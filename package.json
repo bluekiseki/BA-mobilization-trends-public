@@ -1,0 +1,45 @@
+{
+  "name": "ba-mobilization-trends",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build-turbopack": "next build --turbopack",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=12288\" next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "d3-dsv": "^3.0.1",
+    "devtools-detector": "^2.0.25",
+    "lodash": "^4.17.21",
+    "next": "15.5.2",
+    "next-intl": "^4.3.6",
+    "plotly.js": "^3.1.0",
+    "rc-slider": "^11.1.8",
+    "rc-tooltip": "^6.4.0",
+    "rc-util": "^5.44.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-intl": "^7.1.11",
+    "react-plotly.js": "^2.6.0",
+    "xz-decompress": "^0.2.3",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/d3-dsv": "^3.0.7",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-plotly.js": "^2.6.3",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "webpack-obfuscator": "^3.5.1"
+  }
+}

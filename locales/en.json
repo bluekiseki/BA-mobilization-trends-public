@@ -1,0 +1,100 @@
+{
+  "currentLocale": "en",
+  "layout-nav": {
+    "heatmap": "Trending",
+    "ranking": "Ranking",
+    "home": "Home"
+  },
+  "common": {
+    "greeting": "Hello!",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "LocaleSwitcher": {
+    "en": "English",
+    "ko": "Korean",
+    "ja": "Japanece",
+    "label": "label"
+  },
+  "charts": {
+    "ranking": {
+      "title": "Mobilization Frequency Ranking",
+      "description1": "Display the frequency of students who won the Platinum Trophy according to the number of stars",
+      "control": {
+        "percent": "Show Percentage (%)",
+        "absolute": "Show Absolute Value (Count)",
+        "squad_type": "Type:",
+        "squad_type_all": "All",
+        "squad_type_main": "Striker",
+        "squad_type_support": "Supporter",
+        "tactic_role": "Role:",
+        "tactic_role_All": "All",
+        "tactic_role_DamageDealer": "Attacker",
+        "tactic_role_Healer": "Healer",
+        "tactic_role_Supporter": "Supporter",
+        "tactic_role_Tanker": "Tanker",
+        "tactic_role_Vehicle": "T.S",
+        "rank": "Assist included:",
+        "rank_all": "all",
+        "rank_normal": "only recruited student",
+        "rank_assist": "only assist",
+        "display_mode": "Display Mode",
+        "display_total": "Total Count",
+        "display_average": "Average per raid",
+        "raid": "Select a raid period",
+        "diffculty": "Diffculty"
+      },
+      "desp_percent": "Each bar length represents a ratio to the total number of mobilizations",
+      "desp_absolute": "Each bar length represents the actual number of mobilizations.",
+      "unit_cnt": " times",
+      "loading_txt": "Loading data...",
+      "total_x": "Total {x} cases",
+      "filters": "Filters"
+    },
+    "heatmap": {
+      "title": "Student Mobilization Trends by Raid",
+      "description1": "View student mobilization trends in a heatmap format",
+      "description2": "Based on max level. Lower levels are shown as decimals. (e.g., if max level is 90 Lv., a 45 Lv. Fubuki would be counted as 45/90 = 0.5 uses)",
+      "processingMessage": "Loading, decompressing, and processing data...",
+      "noDataMessage": "No data to display. Please select at least one Star-value.",
+      "control": {
+        "selectStudent": "Select Student",
+        "studentSearchPlaceholder": "Enter student name, role, school, or squad type",
+        "setButton": "Set",
+        "displayOptions": {
+          "title": "Display Options",
+          "heatmap": "Heatmap:",
+          "histograms": "Histograms:",
+          "rankWidth": "Rank Width:",
+          "X-Threshold": "Hide less than the number:"
+        },
+        "filterByStars": {
+          "title": "Filter by Stars",
+          "all": "All",
+          "none": "None"
+        },
+        "raidRange": {
+          "title": "Select a raid period"
+        },
+        "diffculty": "Diffculty"
+      }
+    }
+  },
+  "home": {
+    "title": "BlueArhcive-JP Mobilization Trends",
+    "site-title": "BA Mobilization Trends",
+    "description": "Visualizing mobilization trends for 'Blue Archive' JP-Server Platinum Trophy",
+    "btn1": "View Trending Chart",
+    "btn2": "View Ranking Chart",
+    "last-update": "Last data update:",
+    "js-disable": "JavaScript Disabled",
+    "js-disable-description": "This page requires JavaScript. To use the website's main features, please check your browser settings and enable JavaScript."
+  },
+  "raidInfo" : {
+    "All" : "All",
+    "Lunatic": "Lunatic",
+    "Torment": "Torment",
+    "Insane": "Insane",
+    "Extrime": "Extrime"
+  }
+}

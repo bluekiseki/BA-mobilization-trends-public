@@ -1,0 +1,100 @@
+{
+  "currentLocale": "ko",
+  "layout-nav": {
+    "heatmap": "동향",
+    "ranking": "순위",
+    "home": "홈"
+  },
+  "common": {
+    "greeting": "안녕하세요!",
+    "about": "소개",
+    "contact": "연락처"
+  },
+  "LocaleSwitcher": {
+    "en": "영어",
+    "ko": "한국어",
+    "ja": "일본어",
+    "label": "label"
+  },
+  "charts": {
+    "ranking": {
+      "title": "출전 횟수 순위",
+      "description1": "총력전/대결전에 출전하여 플래티넘 등급을 받은 학생들의 출전 횟수를 성급에 따라 표시",
+      "control":{
+        "percent": "비율(%) 표시",
+        "absolute": "절대값(건) 표시",
+        "squad_type": "스트라이커/서포터:",
+        "squad_type_all": "전체",
+        "squad_type_main": "스트라이커",
+        "squad_type_support": "서포터",
+        "tactic_role": "역할:",
+        "tactic_role_All": "전체",
+        "tactic_role_DamageDealer": "딜러",
+        "tactic_role_Healer": "힐러",
+        "tactic_role_Supporter": "서포터",
+        "tactic_role_Tanker": "탱커",
+        "tactic_role_Vehicle": "T.S.",
+        "rank": "조력자 포함여부:",
+        "rank_all": "전체",
+        "rank_normal": "소속 학생만",
+        "rank_assist": "조력자만",
+        "display_mode": "표시 형태",
+        "display_total": "총 합계",
+        "display_average": "건 당 평균",
+        "raid": "총력전/대결전 기간 선택",
+        "diffculty": "난이도"
+      },
+      "desp_percent": "각 막대 길이는 전체 출전 수 대비 비율을 나타냅니다.",
+      "desp_absolute": "각 막대 길이는 실제 출전수를 나타냅니다.",
+      "unit_cnt": "회",
+      "loading_txt": "데이터를 불러오는 중...",
+      "total_x": "총 {x}건",
+      "filters": "필터"
+    },
+    "heatmap": {
+      "title": "총력전/대결전 학생 출전 동향",
+      "description1": "총력전/대결전에 출전하여 플래티넘 등급을 받은 학생들의 동향을 히트맵 형태로 표시",
+      "description2": "최대 래벨 기준, 레벨이 낮으면 소숫점으로 표시. (예: 최대 레벨이 90 Lv.일 때, 45 Lv. 후부키를 사용한다면 45/90 = 0.5 회 사용으로 계산)",
+      "processingMessage": "데이터 로드, 압축 해제 및 처리 중...",
+      "noDataMessage": "표시할 데이터가 없습니다. 최소 하나 이상의 성급을 선택하세요.",
+      "control": {
+        "selectStudent": "학생 선택",
+        "studentSearchPlaceholder": "학생 이름, 역할, 학원, 스쿼드 유형 입력",
+        "setButton": "설정",
+        "displayOptions": {
+          "title": "표시 옵션",
+          "heatmap": "히트맵:",
+          "histograms": "히스토그램:",
+          "rankWidth": "순위 너비:",
+          "X-Threshold": "횟수 이하 숨기기"
+        },
+        "filterByStars": {
+          "title": "성급으로 필터링",
+          "all": "전체",
+          "none": "없음"
+        },
+        "raidRange": {
+          "title": "총력전/대결전 기간 선택"
+        },
+        "diffculty": "난이도"
+      }
+    }
+  },
+  "home": {
+    "title": "블루아카 일섭 플래 출전동향",
+    "site-title": "블루아카 출전동향",
+    "description": "'블루 아카이브' 일본 서버의 총력전/대결전 플래티넘 학생 출전 통계 시각화",
+    "btn1": "동향 차트 보기",
+    "btn2": "순위 차트 보기",
+    "last-update": "마지막 데이터 업데이트 시점:",
+    "js-disable": "JavaScript 비활성화됨",
+    "js-disable-description": "이 페이지는 JavaScript가 필수적입니다. 웹사이트의 주요 기능을 사용하려면 브라우저 설정을 확인하여 JavaScript를 활성화해주세요."
+  },
+  "raidInfo" : {
+    "All" : "전체",
+    "Lunatic": "루나틱",
+    "Torment": "토먼트",
+    "Insane": "인세인",
+    "Extrime": "익스트림"
+  }
+}

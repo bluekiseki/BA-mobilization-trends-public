@@ -1,0 +1,100 @@
+{
+  "currentLocale": "ja",
+  "layout-nav": {
+    "heatmap": "トレンド",
+    "ranking": "順位",
+    "home": "ホーム"
+  },
+  "common": {
+    "greeting": "こんにちは！",
+    "about": "について",
+    "contact": "連絡先"
+  },
+  "LocaleSwitcher": {
+    "en": "英語",
+    "ko": "韓国語",
+    "ja": "日本語",
+    "label": "label"
+  },
+  "charts": {
+    "ranking": {
+      "title": "出撃回数ランキング",
+      "description1": "総力戦/大決戦に出撃し、チナトロを獲得した生徒たちの出撃回数を星の数によって表示",
+      "control": {
+        "percent": "割合（％）を表⁠示",
+        "absolute": "絶対値（回数）を表⁠示",
+        "squad_type": "役割：",
+        "squad_type_all": "すべて",
+        "squad_type_main": "ストライカー",
+        "squad_type_support": "サポーター",
+        "tactic_role": "クラス：",
+        "tactic_role_All": "すべて",
+        "tactic_role_DamageDealer": "アタッカー",
+        "tactic_role_Healer": "ヒーラー",
+        "tactic_role_Supporter": "サポーター",
+        "tactic_role_Tanker": "タンク",
+        "tactic_role_Vehicle": "T.S",
+        "rank": "助っ人を含む：",
+        "rank_all": "すべて",
+        "rank_normal": "所属生徒のみ",
+        "rank_assist": "助っ人のみ",
+        "display_mode": "表示形態",
+        "display_total": "総計",
+        "display_average": "戦あたりの平⁠均",
+        "raid": "総力戦/大決戦期間セレクト",
+        "diffculty": "難易度"
+      },
+      "desp_percent": "各棒の長さは、全体の出撃数に対する割合を表しています。",
+      "desp_absolute": "各棒の長さは実際の出撃数を表します。",
+      "unit_cnt": "回",
+      "loading_txt": "データを読み込んでいます...",
+      "total_x": "計{x}件",
+      "filters": "フィルタ"
+    },
+    "heatmap": {
+      "title": "総力戦/大決戦別の生徒出撃トレンド",
+      "description1": "総力戦/大決戦に出撃し、チナトロを獲得した生徒たちをヒートマップの形で確認",
+      "description2": "最大レベル基準、レベルが低いと小数点で表示されます。(例：最大レベルが90 Lv.の時、45 Lv.フブキを使用したら45/90 = 0.5回使用と計算)",
+      "processingMessage": "データの読み込み、解凍、処理中...",
+      "noDataMessage": "表示するデータがありません。少なくとも1つの星の数を選択してください。",
+      "control": {
+        "setButton": "設定",
+        "selectStudent": "生徒選択",
+        "studentSearchPlaceholder": "生徒名、役割、学園、部隊タイプを入力",
+        "displayOptions": {
+          "title": "表示オプション",
+          "heatmap": "ヒートマップ：",
+          "histograms": "ヒストグラム：",
+          "rankWidth": "順位幅：",
+          "X-Threshold": "回数以下を非表示："
+        },
+        "filterByStars": {
+          "title": "星の数でフィルタリング",
+          "all": "全て",
+          "none": "なし"
+        },
+        "raidRange": {
+          "title": "総力戦/大決戦期間セレクト"
+        },
+        "diffculty": "難易度"
+      }
+    }
+  },
+  "home": {
+    "title": "ブルアカのチナトロ出撃トレンド",
+    "site-title": "チナトロ出撃トレンド",
+    "description": "『ブルーアーカイブ』プラチナトロフィーを獲得した出撃トレンドを視覚化",
+    "btn1": "トレンドチャートを見る",
+    "btn2": "ランキングチャートを見る",
+    "last-update": "データの最終更新時点：",
+    "js-disable": "JavaScriptが無効です",
+    "js-disable-description": "このページはJavaScriptが必須です。ウェブサイトの主要な機能を利用するには、ブラウザの設定を確認してJavaScriptを有効にしてください。"
+  },
+  "raidInfo" : {
+    "All" : "全て",
+    "Lunatic": "LUNATIC",
+    "Torment": "TORMENT",
+    "Insane": "INSANE",
+    "Extrime": "EXTRIME"
+  }
+}
