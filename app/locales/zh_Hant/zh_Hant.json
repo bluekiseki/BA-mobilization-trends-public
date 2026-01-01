@@ -397,7 +397,7 @@
       "escort": "綜合戰術考試"
     },
     "story": {
-      "mini": "小故事: {{title}}"
+      "mini": "迷你故事: {{title}}"
     },
     "misc": {
       "shop-reset": "商店重置"
