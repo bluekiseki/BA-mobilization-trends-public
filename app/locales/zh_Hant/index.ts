@@ -14,7 +14,7 @@ import {
     emblemCounter,
     language_banner,
     calendar
-} from "./zh-Hant.json"; // import your namespaced locales
+} from "./zh_Hant.json"; // import your namespaced locales
 import {zh_Hant as club} from "../club.json"
 import {zh_Hant as stat} from "../stat.json"
 import planner from "./planner.json"
