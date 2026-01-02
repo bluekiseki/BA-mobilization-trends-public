@@ -13,7 +13,7 @@ import {
     emblemCounter,
     language_banner,
     calendar
-} from "../en.json"; // import your namespaced locales
+} from "./en.json"; // import your namespaced locales
 import {en as club} from "../club.json"
 import {en as stat} from "../stat.json"
 import planner from "./planner.json"

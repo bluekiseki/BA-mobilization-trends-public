@@ -14,7 +14,7 @@ import {
     emblemCounter,
     language_banner,
     calendar
-} from "../ko.json"; // import your namespaced locales
+} from "./ko.json"; // import your namespaced locales
 import {ko as club} from "../club.json"
 import {ko as stat} from "../stat.json"
 import planner from "./planner.json"
