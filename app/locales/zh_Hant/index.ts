@@ -1,3 +1,4 @@
+// app/locales/ko/index.ts
 import type { ResourceLanguage } from "i18next";
 import {
     currentLocale,
@@ -13,9 +14,9 @@ import {
     emblemCounter,
     language_banner,
     calendar
-} from "./ja.json"; // import your namespaced locales
-import {ja as club} from "../club.json"
-import {ja as stat} from "../stat.json"
+} from "./zh_Hant.json"; // import your namespaced locales
+import {zh_Hant as club} from "../club.json"
+import {zh_Hant as stat} from "../stat.json"
 import planner from "./planner.json"
 import jukebox from "./jukebox.json"
 

@@ -1,0 +1,95 @@
+{
+    "title": "BGM 播放器",
+    "description": "搜尋「蔚藍檔案」的編號BGM",
+    "filter_title": "劇透過濾器",
+    "actions": {
+      "view_details": "查看詳情",
+      "hide_details": "隱藏詳情",
+      "show_story_names": "顯示故事標題",
+      "hide_story_names": "隱藏故事標題",
+      "view_all_details": "展開所有詳情",
+      "hide_all_details": "收合所有詳情",
+      "close": "關閉",
+      "select_all": "全選",
+      "deselect_all": "全不選",
+      "deselect_all_searched": "取消選取所有搜尋到的學生",
+      "select_all_searched": "選取所有搜尋到的學生"
+    },
+    "selection": {
+      "main_story": "選擇主線故事",
+      "event_story": "選擇活動故事",
+      "favor_story": "選擇關係故事",
+      "memorial": "選擇紀念大廳"
+    },
+    "search": {
+      "placeholder": "搜尋標題、作曲者...",
+      "student_name": "搜尋學生名稱...",
+      "no_results": "無結果。必須設定過濾器以防止劇透，然後才會顯示結果。"
+    },
+    "playback": {
+      "options": "播放選項",
+      "play_random": "隨機播放",
+      "autoplay": "自動播放",
+      "autoplay_next": "自動播放下一首",
+      "autoplay_scroll": "播放時自動滾動",
+      "repeat_current": "重複播放當前曲目",
+      "stop_after": "播放後停止"
+    },
+    "status": {
+      "loading": "載入資料中...",
+      "error": "發生錯誤。"
+    },
+    "meta": {
+      "rank": "排名_",
+      "episode": "(集 {{x}})",
+      "bgm_list_title": "BGM 列表",
+      "sort_ascending": "升序",
+      "sort_descending": "降序",
+      "sort_order": "排序順序"
+    },
+    "category": {
+      "work": "任務",
+      "raid": "總力戰",
+      "group_story": "社團故事",
+      "mini_story": "迷你故事",
+      "work_story": "工作劇情(Work Story)",
+      "other": "其他（UI 等）"
+    },
+    "prefix": {
+      "main_story": "[主線]",
+      "event_story": "[活動]",
+      "favor_story": "[關係]",
+      "memorial": "[紀念]",
+      "work": "[任務]",
+      "ui": "[UI]",
+      "raid": "[總力戰]",
+      "limitraid": "[制約解除決戦]",
+      "group_story": "[社團]",
+      "mini_story": "[迷你]",
+      "work_story": "[工作]"
+    },
+    "main_story": {
+      "vol1_ch1": "Vol.1 Ch.1",
+      "vol1_ch2": "Vol.1 Ch.2",
+      "vol1_ch3": "Vol.1 Ch.3",
+      "vol2_ch1": "Vol.2 Ch.1",
+      "vol2_ch2": "Vol.2 Ch.2",
+      "vol3_ch1": "Vol.3 Ch.1",
+      "vol3_ch2": "Vol.3 Ch.2",
+      "vol3_ch3": "Vol.3 Ch.3",
+      "vol3_ch4": "Vol.3 Ch.4",
+      "vol4_ch1": "Vol.4 Ch.1",
+      "vol4_ch2": "Vol.4 Ch.2",
+      "vol5_ch1": "Vol.5 Ch.1",
+      "vol5_ch2": "Vol.5 Ch.2",
+      "vol6_ch1": "Vol.6 Ch.1",
+      "vol6_ch2": "Vol.6 Ch.2",
+      "vol6_ch3": "Vol.6 Ch.3",
+      "ex_deca_ch0": "Ex. Decagrammaton Ch.0",
+      "ex_deca_ch1": "Ex. Decagrammaton Ch.1",
+      "final_ch1": "Final Vol. Ch.1",
+      "final_ch2": "Final Vol. Ch.2",
+      "final_ch3": "Final Vol. Ch.3",
+      "final_ch4": "Final Vol. Ch.4"
+    }
+  }
