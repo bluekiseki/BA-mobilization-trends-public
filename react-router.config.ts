@@ -10,10 +10,10 @@ declare module "react-router" {
 export default {
   ssr: true,
   future: {
-    v8_middleware: true
+    v8_middleware: true,
     // unstable_middleware: true,
     // unstable_optimizeDeps: false,
     // unstable_splitRouteModules: false,
-    // unstable_viteEnvironmentApi: false,
+    v8_viteEnvironmentApi: true, // for cloudflare worker
   },
 } satisfies Config;

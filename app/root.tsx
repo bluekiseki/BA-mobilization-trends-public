@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
   useLoaderData,
   data,
+  redirect,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -16,8 +17,8 @@ import { Navigation } from "./components/Navigation";
 import { ThemeProvider } from "./components/ThemeToggleButton";
 // import { getLocaleFromHeaders } from "./utils/i18n/service";
 import { CollectedLinks } from "./components/CollectedLinks";
-import { SpeedInsights } from "@vercel/speed-insights/react"
-import { Analytics } from "@vercel/analytics/react"
+// import { SpeedInsights } from "@vercel/speed-insights/react" // for vercel
+// import { Analytics } from "@vercel/analytics/react" // for vercel
 import { lazy, useEffect } from "react";
 import { DEFAULT_LOCALE, type Locale } from "./utils/i18n/config";
 import { getLocale, i18nextMiddleware, localeCookie } from "./middleware/i18next";
@@ -25,12 +26,22 @@ import { useTranslation } from "react-i18next";
 import { getLocaleFromHeaders } from "./utils/i18n/service";
 // import ContactButton from "./components/ContactButton";
 import { PostHogProvider } from 'posthog-js/react';
-import { domain, cdn as cdn_domain } from './data/livedataServer.json'
+import { domain, cdn as cdn_domain, vercelDomain } from './data/livedataServer.json'
 
 const DynamicDevtoolsdetector = lazy(() => import("./components/devtools-detector"));
 
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
+
+  const url = new URL(request.url);
+
+  if (url.hostname === vercelDomain) {
+    throw redirect(
+      `https://${domain}` + url.pathname + url.search,
+      301
+    );
+  }
+  
   let locale = getLocale(context) as Locale;
   const reqLocale = getLocaleFromHeaders(request)
   return data(
@@ -140,8 +151,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* </I18nextProvider> */}
         <NoScript />
         {process.env.NODE_ENV === 'production' && <>
-          <SpeedInsights />
-          <Analytics />
+          {/* <SpeedInsights /> */}
+          {/* <Analytics /> */}
           <DynamicDevtoolsdetector />
         </>}
       </body>

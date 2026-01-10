@@ -52,8 +52,8 @@ const mat_3m_old = {
 }
 
 const bosses_limit_3m = [
-    'Binah', '비나', 'ビナー',
-    'KAITEN', '카이텐', 'カイテン'
+    'Binah', '비나', 'ビナー', '薇娜',
+    'KAITEN', '카이텐', 'カイテン', '凱坦澤'
 ];
 const bosses_limit_4_30m = [
     'Yesod', '예소드', 'イェソド',

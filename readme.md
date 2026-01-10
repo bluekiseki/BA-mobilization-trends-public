@@ -9,7 +9,7 @@ All copyright of <a href='https://bluearchive.jp/' target="_blank" rel="noopener
 - The code is updated manually and may differ from the actual live service
 
 ## Requirements
-- Vite 7 + React Router v7.11 (Remix renamed since v7 in November 2024) + *.tsx + Tailwind CSS. Deploying in a Vercel environment
+- Vite 7 + React Router v7.12 (Remix renamed since v7 in November 2024) + *.tsx + Tailwind CSS. Deploying in a Vercel environment
 
 ## Q&A
 - Q. Why was obfuscation used?

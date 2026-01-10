@@ -1,5 +1,5 @@
 import { TIER_COLORS, TIER_ORDER } from '~/data/raidInfo';
-import { getBracketFromTotalScore, getDifficultyFromScoreAndBoss, type DifficultyName } from '../Difficulty';
+import { getBracketFromTotalScore, getDifficultyFromScoreAndBoss } from '../Difficulty';
 import { useEffect, useMemo, useState } from 'react';
 import type { FullData, GameServer, RaidInfo } from '~/types/data';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';

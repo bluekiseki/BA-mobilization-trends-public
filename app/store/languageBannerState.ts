@@ -19,7 +19,7 @@ export const useLanguageBannerStore = create<LanguageBannerState>()(
       setHasShownLanguageBanner: () => set({ hasShownLanguageBanner: true }),
     }),
     {
-      name: 'language-banner-storage-en-ko-ja', // Key name to be stored in localStorage
+      name: 'language-banner-storage-en-ko-ja-zh_Hant', // Key name to be stored in localStorage
       storage: createJSONStorage(() => localStorage),
     },
   ),

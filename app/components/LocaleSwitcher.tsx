@@ -21,6 +21,10 @@ export default function LocaleSwitcher() {
         {
           value: 'ja',
           label: '日本語'
+        },
+        {
+          value: 'zh-Hant',
+          label: '繁體中文'
         }
       ]}
       label={t('label')}

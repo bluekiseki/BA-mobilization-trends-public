@@ -46,3 +46,4 @@ season,startTime,endTime,type,teran,armorType,3nd,4nd
 45,2025-11-05 11:00:00,2025-11-12 03:59:59,escort,Outdoor,ElasticArmor,"적을 쓰러뜨렸을 때 defense력 감소, 받는 대미지량 증가","적의 HP가 감소할 때, 다른 적의 HP 회복"
 46,2025-12-03 11:00:00,2025-12-10 03:59:59,breakthrough,Outdoor,LightArmor,,
 47,2026-01-07 11:00:00,2026-01-14 03:59:59,escort,Street,HeavyArmor,,
+48,2026-01-29 11:00:00,2026-02-05 03:59:59,defense,Indoor,Unarmed,,

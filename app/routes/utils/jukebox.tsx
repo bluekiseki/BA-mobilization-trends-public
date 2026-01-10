@@ -4,7 +4,7 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import eventList from '~/data/jp/eventList.json';
 import { useDataCache } from '~/utils/cache';
 import type { Student } from '~/types/data';
-import bgmData from '~/data/jp/bgm_database_combined.json'
+// import bgmData from '~/data/jp/bgm_database_combined.json'
 import { AutoplayIcon, eventConvertor, FilterIcon, GENERAL_CATEGORIES, mainStoryChapters, otherStoryTitles, RepeatIcon, StopIcon, XREF_PREFIXES, type OtherStoryData } from './jukeboxMetadata';
 import { data } from 'react-router';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
@@ -45,12 +45,13 @@ const SoundWaveIcon = () => (
 
 
 // --- TYPE DEFINITIONS ---
-type Language = 'en' | 'jp' | 'ko';
+type Language = 'en' | 'jp' | 'ko' | 'tw';
 
 interface LocalizedName {
     ja?: string | string[] | null;
     ko?: string | string[] | null;
     en?: string | string[] | null;
+    tw?: string | string[] | null;
 }
 
 
@@ -208,7 +209,8 @@ export default function JukeboxPage() {
     const language = { ja: 'jp', ko: 'ko', en: 'en', 'zh-Hant': 'zh_Hant' }[locale] as Language || 'jp';
 
     // State Hooks
-    const allBgm = useMemo(() => bgmData.sort((a, b) => Number(a.id) - Number(b.id)), []);
+    const [allBgm, setAllBgm] = useState<any[]>([]);
+    // const allBgms = useMemo(() => bgmData.sort((a, b) => Number(a.id) - Number(b.id)), []);
     const [studentData, setStudentData] = useState<Record<string, Student>>({});
     const [eventData, setEventData] = useState<any>({});
     const [filteredBgm, setFilteredBgm] = useState<any[]>([]);
@@ -245,6 +247,14 @@ export default function JukeboxPage() {
 
     const filterPanelRef = useRef<HTMLDivElement>(null);
     const fetchStudents = useDataCache<Record<string, Student>>();
+
+    useEffect(()=>{
+        fetch(cdn('/w/bgm_database_combined.json')).then(res=>res.json()).then((bgmData: any)=>{
+            setAllBgm(
+                bgmData.sort((a: { id: any; }, b: { id: any; }) => Number(a.id) - Number(b.id))
+            )
+        })
+    }, [setAllBgm]);
 
     // --- Fetch Data Effect ---
     useEffect(() => {

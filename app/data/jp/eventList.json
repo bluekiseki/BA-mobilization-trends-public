@@ -755,6 +755,16 @@
     "OpenTime": "2025-11-05 11:00:00",
     "CloseTime": "2025-11-12 10:59:59"
   },
+  "10840": {
+    "Name": "Event_Name_840",
+    "Kr": "오욕내강",
+    "Jp": "五塵来降",
+    "En": "The Senses Descend",
+    "Tw": "五塵降臨",
+    "OpenTime": "2026-01-07 11:00:00",
+    "CloseTime": "2026-01-20 10:59:59",
+    "Planable": true
+  },
   "10841": {
     "Name": "Event_Name_841",
     "Kr": "Serenade Promenade",

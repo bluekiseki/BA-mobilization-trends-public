@@ -32,7 +32,7 @@
     "end": "結束",
     "acquire": "獲得",
     "loop": "循環",
-    "rerun": "復刻",
+    "rerun": "重跑",
     "fast": "加速",
     "limited": "限時",
     "clear": "清除",
@@ -42,7 +42,7 @@
     "en": "英文",
     "ko": "韓文",
     "ja": "日文",
-    "zh-Hant": "繁體中文",
+    "zh-Hant-TW": "繁體中文",
     "label": "label"
   },
   "charts": {
@@ -51,7 +51,7 @@
       "description1": "顯示達成白金獎盃的隊伍中學生的出擊率。",
       "control": {
         "bar_option": {
-          "name": "長條圖之長度",
+          "name": "Bar 長度",
           "percent": "最大值",
           "absolute": "比例"
         },
@@ -75,8 +75,8 @@
         "tactic_role_Vehicle": "T.S",
         "rank": "包含助戰:",
         "rank_all": "全部",
-        "rank_normal": "僅限於自己擁有的學生",
-        "rank_assist": "僅限於助戰學生",
+        "rank_normal": "僅招募學生",
+        "rank_assist": "僅助戰",
         "display_mode": "顯示模式",
         "display_total": "總共",
         "display_average": "每次出擊平均",
@@ -206,7 +206,7 @@
     "tagAllowOnce": "助戰",
     "description": "報告臨時替換(Report temporary replacement)",
     "dashboardList": "儀表板列表",
-    "selectBossPrompt": "選擇一個BOSS進行分析。",
+    "selectBossPrompt": "選擇一個首領進行分析。",
     "histogramTitle": "總分分佈（直方圖）",
     "scoreRangeFilter": "分數範圍篩選",
     "binSize": "區間（區間大小）",
@@ -236,13 +236,13 @@
     "tooltipTime": "時間: {{time}}",
     "tooltipDifficulty": "難度: {{difficulty}}",
     "tooltipCumulativeRank": "累計排名: ~{{rank}}",
-    "clearTime": "通關時間",
+    "clearTime": "清除時間",
     "hideSettings": "隱藏設定",
     "showSettings": "顯示設定",
     "rankRangeSettings": "排名範圍設定",
     "minRankPlaceholder": "最低排名",
     "maxRankPlaceholder": "最高排名",
-    "clearTimeDistribution": "通關時間分佈",
+    "clearTimeDistribution": "清除時間分佈",
     "noData": "無資料顯示。請檢查設定。",
     "headerDifficulty": "難度",
     "headerInterval": "區間（分:秒）",
@@ -268,7 +268,7 @@
     "timeViewUnavailableNotice": "時間視圖因混合難度記錄而無法使用。",
     "byRank": "排名",
     "rankDistribution": "排名分佈",
-    "select_boss_type_for_stats": "請選擇一個護甲以查看統計資料。",
+    "select_boss_type_for_stats": "請選擇一個BOSS類型以查看統計資料。",
     "recordLookup": "記錄查詢",
     "lookupPlaceholder": "輸入排名、分數或時間計算（例如，4:00 - 2:30.5）...",
     "lookupInFiltersPlaceholder": "在篩選條件中輸入排名、分數或時間（M:SS）...",
@@ -300,17 +300,32 @@
       "copy": "複製",
       "copied": "已複製",
       "dateRange": "日期範圍"
+    },
+    "composition": {
+      "mode_team": "Team",
+      "mode_report": "Report",
+      "total_parties": "Total Parties",
+      "full_party_only": "Full(6) Only",
+      "specific_team": "Specific Team",
+      "from_start": "From Start",
+      "from_end": "From End",
+      "usage_count": "{{counts}} uses",
+      "click_to_collapse": "Click to collapse",
+      "click_for_details": "Click for details",
+      "load_more": "Load More",
+      "placement_variants": "Placement Order Variants",
+      "mulligan_variants": "Starting Hand Variants"
     }
   },
   "dashboardIndex": {
     "title": "儀表板列表",
     "description": "過去總力戰和大決戰的統計儀表板",
-    "pinnedGlobalTitle": "當前國際服總力戰&大決戰",
+    "pinnedGlobalTitle": "當前國際服伺服器總力戰或大決戰",
     "liveBetaTitle": "實時儀表板（測試版）"
   },
   "liveDashboard": {
     "description": "實時統計總力戰和大決戰",
-    "total_clear": "總通關數",
+    "total_clear": "總清除數",
     "hourly_change": "每小時變化",
     "platinum_tier_distribution": "白金階層分佈",
     "total_score": "總分數",
@@ -365,7 +380,7 @@
   "calendar": {
     "title": "日曆和未來預測",
     "description": {
-      "main": "蔚藍檔案主要活動時間表以甘特圖顯示。",
+      "main": "Blue Archive 主要活動時間表以甘特圖顯示。",
       "prediction": "條紋項目是基於先例的預測。未來可能會變更。"
     },
     "distribute": "(分布: {{name}})",

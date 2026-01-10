@@ -4,12 +4,12 @@ import { data, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router
 import { useEquipmentPlanStore } from '~/store/planner/useEquipmentPlanStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
-import campaignData from '~/data/jp/campaigns.json'
+// import campaignData from '~/data/jp/campaigns.json'
 import { createMetaDescriptor } from '~/components/head';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { getInstance } from '~/middleware/i18next';
-import iconDataInfoModule from "~/data/jp/campaign_icon_info.json"
-import iconDataAllModule from "~/data/event/icon_img.json"
+// import iconDataInfoModule from "~/data/jp/campaign_icon_info.json"
+// import iconDataAllModule from "~/data/event/icon_img.json"
 import type { Route } from './+types/Equipment';
 import type { CampaignData, EventData, IconData, IconInfos, Student, StudentPortraitData } from '~/types/plannerData';
 import { FaFilter, FaSortAmountUp, FaSortAmountDown, FaArchive, FaCalculator, FaListAlt, FaBoxOpen, FaPlusCircle, FaLayerGroup, FaSortNumericDown } from 'react-icons/fa';
@@ -36,9 +36,9 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   
   return data({
     siteTitle, title, description, locale,
-    campaigns: campaignData as CampaignData,
-    iconInfoData: iconDataInfoModule as unknown as IconInfos,
-    iconData: iconDataAllModule as unknown as IconData,
+    // campaigns: campaignData as CampaignData,
+    // iconInfoData: iconDataInfoModule as unknown as IconInfos,
+    // iconData: iconDataAllModule as unknown as IconData,
     // studentData,
     // studentPortraits,
   });
@@ -54,9 +54,9 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export default function EquipmentPlannerPage() {
   const {
-    campaigns,
-    iconInfoData,
-    iconData,
+    // campaigns,
+    // iconInfoData,
+    // iconData,
     title
   } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation("planner"); //
@@ -72,10 +72,23 @@ export default function EquipmentPlannerPage() {
   const [summarySortMode, setSummarySortMode] = useState<'tier' | 'id' | 'amount'>('tier');
   const [studentData, setStudentData] = useState<Record<string, Student> | null>(null);
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
+  const [iconData, setIconData] = useState<IconData>({});
+  const [campaigns, setCampaignData] = useState<CampaignData>()
+    const [iconInfoData, setIconInfoData] = useState<IconInfos>({
+    Item: {},
+    Equipment: {},
+    Furniture: {},
+    Currency: {},
+    Emblem: {},
+    GachaGroup: {},
+  });
 
   useEffect(() => {
-    fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.s`)).then(res => res.json()).then(setStudentData).catch(e => console.error(e));
-    fetch(cdn(`/w/students_portrait.json`)).then(res => res.json()).then(setStudentPortraits).catch(e => console.error(e));
+    fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.json`)).then(res => res.json() as any).then(setStudentData).catch(e => console.error(e));
+    fetch(cdn(`/w/students_portrait.json`)).then(res => res.json() as any).then(setStudentPortraits).catch(e => console.error(e));
+    fetch(cdn(`/ew/icon_img.json`)).then(res => res.json() as any).then(setIconData).catch(e => console.error(e));
+    fetch(cdn(`/ew/icon_info.json`)).then(res => res.json() as any).then(setIconInfoData).catch(e => console.error(e));
+    fetch(cdn(`/w/campaigns.json`)).then(res => res.json() as any).then(setCampaignData).catch(e => console.error(e));
   }, [locale]);
 
   // 5-2. Merge allStudents and portraits data
@@ -100,6 +113,8 @@ export default function EquipmentPlannerPage() {
     const stages = campaigns;
     const iconInfo = iconInfoData;
     console.log('resolvedStages return')
+    if (!stages) return []
+
     return Object.entries(stages).map(([stageId, stageData]) => {
       const drops: Record<string, number> = {};
       const apCost = stageData.AP;
@@ -329,23 +344,23 @@ export default function EquipmentPlannerPage() {
   }, [resolvedStages]);
 
 
-  const filteredAndSortedStages = useMemo(() => {
-    let stages = resolvedStages
-      .filter(s => Object.keys(s.drops).length > 0);
+  // const filteredAndSortedStages = useMemo(() => {
+  //   let stages = resolvedStages
+  //     .filter(s => Object.keys(s.drops).length > 0);
 
-    // Apply Currency Filter here (Remove duplicate logic in child components)
-    if (itemFilter.size > 0) {
-      stages = stages.filter(stage =>
-        Object.keys(stage.drops).some(dropKey => itemFilter.has(dropKey))
-      );
-    }
+  //   // Apply Currency Filter here (Remove duplicate logic in child components)
+  //   if (itemFilter.size > 0) {
+  //     stages = stages.filter(stage =>
+  //       Object.keys(stage.drops).some(dropKey => itemFilter.has(dropKey))
+  //     );
+  //   }
 
-    // Apply Sorting here as well (Remove duplicate logic in child components)
-    if (isSortedDesc) {
-      return stages.sort((a, b) => b.id - a.id);
-    }
-    return stages.sort((a, b) => a.id - b.id);
-  }, [resolvedStages, isSortedDesc, itemFilter]);
+  //   // Apply Sorting here as well (Remove duplicate logic in child components)
+  //   if (isSortedDesc) {
+  //     return stages.sort((a, b) => b.id - a.id);
+  //   }
+  //   return stages.sort((a, b) => a.id - b.id);
+  // }, [resolvedStages, isSortedDesc, itemFilter]);
 
   const getSortedEquipmentList = useCallback((
     items: Record<string, number>,

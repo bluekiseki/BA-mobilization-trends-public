@@ -23,8 +23,8 @@ season,startTime,endTime,boss1,boss2,boss3,difficulty1,difficulty2,difficulty3,p
 22,2025-10-14 11:00:00,2025-10-21 03:59:59,ShiroKuro_Indoor_HeavyArmor,ShiroKuro_Indoor_ElasticArmor,ShiroKuro_Indoor_Unarmed,Insane,Torment,Insane
 23,2025-11-11 11:00:00,2025-11-18 03:59:59,Hieronymus_Street_LightArmor,Hieronymus_Street_HeavyArmor,Hieronymus_Street_ElasticArmor,Insane,Torment,Insane
 24,2025-12-09 11:00:00,2025-12-16 03:59:59,Kaitenger_Outdoor_LightArmor,Kaitenger_Outdoor_Unarmed,Kaitenger_Outdoor_ElasticArmor,Insane,Torment,Insane
-25,2026-01-06 11:00:00,2026-01-13 03:59:59,Binah_Street_LightArmor,Binah_Street_Unarmed,Binah_Street_ElasticArmor,Insane,Insane,Torment,true
-26,2026-02-03 11:00:00,2026-02-10 03:59:59,Chesed_Outdoor_LightArmor,Chesed_Outdoor_ElasticArmor,Chesed_Outdoor_HeavyArmor,Insane,Torment,Insane,true
+25,2026-01-06 11:00:00,2026-01-13 03:59:59,Binah_Street_LightArmor,Binah_Street_Unarmed,Binah_Street_ElasticArmor,Insane,Insane,Torment
+26,2026-02-03 11:00:00,2026-02-10 03:59:59,Chesed_Outdoor_LightArmor,Chesed_Outdoor_ElasticArmor,Chesed_Outdoor_HeavyArmor,Insane,Torment,Insane
 27,2026-03-10 11:00:00,2026-03-17 03:59:59,ShiroKuro_Indoor_LightArmor,ShiroKuro_Indoor_ElasticArmor,ShiroKuro_Indoor_Unarmed,Torment,Torment,Insane,true
 28,2026-04-07 11:00:00,2026-04-14 03:59:59,Hieronymus_Street_LightArmor,Chesed_Outdoor_Unarmed,Hieronymus_Street_ElasticArmor,Torment,Torment,Insane,true
 29,2026-05-05 11:00:00,2026-05-12 03:59:59,Kaitenger_Street_Unarmed,Kaitenger_Street_LightArmor,Kaitenger_Street_HeavyArmor,Insane,Torment,Torment,true

@@ -300,6 +300,21 @@
       "copy": "コピー",
       "copied": "コピーしました！",
       "dateRange": "期間"
+    },
+    "composition": {
+      "mode_team": "部隊",
+      "mode_report": "レポート",
+      "total_parties": "総部隊数",
+      "full_party_only": "すべて編成されたチームのみ",
+      "specific_team": "特定の部隊",
+      "from_start": "先頭から",
+      "from_end": "末尾から",
+      "usage_count": "{{counts}}回",
+      "click_to_collapse": "閉じる",
+      "click_for_details": "詳細を表示",
+      "load_more": "もっと見る",
+      "placement_variants": "配置パターン",
+      "mulligan_variants": "初手(スキル)パターン"
     }
   },
   "dashboardIndex": {

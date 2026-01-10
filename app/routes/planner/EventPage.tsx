@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { data, useLoaderData, useParams, type LoaderFunctionArgs } from 'react-router';
 import { EventInfo } from '~/components/planner/EventInfo';
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
-import iconDataInfoModule from "~/data/event/icon_info.json"
-import iconDataAllModule from "~/data/event/icon_img.json"
+// import iconDataInfoModule from "~/data/event/icon_info.json"
+// import iconDataAllModule from "~/data/event/icon_img.json"
 import { useTranslation } from 'react-i18next';
 
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
@@ -20,12 +20,13 @@ import { EventPlannerLoader } from '~/components/planner/event/EventPlannerLoade
 
 const fetchEventSeasonData = async (eventId: number) => {
   try {
-    const eventDataModules = import.meta.glob('/app/data/event/event.*.json');
-    const modulePath = `/app/data/event/event.${eventId}.json`;
+    const eventDataModules = import.meta.glob('/app/data/event/event.season.*.json');
+    const modulePath = `/app/data/event/event.season.${eventId}.json`;
     const eventDataModule: any = await eventDataModules[modulePath]()
 
-    return (eventDataModule.season);
+    return (eventDataModule);
   } catch (e) {
+    console.log('e',e)
     return null
   }
 };
@@ -33,9 +34,9 @@ const fetchEventSeasonData = async (eventId: number) => {
 export async function loader({ context, params, request }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
   const locale = i18n.language as Locale
-  const  evnetSeasonData = await fetchEventSeasonData(Number(params.eventId))
-  if (evnetSeasonData==null){
-    throw new Response("Not Found: Invalid server parameter.", { status: 404 }); 
+  const evnetSeasonData = await fetchEventSeasonData(Number(params.eventId))
+  if (evnetSeasonData == null) {
+    throw new Response("Not Found: Invalid server parameter.", { status: 404 });
   }
   return data({
     locale,
@@ -142,12 +143,14 @@ export const EventPage = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const eventDataModules = import.meta.glob('/app/data/event/event.*.json');
-        const modulePath = `/app/data/event/event.${eventId}.json`;
-        const eventDataModule: any = await eventDataModules[modulePath]()
+        // const eventDataModules = import.meta.glob('/app/data/event/event.*.json');
+        // const modulePath = `/app/data/event/event.${eventId}.json`;
+        // const eventDataModule: any = await eventDataModules[modulePath]()
+        const eventDataModule = await((await fetch(cdn(`/ew/event.${eventId}.json`))).json()) as any;
 
         // const eventDataModule = (await import(/* @vite-ignore */ `/app/data/event/event.${eventId}.json`)).default;
         // const iconDataInfoModule = (await import(`~/data/event/icon_info.json`)).default;
+        const iconDataInfoModule = await((await fetch(cdn('/ew/icon_info.json'))).json()) as any;
         for (const key in iconDataInfoModule) {
           eventDataModule.icons[key] = {
             ...eventDataModule.icons[key],
@@ -179,22 +182,27 @@ export const EventPage = () => {
     const fetchIconData = async () => {
       try {
         // Use the path format provided by the user
+        /*
         const iconModules = import.meta.glob('/app/data/event/icon_img.*.json');
         const modulePath = `/app/data/event/icon_img.${eventId}.json`;
         const iconDataModule: any = await iconModules[modulePath]()
+        */
+        const iconDataModule = await (await fetch(cdn(`/ew/icon_img.${eventId}.json`))).json() as any
+        const iconDataAllModule = await ((await fetch(cdn(`/ew/icon_img.json`))).json()) as any
         let ext = {
           Item: {},
           Equipment: {},
         }
-        for (const key in iconDataModule.default) {
+        for (const key in iconDataModule) {
           const baseData = iconDataAllModule[key as keyof typeof iconDataAllModule] as any || {};
 
           ext[key as keyof typeof ext] = {
-            ...iconDataModule.default[key],
+            ...iconDataModule[key],
             ...baseData,
 
           }
         }
+        console.log('ext',ext)
         setIconData(ext);
       } catch (e) {
         console.error("Failed to fetch icon data:", e);

@@ -1,5 +1,59 @@
 [
+
+
     {
+        "date": "2026-01-09",
+        "changes": {
+            "en": [
+                "Live Dashboard Total Assault S85 (BETA) ended",
+                "Added Favor Rank Status",
+                "Added JP Total Assault S85 top-ranking team data (from Plana Stats)",
+                "Added JP Total Assault S85 overall score data",
+                "Deployment platform has been changed from Vercel to Cloudflare Pages."
+            ],
+            "ko": [
+                "라이브 대시보드 총력전 S85 (BETA) 종료",
+                "인연 칭호 설정 현황 추가",
+                "JP 총력전 S85 상위권 편성 데이터 추가 (from Plana Stats)",
+                "JP 총력전 S85 전체 분포 데이터 추가",
+                "배포 환경을 Vercel에서 Cloudflare Pages로 변경"
+            ],
+            "ja": [
+                "リアルタイムダッシュボード 総力戦S85 (BETA) 終了",
+                "絆ランク称号の状況追加",
+                "JP 総力戦S85 上位編成データをの追加 (from Plana Stats)",
+                "JP 総力戦S85 全体スコア分布データをの追加",
+                "デプロイ環境を Vercel から Cloudflare Pages に変更しました。"
+            ]
+        }
+    },
+    {
+        "date": "2026-01-02",
+        "changes": {
+            "en": [
+                "Added Chinese (Traditional) localization (Issue #4, PR #5)",
+                "Improved filters on the Assault dashboard",
+                "Added statistics for frequently used compositions and starting hand settings in the Assault dashboard"
+            ],
+            "ko": [
+                "중국어(번체) 번역 추가 (Issue #4, PR #5)",
+                "총력전·대결전 대시보드의 필터 개선",
+                "총력전·대결전 대시보드에서 많이 출전한 편성과 손패 설정 통계 제공"
+            ],
+            "ja": [
+                "中国語（繁体字）ローカライズを追加（Issue #4, PR #5）",
+                "総力戦·大決戦ダッシュボードのフィルターを改善",
+                "総力戦·大決戦ダッシュボードにて、使用率の高い編成と初手設定の統計を追加"
+            ],
+            "zh-Hant": [
+                "新增繁體中文翻譯。（Issue #4, PR #5）",
+                "改善總力戰儀表板的篩選功能",
+                "在總力戰儀表板中提供熱門隊伍編成與起手手牌設定統計"
+            ]
+        }
+    },
+    {
+
         "date": "2025-12-19",
         "changes": {
             "en": [

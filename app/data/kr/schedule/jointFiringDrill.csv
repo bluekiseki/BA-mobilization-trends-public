@@ -41,7 +41,7 @@ season,startTime,endTime,type,teran,armorType,3nd,4nd,prediction
 40,2025-11-04 11:00:00,2025-11-11 03:59:59,defense,Outdoor,ElasticArmor,최대 피해 제한,공격 시 추가 대미지
 41,2025-12-02 11:00:00,2025-12-09 03:59:59,escort,Indoor,HeavyArmor,"아방가르드군, 백귀야행 주는 대미지 증가","아방가르드군 이로운 효과 적용 시, 적 defense력 감소"
 42,2025-12-30 11:00:00,2026-01-06 03:59:59,breakthrough,Indoor,Unarmed,허수아비 회복 시 적에게 피해,"해로운 효과 적용 시, 보호막 해제"
-43,2026-01-27 11:00:00,2026-02-03 03:59:59,shooting,Street,ElasticArmor,마지막 박스캣 받는 대미지 감소,SR 무기 공격력 증가,true
+43,2026-01-27 11:00:00,2026-02-03 03:59:59,shooting,Street,ElasticArmor,마지막 박스캣 받는 대미지 감소,SR 무기 공격력 증가
 44,2026-03-03 11:00:00,2026-03-10 03:59:59,defense,Indoor,LightArmor,"이동속도 증가, 피격 시 넉백","사망 시, 주변에 대미지",true
 45,2026-03-31 11:00:00,2026-04-07 03:59:59,escort,Outdoor,ElasticArmor,"적을 쓰러뜨렸을 때 defense력 감소, 받는 대미지량 증가","적의 HP가 감소할 때, 다른 적의 HP 회복",true
 46,2026-04-28 11:00:00,2026-05-05 03:59:59,breakthrough,Outdoor,LightArmor,,,true

@@ -209,7 +209,8 @@ export interface Mission {
   Description: {
     Kr: string;
     Jp: string;
-    En: string
+    En: string;
+    Tw: string
   };
   MissionRewardParcelType: number[];
   MissionRewardParcelId: number[];

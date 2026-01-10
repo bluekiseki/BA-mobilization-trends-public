@@ -1,6 +1,7 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChartData } from '~/types/data';
+import { ClientOnly } from '../ClientOnly';
 
 export interface HeatmapChartProps {
   isLoading: boolean;
@@ -58,6 +59,8 @@ const HeatmapChart = ({
   if (!aggregatedChartData) return <p className='p-4'>{t('noDataMessage')}</p>;
 
   return (
+    <ClientOnly>
+      <Suspense>
     <PlotlyComponent
       data={[
         heatmapData,
@@ -84,6 +87,8 @@ const HeatmapChart = ({
       style={{ width: '100%', height: '90vh', maxHeight: '1300px', minHeight: `min(1300px, max(85vh, 45vw, 600px))`, }}
       useResizeHandler
     />
+    </Suspense>
+    </ClientOnly>
   );
 };
 

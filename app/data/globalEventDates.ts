@@ -18,6 +18,18 @@ export const globalEventDates: Record<number, { start: string; end: string }> = 
     848: { // Another placeholder event ID
         start: '2025-12-16T11:00',
         end: '2025-12-30T10:59'
+    },
+    10837: { // Another placeholder event ID
+        start: '2025-12-30T11:00',
+        end: '2026-01-06T10:59'
+    },
+    849: { // Another placeholder event ID
+        start: '2026-01-13T11:00',
+        end: '2026-01-27T10:59'
+    },
+    10838: { // Another placeholder event ID
+        start: '2026-01-27T11:00',
+        end: '2026-02-10T10:59'
     }
     // ... Add Global server dates for other events.
 };

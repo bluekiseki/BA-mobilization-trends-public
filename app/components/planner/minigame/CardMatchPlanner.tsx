@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { ChevronIcon } from '~/components/Icon';
 import { getItemSortPriority } from '~/utils/itemSort';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
-import { number } from 'zod';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
 
 // ----------------------------------------------------------------------

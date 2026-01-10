@@ -4,10 +4,13 @@ import tailwindcss from "@tailwindcss/vite";
 import vitePluginObfuscator from "./plugin/vite-plugin-obfuscator";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { domain, vercelDomain } from './app/data/livedataServer.json'
+import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig(({ isSsrBuild }) => ({
-  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(),
-    !isSsrBuild && vitePluginObfuscator({
+  plugins: [cloudflare({ viteEnvironment: { name: "ssr" } }), // for cloudflare
+  tailwindcss(), reactRouter(), tsconfigPaths(),
+  !isSsrBuild && vitePluginObfuscator({
     obfuscatorOptions: {
       compact: true,
       controlFlowFlattening: false,
@@ -22,7 +25,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       selfDefending: true,
       simplify: true,
       splitStrings: false, // plotly.js error when enabled
-      stringArray: true,
+      stringArray: true, // False -> This increases the build code by 28%
       stringArrayCallsTransform: false,
       stringArrayEncoding: [],
       stringArrayIndexShift: true,
@@ -38,7 +41,6 @@ export default defineConfig(({ isSsrBuild }) => ({
   })
 
   ],
-  // include: ['react-helmet-async'],
   ssr: {
     noExternal: ['posthog-js', '@posthog/react']
   },
@@ -47,7 +49,8 @@ export default defineConfig(({ isSsrBuild }) => ({
     rollupOptions: isSsrBuild
       ? // For server (isSrBuild = true):
       {
-        input: './server/app.ts',
+        // input: './server/app.ts', // for Vercel
+        input: './worker/app.ts', // for cloudflare worker
       }
       : // For client (isSrBuild = false):
       {
@@ -59,6 +62,11 @@ export default defineConfig(({ isSsrBuild }) => ({
       },
   }, define: {
     // 'global': 'window', // not work for web worker
-  }
+  },
+  server: {
+    allowedHosts: [
+      domain, vercelDomain
+    ],
+  },
 
 }));

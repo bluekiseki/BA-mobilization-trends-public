@@ -7,8 +7,8 @@ import { StudentGrowthSummaryCard } from '~/components/planner/StudentGrowth/Stu
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
-import iconDataInfoModule from "~/data/event/icon_info.json"
-import iconDataAllModule from "~/data/event/icon_img.json"
+// import iconDataInfoModule from "~/data/event/icon_info.json"
+// import iconDataAllModule from "~/data/event/icon_img.json"
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { data, Link, type LoaderFunctionArgs } from 'react-router';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
@@ -48,8 +48,10 @@ export const StudentPlannerPage = () => {
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   // const [iconData, setIconData] = useState<IconData | null>(null);
   // const [iconInfoData, setIconInfoData] = useState<EventData["icons"] | null>(null);
-  const iconInfoData = iconDataInfoModule as any as EventData["icons"]
-  const iconData = iconDataAllModule as IconData
+  // const iconInfoData = iconDataInfoModule as any as EventData["icons"]
+  // const iconData = iconDataAllModule as IconData
+  const [iconData, setIconData] = useState<IconData>({});
+  const [iconInfoData, setIconInfoData] = useState<EventData["icons"]>({} as any);
   const [loading, setLoading] = useState(true);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
@@ -63,12 +65,16 @@ export const StudentPlannerPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentsRes, portraitsRes] = await Promise.all([
+        const [studentsRes, portraitsRes, iconImgRes, iconInfoRes] = await Promise.all([
           fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)),
           fetch(cdn('/w/students_portrait.json')),
+          fetch(cdn(`/ew/icon_img.json`)),
+          fetch(cdn(`/ew/icon_info.json`)),
         ]);
         setAllStudents(await studentsRes.json());
         setStudentPortraits(await portraitsRes.json());
+        setIconData(await iconImgRes.json());
+        setIconInfoData(await iconInfoRes.json())
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
       } finally {

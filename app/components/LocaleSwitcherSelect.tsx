@@ -18,9 +18,11 @@ const BLACKLISTED_PATHS = ["/source"];
 
 export function changePathLanguage(currentLocale: Locale, newLocale: Locale, pathname: string) {
   let basePath = pathname;
+  // console.log('[changePathLanguage], basePath', basePath)
   if (currentLocale && pathname.startsWith(`/${currentLocale}`)) {
-    basePath = pathname.replace(`/${currentLocale}`, "");
+    basePath = pathname.replace(`/${currentLocale.replace(/\-/gi, '\-')}`, "");
   }
+  // console.log('[changePathLanguage], 2 basePath', basePath)
   // e.g., '/ko' -> '/' (root path must be '/' not an empty string)
   if (basePath === "") {
     basePath = "/";
@@ -30,7 +32,6 @@ export function changePathLanguage(currentLocale: Locale, newLocale: Locale, pat
   const isBlacklisted = BLACKLISTED_PATHS.some((path) =>
     basePath.startsWith(path)
   );
-
   let newPath;
 
   if (isBlacklisted) {
@@ -116,8 +117,8 @@ export default function LocaleSwitcherSelect({ defaultValue, items, label }: Loc
                 key={item.value}
                 onClick={() => handleItemClick(item)}
                 className={`${selectedItem.value === item.value
-                    ? 'font-semibold bg-neutral-100 dark:bg-neutral-600 text-neutral-900 dark:text-white'
-                    : 'text-neutral-700 dark:text-neutral-300'
+                  ? 'font-semibold bg-neutral-100 dark:bg-neutral-600 text-neutral-900 dark:text-white'
+                  : 'text-neutral-700 dark:text-neutral-300'
                   } block w-full text-left px-4 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-600 hover:text-neutral-900 dark:hover:text-white transition-colors duration-150`}
                 role="menuitem"
               >

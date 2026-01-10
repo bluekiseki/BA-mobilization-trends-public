@@ -453,3 +453,7 @@ studentId,name,startTime,endTime,rerun,limited,fast,prediction
 10033,Wakamo,2025-12-31 11:00,2026-01-07 10:59,true,true,false
 10045,Hoshino (Swimsuit),2025-12-31 11:00,2026-01-07 10:59,true,true,false
 10059,Mika,2025-12-31 11:00,2026-01-07 10:59,true,true,false
+20039,Kisaki,2026-01-07 11:00,2026-01-20 10:59,false,false,false
+10104,Reijo,2026-01-07 11:00,2026-01-20 10:59,false,false,false
+10053,Yuuka (Sportswear),2026-01-07 11:00,2026-01-20 10:59,true,true,false
+10054,Mari (Sportswear),2026-01-07 11:00,2026-01-20 10:59,true,true,false

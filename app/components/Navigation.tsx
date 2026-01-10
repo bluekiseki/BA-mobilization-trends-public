@@ -54,6 +54,8 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
     // const {t} = useTranslation('layout-nav');
     const { t, i18n } = useTranslation("navigation");
     const locale = i18n.language as Locale
+
+    // console.log('Navigation', locale, t('home'))
     const [bannerData, setBannerData] = useState<{
         type: 'mismatch' | 'unsupported'
         displayLocale: Locale // Banner text language
@@ -125,7 +127,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
 
         const browserPrefs = [
             ...new Set(navigator.languages.map((l) => {
-                // if (['zh-TW', 'zh-HK', 'zh-MO', 'zh-hant', 'zh'].includes(l)) return 'zh-Hant' // TODO
+                if (['zh-TW', 'zh-HK', 'zh-MO', 'zh-hant', 'zh'].includes(l)) return 'zh-Hant' // TODO
                 return l.split('-')[0]
             })),
         ] as Locale[]
@@ -260,6 +262,8 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                     {navLinks.map((link) => {
                         const isActive = link.regex.test(pathname);
                         const visibilityClass = getVisibilityClass(link);
+
+                        // console.log('link.label, t(link.label as any', locale,  link.label, '->', t(link.label as any), )
 
                         return (
                             <Link

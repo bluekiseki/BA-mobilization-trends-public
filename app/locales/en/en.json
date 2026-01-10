@@ -299,6 +299,21 @@
       "copy": "Copy",
       "copied": "Copied!",
       "dateRange": "Date Range"
+    },
+    "composition": {
+      "mode_team": "Team",
+      "mode_report": "Report",
+      "total_parties": "Total Parties",
+      "full_party_only": "Full(6) Only",
+      "specific_team": "Specific Team",
+      "from_start": "From Start",
+      "from_end": "From End",
+      "usage_count": "{{counts}} uses",
+      "click_to_collapse": "Click to collapse",
+      "click_for_details": "Click for details",
+      "load_more": "Load More",
+      "placement_variants": "Placement Order Variants",
+      "mulligan_variants": "Starting Hand Variants"
     }
   },
   "dashboardIndex": {

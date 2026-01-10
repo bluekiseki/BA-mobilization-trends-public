@@ -13,7 +13,6 @@ import { EquipmentTab } from './EquipmentTab';
 import { PotentialTab } from './PotentialTab';
 import { AffectionTab, HighFlowerBouquetItemIds, LowFlowerBouquetItemIds } from './FaverTab';
 import StudentSearchDropdown from '~/components/StudentSearchDropdown';
-import { boolean } from 'zod';
 
 interface StudentGrowthPlanCardProps {
     plan: GrowthPlan;

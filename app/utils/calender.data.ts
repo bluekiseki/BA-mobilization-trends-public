@@ -44,6 +44,7 @@ const KR_RAID_SEASON_EXIST_START = 15
 function convTitleLnag(locale: Locale) {
   if (locale == 'en') return 'titleEn'
   else if (locale == 'ko') return 'titleKo'
+  else if (locale == 'zh-Hant') return 'titleTw'
   else return 'titleJa'
 }
 

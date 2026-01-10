@@ -295,6 +295,21 @@
       "copy": "복사",
       "copied": "복사됨!",
       "dateRange": "기간"
+    },
+    "composition": {
+      "mode_team": "팀",
+      "mode_report": "리포트",
+      "total_parties": "부대 투입 수",
+      "full_party_only": "모든 자리에 편성된 팀만",
+      "specific_team": "특정 순서의 팀",
+      "from_start": "앞에서부터",
+      "from_end": "뒤에서부터",
+      "usage_count": "{{counts}} 회",
+      "click_to_collapse": "접기",
+      "click_for_details": "상세 정보",
+      "load_more": "더 보기",
+      "placement_variants": "배치 순서 통계",
+      "mulligan_variants": "첫 패(손패) 통계"
     }
   },
   "dashboardIndex": {
@@ -348,7 +363,7 @@
     "change": "증감",
     "emblemSummary": "총 {{counts}}건, 설졍률: {{rate}}%"
   },
- "language_banner": {
+  "language_banner": {
     "message": "{{language}}를 사용하시는 것 같습니다. 언어를 변경하시겠습니까?",
     "switch_button": "{{language}}로 변경",
     "dismiss_button": "닫기",

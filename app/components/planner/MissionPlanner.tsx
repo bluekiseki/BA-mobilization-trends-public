@@ -24,7 +24,7 @@ type MissionType = 'DailyMission' | 'Achievement';
 const formatMissionDescription = (mission: Mission, allStages: (Stage & { type: string })[], locale: Locale): string => {
 
 
-    let desc = locale == 'ko' ? mission.Description.Kr :locale == 'ja' ? mission.Description.Jp : mission.Description.En || mission.Description.Jp;
+    let desc = locale == 'ko' ? mission.Description.Kr :locale == 'ja' ? mission.Description.Jp : locale == 'en' ?mission.Description.En : mission.Description.Tw || mission.Description.Jp;
 
     desc = desc.replace('{2}', mission.CompleteConditionCount.toString());
 
