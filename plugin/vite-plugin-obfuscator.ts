@@ -33,10 +33,7 @@ export default function vitePluginObfuscator(options?: VitePluginObfuscatorOptio
             console.log(`[vite-plugin-obfuscator] Obfuscating: ${fileName}`);
 
             try {
-              const obfuscationResult = JavaScriptObfuscator.obfuscate(
-                file.code,
-                obfuscatorOptions
-              );
+              const obfuscationResult = JavaScriptObfuscator.obfuscate(file.code, obfuscatorOptions);
 
               // Update
               file.code = obfuscationResult.getObfuscatedCode();
@@ -45,7 +42,6 @@ export default function vitePluginObfuscator(options?: VitePluginObfuscatorOptio
               if (obfuscationResult.getSourceMap()) {
                 file.map = JSON.parse(obfuscationResult.getSourceMap());
               }
-
             } catch (error) {
               this.warn(`[vite-plugin-obfuscator] Failed to obfuscate ${fileName}: ${error}`);
             }

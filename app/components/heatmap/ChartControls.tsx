@@ -1,14 +1,15 @@
+// app/components/heatmap/ChartControls.tsx
+
 import { useState, memo, useCallback } from 'react';
 import StudentSearchDropdown from '../StudentSearchDropdown';
 import { StarRating } from '../StarRatingProps';
-import { useChartControlsStore } from '../../store/chartControlsStore'
+import { useChartControlsStore } from '../../store/chartControlsStore';
 import { useShallow } from 'zustand/react/shallow';
 import TooltipSlider from '../HandleTooltip';
 import 'rc-slider/assets/index.css';
 import { raidToString, raidToStringTsx } from '../raidToString';
 import lodash from 'lodash';
-const { debounce } = lodash
-
+const { debounce } = lodash;
 
 import React from 'react';
 import { ToggleButtonGroup } from '../ToggleButtonGroupProps';
@@ -17,16 +18,20 @@ import { useTranslation } from 'react-i18next';
 import { difficultyInfo, type DifficultySelect } from '../Difficulty';
 import type { Locale } from '~/utils/i18n/config';
 
-
 interface ChartControlsProps {
   students: Record<number, Student>;
 }
 
-const SliderComponent = ({ fullXRange, labelMap, xRange, setXRange }: {
-  fullXRange: [number, number],
-  labelMap: Record<number, React.ReactNode>,
-  xRange: [number, number],
-  setXRange: (range: [number, number]) => void
+const SliderComponent = ({
+  fullXRange,
+  labelMap,
+  xRange,
+  setXRange,
+}: {
+  fullXRange: [number, number];
+  labelMap: Record<number, React.ReactNode>;
+  xRange: [number, number];
+  setXRange: (range: [number, number]) => void;
 }) => {
   const handleSliderChange = useCallback(
     debounce((value: number | number[]) => {
@@ -34,7 +39,7 @@ const SliderComponent = ({ fullXRange, labelMap, xRange, setXRange }: {
         setXRange([value[0], value[1]]);
       }
     }, 300), // Run in 300ms
-    [setXRange]
+    [setXRange],
   );
 
   return (
@@ -51,13 +56,12 @@ const SliderComponent = ({ fullXRange, labelMap, xRange, setXRange }: {
   );
 };
 
-
-const ChartControls = ({
-  students,
-}: ChartControlsProps) => {
-  const { t, i18n } = useTranslation("charts", { keyPrefix: 'heatmap.control' });
-  const { t: t_raids } = useTranslation("raidInfo");
-  const locale = i18n.language as Locale
+const ChartControls = ({ students }: ChartControlsProps) => {
+  const { t, i18n } = useTranslation('charts', {
+    keyPrefix: 'heatmap.control',
+  });
+  const { t: t_raids } = useTranslation('raidInfo');
+  const locale = i18n.language as Locale;
 
   const {
     selectedStudentId,
@@ -80,57 +84,56 @@ const ChartControls = ({
     difficulty,
     setDifficulty,
     getFilteredRaidInfoByDifficulty,
-  } = useChartControlsStore(useShallow(state => ({
-    selectedStudentId: state.selectedStudentId,
-    setSelectedStudentId: state.setSelectedStudentId,
-    setRankWidth: state.setRankWidth,
-    rankwidth: state.rankWidth,
-    selectedZValues: state.selectedZValues,
-    handleZSelectionChange: state.handleZSelectionChange,
-    setSelectedZValues: state.setSelectedZValues,
-    heatmapMode: state.heatmapMode,
-    setHeatmapMode: state.setHeatmapMode,
-    histogramMode: state.histogramMode,
-    setHistogramMode: state.setHistogramMode,
-    hideXThreshold: state.hideXThreshold,
-    setHideXThreshold: state.setHideXThreshold,
-    xRange: state.xRange,
-    setXRange: state.setXRange,
-    fullXRange: state.fullXRange,
-    availableZValueCounter: state.availableZValueCounter,
-    difficulty: state.difficulty,
-    setDifficulty: state.setDifficulty,
-    getFilteredRaidInfoByDifficulty: state.getFilteredRaidInfoByDifficulty
-  })));
+  } = useChartControlsStore(
+    useShallow((state) => ({
+      selectedStudentId: state.selectedStudentId,
+      setSelectedStudentId: state.setSelectedStudentId,
+      setRankWidth: state.setRankWidth,
+      rankwidth: state.rankWidth,
+      selectedZValues: state.selectedZValues,
+      handleZSelectionChange: state.handleZSelectionChange,
+      setSelectedZValues: state.setSelectedZValues,
+      heatmapMode: state.heatmapMode,
+      setHeatmapMode: state.setHeatmapMode,
+      histogramMode: state.histogramMode,
+      setHistogramMode: state.setHistogramMode,
+      hideXThreshold: state.hideXThreshold,
+      setHideXThreshold: state.setHideXThreshold,
+      xRange: state.xRange,
+      setXRange: state.setXRange,
+      fullXRange: state.fullXRange,
+      availableZValueCounter: state.availableZValueCounter,
+      difficulty: state.difficulty,
+      setDifficulty: state.setDifficulty,
+      getFilteredRaidInfoByDifficulty: state.getFilteredRaidInfoByDifficulty,
+    })),
+  );
 
   const [tempRankWidth, setTempRankWidth] = useState<number>(rankwidth);
-  const xLabels = getFilteredRaidInfoByDifficulty()
+  const xLabels = getFilteredRaidInfoByDifficulty();
 
-  const labelMap: Record<number, React.ReactNode> = xLabels.reduce((map, raid, index) => {
-    map[index] = raidToString(raid, locale, true);
-    return map;
-  }, {} as Record<number, React.ReactNode>);
+  const labelMap: Record<number, React.ReactNode> = xLabels.reduce(
+    (map, raid, index) => {
+      map[index] = raidToString(raid, locale, true);
+      return map;
+    },
+    {} as Record<number, React.ReactNode>,
+  );
 
   const handleSelectAllZValues = () => {
     setSelectedZValues(Array.from(availableZValueCounter.keys()));
   };
 
-
   const handleDeselectAllZValues = () => {
     setSelectedZValues([]);
   };
-
 
   return (
     <>
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
       {/* Student Search - Full Width */}
       <div className="mb-2">
-        <StudentSearchDropdown
-          students={students}
-          selectedStudentId={selectedStudentId}
-          setSelectedStudentId={setSelectedStudentId}
-        />
+        <StudentSearchDropdown students={students} selectedStudentId={selectedStudentId} setSelectedStudentId={setSelectedStudentId} />
       </div>
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
 
@@ -165,14 +168,14 @@ const ChartControls = ({
                   type="number"
                   min={1}
                   value={tempRankWidth}
-                  onChange={e => Number(e.target.value) && setTempRankWidth(Number(e.target.value))}
+                  onChange={(e) => Number(e.target.value) && setTempRankWidth(Number(e.target.value))}
                   className="w-16 px-1 py-0.5 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white border rounded-l-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-colors duration-300"
                 />
                 <button
                   onClick={() => setRankWidth(tempRankWidth)}
                   className="px-3 py-1 bg-bluearchive-botton-blue  hover:bg-sky-400  transition-colors  w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold" // dark:hover:bg-sky-500 dark:text-white dark:bg-sky-600
                 >
-                  {(t('setButton'))}
+                  {t('setButton')}
                 </button>
               </div>
             </div>
@@ -183,20 +186,21 @@ const ChartControls = ({
                   type="number"
                   min={1}
                   value={hideXThreshold}
-                  onChange={e => setHideXThreshold(Number(e.target.value))}
+                  onChange={(e) => setHideXThreshold(Number(e.target.value))}
                   className="w-16  px-1 py-0.5 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white border rounded-l-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-colors duration-300"
                 />
                 <button
                   onClick={() => setHideXThreshold(hideXThreshold)}
                   className="px-3 py-1.5 bg-bluearchive-botton-blue  hover:bg-sky-400  transition-colors  w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold" // dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white
                 >
-                  {(t('setButton'))}
+                  {t('setButton')}
                 </button>
               </div>
             </div>
             <div className="flex justify-between items-center">
-
-              <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('difficulty')}</label>
+              <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                {t('difficulty')}
+              </label>
               <select
                 id="squad-type-select"
                 value={difficulty}
@@ -204,9 +208,12 @@ const ChartControls = ({
                 className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
               >
                 <option value="All">{t_raids('All')}</option>
-                {difficultyInfo.map(({ name }) => <option value={name} key={name}>{t_raids(name)}</option>)}
+                {difficultyInfo.map(({ name }) => (
+                  <option value={name} key={name}>
+                    {t_raids(name)}
+                  </option>
+                ))}
               </select>
-
             </div>
           </div>
         </div>
@@ -232,22 +239,28 @@ const ChartControls = ({
             {Array.from(availableZValueCounter.keys())
               .sort((a, b) => a - b)
               .sort((a, b) => {
-                const f = (x: number) => x >= 0 ? x : 10000 + -x
-                return f(a) - f(b)
+                const f = (x: number) => (x >= 0 ? x : 10000 + -x);
+                return f(a) - f(b);
               })
-              .map(z => {
+              .map((z) => {
                 const isSelected = selectedZValues.has(z);
                 return (
                   <button
                     key={z}
                     onClick={() => handleZSelectionChange(z)}
                     className={`flex place-items-center rounded-md h-6 border transition-all duration-200 px-0.5
-                    ${isSelected
+                    ${
+                      isSelected
                         ? 'bg-white border-neutral-600 shadow-inner dark:bg-neutral-700 dark:border-neutral-400 dark:shadow-none'
                         : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-600 dark:hover:bg-neutral-700'
-                      }`}
+                    }`}
                   >
-                    <StarRating n={z} /> <span className='flex items-center relative pl-1 text-xs text-neutral-600 dark:text-neutral-400'> {availableZValueCounter.get(z)?.toLocaleString()}{t('filterByStars.count')}</span>
+                    <StarRating n={z} />{' '}
+                    <span className="flex items-center relative pl-1 text-xs text-neutral-600 dark:text-neutral-400">
+                      {' '}
+                      {availableZValueCounter.get(z)?.toLocaleString()}
+                      {t('filterByStars.count')}
+                    </span>
                   </button>
                 );
               })}
@@ -258,9 +271,8 @@ const ChartControls = ({
         <div>
           <h3 className="font-semibold text-neutral-800 dark:text-white mb-2 transition-colors duration-300">{t('raidRange.title')}</h3>
           <div className="w-full text-center text-sm text-neutral-700 dark:text-neutral-400 mb-2 transition-colors duration-300 flex flex-col sm:flex-row justify-center">
-            <span><span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">
-              {xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}
-            </span>
+            <span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}</span>
               <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">
                 {/* <RaidNoWrapFormatter
                   raid={xLabels[Math.max(fullXRange[0], xRange[0])]}
@@ -270,25 +282,15 @@ const ChartControls = ({
             </span>
             <span className="mx-2 font-medium">—</span>
             <span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">
-                {xLabels[Math.min(fullXRange[1], xRange[1])]?.Id}
-              </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">
-                {raidToStringTsx(xLabels[Math.min(fullXRange[1], xRange[1])], locale, true)}
-              </span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.min(fullXRange[1], xRange[1])]?.Id}</span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.min(fullXRange[1], xRange[1])], locale, true)}</span>
             </span>
           </div>
-          <SliderComponent
-            fullXRange={fullXRange}
-            labelMap={labelMap}
-            xRange={xRange}
-            setXRange={setXRange}
-          />
+          <SliderComponent fullXRange={fullXRange} labelMap={labelMap} xRange={xRange} setXRange={setXRange} />
           <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
         </div>
       </div>
     </>
-
   );
 };
 

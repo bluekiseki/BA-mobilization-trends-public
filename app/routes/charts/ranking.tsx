@@ -21,7 +21,6 @@ import { PlayIcon, StopIcon } from '~/components/Icon';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 
-
 interface RawRatingData {
   [key: string]: number; // e.g., "6|10074|6": 1024
 }
@@ -30,46 +29,40 @@ export interface RatingData {
   rank: number;
   id: number;
   name: string;
-  bullettype: Student['BulletType']
+  bullettype: Student['BulletType'];
   total: number;
   count: number;
-  portrait: Student['Portrait']
+  portrait: Student['Portrait'];
   ratings: {
     [key: string]: number;
   };
 }
 
-
 export async function loader({ context, params, request }: LoaderFunctionArgs) {
-
   const { server } = params;
   if (!server || !GAMESERVER_LIST.includes(server as GameServer)) {
-    throw new Response("Not Found", { status: 404 });
+    throw new Response('Not Found', { status: 404 });
   }
-  const g_server = server as GameServer
+  const g_server = server as GameServer;
   let i18n = getInstance(context);
   return {
-    siteTitle: i18n.t("home:title"),
-    title: i18n.t("navigation:ranking"),
-    description: i18n.t("charts:ranking.description1"),
-    server: g_server
+    siteTitle: i18n.t('home:title'),
+    title: i18n.t('navigation:ranking'),
+    description: i18n.t('charts:ranking.description1'),
+    server: g_server,
   };
 }
 
-
 export const links: Route.LinksFunction = () => {
   return [
-
     {
-      rel: "preload",
+      rel: 'preload',
       href: cdn(`/w/students_portrait.json`),
-      crossOrigin: "anonymous",
-      as: "fetch"
+      crossOrigin: 'anonymous',
+      as: 'fetch',
     },
-  ]
+  ];
 };
-
-
 
 // export const meta: MetaFunction<typeof rootLorder, {
 //   "root": typeof rootLorder,
@@ -87,12 +80,7 @@ export const links: Route.LinksFunction = () => {
 //   const t_ranking = i18n.getFixedT(locale, undefined, 'charts.heatmap');
 
 export function meta({ loaderData }: Route.MetaArgs) {
-
-  return createMetaDescriptor(
-    loaderData.title + ' | ' + loaderData.siteTitle,
-    loaderData.description,
-    "/img/1.webp"
-  )
+  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/1.webp');
 }
 
 export const handle: AppHandle = {
@@ -100,16 +88,16 @@ export const handle: AppHandle = {
     // Create a link dynamically using the return value (data) of the root loader
     const pathname = useLocation().pathname;
     const match = pathname.match(/\/charts\/([a-zA-Z]{2})\//);
-    if (!match || !GAMESERVER_LIST.includes(match[1] as GameServer)) return []
-    const server = match[1] as GameServer
+    if (!match || !GAMESERVER_LIST.includes(match[1] as GameServer)) return [];
+    const server = match[1] as GameServer;
     if (!data?.locale) return [];
 
     return [
       {
-        rel: "preload",
+        rel: 'preload',
         href: cdn(`/w/${server}/play_rate_rank.bin`),
-        crossOrigin: "anonymous",
-        as: "fetch"
+        crossOrigin: 'anonymous',
+        as: 'fetch',
       },
       {
         rel: 'preload',
@@ -123,11 +111,10 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
-      ...createLinkHreflang(`/charts/${server}/ranking`)
+      ...createLinkHreflang(`/charts/${server}/ranking`),
     ];
   },
 };
-
 
 export default function RankingChartPage() {
   const [isRelativeMode, setIsRelativeMode] = useState<boolean>(false);
@@ -143,15 +130,15 @@ export default function RankingChartPage() {
   const [allStudents, setAllStudents] = useState<Record<string, Student>>({});
   const [raidInfo, setraidInfo] = useState<RaidInfo[]>([]);
   const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 102]); // Stores [min, max] range
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultySelect>("All"); // Stores [min, max] range
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultySelect>('All'); // Stores [min, max] range
   const [isPlaying, setIsPlaying] = useState(false);
   const currentLocale = useTranslation().i18n.language as Locale;
-  const { t, i18n } = useTranslation("charts", { keyPrefix: 'ranking' });
-  const { t: t_raids } = useTranslation("raidInfo");
-  const locale = i18n.language as Locale
+  const { t, i18n } = useTranslation('charts', { keyPrefix: 'ranking' });
+  const { t: t_raids } = useTranslation('raidInfo');
+  const locale = i18n.language as Locale;
 
   const { server } = useParams<GameServerParams>();
-  if (!server) return <></>
+  if (!server) return <></>;
 
   // Create a ref for the SVG container
   const containerRef = useRef<HTMLDivElement>(null);
@@ -187,21 +174,22 @@ export default function RankingChartPage() {
     const fetchDataAndStudents = async () => {
       try {
         const [ratings, students, raids] = await Promise.all([
-          fetchData(cdn(`/w/${server}/play_rate_rank.bin`), res => res.json() as Promise<RawRatingData>),
-          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), res => res.json() as Promise<Record<string, Student>>),
-          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), res => res.json() as Promise<RaidInfo[]>),
+          fetchData(cdn(`/w/${server}/play_rate_rank.bin`), (res) => res.json() as Promise<RawRatingData>),
+          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as Promise<Record<string, Student>>),
+          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as Promise<RaidInfo[]>),
         ]);
 
         setAllStudents(students);
 
         await (async () => {
-          const students_portrait = await fetch(cdn('/w/students_portrait.json')).then(res => res.json()) as { [key: number]: string }
+          const students_portrait = (await fetch(cdn('/w/students_portrait.json')).then((res) => res.json())) as {
+            [key: number]: string;
+          };
           Object.entries(students).map(([studentId, student]) => {
-            student.Portrait = students_portrait[parseInt(studentId)]
-          })
-          setAllStudents(students)
+            student.Portrait = students_portrait[parseInt(studentId)];
+          });
+          setAllStudents(students);
         })();
-
 
         const nameMap: Record<number, Student> = {};
         for (const key in students) {
@@ -214,10 +202,9 @@ export default function RankingChartPage() {
         setStudentMap(nameMap);
         setRawRatingData(ratings);
         setraidInfo(raids);
-        setSelectedRaidIds([0, raids.length - 1])
-
+        setSelectedRaidIds([0, raids.length - 1]);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -225,19 +212,19 @@ export default function RankingChartPage() {
     fetchDataAndStudents();
   }, [fetchData, fetchStudents, fetchRaids, currentLocale, server]);
 
-
   const processedData = useMemo(() => {
     if (Object.keys(rawRatingData).length === 0 || Object.keys(allStudents).length === 0) return [];
 
     // Filter students based on selected SquadType and TacticRole
-    const filteredStudentIds = Object.keys(allStudents).filter(studentId => {
-      const student = allStudents[studentId];
-      const squadTypeMatch = selectedSquadType === 'All' || student.SquadType === selectedSquadType;
-      const tacticRoleMatch = selectedTacticRole === 'All' || student.TacticRole === selectedTacticRole;
+    const filteredStudentIds = Object.keys(allStudents)
+      .filter((studentId) => {
+        const student = allStudents[studentId];
+        const squadTypeMatch = selectedSquadType === 'All' || student.SquadType === selectedSquadType;
+        const tacticRoleMatch = selectedTacticRole === 'All' || student.TacticRole === selectedTacticRole;
 
-
-      return squadTypeMatch && tacticRoleMatch;
-    }).map(id => parseInt(id, 10));
+        return squadTypeMatch && tacticRoleMatch;
+      })
+      .map((id) => parseInt(id, 10));
 
     // Process only the filtered students' data
     const studentTotals: Record<number, number> = {};
@@ -245,7 +232,7 @@ export default function RankingChartPage() {
 
     const [startId, endId] = selectedRaidIds;
 
-    const displayValue = displayMode === 'average'
+    const displayValue = displayMode === 'average';
 
     for (const key in rawRatingData) {
       const [raidStr, studentStr, rankStr, difficultyIndex] = key.split('|');
@@ -253,25 +240,21 @@ export default function RankingChartPage() {
       const rank = parseInt(rankStr, 10);
       let count = rawRatingData[key];
       const raidIdNum = parseInt(raidStr, 10);
-      const difficulty = difficultyInfo[parseInt(difficultyIndex)].name
+      const difficulty = difficultyInfo[parseInt(difficultyIndex)].name;
 
       if (displayValue) {
-        if (selectedDifficulty == 'All') count /= raidInfo[raidIdNum].Cnt.All
-        else count /= raidInfo[raidIdNum].Cnt[selectedDifficulty] || raidInfo[raidIdNum].Cnt.All
+        if (selectedDifficulty == 'All') count /= raidInfo[raidIdNum].Cnt.All;
+        else count /= raidInfo[raidIdNum].Cnt[selectedDifficulty] || raidInfo[raidIdNum].Cnt.All;
       }
 
-      if (selectedDifficulty != 'All' && selectedDifficulty != difficulty) continue
-
+      if (selectedDifficulty != 'All' && selectedDifficulty != difficulty) continue;
 
       // Filter by raid ID range
       const raidIdMatch = raidIdNum >= startId && raidIdNum <= endId;
 
-
       // Only process data for students that match the filter
       if (filteredStudentIds.includes(student) && raidIdMatch) {
-        const studentTypeMatch = selectedStudentType === 'All' ||
-          (selectedStudentType === 'Normal' && rank >= 0) ||
-          (selectedStudentType === 'Helper' && rank < 0);
+        const studentTypeMatch = selectedStudentType === 'All' || (selectedStudentType === 'Normal' && rank >= 0) || (selectedStudentType === 'Helper' && rank < 0);
         if (!studentTypeMatch) {
           continue;
         }
@@ -283,8 +266,7 @@ export default function RankingChartPage() {
       }
     }
 
-    const sortedStudents = Object.entries(studentTotals)
-      .sort(([, totalA], [, totalB]) => totalB - totalA);
+    const sortedStudents = Object.entries(studentTotals).sort(([, totalA], [, totalB]) => totalB - totalA);
 
     const formattedData: RatingData[] = sortedStudents.map(([studentIdStr, total], index) => {
       const studentId = parseInt(studentIdStr, 10);
@@ -301,21 +283,20 @@ export default function RankingChartPage() {
       };
     });
 
-    const maxTotal = Math.max(...formattedData.map(item => item.total));
+    const maxTotal = Math.max(...formattedData.map((item) => item.total));
 
-
-    return formattedData.map(item => {
+    return formattedData.map((item) => {
       let xOffset = 0;
       const processedRatings = Object.entries(item.ratings)
         .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
         .sort(([a], [b]) => {
-          const f = (x: number) => x >= 0 ? x : 10000 + -x
-          return f(parseInt(a, 10)) - f(parseInt(b, 10))
+          const f = (x: number) => (x >= 0 ? x : 10000 + -x);
+          return f(parseInt(a, 10)) - f(parseInt(b, 10));
         })
         .map(([key, value]) => {
           const width = isRelativeMode ? (value / item.total) * (svgWidth - 120) : (value / maxTotal) * (svgWidth - 120);
           const x = xOffset;
-          const percent = `${(value / item.total * 100).toFixed(2)}%`
+          const percent = `${((value / item.total) * 100).toFixed(2)}%`;
           xOffset += width;
           return {
             rating: parseInt(key),
@@ -323,7 +304,7 @@ export default function RankingChartPage() {
             width,
             x,
             percent,
-            label: isRelativeMode ? percent : (displayMode == 'average' ? value.toFixed(2) : value.toLocaleString()),
+            label: isRelativeMode ? percent : displayMode == 'average' ? value.toFixed(2) : value.toLocaleString(),
           };
         });
       return { ...item, processedRatings };
@@ -333,30 +314,36 @@ export default function RankingChartPage() {
   // Create marks for the slider
   // const raidIds = Object.keys(raidInfo).map(Number).filter(id => !isNaN(id));
 
-  const filteredRaidInfoByDifficulty = raidInfo.map((raid, index) => ({ ...raid, index })).filter(raid => {
-    if (selectedDifficulty == 'All') return true
-    return selectedDifficulty in raid.Cnt
-  })
+  const filteredRaidInfoByDifficulty = raidInfo
+    .map((raid, index) => ({ ...raid, index }))
+    .filter((raid) => {
+      if (selectedDifficulty == 'All') return true;
+      return selectedDifficulty in raid.Cnt;
+    });
 
-  const toFilteredRaidId = (origID: number,) => {
+  const toFilteredRaidId = (origID: number) => {
     for (let i = 0; i < filteredRaidInfoByDifficulty.length; i++) {
-      const raid = filteredRaidInfoByDifficulty[i]
-      if (raid.index >= origID) return i
+      const raid = filteredRaidInfoByDifficulty[i];
+      if (raid.index >= origID) return i;
     }
-    return filteredRaidInfoByDifficulty.length - 1
-  }
+    return filteredRaidInfoByDifficulty.length - 1;
+  };
 
-  const labelMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce((map, raid, index) => {
-    map[raid.index] = raidToString(raid, locale, true);
-    return map;
-  }, {} as Record<number, React.ReactNode>);
+  const labelMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce(
+    (map, raid, index) => {
+      map[raid.index] = raidToString(raid, locale, true);
+      return map;
+    },
+    {} as Record<number, React.ReactNode>,
+  );
 
-  const markMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce((map, raid, index) => {
-    map[raid.index] = ' ';
-    return map;
-  }, {} as Record<number, React.ReactNode>);
-
-
+  const markMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce(
+    (map, raid, index) => {
+      map[raid.index] = ' ';
+      return map;
+    },
+    {} as Record<number, React.ReactNode>,
+  );
 
   // animation
   useEffect(() => {
@@ -367,7 +354,7 @@ export default function RankingChartPage() {
     const maxIndex = filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length - 1].index;
 
     const interval = setInterval(() => {
-      setSelectedRaidIds(prevIds => {
+      setSelectedRaidIds((prevIds) => {
         if (prevIds[1] + 1 > maxIndex) {
           setIsPlaying(false);
           return prevIds;
@@ -388,7 +375,9 @@ export default function RankingChartPage() {
           <div className="w-full mx-auto p-4 sm:p-6 pt-0 sm:pt-0 bg-neutral-50 dark:bg-neutral-900  transition-colors duration-300">
             {/* header */}
             <div className="mb-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">{t('title')} ({server.toUpperCase()})</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">
+                {t('title')} ({server.toUpperCase()})
+              </h1>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">{t('description1')}</p>
             </div>
 
@@ -396,28 +385,36 @@ export default function RankingChartPage() {
 
             {/* Control groups: Configure reactive layouts using grids */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">
-
               {/* 1. Display Mode Section */}
               <div className="space-x-4">
                 <h3 className="text-base mb-2 font-semibold text-neutral-800 dark:text-white">{t('control.display_mode')}</h3>
-                <div className='flex flex-col sm:flex-row items-center gap-1'>
-                  <div className='flex justify-between items-center w-full px-1 '>
+                <div className="flex flex-col sm:flex-row items-center gap-1">
+                  <div className="flex justify-between items-center w-full px-1 ">
                     <ToggleButtonGroup
                       label={t('control.bar_option.name')}
                       options={[
                         { value: true, label: t('control.bar_option.percent') },
-                        { value: false, label: t('control.bar_option.absolute') },
+                        {
+                          value: false,
+                          label: t('control.bar_option.absolute'),
+                        },
                       ]}
                       selectedValue={isRelativeMode}
                       onSelect={(val) => setIsRelativeMode(val)}
                     />
                   </div>
-                  <div className='flex justify-between items-center w-full  px-1'>
+                  <div className="flex justify-between items-center w-full  px-1">
                     <ToggleButtonGroup
                       label={t('control.sum_option.name')}
                       options={[
-                        { value: 'total', label: t('control.sum_option.display_total') },
-                        { value: 'average', label: t('control.sum_option.display_average') },
+                        {
+                          value: 'total',
+                          label: t('control.sum_option.display_total'),
+                        },
+                        {
+                          value: 'average',
+                          label: t('control.sum_option.display_average'),
+                        },
                       ]}
                       selectedValue={displayMode}
                       onSelect={(val) => setDisplayMode(val as 'total' | 'average')}
@@ -431,7 +428,9 @@ export default function RankingChartPage() {
                 <h3 className="text-base font-semibold text-neutral-800 dark:text-white">{t('filters')}</h3>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-3 space-x-2">
                   <div className="flex items-center space-x-2 py-0.5">
-                    <label htmlFor="student-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.rank')}</label>
+                    <label htmlFor="student-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                      {t('control.rank')}
+                    </label>
                     <select
                       id="student-type-select"
                       value={selectedStudentType}
@@ -445,7 +444,9 @@ export default function RankingChartPage() {
                   </div>
 
                   <div className="flex items-center space-x-2 py-0.5">
-                    <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.squad_type')}</label>
+                    <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                      {t('control.squad_type')}
+                    </label>
                     <select
                       id="squad-type-select"
                       value={selectedSquadType}
@@ -459,25 +460,33 @@ export default function RankingChartPage() {
                   </div>
 
                   <div className="flex items-center space-x-2 py-0.5">
-                    <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.difficulty')}</label>
+                    <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                      {t('control.difficulty')}
+                    </label>
                     <select
                       id="squad-type-select"
                       value={selectedDifficulty}
                       onChange={(e) => {
-
-                        const difficultySelect = e.target.value as DifficultySelect
-                        setSelectedDifficulty(difficultySelect)
-
+                        const difficultySelect = e.target.value as DifficultySelect;
+                        setSelectedDifficulty(difficultySelect);
                       }}
                       className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                     >
                       <option value="All">{t('control.squad_type_all')}</option>
-                      {difficultyInfo.filter(v => v.name != 'Extreme').map(({ name }) => <option value={name} key={name}>{t_raids(name)}</option>)}
+                      {difficultyInfo
+                        .filter((v) => v.name != 'Extreme')
+                        .map(({ name }) => (
+                          <option value={name} key={name}>
+                            {t_raids(name)}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
                   <div className="flex items-center space-x-2 py-0.5">
-                    <label htmlFor="tactic-role-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.tactic_role')}</label>
+                    <label htmlFor="tactic-role-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                      {t('control.tactic_role')}
+                    </label>
                     <select
                       id="tactic-role-select"
                       value={selectedTacticRole}
@@ -501,9 +510,7 @@ export default function RankingChartPage() {
             {/* 3. Raid Period Setting Slider Section */}
             <div className="w-full">
               <div className="flex justify-center items-center gap-x-3 mb-2">
-                <h3 className="font-semibold text-neutral-800 dark:text-white select-none">
-                  {t('control.raid')}
-                </h3>
+                <h3 className="font-semibold text-neutral-800 dark:text-white select-none">{t('control.raid')}</h3>
                 <button
                   onClick={() => setIsPlaying(!isPlaying)}
                   disabled={!filteredRaidInfoByDifficulty.length || selectedRaidIds[1] >= filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length - 1].index}
@@ -512,25 +519,25 @@ export default function RankingChartPage() {
                   bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600
                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-neutral-900
 
-                  ${isPlaying
-                      // Stop:
-                      ? 'text-blue-600 dark:text-blue-400'
-                      // Play
-                      : 'text-neutral-600 dark:text-neutral-400'
-                    }
+                  ${
+                    isPlaying
+                      ? // Stop:
+                        'text-blue-600 dark:text-blue-400'
+                      : // Play
+                        'text-neutral-600 dark:text-neutral-400'
+                  }
                   disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed
                   dark:disabled:bg-neutral-800 dark:disabled:text-neutral-600
                 `}
-                  aria-label={isPlaying ? "Stop" : "Play"}
+                  aria-label={isPlaying ? 'Stop' : 'Play'}
                 >
-                  <span >
-                    {isPlaying ? <StopIcon /> : <PlayIcon />}
-                  </span>
+                  <span>{isPlaying ? <StopIcon /> : <PlayIcon />}</span>
                 </button>
               </div>
               <div className="px-2 select-none">
-
-                <style>.rc-slider-dot{'{'}display: none{'}'}</style>
+                <style>
+                  .rc-slider-dot{'{'}display: none{'}'}
+                </style>
                 <TooltipSlider
                   range
                   labelMap={labelMap}
@@ -544,16 +551,14 @@ export default function RankingChartPage() {
                   step={null}
                   onChange={(value) => {
                     if (Array.isArray(value)) {
-                      setSelectedRaidIds(value)
+                      setSelectedRaidIds(value);
                     }
                   }}
                 />
-
               </div>
               <div className="flex justify-between items-center text-xs sm:text-sm mt-3 text-neutral-600 dark:text-neutral-400">
-
-                {
-                  filteredRaidInfoByDifficulty.length ? <>
+                {filteredRaidInfoByDifficulty.length ? (
+                  <>
                     <div className="text-left flex flex-col sm:flex-row">
                       {/* <div className="font-bold text-blue-600 dark:text-blue-400 sm:inline">{raidInfo[selectedRaidIds[0]].Id}</div> */}
                       <div className="font-bold text-blue-600 dark:text-blue-400 sm:inline">{filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[0])].Id}</div>
@@ -562,17 +567,20 @@ export default function RankingChartPage() {
                     </div>
                     <div className="font-semibold text-neutral-800 dark:text-white px-2 whitespace-nowrap">
                       {/* {t('total_x', { 'x': selectedRaidIds[1] - selectedRaidIds[0] + 1 })} -  */}
-                      {t('total_x').replace(/{x}/, `${((from: number, to: number) => {
-                        if (!filteredRaidInfoByDifficulty.length) return 0
+                      {t('total_x').replace(
+                        /{x}/,
+                        `${((from: number, to: number) => {
+                          if (!filteredRaidInfoByDifficulty.length) return 0;
 
-                        const filteredMin = filteredRaidInfoByDifficulty[0].index
-                        if (from < filteredMin && to < filteredMin) return 0
+                          const filteredMin = filteredRaidInfoByDifficulty[0].index;
+                          if (from < filteredMin && to < filteredMin) return 0;
 
-                        const filteredMax = filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length - 1].index
-                        if (from > filteredMax && to > filteredMax) return 0
+                          const filteredMax = filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length - 1].index;
+                          if (from > filteredMax && to > filteredMax) return 0;
 
-                        return toFilteredRaidId(to) - toFilteredRaidId(from) + 1
-                      })(selectedRaidIds[0], selectedRaidIds[1])}`)}
+                          return toFilteredRaidId(to) - toFilteredRaidId(from) + 1;
+                        })(selectedRaidIds[0], selectedRaidIds[1])}`,
+                      )}
                       {/* {t('total_x')} */}
                     </div>
                     <div className="text-right flex flex-col sm:flex-row">
@@ -581,8 +589,10 @@ export default function RankingChartPage() {
                       {/* <div className="ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[Math.min(filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length-1].index, selectedRaidIds[1])], locale, true)}</div> */}
                       <div className="ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[1])], locale, true)}</div>
                     </div>
-                  </> : <> {t('total_x').replace(/{x}/, '0')}</>
-                }
+                  </>
+                ) : (
+                  <> {t('total_x').replace(/{x}/, '0')}</>
+                )}
               </div>
             </div>
           </div>
@@ -590,15 +600,9 @@ export default function RankingChartPage() {
 
         {/* Attach the ref to the container div */}
         <div className="w-full bg-white p-4 sm:p-6 rounded-lg shadow-xl overflow-x-auto dark:bg-neutral-800 dark:shadow-xl transition-colors duration-300 dark:text-neutral-300">
-          <RankingChart
-            svgWidth={svgWidth}
-            containerRef={containerRef}
-            processedData={processedData}
-            displayMode={displayMode}
-            isRelativeMode={isRelativeMode}
-          />
+          <RankingChart svgWidth={svgWidth} containerRef={containerRef} processedData={processedData} displayMode={displayMode} isRelativeMode={isRelativeMode} />
         </div>
       </div>
     </>
   );
-} 
+}

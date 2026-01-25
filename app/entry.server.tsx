@@ -75,24 +75,17 @@ export default function handleRequest(
 }
 */
 
-
 // for cloudflare worker
-import { isbot } from "isbot";
-import { renderToReadableStream } from "react-dom/server";
-import { I18nextProvider } from "react-i18next";
-import type { EntryContext, RouterContextProvider } from "react-router";
-import { ServerRouter } from "react-router";
-import { getInstance } from "./middleware/i18next";
+import { isbot } from 'isbot';
+import { renderToReadableStream } from 'react-dom/server';
+import { I18nextProvider } from 'react-i18next';
+import type { EntryContext, RouterContextProvider } from 'react-router';
+import { ServerRouter } from 'react-router';
+import { getInstance } from './middleware/i18next';
 
-export default async function handleRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  routerContext: EntryContext,
-  loadContext: RouterContextProvider,
-) {
+export default async function handleRequest(request: Request, responseStatusCode: number, responseHeaders: Headers, routerContext: EntryContext, loadContext: RouterContextProvider) {
   let shellRendered = false;
-  const userAgent = request.headers.get("user-agent");
+  const userAgent = request.headers.get('user-agent');
 
   const body = await renderToReadableStream(
     <I18nextProvider i18n={getInstance(loadContext)}>
@@ -118,10 +111,9 @@ export default async function handleRequest(
     await body.allReady;
   }
 
-  responseHeaders.set("Content-Type", "text/html");
+  responseHeaders.set('Content-Type', 'text/html');
   return new Response(body, {
     headers: responseHeaders,
     status: responseStatusCode,
   });
 }
-  

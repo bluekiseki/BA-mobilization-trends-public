@@ -6,22 +6,17 @@ interface NumberInputProps {
   onChange: (newValue: number) => void;
   min: number;
   max: number;
-  narrowButtonType?: "max" | 'plus'
+  narrowButtonType?: 'max' | 'plus';
   disabled?: boolean;
 }
 
-const useLongPress = (
-  onShortPress: () => void,
-  onLongPress: () => void,
-  disabled: boolean = false,
-  delay: number = 600
-) => {
+const useLongPress = (onShortPress: () => void, onLongPress: () => void, disabled: boolean = false, delay: number = 600) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressTriggered = useRef(false);
 
   const start = (e: React.SyntheticEvent) => {
     if (disabled) return;
-    // e.preventDefault(); 
+    // e.preventDefault();
 
     isLongPressTriggered.current = false;
     timeoutRef.current = setTimeout(() => {
@@ -37,7 +32,7 @@ const useLongPress = (
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
       if (!isLongPressTriggered.current) {
-        onShortPress();
+        // onShortPress();
       }
     }
   };
@@ -65,6 +60,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
   };
 
   const handleIncrement = () => {
+    // console.log('handleIncrement', e)
     if (disabled) return;
     const nextValue = value + 1;
     onChange(nextValue > max ? max : nextValue);
@@ -82,7 +78,6 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
     }
   };
 
-
   const handleSetMin = () => {
     if (disabled) return;
     onChange(min);
@@ -96,7 +91,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
   const minusButtonEvents = useLongPress(handleDecrement, handleSetMin, disabled || value <= min);
   const plusButtonEvents = useLongPress(handleIncrement, handleSetMax, disabled || value >= max);
 
-  const hiding_in_narrow_width_class = 'hidden sm:block'
+  const hiding_in_narrow_width_class = 'hidden sm:block';
 
   return (
     <div className="flex items-center w-full h-6 border border-gray-400 dark:border-neutral-600 bg-white dark:bg-neutral-700/50">
@@ -104,7 +99,10 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
       <button
         onClick={handleSetMin}
         disabled={disabled || value === min}
-        className={(narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') + " w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors"}
+        className={
+          (narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') +
+          ' w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors'
+        }
       >
         0
       </button>
@@ -113,7 +111,10 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         {...minusButtonEvents}
         onClick={handleDecrement}
         disabled={disabled || value <= min}
-        className={(narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') + "  w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-r border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500"}
+        className={
+          (narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') +
+          '  w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-r border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500'
+        }
       >
         -
       </button>
@@ -133,7 +134,10 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         {...plusButtonEvents}
         onClick={handleIncrement}
         disabled={disabled || value >= max}
-        className={(narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') + " w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-l border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500"}
+        className={
+          (narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') +
+          ' w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-l border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500'
+        }
       >
         +
       </button>
@@ -142,7 +146,10 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
       <button
         onClick={handleSetMax}
         disabled={disabled || value === max || max === Infinity}
-        className={(narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') + "w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors"}
+        className={
+          (narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') +
+          'w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors'
+        }
       >
         M
       </button>

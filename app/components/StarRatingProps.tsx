@@ -10,42 +10,49 @@ const styles = {
 };
 
 export function StarRating({ n }: StarRatingProps) {
-  const isassist = n <= 0
-  const assistStr = isassist ? <span
-    className="inline-flex items-center justify-center absolute top-0.5 left-3.5 text-black text-center font-bold"
-    style={
-      {
-        'fontSize': '7px',
-        'background': `linear-gradient(
+  const isassist = n <= 0;
+  const assistStr = isassist ? (
+    <span
+      className="inline-flex items-center justify-center absolute top-0.5 left-3.5 text-black text-center font-bold"
+      style={{
+        fontSize: '7px',
+        background: `linear-gradient(
           to bottom right,
           #a0e3fd 0 33.3%,
           #66d7fc 33.3% 80.0%,
           #a0e3fd 80.0% 100%
           )
         `,
-        'borderRadius': '2px',
-        'width': '7px',
-        'height': '10px',
-        'boxShadow': '0 0 0 0.5px #111  '
+        borderRadius: '2px',
+        width: '7px',
+        height: '10px',
+        boxShadow: '0 0 0 0.5px #111  ',
       }}
-  >A</span> : ''
-  const abs = (x: number) => x > 0 ? x : -x
-  n = abs(n)
+    >
+      A
+    </span>
+  ) : (
+    ''
+  );
+  const abs = (x: number) => (x > 0 ? x : -x);
+  n = abs(n);
 
   const starNode = ((n: number) => {
     if (n <= 5) {
-      return <StarIcon number={n} color='#f6e94b' height={20} />
+      return <StarIcon number={n} color="#f6e94b" height={20} />;
     } else if (n === 6) {
-      return <StarIcon number={''} color='#77e0ff' height={20} />
+      return <StarIcon number={''} color="#77e0ff" height={20} />;
     } else if (n <= 10) {
-
-      return <StarIcon number={n - 6} color='#77e0ff' height={20} />
+      return <StarIcon number={n - 6} color="#77e0ff" height={20} />;
     } else if (n === 11) {
       return <span style={styles.cyan}>(A)</span>;
     }
   })(n);
 
-  return <span className='flex items-center relative'>{starNode}{assistStr}</span>;
+  return (
+    <span className="flex items-center relative">
+      {starNode}
+      {assistStr}
+    </span>
+  );
 }
-
-

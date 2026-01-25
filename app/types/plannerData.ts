@@ -1,5 +1,5 @@
 // app/types/plannerData.ts
-import type { Student as StudentBase } from './data'
+import type { Student as StudentBase } from './data';
 // src/types/student.ts
 export interface Student extends StudentBase {
   PieceId?: any;
@@ -10,20 +10,19 @@ export interface Student extends StudentBase {
   // TacticRole: "DamageDealer" | "Healer" | "Supporter" | "Tanker" | "Vehicle";
   School: string;
   BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic';
-  PotentialMaterial: number
-  SkillExMaterial: number[][]
-  SkillExMaterialAmount: number[][]
-  SkillMaterial: number[][]
-  SkillMaterialAmount: number[][]
-  StarGrade: number
-  Skills: Skills
-  Equipment: ["Hat" | "Shoes" | "Gloves", "Hairpin" | "Bag" | "Badge", "Watch" | "Charm" | "Necklace:"]
-  FavorItemTags: string[]
-  FavorItemUniqueTags: string[]
+  PotentialMaterial: number;
+  SkillExMaterial: number[][];
+  SkillExMaterialAmount: number[][];
+  SkillMaterial: number[][];
+  SkillMaterialAmount: number[][];
+  StarGrade: number;
+  Skills: Skills;
+  Equipment: ['Hat' | 'Shoes' | 'Gloves', 'Hairpin' | 'Bag' | 'Badge', 'Watch' | 'Charm' | 'Necklace:'];
+  FavorItemTags: string[];
+  FavorItemUniqueTags: string[];
 }
 
 export type ImageMap = Record<string, string>;
-
 
 // Use Student ID as Key
 export type StudentData = Record<string, Student>;
@@ -39,11 +38,9 @@ interface ShopInfo {
   CostParcelId: number[];
 }
 
-
 // ===================================================================
 // Full structure of the event JSON file (event.xxx.json)
 // ===================================================================
-
 
 export interface EventData {
   season: EventSeason;
@@ -73,7 +70,7 @@ export interface EventData {
   fortune_gacha?: {
     shop: FortuneGachaShopItem[];
     modify: FortuneGachaModify[];
-  }
+  };
   total_reward?: TotalRewardItem[];
   dice_race?: {
     info: DiceRaceInfo[];
@@ -82,10 +79,10 @@ export interface EventData {
     race_node: DiceRaceNode[];
   };
   minigame_mission?: MinigameMission[];
-  minigame_dream?: MinigameDreamData
+  minigame_dream?: MinigameDreamData;
   minigame_ccg?: MinigameCCG;
-  concentration?: MinigameConcentration
-
+  concentration?: MinigameConcentration;
+  minigame_defense?: MinigameDefense;
 }
 
 export interface IconInfos {
@@ -102,8 +99,8 @@ interface EventSeason {
   Name: string;
   EventContentOpenTime: string;
   EventContentCloseTime: string;
-  ExtensionTime: string
-  EventContentTypeStr: string[]
+  ExtensionTime: string;
+  EventContentTypeStr: string[];
 }
 
 // Bonus information for each student
@@ -116,7 +113,7 @@ interface EventBonus {
 interface EventCurrency {
   ItemUniqueId: number;
   EventContentItemType: number;
-  UseShortCutContentType?: string
+  UseShortCutContentType?: string;
 }
 
 // Stage common structure
@@ -129,10 +126,9 @@ export interface Stage {
   BattleDuration: number;
   StageHintStr?: {
     DescriptionKr: string;
-    DescriptionJp: string
+    DescriptionJp: string;
     NameKr: string;
   };
-
 }
 
 // Stage compensation information
@@ -140,9 +136,8 @@ interface StageReward {
   RewardId: number;
   RewardAmount: number;
   RewardTagStr: string; // 'Event', 'Default', 'FirstClear_etc', etc.
-  RewardParcelTypeStr: string
-  RewardProb: number
-
+  RewardParcelTypeStr: string;
+  RewardProb: number;
 }
 
 // Shop Item Information
@@ -179,8 +174,8 @@ export interface IconInfo {
   Icon?: string;
   ItemCategory?: number;
   LocalizeEtc?: LocalizeEtc;
-  TagsStr: string[]
-  Rarity: number
+  TagsStr: string[];
+  Rarity: number;
 }
 
 export interface GachaElement {
@@ -210,24 +205,21 @@ export interface Mission {
     Kr: string;
     Jp: string;
     En: string;
-    Tw: string
+    Tw: string;
   };
   MissionRewardParcelType: number[];
   MissionRewardParcelId: number[];
   MissionRewardAmount: number[];
-  MissionRewardParcelTypeStr: string[]
-  CompleteConditionCount: number
-  CompleteConditionParameter: number[]
-  CategoryStr: string
+  MissionRewardParcelTypeStr: string[];
+  CompleteConditionCount: number;
+  CompleteConditionParameter: number[];
+  CategoryStr: string;
 }
-
-
 
 export interface CardShopCostGoods {
   ConsumeParcelId: number[];
-  ConsumeExtraAmount: number[];// [The cost of the first round, the cost of the second round...]
+  ConsumeExtraAmount: number[]; // [The cost of the first round, the cost of the second round...]
 }
-
 
 export interface CardShopItem {
   Id: number;
@@ -238,10 +230,9 @@ export interface CardShopItem {
   RewardParcelTypeStr: string[]; // parcelType[]
   RewardParcelId: number[];
   RewardParcelAmount: number[];
-  RefreshGroup: number
+  RefreshGroup: number;
   CostGoods: CardShopCostGoods;
 }
-
 
 export interface TreasureRound {
   TreasureRound: number;
@@ -250,7 +241,7 @@ export interface TreasureRound {
   CellRewardId: number;
   RewardId: number[]; // List of treasure IDs included in this round
   RewardAmount: number[]; // the number of treasures each
-  CellCheckGoods: GoodsInfo
+  CellCheckGoods: GoodsInfo;
 }
 
 export interface TreasureReward {
@@ -260,9 +251,9 @@ export interface TreasureReward {
   RewardParcelTypeStr: string[];
   RewardParcelId: number[];
   RewardParcelAmount: number[];
-  LocalizeCodeId: string
-  TreasureSizeIconPath: string
-  TreasureSmallImagePath: string
+  LocalizeCodeId: string;
+  TreasureSizeIconPath: string;
+  TreasureSmallImagePath: string;
 }
 
 export interface CellReward {
@@ -285,7 +276,6 @@ export interface BoxGachaManage {
   Goods: GoodsInfo;
 }
 
-
 export interface Skill {
   Name: string;
   Desc: string;
@@ -296,7 +286,7 @@ export interface Skill {
 }
 
 export interface EXSkill extends Skill {
-  ExtraSkills?: Skill[]
+  ExtraSkills?: Skill[];
 }
 
 // Define the type for the student's overall skill object
@@ -306,9 +296,8 @@ export interface Skills {
   Passive: Skill;
   ExtraPassive: Skill;
   WeaponPassive: Skill;
-  GearPublic?: Skill
+  GearPublic?: Skill;
 }
-
 
 export interface FortuneGachaGroup {
   FortuneGachaGroupId: number;
@@ -334,7 +323,6 @@ export interface FortuneGachaModify {
   TargetGrade: number;
 }
 
-
 export interface TotalRewardItem {
   Id: number;
   RequiredEventItemAmount: number;
@@ -343,7 +331,6 @@ export interface TotalRewardItem {
   RewardParcelType: number[];
   RewardParcelTypeStr: string[];
 }
-
 
 export interface DiceRaceNode {
   NodeId: number;
@@ -354,7 +341,6 @@ export interface DiceRaceNode {
   RewardAmount?: number[];
 }
 
-
 export interface DiceRaceTotalReward {
   RequiredLapFinishCount: number;
   RewardParcelTypeStr: string[];
@@ -363,7 +349,7 @@ export interface DiceRaceTotalReward {
 }
 
 export interface DiceRaceInfo {
-  DiceCostGoods: GoodsInfo
+  DiceCostGoods: GoodsInfo;
 }
 
 // MinigameDream Types
@@ -394,7 +380,7 @@ export interface MinigameDreamEndingReward {
   RewardParcelId: number[];
   RewardParcelAmount: number[];
   RewardParcelTypeStr: string[];
-  LocalizeEtc?: { Kr: string, Jp: string, En: string };
+  LocalizeEtc?: { Kr: string; Jp: string; En: string };
 }
 
 export interface MinigameDreamInfo {
@@ -421,13 +407,13 @@ export interface MinigameDreamParameter {
   ParameterBase: number; // Initial value for first run
   ParameterBaseMax: number; // Carryover Cap (relevant for Condition)
   IconPath: string;
-  LocalizeEtc?: { Kr: string, Jp: string, En: string };
+  LocalizeEtc?: { Kr: string; Jp: string; En: string };
 }
 
 export interface MinigameDreamSchedule {
   DreamMakerScheduleGroupId: number; // Links to schedule_result
   IconPath: string;
-  LocalizeEtc?: { Kr: string, Jp: string, En: string };
+  LocalizeEtc?: { Kr: string; Jp: string; En: string };
 }
 
 export interface MinigameDreamScheduleResult {
@@ -469,7 +455,6 @@ export interface MinigameMission {
     Kr: string;
     Jp: string;
     En: string;
-
   };
   CategoryStr: string;
 }
@@ -531,11 +516,36 @@ export interface MinigameConcentration {
   reward: ConcentrationReward[];
 }
 
+export interface MinigameDefenseInfo {
+  DefenseBattleMultiplierMax: number;
+  DefenseBattleParcelId: number;
+  DefenseBattleParcelType: number;
+  DefenseBattleParcelTypeStr: string;
+}
+
+export interface MinigameDefenseStage {
+  Id: number;
+  Name: string;
+  StageNumber: number;
+  StageDisplay: number;
+  StageDifficulty: number; // 1: Story, 2: Normal, 3: Challenge
+  RecommandLevel: number;
+  StageEnterCostId: number;
+  StageEnterCostAmount: number;
+  StageEnterCostType: number;
+  EventContentStageReward: StageReward[];
+  BattleDuration: number;
+}
+
+export interface MinigameDefense {
+  info: MinigameDefenseInfo[];
+  stage: MinigameDefenseStage[];
+}
+
 export type TransactionEntry = {
   source: string; // ex: 'shop_cost', 'farming', 'studentGrowth_cost'
   items: Record<string, { amount: number; isBonusApplied: boolean }>;
 };
-
 
 export interface CampaignReward {
   GroupId: number;
@@ -545,17 +555,17 @@ export interface CampaignReward {
   StageRewardId: number;
   StageRewardParcelType: number;
   StageRewardProb: number;
-  RewardTagStr: "Default" | "Rare" | string; // 'Default', 'Rare', etc.
-  StageRewardParcelTypeStr: "Equipment" | "GachaGroup" | "Item" | "Currency" | string;
+  RewardTagStr: 'Default' | 'Rare' | string; // 'Default', 'Rare', etc.
+  StageRewardParcelTypeStr: 'Equipment' | 'GachaGroup' | 'Item' | 'Currency' | string;
 }
 
 export interface CampaignStage {
-  Type: "Normal" | "Hard";
+  Type: 'Normal' | 'Hard';
   Chapter: number;
   Stage: number;
   Name: string;
   RecommandLevel: number;
-  StageEnterCostTypeStr: "Currency" | string;
+  StageEnterCostTypeStr: 'Currency' | string;
   AP: number;
   Reward: CampaignReward[];
 }

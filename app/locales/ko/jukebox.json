@@ -1,95 +1,96 @@
 {
-    "title": "BGM 플레이어",
-    "description": "\"블루 아카이브\"의 번호가 붙어있는 BGM 사용처 조회 및 재생",
-    "filter_title": "스포일러 필터",
-    "actions": {
-      "view_details": "상세정보 보기",
-      "hide_details": "상세정보 닫기",
-      "show_story_names": "스토리 제목 표시",
-      "hide_story_names": "스토리 제목 숨김",
-      "view_all_details": "모든 상세정보 펼치기",
-      "hide_all_details": "모든 상세정보 닫기",
-      "close": "닫기",
-      "select_all": "전체 선택",
-      "deselect_all": "전체 해제",
-      "deselect_all_searched": "검색된 학생 전체 해제",
-      "select_all_searched": "검색된 학생 전체 선택"
-    },
-    "selection": {
-      "main_story": "메인 스토리 선택",
-      "event_story": "이벤트 스토리 선택",
-      "favor_story": "인연 스토리 선택",
-      "memorial": "메모리얼 로비 선택"
-    },
-    "search": {
-      "placeholder": "제목, 작곡가로 검색...",
-      "student_name": "학생 이름 검색...",
-      "no_results": "결과가 없습니다. 스포일러 방지를 위해 필터를 설정해야 결과가 표시됩니다."
-    },
-    "playback": {
-      "options": "재생 옵션",
-      "play_random": "랜덤 재생",
-      "autoplay": "다음 곡 자동 재생",
-      "autoplay_next": "다음 곡 자동재생",
-      "autoplay_scroll": "다음 곡 재생 시 자동 스크롤",
-      "repeat_current": "현재 곡 반복",
-      "stop_after": "재생 후 정지"
-    },
-    "status": {
-      "loading": "데이터 로딩 중...",
-      "error": "오류가 발생했습니다."
-    },
-    "meta": {
-      "rank": "인연랭크_",
-      "episode": "({{x}}화)",
-      "bgm_list_title": "BGM 목록",
-      "sort_ascending": "오름차순",
-      "sort_descending": "내림차순",
-      "sort_order": "정렬 순서"
-    },
-    "category": {
-      "work": "임무",
-      "raid": "총력전",
-      "group_story": "그룹 스토리",
-      "mini_story": "미니 스토리",
-      "work_story": "업무 스토리",
-      "other": "기타 (UI, 로비 등)"
-    },
-    "prefix": {
-      "main_story": "[메인]",
-      "event_story": "[이벤트]",
-      "favor_story": "[인연]",
-      "memorial": "[메모리얼]",
-      "work": "[임무]",
-      "ui": "[UI]",
-      "raid": "[총력전]",
-      "limitraid": "[제약해제결전]",
-      "group_story": "[그룹]",
-      "mini_story": "[미니]",
-      "work_story": "[업무]"
-    },
-    "main_story": {
-      "vol1_ch1": "Vol.1 1장 대책위원회의 기묘한 하루",
-      "vol1_ch2": "Vol.1 2장 잃은 것과 놓지 않은 것",
-      "vol1_ch3": "Vol.1 3장 그 꿈이 남기고 간 흔적들",
-      "vol2_ch1": "Vol.2 1장 레트로의 로망",
-      "vol2_ch2": "Vol.2 2장 우정과 용기와 빛의 로망",
-      "vol3_ch1": "Vol.3 1장 보충수업, 시작합니다!",
-      "vol3_ch2": "Vol.3 2장 증명 불가능한 문제",
-      "vol3_ch3": "Vol.3 3장 우리들의 이야기를",
-      "vol3_ch4": "Vol.3 4장 잊혀진 신들을 위한 키리에",
-      "vol4_ch1": "Vol.4 1장 RABBIT 소대, 작전 개시!",
-      "vol4_ch2": "Vol.4 2장 We Were RABBITs!",
-      "vol5_ch1": "Vol.5 1장 피어나길 바라는 꽃망울처럼",
-      "vol5_ch2": "Vol.5 2장 홀로 꽃을 피우려는 너에게",
-      "vol6_ch1": "Vol.6 1장",
-      "vol6_ch2": "Vol.6 2장",
-      "vol6_ch3": "Vol.6 3장",
-      "ex_deca_ch0": "Ex. 데카그라마톤 편 0장 지혜의 뱀",
-      "ex_deca_ch1": "Ex. 데카그라마톤 편 1장 불타는 검",
-      "final_ch1": "Final. 1장 샬레 탈환 작전",
-      "final_ch2": "Final. 2장 거짓된 성소 공략전",
-      "final_ch3": "Final. 3장 아트라하시스의 방주 점령전",
-      "final_ch4": "Final. 4장 프레나파테스 결전"
-    }
+  "title": "BGM 플레이어",
+  "description": "\"블루 아카이브\"의 번호가 붙어있는 BGM 사용처 조회 및 재생",
+  "filter_title": "스포일러 필터",
+  "actions": {
+    "view_details": "상세정보 보기",
+    "hide_details": "상세정보 닫기",
+    "show_story_names": "스토리 제목 표시",
+    "hide_story_names": "스토리 제목 숨김",
+    "view_all_details": "모든 상세정보 펼치기",
+    "hide_all_details": "모든 상세정보 닫기",
+    "close": "닫기",
+    "select_all": "전체 선택",
+    "deselect_all": "전체 해제",
+    "deselect_all_searched": "검색된 학생 전체 해제",
+    "select_all_searched": "검색된 학생 전체 선택"
+  },
+  "selection": {
+    "main_story": "메인 스토리 선택",
+    "event_story": "이벤트 스토리 선택",
+    "favor_story": "인연 스토리 선택",
+    "memorial": "메모리얼 로비 선택"
+  },
+  "search": {
+    "placeholder": "제목, 작곡가로 검색...",
+    "student_name": "학생 이름 검색...",
+    "no_results": "결과가 없습니다. 스포일러 방지를 위해 필터를 설정해야 결과가 표시됩니다."
+  },
+  "playback": {
+    "options": "재생 옵션",
+    "play_random": "랜덤 재생",
+    "autoplay": "다음 곡 자동 재생",
+    "autoplay_next": "다음 곡 자동재생",
+    "autoplay_scroll": "다음 곡 재생 시 자동 스크롤",
+    "repeat_current": "현재 곡 반복",
+    "stop_after": "재생 후 정지"
+  },
+  "status": {
+    "loading": "데이터 로딩 중...",
+    "error": "오류가 발생했습니다."
+  },
+  "meta": {
+    "rank": "인연랭크_",
+    "episode": "({{x}}화)",
+    "bgm_list_title": "BGM 목록",
+    "sort_ascending": "오름차순",
+    "sort_descending": "내림차순",
+    "sort_order": "정렬 순서"
+  },
+  "category": {
+    "work": "임무",
+    "raid": "총력전",
+    "group_story": "그룹 스토리",
+    "mini_story": "미니 스토리",
+    "work_story": "업무 스토리",
+    "other": "기타 (UI, 로비 등)"
+  },
+  "prefix": {
+    "main_story": "[메인]",
+    "event_story": "[이벤트]",
+    "favor_story": "[인연]",
+    "memorial": "[메모리얼]",
+    "work": "[임무]",
+    "ui": "[UI]",
+    "raid": "[총력전]",
+    "limitraid": "[제약해제결전]",
+    "group_story": "[그룹]",
+    "mini_story": "[미니]",
+    "work_story": "[업무]"
+  },
+  "main_story": {
+    "vol1_ch1": "Vol.1 1장 대책위원회의 기묘한 하루",
+    "vol1_ch2": "Vol.1 2장 잃은 것과 놓지 않은 것",
+    "vol1_ch3": "Vol.1 3장 그 꿈이 남기고 간 흔적들",
+    "vol2_ch1": "Vol.2 1장 레트로의 로망",
+    "vol2_ch2": "Vol.2 2장 우정과 용기와 빛의 로망",
+    "vol3_ch1": "Vol.3 1장 보충수업, 시작합니다!",
+    "vol3_ch2": "Vol.3 2장 증명 불가능한 문제",
+    "vol3_ch3": "Vol.3 3장 우리들의 이야기를",
+    "vol3_ch4": "Vol.3 4장 잊혀진 신들을 위한 키리에",
+    "vol4_ch1": "Vol.4 1장 RABBIT 소대, 작전 개시!",
+    "vol4_ch2": "Vol.4 2장 We Were RABBITs!",
+    "vol5_ch1": "Vol.5 1장 피어나길 바라는 꽃망울처럼",
+    "vol5_ch2": "Vol.5 2장 홀로 꽃을 피우려는 너에게",
+    "vol6_ch1": "Vol.6 1장",
+    "vol6_ch2": "Vol.6 2장",
+    "vol6_ch3": "Vol.6 3장",
+    "ex_deca_ch0": "Ex. 데카그라마톤 편 1장 지혜의 뱀",
+    "ex_deca_ch1": "Ex. 데카그라마톤 편 2장 불타는 검",
+    "ex_deca_ch2": "Ex. 데카그라마톤 편 3장",
+    "final_ch1": "Final. 1장 샬레 탈환 작전",
+    "final_ch2": "Final. 2장 거짓된 성소 공략전",
+    "final_ch3": "Final. 3장 아트라하시스의 방주 점령전",
+    "final_ch4": "Final. 4장 프레나파테스 결전"
   }
+}

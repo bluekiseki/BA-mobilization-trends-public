@@ -1,4 +1,4 @@
-import type { UIMatch } from "react-router";
+import type { UIMatch } from 'react-router';
 
 // Standard <link> Tag Properties
 export interface CollectedLink {
@@ -7,7 +7,7 @@ export interface CollectedLink {
   as?: 'image' | 'style' | 'script' | 'font' | 'fetch';
   type?: string;
   crossOrigin?: 'anonymous' | 'use-credentials';
-  hrefLang?: string
+  hrefLang?: string;
 }
 
 // Custom type to the handle object on the React Router.

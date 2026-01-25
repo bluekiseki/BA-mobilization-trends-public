@@ -1,95 +1,96 @@
 {
-    "title": "BGMプレーヤー",
-    "description": "「ブルーアーカイブ」の番号が付いているBGM照会",
-    "filter_title": "ネタバレフィルター",
-    "actions": {
-      "view_details": "詳細表示",
-      "hide_details": "詳細非表示",
-      "show_story_names": "ストーリータイトル表示",
-      "hide_story_names": "ストーリータイトル非表示",
-      "view_all_details": "すべての詳細を開く",
-      "hide_all_details": "すべての詳細を閉じる",
-      "close": "閉じる",
-      "select_all": "すべて選択",
-      "deselect_all": "すべて選択解除",
-      "deselect_all_searched": "検索された学生をすべて選択解除",
-      "select_all_searched": "検索された学生をすべて選択"
-    },
-    "selection": {
-      "main_story": "メインストーリー選択",
-      "event_story": "イベントストーリー選択",
-      "favor_story": "絆ストーリー選択",
-      "memorial": "メモリアルロビー選択"
-    },
-    "search": {
-      "placeholder": "タイトル、作曲者で検索...",
-      "student_name": "生徒名検索...",
-      "no_results": "結果はありません。 結果を表示する前に、ネタバレを防止するためのフィルタを設定する必要があります。"
-    },
-    "playback": {
-      "options": "再生オプション",
-      "play_random": "ランダム再生",
-      "autoplay": "自動再生",
-      "autoplay_next": "次の曲を自動再生",
-      "autoplay_scroll": "再生時に自動スクロール",
-      "repeat_current": "現在の曲をリピート",
-      "stop_after": "再生後に停止"
-    },
-    "status": {
-      "loading": "データ読み込み中...",
-      "error": "エラーが発生しました。"
-    },
-    "meta": {
-      "rank": "絆",
-      "episode": "（第{{x}}話）",
-      "bgm_list_title": "BGMリスト",
-      "sort_ascending": "昇順",
-      "sort_descending": "降順",
-      "sort_order": "並び替え"
-    },
-    "category": {
-      "work": "任務",
-      "raid": "総力戦",
-      "group_story": "グループストーリー",
-      "mini_story": "ミニストーリー",
-      "work_story": "業務ストーリー",
-      "other": "その他（UIなど）"
-    },
-    "prefix": {
-      "main_story": "[メイン]",
-      "event_story": "[イベント]",
-      "favor_story": "[絆]",
-      "memorial": "[メモリアル]",
-      "work": "[任務]",
-      "ui": "[UI]",
-      "raid": "[総力戦]",
-      "limitraid": "[制約解除決戦]",
-      "group_story": "[グループ]",
-      "mini_story": "[ミニ]",
-      "work_story": "[業務]"
-    },
-    "main_story": {
-      "vol1_ch1": "Vol.1 第1章 対策委員会の奇妙な一日",
-      "vol1_ch2": "Vol.1 第2章 失ったもの、手放さなかったもの",
-      "vol1_ch3": "Vol.1 第3章 夢が残した足跡",
-      "vol2_ch1": "Vol.2 第1章 レトロチック・ロマン",
-      "vol2_ch2": "Vol.2 第2章 友情と勇気と光のロマン",
-      "vol3_ch1": "Vol.3 第1章 補習授業、スタート！",
-      "vol3_ch2": "Vol.3 第2章 不可能な証明",
-      "vol3_ch3": "Vol.3 第3章 私たちの物語",
-      "vol3_ch4": "Vol.3 第4章 忘れられた神々のためのキリエ",
-      "vol4_ch1": "Vol.4 第1章 RABBIT小隊始動！",
-      "vol4_ch2": "Vol.4 第2章 We Were RABBITs!",
-      "vol5_ch1": "Vol.5 第1章 いつかの芽吹きを待ち侘びて",
-      "vol5_ch2": "Vol.5 第2章 孤独に花を咲かせんとする君へ",
-      "vol6_ch1": "Vol.6 第1章 見えない私たちの境界線 ",
-      "vol6_ch2": "Vol.6 第2章 あの刻に告げし決別",
-      "vol6_ch3": "Vol.6 第3章 遺された未来のためのエクレシア",
-      "ex_deca_ch0": "Ex. デカグラマトン編 第1章 知恵の蛇",
-      "ex_deca_ch1": "Ex. デカグラマトン編 第2章 炎の剣",
-      "final_ch1": "Final. 第1章 シャーレ奪還作戦",
-      "final_ch2": "Final. 第2章 虚妄のサンクトゥム攻略戦",
-      "final_ch3": "Final. 第3章 アトラ・ハシースの箱舟占領戦",
-      "final_ch4": "Final. 第4章 プレナパテス決戦"
-    }
+  "title": "BGMプレーヤー",
+  "description": "「ブルーアーカイブ」の番号が付いているBGM照会",
+  "filter_title": "ネタバレフィルター",
+  "actions": {
+    "view_details": "詳細表示",
+    "hide_details": "詳細非表示",
+    "show_story_names": "ストーリータイトル表示",
+    "hide_story_names": "ストーリータイトル非表示",
+    "view_all_details": "すべての詳細を開く",
+    "hide_all_details": "すべての詳細を閉じる",
+    "close": "閉じる",
+    "select_all": "すべて選択",
+    "deselect_all": "すべて選択解除",
+    "deselect_all_searched": "検索された学生をすべて選択解除",
+    "select_all_searched": "検索された学生をすべて選択"
+  },
+  "selection": {
+    "main_story": "メインストーリー選択",
+    "event_story": "イベントストーリー選択",
+    "favor_story": "絆ストーリー選択",
+    "memorial": "メモリアルロビー選択"
+  },
+  "search": {
+    "placeholder": "タイトル、作曲者で検索...",
+    "student_name": "生徒名検索...",
+    "no_results": "結果はありません。 結果を表示する前に、ネタバレを防止するためのフィルタを設定する必要があります。"
+  },
+  "playback": {
+    "options": "再生オプション",
+    "play_random": "ランダム再生",
+    "autoplay": "自動再生",
+    "autoplay_next": "次の曲を自動再生",
+    "autoplay_scroll": "再生時に自動スクロール",
+    "repeat_current": "現在の曲をリピート",
+    "stop_after": "再生後に停止"
+  },
+  "status": {
+    "loading": "データ読み込み中...",
+    "error": "エラーが発生しました。"
+  },
+  "meta": {
+    "rank": "絆",
+    "episode": "（第{{x}}話）",
+    "bgm_list_title": "BGMリスト",
+    "sort_ascending": "昇順",
+    "sort_descending": "降順",
+    "sort_order": "並び替え"
+  },
+  "category": {
+    "work": "任務",
+    "raid": "総力戦",
+    "group_story": "グループストーリー",
+    "mini_story": "ミニストーリー",
+    "work_story": "業務ストーリー",
+    "other": "その他（UIなど）"
+  },
+  "prefix": {
+    "main_story": "[メイン]",
+    "event_story": "[イベント]",
+    "favor_story": "[絆]",
+    "memorial": "[メモリアル]",
+    "work": "[任務]",
+    "ui": "[UI]",
+    "raid": "[総力戦]",
+    "limitraid": "[制約解除決戦]",
+    "group_story": "[グループ]",
+    "mini_story": "[ミニ]",
+    "work_story": "[業務]"
+  },
+  "main_story": {
+    "vol1_ch1": "Vol.1 第1章 対策委員会の奇妙な一日",
+    "vol1_ch2": "Vol.1 第2章 失ったもの、手放さなかったもの",
+    "vol1_ch3": "Vol.1 第3章 夢が残した足跡",
+    "vol2_ch1": "Vol.2 第1章 レトロチック・ロマン",
+    "vol2_ch2": "Vol.2 第2章 友情と勇気と光のロマン",
+    "vol3_ch1": "Vol.3 第1章 補習授業、スタート！",
+    "vol3_ch2": "Vol.3 第2章 不可能な証明",
+    "vol3_ch3": "Vol.3 第3章 私たちの物語",
+    "vol3_ch4": "Vol.3 第4章 忘れられた神々のためのキリエ",
+    "vol4_ch1": "Vol.4 第1章 RABBIT小隊始動！",
+    "vol4_ch2": "Vol.4 第2章 We Were RABBITs!",
+    "vol5_ch1": "Vol.5 第1章 いつかの芽吹きを待ち侘びて",
+    "vol5_ch2": "Vol.5 第2章 孤独に花を咲かせんとする君へ",
+    "vol6_ch1": "Vol.6 第1章 見えない私たちの境界線 ",
+    "vol6_ch2": "Vol.6 第2章 あの刻に告げし決別",
+    "vol6_ch3": "Vol.6 第3章 遺された未来のためのエクレシア",
+    "ex_deca_ch0": "Ex. デカグラマトン編 第1章 知恵の蛇",
+    "ex_deca_ch1": "Ex. デカグラマトン編 第2章 炎の剣",
+    "ex_deca_ch2": "Ex. デカグラマトン編 第3章 不離一体の空 ",
+    "final_ch1": "Final. 第1章 シャーレ奪還作戦",
+    "final_ch2": "Final. 第2章 虚妄のサンクトゥム攻略戦",
+    "final_ch3": "Final. 第3章 アトラ・ハシースの箱舟占領戦",
+    "final_ch4": "Final. 第4章 プレナパテス決戦"
   }
+}

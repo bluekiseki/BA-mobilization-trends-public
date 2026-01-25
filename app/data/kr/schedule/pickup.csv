@@ -414,50 +414,50 @@ studentId,name,startTime,endTime,rerun,limited,fast,prediction
 20024,Nagisa,2026-01-06 11:00,2026-01-13 10:59,true,true,false,true
 20023,Kanna,2026-01-06 11:00,2026-01-13 10:59,true,false,false,true
 10107,Chiaki,2026-01-06 11:00,2026-01-13 10:59,true,false,false,true
-10125,Eri,2026-01-13 11:00,2026-01-27 10:59,false,false,false,true
-10126,Kanoe,2026-01-13 11:00,2026-01-27 10:59,false,false,false,true
+10125,Eri,2026-01-13 11:00,2026-01-27 10:59,false,false,false
+10126,Kanoe,2026-01-13 11:00,2026-01-27 10:59,false,false,false
 20049,Misaki (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,false,false,false,true
 10101,Saori (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,true,false,true
 10102,Hiyori (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,true,false,true
 20027,Shiroko (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,false,false,true
 10044,Nonomi (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,false,false,true
-10026,Neru (Bunny Girl),2026-02-10 11:00,2026-02-17 10:59,true,true,false,true
-10027,Karin (Bunny Girl),2026-02-10 11:00,2026-02-17 10:59,true,true,false,true
-20019,Akane (Bunny Girl),2026-02-10 11:00,2026-02-17 10:59,true,false,false,true
-10127,Miyo,2026-02-17 11:00,2026-03-03 10:59,false,false,false,true
-10128,Fuyu,2026-02-17 11:00,2026-03-03 10:59,false,false,false,true
-20040,Satsuki,2026-02-17 11:00,2026-03-03 10:59,true,false,false,true
-20050,Ritsu,2026-03-03 11:00,2026-03-10 10:59,false,false,false,true
-10055,Shigure,2026-03-03 11:00,2026-03-10 10:59,true,false,false,true
-10039,Miyu,2026-03-03 11:00,2026-03-10 10:59,true,false,false,true
-10022,Hina (Swimsuit),2026-03-10 11:00,2026-03-17 10:59,true,true,false,true
-10023,Iori (Swimsuit),2026-03-10 11:00,2026-03-17 10:59,true,true,false,true
-20029,Mimori (Swimsuit),2026-03-10 11:00,2026-03-17 10:59,true,false,false,true
-20051,Reisa (Magical),2026-03-17 11:00,2026-03-31 10:59,false,true,false,true
-10129,Suzumi (Magical),2026-03-17 11:00,2026-03-31 10:59,false,true,false,true
-20038,,2026-03-31 11:00,2026-04-07 10:59,true,false,false,true
-10103,,2026-03-31 11:00,2026-04-07 10:59,true,false,false,true
-10038,,2026-03-31 11:00,2026-04-07 10:59,true,false,false,true
-20014,,2026-03-31 11:00,2026-04-07 10:59,true,false,false,true
-20018,,2026-03-31 11:00,2026-04-07 10:59,true,false,false,true
-10130,,2026-04-07 11:00,2026-04-14 10:59,false,false,false,true
-10073,,2026-04-07 11:00,2026-04-14 10:59,true,true,false,true
-20028,,2026-04-07 11:00,2026-04-14 10:59,true,true,false,true
-10068,,2026-04-07 11:00,2026-04-14 10:59,true,false,false,true
-10058,,2026-04-07 11:00,2026-04-14 10:59,true,false,false,true
-10131,,2026-04-14 11:00,2026-04-28 10:59,false,false,false,true
-20052,,2026-04-14 11:00,2026-04-28 10:59,false,false,false,true
-10105,Mari (Idol),2026-04-28 11:00,2026-05-12 10:59,true,true,false,true
-10106,Sakurako (Idol),2026-04-28 11:00,2026-05-12 10:59,true,true,false,true
-10049,Kazusa,2026-04-28 11:00,2026-05-12 10:59,true,false,false,true
-10065,Kaho,2026-04-28 11:00,2026-05-12 10:59,true,false,false,true
-13013,Momiji,2026-05-12 11:00:00,2026-05-19 10:59:00,true,false,false,true
-10075,Meru,2026-05-12 11:00:00,2026-05-19 10:59:00,true,false,false,true
-20026,Minori,2026-05-12 11:00:00,2026-05-19 10:59:00,true,false,false,true
-20031,Shigure (Hot Spring),2026-05-12 11:00:00,2026-05-19 10:59:00,true,false,false,true
-20036,Serika (Swimsuit),2026-05-12 11:00:00,2026-05-19 10:59:00,true,false,false,true
-10132,Tsukuyo (Dress),2026-05-19 11:00:00,2026-06-02 10:59:00,false,false,false,true
-20053,Machiru (Dress),2026-05-19 11:00:00,2026-06-02 10:59:00,false,false,false,true
-10033,Wakamo,2026-05-26 11:00:00,2026-06-02 10:59:00,true,true,false,true
-10045,Hoshino (Swimsuit),2026-05-26 11:00:00,2026-06-02 10:59:00,true,true,false,true
-10059,Mika,2026-05-26 11:00:00,2026-06-02 10:59:00,true,true,false,true
+10026,Neru (Bunny Girl),2026-02-03 11:00:00,2026-02-10 10:59:00,true,true,false,true
+10027,Karin (Bunny Girl),2026-02-03 11:00:00,2026-02-10 10:59:00,true,true,false,true
+20019,Akane (Bunny Girl),2026-02-03 11:00:00,2026-02-10 10:59:00,true,false,false,true
+10127,Miyo,2026-02-10 11:00:00,2026-02-24 10:59:00,false,false,false,true
+10128,Fuyu,2026-02-10 11:00:00,2026-02-24 10:59:00,false,false,false,true
+20040,Satsuki,2026-02-10 11:00:00,2026-02-24 10:59:00,true,false,false,true
+20050,Ritsu,2026-02-24 11:00:00,2026-03-03 10:59:00,false,false,false,true
+10055,Shigure,2026-02-24 11:00:00,2026-03-03 10:59:00,true,false,false,true
+10039,Miyu,2026-02-24 11:00:00,2026-03-03 10:59:00,true,false,false,true
+10022,Hina (Swimsuit),2026-03-03 11:00:00,2026-03-10 10:59:00,true,true,false,true
+10023,Iori (Swimsuit),2026-03-03 11:00:00,2026-03-10 10:59:00,true,true,false,true
+20029,Mimori (Swimsuit),2026-03-03 11:00:00,2026-03-10 10:59:00,true,false,false,true
+20051,Reisa (Magical),2026-03-10 11:00:00,2026-03-24 10:59:00,false,true,false,true
+10129,Suzumi (Magical),2026-03-10 11:00:00,2026-03-24 10:59:00,false,true,false,true
+20038,,2026-03-24 11:00:00,2026-03-31 10:59:00,true,false,false,true
+10103,,2026-03-24 11:00:00,2026-03-31 10:59:00,true,false,false,true
+10038,,2026-03-24 11:00:00,2026-03-31 10:59:00,true,false,false,true
+20014,,2026-03-24 11:00:00,2026-03-31 10:59:00,true,false,false,true
+20018,,2026-03-24 11:00:00,2026-03-31 10:59:00,true,false,false,true
+10130,,2026-03-31 11:00:00,2026-04-07 10:59:00,false,false,false,true
+10073,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,true,false,true
+20028,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,true,false,true
+10068,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,false,false,true
+10058,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,false,false,true
+10131,,2026-04-07 11:00:00,2026-04-21 10:59:00,false,false,false,true
+20052,,2026-04-07 11:00:00,2026-04-21 10:59:00,false,false,false,true
+10105,Mari (Idol),2026-04-21 11:00:00,2026-05-05 10:59:00,true,true,false,true
+10106,Sakurako (Idol),2026-04-21 11:00:00,2026-05-05 10:59:00,true,true,false,true
+10049,Kazusa,2026-04-21 11:00:00,2026-05-05 10:59:00,true,false,false,true
+10065,Kaho,2026-04-21 11:00:00,2026-05-05 10:59:00,true,false,false,true
+13013,Momiji,2026-05-05 11:00:00,2026-05-12 10:59:00,true,false,false,true
+10075,Meru,2026-05-05 11:00:00,2026-05-12 10:59:00,true,false,false,true
+20026,Minori,2026-05-05 11:00:00,2026-05-12 10:59:00,true,false,false,true
+20031,Shigure (Hot Spring),2026-05-05 11:00:00,2026-05-12 10:59:00,true,false,false,true
+20036,Serika (Swimsuit),2026-05-05 11:00:00,2026-05-12 10:59:00,true,false,false,true
+10132,Tsukuyo (Dress),2026-05-12 11:00:00,2026-05-26 10:59:00,false,false,false,true
+20053,Machiru (Dress),2026-05-12 11:00:00,2026-05-26 10:59:00,false,false,false,true
+10033,Wakamo,2026-05-19 11:00:00,2026-05-26 10:59:00,true,true,false,true
+10045,Hoshino (Swimsuit),2026-05-19 11:00:00,2026-05-26 10:59:00,true,true,false,true
+10059,Mika,2026-05-19 11:00:00,2026-05-26 10:59:00,true,true,false,true

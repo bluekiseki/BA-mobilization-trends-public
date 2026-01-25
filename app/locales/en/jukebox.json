@@ -1,95 +1,96 @@
 {
-    "title": "BGM Player",
-    "description": "Search for numbered BGM of \"Blue Archive\"",
-    "filter_title": "Spoiler Filter",
-    "actions": {
-      "view_details": "View Details",
-      "hide_details": "Hide Details",
-      "show_story_names": "Show Story Titles",
-      "hide_story_names": "Hide Story Titles",
-      "view_all_details": "Expand All Details",
-      "hide_all_details": "Collapse All Details",
-      "close": "Close",
-      "select_all": "Select All",
-      "deselect_all": "Deselect All",
-      "deselect_all_searched": "Deselect All Searched Students",
-      "select_all_searched": "Select All Searched Students"
-    },
-    "selection": {
-      "main_story": "Select Main Stories",
-      "event_story": "Select Event Stories",
-      "favor_story": "Choose relationship Stories",
-      "memorial": "Select Memorial Lobby"
-    },
-    "search": {
-      "placeholder": "Search by title, composer...",
-      "student_name": "Search student name...",
-      "no_results": "No results. Filters must be set to prevent spoilers before the results are displayed."
-    },
-    "playback": {
-      "options": "Playback Options",
-      "play_random": "Play Random",
-      "autoplay": "Autoplay",
-      "autoplay_next": "Autoplay Next",
-      "autoplay_scroll": "Auto-scroll on play",
-      "repeat_current": "Repeat Current",
-      "stop_after": "Stop After"
-    },
-    "status": {
-      "loading": "Loading data...",
-      "error": "An error occurred."
-    },
-    "meta": {
-      "rank": "rank_",
-      "episode": "(Episode {{x}})",
-      "bgm_list_title": "BGM List",
-      "sort_ascending": "Ascending",
-      "sort_descending": "Descending",
-      "sort_order": "Sort Order"
-    },
-    "category": {
-      "work": "Missions",
-      "raid": "Raids",
-      "group_story": "Group Story",
-      "mini_story": "Mini Story",
-      "work_story": "Work Story",
-      "other": "Other (UI, etc.)"
-    },
-    "prefix": {
-      "main_story": "[Main]",
-      "event_story": "[Event]",
-      "favor_story": "[Favor]",
-      "memorial": "[Memorial]",
-      "work": "[Mission]",
-      "ui": "[UI]",
-      "raid": "[T. Assault]",
-      "limitraid": "[Final Restriction Release]",
-      "group_story": "[Group]",
-      "mini_story": "[Mini]",
-      "work_story": "[Work]"
-    },
-    "main_story": {
-      "vol1_ch1": "Vol.1 Ch.1",
-      "vol1_ch2": "Vol.1 Ch.2",
-      "vol1_ch3": "Vol.1 Ch.3",
-      "vol2_ch1": "Vol.2 Ch.1",
-      "vol2_ch2": "Vol.2 Ch.2",
-      "vol3_ch1": "Vol.3 Ch.1",
-      "vol3_ch2": "Vol.3 Ch.2",
-      "vol3_ch3": "Vol.3 Ch.3",
-      "vol3_ch4": "Vol.3 Ch.4",
-      "vol4_ch1": "Vol.4 Ch.1",
-      "vol4_ch2": "Vol.4 Ch.2",
-      "vol5_ch1": "Vol.5 Ch.1",
-      "vol5_ch2": "Vol.5 Ch.2",
-      "vol6_ch1": "Vol.6 Ch.1",
-      "vol6_ch2": "Vol.6 Ch.2",
-      "vol6_ch3": "Vol.6 Ch.3",
-      "ex_deca_ch0": "Ex. Decagrammaton Ch.0",
-      "ex_deca_ch1": "Ex. Decagrammaton Ch.1",
-      "final_ch1": "Final Vol. Ch.1",
-      "final_ch2": "Final Vol. Ch.2",
-      "final_ch3": "Final Vol. Ch.3",
-      "final_ch4": "Final Vol. Ch.4"
-    }
+  "title": "BGM Player",
+  "description": "Search for numbered BGM of \"Blue Archive\"",
+  "filter_title": "Spoiler Filter",
+  "actions": {
+    "view_details": "View Details",
+    "hide_details": "Hide Details",
+    "show_story_names": "Show Story Titles",
+    "hide_story_names": "Hide Story Titles",
+    "view_all_details": "Expand All Details",
+    "hide_all_details": "Collapse All Details",
+    "close": "Close",
+    "select_all": "Select All",
+    "deselect_all": "Deselect All",
+    "deselect_all_searched": "Deselect All Searched Students",
+    "select_all_searched": "Select All Searched Students"
+  },
+  "selection": {
+    "main_story": "Select Main Stories",
+    "event_story": "Select Event Stories",
+    "favor_story": "Choose relationship Stories",
+    "memorial": "Select Memorial Lobby"
+  },
+  "search": {
+    "placeholder": "Search by title, composer...",
+    "student_name": "Search student name...",
+    "no_results": "No results. Filters must be set to prevent spoilers before the results are displayed."
+  },
+  "playback": {
+    "options": "Playback Options",
+    "play_random": "Play Random",
+    "autoplay": "Autoplay",
+    "autoplay_next": "Autoplay Next",
+    "autoplay_scroll": "Auto-scroll on play",
+    "repeat_current": "Repeat Current",
+    "stop_after": "Stop After"
+  },
+  "status": {
+    "loading": "Loading data...",
+    "error": "An error occurred."
+  },
+  "meta": {
+    "rank": "rank_",
+    "episode": "(Episode {{x}})",
+    "bgm_list_title": "BGM List",
+    "sort_ascending": "Ascending",
+    "sort_descending": "Descending",
+    "sort_order": "Sort Order"
+  },
+  "category": {
+    "work": "Missions",
+    "raid": "Raids",
+    "group_story": "Group Story",
+    "mini_story": "Mini Story",
+    "work_story": "Work Story",
+    "other": "Other (UI, etc.)"
+  },
+  "prefix": {
+    "main_story": "[Main]",
+    "event_story": "[Event]",
+    "favor_story": "[Favor]",
+    "memorial": "[Memorial]",
+    "work": "[Mission]",
+    "ui": "[UI]",
+    "raid": "[T. Assault]",
+    "limitraid": "[Final Restriction Release]",
+    "group_story": "[Group]",
+    "mini_story": "[Mini]",
+    "work_story": "[Work]"
+  },
+  "main_story": {
+    "vol1_ch1": "Vol.1 Ch.1",
+    "vol1_ch2": "Vol.1 Ch.2",
+    "vol1_ch3": "Vol.1 Ch.3",
+    "vol2_ch1": "Vol.2 Ch.1",
+    "vol2_ch2": "Vol.2 Ch.2",
+    "vol3_ch1": "Vol.3 Ch.1",
+    "vol3_ch2": "Vol.3 Ch.2",
+    "vol3_ch3": "Vol.3 Ch.3",
+    "vol3_ch4": "Vol.3 Ch.4",
+    "vol4_ch1": "Vol.4 Ch.1",
+    "vol4_ch2": "Vol.4 Ch.2",
+    "vol5_ch1": "Vol.5 Ch.1",
+    "vol5_ch2": "Vol.5 Ch.2",
+    "vol6_ch1": "Vol.6 Ch.1",
+    "vol6_ch2": "Vol.6 Ch.2",
+    "vol6_ch3": "Vol.6 Ch.3",
+    "ex_deca_ch0": "Ex. Decagrammaton Ch.1",
+    "ex_deca_ch1": "Ex. Decagrammaton Ch.2",
+    "ex_deca_ch2": "Ex. Decagrammaton Ch.3",
+    "final_ch1": "Final Vol. Ch.1",
+    "final_ch2": "Final Vol. Ch.2",
+    "final_ch3": "Final Vol. Ch.3",
+    "final_ch4": "Final Vol. Ch.4"
   }
+}

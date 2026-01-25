@@ -36,7 +36,8 @@
     "fast": "Fast",
     "limited": "Limited",
     "clear": "Clear",
-    "period": "Period"
+    "period": "Period",
+    "jfd": "Joint Firing Drill"
   },
   "LocaleSwitcher": {
     "en": "English",
@@ -91,10 +92,12 @@
     },
     "heatmap": {
       "title": "Student Mobilization Trends by Assault",
-      "description1": "View student mobilization trends in a heatmap format",
+      "description1": "View which Assaults each student has been mobilized for",
       "description2": "Data is weighted by student level relative to the level cap. For example, if the cap is 90, a Lv. 45 student mobilization counts as 0.5 (45/90).",
       "processingMessage": "Loading, decompressing, and processing data...",
       "noDataMessage": "No data to display. Please select at least one Star Level.",
+      "usage_statistics": "Usage Statistics",
+      "usage_desc": "Compare pick rates by star level across raids.",
       "control": {
         "selectStudent": "Select Student",
         "studentSearchPlaceholder": "Enter student name, role, Academy, or squad type",

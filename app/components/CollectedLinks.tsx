@@ -1,9 +1,8 @@
-import { useMatches } from "react-router";
-import type { AppUIMatch, CollectedLink } from "~/types/link";
-
+import { useMatches } from 'react-router';
+import type { AppUIMatch, CollectedLink } from '~/types/link';
 
 /**
-* Collect preload information from the 'handle' of all currently active routes
+ * Collect preload information from the 'handle' of all currently active routes
  * The component that renders the <link> tag.
  * This component must be used within <head>.
  */
@@ -11,21 +10,21 @@ export function CollectedLinks() {
   // Use the useMatches() hook to get all the route information
   const matches = useMatches() as AppUIMatch[];
 
-
-  const rootLoaderData = matches.filter(v => v.id == 'root')[0]?.data
-
+  const rootLoaderData = matches.filter((v) => v.id == 'root')[0]?.data;
 
   // console.log('<CollectedLinks', matches, rootLoaderData)
 
   // Run handle.preload function for all routes
-  const links = rootLoaderData ? matches.flatMap((match) => {
-    if (match.handle?.preload) {
-      // console.log('match.handle?.preload',match.handle?.preload, rootLoaderData)
-      // console.log('match.handle?.preload res',match.handle.preload(rootLoaderData))
-      return match.handle.preload(rootLoaderData);
-    }
-    return [];
-  }) : [];
+  const links = rootLoaderData
+    ? matches.flatMap((match) => {
+        if (match.handle?.preload) {
+          // console.log('match.handle?.preload',match.handle?.preload, rootLoaderData)
+          // console.log('match.handle?.preload res',match.handle.preload(rootLoaderData))
+          return match.handle.preload(rootLoaderData);
+        }
+        return [];
+      })
+    : [];
 
   // console.log('rootLoaderData',rootLoaderData)
   // console.log('links',links)

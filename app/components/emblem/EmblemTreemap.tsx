@@ -7,18 +7,21 @@ import { cdn } from '~/utils/cdn';
 interface EmblemTreemapProps {
   data: TreemapSourceEntry[];
   totalCount: number;
-  t_s: (key: string) => string;
+  t_s: any;
   portraitData: Record<string, string>;
   aggregationType: AggregationType;
 }
 
-
 const CustomTooltip = ({ active, payload, totalCount }: any) => {
-  const { t } = useTranslation("emblemCounter");
+  const { t } = useTranslation('emblemCounter');
   if (active && payload && payload.length) {
     const item = payload[0].payload;
     const value = payload[0].value; // Same as item.count
-    const path = payload.slice(1).map((p: any) => p.name).reverse().join(' > ');
+    const path = payload
+      .slice(1)
+      .map((p: any) => p.name)
+      .reverse()
+      .join(' > ');
     const percentage = totalCount > 0 ? (value / totalCount) * 100 : 0;
 
     //  Check if 'count' exists when displaying tooltip for aggregated nodes (e.g., School)
@@ -40,15 +43,28 @@ const CustomTooltip = ({ active, payload, totalCount }: any) => {
   return null;
 };
 
-
-
 const SCHOOL_COLORS = [
-  '#E6194B', '#3CB44B', '#FFE119', '#4363D8', '#F58231',
-  '#911EB4', '#42D4F4', '#F032E6', '#BCF60C', '#FABEBE',
-  '#008080', '#E6BEFF', '#9A6324', '#FFFAC8', '#800000',
-  '#AAFFC3', '#808000', '#FFD8B1', '#000075', '#A9A9A9'
+  '#E6194B',
+  '#3CB44B',
+  '#FFE119',
+  '#4363D8',
+  '#F58231',
+  '#911EB4',
+  '#42D4F4',
+  '#F032E6',
+  '#BCF60C',
+  '#FABEBE',
+  '#008080',
+  '#E6BEFF',
+  '#9A6324',
+  '#FFFAC8',
+  '#800000',
+  '#AAFFC3',
+  '#808000',
+  '#FFD8B1',
+  '#000075',
+  '#A9A9A9',
 ];
-
 
 const CustomizedContent: React.FC<any> = (props) => {
   const { depth, x, y, width, height, name, schoolColor, iconId, portraitData, children } = props;
@@ -94,19 +110,22 @@ const CustomizedContent: React.FC<any> = (props) => {
       strokeWidth = 0;
   }
 
-
   // Determine image rendering based on isLeaf (no child nodes?)
   const isLeaf = !children || children.length === 0;
-  const portraitBase64 = (isLeaf && iconId && portraitData) ? portraitData[iconId] : null;
+  const portraitBase64 = isLeaf && iconId && portraitData ? portraitData[iconId] : null;
   // const canRenderImage = portraitBase64 && width > 40 && height > 40;
 
   // (Label position calculation logic follows the user-modified version)
-  let labelX = x + 6, labelY = y + 18, labelSize = 14;
-  if (depth === 2) { // Club
+  let labelX = x + 6,
+    labelY = y + 18,
+    labelSize = 14;
+  if (depth === 2) {
+    // Club
     labelX = x + 10;
     labelY = y + 34;
     labelSize = 12;
-  } else if (depth === 3) { // Student
+  } else if (depth === 3) {
+    // Student
     labelX = x + 14;
     labelY = y + 50;
     labelSize = 11;
@@ -120,8 +139,8 @@ const CustomizedContent: React.FC<any> = (props) => {
   // Do not display labels on leaf nodes (images)
   // const canRenderLabel = !isLeaf && width > 80 && height > minHeight;
 
-  let imageSize;//, imageX, imageY;
-  const NATURAL_IMAGE_SIZE = 250
+  let imageSize; //, imageX, imageY;
+  const NATURAL_IMAGE_SIZE = 250;
 
   // 2. Limit image size to the *smaller* of 'cell size' and 'original size' (prevent distortion)
   // (However, use smaller of width/height to maintain aspect ratio)
@@ -129,12 +148,12 @@ const CustomizedContent: React.FC<any> = (props) => {
   imageSize = Math.min(maxImageSize, NATURAL_IMAGE_SIZE);
 
   // const useHighRes = width * height > 150 * 150; // High-res condition requested by user
-  const useHighRes = Math.max(width, height) > 150 // High-res condition requested by user
+  const useHighRes = Math.max(width, height) > 150; // High-res condition requested by user
   const highResPath = cdn(`/img/portrait/${iconId}.webp`);
   const lowResPath = `data:image/webp;base64,${portraitBase64}`;
 
   // Default path is lowResPath. If high-res is available, use highResPath.
-  const initialHref = (useHighRes) ? highResPath : lowResPath;
+  const initialHref = useHighRes ? highResPath : lowResPath;
 
   // 4. Error Handler (On high-res loading failure)
   const handleImageError = (e: React.SyntheticEvent<SVGImageElement, Event>) => {
@@ -144,8 +163,6 @@ const CustomizedContent: React.FC<any> = (props) => {
       e.currentTarget.setAttribute('href', lowResPath);
     }
   };
-
-
 
   return (
     <g>
@@ -166,7 +183,6 @@ const CustomizedContent: React.FC<any> = (props) => {
 
       {/* 2. Render Portrait Image (isLeaf && canRenderImage) */}
       {iconId ? (
-
         <image
           href={initialHref}
           x={x}
@@ -198,7 +214,6 @@ const CustomizedContent: React.FC<any> = (props) => {
   );
 };
 
-
 /**
  * 5. Treemap Chart Component
  */
@@ -207,32 +222,38 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
   totalCount,
   t_s,
   portraitData,
-  aggregationType // Receive prop
+  aggregationType, // Receive prop
 }) => {
-
-  const { t } = useTranslation("emblemCounter");
+  const { t } = useTranslation('emblemCounter');
 
   /**
-     * 6. Generate Hierarchical Data (useMemo)
-     * Dynamically changes depth and leaf nodes based on aggregationType.
-     */
+   * 6. Generate Hierarchical Data (useMemo)
+   * Dynamically changes depth and leaf nodes based on aggregationType.
+   */
   const hierarchyData = useMemo(() => {
     // Define Aggregate Node Type
-    type SeasonalLeaf = { name: string; count: number; iconId: number; };
+    type SeasonalLeaf = { name: string; count: number; iconId: number };
     type BaseNameNode = {
       name: string;
       children: SeasonalLeaf[];
-      totalCount: number; maxCount: number; topStudentId: number | null;
+      totalCount: number;
+      maxCount: number;
+      topStudentId: number | null;
     };
     type ClubNode = {
       name: string;
       children: Map<string, BaseNameNode>;
-      totalCount: number; maxCount: number; topStudentId: number | null;
+      totalCount: number;
+      maxCount: number;
+      topStudentId: number | null;
     };
     type SchoolNode = {
-      name: string; color: string;
+      name: string;
+      color: string;
       children: Map<string, ClubNode>;
-      totalCount: number; maxCount: number; topStudentId: number | null;
+      totalCount: number;
+      maxCount: number;
+      topStudentId: number | null;
     };
 
     const root = new Map<string, SchoolNode>();
@@ -254,7 +275,14 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
       if (!root.has(schoolName)) {
         const schoolColor = SCHOOL_COLORS[schoolIndex % SCHOOL_COLORS.length];
         schoolIndex++;
-        root.set(schoolName, { name: schoolName, color: schoolColor, children: new Map(), totalCount: 0, maxCount: 0, topStudentId: null });
+        root.set(schoolName, {
+          name: schoolName,
+          color: schoolColor,
+          children: new Map(),
+          totalCount: 0,
+          maxCount: 0,
+          topStudentId: null,
+        });
       }
       const schoolNode = root.get(schoolName)!;
       // Update School Node Aggregation
@@ -266,7 +294,13 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
 
       // 2. Club Node (Get or Create)
       if (!schoolNode.children.has(clubName)) {
-        schoolNode.children.set(clubName, { name: clubName, children: new Map(), totalCount: 0, maxCount: 0, topStudentId: null });
+        schoolNode.children.set(clubName, {
+          name: clubName,
+          children: new Map(),
+          totalCount: 0,
+          maxCount: 0,
+          topStudentId: null,
+        });
       }
       const clubNode = schoolNode.children.get(clubName)!;
       // Update Club node aggregation
@@ -278,7 +312,13 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
 
       // 3. Student (Base) Node (Get or Create)
       if (!clubNode.children.has(baseNameTranslated)) {
-        clubNode.children.set(baseNameTranslated, { name: baseNameTranslated, children: [], totalCount: 0, maxCount: 0, topStudentId: null });
+        clubNode.children.set(baseNameTranslated, {
+          name: baseNameTranslated,
+          children: [],
+          totalCount: 0,
+          maxCount: 0,
+          topStudentId: null,
+        });
       }
       const baseNameNode = clubNode.children.get(baseNameTranslated)!;
       // Update Student (Base) node aggregation
@@ -292,102 +332,89 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
       baseNameNode.children.push({
         name: seasonalNameTranslated,
         count: count,
-        iconId: iconId
+        iconId: iconId,
       });
     }
 
     // 2. Modify returned data structure based on aggregationType
     switch (aggregationType) {
-
       // School (Depth 1)
       case 'school':
-        return Array.from(root.values()).map(s => ({
+        return Array.from(root.values()).map((s) => ({
           name: s.name,
           schoolColor: s.color,
-          count: s.totalCount,       // Size of leaf node (School)
-          iconId: s.topStudentId,    // Icon of leaf node (School)
+          count: s.totalCount, // Size of leaf node (School)
+          iconId: s.topStudentId, // Icon of leaf node (School)
         }));
 
       // Club (Depth 2)
       case 'club':
-        return Array.from(root.values()).map(s => ({
+        return Array.from(root.values()).map((s) => ({
           name: s.name,
           schoolColor: s.color,
-          children: Array.from(s.children.values()).map(c => ({
+          children: Array.from(s.children.values()).map((c) => ({
             name: c.name,
             schoolColor: s.color,
-            count: c.totalCount,     // Size of leaf node (Club)
-            iconId: c.topStudentId,  // Icon of leaf node (Club)
-          }))
+            count: c.totalCount, // Size of leaf node (Club)
+            iconId: c.topStudentId, // Icon of leaf node (Club)
+          })),
         }));
 
       // Student (Integrated) (Depth 3)
       case 'student_combined':
-        return Array.from(root.values()).map(s => ({
+        return Array.from(root.values()).map((s) => ({
           name: s.name,
           schoolColor: s.color,
-          children: Array.from(s.children.values()).map(c => ({
+          children: Array.from(s.children.values()).map((c) => ({
             name: c.name,
             schoolColor: s.color,
-            children: Array.from(c.children.values()).map(b => ({
+            children: Array.from(c.children.values()).map((b) => ({
               name: b.name,
               schoolColor: s.color,
-              count: b.totalCount,    // Size of leaf node (Student)
+              count: b.totalCount, // Size of leaf node (Student)
               iconId: b.topStudentId, // Icon of leaf node (Student)
-            }))
-          }))
+            })),
+          })),
         }));
 
       // Student (Individual) (Depth 4) - Default
       case 'student_separate':
       default:
-        return Array.from(root.values()).map(s => ({
+        return Array.from(root.values()).map((s) => ({
           name: s.name,
           schoolColor: s.color,
-          children: Array.from(s.children.values()).map(c => ({
+          children: Array.from(s.children.values()).map((c) => ({
             name: c.name,
             schoolColor: s.color,
-            children: Array.from(c.children.values()).map(b => ({
+            children: Array.from(c.children.values()).map((b) => ({
               name: b.name,
               schoolColor: s.color,
               // No count or iconId as it is not a leaf node
-              children: b.children.map(leaf => ({ // Leaf Node (Seasonal)
+              children: b.children.map((leaf) => ({
+                // Leaf Node (Seasonal)
                 ...leaf,
                 schoolColor: s.color, // (count, iconId included in ...leaf)
-              }))
-            }))
-          }))
+              })),
+            })),
+          })),
         }));
     }
   }, [data, t, t_s, aggregationType]); // Add aggregationType dependency
-
 
   if (hierarchyData.length === 0) {
     return null;
   }
 
-
   return (
     // (Keep user-modified height of 600px)
     <div className="w-full h-96 md:h-[600px] mb-6">
       <ResponsiveContainer width="100%" height="100%">
-        <Treemap
-          data={hierarchyData}
-          dataKey="count"
-          nameKey="name"
-          isAnimationActive={false}
-
-          content={(props) => (
-            <CustomizedContent {...props} portraitData={portraitData} />
-          )}
-        >
+        <Treemap data={hierarchyData} dataKey="count" nameKey="name" isAnimationActive={false} content={(props) => <CustomizedContent {...props} portraitData={portraitData} />}>
           <Tooltip content={<CustomTooltip totalCount={totalCount} />} />
         </Treemap>
       </ResponsiveContainer>
     </div>
   );
 };
-
-
 
 export default EmblemTreemap;

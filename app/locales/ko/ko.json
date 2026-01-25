@@ -36,7 +36,8 @@
     "fast": "패스",
     "limited": "한정",
     "clear": "클리어",
-    "period": "기간"
+    "period": "기간",
+    "jfd": "종합전술시험"
   },
   "LocaleSwitcher": {
     "en": "영어",
@@ -86,11 +87,13 @@
       "filters": "필터"
     },
     "heatmap": {
-      "title": "총력전·대결전 학생 출전 동향",
-      "description1": "총력전·대결전에 출전하여 플래티넘 등급을 받은 학생들의 동향을 히트맵 형태로 표시",
+      "title": "학생별 총력전·대결전 출전 동향 및 미래시",
+      "description1": "각 학생이 어떤 총력전·대결전에 출전하였는지 조회",
       "description2": "학생의 레벨에 따라 사용 횟수에 가중치를 적용합니다. (예: 최대 레벨이 90 Lv.일 때, 45 Lv. 후부키를 사용한다면 45/90 = 0.5 회 사용으로 계산)",
       "processingMessage": "데이터 로드, 압축 해제 및 처리 중...",
       "noDataMessage": "표시할 데이터가 없습니다. 최소 하나 이상의 성급을 선택하세요.",
+      "usage_statistics": "채용 통계",
+      "usage_desc": "총력전·대결전별 성급에 따른 픽률을 비교합니다.",
       "control": {
         "selectStudent": "학생 선택",
         "studentSearchPlaceholder": "학생 이름, 역할, 학원 입력",
@@ -133,9 +136,9 @@
     "site-title_old": "유즈 Trends | 블루아카 출전동향",
     "description_old": "\"블루 아카이브\" 국내·일본 서버의 총력전·대결전 편성 통계",
     "description": "넥슨게임즈가 개발한 모바일 게임 \"블루 아카이브\"의 공략을 위한 비공식 데이터베이스",
-    "btn1-go": "동향 차트 보기",
+    "btn1-go": "학생별 차트 보기",
     "btn2-go": "순위 차트 보기",
-    "btn1": "동향 차트",
+    "btn1": "학생별 차트",
     "btn2": "순위 차트",
     "last-update": "데이터 시점:",
     "js-disable": "JavaScript 비활성화됨",
@@ -361,7 +364,7 @@
     "percentage": "%",
     "count": "횟수",
     "change": "증감",
-    "emblemSummary": "총 {{counts}}건, 설졍률: {{rate}}%"
+    "emblemSummary": "총 {{counts}}건, 설정률: {{rate}}%"
   },
   "language_banner": {
     "message": "{{language}}를 사용하시는 것 같습니다. 언어를 변경하시겠습니까?",

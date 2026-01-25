@@ -23,7 +23,7 @@ function parseTimeSegmentToSeconds(timeStr: string): number | null {
     return null;
   }
 
-  return (minutes * 60) + seconds + fractions;
+  return minutes * 60 + seconds + fractions;
 }
 
 /**
@@ -38,7 +38,7 @@ export function calculateTimeExpression(expression: string): number | null {
 
   // 2. Remove spaces on each part and filter empty strings.
   //    ["10:30 ", "+", " 01:15"] -> ["10:30", "+", "01:15"]
-  const tokens = parts.map(p => p.trim()).filter(p => p.length > 0);
+  const tokens = parts.map((p) => p.trim()).filter((p) => p.length > 0);
 
   if (tokens.length === 0) {
     return null;

@@ -11,7 +11,6 @@ import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from './common/locale';
 import { CustomCheckbox } from '../CustomCheckbox';
 
-
 type ItemType = 'Furniture' | 'Credit' | 'ExpGrowth' | 'Material' | 'Favor' | 'Coin' | 'SecretStone' | 'Gem' | 'Equipment';
 
 export type ShopResult = {
@@ -19,11 +18,7 @@ export type ShopResult = {
   rewards: Record<string, number>;
 };
 
-const getShopItemType = (
-  rewardType: string,
-  rewardId: number,
-  itemInfo: { ItemCategory?: number } | undefined
-): ItemType | null => {
+const getShopItemType = (rewardType: string, rewardId: number, itemInfo: { ItemCategory?: number } | undefined): ItemType | null => {
   if (rewardType === 'Furniture') return 'Furniture';
   if (rewardType === 'Equipment') return 'Equipment';
   if (rewardType === 'Currency') {
@@ -32,17 +27,20 @@ const getShopItemType = (
   }
   if (itemInfo && typeof itemInfo.ItemCategory === 'number') {
     switch (itemInfo.ItemCategory) {
-      case 0: return 'Coin';
-      case 1: return 'ExpGrowth';
-      case 2: return 'SecretStone';
-      case 3: return 'Material';
-      case 6: return 'Favor';
+      case 0:
+        return 'Coin';
+      case 1:
+        return 'ExpGrowth';
+      case 2:
+        return 'SecretStone';
+      case 3:
+        return 'Material';
+      case 6:
+        return 'Favor';
     }
   }
   return null;
 };
-
-
 
 interface ShopPlannerProps {
   eventId: number;
@@ -53,24 +51,14 @@ interface ShopPlannerProps {
   onCalculate: (result: ShopResult | null) => void;
 }
 
-
-export const ShopPlanner = ({
-  eventId,
-  eventData,
-  iconData,
-  allStages,
-  totalBonus,
-  onCalculate,
-}: ShopPlannerProps) => {
-
-
+export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonus, onCalculate }: ShopPlannerProps) => {
   const { shopActiveTab: activeTab, setShopActiveTab: setActiveTab, shopDisplayUnit: displayUnit, setShopDisplayUnit: setDisplayUnit } = useEventSettings(eventId);
 
   const { plan, setPurchaseCounts, setAlreadyPurchasedCounts } = usePlanForEvent(eventId);
-  const { purchaseCounts, alreadyPurchasedCounts } = plan
+  const { purchaseCounts, alreadyPurchasedCounts } = plan;
 
-  const { t, i18n } = useTranslation("planner");
-  const locale = i18n.language as Locale
+  const { t, i18n } = useTranslation('planner');
+  const locale = i18n.language as Locale;
 
   useEffect(() => {
     if (!activeTab) {
@@ -79,30 +67,31 @@ export const ShopPlanner = ({
     }
   }, [eventData.shop]);
 
-
   // 2. Highest efficiency AP cost calculation by event goods
   const currencyApCostMap = useMemo(() => {
     if (!allStages || !eventData) return {};
 
     const apMap: Record<number, number> = {};
-    const eventCurrencyIds = new Set(eventData.currency.map(c => c.ItemUniqueId));
+    const eventCurrencyIds = new Set(eventData.currency.map((c) => c.ItemUniqueId));
 
-    eventCurrencyIds.forEach(currencyId => {
+    eventCurrencyIds.forEach((currencyId) => {
       let bestApPerItem = Infinity;
 
       // Find all the 'repeatable' stages that drop the goods.
-      const stagesThatDropThis = allStages.filter(s => s.StageEnterCostAmount == 20 && s.type === 'stage' && s.EventContentStageReward.some(r => r.RewardId === currencyId));
+      const stagesThatDropThis = allStages.filter((s) => s.StageEnterCostAmount == 20 && s.type === 'stage' && s.EventContentStageReward.some((r) => r.RewardId === currencyId));
 
       for (const stage of stagesThatDropThis) {
-        const totalRewardSum = stage.EventContentStageReward.filter(r => r.RewardTagStr == 'Event').map(v => v?.RewardAmount).reduce((a, b) => a + b);
-        const rewardInfo = stage.EventContentStageReward.find(r => r.RewardId === currencyId && r.RewardTagStr == 'Event')!;
-        if (!rewardInfo) continue
-        const baseDropAmount = rewardInfo.RewardAmount * rewardInfo.RewardProb / 10000;
+        const totalRewardSum = stage.EventContentStageReward.filter((r) => r.RewardTagStr == 'Event')
+          .map((v) => v?.RewardAmount)
+          .reduce((a, b) => a + b);
+        const rewardInfo = stage.EventContentStageReward.find((r) => r.RewardId === currencyId && r.RewardTagStr == 'Event')!;
+        if (!rewardInfo) continue;
+        const baseDropAmount = (rewardInfo.RewardAmount * rewardInfo.RewardProb) / 10000;
         const bonusPercent = totalBonus[currencyId] || 0;
         const effectiveDropAmount = baseDropAmount * (1 + bonusPercent / 10000);
 
         if (effectiveDropAmount > 0) {
-          const apPerItem = stage.StageEnterCostAmount * (baseDropAmount / totalRewardSum) / effectiveDropAmount;
+          const apPerItem = (stage.StageEnterCostAmount * (baseDropAmount / totalRewardSum)) / effectiveDropAmount;
           if (apPerItem < bestApPerItem) {
             bestApPerItem = apPerItem;
           }
@@ -113,13 +102,11 @@ export const ShopPlanner = ({
     return apMap;
   }, [allStages, eventData, totalBonus]);
 
-
-
   const handlePurchaseAllItems = () => {
     const newCounts: Record<number, number> = {};
     const allItems = Object.values(eventData.shop).flat();
 
-    allItems.forEach(item => {
+    allItems.forEach((item) => {
       const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
       const remainingLimit = item.PurchaseCountLimit - alreadyPurchased;
       if (remainingLimit > 0) {
@@ -127,50 +114,48 @@ export const ShopPlanner = ({
       }
     });
 
-    setPurchaseCounts(prev => ({ ...prev, ...newCounts }));
+    setPurchaseCounts((prev) => ({ ...prev, ...newCounts }));
   };
 
   const handleResetAllPurchases = () => {
     setPurchaseCounts(() => ({}));
   };
 
-
-
-
   const handlePurchaseChange = (itemId: number, count: number, limit: number) => {
     const newCount = Math.max(0, Math.min(count, limit ? limit : count));
-    setPurchaseCounts(prev => ({ ...prev, [itemId]: newCount }));
+    setPurchaseCounts((prev) => ({ ...prev, [itemId]: newCount }));
   };
 
-  const handleAlreadyPurchasedChange = useCallback((itemId: number, count: number, limit: number) => {
-    const newAlreadyPurchased = Math.max(0, Math.min(count, limit));
+  const handleAlreadyPurchasedChange = useCallback(
+    (itemId: number, count: number, limit: number) => {
+      const newAlreadyPurchased = Math.max(0, Math.min(count, limit));
 
-    // 1. Update 'previously purchased' quantity
-    setAlreadyPurchasedCounts(prev => ({
-      ...prev,
-      [itemId]: newAlreadyPurchased,
-    }));
-
-    // 2. Calculate new stock (remainingLimit)
-    const newRemainingLimit = limit - newAlreadyPurchased;
-    const currentPurchase = purchaseCounts?.[itemId] || 0;
-
-    // 3. If the current 'purchase' quantity exceeds the new stock, automatically adjust it to the maximum stock
-    if (currentPurchase > newRemainingLimit) {
-      setPurchaseCounts(prev => ({
+      // 1. Update 'previously purchased' quantity
+      setAlreadyPurchasedCounts((prev) => ({
         ...prev,
-        [itemId]: newRemainingLimit,
+        [itemId]: newAlreadyPurchased,
       }));
-    }
-  }, [purchaseCounts, setAlreadyPurchasedCounts, setPurchaseCounts]);
 
+      // 2. Calculate new stock (remainingLimit)
+      const newRemainingLimit = limit - newAlreadyPurchased;
+      const currentPurchase = purchaseCounts?.[itemId] || 0;
 
+      // 3. If the current 'purchase' quantity exceeds the new stock, automatically adjust it to the maximum stock
+      if (currentPurchase > newRemainingLimit) {
+        setPurchaseCounts((prev) => ({
+          ...prev,
+          [itemId]: newRemainingLimit,
+        }));
+      }
+    },
+    [purchaseCounts, setAlreadyPurchasedCounts, setPurchaseCounts],
+  );
 
   const handleSelectAllInCategory = (categoryId: string) => {
     const newCounts: Record<number, number> = {};
     const itemsInCategory = eventData.shop[categoryId];
 
-    itemsInCategory.forEach(item => {
+    itemsInCategory.forEach((item) => {
       const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
       const remainingLimit = item.PurchaseCountLimit - alreadyPurchased;
       if (remainingLimit > 0) {
@@ -178,21 +163,19 @@ export const ShopPlanner = ({
       }
     });
 
-    setPurchaseCounts(prev => ({ ...prev, ...newCounts }));
+    setPurchaseCounts((prev) => ({ ...prev, ...newCounts }));
   };
-
 
   const handleResetCategory = (categoryId: string) => {
     const newCounts = { ...purchaseCounts };
     const itemsInCategory = eventData.shop[categoryId];
-    itemsInCategory.forEach(item => {
+    itemsInCategory.forEach((item) => {
       if (newCounts[item.Id]) {
         delete newCounts[item.Id];
       }
     });
-    setPurchaseCounts(prev => ({ ...newCounts }));
+    setPurchaseCounts((prev) => ({ ...newCounts }));
   };
-
 
   /*
     const handleSelectAllByTypeInCategory = (type: ItemType, categoryId: string) => {
@@ -221,14 +204,13 @@ export const ShopPlanner = ({
       setPurchaseCounts(() => newCounts);
     };*/
 
-
   const handleToggleTypeSelection = (type: ItemType, categoryId: string, currentState: 'checked' | 'unchecked' | 'indeterminate') => {
     const isFullyChecked = currentState === 'checked';
 
     const newCounts = { ...purchaseCounts };
     const itemsInCategory = eventData.shop[categoryId];
 
-    itemsInCategory.forEach(item => {
+    itemsInCategory.forEach((item) => {
       if (!item.Goods?.length) return;
 
       const goodsInfo = item.Goods[0];
@@ -278,7 +260,7 @@ export const ShopPlanner = ({
     const states: Record<string, { totalEligible: number; totalSelected: number }> = {};
 
     // 1. Initialize state object for all button types
-    itemTypeButtons.forEach(btn => {
+    itemTypeButtons.forEach((btn) => {
       states[btn.type] = { totalEligible: 0, totalSelected: 0 };
     });
 
@@ -319,8 +301,8 @@ export const ShopPlanner = ({
 
     const itemsInCurrentCategory = eventData.shop[activeTab] || [];
 
-    let hasReports = false
-    let hasEnhancementStones = false
+    let hasReports = false;
+    let hasEnhancementStones = false;
 
     for (const item of itemsInCurrentCategory) {
       if (item.Goods) {
@@ -331,24 +313,22 @@ export const ShopPlanner = ({
 
         // Simplify logic by calling helper function
         const currentItemType = getShopItemType(rewardType, rewardId, itemInfo);
-        if (currentItemType == 'Equipment') hasEnhancementStones = true
-        else if (currentItemType == 'ExpGrowth') hasReports = true
+        if (currentItemType == 'Equipment') hasEnhancementStones = true;
+        else if (currentItemType == 'ExpGrowth') hasReports = true;
       }
-
-
     }
 
     return (
       <div className="space-y-2">
         {/* 1. Basic informational text (always displayed) */}
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t('ui.defaultNotice')}
-        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t('ui.defaultNotice')}</p>
 
         {/* 2. Statement related to the report  */}
         {hasReports && (
           <div className="text-xs text-orange-700 dark:text-orange-400 border-t border-orange-200 dark:border-orange-800 pt-2 mt-2">
-            <p><strong>{t('ui.reportNoticeTitle')}</strong></p>
+            <p>
+              <strong>{t('ui.reportNoticeTitle')}</strong>
+            </p>
             <p className="font-mono text-[10px] opacity-80">{t('ui.reportNoticeFormula')}</p>
           </div>
         )}
@@ -356,49 +336,33 @@ export const ShopPlanner = ({
         {/* 3. a phrase related to EnhancementStones */}
         {hasEnhancementStones && (
           <div className="text-xs text-orange-700 dark:text-orange-400 border-t border-orange-200 dark:border-orange-800 pt-2 mt-2">
-            <p><strong>{t('ui.enhancementStoneNoticeTitle')}</strong></p>
+            <p>
+              <strong>{t('ui.enhancementStoneNoticeTitle')}</strong>
+            </p>
             <p className="font-mono text-[10px] opacity-80">{t('ui.enhancementStoneNoticeFormula')}</p>
           </div>
         )}
       </div>
     );
-
   }, [displayUnit, activeTab, eventData, locale]);
-
-
-
 
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-
         {/* Title */}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">
-          {t('page.eventShop')}
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">{t('page.eventShop')}</h2>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           <label className="flex items-center gap-1.5 cursor-pointer text-sm font-semibold text-gray-600 dark:text-gray-300">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded"
-              checked={displayUnit === 'ap'}
-              onChange={(e) => setDisplayUnit(e.target.checked ? 'ap' : 'currency')}
-            />
+            <input type="checkbox" className="h-4 w-4 rounded" checked={displayUnit === 'ap'} onChange={(e) => setDisplayUnit(e.target.checked ? 'ap' : 'currency')} />
             {t('ui.displayCostInAP')}
           </label>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handlePurchaseAllItems}
-              className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold text-xs py-1 px-3 rounded-lg"
-            >
+            <button onClick={handlePurchaseAllItems} className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold text-xs py-1 px-3 rounded-lg">
               {t('button.purchaseAllItems')}
             </button>
-            <button
-              onClick={handleResetAllPurchases}
-              className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold text-xs py-1 px-3 rounded-lg"
-            >
+            <button onClick={handleResetAllPurchases} className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold text-xs py-1 px-3 rounded-lg">
               {t('button.resetAll')}
             </button>
           </div>
@@ -408,25 +372,24 @@ export const ShopPlanner = ({
       {/*Tab navigation UI */}
       <div className="flex flex-wrap border-b-2 border-gray-200 dark:border-neutral-700 mb-4 pb-4">
         {shopCategories.map(([categoryId]) => {
-          const shopInfo = eventData.shop_info?.find(info => info.CategoryType.toString() === categoryId);
+          const shopInfo = eventData.shop_info?.find((info) => info.CategoryType.toString() === categoryId);
           const currencyId = shopInfo?.CostParcelId[0];
           // const currencyName = currencyId ? eventData.icons.Item[currencyId]?.LocalizeEtc?.NameKr : `Shop ${categoryId}`;
-          const currencyName = currencyId ? (getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, locale) || getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, 'ja')) : `Shop ${categoryId}`;
+          const currencyName = currencyId
+            ? getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, locale) || getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, 'ja')
+            : `Shop ${categoryId}`;
           return (
             <button
               key={categoryId}
               onClick={() => setActiveTab(categoryId)}
-              className={`flex items-center space-x-2 px-3 pt-4 text-sm font-semibold border-b-2 -mb-0.5 ${activeTab === categoryId
-                ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                }`}
+              className={`flex items-center space-x-2 px-3 pt-4 text-sm font-semibold border-b-2 -mb-0.5 ${
+                activeTab === categoryId
+                  ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+              }`}
             >
               <span>
-                <img
-                  src={`data:image/webp;base64,${iconData.Item?.[currencyId?.toString() ?? '']}`}
-                  alt={currencyName || undefined}
-                  className="w-6 h-6 object-cover rounded-full"
-                />
+                <img src={`data:image/webp;base64,${iconData.Item?.[currencyId?.toString() ?? '']}`} alt={currencyName || undefined} className="w-6 h-6 object-cover rounded-full" />
               </span>
               <span>{currencyName}</span>
             </button>
@@ -434,15 +397,11 @@ export const ShopPlanner = ({
         })}
       </div>
 
-      {displayUnit === 'ap' && (
-        <div className="p-2 mb-4 bg-orange-50 dark:bg-orange-900/40 rounded-md border border-orange-200 dark:border-orange-800">
-          {apConversionNotice}
-        </div>
-      )}
+      {displayUnit === 'ap' && <div className="p-2 mb-4 bg-orange-50 dark:bg-orange-900/40 rounded-md border border-orange-200 dark:border-orange-800">{apConversionNotice}</div>}
 
       <div className="space-y-6">
         {shopCategories.map(([categoryId, items]) => {
-          console.log('shop - activeTab', activeTab)
+          console.log('shop - activeTab', activeTab);
           if (activeTab !== categoryId) return null; // Render only the active tab
 
           // Find shop name using shop_info
@@ -451,7 +410,7 @@ export const ShopPlanner = ({
           // const currencyName = currencyId ? eventData.icons.Item[currencyId]?.LocalizeEtc?.NameKr : `Shop ${categoryId}`;
 
           const availableTypesInCategory = new Set<string>();
-          items.forEach(item => {
+          items.forEach((item) => {
             if (!item.Goods?.length) return;
             const goodsInfo = item.Goods[0];
             const rewardId = goodsInfo.ParcelId[0];
@@ -464,58 +423,66 @@ export const ShopPlanner = ({
             }
           });
 
-          const filteredButtons = itemTypeButtons.filter(btn => availableTypesInCategory.has(btn.type));
-
-
+          const filteredButtons = itemTypeButtons.filter((btn) => availableTypesInCategory.has(btn.type));
 
           return (
             <div key={categoryId}>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex flex-wrap gap-2">
-                  {filteredButtons.filter(btn => categorySelectionStates[btn.type].totalEligible).map(btn => {
-                    const stateInfo = categorySelectionStates[btn.type];
-                    if (!stateInfo) return null;
+                  {filteredButtons
+                    .filter((btn) => categorySelectionStates[btn.type].totalEligible)
+                    .map((btn) => {
+                      const stateInfo = categorySelectionStates[btn.type];
+                      if (!stateInfo) return null;
 
-                    const { totalEligible, totalSelected } = stateInfo;
-                    const isDisabled = totalEligible === 0;
+                      const { totalEligible, totalSelected } = stateInfo;
+                      const isDisabled = totalEligible === 0;
 
-                    let state: 'checked' | 'unchecked' | 'indeterminate' = 'unchecked';
-                    if (!isDisabled) {
-                      if (totalSelected === totalEligible) {
-                        state = 'checked';
-                      } else if (totalSelected > 0) {
-                        state = 'indeterminate';
+                      let state: 'checked' | 'unchecked' | 'indeterminate' = 'unchecked';
+                      if (!isDisabled) {
+                        if (totalSelected === totalEligible) {
+                          state = 'checked';
+                        } else if (totalSelected > 0) {
+                          state = 'indeterminate';
+                        }
                       }
-                    }
-                    return (
-                      <label
-                        key={btn.type}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors
-                          ${isDisabled
-                            ? 'bg-gray-200 dark:bg-neutral-800 text-gray-400 dark:text-neutral-600 cursor-not-allowed'
-                            : 'bg-teal-500/10 dark:bg-teal-600/20 text-teal-700 dark:text-teal-300 hover:bg-teal-500/20 dark:hover:bg-teal-600/30 cursor-pointer'
-                          }`}
-                      >
-                        <CustomCheckbox
-                          state={state}
-                          disabled={isDisabled}
-                          // OnChange only causes click events.
-                          // Checked status changes are handled by useEffect inside CustomCheckbox seeing 'state' prop.
-                          onChange={() => {
-                            if (!isDisabled) {
-                              handleToggleTypeSelection(btn.type, categoryId, state);
-                            }
-                          }}
-                        />
-                        <span>{btn.label}</span>
-                      </label>
-                    );
-                  })}
+                      return (
+                        <label
+                          key={btn.type}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors
+                          ${isDisabled ? 'bg-gray-200 dark:bg-neutral-800 text-gray-400 dark:text-neutral-600 cursor-not-allowed' : 'bg-teal-500/10 dark:bg-teal-600/20 text-teal-700 dark:text-teal-300 hover:bg-teal-500/20 dark:hover:bg-teal-600/30 cursor-pointer'}`}
+                        >
+                          <CustomCheckbox
+                            state={state}
+                            disabled={isDisabled}
+                            // OnChange only causes click events.
+                            // Checked status changes are handled by useEffect inside CustomCheckbox seeing 'state' prop.
+                            onChange={() => {
+                              if (!isDisabled) {
+                                handleToggleTypeSelection(btn.type, categoryId, state);
+                              }
+                            }}
+                          />
+                          <span>{btn.label}</span>
+                        </label>
+                      );
+                    })}
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button onClick={() => handleSelectAllInCategory(categoryId)} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold text-xs py-1 px-2 rounded-md"> {t('button.purchaseCurrentTab')}</button>
-                  <button onClick={() => handleResetCategory(categoryId)} className="bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-2 rounded-md">{t('button.resetCurrentTab')}</button>
+                  <button
+                    onClick={() => handleSelectAllInCategory(categoryId)}
+                    className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold text-xs py-1 px-2 rounded-md"
+                  >
+                    {' '}
+                    {t('button.purchaseCurrentTab')}
+                  </button>
+                  <button
+                    onClick={() => handleResetCategory(categoryId)}
+                    className="bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-2 rounded-md"
+                  >
+                    {t('button.resetCurrentTab')}
+                  </button>
                 </div>
               </div>
 
@@ -543,15 +510,16 @@ export const ShopPlanner = ({
                         <ItemIcon type={rewardType} itemId={rewardId.toString()} amount={goodsInfo.ParcelAmount[0]} size={12} eventData={eventData} iconData={iconData} />
                       </div>
                       <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center justify-center mt-0.5">
-
-                        <span className='inline-flex items-center
+                        <span
+                          className="inline-flex items-center
                           bg-no-repeat bg-bottom
                           bg-[linear-gradient(to_top,currentColor_1px,transparent_1px)]
-                          bg-size-[100%_1px]'>
+                          bg-size-[100%_1px]"
+                        >
                           {displayUnit === 'ap' ? (
                             <>
                               <span className="font-bold text-teal-600 dark:text-teal-400">{totalApCost ? totalApCost.toPrecision(3) : 'NA'}</span>
-                              <img src={`data:image/webp;base64,${iconData.Currency?.["5"]}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
+                              <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
                               {/* <span className="ml-0.5">AP</span> */}
                             </>
                           ) : (
@@ -570,8 +538,9 @@ export const ShopPlanner = ({
                           <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.alreadyPurchased')}</label>
                           <NumberInput
                             value={alreadyPurchased}
-                            onChange={val => handleAlreadyPurchasedChange(item.Id, val, item.PurchaseCountLimit)}
-                            min={0} max={isInfinite ? Infinity : item.PurchaseCountLimit}
+                            onChange={(val) => handleAlreadyPurchasedChange(item.Id, val, item.PurchaseCountLimit)}
+                            min={0}
+                            max={isInfinite ? Infinity : item.PurchaseCountLimit}
                             disabled={isInfinite}
                           />
                         </div>
@@ -579,8 +548,9 @@ export const ShopPlanner = ({
                           <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.purchase')}</label>
                           <NumberInput
                             value={currentPurchase}
-                            onChange={val => handlePurchaseChange(item.Id, val, remainingLimit)}
-                            min={0} max={isInfinite ? Infinity : remainingLimit}
+                            onChange={(val) => handlePurchaseChange(item.Id, val, remainingLimit)}
+                            min={0}
+                            max={isInfinite ? Infinity : remainingLimit}
                             disabled={remainingLimit <= 0 && !isInfinite}
                           />
                         </div>
@@ -590,10 +560,9 @@ export const ShopPlanner = ({
                 })}
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </>
   );
-
 };

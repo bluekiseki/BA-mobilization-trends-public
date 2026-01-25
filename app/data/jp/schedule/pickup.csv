@@ -457,3 +457,9 @@ studentId,name,startTime,endTime,rerun,limited,fast,prediction
 10104,Reijo,2026-01-07 11:00,2026-01-20 10:59,false,false,false
 10053,Yuuka (Sportswear),2026-01-07 11:00,2026-01-20 10:59,true,true,false
 10054,Mari (Sportswear),2026-01-07 11:00,2026-01-20 10:59,true,true,false
+10133,Rio (Battle),2026-01-20 11:00,2026-01-29 10:59,false,true,false
+20054,Himari (Battle),2026-01-20 11:00,2026-01-29 10:59,false,true,false
+10134,Aris (Battle),2026-01-29 11:00,2026-02-05 10:59,false,true,true
+10135,Kei (Battle),2026-01-29 11:00,2026-02-05 10:59,false,true,true
+10098,Hoshino (Battle),2026-01-29 11:00,2026-02-05 10:59,true,true,true
+10100,Shiroko＊Terror,2026-01-29 11:00,2026-02-05 10:59,true,true,true

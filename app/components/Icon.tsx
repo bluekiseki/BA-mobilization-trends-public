@@ -1,27 +1,16 @@
-export const PlayIcon = ({ className = "w-3 h-3" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
+export const PlayIcon = ({ className = 'w-3 h-3' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d="M8 5v14l11-7z" />
   </svg>
 );
 
-export const StopIcon = ({ className = "w-3 h-3" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
+export const StopIcon = ({ className = 'w-3 h-3' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d="M6 6h12v12H6z" />
   </svg>
 );
 
-
-export const PyroxenesIcon = ({ title = "Home", className = "w-10 h-10" }) => {
+export const PyroxenesIcon = ({ title = 'Home', className = 'w-10 h-10' }) => {
   return (
     <svg className={className} width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
       <title>{title}</title>
@@ -77,19 +66,11 @@ export const PyroxenesIcon = ({ title = "Home", className = "w-10 h-10" }) => {
 
       <polygon points="50,8 83,31 83,69 50,92 17,69 17,31" fill="none" stroke="#A38FFF" strokeWidth="2" />
     </svg>
-  )
-}
-
+  );
+};
 
 export const ChevronIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    className={`h-5 w-5 transition-transform duration-300 ${className}`}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`h-5 w-5 transition-transform duration-300 ${className}`}>
     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
   </svg>
 );

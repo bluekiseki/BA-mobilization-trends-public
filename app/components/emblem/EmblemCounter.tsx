@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import emblemDataList from 'app/data/jp/emblem_counter/list.json';
 import type { PortraitData } from '../dashboard/common';
-import Group_Name_Translation from '~/locales/club.json'
-const s_locale = Group_Name_Translation as any
+// import Group_Name_Translation from '~/locales/club.json';
+// const s_locale = Group_Name_Translation as any;
 import { IoTriangleSharp } from 'react-icons/io5';
 import { FiHash, FiTrendingUp, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import type { TFunction } from 'i18next';
@@ -56,16 +56,15 @@ const processEmblemData = (
   tierFilter: number,
   bondLevelFilter: number,
   aggregationType: AggregationType,
-  t: TFunction<"emblemCounter", undefined>
+  t: TFunction<'emblemCounter', undefined>,
 ): Map<string, { count: number; topStudentId: number | null; maxCount: number }> => {
-
   const aggregationMap = new Map<string, { count: number; topStudentId: number | null; maxCount: number }>();
   if (!emblemData || emblemData.length === 0) {
     return aggregationMap;
   }
 
   // 1. Filter entries based on selections
-  const filteredEntries = emblemData.filter(entry => {
+  const filteredEntries = emblemData.filter((entry) => {
     const [tier, bondLevel] = entry;
     if (bondLevelFilter !== bondLevel) return false;
     if (tierFilter === 4) return tier === 4;
@@ -76,7 +75,7 @@ const processEmblemData = (
   });
 
   // 2. Aggregate data
-  filteredEntries.forEach(entry => {
+  filteredEntries.forEach((entry) => {
     const studentId = Number(entry[2]);
     const student = studentData[String(studentId)];
     const count = entry[3];
@@ -88,15 +87,27 @@ const processEmblemData = (
       currentStudentIdForIcon = studentId;
     } else {
       switch (aggregationType) {
-        case 'student_separate': key = student.Name; break;
-        case 'student_combined': key = parseStudentName(student.Name).baseName; break;
-        case 'club': key = student.Club || t('etc', "etc"); break;
-        case 'school': key = student.School || t('etc', "etc"); break;
+        case 'student_separate':
+          key = student.Name;
+          break;
+        case 'student_combined':
+          key = parseStudentName(student.Name).baseName;
+          break;
+        case 'club':
+          key = student.Club || t('etc', 'etc');
+          break;
+        case 'school':
+          key = student.School || t('etc', 'etc');
+          break;
       }
     }
 
     if (key) {
-      const existing = aggregationMap.get(key) || { count: 0, topStudentId: null, maxCount: 0 };
+      const existing = aggregationMap.get(key) || {
+        count: 0,
+        topStudentId: null,
+        maxCount: 0,
+      };
       const newTotalCount = existing.count + count;
       let newTopStudentId = existing.topStudentId;
       let newMaxCount = existing.maxCount;
@@ -115,7 +126,7 @@ const processEmblemData = (
       aggregationMap.set(key, {
         count: newTotalCount,
         topStudentId: newTopStudentId,
-        maxCount: newMaxCount
+        maxCount: newMaxCount,
       });
     }
   });
@@ -126,20 +137,19 @@ const processEmblemData = (
 type SortKey = 'name' | 'count' | 'diff';
 type SortOrder = 'asc' | 'desc';
 
-
-export function EmblemCounter({ }) {
-
-  const { t, i18n } = useTranslation("emblemCounter");
-  const { t: t_d } = useTranslation("dashboard");
+export function EmblemCounter({}) {
+  const { t, i18n } = useTranslation('emblemCounter');
+  const { t: t_d } = useTranslation('dashboard');
+  const { t: t_s } = useTranslation('club');
 
   const locale = i18n.language as Locale;
-  const t_s = (x: string) => {
-    if (!s_locale[locale]) return x
-    if (!s_locale[locale][x]) return x
-    return s_locale[locale][x]
-  }
+  // const t_s = (x: string) => {
+  //   if (!s_locale[locale]) return x;
+  //   if (!s_locale[locale][x]) return x;
+  //   return s_locale[locale][x];
+  // };
 
-  const [dataList, setDataList] = useState(emblemDataList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  const [dataList] = useState(emblemDataList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   const [emblemData, setEmblemData] = useState<EmblemCountData>([]);
   const [prevEmblemData, setPrevEmblemData] = useState<EmblemCountData>([]);
 
@@ -166,7 +176,8 @@ export function EmblemCounter({ }) {
         setSortKey('diff');
         setSortOrder('desc');
       }
-    } else { // sortKey === 'diff'
+    } else {
+      // sortKey === 'diff'
       if (sortOrder === 'desc') {
         // diff desc -> diff asc
         setSortOrder('asc');
@@ -181,8 +192,8 @@ export function EmblemCounter({ }) {
   useEffect(() => {
     setIsLoading(true);
     Promise.all([
-      fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)).then(res => res.json()),
-      fetch(cdn('/w/students_portrait.json')).then(res => res.json())
+      fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)).then((res) => res.json() as any),
+      fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as any),
     ])
       .then(([studentJson, portraitJson]) => {
         // studentJson[10131] = {
@@ -195,9 +206,9 @@ export function EmblemCounter({ }) {
         setPortraitData(portraitJson);
         setError(null);
       })
-      .catch(err => {
-        console.error("Error loading static data:", err);
-        setError(t('errorLoadingData', "Error loading static data"));
+      .catch((err) => {
+        console.error('Error loading static data:', err);
+        setError(t('errorLoadingData', 'Error loading static data'));
       })
       .finally(() => setIsLoading(false)); // This only stops the *initial* load
   }, [locale, t]);
@@ -210,52 +221,65 @@ export function EmblemCounter({ }) {
     setError(null); // Clear previous errors
 
     // Find index of current and previous data files
-    const currentIndex = dataList.findIndex(item => item.name === selectedDate);
+    const currentIndex = dataList.findIndex((item) => item.name === selectedDate);
     const prevIndex = currentIndex + 1;
 
     // Construct the module path keys
     // These paths MUST exactly match the keys in emblemDataModules
     const currentModulePath = `/app/data/jp/emblem_counter/${selectedDate}.json`;
-    const prevModulePath = (prevIndex < dataList.length)
-      ? `/app/data/jp/emblem_counter/${dataList[prevIndex].name}.json`
-      : null;
+    const prevModulePath = prevIndex < dataList.length ? `/app/data/jp/emblem_counter/${dataList[prevIndex].name}.json` : null;
 
     // Check if the current module exists in our glob
     if (!emblemDataModules[currentModulePath]) {
       console.error(`Data module not found: ${currentModulePath}`);
-      setError(t('errorLoadingData', "Data module not found"));
+      setError(t('errorLoadingData', 'Data module not found'));
       setIsLoadingData(false);
       return;
     }
 
     // Create dynamic import promises (no fetch)
     // We assume the JSON files use default export
-    const currentDataPromise = (emblemDataModules[currentModulePath] as () => Promise<{ default: EmblemCountData }>)()
-      .then(module => module.default);
+    const currentDataPromise = (
+      emblemDataModules[currentModulePath] as () => Promise<{
+        default: EmblemCountData;
+      }>
+    )().then((module) => module.default);
 
-    const prevDataPromise = (prevModulePath && emblemDataModules[prevModulePath])
-      ? (emblemDataModules[prevModulePath] as () => Promise<{ default: EmblemCountData }>)()
-        .then(module => module.default)
-      : Promise.resolve([]); // Resolve with empty array if no previous data
+    const prevDataPromise =
+      prevModulePath && emblemDataModules[prevModulePath]
+        ? (
+            emblemDataModules[prevModulePath] as () => Promise<{
+              default: EmblemCountData;
+            }>
+          )().then((module) => module.default)
+        : Promise.resolve([]); // Resolve with empty array if no previous data
 
     Promise.all([currentDataPromise, prevDataPromise])
       .then(([currentJson, prevJson]) => {
         setEmblemData(currentJson);
         setPrevEmblemData(prevJson);
       })
-      .catch(err => {
-        console.error("Error loading emblem data module:", err);
-        setError(t('errorLoadingData', "Error loading emblem data module"));
+      .catch((err) => {
+        console.error('Error loading emblem data module:', err);
+        setError(t('errorLoadingData', 'Error loading emblem data module'));
       })
       .finally(() => setIsLoadingData(false));
-
   }, [selectedDate, dataList, t]);
 
-  const { displayData, totalCount, totalDelta, totalRaidPlayers } = useMemo((): { displayData: DisplayResult[], totalCount: number, totalDelta: number | null, totalRaidPlayers:number } => {
-
+  const { displayData, totalCount, totalDelta, totalRaidPlayers } = useMemo((): {
+    displayData: DisplayResult[];
+    totalCount: number;
+    totalDelta: number | null;
+    totalRaidPlayers: number;
+  } => {
     // Wait for all data to be ready
     if (isLoading || !studentData || Object.keys(studentData).length === 0 || Object.keys(portraitData).length === 0) {
-      return { displayData: [], totalCount: 0, totalDelta: null, totalRaidPlayers: 20000 };
+      return {
+        displayData: [],
+        totalCount: 0,
+        totalDelta: null,
+        totalRaidPlayers: 20000,
+      };
     }
 
     // Process both current and previous data with the same filters
@@ -267,21 +291,29 @@ export function EmblemCounter({ }) {
 
     // Get total count from *current* data for percentage calculation
     const totalCount = Array.from(currentMap.values()).reduce((sum, data) => sum + data.count, 0);
-    const totalRaidPlayers = Array.from(processEmblemData(emblemData, studentData, 1 , 0, aggregationType, t).values()).reduce((sum, data) => sum + data.count, 0);
+    const totalRaidPlayers = Array.from(processEmblemData(emblemData, studentData, 1, 0, aggregationType, t).values()).reduce((sum, data) => sum + data.count, 0);
 
     // Use all keys from both maps to include items that dropped to 0
     const allKeys = new Set([...currentMap.keys(), ...prevMap.keys()]);
 
     const results: DisplayResult[] = [];
-    allKeys.forEach(key => {
-      const currentData = currentMap.get(key) || { count: 0, topStudentId: null, maxCount: 0 };
-      const prevData = prevMap.get(key) || { count: 0, topStudentId: null, maxCount: 0 };
+    allKeys.forEach((key) => {
+      const currentData = currentMap.get(key) || {
+        count: 0,
+        topStudentId: null,
+        maxCount: 0,
+      };
+      const prevData = prevMap.get(key) || {
+        count: 0,
+        topStudentId: null,
+        maxCount: 0,
+      };
 
       const count = currentData.count;
       const prevCount = prevData.count;
 
       // Calculate diff only if prev data exists, otherwise set to null
-      const diff = hasPrevData ? (count - prevCount) : null;
+      const diff = hasPrevData ? count - prevCount : null;
 
       const iconId = currentData.topStudentId || prevData.topStudentId;
 
@@ -292,7 +324,7 @@ export function EmblemCounter({ }) {
           count: count,
           percentage: totalCount > 0 ? (count / totalCount) * 100 : 0,
           iconId: iconId,
-          diff: diff // Pass diff (which is null if no prev data)
+          diff: diff, // Pass diff (which is null if no prev data)
         });
       }
     });
@@ -330,8 +362,12 @@ export function EmblemCounter({ }) {
 
     const totalDelta = Array.from(results.values()).reduce((sum, data) => sum + (data.diff || 0), 0);
 
-    return { displayData: results, totalCount: totalCount, totalDelta, totalRaidPlayers };
-
+    return {
+      displayData: results,
+      totalCount: totalCount,
+      totalDelta,
+      totalRaidPlayers,
+    };
   }, [emblemData, prevEmblemData, studentData, portraitData, tierFilter, bondLevelFilter, aggregationType, t, isLoading, sortKey, sortOrder]);
 
   const treemapSourceData = useMemo((): TreemapSourceEntry[] => {
@@ -341,7 +377,7 @@ export function EmblemCounter({ }) {
     }
 
     // 2. Filter current data (based on tier, bondLevel)
-    const filteredEntries = emblemData.filter(entry => {
+    const filteredEntries = emblemData.filter((entry) => {
       const [tier, bondLevel] = entry;
       if (bondLevelFilter !== bondLevel) return false;
       if (tierFilter === 4) return tier === 4;
@@ -353,7 +389,7 @@ export function EmblemCounter({ }) {
 
     // 3. Aggregate counts based on Student ID (studentId) (Resolve duplication issue) [!!!]
     const studentCountMap = new Map<number, number>(); // <StudentId, total count>
-    filteredEntries.forEach(entry => {
+    filteredEntries.forEach((entry) => {
       const studentId = Number(entry[2]);
       const count = entry[3];
       // Accumulate to existing count
@@ -379,11 +415,10 @@ export function EmblemCounter({ }) {
     });
 
     return sourceData;
-
   }, [emblemData, studentData, tierFilter, bondLevelFilter, t, isLoading]); // 'aggregationType' dependency removed
 
-  const totalPlayers = tierFilter === 4 ? 20000 : (tierFilter === 3 ? 120000: tierFilter === 2 ? 240000: totalRaidPlayers);
-  const possessionRate = (totalCount <= totalPlayers && totalCount > 0) ? ((totalCount / totalPlayers) * 100).toFixed(2) : totalCount > totalPlayers ? "???" : "0.00";
+  const totalPlayers = tierFilter === 4 ? 20000 : tierFilter === 3 ? 120000 : tierFilter === 2 ? 240000 : totalRaidPlayers;
+  const possessionRate = totalCount <= totalPlayers && totalCount > 0 ? ((totalCount / totalPlayers) * 100).toFixed(2) : totalCount > totalPlayers ? '???' : '0.00';
 
   return (
     <div className=" border-neutral-200 dark:border-neutral-700 p-6 px-3 sm:px-6">
@@ -401,8 +436,10 @@ export function EmblemCounter({ }) {
             disabled={isLoading} // Disable only during initial load
             className="w-full p-2 border rounded bg-white dark:bg-neutral-700 dark:border-neutral-600"
           >
-            {dataList.map(item => (
-              <option key={item.name} value={item.name}>{item.date} ({item.name})</option>
+            {dataList.map((item) => (
+              <option key={item.name} value={item.name}>
+                {item.date} ({item.name})
+              </option>
             ))}
           </select>
         </div>
@@ -432,7 +469,11 @@ export function EmblemCounter({ }) {
         {/* Aggregation Filter */}
         <div>
           <label className="block font-medium mb-1 text-neutral-700 dark:text-neutral-300">{t('aggregationType')}</label>
-          <select value={aggregationType} onChange={(e) => setAggregationType(e.target.value as AggregationType)} className="w-full p-2 border rounded bg-white dark:bg-neutral-700 dark:border-neutral-600">
+          <select
+            value={aggregationType}
+            onChange={(e) => setAggregationType(e.target.value as AggregationType)}
+            className="w-full p-2 border rounded bg-white dark:bg-neutral-700 dark:border-neutral-600"
+          >
             <option value="student_separate">{t('byStudentSeparate')}</option>
             <option value="student_combined">{t('byStudentCombined')}</option>
             <option value="club">{t('byClub')}</option>
@@ -442,96 +483,91 @@ export function EmblemCounter({ }) {
       </div>
 
       {/* Display Results Table */}
-      {(isLoading || isLoadingData) && <div className="text-center py-4">{t('loading', "loading")}</div>}
+      {(isLoading || isLoadingData) && <div className="text-center py-4">{t('loading', 'loading')}</div>}
       {error && <div className="text-center py-4 text-red-500">{error}</div>}
-
 
       {!isLoading && !isLoadingData && !error && displayData.length > 0 && (
         <>
           <div className="mb-2 text-sm text-neutral-600 dark:text-neutral-400">
-            <span className='flex items-center'>
+            <span className="flex items-center">
               {t('emblemSummary', {
                 counts: totalCount.toLocaleString(),
-                rate: possessionRate
+                rate: possessionRate,
               })}
 
-              {totalDelta != null && <span className={`ml-2 text-xs sm:text-sm font-medium ${totalDelta > 0 ? 'text-green-500' : totalDelta < 0 ? 'text-red-500' : 'text-neutral-500'
-                }`}>
-                {<> (</>}
-                {totalDelta > 0 && <IoTriangleSharp size={12} className="inline mr-0.5" />}
-                {totalDelta < 0 && <IoTriangleSharp size={12} className="inline rotate-180 mr-0.5" />}
-                {(((x: number) => { return x > 0 ? x : -x })(totalDelta || 0))}
-                {< >)</>}
-              </span>}
+              {totalDelta != null && (
+                <span className={`ml-2 text-xs sm:text-sm font-medium ${totalDelta > 0 ? 'text-green-500' : totalDelta < 0 ? 'text-red-500' : 'text-neutral-500'}`}>
+                  {<> (</>}
+                  {totalDelta > 0 && <IoTriangleSharp size={12} className="inline mr-0.5" />}
+                  {totalDelta < 0 && <IoTriangleSharp size={12} className="inline rotate-180 mr-0.5" />}
+                  {((x: number) => {
+                    return x > 0 ? x : -x;
+                  })(totalDelta || 0)}
+                  {<>)</>}
+                </span>
+              )}
             </span>
           </div>
 
-
-          <EmblemTreemap
-            data={treemapSourceData}
-            totalCount={totalCount}
-            t_s={t_s}
-            portraitData={portraitData}
-            aggregationType={aggregationType}
-          />
-
+          <EmblemTreemap data={treemapSourceData} totalCount={totalCount} t_s={t_s} portraitData={portraitData} aggregationType={aggregationType} />
 
           <div className="overflow-x-auto">
             {/* Added table-fixed for mobile layout */}
             <table className="w-full text-sm text-left text-neutral-700 dark:text-neutral-300 table-fixed">
               <thead className="text-xs text-neutral-500 dark:text-neutral-400 uppercase bg-gray-50 dark:bg-neutral-700/50">
                 <tr>
-                  <th scope="col" className="py-2 px-0 w-10 text-center">#</th>
+                  <th scope="col" className="py-2 px-0 w-10 text-center">
+                    #
+                  </th>
                   <th scope="col" className="py-2 px-1 w-14"></th>
-                  <th scope="col" className="px-4 py-2 w-auto">{t(aggregationType)}</th>
+                  <th scope="col" className="px-4 py-2 w-auto">
+                    {t(aggregationType)}
+                  </th>
                   {/* <th scope="col" className="px-4 py-2 w-20 sm:w-32 text-right">{t('count')}</th> */}
                   <th
                     scope="col"
                     className="py-2 px-1 w-22 sm:w-32 text-right cursor-pointer group"
                     onClick={handleSort} // Attach the cycling handler
-                    title={sortKey === 'count' ? t('sortByChange', "sortByChange") : t('sortByCount', "sortByCount")} // Tooltip for next action
+                    title={sortKey === 'count' ? t('sortByChange', 'sortByChange') : t('sortByCount', 'sortByCount')} // Tooltip for next action
                   >
                     <div className="flex items-center sm:justify-start justify-end gap-1">
                       {/* Dynamic Icon */}
-                      {sortKey === 'count' ?
-                        <FiHash size={12} /> :
-                        <FiTrendingUp size={12} />
-                      }
+                      {sortKey === 'count' ? <FiHash size={12} /> : <FiTrendingUp size={12} />}
 
                       {/* Dynamic Label */}
                       <span>{sortKey === 'count' ? t('count') : t('change')}</span>
 
                       {/* Sort Order Arrow */}
-                      <span className="transition-opacity opacity-100">
-                        {sortOrder === 'desc' ? <FiArrowDown size={14} /> : <FiArrowUp size={14} />}
-                      </span>
+                      <span className="transition-opacity opacity-100">{sortOrder === 'desc' ? <FiArrowDown size={14} /> : <FiArrowUp size={14} />}</span>
                     </div>
                   </th>
-                  <th scope="col" className="px-4 py-2 w-20 text-right">{t('percentage')}</th>
+                  <th scope="col" className="px-4 py-2 w-20 text-right">
+                    {t('percentage')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {displayData.map((item, index) => {
-                  const r = sortKey == 'count' ? displayData.findIndex(v => v.count === item.count) : displayData.findIndex(v => v.diff === item.diff); // Find first rank with this count
+                  const r = sortKey == 'count' ? displayData.findIndex((v) => v.count === item.count) : displayData.findIndex((v) => v.diff === item.diff); // Find first rank with this count
                   return (
                     <tr key={item.name} className=" dark:bg-neutral-800 border-b dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700/30">
                       <td className="px-2 py-2 font-medium align-middle text-center">{r + 1}</td>
                       {/* Image cell with flex-shrink-0 */}
                       <td className="py-1 px-0.5 align-middle">
                         {item.iconId && portraitData[item.iconId] ? (
-                          <img
-                            src={`data:image/webp;base64,${portraitData[item.iconId]}`}
-                            alt=""
-                            className="w-10 h-10 rounded-full object-cover block"
-                            loading="lazy"
-                          />
+                          <img src={`data:image/webp;base64,${portraitData[item.iconId]}`} alt="" className="w-10 h-10 rounded-full object-cover block" loading="lazy" />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-neutral-700 inline-block"></div>
                         )}
                       </td>
                       {/* Name cell with truncate */}
                       <td className="px-2 py-1 font-medium align-middle truncate">
-                        {t_s(t(item.name, { ns: 'term', defaultValue: item.name } as any))}
+                        {t_s(
+                          t(item.name, {
+                            ns: 'term',
+                            defaultValue: item.name,
+                          } as any),
+                        )}
                       </td>
                       <td className="px-2 py-1 align-middle text-right">
                         {/* Responsive container: */}
@@ -539,19 +575,18 @@ export function EmblemCounter({ }) {
                         {/* Desktop: sm:flex-row, sm:items-baseline, sm:justify-end */}
                         <div className="flex flex-col items-end sm:flex-row sm:items-baseline  sm:gap-x-1">
                           {/* 1. Count (Always larger) */}
-                          <span className="font-semibold text-base text-black dark:text-white">
-                            {item.count.toLocaleString()}
-                          </span>
+                          <span className="font-semibold text-base text-black dark:text-white">{item.count.toLocaleString()}</span>
 
                           {/* 2. Change (conditionally rendered) */}
                           {/* Renders only if diff is not null (i.e., prev data existed) */}
                           {item.diff !== null && (
-                            <span className={`flex items-center text-xs sm:text-sm font-medium ${item.diff > 0 ? 'text-green-500' : item.diff < 0 ? 'text-red-500' : 'text-neutral-500'
-                              }`}>
+                            <span className={`flex items-center text-xs sm:text-sm font-medium ${item.diff > 0 ? 'text-green-500' : item.diff < 0 ? 'text-red-500' : 'text-neutral-500'}`}>
                               {<span className="hidden sm:inline">(</span>}
                               {item.diff > 0 && <IoTriangleSharp size={12} className="inline mr-0.5" />}
                               {item.diff < 0 && <IoTriangleSharp size={12} className="inline rotate-180 mr-0.5" />}
-                              {(((x: number) => { return x > 0 ? x : -x })(item.diff || 0))}
+                              {((x: number) => {
+                                return x > 0 ? x : -x;
+                              })(item.diff || 0)}
                               {<span className="hidden sm:inline">)</span>}
                             </span>
                           )}
@@ -566,10 +601,7 @@ export function EmblemCounter({ }) {
           </div>
         </>
       )}
-      {!isLoading && !isLoadingData && !error && displayData.length === 0 && (
-        <div className="text-center py-4 text-neutral-500">{t_d('noData')}</div>
-      )}
+      {!isLoading && !isLoadingData && !error && displayData.length === 0 && <div className="text-center py-4 text-neutral-500">{t_d('noData')}</div>}
     </div>
-
   );
 }

@@ -13,3 +13,4 @@ pnpm-workspace.yaml
 codeql-repo
 *.zip
 /ql/
+.wrangler

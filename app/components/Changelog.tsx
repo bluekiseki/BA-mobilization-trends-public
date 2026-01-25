@@ -16,14 +16,11 @@ interface ChangelogProps {
 }
 
 export function Changelog({ changelogData }: ChangelogProps) {
-  const { i18n, t } = useTranslation("home"); // Assuming keys are in 'home' namespace
+  const { i18n, t } = useTranslation('home'); // Assuming keys are in 'home' namespace
   const locale = i18n.language as Locale;
 
   // Sort data by date descending (most recent first)
-  const sortedData = useMemo(() =>
-    [...changelogData].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    [changelogData]
-  );
+  const sortedData = useMemo(() => [...changelogData].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [changelogData]);
 
   const hasRecentChanges = useMemo(() => {
     const sevenDaysAgo = new Date();
@@ -46,28 +43,21 @@ export function Changelog({ changelogData }: ChangelogProps) {
       <h2 className="relative inline-block text-xl font-bold mb-4 text-neutral-800 dark:text-white">
         {t('changelog.title')}
 
-        {hasRecentChanges && (
-          <div
-            className="absolute -top-1 -right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full"
-            title={t('changelog.newUpdate')}
-          />
-        )}
+        {hasRecentChanges && <div className="absolute -top-1 -right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full" title={t('changelog.newUpdate')} />}
       </h2>
 
       {/* Add scrolling if the list becomes long */}
-      <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar"> {/* Added scrollbar styling class */}
+      <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+        {' '}
+        {/* Added scrollbar styling class */}
         {sortedData.map((entry, index) => (
           <div key={index}>
             <p className="font-semibold text-sm text-neutral-600 dark:text-neutral-400 mb-1">
-              {entry.date}
+              <time dateTime={entry.date}>{entry.date}</time>
             </p>
             <ul className="list-disc list-inside space-y-1 text-sm text-neutral-700 dark:text-neutral-300 pl-1">
               {/* Access the correct language array, provide fallback */}
-              {(entry.changes[locale] || entry.changes['en'])?.map((change, idx) => (
-                <li key={idx}>{change}</li>
-              )) || (
-                  <li>{t('changelog.noTranslation')}</li> /* Fallback message */
-                )}
+              {(entry.changes[locale] || entry.changes['en'])?.map((change, idx) => <li key={idx}>{change}</li>) || <li>{t('changelog.noTranslation')}</li> /* Fallback message */}
             </ul>
           </div>
         ))}

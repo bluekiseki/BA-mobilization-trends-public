@@ -61,16 +61,14 @@ const RubyText: React.FC<RubyTextProps> = ({ children }) => {
     <span>
       {parsedParts.map((part, index) => {
         // If the part is a structured ruby object, render it with <ruby>
-        if (typeof (part) == 'string') return part
+        if (typeof part == 'string') return part;
 
         if (typeof part === 'object' && part.type === 'ruby') {
           return (
             <ruby key={index}>
               {part.base}
               {/* The small text above, styled with Tailwind CSS */}
-              <rt className="select-none text-[0.8em] text-slate-500 opacity-90">
-                {part.text}
-              </rt>
+              <rt className="select-none text-[0.8em] text-slate-500 opacity-90">{part.text}</rt>
             </ruby>
           );
         }

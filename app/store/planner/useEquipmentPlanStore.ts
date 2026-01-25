@@ -19,7 +19,6 @@ interface EquipmentPlanState {
   setFarmingDays: (days: number) => void;
   setMultipliers: (type: 'normal' | 'hard', value: number) => void;
 
-
   setInventoryItem: (key: string, amount: number) => void;
 }
 
@@ -36,32 +35,31 @@ export const useEquipmentPlanStore = create<EquipmentPlanState>()(
       // --- Setters ---
       setRunCounts: (newCounts) => set({ runCounts: newCounts }),
 
-      setRunCount: (stageId, count) => set((state) => ({
-        runCounts: { ...state.runCounts, [stageId]: Math.max(0, count) },
-      })),
+      setRunCount: (stageId, count) =>
+        set((state) => ({
+          runCounts: { ...state.runCounts, [stageId]: Math.max(0, count) },
+        })),
 
       setFarmingDays: (days) => set({ farmingDays: Math.max(1, days) }),
 
-      setMultipliers: (type, value) => set(type === 'normal'
-        ? { normalMultiplier: value }
-        : { hardMultiplier: value }),
+      setMultipliers: (type, value) => set(type === 'normal' ? { normalMultiplier: value } : { hardMultiplier: value }),
 
-      setInventoryItem: (key, amount) => set((state) => {
-        const newInventory = { ...state.inventory };
-        const cleanAmount = Math.max(0, amount);
+      setInventoryItem: (key, amount) =>
+        set((state) => {
+          const newInventory = { ...state.inventory };
+          const cleanAmount = Math.max(0, amount);
 
-        if (cleanAmount > 0) {
-          newInventory[key] = cleanAmount;
-        } else {
-          // Remove from list if quantity is 0 or less
-          delete newInventory[key];
-        }
-        return { inventory: newInventory };
-      }),
-
+          if (cleanAmount > 0) {
+            newInventory[key] = cleanAmount;
+          } else {
+            // Remove from list if quantity is 0 or less
+            delete newInventory[key];
+          }
+          return { inventory: newInventory };
+        }),
     }),
     {
       name: 'equipment-plan-storage', // Key to be saved in localStorage
-    }
-  )
+    },
+  ),
 );

@@ -28,17 +28,17 @@ export const CurrencyStatus = ({
 
   const handleOwnedChange = (itemId: number, value: string) => {
     const amount = parseInt(value) || 0;
-    setOwnedCurrency(prev => ({ ...prev, [itemId]: amount }));
+    setOwnedCurrency((prev) => ({ ...prev, [itemId]: amount }));
   };
 
-  const { t, i18n } = useTranslation("planner");
-  const locale = i18n.language as Locale
-
+  const { t, i18n } = useTranslation('planner');
+  const locale = i18n.language as Locale;
 
   return (
     <>
-      <div className="flex justify-between items-center mb-3"
-      //  ref={ref}
+      <div
+        className="flex justify-between items-center mb-3"
+        //  ref={ref}
       >
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('ui.remainingCurrency')}</h2>
         <button
@@ -51,26 +51,17 @@ export const CurrencyStatus = ({
 
       <div className="flex flex-wrap gap-x-6 gap-y-2">
         {eventData.currency
-          .filter(currency => currency.EventContentItemType != 7)
-          .map(currency => {
+          .filter((currency) => currency.EventContentItemType != 7)
+          .map((currency) => {
             const itemId = currency.ItemUniqueId;
             const finalAmount = remainingCurrency[itemId] || 0;
 
             return (
               <div key={itemId} className="shrink-0">
                 <div className="flex items-center gap-2">
-                  <ItemIcon
-                    type="Item"
-                    itemId={String(itemId)}
-                    amount={finalAmount > 0 ? finalAmount : -finalAmount}
-                    size={10}
-                    eventData={eventData}
-                    iconData={iconData}
-                  />
+                  <ItemIcon type="Item" itemId={String(itemId)} amount={finalAmount > 0 ? finalAmount : -finalAmount} size={10} eventData={eventData} iconData={iconData} />
                   <div>
-                    <p className={`text-lg font-bold leading-tight ${finalAmount < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>
-                      {finalAmount.toLocaleString()}
-                    </p>
+                    <p className={`text-lg font-bold leading-tight ${finalAmount < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>{finalAmount.toLocaleString()}</p>
                     <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1 truncate" style={{ maxWidth: '80px' }}>
                       {getLocalizeEtcName(eventData.icons.Item?.[itemId]?.LocalizeEtc, locale)}
                     </p>
@@ -81,7 +72,7 @@ export const CurrencyStatus = ({
                     <input
                       type="number"
                       value={ownedCurrency[itemId] || ''}
-                      onChange={e => handleOwnedChange(itemId, e.target.value)}
+                      onChange={(e) => handleOwnedChange(itemId, e.target.value)}
                       className="w-full p-1 text-xs rounded border dark:border-neutral-600 text-right bg-transparent dark:text-gray-200"
                     />
                   </div>

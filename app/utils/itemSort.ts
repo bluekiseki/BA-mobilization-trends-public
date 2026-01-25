@@ -7,11 +7,9 @@ import type { EventData } from '~/types/plannerData';
 export const getItemSortPriority = (key: string, eventData: EventData): number => {
   const [type, id] = key.split('_');
 
-
-
   const numericId = Number(id);
 
-  const eventItemIds = new Set(eventData.currency.map(c => c.ItemUniqueId));
+  const eventItemIds = new Set(eventData?.currency?.map((c) => c.ItemUniqueId));
   if (eventItemIds.has(numericId)) {
     return 1;
   }
@@ -25,10 +23,14 @@ export const getItemSortPriority = (key: string, eventData: EventData): number =
   // rarity
   const rarity = (eventData.icons as any)?.[type]?.[id]?.Rarity;
   switch (rarity) {
-    case 3: return 30;
-    case 2: return 31;
-    case 1: return 32;
-    case 0: return 33;
+    case 3:
+      return 30;
+    case 2:
+      return 31;
+    case 1:
+      return 32;
+    case 0:
+      return 33;
   }
 
   // etc

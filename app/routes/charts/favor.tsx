@@ -1,4 +1,3 @@
-
 import { data, type LoaderFunctionArgs } from 'react-router';
 import { EmblemCounter } from '~/components/emblem/EmblemCounter'; // Fix path
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
@@ -9,16 +8,15 @@ import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 
-
 export async function loader({ context, params, request }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
-  const locale = i18n.language as Locale
+  const locale = i18n.language as Locale;
   return data({
     locale,
-    siteTitle: i18n.t("home:title"),
-    title: i18n.t("emblemCounter:title"),
-    description: i18n.t("emblemCounter:description")
-  })
+    siteTitle: i18n.t('home:title'),
+    title: i18n.t('emblemCounter:title'),
+    description: i18n.t('emblemCounter:description'),
+  });
 }
 
 // export const meta: MetaFunction<typeof rootLorder, {
@@ -34,11 +32,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
 //   const t_c = i18n.getFixedT(locale, undefined, 'common');
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(
-    loaderData.title + ' | ' + loaderData.siteTitle,
-    loaderData.description,
-    "/img/f.webp"
-  )
+  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/f.webp');
 }
 
 export const handle: AppHandle = {
@@ -57,19 +51,17 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
-      ...createLinkHreflang(`/charts/favor`)
-    ]
-  }
-}
+      ...createLinkHreflang(`/charts/favor`),
+    ];
+  },
+};
 
 export default function emblemCounter() {
   return (
     <>
-
       <div className="mt-0">
         <EmblemCounter />
       </div>
-
     </>
   );
 }

@@ -24,7 +24,6 @@ export interface FortuneGachaAvgRates {
   avgRewards: Record<string, number>;
 }
 
-
 // --- Simulation Engine ---
 const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): { avgCost: number; avgRewards: Record<string, number> } => {
   if (!gachaData || simRuns <= 0) return { avgCost: 0, avgRewards: {} };
@@ -34,7 +33,7 @@ const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): 
   const totalPulls = simRuns;
 
   const pityInfo = gachaData.modify[0];
-  const baseProbs = gachaData.shop.map(item => item.Prob);
+  const baseProbs = gachaData.shop.map((item) => item.Prob);
   const totalBaseProb = baseProbs.reduce((sum, p) => sum + p, 0);
 
   let currentProbs = [...baseProbs];
@@ -54,7 +53,7 @@ const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): 
 
     // 2. Normalize probabilities
     const currentTotalProb = currentProbs.reduce((sum, p) => sum + p, 0);
-    const normalizedProbs = currentProbs.map(p => p * totalBaseProb / currentTotalProb);
+    const normalizedProbs = currentProbs.map((p) => (p * totalBaseProb) / currentTotalProb);
 
     // 3. Execute draw
     const rand = Math.random() * totalBaseProb;
@@ -95,29 +94,19 @@ const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): 
   return { avgCost: costPerPull, avgRewards };
 };
 
-
 // --- React Component ---
 export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: FortuneGachaPlannerProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const { t } = useTranslation("planner", {keyPrefix: "fortune_gacha"});
-  const { plan,
-    setFortuneGachaSimRuns: setSimRuns,
-    setFortuneGachaFinalPulls: setFinalPulls,
-    setFortuneGachaAvgRates: setAvgRates,
-  } = usePlanForEvent(eventId);
+  const { t } = useTranslation('planner', { keyPrefix: 'fortune_gacha' });
+  const { plan, setFortuneGachaSimRuns: setSimRuns, setFortuneGachaFinalPulls: setFinalPulls, setFortuneGachaAvgRates: setAvgRates } = usePlanForEvent(eventId);
 
-  const {
-    fortuneGachaSimRuns: simRuns,
-    fortuneGachaFinalPulls: finalPulls,
-    fortuneGachaAvgRates: avgRates,
-  } = plan
+  const { fortuneGachaSimRuns: simRuns, fortuneGachaFinalPulls: finalPulls, fortuneGachaAvgRates: avgRates } = plan;
 
   const gachaData = eventData.fortune_gacha;
 
-
   if (simRuns === undefined || finalPulls === undefined) {
-    return null
+    return null;
   }
 
   const handleRunSimulation = useCallback(() => {
@@ -142,13 +131,13 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
 
     onCalculate({
       cost: { key: costKey, amount: avgRates.avgCost * finalPulls },
-      rewards: totalRewards
+      rewards: totalRewards,
     });
   }, [avgRates, finalPulls, onCalculate, gachaData]);
 
   const handleSetMaxPulls = useCallback(() => {
     if (!avgRates || !gachaData) {
-      alert("Please do the average compensation calculation first.");
+      alert('Please do the average compensation calculation first.');
       return;
     }
 
@@ -161,7 +150,6 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
     // 3. Check the average consumption per draw
     const costPerPull = avgRates.avgCost;
 
-
     if (availableGachaCurrency <= 0 || costPerPull <= 0) {
       setFinalPulls(finalPulls + 0);
       return;
@@ -171,13 +159,9 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
 
     const affordablePulls = Math.floor(availableGachaCurrency / costPerPull);
     setFinalPulls(finalPulls + affordablePulls);
-
   }, [avgRates, remainingCurrency, gachaData]);
 
-
-
   if (!gachaData) return null;
-
 
   const costItem = gachaData.shop[0].CostGoods;
   const costKey = `${costItem.ConsumeParcelTypeStr[0]}_${costItem.ConsumeParcelId[0]}`;
@@ -186,7 +170,9 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
     <>
       <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110"><ChevronIcon className={isCollapsed ? "rotate-180" : ""} /></span>
+        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+          <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
+        </span>
       </div>
       {!isCollapsed && (
         <div className="mt-4 space-y-4">
@@ -196,7 +182,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
               <input
                 type="number"
                 value={simRuns}
-                onChange={e => setSimRuns(parseInt(e.target.value) || 1000)}
+                onChange={(e) => setSimRuns(parseInt(e.target.value) || 1000)}
                 className="w-full p-2 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
               />
               <button onClick={handleRunSimulation} className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shrink-0">
@@ -221,14 +207,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
                 <div>
                   <p className="text-xs font-semibold text-green-700 dark:text-green-400">{t('avgRewardsPerPull')}</p>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    <ItemIcon
-                      type={costKey.split('_')[0]}
-                      itemId={costKey.split('_')[1]}
-                      amount={avgRates.avgCost}
-                      size={10}
-                      eventData={eventData}
-                      iconData={iconData}
-                    />
+                    <ItemIcon type={costKey.split('_')[0]} itemId={costKey.split('_')[1]} amount={avgRates.avgCost} size={10} eventData={eventData} iconData={iconData} />
                   </div>
                 </div>
               </div>
@@ -241,7 +220,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
               <input
                 type="number"
                 value={finalPulls || ''}
-                onChange={e => setFinalPulls(parseInt(e.target.value) || 0)}
+                onChange={(e) => setFinalPulls(parseInt(e.target.value) || 0)}
                 className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
                 placeholder={t('totalPullsPlaceholder')}
               />

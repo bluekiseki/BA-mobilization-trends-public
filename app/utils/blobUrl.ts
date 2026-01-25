@@ -40,7 +40,6 @@
 // /** Key: Number, Value: Blob URL String */
 // type BlobUrlObject = { [key: string]: string };
 
-
 // /**
 //  * Converts Base64 object to Blob URL object.
 //  * @param base64Obj - Base64 string object in { [key: number]: string } format
@@ -67,7 +66,6 @@
 
 //     return blobUrlObj;
 // }
-
 
 // function convertIconToBolbUrls(iconData: IconData) {
 

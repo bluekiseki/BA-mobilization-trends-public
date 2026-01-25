@@ -1,16 +1,24 @@
 // app/components/dashboard/GrandAssaultTotalScoreAnalysis.tsx
 
-const DIFFICULTY_WEIGHT: { [key: string]: number } = { 'L': 7, 'T': 6, 'I': 5, 'E': 4, 'H': 3, 'V': 2, 'A': 1, 'N': 0 };
+const DIFFICULTY_WEIGHT: { [key: string]: number } = {
+  L: 7,
+  T: 6,
+  I: 5,
+  E: 4,
+  H: 3,
+  V: 2,
+  A: 1,
+  N: 0,
+};
 
 interface GrandAssaultTotalScoreAnalysisProps {
-    fullData: FullData;
-    raidInfos: RaidInfo[];
-    tierCounter: { [key: string]: number };
-    boss: string
-    server: GameServer
-    id: string
+  fullData: FullData;
+  raidInfos: RaidInfo[];
+  tierCounter: { [key: string]: number };
+  boss: string;
+  server: GameServer;
+  id: string;
 }
-
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -22,230 +30,289 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '../card';
 import HistogramAnalysis from './GrandAssaultTotalScoreHistogram';
 
-export interface PlayerAnalysisData { rank: number; totalScore: number; combination: string; tier: string; }
-interface ChartData { name: string; value: number; percent?: number; color?: string, fill?: string, [key: string]: any; }
-
+export interface PlayerAnalysisData {
+  rank: number;
+  totalScore: number;
+  combination: string;
+  tier: string;
+}
+interface ChartData {
+  name: string;
+  value: number;
+  percent?: number;
+  color?: string;
+  fill?: string;
+  [key: string]: any;
+}
 
 const CustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }: any) => {
-    if (percent < 2) return null;
+  if (percent < 2) return null;
 
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    return (
-        <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="white">
-            <tspan x={x} dy="-0.1em" fontSize="12px" fontWeight="bold">{name}</tspan>
-            <tspan x={x} dy="1.2em" fontSize="10px" opacity={0.8}>{value.toLocaleString()}</tspan>
-        </text>
-    );
+  return (
+    <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="white">
+      <tspan x={x} dy="-0.1em" fontSize="12px" fontWeight="bold">
+        {name}
+      </tspan>
+      <tspan x={x} dy="1.2em" fontSize="10px" opacity={0.8}>
+        {value.toLocaleString()}
+      </tspan>
+    </text>
+  );
 };
-
 
 const TooltipContent = ({ data }: { data: ChartData }) => {
-    const { t } = useTranslation("dashboard");
+  const { t } = useTranslation('dashboard');
 
-    const name = data.name;
-    const value = data.value.toLocaleString() as any;
-    const percent = data.percent;
-    return (
-        <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3 border rounded-lg shadow-lg text-sm">
-            <div className="flex items-center mb-1">
-                <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: data.color || data.fill }} />
-                <p className="font-bold text-gray-800 dark:text-gray-100">{name}</p>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300">{t('tooltipPlayers', { count: value })}</p>
-            {percent !== undefined && <p className="text-gray-600 dark:text-gray-400">{t('tooltipRatio', { percent: percent.toFixed(1) })}</p>}
-        </div>
-    );
+  const name = data.name;
+  const value = data.value.toLocaleString() as any;
+  const percent = data.percent;
+  return (
+    <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3 border rounded-lg shadow-lg text-sm">
+      <div className="flex items-center mb-1">
+        <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: data.color || data.fill }} />
+        <p className="font-bold text-gray-800 dark:text-gray-100">{name}</p>
+      </div>
+      <p className="text-gray-700 dark:text-gray-300">{t('tooltipPlayers', { count: value })}</p>
+      {percent !== undefined && <p className="text-gray-600 dark:text-gray-400">{t('tooltipRatio', { percent: percent.toFixed(1) })}</p>}
+    </div>
+  );
 };
 
-
 export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, tierCounter, server, id }: GrandAssaultTotalScoreAnalysisProps) {
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation('dashboard');
+  const [_isPending, startTransition] = useTransition();
+  const [allPlayers, setAllPlayers] = useState<PlayerAnalysisData[]>([]);
 
-    const tooltipRef = useRef<HTMLDivElement>(null);
-    const { t } = useTranslation("dashboard");
-    const [_isPending, startTransition] = useTransition();
-    const [allPlayers, setAllPlayers] = useState<PlayerAnalysisData[]>([]);
+  useEffect(() => {
+    startTransition(() => {
+      const scoreArrays = raidInfos.map((_, index) => fullData[`rank_${index + 1}` as keyof FullData] as Int32Array);
+      if (scoreArrays.some((arr) => !arr) || !fullData.rank) {
+        setAllPlayers([]);
+        return;
+      }
 
-    useEffect(() => {
-        startTransition(() => {
-            const scoreArrays = raidInfos.map((_, index) => fullData[`rank_${index + 1}` as keyof FullData] as Int32Array);
-            if (scoreArrays.some(arr => !arr) || !fullData.rank) {
-                setAllPlayers([]);
-                return;
-            }
+      const tierBoundaries = {
+        platinum: tierCounter['4'],
+        gold: tierCounter['4'] + tierCounter['3'],
+        silver: tierCounter['4'] + tierCounter['3'] + tierCounter['2'],
+      };
+      const getTierFromRank = (rank: number) => {
+        if (rank <= tierBoundaries.platinum) return 'Platinum';
+        if (rank <= tierBoundaries.gold) return 'Gold';
+        if (rank <= tierBoundaries.silver) return 'Silver';
+        return 'Bronze';
+      };
 
-            const tierBoundaries = { platinum: tierCounter['4'], gold: tierCounter['4'] + tierCounter['3'], silver: tierCounter['4'] + tierCounter['3'] + tierCounter['2'] };
-            const getTierFromRank = (rank: number) => {
-                if (rank <= tierBoundaries.platinum) return 'Platinum';
-                if (rank <= tierBoundaries.gold) return 'Gold';
-                if (rank <= tierBoundaries.silver) return 'Silver';
-                return 'Bronze';
-            };
+      const calculatedPlayers = [...fullData.rank].map((totalScore: number, i: number) => {
+        const combinationLetters = scoreArrays.map((scores) => getDifficultyFromScoreAndBoss(scores[i], server, id)[0]);
 
-            const calculatedPlayers = [...fullData.rank].map((totalScore: number, i: number) => {
-                const combinationLetters = scoreArrays.map(scores => getDifficultyFromScoreAndBoss(scores[i], server, id)[0]);
+        combinationLetters.sort((a, b) => (DIFFICULTY_WEIGHT[b] || 0) - (DIFFICULTY_WEIGHT[a] || 0));
+        const combination = combinationLetters.join('');
 
-                combinationLetters.sort((a, b) => (DIFFICULTY_WEIGHT[b] || 0) - (DIFFICULTY_WEIGHT[a] || 0));
-                const combination = combinationLetters.join('');
+        return {
+          rank: i + 1,
+          totalScore,
+          combination,
+          tier: getTierFromRank(i + 1),
+        };
+      });
 
-                return { rank: i + 1, totalScore, combination, tier: getTierFromRank(i + 1) };
-            });
+      // Update the status when the calculation is complete.
+      setAllPlayers(calculatedPlayers);
+    });
+  }, [fullData, raidInfos, tierCounter, startTransition]);
 
-            // Update the status when the calculation is complete.
-            setAllPlayers(calculatedPlayers);
-        });
-    }, [fullData, raidInfos, tierCounter, startTransition]);
+  const [donutFilter, setDonutFilter] = useState<{
+    grouping: 'actual' | 'bracket'; // Grouping criteria
+    selectedTier: string | null; // an enlarged tier
+  }>({ grouping: 'bracket', selectedTier: null });
 
+  // 2. Calculate data for doughnut charts
+  const addPercentage = (data: ChartData[], total: number) => {
+    return total > 0
+      ? data.map((entry) => ({
+          ...entry,
+          percent: (entry.value / total) * 100,
+        }))
+      : data;
+  };
+  const donutTierData = useMemo(() => {
+    const tierCounts = new Map<string, number>();
+    for (const player of allPlayers) {
+      tierCounts.set(player.tier, (tierCounts.get(player.tier) || 0) + 1);
+    }
+    const result = Array.from(tierCounts.entries())
+      .map(([name, value]) => ({
+        name,
+        value,
+        fill: TIER_COLORS[name],
+      }))
+      .sort((a, b) => TIER_ORDER.indexOf(a.name) - TIER_ORDER.indexOf(b.name));
 
-    const [donutFilter, setDonutFilter] = useState<{
-        grouping: 'actual' | 'bracket'; // Grouping criteria
-        selectedTier: string | null; // an enlarged tier
-    }>({ grouping: 'bracket', selectedTier: null });
+    return addPercentage(result, allPlayers.length);
+  }, [allPlayers]);
 
-    // 2. Calculate data for doughnut charts
-    const addPercentage = (data: ChartData[], total: number) => {
-        return total > 0 ? data.map(entry => ({ ...entry, percent: (entry.value / total) * 100 })) : data;
-    };
-    const donutTierData = useMemo(() => {
-        const tierCounts = new Map<string, number>();
-        for (const player of allPlayers) {
-            tierCounts.set(player.tier, (tierCounts.get(player.tier) || 0) + 1);
-        }
-        const result = Array.from(tierCounts.entries()).map(([name, value]) => ({
-            name,
-            value,
-            fill: TIER_COLORS[name]
-        })).sort((a, b) => TIER_ORDER.indexOf(a.name) - TIER_ORDER.indexOf(b.name));
+  // 3-2. Doughnut: Primary filtering based on the selected tier
+  const donutFilteredPlayers = useMemo(() => {
+    if (donutFilter.selectedTier) {
+      return allPlayers.filter((p) => p.tier === donutFilter.selectedTier);
+    }
+    return allPlayers;
+  }, [allPlayers, donutFilter.selectedTier]);
 
-        return addPercentage(result, allPlayers.length);
-    }, [allPlayers]);
+  // 3-3. Donuts: Calculate group (combination) data based on primary filtered data
+  const donutGroupData = useMemo(() => {
+    const groupCounts = new Map<string, { count: number; totalScore: number }>();
+    for (const player of donutFilteredPlayers) {
+      const groupKey = donutFilter.grouping === 'actual' ? player.combination : getBracketFromTotalScore(player.totalScore);
+      const current = groupCounts.get(groupKey) || { count: 0, totalScore: 0 };
+      current.count += 1;
+      current.totalScore += player.totalScore;
+      groupCounts.set(groupKey, current);
+    }
 
-    // 3-2. Doughnut: Primary filtering based on the selected tier
-    const donutFilteredPlayers = useMemo(() => {
-        if (donutFilter.selectedTier) {
-            return allPlayers.filter(p => p.tier === donutFilter.selectedTier);
-        }
-        return allPlayers;
-    }, [allPlayers, donutFilter.selectedTier]);
+    const result = Array.from(groupCounts.entries())
+      .map(([name, data]) => {
+        const avgScore = data.count > 0 ? data.totalScore / data.count : 0;
+        return {
+          name,
+          value: data.count,
+          color: getBracketColorFromTotalScore(avgScore),
+          score: avgScore,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
 
-    // 3-3. Donuts: Calculate group (combination) data based on primary filtered data
-    const donutGroupData = useMemo(() => {
-        const groupCounts = new Map<string, { count: number, totalScore: number }>();
-        for (const player of donutFilteredPlayers) {
-            const groupKey = donutFilter.grouping === 'actual' ? player.combination : getBracketFromTotalScore(player.totalScore);
-            const current = groupCounts.get(groupKey) || { count: 0, totalScore: 0 };
-            current.count += 1;
-            current.totalScore += player.totalScore;
-            groupCounts.set(groupKey, current);
-        }
+    return addPercentage(result, donutFilteredPlayers.length);
+  }, [donutFilteredPlayers, donutFilter.grouping]);
 
-        const result = Array.from(groupCounts.entries()).map(([name, data]) => {
-            const avgScore = data.count > 0 ? data.totalScore / data.count : 0;
-            return {
-                name,
-                value: data.count,
-                color: getBracketColorFromTotalScore(avgScore),
-                score: avgScore
-            };
-        }).sort((a, b) => b.score - a.score);
+  // 3-4. final data aggregation
+  const donutData = useMemo(() => {
+    return { tier: donutTierData, group: donutGroupData };
+  }, [donutTierData, donutGroupData]);
 
-        return addPercentage(result, donutFilteredPlayers.length);
-    }, [donutFilteredPlayers, donutFilter.grouping]);
+  const handleMouseEnter = (data: ChartData, event: React.MouseEvent) => {
+    const tooltipNode = tooltipRef.current;
+    if (!tooltipNode) return;
+    const htmlContent = ReactDOMServer.renderToStaticMarkup(<TooltipContent data={data} />);
+    tooltipNode.innerHTML = htmlContent;
+    tooltipNode.style.opacity = '1';
+  };
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (tooltipRef.current) {
+      // tooltipRef.current.style.transform = `translate(${event.clientX + 10}px, ${event.clientY + 10}px)`;
+      tooltipRef.current.style.transform = `translate(${event.nativeEvent.offsetX + 10}px, ${event.nativeEvent.offsetY + 10}px)`;
+    }
+  };
+  const handleMouseLeave = () => {
+    if (tooltipRef.current) {
+      tooltipRef.current.style.opacity = '0';
+    }
+  };
 
-    // 3-4. final data aggregation
-    const donutData = useMemo(() => {
-        return { tier: donutTierData, group: donutGroupData };
-    }, [donutTierData, donutGroupData]);
+  return (
+    <div className="p-0 bg-neutral-50 dark:bg-neutral-900 space-y-8" onMouseLeave={handleMouseLeave}>
+      <Card title={t('donutChartTitle')} className="space-y-4">
+        <h3 className="text-sm mb-2">{t('donutChartSubtitle')}</h3>
+        <div className="p-2 bg-gray-50 dark:bg-neutral-800/50 border dark:border-neutral-700 rounded-lg flex justify-between items-center">
+          <div>
+            <label className="text-sm font-bold">{t('groupingCriteria')}</label>
+            <div className="flex gap-2 mt-1">
+              {/* <button onClick={() => setDonutFilter(p => ({ ...p, grouping: 'actual' }))} className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'actual' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-700'}`}>{t('actualCombination')}</button> */}
+              <button
+                onClick={() => setDonutFilter((p) => ({ ...p, grouping: 'bracket' }))}
+                className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'bracket' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-700'}`}
+              >
+                {t('scoreCutBracket')}
+              </button>
+            </div>
+          </div>
+          {donutFilter.selectedTier && (
+            <button onClick={() => setDonutFilter((p) => ({ ...p, selectedTier: null }))} className="px-3 py-1 text-sm bg-gray-300 dark:bg-neutral-600 rounded">
+              {t('viewAll')}
+            </button>
+          )}
+        </div>
 
-
-    const handleMouseEnter = (data: ChartData, event: React.MouseEvent) => {
-        const tooltipNode = tooltipRef.current;
-        if (!tooltipNode) return;
-        const htmlContent = ReactDOMServer.renderToStaticMarkup(<TooltipContent data={data} />);
-        tooltipNode.innerHTML = htmlContent;
-        tooltipNode.style.opacity = '1';
-    };
-    const handleMouseMove = (event: React.MouseEvent) => {
-        if (tooltipRef.current) {
-            // tooltipRef.current.style.transform = `translate(${event.clientX + 10}px, ${event.clientY + 10}px)`;
-            tooltipRef.current.style.transform = `translate(${event.nativeEvent.offsetX + 10}px, ${event.nativeEvent.offsetY + 10}px)`;
-        }
-    };
-    const handleMouseLeave = () => {
-        if (tooltipRef.current) {
-            tooltipRef.current.style.opacity = '0';
-        }
-    };
-
-    return (
-        <div className="p-0 bg-neutral-50 dark:bg-neutral-900 space-y-8" onMouseLeave={handleMouseLeave}>
-
-            <Card title={t('donutChartTitle')} className="space-y-4">
-                <h3 className="text-sm mb-2">{t('donutChartSubtitle')}</h3>
-                <div className="p-2 bg-gray-50 dark:bg-neutral-800/50 border dark:border-neutral-700 rounded-lg flex justify-between items-center">
-                    <div>
-                        <label className="text-sm font-bold">{t('groupingCriteria')}</label>
-                        <div className="flex gap-2 mt-1">
-                            {/* <button onClick={() => setDonutFilter(p => ({ ...p, grouping: 'actual' }))} className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'actual' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-700'}`}>{t('actualCombination')}</button> */}
-                            <button onClick={() => setDonutFilter(p => ({ ...p, grouping: 'bracket' }))} className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'bracket' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-700'}`}>{t('scoreCutBracket')}</button>
-                        </div>
-                    </div>
-                    {donutFilter.selectedTier && (
-                        <button onClick={() => setDonutFilter(p => ({ ...p, selectedTier: null }))} className="px-3 py-1 text-sm bg-gray-300 dark:bg-neutral-600 rounded">{t("viewAll")}</button>
-                    )}
-                </div>
-
-
-                <div className='relative' style={{ width: '100%', height: 'min(600px, 100vw)' }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-                    <ResponsiveContainer>
-                        <PieChart>
-                            <Pie data={donutData.tier} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="59%" innerRadius="30%"
-                                onClick={(_, i) => setDonutFilter(p => ({ ...p, selectedTier: donutData.tier[i].name }))}
-                                labelLine={false} label={<CustomizedLabel />}>
-                                {donutData.tier.map((entry) => <Cell key={`cell-tier-${entry.name}`} fill={TIER_COLORS[entry.name]} className={`
+        <div className="relative" style={{ width: '100%', height: 'min(600px, 100vw)' }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={donutData.tier}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius="59%"
+                innerRadius="30%"
+                onClick={(_, i) =>
+                  setDonutFilter((p) => ({
+                    ...p,
+                    selectedTier: donutData.tier[i].name,
+                  }))
+                }
+                labelLine={false}
+                label={<CustomizedLabel />}
+              >
+                {donutData.tier.map((entry) => (
+                  <Cell
+                    key={`cell-tier-${entry.name}`}
+                    fill={TIER_COLORS[entry.name]}
+                    className={`
                                     cursor-pointer
                                     transition-opacity
                                     duration-300
                                     ${donutFilter.selectedTier && donutFilter.selectedTier !== entry.name ? 'opacity-30' : 'opacity-100'}
-                                    `} onMouseEnter={(e) => handleMouseEnter(entry, e)} onMouseLeave={handleMouseLeave} />)}
-                            </Pie>
-                            <Pie data={donutData.group} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="90%" innerRadius="61%"
-                                labelLine={false} label={<CustomizedLabel />}>
-                                {donutData.group.map((entry) => <Cell key={`cell-group-${entry.name}`} fill={entry.color} className="cursor-pointer" onMouseEnter={(e) => handleMouseEnter(entry, e)} onMouseLeave={handleMouseLeave} />)}
-                            </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
+                                    `}
+                    onMouseEnter={(e) => handleMouseEnter(entry, e)}
+                    onMouseLeave={handleMouseLeave}
+                  />
+                ))}
+              </Pie>
+              <Pie data={donutData.group} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="90%" innerRadius="61%" labelLine={false} label={<CustomizedLabel />}>
+                {donutData.group.map((entry) => (
+                  <Cell key={`cell-group-${entry.name}`} fill={entry.color} className="cursor-pointer" onMouseEnter={(e) => handleMouseEnter(entry, e)} onMouseLeave={handleMouseLeave} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
 
-                    <div ref={tooltipRef} className="pointer-events-none transition-opacity duration-200" style={{ position: 'absolute', top: 0, left: 0, opacity: 0, zIndex: 999 }} />
+          <div
+            ref={tooltipRef}
+            className="pointer-events-none transition-opacity duration-200"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              opacity: 0,
+              zIndex: 999,
+            }}
+          />
+        </div>
 
-                </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {donutData.group.map((item) => (
+            <div key={item.name} className="p-1 px-1.5 rounded-lg bg-gray-100 dark:bg-neutral-800 text-xs flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="font-semibold">{item.name}</span>
+              <span className="font-mono text-gray-600 dark:text-gray-400">{item.value.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
 
-
-                <div className="flex flex-wrap justify-center gap-2">
-                    {donutData.group.map(item => (
-                        <div key={item.name} className="p-1 px-1.5 rounded-lg bg-gray-100 dark:bg-neutral-800 text-xs flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                            <span className="font-semibold">{item.name}</span>
-                            <span className="font-mono text-gray-600 dark:text-gray-400">{item.value.toLocaleString()}</span>
-                        </div>
-                    ))}
-                </div>
-            </Card>
-
-
-
-            <Card title={t('histogramTitle')} defaultExpanded={true} className="space-y-4">
-                {/* Now, the HistogramAnalysis component will ONLY be mounted
+      <Card title={t('histogramTitle')} defaultExpanded={true} className="space-y-4">
+        {/* Now, the HistogramAnalysis component will ONLY be mounted
                   (and its logic run) when the user expands this Card.
                 */}
-                <HistogramAnalysis allPlayers={allPlayers} />
-            </Card>
-
-
-
-        </div>
-    );
+        <HistogramAnalysis allPlayers={allPlayers} />
+      </Card>
+    </div>
+  );
 }

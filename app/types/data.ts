@@ -1,6 +1,6 @@
 // app/types/data.ts
 
-import type { DifficultyName } from "~/components/Difficulty";
+import type { DifficultyName } from '~/components/Difficulty';
 
 // The interface of initial data row after parsing the TSV file
 export interface RawDataRow {
@@ -38,57 +38,59 @@ export interface ChartData {
   };
 }
 
-
 export interface Student {
   Name: string;
   SearchTags: string[];
-  Position: "Back'| 'Front'| 'Middle"
-  SquadType: "Main" | "Support"
-  TacticRole: "DamageDealer'| 'Healer'| 'Supporter'| 'Tanker'| 'Vehicle"
-  School: string
-  BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic'
-  Portrait?: string
-  CombatStyleIndex?: 1 | 2 // for hosino
-  FamilyName?: string
-  BirthDay: string
-  Id: number
+  Position: "Back'| 'Front'| 'Middle";
+  SquadType: 'Main' | 'Support';
+  TacticRole: "DamageDealer'| 'Healer'| 'Supporter'| 'Tanker'| 'Vehicle";
+  School: string;
+  BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic';
+  Portrait?: string;
+  CombatStyleIndex?: 1 | 2; // for hosino
+  FamilyName?: string;
+  BirthDay: string;
+  Id: number;
 }
 
-
-
 export interface RaidInfo {
-  Id: string
-  Boss: string
-  Type?: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor'
-  Date: string
-  Location: string
-  Alias: string,
-  MaxLv: number,
+  Id: string;
+  Boss: string;
+  Type?: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor';
+  Date: string;
+  Location: string;
+  Alias?: string;
+  MaxLv: number;
   Cnt: {
-    All: number,
-    Lunatic: number,
-    Torment: number,
-    Insane: number,
-    Extreme?: number,
-    Hardcore?: number,
-    Veryhard?: number,
-    Hard?: number,
-    Normal?: number
-  }
+    All: number;
+    Lunatic: number;
+    Torment: number;
+    Insane: number;
+    Extreme?: number;
+    Hardcore?: number;
+    Veryhard?: number;
+    Hard?: number;
+    Normal?: number;
+  };
+}
+
+export interface RaidFullInfo extends RaidInfo {
+  Platinum: number;
+  Tier: { '4'?: number; '3'?: number; '2'?: number; '1'?: number };
+  TotalParticipants?: number;
 }
 
 export interface RaidInfoFiltered extends RaidInfo {
-  index: number
+  index: number;
 }
-
 
 export type GameServerParams = {
   server: GameServer;
 };
 
-export type GameServer = "jp" | "kr"
+export type GameServer = 'jp' | 'kr';
 
-export const GAMESERVER_LIST: GameServer[] = ["jp", "kr"]
+export const GAMESERVER_LIST: GameServer[] = ['jp', 'kr'];
 
 export interface FullData {
   tier_counter: { [key: string]: number };

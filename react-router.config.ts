@@ -1,7 +1,7 @@
-import type { Config } from "@react-router/dev/config";
-import "react-router";
+import type { Config } from '@react-router/dev/config';
+import 'react-router';
 
-declare module "react-router" {
+declare module 'react-router' {
   interface Future {
     // unstable_middleware: true;
   }

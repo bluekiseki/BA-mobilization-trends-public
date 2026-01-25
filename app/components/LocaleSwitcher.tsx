@@ -3,8 +3,8 @@ import LocaleSwitcherSelect from './LocaleSwitcherSelect';
 
 export default function LocaleSwitcher() {
   // const {t, i18n} = useTranslation('LocaleSwitcher');
-  const { t, i18n } = useTranslation("LocaleSwitcher");
-  const locale = i18n.language
+  const { t, i18n } = useTranslation('LocaleSwitcher');
+  const locale = i18n.language;
 
   return (
     <LocaleSwitcherSelect
@@ -12,20 +12,20 @@ export default function LocaleSwitcher() {
       items={[
         {
           value: 'en',
-          label: 'English'
+          label: 'English',
         },
         {
           value: 'ko',
-          label: '한국어'
+          label: '한국어',
         },
         {
           value: 'ja',
-          label: '日本語'
+          label: '日本語',
         },
         {
           value: 'zh-Hant',
-          label: '繁體中文'
-        }
+          label: '繁體中文',
+        },
       ]}
       label={t('label')}
     />

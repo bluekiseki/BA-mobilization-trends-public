@@ -6,19 +6,33 @@ export interface GrowthPlan {
   uuid: string;
   studentId: number | null;
   current: {
-    level: number; star: number; uw: number; uwLevel: number; ex: number; normal: number; passive: number; sub: number; eleph: number;
+    level: number;
+    star: number;
+    uw: number;
+    uwLevel: number;
+    ex: number;
+    normal: number;
+    passive: number;
+    sub: number;
+    eleph: number;
 
     affection: number;
-    affectionExp: number
+    affectionExp: number;
     equipment: [number, number, number];
-    potential: { hp: number; atk: number; heal: number }
+    potential: { hp: number; atk: number; heal: number };
   };
   target: {
-    level: number; star: number; uw: number; uwLevel: number; ex: number; normal: number; passive: number; sub: number;
+    level: number;
+    star: number;
+    uw: number;
+    uwLevel: number;
+    ex: number;
+    normal: number;
+    passive: number;
+    sub: number;
     affection: number;
     equipment: [number, number, number];
-    potential: { hp: number; atk: number; heal: number }
-
+    potential: { hp: number; atk: number; heal: number };
   };
   includedInEvents: number[];
   useEligmaForStar: boolean;
@@ -27,6 +41,7 @@ export interface GrowthPlan {
     stock: number;
   };
   ownedGifts: Record<string, number>;
+  isSelected: boolean;
 }
 
 interface GlobalState {
@@ -38,7 +53,9 @@ interface GlobalState {
   toggleEventInclusion: (uuid: string, eventId: number) => void;
   setGrowthPlans: (plans: GrowthPlan[]) => void;
   updateOwnedGifts: (itemId: string, amount: number) => void;
-  resetOwnedGifts: () => void
+  resetOwnedGifts: () => void;
+  togglePlanSelection: (uuid: string) => void;
+  selectAllPlans: (selected: boolean) => void;
 }
 
 export const useGlobalStore = create<GlobalState>()(
@@ -47,45 +64,69 @@ export const useGlobalStore = create<GlobalState>()(
       growthPlans: [],
       ownedGifts: {},
       addPlan: (eventId: number | null = null) => {
-
         const { growthPlans } = get();
 
-        const hasUnselectedPlan = growthPlans.some(plan => plan.studentId === null);
+        const hasUnselectedPlan = growthPlans.some((plan) => plan.studentId === null);
 
         // If it already exists, stop the function here and do nothing.
         if (hasUnselectedPlan) {
-          console.warn("A new plan cannot be added because a plan with no student selected already exists.");
-          alert("A new plan cannot be added because a plan with no student selected already exists.");
+          console.warn('A new plan cannot be added because a plan with no student selected already exists.');
+          alert('A new plan cannot be added because a plan with no student selected already exists.');
           // You can also add logic to alert users (e.g., toast, alert, etc.)
           return;
         }
 
         const newPlan: GrowthPlan = {
-          uuid: `${Date.now()}-${Math.random() * 1e9 | 0}`,
+          uuid: `${Date.now()}-${(Math.random() * 1e9) | 0}`,
           studentId: null,
-          current: { level: 1, star: 1, uw: 0, uwLevel: 1, ex: 1, normal: 1, passive: 1, sub: 1, eleph: 0, affection: 1, affectionExp: 0, equipment: [0, 0, 0], potential: { hp: 0, atk: 0, heal: 0 }, },
-          target: { level: 1, star: 1, uw: 0, uwLevel: 1, ex: 1, normal: 1, passive: 1, sub: 1, affection: 1, equipment: [0, 0, 0], potential: { hp: 0, atk: 0, heal: 0 }, },
+          current: {
+            level: 1,
+            star: 1,
+            uw: 0,
+            uwLevel: 1,
+            ex: 1,
+            normal: 1,
+            passive: 1,
+            sub: 1,
+            eleph: 0,
+            affection: 1,
+            affectionExp: 0,
+            equipment: [0, 0, 0],
+            potential: { hp: 0, atk: 0, heal: 0 },
+          },
+          target: {
+            level: 1,
+            star: 1,
+            uw: 0,
+            uwLevel: 1,
+            ex: 1,
+            normal: 1,
+            passive: 1,
+            sub: 1,
+            affection: 1,
+            equipment: [0, 0, 0],
+            potential: { hp: 0, atk: 0, heal: 0 },
+          },
           includedInEvents: eventId ? [eventId] : [],
           useEligmaForStar: false,
           eligmaInfo: {
             price: 1,
-            stock: 20
+            stock: 20,
           },
           ownedGifts: {},
-
-
+          isSelected: true,
         };
         set({ growthPlans: [...get().growthPlans, newPlan] });
       },
       removePlan: (uuid) => {
-        set({ growthPlans: get().growthPlans.filter(p => p.uuid !== uuid) });
+        set({ growthPlans: get().growthPlans.filter((p) => p.uuid !== uuid) });
       },
       updatePlan: (uuid, field, value) => {
-        set(state => ({
-          growthPlans: state.growthPlans.map(p => {
+        // console.log(`updatePlan: (uuid:${uuid}, field:${field}, value:${value}) => {`, value)
+        set((state) => ({
+          growthPlans: state.growthPlans.map((p) => {
             if (p.uuid === uuid) {
               const newPlan = JSON.parse(JSON.stringify(p));
-
 
               const [main, sub] = field.split('.');
               if (sub) {
@@ -95,6 +136,8 @@ export const useGlobalStore = create<GlobalState>()(
               }
               if (main === 'current' && sub) {
                 if (newPlan.current[sub] > newPlan.target[sub]) {
+                  newPlan.target[sub] = newPlan.current[sub];
+                } else if (typeof newPlan.current[sub] == 'object' && Object.values(newPlan.current[sub]) > Object.values(newPlan.target[sub])) {
                   newPlan.target[sub] = newPlan.current[sub];
                 }
                 // ★ rank
@@ -111,44 +154,51 @@ export const useGlobalStore = create<GlobalState>()(
               return newPlan;
             }
             return p;
-          })
+          }),
         }));
       },
       toggleEventInclusion: (uuid, eventId) => {
-        set(state => ({
-          growthPlans: state.growthPlans.map(plan => {
+        set((state) => ({
+          growthPlans: state.growthPlans.map((plan) => {
             if (plan.uuid === uuid) {
               const included = plan.includedInEvents.includes(eventId);
               return {
                 ...plan,
-                includedInEvents: included
-                  ? plan.includedInEvents.filter(id => id !== eventId)
-                  : [...plan.includedInEvents, eventId],
+                includedInEvents: included ? plan.includedInEvents.filter((id) => id !== eventId) : [...plan.includedInEvents, eventId],
               };
             }
             return plan;
-          })
+          }),
         }));
       },
       setGrowthPlans: (plans) => set({ growthPlans: plans }),
-      updateOwnedGifts: (itemId, amount) => set(state => {
-        const newOwnedGifts = { ...state.ownedGifts };
-        if (amount > 0) {
-          newOwnedGifts[itemId] = amount;
-        } else {
-          delete newOwnedGifts[itemId]; // Remove from list if quantity is 0
-        }
-        return { ownedGifts: newOwnedGifts };
-      }),
+      updateOwnedGifts: (itemId, amount) =>
+        set((state) => {
+          const newOwnedGifts = { ...state.ownedGifts };
+          if (amount > 0) {
+            newOwnedGifts[itemId] = amount;
+          } else {
+            delete newOwnedGifts[itemId]; // Remove from list if quantity is 0
+          }
+          return { ownedGifts: newOwnedGifts };
+        }),
       resetOwnedGifts: () => set({ ownedGifts: {} }),
 
-
+      togglePlanSelection: (uuid) =>
+        set((state) => ({
+          growthPlans: state.growthPlans.map((p) => (p.uuid === uuid ? { ...p, isSelected: !p.isSelected } : p)),
+        })),
+      selectAllPlans: (selected) =>
+        set((state) => ({
+          growthPlans: state.growthPlans.map((p) => ({
+            ...p,
+            isSelected: selected,
+          })),
+        })),
     }),
     {
       name: 'global-growth-plans-v2',
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );
-
-

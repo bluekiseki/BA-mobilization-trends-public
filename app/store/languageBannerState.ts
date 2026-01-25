@@ -1,11 +1,11 @@
 // app/stores/languageBannerState.ts (new file)
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface LanguageBannerState {
-  hasShownLanguageBanner: boolean
-  setHasShownLanguageBanner: () => void
+  hasShownLanguageBanner: boolean;
+  setHasShownLanguageBanner: () => void;
 }
 
 /**
@@ -23,4 +23,4 @@ export const useLanguageBannerStore = create<LanguageBannerState>()(
       storage: createJSONStorage(() => localStorage),
     },
   ),
-)
+);

@@ -1,65 +1,55 @@
-import { Link } from 'react-router'
-import { useTranslation } from 'react-i18next'
-import type { Locale } from '~/utils/i18n/config'
-import LocaleSwitcher from './LocaleSwitcher' // Language switcher
-import { issuesURL as GITHUB_TRANSLATE_URL } from '~/data/livedataServer.json'
+import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import type { Locale } from '~/utils/i18n/config';
+import LocaleSwitcher from './LocaleSwitcher'; // Language switcher
+import { issuesURL as GITHUB_TRANSLATE_URL } from '~/data/livedataServer.json';
 
 // Define data types for component props
 type BannerData = {
-  type: 'mismatch' | 'unsupported'
-  displayLocale: Locale // The text language of the banner itself (reqLocale)
-  suggestedLocale?: Locale // The language to suggest switching to (on mismatch)
-  targetPath?: string // The path to switch to (on mismatch)
-}
+  type: 'mismatch' | 'unsupported';
+  displayLocale: Locale; // The text language of the banner itself (reqLocale)
+  suggestedLocale?: Locale; // The language to suggest switching to (on mismatch)
+  targetPath?: string; // The path to switch to (on mismatch)
+};
 
 type Props = {
-  bannerData: BannerData
-  onDismiss: () => void
-}
+  bannerData: BannerData;
+  onDismiss: () => void;
+};
 
 const getNativeLanguageName = (locale: string) => {
   try {
-    return (
-      new Intl.DisplayNames([locale], { type: 'language' }).of(locale) || locale
-    )
+    return new Intl.DisplayNames([locale], { type: 'language' }).of(locale) || locale;
   } catch (e) {
-    return locale // Handle exceptions like non-standard codes
+    return locale; // Handle exceptions like non-standard codes
   }
-}
+};
 
 export function LanguageBanner({ bannerData, onDismiss }: Props) {
-  const { i18n } = useTranslation("language_banner", { lng: bannerData.displayLocale })
+  const { i18n } = useTranslation('language_banner', {
+    lng: bannerData.displayLocale,
+  });
 
   // (Improvement 1)
   // Display the banner text not in the current page language (locale)
   // but in the preferred language detected by the server (displayLocale)
 
-  const t = i18n.getFixedT(bannerData.displayLocale, "language_banner",) // Assuming 'common' namespace
+  const t = i18n.getFixedT(bannerData.displayLocale, 'language_banner'); // Assuming 'common' namespace
   // console.log('bannerData.displayLocale', bannerData.displayLocale, t("message"))
 
-  const languageName = bannerData.suggestedLocale
-    ? getNativeLanguageName(bannerData.suggestedLocale)
-    : ''
-
+  const languageName = bannerData.suggestedLocale ? getNativeLanguageName(bannerData.suggestedLocale) : '';
 
   return (
-    <div
-      className="bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-100 p-3 shadow-md"
-      role="alert"
-    >
+    <div className="bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-100 p-3 shadow-md" role="alert">
       <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-y-3 gap-x-4 px-2 sm:px-6 lg:px-8">
         {/* Message area */}
         <div className="grow flex flex-col md:flex-row md:items-center gap-2">
           {bannerData.type === 'mismatch' ? (
             // Scenario 1: Language mismatch
-            <p className="text-sm md:text-base font-medium">
-              {t('message', { language: languageName })}
-            </p>
+            <p className="text-sm md:text-base font-medium">{t('message', { language: languageName })}</p>
           ) : (
             // Scenario 2: Unsupported language
-            <p className="text-sm md:text-base font-medium">
-              {t('unsupported.message')}
-            </p>
+            <p className="text-sm md:text-base font-medium">{t('unsupported.message')}</p>
           )}
         </div>
 
@@ -100,23 +90,12 @@ export function LanguageBanner({ bannerData, onDismiss }: Props) {
             aria-label={t('dismiss_button')}
           >
             {/* ... (X icon SVG) ... */}
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

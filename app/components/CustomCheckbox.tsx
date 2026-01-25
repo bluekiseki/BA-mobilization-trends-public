@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-export const CustomCheckbox = ({ state, ...props }: {
+export const CustomCheckbox = ({
+  state,
+  ...props
+}: {
   state: 'checked' | 'unchecked' | 'indeterminate';
 } & React.InputHTMLAttributes<HTMLInputElement>) => {
-
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

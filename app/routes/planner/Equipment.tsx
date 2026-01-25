@@ -30,37 +30,26 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   // ... (loader logic is ) ...
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
-  const siteTitle = i18n.t("home:title");
-  const title: string = i18n.t("planner:page.equipmentFarmingPlanner", "Equipment Farming Planner");
-  const description: string = i18n.t("planner:page.description.equipmentFarmingPlanner");
-  
+  const siteTitle = i18n.t('home:title');
+  const title: string = i18n.t('planner:page.equipmentFarmingPlanner', 'Equipment Farming Planner');
+  const description: string = i18n.t('planner:page.description.equipmentFarmingPlanner');
+
   return data({
-    siteTitle, title, description, locale,
-    // campaigns: campaignData as CampaignData,
-    // iconInfoData: iconDataInfoModule as unknown as IconInfos,
-    // iconData: iconDataAllModule as unknown as IconData,
-    // studentData,
-    // studentPortraits,
+    siteTitle,
+    title,
+    description,
+    locale,
   });
 }
 // ... meta ...
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(
-    loaderData.title + ' | ' + loaderData.siteTitle,
-    loaderData.description,
-    "/img/p.webp"
-  );
+  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp');
 }
 
 export default function EquipmentPlannerPage() {
-  const {
-    // campaigns,
-    // iconInfoData,
-    // iconData,
-    title
-  } = useLoaderData<typeof loader>();
-  const { t, i18n } = useTranslation("planner"); //
-  const locale = i18n.language as Locale
+  const { title } = useLoaderData<typeof loader>();
+  const { t, i18n } = useTranslation('planner'); //
+  const locale = i18n.language as Locale;
 
   // --- UI State ---
   const [stageFilter, setStageFilter] = useState<'Normal' | 'Hard'>('Normal'); // 'all' |
@@ -73,8 +62,8 @@ export default function EquipmentPlannerPage() {
   const [studentData, setStudentData] = useState<Record<string, Student> | null>(null);
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
-  const [campaigns, setCampaignData] = useState<CampaignData>()
-    const [iconInfoData, setIconInfoData] = useState<IconInfos>({
+  const [campaigns, setCampaignData] = useState<CampaignData>();
+  const [iconInfoData, setIconInfoData] = useState<IconInfos>({
     Item: {},
     Equipment: {},
     Furniture: {},
@@ -84,11 +73,26 @@ export default function EquipmentPlannerPage() {
   });
 
   useEffect(() => {
-    fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.json`)).then(res => res.json() as any).then(setStudentData).catch(e => console.error(e));
-    fetch(cdn(`/w/students_portrait.json`)).then(res => res.json() as any).then(setStudentPortraits).catch(e => console.error(e));
-    fetch(cdn(`/ew/icon_img.json`)).then(res => res.json() as any).then(setIconData).catch(e => console.error(e));
-    fetch(cdn(`/ew/icon_info.json`)).then(res => res.json() as any).then(setIconInfoData).catch(e => console.error(e));
-    fetch(cdn(`/w/campaigns.json`)).then(res => res.json() as any).then(setCampaignData).catch(e => console.error(e));
+    fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
+      .then((res) => res.json() as any)
+      .then(setStudentData)
+      .catch((e) => console.error(e));
+    fetch(cdn(`/w/students_portrait.json`))
+      .then((res) => res.json() as any)
+      .then(setStudentPortraits)
+      .catch((e) => console.error(e));
+    fetch(cdn(`/ew/icon_img.json`))
+      .then((res) => res.json() as any)
+      .then(setIconData)
+      .catch((e) => console.error(e));
+    fetch(cdn(`/ew/icon_info.json`))
+      .then((res) => res.json() as any)
+      .then(setIconInfoData)
+      .catch((e) => console.error(e));
+    fetch(cdn(`/w/campaigns.json`))
+      .then((res) => res.json() as any)
+      .then(setCampaignData)
+      .catch((e) => console.error(e));
   }, [locale]);
 
   // 5-2. Merge allStudents and portraits data
@@ -96,11 +100,11 @@ export default function EquipmentPlannerPage() {
     const students = studentData;
     const portraits = studentPortraits;
 
-    if (!students) return {}
-    if (!portraits) return {}
+    if (!students) return {};
+    if (!portraits) return {};
 
-    Object.keys(students).forEach(studentIdStr => {
-      const studentId = Number(studentIdStr)
+    Object.keys(students).forEach((studentIdStr) => {
+      const studentId = Number(studentIdStr);
       if (portraits[studentId]) {
         students[studentIdStr].Portrait = portraits[studentId];
       }
@@ -112,13 +116,13 @@ export default function EquipmentPlannerPage() {
   const resolvedStages = useMemo((): ResolvedStage[] => {
     const stages = campaigns;
     const iconInfo = iconInfoData;
-    console.log('resolvedStages return')
-    if (!stages) return []
+    console.log('resolvedStages return');
+    if (!stages) return [];
 
     return Object.entries(stages).map(([stageId, stageData]) => {
       const drops: Record<string, number> = {};
       const apCost = stageData.AP;
-      stageData.Reward.forEach(reward => {
+      stageData.Reward.forEach((reward) => {
         const prob = reward.StageRewardProb / 10000;
         const type = reward.StageRewardParcelTypeStr;
         const id = reward.StageRewardId;
@@ -128,42 +132,39 @@ export default function EquipmentPlannerPage() {
         } else if (type === 'GachaGroup') {
           const gachaRewards = resolveGachaGroup(id, iconInfo);
           for (const [eqKey, eqProb] of Object.entries(gachaRewards)) {
-            drops[eqKey] = (drops[eqKey] || 0) + (prob * eqProb);
+            drops[eqKey] = (drops[eqKey] || 0) + prob * eqProb;
           }
         }
       });
 
       return {
-        id: Number(stageId), type: stageData.Type, name: stageData.Name,
-        chapter: stageData.Chapter, stageNum: stageData.Stage,
-        ap: apCost, drops: drops,
+        id: Number(stageId),
+        type: stageData.Type,
+        name: stageData.Name,
+        chapter: stageData.Chapter,
+        stageNum: stageData.Stage,
+        ap: apCost,
+        drops: drops,
       };
     });
   }, [campaigns, iconInfoData]);
-
 
   // Load total required materials from Student Growth Plan
   const { growthPlans } = useGlobalStore();
   // --- Reflect Student Selection Logic ---
   const selectedPlans = useMemo(() => {
-    console.log('selectedPlans - return')
-    return growthPlans.filter(p => selectedPlanUuids.has(p.uuid));
+    console.log('selectedPlans - return');
+    return growthPlans.filter((p) => selectedPlanUuids.has(p.uuid));
   }, [growthPlans, selectedPlanUuids]);
 
   const totalEquipmentNeeds = useMemo(() => {
     //  growthPlans -> selectedPlans
     const needs = calculatedGrowthNeeds(selectedPlans, mergedStudents);
-    return Object.fromEntries(
-      Object.entries(needs).filter(([key]) => key.startsWith('Equipment_') && !['Equipment_1', 'Equipment_2', 'Equipment_3', 'Equipment_4'].includes(key))
-    );
+    return Object.fromEntries(Object.entries(needs).filter(([key]) => key.startsWith('Equipment_') && !['Equipment_1', 'Equipment_2', 'Equipment_3', 'Equipment_4'].includes(key)));
   }, [selectedPlans, mergedStudents]);
 
   // Equipment Farming Plan Store
-  const {
-    runCounts, farmingDays, normalMultiplier, hardMultiplier,
-    setRunCount, setFarmingDays, setMultipliers, setRunCounts,
-    inventory, setInventoryItem
-  } = useEquipmentPlanStore();
+  const { runCounts, farmingDays, normalMultiplier, hardMultiplier, setRunCount, setFarmingDays, setMultipliers, setRunCounts, inventory, setInventoryItem } = useEquipmentPlanStore();
 
   // 2. Core Calculation: Current Farmed Amount / Remaining Required Amount
   const farmedByPlan = useMemo(() => {
@@ -173,7 +174,7 @@ export default function EquipmentPlannerPage() {
       if (runs === 0) continue;
       const multiplier = stage.type === 'Normal' ? normalMultiplier : hardMultiplier;
       for (const [eqKey, baseDrop] of Object.entries(stage.drops)) {
-        farmed[eqKey] = (farmed[eqKey] || 0) + (baseDrop * runs * multiplier);
+        farmed[eqKey] = (farmed[eqKey] || 0) + baseDrop * runs * multiplier;
       }
     }
     return farmed;
@@ -213,24 +214,22 @@ export default function EquipmentPlannerPage() {
   }, [totalEquipmentNeeds, farmedByPlan, inventory]);
 
   const totalApUsed = useMemo(() => {
-    return Math.round(resolvedStages.reduce((total, stage) => {
-      const runs = runCounts[stage.id] || 0;
-      return total + (runs * stage.ap);
-    }, 0));
+    return Math.round(
+      resolvedStages.reduce((total, stage) => {
+        const runs = runCounts[stage.id] || 0;
+        return total + runs * stage.ap;
+      }, 0),
+    );
   }, [runCounts, resolvedStages]);
-
-
 
   // --- 4. Optimizer Handler (Logic same) ---
   const handleOptimizeHard = () => {
     const newRunCounts = { ...runCounts };
     const neededItemsSet = new Set(Object.keys(remainingNeeds));
-    const relevantHardStages = resolvedStages.filter(stage =>
-      stage.type === 'Hard' &&
-      Object.keys(stage.drops).length > 0 &&
-      Object.keys(stage.drops).some(dropKey => neededItemsSet.has(dropKey))
+    const relevantHardStages = resolvedStages.filter(
+      (stage) => stage.type === 'Hard' && Object.keys(stage.drops).length > 0 && Object.keys(stage.drops).some((dropKey) => neededItemsSet.has(dropKey)),
     );
-    relevantHardStages.forEach(stage => {
+    relevantHardStages.forEach((stage) => {
       const maxRuns = farmingDays * 3;
       newRunCounts[stage.id] = maxRuns;
     });
@@ -239,24 +238,22 @@ export default function EquipmentPlannerPage() {
 
   const handleOptimizeNormal = useCallback(() => {
     // 1. Optimization Target Stages (Normal)
-    const optimizableStages = resolvedStages.filter(s =>
-      s.type === 'Normal' &&
-      Object.keys(s.drops).length > 0 &&
-      s.ap > 0
-    );
+    const optimizableStages = resolvedStages.filter((s) => s.type === 'Normal' && Object.keys(s.drops).length > 0 && s.ap > 0);
     if (optimizableStages.length === 0) return;
 
     // 2. List of remaining required materials (IDs only)
     const neededItemKeys = Object.keys(remainingNeeds);
     if (neededItemKeys.length === 0) return; // No need to optimize
-    const neededAmounts = neededItemKeys.map(key => remainingNeeds[key]);
+    const neededAmounts = neededItemKeys.map((key) => remainingNeeds[key]);
 
     // 3. Create data structure required for Simplex
     // const stageMap = new Map(optimizableStages.map((s, i) => [s.id, i]));
     const itemMap = new Map(neededItemKeys.map((key, i) => [key, i]));
     const numStages = optimizableStages.length;
     const numItems = neededItemKeys.length;
-    const dropMatrix = Array(numStages).fill(0).map(() => Array(numItems).fill(0));
+    const dropMatrix = Array(numStages)
+      .fill(0)
+      .map(() => Array(numItems).fill(0));
     const apCosts = Array(numStages).fill(0);
     for (let i = 0; i < numStages; i++) {
       const stage = optimizableStages[i];
@@ -292,37 +289,43 @@ export default function EquipmentPlannerPage() {
   // --- End of Optimizer ---
 
   // --- Reset Handler ---
-  const handleResetAll = useCallback(() => { setRunCounts({}); }, [setRunCounts]);
+  const handleResetAll = useCallback(() => {
+    setRunCounts({});
+  }, [setRunCounts]);
   const handleResetHard = useCallback(() => {
     const normalRunCounts = Object.fromEntries(
       Object.entries(runCounts).filter(([stageId]) => {
-        const stage = resolvedStages.find(s => s.id === Number(stageId));
+        const stage = resolvedStages.find((s) => s.id === Number(stageId));
         return stage && stage.type === 'Normal';
-      })
+      }),
     );
     setRunCounts(normalRunCounts);
   }, [runCounts, resolvedStages, setRunCounts]);
   const handleResetNormal = useCallback(() => {
     const hardRunCounts = Object.fromEntries(
       Object.entries(runCounts).filter(([stageId]) => {
-        const stage = resolvedStages.find(s => s.id === Number(stageId));
+        const stage = resolvedStages.find((s) => s.id === Number(stageId));
         return stage && stage.type === 'Hard';
-      })
+      }),
     );
     setRunCounts(hardRunCounts);
   }, [runCounts, resolvedStages, setRunCounts]);
   // ---
   // eventData prop to pass to ItemIcon
-  const eventDataForIcon = useMemo(() => ({
-    icons: iconInfoData
-  }) as EventData, [iconInfoData]);
+  const eventDataForIcon = useMemo(
+    () =>
+      ({
+        icons: iconInfoData,
+      }) as EventData,
+    [iconInfoData],
+  );
   // --- Filtering/Sorting Logic ---
   const allFarmableItems = useMemo(() => {
     const items = new Set<string>();
-    resolvedStages.forEach(stage => {
-      Object.keys(stage.drops).forEach(dropKey => {
+    resolvedStages.forEach((stage) => {
+      Object.keys(stage.drops).forEach((dropKey) => {
         if (!['Equipment_1', 'Equipment_2', 'Equipment_3', 'Equipment_4'].includes(dropKey)) {
-          items.add(dropKey)
+          items.add(dropKey);
         }
       });
     });
@@ -339,10 +342,8 @@ export default function EquipmentPlannerPage() {
         return tierB - tierA; // High Tier First
       }
       return idA - idB; // ID Ascending
-
     });
   }, [resolvedStages]);
-
 
   // const filteredAndSortedStages = useMemo(() => {
   //   let stages = resolvedStages
@@ -362,63 +363,51 @@ export default function EquipmentPlannerPage() {
   //   return stages.sort((a, b) => a.id - b.id);
   // }, [resolvedStages, isSortedDesc, itemFilter]);
 
-  const getSortedEquipmentList = useCallback((
-    items: Record<string, number>,
-    sortMode: 'tier' | 'id' | 'amount'
-  ): [string, number][] => {
-    const entries = Object.entries(items);
-    entries.sort((a, b) => {
-      const [keyA, amountA] = a;
-      const [keyB, amountB] = b;
-      if (sortMode === 'amount') {
-        return amountB - amountA; // By Count Descending
-      }
-      const idA = parseInt(keyA.split('_')[1], 10);
-      const idB = parseInt(keyB.split('_')[1], 10);
-      if (sortMode === 'id') {
-        return idA - idB; // ID Ascending
-      }
-      if (sortMode === 'tier') {
-        // Tier Order (High Tier -> Low Tier -> ID Order)
-        const itemInfoA = iconInfoData.Equipment?.[idA];
-        const itemInfoB = iconInfoData.Equipment?.[idB];
-        const tierLabelA = getEquipmentTierLabel(itemInfoA);
-        const tierLabelB = getEquipmentTierLabel(itemInfoB);
-        const tierA = tierLabelA ? parseInt(tierLabelA) : 0;
-        const tierB = tierLabelB ? parseInt(tierLabelB) : 0;
-        if (tierA !== tierB) {
-          return tierB - tierA; // High Tier First
+  const getSortedEquipmentList = useCallback(
+    (items: Record<string, number>, sortMode: 'tier' | 'id' | 'amount'): [string, number][] => {
+      const entries = Object.entries(items);
+      entries.sort((a, b) => {
+        const [keyA, amountA] = a;
+        const [keyB, amountB] = b;
+        if (sortMode === 'amount') {
+          return amountB - amountA; // By Count Descending
         }
-        return idA - idB; // ID Ascending
-      }
-      return 0;
-    });
-    return entries;
-  }, [iconInfoData.Equipment]); // iconInfoData comes from loader, so it is immutable
+        const idA = parseInt(keyA.split('_')[1], 10);
+        const idB = parseInt(keyB.split('_')[1], 10);
+        if (sortMode === 'id') {
+          return idA - idB; // ID Ascending
+        }
+        if (sortMode === 'tier') {
+          // Tier Order (High Tier -> Low Tier -> ID Order)
+          const itemInfoA = iconInfoData.Equipment?.[idA];
+          const itemInfoB = iconInfoData.Equipment?.[idB];
+          const tierLabelA = getEquipmentTierLabel(itemInfoA);
+          const tierLabelB = getEquipmentTierLabel(itemInfoB);
+          const tierA = tierLabelA ? parseInt(tierLabelA) : 0;
+          const tierB = tierLabelB ? parseInt(tierLabelB) : 0;
+          if (tierA !== tierB) {
+            return tierB - tierA; // High Tier First
+          }
+          return idA - idB; // ID Ascending
+        }
+        return 0;
+      });
+      return entries;
+    },
+    [iconInfoData.Equipment],
+  ); // iconInfoData comes from loader, so it is immutable
 
-  const sortedTotalNeeds = useMemo(
-    () => getSortedEquipmentList(totalEquipmentNeeds, summarySortMode),
-    [totalEquipmentNeeds, summarySortMode, getSortedEquipmentList]
-  );
+  const sortedTotalNeeds = useMemo(() => getSortedEquipmentList(totalEquipmentNeeds, summarySortMode), [totalEquipmentNeeds, summarySortMode, getSortedEquipmentList]);
 
-  const sortedFarmedByPlan = useMemo(
-    () => getSortedEquipmentList(farmedByPlan, summarySortMode),
-    [farmedByPlan, summarySortMode, getSortedEquipmentList]
-  );
+  const sortedFarmedByPlan = useMemo(() => getSortedEquipmentList(farmedByPlan, summarySortMode), [farmedByPlan, summarySortMode, getSortedEquipmentList]);
 
-  const sortedRemainingNeeds = useMemo(
-    () => getSortedEquipmentList(remainingNeeds, summarySortMode),
-    [remainingNeeds, summarySortMode, getSortedEquipmentList]
-  );
+  const sortedRemainingNeeds = useMemo(() => getSortedEquipmentList(remainingNeeds, summarySortMode), [remainingNeeds, summarySortMode, getSortedEquipmentList]);
 
-  const sortedSurplusGoods = useMemo(
-    () => getSortedEquipmentList(surplusGoods, summarySortMode),
-    [surplusGoods, summarySortMode, getSortedEquipmentList]
-  );
+  const sortedSurplusGoods = useMemo(() => getSortedEquipmentList(surplusGoods, summarySortMode), [surplusGoods, summarySortMode, getSortedEquipmentList]);
 
   // --- Student Selection Handler ---
   const handleTogglePlan = useCallback((uuid: string) => {
-    setSelectedPlanUuids(prev => {
+    setSelectedPlanUuids((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(uuid)) {
         newSet.delete(uuid);
@@ -430,7 +419,7 @@ export default function EquipmentPlannerPage() {
   }, []);
 
   const handleSelectAllPlans = useCallback(() => {
-    setSelectedPlanUuids(new Set(growthPlans.map(p => p.uuid)));
+    setSelectedPlanUuids(new Set(growthPlans.map((p) => p.uuid)));
   }, [growthPlans]);
 
   const handleDeselectAllPlans = useCallback(() => {
@@ -438,12 +427,11 @@ export default function EquipmentPlannerPage() {
   }, []);
   // ---
 
-
   // Define Tailwind CSS classes
-  const tabButtonClass = "px-4 py-2 text-sm font-semibold rounded-md transition-colors";
-  const activeTabClass = "bg-blue-600 text-white";
-  const inactiveTabClass = "bg-gray-200 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-neutral-600";
-  const resetButtonClass = "text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1";
+  const tabButtonClass = 'px-4 py-2 text-sm font-semibold rounded-md transition-colors';
+  const activeTabClass = 'bg-blue-600 text-white';
+  const inactiveTabClass = 'bg-gray-200 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-neutral-600';
+  const resetButtonClass = 'text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1';
 
   return (
     <div className="max-w-7xl mx-auto p-4">
@@ -452,53 +440,43 @@ export default function EquipmentPlannerPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 p-4 bg-white dark:bg-neutral-800 rounded-lg shadow">
         <label className="block">
           <span className="font-semibold text-gray-700 dark:text-gray-300">{t('equipment.farmingDays')}</span>
-          <NumberInput
-            value={farmingDays}
-            onChange={val => setFarmingDays(val || 1)}
-            min={1}
-            max={999}
-          />
+          <NumberInput value={farmingDays} onChange={(val) => setFarmingDays(val || 1)} min={1} max={999} />
         </label>
         <label className="block">
           <span className="font-semibold text-gray-700 dark:text-gray-300">{t('equipment.normalMultiplier')}</span>
           <select
             value={normalMultiplier}
-            onChange={e => setMultipliers('normal', Number(e.target.value))}
+            onChange={(e) => setMultipliers('normal', Number(e.target.value))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-neutral-700 dark:border-neutral-600 focus:border-blue-500 focus:ring-blue-500"
           >
-            <option value={1}>1x</option><option value={2}>2x</option><option value={3}>3x</option>
+            <option value={1}>1x</option>
+            <option value={2}>2x</option>
+            <option value={3}>3x</option>
           </select>
         </label>
         <label className="block">
           <span className="font-semibold text-gray-700 dark:text-gray-300">{t('equipment.hardMultiplier')}</span>
           <select
             value={hardMultiplier}
-            onChange={e => setMultipliers('hard', Number(e.target.value))}
+            onChange={(e) => setMultipliers('hard', Number(e.target.value))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-neutral-700 dark:border-neutral-600 focus:border-blue-500 focus:ring-blue-500"
           >
-            <option value={1}>1x</option><option value={2}>2x</option><option value={3}>3x</option>
+            <option value={1}>1x</option>
+            <option value={2}>2x</option>
+            <option value={3}>3x</option>
           </select>
         </label>
       </div>
 
       <div className="flex justify-end items-center gap-2 my-4">
         <span className="text-sm font-semibold dark:text-gray-300">{t('equipment.summarySort')}</span>
-        <button
-          onClick={() => setSummarySortMode('tier')}
-          className={`${tabButtonClass} ${summarySortMode === 'tier' ? activeTabClass : inactiveTabClass}`}
-        >
+        <button onClick={() => setSummarySortMode('tier')} className={`${tabButtonClass} ${summarySortMode === 'tier' ? activeTabClass : inactiveTabClass}`}>
           <FaLayerGroup className="inline sm:mr-1" /> <span className="hidden sm:inline">{t('equipment.sortByTier')}</span>
         </button>
-        <button
-          onClick={() => setSummarySortMode('id')}
-          className={`${tabButtonClass} ${summarySortMode === 'id' ? activeTabClass : inactiveTabClass}`}
-        >
+        <button onClick={() => setSummarySortMode('id')} className={`${tabButtonClass} ${summarySortMode === 'id' ? activeTabClass : inactiveTabClass}`}>
           <FaSortNumericDown className="inline sm:mr-1" /> <span className="hidden sm:inline">{t('equipment.sortById')}</span>
         </button>
-        <button
-          onClick={() => setSummarySortMode('amount')}
-          className={`${tabButtonClass} ${summarySortMode === 'amount' ? activeTabClass : inactiveTabClass}`}
-        >
+        <button onClick={() => setSummarySortMode('amount')} className={`${tabButtonClass} ${summarySortMode === 'amount' ? activeTabClass : inactiveTabClass}`}>
           <FaSortAmountDown className="inline sm:mr-1" /> <span className="hidden sm:inline">{t('equipment.sortByAmount')}</span>
         </button>
       </div>
@@ -511,31 +489,22 @@ export default function EquipmentPlannerPage() {
               <FaArchive /> {t('equipment.selectPlansTitle')}
             </h2>
             <div className="flex gap-2 items-center">
-              <Link
-                to={localeLink(locale, "/planner/students")}
-                className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-              >
+              <Link to={localeLink(locale, '/planner/students')} className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                 <FaPlusCircle />
                 {t('equipment.addEditPlans')}
               </Link>
               <div className="h-4 w-px bg-gray-300 dark:bg-neutral-600"></div> {/* Divider */}
-              <button
-                onClick={handleSelectAllPlans}
-                className="text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200 px-3 py-1 rounded-md"
-              >
+              <button onClick={handleSelectAllPlans} className="text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200 px-3 py-1 rounded-md">
                 {t('equipment.selectAll')}
               </button>
-              <button
-                onClick={handleDeselectAllPlans}
-                className="text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-gray-200 px-3 py-1 rounded-md"
-              >
+              <button onClick={handleDeselectAllPlans} className="text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-gray-200 px-3 py-1 rounded-md">
                 {t('equipment.deselectAll')}
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {growthPlans.map(plan => (
+            {growthPlans.map((plan) => (
               <StudentGrowthSummaryCard
                 key={plan.uuid}
                 plan={plan}
@@ -548,13 +517,12 @@ export default function EquipmentPlannerPage() {
             ))}
             {growthPlans.length === 0 && (
               <div className="text-center text-gray-500 dark:text-gray-400 md:col-span-2 py-8 px-4 bg-gray-50 dark:bg-neutral-800/50 rounded-lg">
-                <p className="font-semibold dark:text-gray-200">{t("ui.noStudentGrowthPlan")}</p>
+                <p className="font-semibold dark:text-gray-200">{t('ui.noStudentGrowthPlan')}</p>
                 <p className="text-sm mt-2">
-                  <Link to={localeLink(locale, "/planner/students")} className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                  <Link to={localeLink(locale, '/planner/students')} className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
                     [{t('page.studentGrowthPlanner')}]
-                  </Link>
-                  {" "}
-                  {t("ui.startByAddingNewPlan")}
+                  </Link>{' '}
+                  {t('ui.startByAddingNewPlan')}
                 </p>
               </div>
             )}
@@ -569,10 +537,7 @@ export default function EquipmentPlannerPage() {
             <h2 className="text-lg font-semibold dark:text-gray-200 flex items-center gap-2">
               <FaListAlt /> {t('equipment.totalNeeded')}
             </h2>
-            <button
-              onClick={() => setIsInventoryModalOpen(true)}
-              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline relative"
-            >
+            <button onClick={() => setIsInventoryModalOpen(true)} className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline relative">
               <FaBoxOpen />
               {t('equipment.editInventory')}
               {Object.keys(inventory).length > 0 && (
@@ -583,16 +548,15 @@ export default function EquipmentPlannerPage() {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-gray-100 dark:bg-neutral-800 rounded-md mt-1 max-h-80 overflow-y-scroll scrollbar-thin">
-            {sortedTotalNeeds.length > 0 ? sortedTotalNeeds.map(([key, amount]) => {
-              const itemType = key.split('_')[0] as keyof IconInfos;
-              const itemId = key.split('_')[1];
-              return (
-                <EquipmentItemIcon
-                  key={key} type={itemType} itemId={itemId} amount={amount} size={13}
-                  eventData={eventDataForIcon} iconData={iconData} 
-                />
-              )
-            }) : <span className="text-sm text-gray-500 dark:text-gray-400">{t('equipment.noItemsNeeded')}</span>}
+            {sortedTotalNeeds.length > 0 ? (
+              sortedTotalNeeds.map(([key, amount]) => {
+                const itemType = key.split('_')[0] as keyof IconInfos;
+                const itemId = key.split('_')[1];
+                return <EquipmentItemIcon key={key} type={itemType} itemId={itemId} amount={amount} size={13} eventData={eventDataForIcon} iconData={iconData} />;
+              })
+            ) : (
+              <span className="text-sm text-gray-500 dark:text-gray-400">{t('equipment.noItemsNeeded')}</span>
+            )}
           </div>
         </div>
 
@@ -633,9 +597,7 @@ export default function EquipmentPlannerPage() {
       {/* Total Used AP Panel */}
       <div className="my-4 p-4 bg-white dark:bg-neutral-800 rounded-lg shadow">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('equipment.totalApUsed')}</h3>
-        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-          {totalApUsed.toLocaleString()} AP
-        </p>
+        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">{totalApUsed.toLocaleString()} AP</p>
       </div>
       {/* Optimize Button */}
       <div className="flex flex-col sm:flex-row gap-4 my-4">
@@ -665,26 +627,19 @@ export default function EquipmentPlannerPage() {
         {/* 2. Sort and Currency Filter */}
         <div className="flex gap-2">
           <button
-            onClick={() => setIsSortedDesc(prev => !prev)}
+            onClick={() => setIsSortedDesc((prev) => !prev)}
             className={`${tabButtonClass} ${inactiveTabClass} flex items-center gap-2`}
             title={t(isSortedDesc ? 'equipment.sortAsc' : 'equipment.sortDesc')}
           >
             {isSortedDesc ? <FaSortAmountDown /> : <FaSortAmountUp />}
-            <span className="hidden sm:inline">
-              {t(isSortedDesc ? 'equipment.sortOrderDesc' : 'equipment.sortOrderAsc')}
-            </span>
+            <span className="hidden sm:inline">{t(isSortedDesc ? 'equipment.sortOrderDesc' : 'equipment.sortOrderAsc')}</span>
           </button>
-          <button
-            onClick={() => setIsFilterModalOpen(true)}
-            className={`${tabButtonClass} ${itemFilter.size > 0 ? activeTabClass : inactiveTabClass} flex items-center gap-2 relative`}
-          >
+          <button onClick={() => setIsFilterModalOpen(true)} className={`${tabButtonClass} ${itemFilter.size > 0 ? activeTabClass : inactiveTabClass} flex items-center gap-2 relative`}>
             <FaFilter />
             <span className="hidden sm:inline">{t('equipment.itemFilter')}</span>
             {itemFilter.size > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-blue-500 text-white text-xs items-center justify-center">
-                  {itemFilter.size}
-                </span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-blue-500 text-white text-xs items-center justify-center">{itemFilter.size}</span>
               </span>
             )}
           </button>
@@ -697,8 +652,8 @@ export default function EquipmentPlannerPage() {
           title="Hard Stages"
           type="Hard"
           allStages={resolvedStages} // Pass unfiltered full list
-          itemFilter={itemFilter}       // Pass filter state
-          isSortedDesc={isSortedDesc}   // Pass sort state
+          itemFilter={itemFilter} // Pass filter state
+          isSortedDesc={isSortedDesc} // Pass sort state
           isItemFilterActive={itemFilter.size > 0} // Pass filter active state
           runCounts={runCounts}
           onRunCountChange={setRunCount}
@@ -717,8 +672,8 @@ export default function EquipmentPlannerPage() {
           title="Normal Stages"
           type="Normal"
           allStages={resolvedStages} // Pass unfiltered full list
-          itemFilter={itemFilter}       // Pass filter state
-          isSortedDesc={isSortedDesc}   // Pass sort state
+          itemFilter={itemFilter} // Pass filter state
+          isSortedDesc={isSortedDesc} // Pass sort state
           isItemFilterActive={itemFilter.size > 0} // Pass filter active state
           runCounts={runCounts}
           onRunCountChange={setRunCount}

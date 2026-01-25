@@ -1,182 +1,182 @@
 {
-    "EN0008": {
-        "name": {
-            "ko": "세트의 분노",
-            "ja": "セトの憤怒",
-            "en": "The Fury of Set",
-            "zh_Hant": "賽特的憤怒"
-        },
-        "teran": "Outdoor",
-        "armorType": "LightArmor"
+  "EN0008": {
+    "name": {
+      "ko": "세트의 분노",
+      "ja": "セトの憤怒",
+      "en": "The Fury of Set",
+      "zh_Hant": "賽特的憤怒"
     },
-    "EN0009": {
-        "name": {
-            "ko": "호크마",
-            "ja": "コクマー",
-            "en": "Chokmah",
-            "zh_Hant": "霍刻瑪"
-        },
-        "teran": "Outdoor",
-        "armorType": "LightArmor"
+    "teran": "Outdoor",
+    "armorType": "LightArmor"
+  },
+  "EN0009": {
+    "name": {
+      "ko": "호크마",
+      "ja": "コクマー",
+      "en": "Chokmah",
+      "zh_Hant": "霍刻瑪"
     },
-    "EN0010": {
-        "name": {
-            "ko": "게부라",
-            "ja": "ゲブラ",
-            "en": "Gebura",
-            "zh_Hant": "葛夫拉"
-        },
-        "teran": "Outdoor",
-        "armorType": "LightArmor"
+    "teran": "Outdoor",
+    "armorType": "LightArmor"
+  },
+  "EN0010": {
+    "name": {
+      "ko": "게부라",
+      "ja": "ゲブラ",
+      "en": "Gebura",
+      "zh_Hant": "葛夫拉"
     },
-    "EN0011": {
-        "name": {
-            "ko": "티페레트",
-            "ja": "ティファレト",
-            "en": "Tiphareth",
-            "zh_Hant": "Tiphareth"
-        },
-        "teran": "Outdoor",
-        "armorType": "ElasticArmor"
+    "teran": "Outdoor",
+    "armorType": "LightArmor"
+  },
+  "EN0011": {
+    "name": {
+      "ko": "티페레트",
+      "ja": "ティファレト",
+      "en": "Tiphareth",
+      "zh_Hant": "Tiphareth"
     },
-    "EN0013": {
-        "name": {
-            "ko": "예소드",
-            "ja": "イェソド",
-            "en": "Yesod",
-            "zh_Hant": "Yesod"
-        }, 
-        "teran": "Street",
-        "armorType": "ElasticArmor"
+    "teran": "Outdoor",
+    "armorType": "ElasticArmor"
+  },
+  "EN0013": {
+    "name": {
+      "ko": "예소드",
+      "ja": "イェソド",
+      "en": "Yesod",
+      "zh_Hant": "Yesod"
     },
-    "Hieronymus_Street": {
-        "name": {
-            "ko": "예로니무스",
-            "ja": "ヒエロニムス",
-            "en": "Hieronymus",
-            "zh_Hant": "耶羅尼姆斯"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "ElasticArmor"
+  },
+  "Hieronymus_Street": {
+    "name": {
+      "ko": "예로니무스",
+      "ja": "ヒエロニムス",
+      "en": "Hieronymus",
+      "zh_Hant": "耶羅尼姆斯"
     },
-    "Hieronymus": {
-        "name": {
-            "ko": "예로니무스",
-            "ja": "ヒエロニムス",
-            "en": "Hieronymus",
-            "zh_Hant": "耶羅尼姆斯"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "Hieronymus": {
+    "name": {
+      "ko": "예로니무스",
+      "ja": "ヒエロニムス",
+      "en": "Hieronymus",
+      "zh_Hant": "耶羅尼姆斯"
     },
-    "Binah": {
-        "name": {
-            "en": "Binah",
-            "ko": "비나",
-            "ja": "ビナー",
-            "zh_Hant": "薇娜"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "Binah": {
+    "name": {
+      "en": "Binah",
+      "ko": "비나",
+      "ja": "ビナー",
+      "zh_Hant": "薇娜"
     },
-    "Kaitenger": {
-        "name": {
-            "en": "KAITEN",
-            "ko": "카이텐",
-            "ja": "カイテン",
-            "zh_Hant": "凱坦澤"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "Kaitenger": {
+    "name": {
+      "en": "KAITEN",
+      "ko": "카이텐",
+      "ja": "カイテン",
+      "zh_Hant": "凱坦澤"
     },
-    "EN0005": {
-        "name": {
-            "en": "Gregrios",
-            "ko": "그레고리오",
-            "ja": "グレゴリオ",
-            "zh_Hant": "葛利果"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "EN0005": {
+    "name": {
+      "en": "Gregrios",
+      "ko": "그레고리오",
+      "ja": "グレゴリオ",
+      "zh_Hant": "葛利果"
     },
-    "Perorozilla": {
-        "name": {
-            "en": "Perorozilla",
-            "ko": "페로로지라",
-            "ja": "ペロロジラ",
-            "zh_Hant": "佩洛洛吉拉"
-        }, 
-        "teran": "Street",
-        "armorType": "Unarmed"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "Perorozilla": {
+    "name": {
+      "en": "Perorozilla",
+      "ko": "페로로지라",
+      "ja": "ペロロジラ",
+      "zh_Hant": "佩洛洛吉拉"
     },
-    "Perorozilla_Outdoor": {
-        "name": {
-            "en": "Perorozilla",
-            "ko": "페로로지라",
-            "ja": "ペロロジラ",
-            "zh_Hant": "佩洛洛吉拉"
-        }, 
-        "teran": "Outdoor",
-        "armorType": "Unarmed"
+    "teran": "Street",
+    "armorType": "Unarmed"
+  },
+  "Perorozilla_Outdoor": {
+    "name": {
+      "en": "Perorozilla",
+      "ko": "페로로지라",
+      "ja": "ペロロジラ",
+      "zh_Hant": "佩洛洛吉拉"
     },
-    "ShiroKuro": {
-        "name": {
-            "en": "Shiro&Kuro",
-            "ko": "시로&쿠로",
-            "ja": "シロ＆クロ",
-            "zh_Hant": "白&黑"
-        }, 
-        "teran": "Street",
-        "armorType": "Unarmed"
+    "teran": "Outdoor",
+    "armorType": "Unarmed"
+  },
+  "ShiroKuro": {
+    "name": {
+      "en": "Shiro&Kuro",
+      "ko": "시로&쿠로",
+      "ja": "シロ＆クロ",
+      "zh_Hant": "白&黑"
     },
-    "HoverCraft": {
-        "name": {
-            "ko": "호버크래프트",
-            "ja": "ホバークラフト",
-            "en": "HoverCraft",
-            "zh_Hant": "氣墊船"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "Unarmed"
+  },
+  "HoverCraft": {
+    "name": {
+      "ko": "호버크래프트",
+      "ja": "ホバークラフト",
+      "en": "HoverCraft",
+      "zh_Hant": "氣墊船"
     },
-    "Chesed": {
-        "name": {
-            "ko": "헤세드",
-            "ja": "ケセド",
-            "en": "Chesed",
-            "zh_Hant": "赫賽德"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "Chesed": {
+    "name": {
+      "ko": "헤세드",
+      "ja": "ケセド",
+      "en": "Chesed",
+      "zh_Hant": "赫賽德"
     },
-    "Goz": {
-        "name": {
-            "ko": "고즈",
-            "ja": "ゴズ",
-            "en": "Goz",
-            "zh_Hant": "高茲"
-        }, 
-        "teran": "Street",
-        "armorType": "Unarmed"
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "Goz": {
+    "name": {
+      "ko": "고즈",
+      "ja": "ゴズ",
+      "en": "Goz",
+      "zh_Hant": "高茲"
     },
-    "HOD": {
-        "name": {
-            "ko": "호드",
-            "ja": "ホド",
-            "en": "HOD",
-            "zh_Hant": "霍德"
-        }, 
-        "teran": "Street",
-        "armorType": "LightArmor"
+    "teran": "Street",
+    "armorType": "Unarmed"
+  },
+  "HOD": {
+    "name": {
+      "ko": "호드",
+      "ja": "ホド",
+      "en": "HOD",
+      "zh_Hant": "霍德"
     },
-    "EN0006": {
-        "name": {
-            "ko": "쿠로카게",
-            "ja": "クロカゲ",
-            "en": "Kurokage",
-            "zh_Hant": "黑影"
-        }, 
-        "teran": "Street",
-        "armorType": "ElasticArmor"
-    }
+    "teran": "Street",
+    "armorType": "LightArmor"
+  },
+  "EN0006": {
+    "name": {
+      "ko": "쿠로카게",
+      "ja": "クロカゲ",
+      "en": "Kurokage",
+      "zh_Hant": "黑影"
+    },
+    "teran": "Street",
+    "armorType": "ElasticArmor"
+  }
 }

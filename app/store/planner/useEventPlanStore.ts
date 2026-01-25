@@ -15,7 +15,6 @@ import type { CcgRunInput } from '~/components/planner/minigame/MinigameCCGPlann
 
 type StagePrio = 'include' | 'exclude' | 'priority';
 
-
 // All user input state for a single event
 export interface EventPlan {
   // BonusSelector
@@ -78,14 +77,12 @@ export interface EventPlan {
   cardMatchSimConfig: CardMatchSimConifg | null;
 
   // TotalRewardPlanner
-  totalRewardCurrentAmount: number
-  totalRewardTargetAmount: number
-
+  totalRewardCurrentAmount: number;
+  totalRewardTargetAmount: number;
 }
 
 interface EventPlanStoreState {
   plans: Record<string, Partial<EventPlan>>; // eventId as key
-
 
   updatePlan: (eventId: number, newPlanData: Partial<EventPlan>) => void;
 
@@ -135,7 +132,6 @@ interface EventPlanStoreState {
 }
 
 // --- Default Values ---
-
 
 const defaultPlan: EventPlan = {
   selectedStudents: [],
@@ -194,14 +190,11 @@ const defaultPlan: EventPlan = {
   // totalRewardPlanner
   totalRewardCurrentAmount: 0,
   totalRewardTargetAmount: 0,
-
 };
-
 
 export const useEventPlanStore = create<EventPlanStoreState>()(
   persist(
     (set, get) => {
-
       const updatePlanForEvent = (eventId: number, newPlanData: Partial<EventPlan>) => {
         const currentPlans = get().plans;
         const currentEventPlan = currentPlans[eventId] || defaultPlan;
@@ -224,7 +217,10 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setRunCounts: (eventId, counts) => updatePlanForEvent(eventId, { runCounts: counts }),
         setFirstClears: (eventId, clears) => updatePlanForEvent(eventId, { firstClears: clears }),
         setStagePrio: (eventId, prio) => updatePlanForEvent(eventId, { stagePrio: prio }),
-        setCompletedMissions: (eventId, missions) => updatePlanForEvent(eventId, { completedMissions: Array.from(missions) }),
+        setCompletedMissions: (eventId, missions) =>
+          updatePlanForEvent(eventId, {
+            completedMissions: Array.from(missions),
+          }),
         setDurationDays: (eventId, days) => updatePlanForEvent(eventId, { durationDays: days }),
         setApConfig: (eventId, config) => updatePlanForEvent(eventId, { apConfig: config }),
         setFinalCardFlips: (eventId, flips) => updatePlanForEvent(eventId, { finalCardFlips: flips }),
@@ -262,21 +258,23 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
     {
       name: 'event-plans-v2',
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );
 
 // Custom hooks for easy use of eventId's plans
 export const usePlanForEvent = (eventId: number) => {
+  const plan = useEventPlanStore((state) => state.plans[eventId || ''] || defaultPlan);
 
-  const plan = useEventPlanStore(state => state.plans[eventId || ''] || defaultPlan);
-
-  const actions = useEventPlanStore(state => state);
+  const actions = useEventPlanStore((state) => state);
 
   const completedMissionsSet = useMemo(() => new Set(plan.completedMissions || []), [plan.completedMissions]);
-  const setCompletedMissions = useCallback((missions: Set<number>) => {
-    if (eventId) actions.setCompletedMissions(eventId, missions);
-  }, [actions, eventId]);
+  const setCompletedMissions = useCallback(
+    (missions: Set<number>) => {
+      if (eventId) actions.setCompletedMissions(eventId, missions);
+    },
+    [actions, eventId],
+  );
 
   const setters = {
     setSelectedStudents: (data: string[]) => eventId && actions.setSelectedStudents(eventId, data),
@@ -307,7 +305,6 @@ export const usePlanForEvent = (eventId: number) => {
     setBoxGachaEndBox: (box: number) => eventId && actions.setBoxGachaEndBox(eventId, box),
     setCustomGamePlays: (plays: number) => eventId && actions.setCustomGamePlays(eventId, plays),
 
-
     // Minigame Setters (New)
     setBoxGachaFinalTotalBoxes: (boxes: number) => eventId && actions.setBoxGachaFinalTotalBoxes(eventId, boxes),
     setCardShopConfig: (config: CardShopConfig) => eventId && actions.setCardShopConfig(eventId, config),
@@ -317,7 +314,8 @@ export const usePlanForEvent = (eventId: number) => {
     //  setDiceRaceSimConfig: (config: DiceRaceSimConfig) => eventId && actions.setDiceRaceSimConfig(eventId, config), // simplified setter
     setDiceRaceSimConfig: (updater: (prev: DiceRaceSimConfig) => DiceRaceSimConfig) => {
       if (eventId) actions.setDiceRaceSimConfig(eventId, updater(plan.diceRaceSimConfig || DefaultDiceRaceSimConfig));
-    }, setFortuneGachaSimRuns: (runs: number) => eventId && actions.setFortuneGachaSimRuns(eventId, runs),
+    },
+    setFortuneGachaSimRuns: (runs: number) => eventId && actions.setFortuneGachaSimRuns(eventId, runs),
     setFortuneGachaFinalPulls: (pulls: number) => eventId && actions.setFortuneGachaFinalPulls(eventId, pulls),
     setFortuneGachaAvgRates: (rates: FortuneGachaAvgRates | null) => eventId && actions.setFortuneGachaAvgRates(eventId, rates),
     // setTreasureSimConfig: (config: TreasureSimConfig) => eventId && actions.setTreasureSimConfig(eventId, config),
@@ -325,20 +323,36 @@ export const usePlanForEvent = (eventId: number) => {
       if (eventId) actions.setTreasureSimConfig(eventId, updater(plan.treasureSimConfig || DefaultTreasureSimConfig));
     },
     setTreasureFinalTotalRounds: (rounds: number) => eventId && actions.setTreasureFinalTotalRounds(eventId, rounds),
-    setDreamMakerSimConfig: (updater: (prev: DreamMakerSimConfig) => DreamMakerSimConfig) => { if (eventId) actions.setDreamMakerSimConfig(eventId, updater(plan.dreamMakerSimConfig || defaultDreamMakerConfig)) },
-    setDreamMakerInteractiveResult: (result: DreamMakerSimResult | null) => { if (eventId) actions.setDreamMakerInteractiveResult(eventId, result) },
-    setDreamMakerClaimedMissions: (missions: number[]) => { if (eventId) actions.setDreamMakerClaimedMissions(eventId, missions) },
-    setCardMatchSimConfig: (result: CardMatchSimConifg | null) => { if (eventId) actions.setCardMatchSimConfig(eventId, result) },
+    setDreamMakerSimConfig: (updater: (prev: DreamMakerSimConfig) => DreamMakerSimConfig) => {
+      if (eventId) actions.setDreamMakerSimConfig(eventId, updater(plan.dreamMakerSimConfig || defaultDreamMakerConfig));
+    },
+    setDreamMakerInteractiveResult: (result: DreamMakerSimResult | null) => {
+      if (eventId) actions.setDreamMakerInteractiveResult(eventId, result);
+    },
+    setDreamMakerClaimedMissions: (missions: number[]) => {
+      if (eventId) actions.setDreamMakerClaimedMissions(eventId, missions);
+    },
+    setCardMatchSimConfig: (result: CardMatchSimConifg | null) => {
+      if (eventId) actions.setCardMatchSimConfig(eventId, result);
+    },
     setTotalRewardCurrentAmount: (amount: number) => eventId && actions.setTotalRewardCurrentAmount(eventId, amount),
     setTotalRewardTargetAmount: (amount: number) => eventId && actions.setTotalRewardTargetAmount(eventId, amount),
     // setMinigameCCGConfig: (updater: (prev: CcgRunInput[]) => CcgRunInput[]) => {
     //   if (eventId) actions.setMinigameCCGConfig(eventId, updater(plan.minigameCCGConfig || defaultPlan.minigameCCGConfig));
     // },
-    setMinigameCCGConfig: (config: CcgRunInput[]) => { if (eventId) actions.setMinigameCCGConfig(eventId, config) },
+    setMinigameCCGConfig: (config: CcgRunInput[]) => {
+      if (eventId) actions.setMinigameCCGConfig(eventId, config);
+    },
     setMinigameMissionStatus: (status: Record<number, boolean>) => {
       if (eventId) actions.setMinigameMissionStatus(eventId, status);
     },
   };
 
-  return { plan, ...plan, ...setters, completedMissionsSet, setCompletedMissions };
+  return {
+    plan,
+    ...plan,
+    ...setters,
+    completedMissionsSet,
+    setCompletedMissions,
+  };
 };

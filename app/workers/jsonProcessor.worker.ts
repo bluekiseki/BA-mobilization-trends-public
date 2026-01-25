@@ -8,7 +8,7 @@ const { XzReadableStream } = xz;
  */
 self.onmessage = async (event: MessageEvent<{ url: string; doXor: boolean }>) => {
   const { url, doXor } = event.data;
-  console.log('worker-start')
+  console.log('worker-start');
 
   try {
     const response = await fetch(url);
@@ -31,11 +31,10 @@ self.onmessage = async (event: MessageEvent<{ url: string; doXor: boolean }>) =>
 
     // 4. Send the parsed JavaScript object to the main thread
     self.postMessage({ status: 'success', data: jsonData });
-
   } catch (error) {
     self.postMessage({
       status: 'error',
-      error: (error as Error).message
+      error: (error as Error).message,
     });
   }
 };

@@ -22,59 +22,51 @@ export const useDataCacheJson = <T>() => {
     };
   }, []);
 
-  const fetchAndCacheJson = useCallback(
-    (url: string, doXor: boolean = true): Promise<T> => {
+  const fetchAndCacheJson = useCallback((url: string, doXor: boolean = true): Promise<T> => {
+    // 1. Check cache
+    if (dataCache.current.has(url)) {
+      return dataCache.current.get(url)!;
+    }
 
+    console.log(`[Cache MISS]: ${url}`);
 
-      // 1. Check cache
-      if (dataCache.current.has(url)) {
-        return dataCache.current.get(url)!;
-      }
+    const promise = new Promise<T>((resolve, reject) => {
+      const worker = new JsonProcessorWorker();
+      //  return new Promise(() => {}); // A Promise that never resolves/rejects
 
-      console.log(`[Cache MISS]: ${url}`);
+      // 2. Receive message from worker
+      worker.onmessage = (event: MessageEvent<{ status: string; data?: T; error?: string }>) => {
+        const { status, data, error } = event.data;
 
-      const promise = new Promise<T>((resolve, reject) => {
+        if (status === 'success' && data) {
+          resolve(data as T);
+        } else {
+          reject(new Error(error || 'Worker failed to return data.'));
+        }
 
+        // 3. Terminate worker after task completion (memory cleanup)
+        worker.terminate();
+      };
 
+      // Worker error handling
+      worker.onerror = (e) => {
+        dataCache.current.delete(url); // Remove from cache on failure
+        reject(e);
+        worker.terminate();
+      };
 
-        const worker = new JsonProcessorWorker();
-        //  return new Promise(() => {}); // A Promise that never resolves/rejects
+      // 4. Post message to worker (request task)
+      worker.postMessage({ url, doXor });
+    }).catch((error) => {
+      // Catch any errors in the Promise chain and clear the cache
+      dataCache.current.delete(url);
+      throw error; // Rethrow the error so it can be handled at the component level
+    });
 
-        // 2. Receive message from worker
-        worker.onmessage = (event: MessageEvent<{ status: string; data?: T; error?: string }>) => {
-          const { status, data, error } = event.data;
-
-          if (status === 'success' && data) {
-            resolve(data as T);
-          } else {
-            reject(new Error(error || 'Worker failed to return data.'));
-          }
-
-          // 3. Terminate worker after task completion (memory cleanup)
-          worker.terminate();
-        };
-
-        // Worker error handling
-        worker.onerror = (e) => {
-          dataCache.current.delete(url); // Remove from cache on failure
-          reject(e);
-          worker.terminate();
-        };
-
-        // 4. Post message to worker (request task)
-        worker.postMessage({ url, doXor });
-      }).catch((error) => {
-        // Catch any errors in the Promise chain and clear the cache
-        dataCache.current.delete(url);
-        throw error; // Rethrow the error so it can be handled at the component level
-      });
-
-      // Store the Promise in the cache immediately to prevent duplicate requests
-      dataCache.current.set(url, promise);
-      return promise;
-    },
-    []
-  );
+    // Store the Promise in the cache immediately to prevent duplicate requests
+    dataCache.current.set(url, promise);
+    return promise;
+  }, []);
 
   return fetchAndCacheJson;
 };

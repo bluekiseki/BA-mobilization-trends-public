@@ -1,78 +1,61 @@
-import {
-  isRouteErrorResponse,
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useLoaderData,
-  data,
-  redirect,
-} from "react-router";
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, data, redirect } from 'react-router';
 
-import type { Route } from "./+types/root";
-import "./app.css";
-import { NoScript, Title } from "./components/head";
-import { Navigation } from "./components/Navigation";
-import { ThemeProvider } from "./components/ThemeToggleButton";
-// import { getLocaleFromHeaders } from "./utils/i18n/service";
-import { CollectedLinks } from "./components/CollectedLinks";
+import type { Route } from './+types/root';
+import './app.css';
+import { NoScript, Title } from './components/head';
+import { Navigation } from './components/Navigation';
+import { ThemeProvider } from './components/ThemeToggleButton';
+import { CollectedLinks } from './components/CollectedLinks';
 // import { SpeedInsights } from "@vercel/speed-insights/react" // for vercel
 // import { Analytics } from "@vercel/analytics/react" // for vercel
-import { lazy, useEffect } from "react";
-import { DEFAULT_LOCALE, type Locale } from "./utils/i18n/config";
-import { getLocale, i18nextMiddleware, localeCookie } from "./middleware/i18next";
-import { useTranslation } from "react-i18next";
-import { getLocaleFromHeaders } from "./utils/i18n/service";
-// import ContactButton from "./components/ContactButton";
+import { lazy, useEffect } from 'react';
+import { DEFAULT_LOCALE, type Locale } from './utils/i18n/config';
+import { getLocale, i18nextMiddleware, localeCookie } from './middleware/i18next';
+import { useTranslation } from 'react-i18next';
+import { getLocaleFromHeaders } from './utils/i18n/service';
 import { PostHogProvider } from 'posthog-js/react';
-import { domain, cdn as cdn_domain, vercelDomain } from './data/livedataServer.json'
-
-const DynamicDevtoolsdetector = lazy(() => import("./components/devtools-detector"));
-
+import { domain, cdn as cdn_domain, vercelDomain } from './data/livedataServer.json';
+const DynamicDevtoolsdetector = lazy(() => import('./components/devtools-detector'));
+import { env } from 'cloudflare:workers'; // for cloudflare
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-
   const url = new URL(request.url);
 
   if (url.hostname === vercelDomain) {
-    throw redirect(
-      `https://${domain}` + url.pathname + url.search,
-      301
-    );
+    throw redirect(`https://${domain}` + url.pathname + url.search, 301);
   }
-  
+
+  // /zh-Tw/** → /zh-Hant/**
+  if (url.pathname === '/zh-TW' || url.pathname.startsWith('/zh-TW/')) {
+    const newPath = url.pathname.replace(/^\/zh-TW/, '/zh-Hant');
+    throw redirect(`${newPath}${url.search}`, 301);
+  }
+
   let locale = getLocale(context) as Locale;
-  const reqLocale = getLocaleFromHeaders(request)
-  return data(
-    { context, locale, reqLocale, params },
-    { headers: { "Set-Cookie": await localeCookie.serialize(locale) } },
-  );
+  const reqLocale = getLocaleFromHeaders(request);
+  return data({ context, locale, reqLocale, params, env }, { headers: { 'Set-Cookie': await localeCookie.serialize(locale) } });
 }
 
 export const middleware = [i18nextMiddleware];
 
-export const links: Route.LinksFunction = () => [
-];
-
-
+export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>();
-  const locale = data?.locale || DEFAULT_LOCALE
-
+  const locale = data?.locale || DEFAULT_LOCALE;
 
   return (
     <html lang={locale} suppressHydrationWarning>
-
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <style>{`.dark{
+        <style>
+          {`.dark{
           background-color: #171717;
         }`}
         </style>
-        <script dangerouslySetInnerHTML={{
-          __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
             try {
               const theme = localStorage.getItem('theme');
               const isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -85,7 +68,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
              var global = global || window
 
           `.replace(/\s{2,}/gi, ''),
-        }} />
+          }}
+        />
 
         {/* matomo test */}
 
@@ -119,30 +103,50 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
         <PostHogProvider
-          apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+          apiKey={(data.env || import.meta.env).VITE_PUBLIC_POSTHOG_KEY}
           options={{
-            api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+            api_host: (data.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST,
             defaults: '2025-05-24',
             capture_exceptions: true,
-            debug: import.meta.env.MODE === "development",
-            cookieless_mode: 'always', // Banner required
+            // debug: import.meta.env.MODE === "development",
+            cookieless_mode: 'always', // Banner required,
           }}
         >
           <ThemeProvider>
-
             <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-bluearchive">
               <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
                 <Navigation reqLocale={data.reqLocale} />
               </nav>
 
-              <main className="max-w-7xl mx-auto" style={{ minHeight: "calc(100vh - 170px)" }}>
+              <main className="max-w-7xl mx-auto" style={{ minHeight: 'calc(100vh - 170px)' }}>
                 {children}
               </main>
 
               <footer className="mt-auto py-4 px-2 text-center text-neutral-500 dark:text-neutral-400 text-sm border-t border-neutral-200 dark:border-neutral-700 transition-colors duration-300 space-y-0.5">
                 <p>This is just a non-commercial fan site,</p>
-                <p>And all copyright of <a href='https://bluearchive.jp/' target="_blank" rel="noopener noreferrer"><b className='hover:underline'>&ldquo;Blue Archive&rdquo;</b></a> belongs to <a href='https://www.nexon.com' target="_blank" rel="noopener noreferrer"><b className='hover:underline'>NEXON Korea Corp.</b></a> & <a href='https://www.nexongames.co.kr/' target="_blank" rel="noopener noreferrer"><b className='hover:underline'>NEXON GAMES Co., Ltd.</b></a> & <a href="https://www.yo-star.com" target="_blank" rel="noopener noreferrer"><b className='hover:underline'>YOSTAR, Inc.</b></a> </p>
-                <p><a className='hover:underline' href="/source"><b>Data Sources & Bug Reports</b></a></p>
+                <p>
+                  And all copyright of{' '}
+                  <a href="https://bluearchive.jp/" target="_blank" rel="noopener noreferrer">
+                    <b className="hover:underline">&ldquo;Blue Archive&rdquo;</b>
+                  </a>{' '}
+                  belongs to{' '}
+                  <a href="https://www.nexon.com" target="_blank" rel="noopener noreferrer">
+                    <b className="hover:underline">NEXON Korea Corp.</b>
+                  </a>{' '}
+                  &{' '}
+                  <a href="https://www.nexongames.co.kr/" target="_blank" rel="noopener noreferrer">
+                    <b className="hover:underline">NEXON GAMES Co., Ltd.</b>
+                  </a>{' '}
+                  &{' '}
+                  <a href="https://www.yo-star.com" target="_blank" rel="noopener noreferrer">
+                    <b className="hover:underline">YOSTAR, Inc.</b>
+                  </a>{' '}
+                </p>
+                <p>
+                  <a className="hover:underline" href="/source">
+                    <b>Data Sources & Bug Reports</b>
+                  </a>
+                </p>
               </footer>
             </div>
           </ThemeProvider>
@@ -150,11 +154,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* </I18nextProvider> */}
         <NoScript />
-        {process.env.NODE_ENV === 'production' && <>
-          {/* <SpeedInsights /> */}
-          {/* <Analytics /> */}
-          <DynamicDevtoolsdetector />
-        </>}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            {/* <SpeedInsights /> */}
+            {/* <Analytics /> */}
+            <DynamicDevtoolsdetector />
+          </>
+        )}
       </body>
       {/* </HelmetProvider> */}
     </html>
@@ -170,20 +176,13 @@ export default function App({ loaderData: { locale } }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let message = 'Oops!';
+  let details = 'An unexpected error occurred.';
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404"
-      : error.status === 503 ? "503"
-        : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.status === 503
-          ? "Service temporary unavailable"
-          : error.statusText || details;
+    message = error.status === 404 ? '404' : error.status === 503 ? '503' : 'Error';
+    details = error.status === 404 ? 'The requested page could not be found.' : error.status === 503 ? 'Service temporary unavailable' : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

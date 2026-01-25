@@ -6,15 +6,14 @@ import type { DiceRaceTab } from '~/components/planner/minigame/DiceRacePlanner'
 import type { AvgPtDisplayMode, DreamMakerResult, DreamMakerSimResult, DreamMakerTab } from '~/components/planner/minigame/dreamMaker/type';
 import type { CardMatchResult, CardMatchTab, CardMatchViewMode } from '~/components/planner/minigame/CardMatchPlanner';
 
-
 interface EventSettings {
   // FarmingPlanner.tsx
   showOneTimeRewards: boolean;
   farmingActiveTab: FarmingTab;
-  minimizeRepeatableInfo: boolean
+  minimizeRepeatableInfo: boolean;
 
   // ShopPlanner.tsx
-  shopDisplayUnit: 'currency' | 'ap'
+  shopDisplayUnit: 'currency' | 'ap';
   shopActiveTab: string | null;
 
   // CardShopPlanner.tsx
@@ -26,9 +25,9 @@ interface EventSettings {
   // DiceRacePlanner.tsx
   diceRaceActiveTab: DiceRaceTab;
   diceRaceSimResult: {
-    avgCost: Record<string, number>,
-    avgRewards: Record<string, number>,
-    avgRolls: number
+    avgCost: Record<string, number>;
+    avgRewards: Record<string, number>;
+    avgRolls: number;
   } | null;
 
   // DreamMakerPlanner
@@ -66,7 +65,7 @@ interface SettingsState {
 
   // Regarding ShopPlanner
   setShopActiveTab: (eventId: number, tab: string | null) => void;
-  setShopDisplayUnit: (eventId: number, displayUnit: "currency" | "ap") => void;
+  setShopDisplayUnit: (eventId: number, displayUnit: 'currency' | 'ap') => void;
 
   // Regarding CardShopPlanner
   setCardSimResult: (eventId: number, result: CardSimulationResult | null) => void;
@@ -87,9 +86,6 @@ interface SettingsState {
   setCardMatchActiveTab: (eventId: number, tab: CardMatchTab) => void;
   setCardMatchViewMode: (eventId: number, mode: CardMatchViewMode) => void;
   setCardMatchDisplayResult: (eventId: number, result: CardMatchResult | null) => void;
-
-
-
 }
 
 const initialSettings: EventSettings = {
@@ -111,7 +107,7 @@ const initialSettings: EventSettings = {
   dreamMakerShowInteractiveSim: false,
   cardMatchActiveTab: 'simulation',
   cardMatchViewMode: 'total',
-  cardMatchDisplayResult: null
+  cardMatchDisplayResult: null,
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -125,7 +121,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   updateSettings: (eventId, partialState) => {
-
     set((state) => ({
       settings: {
         ...state.settings,
@@ -187,9 +182,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setCardMatchActiveTab: (eventId, tab) => get().updateSettings(eventId, { cardMatchActiveTab: tab }),
   setCardMatchViewMode: (eventId, mode) => get().updateSettings(eventId, { cardMatchViewMode: mode }),
   setCardMatchDisplayResult: (eventId, result) => get().updateSettings(eventId, { cardMatchDisplayResult: result }),
-
 }));
-
 
 export const useEventSettings = (eventId: number) => {
   // Get the entire store (not to follow Zustand's selector pattern)
@@ -217,7 +210,7 @@ export const useEventSettings = (eventId: number) => {
       store.setShopActiveTab(eventId, tab);
     },
 
-    setShopDisplayUnit: (displayUnit: "currency" | "ap") => {
+    setShopDisplayUnit: (displayUnit: 'currency' | 'ap') => {
       store.setShopDisplayUnit(eventId, displayUnit);
     },
 
@@ -235,10 +228,7 @@ export const useEventSettings = (eventId: number) => {
     setDiceRaceActiveTab: (tab: DiceRaceTab) => {
       store.setDiceRaceActiveTab(eventId, tab);
     },
-    setDiceRaceSimResult: (
-      result: EventSettings['diceRaceSimResult'],
-
-    ) => {
+    setDiceRaceSimResult: (result: EventSettings['diceRaceSimResult']) => {
       store.setDiceRaceSimResult(eventId, result);
     },
 
@@ -251,12 +241,10 @@ export const useEventSettings = (eventId: number) => {
     setCardMatchActiveTab: (tab: CardMatchTab) => store.setCardMatchActiveTab(eventId, tab),
     setCardMatchViewMode: (mode: CardMatchViewMode) => store.setCardMatchViewMode(eventId, mode),
     setCardMatchDisplayResult: (result: CardMatchResult | null) => store.setCardMatchDisplayResult(eventId, result),
-
   };
-
 
   return {
     ...settings, // Current status value (e.g: farmingActiveTab, showOneTimeRewards ...)
-    ...actions,  // Action function injected with eventId, (e.g: setFarmingActiveTab, setShopActiveTab ...)
+    ...actions, // Action function injected with eventId, (e.g: setFarmingActiveTab, setShopActiveTab ...)
   };
 };

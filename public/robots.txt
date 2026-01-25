@@ -21,3 +21,10 @@ Allow: /ja/dashboard/
 Allow: /ja/planner/
 Allow: /ja/utils/
 Allow: /ja/calendar/
+
+Allow: /zh-Hant$
+Allow: /zh-Hant/charts/
+Allow: /zh-Hant/dashboard/
+Allow: /zh-Hant/planner/
+Allow: /zh-Hant/utils/
+Allow: /zh-Hant/calendar/

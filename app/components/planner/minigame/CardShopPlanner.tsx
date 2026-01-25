@@ -37,25 +37,19 @@ interface CardShopPlannerProps {
   setFinalCardFlips: React.Dispatch<React.SetStateAction<number>>; // Rename
 }
 
-
 // Simulation engine
-const runCardShopSimulation = (
-  cardData: CardShopItem[],
-  numRounds: number,
-  strategy: CardShopStrategy
-): SimulationResult => {
+const runCardShopSimulation = (cardData: CardShopItem[], numRounds: number, strategy: CardShopStrategy): SimulationResult => {
   const totalCosts: Record<string, number> = {};
   const totalRewards: Record<string, number> = {};
   let totalFlips = 0; // Total flip counter
 
   // 1. Pre-sort card pools by each RefreshGroup
   const groupPools: Record<number, CardShopItem[]> = {
-    1: cardData.filter(c => c.RefreshGroup === 1),
-    2: cardData.filter(c => c.RefreshGroup === 2),
-    3: cardData.filter(c => c.RefreshGroup === 3),
-    4: cardData.filter(c => c.RefreshGroup === 4),
+    1: cardData.filter((c) => c.RefreshGroup === 1),
+    2: cardData.filter((c) => c.RefreshGroup === 2),
+    3: cardData.filter((c) => c.RefreshGroup === 3),
+    4: cardData.filter((c) => c.RefreshGroup === 4),
   };
-
 
   const drawWeightedRandom = (cards: CardShopItem[]) => {
     if (!cards || cards.length === 0) return null;
@@ -74,12 +68,11 @@ const runCardShopSimulation = (
     const costKey = `Item_${costCurrencyId}`;
 
     // 2. The nth draw is performed from the nth group
-    let no_sr_cnt = 0
+    let no_sr_cnt = 0;
     for (let flipIndex = 0; flipIndex < 4; flipIndex++) {
       const currentPool = groupPools[no_sr_cnt + 1];
       const card = drawWeightedRandom(currentPool);
       if (!card) continue;
-
 
       if (!card) continue; // Skip if the group has no cards
 
@@ -95,8 +88,7 @@ const runCardShopSimulation = (
       if (strategy === 'one-open') break;
       if (strategy === 'sr-reset' && card.Rarity >= 2) break;
 
-
-      if (card.Rarity < 2) no_sr_cnt += 1
+      if (card.Rarity < 2) no_sr_cnt += 1;
       // 'all-open' is always executed 4 times
     }
   }
@@ -104,18 +96,7 @@ const runCardShopSimulation = (
   return { costs: totalCosts, rewards: totalRewards, totalFlips };
 };
 
-
-
-export const CardShopPlanner = ({
-  eventId,
-  eventData,
-  iconData,
-  onRatesCalculated,
-  rates,
-  remainingCurrency,
-  finalCardFlips,
-  setFinalCardFlips,
-}: CardShopPlannerProps) => {
+export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculated, rates, remainingCurrency, finalCardFlips, setFinalCardFlips }: CardShopPlannerProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   // const [config, setConfig] = useState({
   //   rounds: 5000,
@@ -123,24 +104,19 @@ export const CardShopPlanner = ({
   // });
 
   const { cardShopConfig: config, setCardShopConfig: setConfig } = usePlanForEvent(eventId);
-  const { t } = useTranslation("planner");
-
-
+  const { t } = useTranslation('planner');
 
   // const [result, setResult] = useState<SimulationResult | null>(null);
   // const [simulationTotalResult, setSimulationTotalResult] = useState<SimulationResult | null>(null);
-  const {
-    cardSimResult: simulationTotalResult,
-    setCardSimResult: setSimulationTotalResult
-  } = useEventSettings(eventId);
+  const { cardSimResult: simulationTotalResult, setCardSimResult: setSimulationTotalResult } = useEventSettings(eventId);
 
   const cardShopData = eventData.card_shop;
   const refreshGroups = useMemo(() => {
     if (!cardShopData) return [];
-    return [...new Set(cardShopData.map(c => c.RefreshGroup))];
+    return [...new Set(cardShopData.map((c) => c.RefreshGroup))];
   }, [cardShopData]);
 
-  if (!config) return
+  if (!config) return;
 
   const handleRun = () => {
     const cardPool = cardShopData || [];
@@ -152,15 +128,14 @@ export const CardShopPlanner = ({
     // CHANGED: Calculate 'average value' after simulation and pass to parent
     const avgCosts: Record<string, number> = {};
     const avgRewards: Record<string, number> = {};
-    Object.entries(simResult.costs).forEach(([key, total]) => avgCosts[key] = total / config.rounds);
-    Object.entries(simResult.rewards).forEach(([key, total]) => avgRewards[key] = total / config.rounds);
-    const avgFlips = simResult.totalFlips / config.rounds
+    Object.entries(simResult.costs).forEach(([key, total]) => (avgCosts[key] = total / config.rounds));
+    Object.entries(simResult.rewards).forEach(([key, total]) => (avgRewards[key] = total / config.rounds));
+    const avgFlips = simResult.totalFlips / config.rounds;
 
     onRatesCalculated({ avgCosts, avgRewards, avgFlips });
   };
   const handleSetMaxRounds = () => {
     if (!rates || !remainingCurrency || rates.avgFlips <= 0) return;
-
 
     let maxRequiredFlips = 0;
 
@@ -172,14 +147,12 @@ export const CardShopPlanner = ({
       const deficit = remainingCurrency[itemId] - finalCardFlips * avgRewardPerFlip;
 
       if (deficit < 0 && avgRewardPerRound > 0) {
-
         // 2. Calculate the 'total number of flips' needed to fill the shortage
         const requiredFlips = Math.ceil(-deficit / avgRewardPerFlip);
 
         // 3. Since all materials must be obtained, select the largest flip count
         if (requiredFlips > maxRequiredFlips) {
           maxRequiredFlips = requiredFlips;
-
         }
       }
     }
@@ -194,33 +167,38 @@ export const CardShopPlanner = ({
     { id: 'one-open', label: t('label.openOneAndReset') },
   ];
 
-
   return (
     <>
       <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">🃏 {t('page.cardShopSimulator')}</h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110"><ChevronIcon className={isCollapsed ? "rotate-180" : ""} /></span>
+        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
+          <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
+        </span>
       </div>
       {!isCollapsed && (
         <div className="mt-4 space-y-4">
           {/* Settings UI */}
           <div>
-
             <label className="text-sm font-bold dark:text-gray-300">{t('cardShop.simulationStrategy')}</label>
             <div className="flex gap-2 mt-1">
-              {strategies.map(s => <button key={s.id} onClick={() => setConfig((p => ({ ...p, strategy: s.id as CardShopStrategy }))(config))} className={`${config.strategy === s.id
-                ? 'bg-blue-500 text-white'
-                : 'bg-white dark:bg-neutral-700 dark:text-gray-300 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-3 py-1 text-sm transition-colors`}
-              >{s.label}</button>)}
+              {strategies.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setConfig(((p) => ({ ...p, strategy: s.id as CardShopStrategy }))(config))}
+                  className={`${config.strategy === s.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:text-gray-300 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-3 py-1 text-sm transition-colors`}
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
           </div>
           <div>
             <label className="text-sm font-bold">{t('ui.simulationCount')}</label>
-            <input type="number" value={config.rounds} onChange={e => setConfig((p => ({ ...p, rounds: parseInt(e.target.value) || 0 }))(config))} className="w-full p-2 mt-1 rounded border" />
-
+            <input type="number" value={config.rounds} onChange={(e) => setConfig(((p) => ({ ...p, rounds: parseInt(e.target.value) || 0 }))(config))} className="w-full p-2 mt-1 rounded border" />
           </div>
-          <button onClick={handleRun} className="w-full bg-green-500 text-white font-bold py-2 rounded-lg">{t('button.runSimulation')} </button>
-
+          <button onClick={handleRun} className="w-full bg-green-500 text-white font-bold py-2 rounded-lg">
+            {t('button.runSimulation')}{' '}
+          </button>
 
           <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
             <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('cardShop.planSettingsFlipCount')}</h3>
@@ -230,7 +208,7 @@ export const CardShopPlanner = ({
                 placeholder={t('cardShop.flipCountPlaceholder')}
                 className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
                 value={finalCardFlips || ''}
-                onChange={e => setFinalCardFlips(parseInt(e.target.value) || 0)}
+                onChange={(e) => setFinalCardFlips(parseInt(e.target.value) || 0)}
               />
               <button
                 onClick={handleSetMaxRounds}
@@ -255,17 +233,7 @@ export const CardShopPlanner = ({
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(simulationTotalResult.costs).map(([key, totalAmount]) => {
                         const avgAmountPerFlip = totalAmount / simulationTotalResult.totalFlips;
-                        return (
-                          <ItemIcon
-                            key={key}
-                            type={key.split('_')[0]}
-                            itemId={key.split('_')[1]}
-                            amount={avgAmountPerFlip}
-                            size={11}
-                            eventData={eventData}
-                            iconData={iconData}
-                          />
-                        )
+                        return <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={avgAmountPerFlip} size={11} eventData={eventData} iconData={iconData} />;
                       })}
                     </div>
                   </div>

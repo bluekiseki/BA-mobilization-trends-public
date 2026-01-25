@@ -6,123 +6,128 @@ import 'rc-slider/assets/index.css';
 import { useTranslation } from 'react-i18next';
 
 interface DateRangeSliderProps {
-    distinctDays: string[];
+  distinctDays: string[];
 }
 
 export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }) => {
-    const { dateRangeIndex, setDateRangeIndex } = useTierDashboardStore();
+  const { dateRangeIndex, setDateRangeIndex } = useTierDashboardStore();
 
-    const { t: t_c } = useTranslation("common");
+  const { t: t_c } = useTranslation('common');
 
-    const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-    //] 04:00 Calculation of Day Change Point based on KST
-    const marks = useMemo(() => {
-        if (!distinctDays || distinctDays.length === 0) return {};
+  //] 04:00 Calculation of Day Change Point based on KST
+  const marks = useMemo(() => {
+    if (!distinctDays || distinctDays.length === 0) return {};
 
-        const marksObj: Record<number, any> = {};
-        const markedDays = new Set<string>(); 
+    const marksObj: Record<number, any> = {};
+    const markedDays = new Set<string>();
 
-        distinctDays.forEach((dayStr, index) => {
-            // "Day [Number] HH:MM" parsing with a regular expression
-            // ex: "Day1 22:30", "Day2 00:10"
-            const match = dayStr.match(/Day(\d+)\s+(\d{1,2}):(\d{2})/);
+    distinctDays.forEach((dayStr, index) => {
+      // "Day [Number] HH:MM" parsing with a regular expression
+      // ex: "Day1 22:30", "Day2 00:10"
+      const match = dayStr.match(/Day(\d+)\s+(\d{1,2}):(\d{2})/);
 
-            if (match) {
-                const dayNum = match[1]; // "1", "2"...
-                const hour = parseInt(match[2], 10); // 22, 00, 04...
+      if (match) {
+        const dayNum = match[1]; // "1", "2"...
+        const hour = parseInt(match[2], 10); // 22, 00, 04...
 
-                if (!markedDays.has(dayNum) && hour >= 4) {
-                    markedDays.add(dayNum);
+        if (!markedDays.has(dayNum) && hour >= 4) {
+          markedDays.add(dayNum);
 
-                    marksObj[index] = {
-                        style: {
-                            marginTop: '0px', 
-                        },
-                        label: (
-                            <div className="flex flex-col items-center">
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
-                                    Day {dayNum}
-                                </span>
-                            </div>
-                        )
-                    };
-                }
-            }
-        });
-
-        return marksObj;
-    }, [distinctDays]);
-
-    if (!distinctDays || distinctDays.length === 0) return null;
-
-    const maxIndex = distinctDays.length - 1;
-
-// Range check
-    const currentIndex: [number, number] = [
-        Math.min(dateRangeIndex[0], maxIndex),
-        Math.min(dateRangeIndex[1], maxIndex)
-    ];
-
-    const handleChange = (value: number | number[]) => {
-        if (Array.isArray(value)) {
-            setDateRangeIndex([value[0], value[1]]);
+          marksObj[index] = {
+            style: {
+              marginTop: '0px',
+            },
+            label: (
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Day {dayNum}</span>
+              </div>
+            ),
+          };
         }
-    };
+      }
+    });
 
-    const handleReset = () => {
-        setDateRangeIndex([0, maxIndex]);
-    };
+    return marksObj;
+  }, [distinctDays]);
 
-    return (
-        <div className="w-full flex flex-col gap-1">
-            <div className="flex justify-between items-center text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                <div className="flex items-center gap-1.5 font-semibold">
-                    <FiCalendar className="text-blue-500" />
-                    <span>{t_c('period')}</span>
-                </div>
+  if (!distinctDays || distinctDays.length === 0) return null;
 
-                <div className="flex items-center gap-2">
-                    <span className="font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded text-xs">
-                        {distinctDays[currentIndex[0]]} ~ {distinctDays[currentIndex[1]]}
-                    </span>
+  const maxIndex = distinctDays.length - 1;
 
-                    <button
-                        onClick={handleReset}
-                        title="Reset to full range"
-                        className="p-1 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full text-neutral-500 transition-colors"
-                    >
-                        <FiRefreshCcw size={12} />
-                    </button>
-                </div>
-            </div>
+  // Range check
+  const currentIndex: [number, number] = [Math.min(dateRangeIndex[0], maxIndex), Math.min(dateRangeIndex[1], maxIndex)];
 
-            <div className="px-3 pb-5 pt-1">
-                {isMounted ? (
-                    <Slider
-                        range
-                        min={0}
-                        max={maxIndex}
-                        step={1}
-                        value={currentIndex}
-                        onChange={handleChange}
-                        marks={marks}
-                        dots={false}
-                        trackStyle={[{ backgroundColor: '#3b82f6', height: 4 }]}
-                        handleStyle={[
-                            { borderColor: '#3b82f6', backgroundColor: '#fff', opacity: 1, height: 14, width: 14, marginTop: -5 },
-                            { borderColor: '#3b82f6', backgroundColor: '#fff', opacity: 1, height: 14, width: 14, marginTop: -5 },
-                        ]}
-                        railStyle={{ backgroundColor: '#e5e7eb', height: 4 }}
-                    />
-                ) : (
-                    <div className="w-full h-1 bg-gray-200 dark:bg-neutral-700 rounded mt-2" />
-                )}
-            </div>
+  const handleChange = (value: number | number[]) => {
+    if (Array.isArray(value)) {
+      setDateRangeIndex([value[0], value[1]]);
+    }
+  };
+
+  const handleReset = () => {
+    setDateRangeIndex([0, maxIndex]);
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-1">
+      <div className="flex justify-between items-center text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+        <div className="flex items-center gap-1.5 font-semibold">
+          <FiCalendar className="text-blue-500" />
+          <span>{t_c('period')}</span>
         </div>
-    );
+
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded text-xs">
+            {distinctDays[currentIndex[0]]} ~ {distinctDays[currentIndex[1]]}
+          </span>
+
+          <button onClick={handleReset} title="Reset to full range" className="p-1 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full text-neutral-500 transition-colors">
+            <FiRefreshCcw size={12} />
+          </button>
+        </div>
+      </div>
+
+      <div className="px-3 pb-5 pt-1">
+        {isMounted ? (
+          <Slider
+            range
+            min={0}
+            max={maxIndex}
+            step={1}
+            value={currentIndex}
+            onChange={handleChange}
+            marks={marks}
+            dots={false}
+            trackStyle={[{ backgroundColor: '#3b82f6', height: 4 }]}
+            handleStyle={[
+              {
+                borderColor: '#3b82f6',
+                backgroundColor: '#fff',
+                opacity: 1,
+                height: 14,
+                width: 14,
+                marginTop: -5,
+              },
+              {
+                borderColor: '#3b82f6',
+                backgroundColor: '#fff',
+                opacity: 1,
+                height: 14,
+                width: 14,
+                marginTop: -5,
+              },
+            ]}
+            railStyle={{ backgroundColor: '#e5e7eb', height: 4 }}
+          />
+        ) : (
+          <div className="w-full h-1 bg-gray-200 dark:bg-neutral-700 rounded mt-2" />
+        )}
+      </div>
+    </div>
+  );
 };

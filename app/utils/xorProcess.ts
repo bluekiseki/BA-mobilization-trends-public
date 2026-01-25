@@ -16,9 +16,9 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
         }
         const xoredChunk = new Uint8Array(chunk.length);
         for (let i = 0; i < chunk.length; i++) {
-          xoredChunk[i] = chunk[i] ^ key[(i + size) & (KEY_SIZE_1)];
+          xoredChunk[i] = chunk[i] ^ key[(i + size) & KEY_SIZE_1];
         }
-        size += chunk.length
+        size += chunk.length;
         return xoredChunk;
       };
 
@@ -50,9 +50,11 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
 
             // Create a new chunk with the magic number and the processed data
             const newChunk = new Uint8Array(MAGIC_NUMBER.length + xoredData.length);
-            newChunk.set(MAGIC_NUMBER.map(v => v ^ 0xd9), 0)
+            newChunk.set(
+              MAGIC_NUMBER.map((v) => v ^ 0xd9),
+              0,
+            );
             newChunk.set(xoredData, MAGIC_NUMBER.length);
-
 
             // Enqueue the new, processed chunk
             controller.enqueue(newChunk);
@@ -60,7 +62,6 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
           } else {
             // All subsequent chunks are simply XORed with the key
             const xoredData = xorWithKey(value);
-
 
             controller.enqueue(xoredData);
           }
@@ -71,6 +72,6 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
     },
     cancel() {
       reader.cancel();
-    }
+    },
   });
 }

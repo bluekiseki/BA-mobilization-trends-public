@@ -37,68 +37,70 @@ export const BonusSelector = ({
 }: BonusSelectorProps) => {
   const bonusData = eventData.bonus;
   const { plan, setSelectedStudents } = usePlanForEvent(eventId);
-  const { selectedStudents } = plan
-  const onSelectStudent = useCallback((studentId: string) => {
-    if (selectedStudents) {
-      const newSelectedStudent = selectedStudents.includes(studentId) ? selectedStudents.filter(id => id !== studentId) : [...selectedStudents, studentId]
-      setSelectedStudents(newSelectedStudent)
-    }
-  }, [selectedStudents, setSelectedStudents]);
-  const { t } = useTranslation("planner");
+  const { selectedStudents } = plan;
+  const onSelectStudent = useCallback(
+    (studentId: string) => {
+      if (selectedStudents) {
+        const newSelectedStudent = selectedStudents.includes(studentId) ? selectedStudents.filter((id) => id !== studentId) : [...selectedStudents, studentId];
+        setSelectedStudents(newSelectedStudent);
+      }
+    },
+    [selectedStudents, setSelectedStudents],
+  );
+  const { t } = useTranslation('planner');
 
-
-
-
-  if (!selectedStudents) return null
+  if (!selectedStudents) return null;
 
   const bonusStudents = useMemo(() => {
-    return Object.keys(bonusData).map(id => {
-      const studentInfo = allStudents[Number(id)];
-      const bonusInfo = bonusData[id];
-      const totalBonusValue = bonusInfo.BonusPercentage.reduce((sum, current) => sum + current, 0);
-      return {
-        id,
-        name: studentInfo?.Name || `${id}`,
-        portrait: studentPortraits[Number(id)],
-        totalBonusValue,
-      };
-    }).sort((a, b) => b.totalBonusValue - a.totalBonusValue);
+    return Object.keys(bonusData)
+      .map((id) => {
+        const studentInfo = allStudents[Number(id)];
+        const bonusInfo = bonusData[id];
+        const totalBonusValue = bonusInfo.BonusPercentage.reduce((sum, current) => sum + current, 0);
+        return {
+          id,
+          name: studentInfo?.Name || `${id}`,
+          portrait: studentPortraits[Number(id)],
+          totalBonusValue,
+        };
+      })
+      .sort((a, b) => b.totalBonusValue - a.totalBonusValue);
   }, [bonusData, allStudents, studentPortraits]);
 
   const handleSelectAll = useCallback(() => {
-    setSelectedStudents(bonusStudents.map(s => s.id))
-
+    setSelectedStudents(bonusStudents.map((s) => s.id));
   }, [bonusStudents, selectedStudents, onSelectStudent]);
 
   const handleDeselectAll = useCallback(() => {
-    setSelectedStudents([])
+    setSelectedStudents([]);
   }, [selectedStudents, onSelectStudent]);
-
 
   const totalBonus = useMemo(() => {
     const finalBonusMap: TotalBonusMap = {};
     if (!eventData) return finalBonusMap;
 
-    eventData.currency.forEach(currency => {
+    eventData.currency.forEach((currency) => {
       const itemType = currency.EventContentItemType;
       const itemUniqueId = currency.ItemUniqueId;
-      const relevantStudents = selectedStudents.map(id => {
-        const bonusInfo = eventData.bonus[id as keyof typeof eventData.bonus];
-        const studentInfo = allStudents[Number(id)];
-        if (!bonusInfo) return null;
-        const typeIndex = bonusInfo.EventContentItemType.indexOf(itemType);
-        if (typeIndex === -1) return null;
-        return {
-          id,
-          squadType: studentInfo?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support'), // Reflect cases where students are not yet updated
-          bonusValue: bonusInfo.BonusPercentage[typeIndex],
-        };
-      }).filter((s): s is NonNullable<typeof s> => s !== null);
+      const relevantStudents = selectedStudents
+        .map((id) => {
+          const bonusInfo = eventData.bonus[id as keyof typeof eventData.bonus];
+          const studentInfo = allStudents[Number(id)];
+          if (!bonusInfo) return null;
+          const typeIndex = bonusInfo.EventContentItemType.indexOf(itemType);
+          if (typeIndex === -1) return null;
+          return {
+            id,
+            squadType: studentInfo?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support'), // Reflect cases where students are not yet updated
+            bonusValue: bonusInfo.BonusPercentage[typeIndex],
+          };
+        })
+        .filter((s): s is NonNullable<typeof s> => s !== null);
 
       // console.log('selectedStudents',selectedStudents)
       // console.log('relevantStudents',relevantStudents)
-      const strikers = relevantStudents.filter(s => s.squadType === 'Main');
-      const specials = relevantStudents.filter(s => s.squadType === 'Support');
+      const strikers = relevantStudents.filter((s) => s.squadType === 'Main');
+      const specials = relevantStudents.filter((s) => s.squadType === 'Support');
       strikers.sort((a, b) => b.bonusValue - a.bonusValue);
       specials.sort((a, b) => b.bonusValue - a.bonusValue);
 
@@ -111,29 +113,33 @@ export const BonusSelector = ({
     return finalBonusMap;
   }, [selectedStudents, allStudents, eventData]);
 
-
   // 1. Get the list of currencies to use for toggles
   const eventCurrencies = useMemo(() => {
+    const eventBonusItems = new Set(
+      Object.entries(bonusData)
+        .map((v) => v[1].EventContentItemType)
+        .flatMap((v) => v),
+    );
 
-    const eventBonusItems = new Set(Object.entries(bonusData).map(v => v[1].EventContentItemType).flatMap(v => v))
-
-    return eventData.currency.filter(v => {
-      return eventBonusItems.has(v.EventContentItemType)
-    }).map(c => ({
-      itemType: c.EventContentItemType,
-      itemUniqueId: c.ItemUniqueId,
-      icon: iconData.Item?.[c.ItemUniqueId.toString()]
-    }));
+    return eventData.currency
+      .filter((v) => {
+        return eventBonusItems.has(v.EventContentItemType);
+      })
+      .map((c) => ({
+        itemType: c.EventContentItemType,
+        itemUniqueId: c.ItemUniqueId,
+        icon: iconData.Item?.[c.ItemUniqueId.toString()],
+      }));
   }, [eventData.currency, iconData.Item]);
 
   // 2. State for active filters, default to all active
   const [activeItemFilters, setActiveItemFilters] = useState<Set<number>>(
-    () => new Set(eventCurrencies.map(c => c.itemType)) // Use number
+    () => new Set(eventCurrencies.map((c) => c.itemType)), // Use number
   );
 
   // 3. Handle toggling a filter
   const handleToggleFilter = useCallback((itemType: number) => {
-    setActiveItemFilters(prev => {
+    setActiveItemFilters((prev) => {
       const next = new Set(prev);
       if (next.has(itemType)) {
         next.delete(itemType);
@@ -155,13 +161,11 @@ export const BonusSelector = ({
       return [];
     }
 
-    return bonusStudents.filter(student => {
+    return bonusStudents.filter((student) => {
       const bonusInfo = bonusData[student.id];
       if (!bonusInfo) return false;
       // Show student if they have a bonus for AT LEAST ONE active filter
-      return bonusInfo.EventContentItemType.some(type =>
-        activeItemFilters.has(type)
-      );
+      return bonusInfo.EventContentItemType.some((type) => activeItemFilters.has(type));
     });
   }, [bonusStudents, activeItemFilters, eventCurrencies.length, bonusData]);
 
@@ -169,22 +173,17 @@ export const BonusSelector = ({
     onBonusCalculate(totalBonus);
   }, [totalBonus, onBonusCalculate]);
 
-
-
   return (
     <>
       {/* Header: Title on left, controls on right. */}
-      <div
-        className="flex flex-wrap justify-between items-center cursor-pointer group pt-6 gap-3"
-      >
+      <div className="flex flex-wrap justify-between items-center cursor-pointer group pt-6 gap-3">
         {/* 1. Title (Always left-aligned) */}
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">{t('ui.bonusStudent')}</h2>
 
         {/* Wrapper for all controls, aligned to the right */}
         <div className="flex flex-wrap justify-end items-center gap-2">
-
           {/* 2. Item Filter Toggles (MOVED HERE) */}
-          {eventCurrencies.map(currency => {
+          {eventCurrencies.map((currency) => {
             const isActive = activeItemFilters.has(currency.itemType);
             return (
               <button
@@ -192,16 +191,19 @@ export const BonusSelector = ({
                 onClick={() => handleToggleFilter(currency.itemType)}
                 title={String(currency.itemUniqueId)}
                 // Styling: Smaller, simpler states to match action buttons
-                className={`relative w-9 h-9 p-1 rounded-md transition-all transform hover:scale-110 ${isActive
-                  ? 'bg-white dark:bg-neutral-700 ring-2 dark:ring-1 ring-blue-500' // Active: Ring
-                  : 'bg-gray-200 dark:bg-neutral-800 opacity-60 hover:opacity-100' // Inactive: Grayed out
-                  }`}
+                className={`relative w-9 h-9 p-1 rounded-md transition-all transform hover:scale-110 ${
+                  isActive
+                    ? 'bg-white dark:bg-neutral-700 ring-2 dark:ring-1 ring-blue-500' // Active: Ring
+                    : 'bg-gray-200 dark:bg-neutral-800 opacity-60 hover:opacity-100' // Inactive: Grayed out
+                }`}
               >
                 <img src={`data:image/webp;base64,${currency.icon}`} className="w-full h-full object-contain" alt={String(currency.itemUniqueId)} />
                 {/* Checkmark: Smaller, no extra border */}
                 {isActive && (
                   <div className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
+                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path>
+                    </svg>
                   </div>
                 )}
               </button>
@@ -229,11 +231,7 @@ export const BonusSelector = ({
         </div>
       </div>
 
-
       <div className="mt-4">
-
-
-
         <div className="flex flex-wrap gap-3 justify-center">
           {filteredBonusStudents.map((student) => {
             const isSelected = selectedStudents.includes(student.id);
@@ -245,32 +243,23 @@ export const BonusSelector = ({
                 onClick={() => onSelectStudent(student.id)}
                 title={student.name}
                 className={`w-14 cursor-pointer relative rounded-sm overflow-hidden transition-all duration-200 flex flex-col group
-            ${isSelected
-                    ? 'ring-2 dark:ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm shadow-blue-500/50'
-                    : 'ring-1 ring-gray-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800 opacity-60 hover:opacity-100 hover:-translate-y-1'
-                  }`}
+            ${isSelected ? 'ring-2 dark:ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm shadow-blue-500/50' : 'ring-1 ring-gray-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800 opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
               >
                 {isSelected && (
                   <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path>
+                    </svg>
                   </div>
                 )}
-                <img
-                  src={`data:image/webp;base64,${student.portrait}`}
-                  alt={student.name}
-                  className="w-full h-auto object-cover aspect-square"
-                  loading="lazy"
-                />
-                <div className={`p-0.5 text-center grow flex flex-col justify-center
-            ${isSelected
-                    ? 'bg-white dark:bg-neutral-800'
-                    : ''
-                  }`}
+                <img src={`data:image/webp;base64,${student.portrait}`} alt={student.name} className="w-full h-auto object-cover aspect-square" loading="lazy" />
+                <div
+                  className={`p-0.5 text-center grow flex flex-col justify-center
+            ${isSelected ? 'bg-white dark:bg-neutral-800' : ''}`}
                 >
-
                   <div className={`mt-0.5 text-[10px] leading-tight flex flex-col items-center gap-0.5 ${isSelected ? 'dark:text-blue-100' : 'text-gray-600 dark:text-gray-400'}`}>
                     {bonusInfo.EventContentItemType.map((type, index) => {
-                      const item = eventData.currency.find(c => c.EventContentItemType === type);
+                      const item = eventData.currency.find((c) => c.EventContentItemType === type);
                       if (!item) return null;
 
                       const itemID = item.ItemUniqueId.toString();
@@ -278,10 +267,7 @@ export const BonusSelector = ({
 
                       return (
                         <div key={type} className="flex items-center justify-center gap-1">
-                          <img
-                            src={`data:image/webp;base64,${iconData.Item?.[itemID]}`}
-                            className="w-4 h-4 object-contain"
-                          />
+                          <img src={`data:image/webp;base64,${iconData.Item?.[itemID]}`} className="w-4 h-4 object-contain" />
                           <span className="font-semibold">+{percentage}%</span>
                         </div>
                       );
@@ -293,7 +279,6 @@ export const BonusSelector = ({
           })}
         </div>
       </div>
-
     </>
   );
 };

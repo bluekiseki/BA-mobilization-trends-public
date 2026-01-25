@@ -22,7 +22,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡．庫帕拉",
+    "Tw": "革命的伊凡·庫帕拉",
     "OpenTime": "2021-04-29 12:30:00",
     "CloseTime": "2021-05-13 12:00:00"
   },
@@ -39,7 +39,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Break!",
+    "En": "Head Prefect Hina's Summer Vacation!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2021-07-29 12:30:00",
     "CloseTime": "2021-08-12 12:00:00"
@@ -182,7 +182,7 @@
   "822": {
     "Name": "Event_Name_822",
     "Kr": "아트라하시스의 방주 점령전",
-    "Jp": "アトラ・ハシースの箱舟占領戦 ",
+    "Jp": "アトラ・ハシースの箱舟占領戦",
     "En": "The Ark of Atrahasis Conquest",
     "Tw": "阿特拉哈西斯的方舟占領戰",
     "OpenTime": "2023-02-22 11:00:00",
@@ -417,8 +417,8 @@
     "Name": "Event_Name_849",
     "Kr": "우리는 오컬트 연구회! ~학원의 불가사의와 고대 주문~",
     "Jp": "我らオカルト研究会！～学院の不思議と古の呪文～",
-    "En": null,
-    "Tw": null,
+    "En": "We Are the Occult Investigation Society! Ancient Spells and Mysteries",
+    "Tw": "我們是神秘學研究會！～學園的不可思議與古老的咒語～",
     "OpenTime": "2025-08-20 11:00:00",
     "CloseTime": "2025-09-03 10:59:59"
   },
@@ -426,8 +426,8 @@
     "Name": "Event_Name_850",
     "Kr": "누구를 위한 예술인가 ~위작과 미학의 행방~",
     "Jp": "誰が為の芸術～偽飾の絵画と美学の行方～",
-    "En": null,
-    "Tw": null,
+    "En": "To Whom Art Belongs: The Fate of Forgeries and Aesthetics",
+    "Tw": "為了誰而存在的藝術～偽畫與美學的去向～",
     "OpenTime": "2025-09-24 11:00:00",
     "CloseTime": "2025-10-15 10:59:59"
   },
@@ -435,8 +435,8 @@
     "Name": "Event_Name_851",
     "Kr": "마법소녀 헤비캘리버 ~에라의 야망과 정의의 자격~",
     "Jp": "魔法少女ヘヴィキャリバー～エラの野望と正義の資格～",
-    "En": null,
-    "Tw": null,
+    "En": "Magical Girl Heavy Caliber: Era's Ambitions and the Qualifications of Justice",
+    "Tw": "魔法少女Heavy Caliber～艾拉的野心與正義的資格～",
     "OpenTime": "2025-10-22 11:00:00",
     "CloseTime": "2025-11-05 10:59:59"
   },
@@ -452,11 +452,21 @@
   "853": {
     "Name": "Event_Name_853",
     "Kr": "불인의 길 ~패션쇼 경호 임무!의 서~",
-    "Jp": "不忍ノ道～ファッションショー警護任務！の巻～",
+    "Jp": "不忍ノ道 ～ファッションショー警護任務！の巻～",
     "En": null,
     "Tw": null,
     "OpenTime": "2025-12-24 11:00:00",
     "CloseTime": "2026-01-07 10:59:59"
+  },
+  "854": {
+    "Name": "Event_Name_854",
+    "Kr": "강철대륙 공략전",
+    "Jp": "鋼鉄大陸攻略戦",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-01-20 11:00:00",
+    "CloseTime": "2026-01-29 10:59:59",
+    "Planable": true
   },
   "10801": {
     "Name": "Event_Name_801",
@@ -472,7 +482,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡．庫帕拉",
+    "Tw": "革命的伊凡·庫帕拉",
     "OpenTime": "2022-03-09 11:30:00",
     "CloseTime": "2022-03-16 10:59:59"
   },
@@ -489,7 +499,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Break!",
+    "En": "Head Prefect Hina's Summer Vacation!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2022-09-07 11:00:00",
     "CloseTime": "2022-09-14 10:59:59"

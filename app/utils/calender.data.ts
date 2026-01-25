@@ -1,10 +1,11 @@
-import Papa from "papaparse";
-import { type_translation } from "~/components/raidToString";
+// app/utils/calender.data.ts
+import Papa from 'papaparse';
+import { type_translation } from '~/components/raidToString';
 import jpEventList from '~/data/jp/eventList.json';
 import krEventList from '~/data/jp/eventList.json';
-import bossData from '~/data/bossdata.json'
-import { getInstance } from "~/middleware/i18next";
-import { getLocaleShortName, type Locale } from "~/utils/i18n/config";
+import bossData from '~/data/bossdata.json';
+import { getInstance } from '~/middleware/i18next';
+import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 
 // --- JP ?raw import ---
 import jpEventCsvRaw from '~/data/jp/schedule/event.csv?raw';
@@ -30,28 +31,41 @@ import krJfdCsvRaw from '~/data/kr/schedule/jointFiringDrill.csv?raw';
 import krMainstoryCsvRaw from '~/data/kr/schedule/mainstory.csv?raw';
 import krMinistoryCsvRaw from '~/data/kr/schedule/miniStory.csv?raw';
 import krPatchCsvRaw from '~/data/kr/schedule/patch.csv?raw';
-import type { GameServer } from "~/types/data";
-import { loadRaidInfosById } from "./loadRaidInfo";
+import type { GameServer } from '~/types/data';
+import { loadRaidInfosById } from './loadRaidInfo';
 
-
-const armorTypeTranslation = type_translation
+const armorTypeTranslation = type_translation;
 
 const MS_PER_HOUR = 1000 * 60 * 60;
-const JP_RAID_SEASON_EXIST_START = 47
-const KR_RAID_SEASON_EXIST_START = 15
-
+const JP_RAID_SEASON_EXIST_START = 47;
+const KR_RAID_SEASON_EXIST_START = 15;
 
 function convTitleLnag(locale: Locale) {
-  if (locale == 'en') return 'titleEn'
-  else if (locale == 'ko') return 'titleKo'
-  else if (locale == 'zh-Hant') return 'titleTw'
-  else return 'titleJa'
+  if (locale == 'en') return 'titleEn';
+  else if (locale == 'ko') return 'titleKo';
+  else if (locale == 'zh-Hant') return 'titleTw';
+  else return 'titleJa';
 }
 
-interface PickupStudentInfo { id: number; limited: boolean; rerun: boolean; fast: boolean; }
+interface PickupStudentInfo {
+  id: number;
+  limited: boolean;
+  rerun: boolean;
+  fast: boolean;
+}
 export interface ScheduleItem {
-  id: string; type: string; startTime: string; endTime: string; title: string; link?: string;
-  details?: Record<string, any> & { students?: PickupStudentInfo[]; isPointEvent?: boolean; };
+  id: string;
+  type: string;
+  startTime: string;
+  endTime: string;
+  title: string;
+  label?: string;
+  textColor?: string;
+  link?: string;
+  details?: Record<string, any> & {
+    students?: PickupStudentInfo[];
+    isPointEvent?: boolean;
+  };
 }
 
 export type ScheduleTrack = 'raid' | 'event' | 'multifloor' | 'campaign' | 'pickup' | 'maintenance' | 'story' | 'patch' | 'misc';
@@ -60,9 +74,11 @@ export type ScheduleTrack = 'raid' | 'event' | 'multifloor' | 'campaign' | 'pick
 export function parseCsvString<T extends object>(csvString: string): T[] {
   try {
     const parsed = Papa.parse<T>(csvString, {
-      header: true, skipEmptyLines: true, dynamicTyping: true,
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
     });
-    return parsed.data.filter(row => Object.values(row).some(val => val !== null && val !== ''));
+    return parsed.data.filter((row) => Object.values(row).some((val) => val !== null && val !== ''));
   } catch (error) {
     console.error(`[Schedule Loader] Failed to parse CSV string:`, error);
     return [];
@@ -84,10 +100,35 @@ interface LoadScheduleDataOptions {
  * @param options.tracksToLoad - Array of tracks to load
  */
 export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: LoadScheduleDataOptions) {
-
   const dataSources = {
-    jp: { eventList: jpEventList, event: jpEventCsvRaw, raid: jpRaidCsvRaw, eraid: jpEraidCsvRaw, multifloor: jpMultifloorCsvRaw, campaign: jpCampaignCsvRaw, pickup: jpPickupCsvRaw, maintenance: jpMaintenanceCsvRaw, jfd: jpJfdCsvRaw, mainstory: jpMainstoryCsvRaw, ministory: jpMinistoryCsvRaw, patch: jpPatchCsvRaw },
-    kr: { eventList: krEventList, event: krEventCsvRaw, raid: krRaidCsvRaw, eraid: krEraidCsvRaw, multifloor: krMultifloorCsvRaw, campaign: krCampaignCsvRaw, pickup: krPickupCsvRaw, maintenance: krMaintenanceCsvRaw, jfd: krJfdCsvRaw, mainstory: krMainstoryCsvRaw, ministory: krMinistoryCsvRaw, patch: krPatchCsvRaw }
+    jp: {
+      eventList: jpEventList,
+      event: jpEventCsvRaw,
+      raid: jpRaidCsvRaw,
+      eraid: jpEraidCsvRaw,
+      multifloor: jpMultifloorCsvRaw,
+      campaign: jpCampaignCsvRaw,
+      pickup: jpPickupCsvRaw,
+      maintenance: jpMaintenanceCsvRaw,
+      jfd: jpJfdCsvRaw,
+      mainstory: jpMainstoryCsvRaw,
+      ministory: jpMinistoryCsvRaw,
+      patch: jpPatchCsvRaw,
+    },
+    kr: {
+      eventList: krEventList,
+      event: krEventCsvRaw,
+      raid: krRaidCsvRaw,
+      eraid: krEraidCsvRaw,
+      multifloor: krMultifloorCsvRaw,
+      campaign: krCampaignCsvRaw,
+      pickup: krPickupCsvRaw,
+      maintenance: krMaintenanceCsvRaw,
+      jfd: krJfdCsvRaw,
+      mainstory: krMainstoryCsvRaw,
+      ministory: krMinistoryCsvRaw,
+      patch: krPatchCsvRaw,
+    },
   };
 
   const sources = dataSources[server];
@@ -96,14 +137,23 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   const now = new Date(); // Current time (local time of the execution environment)
   const nowMs = now.getTime();
 
+  const t_cal = (key: string) => i18n.t(`calendar:${key}`);
+  const t_com = (key: string) => i18n.t(`common:${key}`);
+
   // If tracksToLoad is 'all', create an array containing all keys
-  const tracksToLoadArray = tracksToLoad === 'all'
-    ? ['raid', 'event', 'multifloor', 'campaign', 'pickup', 'maintenance', 'story', 'patch', 'misc']
-    : tracksToLoad;
+  const tracksToLoadArray = tracksToLoad === 'all' ? ['raid', 'event', 'multifloor', 'campaign', 'pickup', 'maintenance', 'story', 'patch', 'misc'] : tracksToLoad;
 
   const tracks: Record<string, ScheduleItem[]> = {
-    raid: [], event: [], multifloor: [], campaign: [], pickup: [], maintenance: [],
-    mainstory: [], ministory: [], patch: [], misc: [],
+    raid: [],
+    event: [],
+    multifloor: [],
+    campaign: [],
+    pickup: [],
+    maintenance: [],
+    mainstory: [],
+    ministory: [],
+    patch: [],
+    misc: [],
   };
   const allStartTimes: number[] = [];
   const allEndTimes: number[] = [];
@@ -111,13 +161,13 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   // Helper function to specify KST/JST (UTC+9) timezone
   // "2025-10-29 04:00:00" -> "2025-10-29T04:00:00+09:00"
   const parseKST = (dateString: string): string => {
-    if (!dateString) return "";
+    if (!dateString) return '';
     // If already in ISO format or has timezone info, return as is
     if (dateString.includes('T') && (dateString.includes('Z') || dateString.includes('+'))) {
       return dateString;
     }
     // Change format from "YYYY-MM-DD HH:MM:SS" to "YYYY-MM-DDTHH:MM:SS+09:00"
-    return dateString.replace(" ", "T") + "+09:00";
+    return dateString.replace(' ', 'T') + '+09:00';
   };
 
   // Modify addItem helper to use KST parser
@@ -152,20 +202,39 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   //  the CSV parsing logic itself doesn&#39;t need modification.)
 
   if (tracksToLoadArray.includes('event')) {
-    parseCsvString<any>(sources.event).forEach(item => {
+    parseCsvString<any>(sources.event).forEach((item) => {
       const eventInfo = (eventList as any)[(item.id % 10000)?.toString()];
-      const title = eventInfo?.[{ en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' }[locale]] || eventInfo?.[{ en: 'En', ja: 'Jp', ko: 'Kr' }['ja']] || item.name || `Event (ID: ${item.id})`;
-      addItem('event', { id: `event-${item.id}`, type: 'event', startTime: item.openTime, endTime: item.closeTime, title: title, link: `/planner/event/${item.id}`, details: { rerun: item.rerun, studentId: item.studentId, prediction: !!item.prediction } });
+      const title = eventInfo?.[{ en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' }[locale]] || eventInfo?.Jp || item.name || `Event`;
+
+      const label = `${t_cal('track.event')}${item.rerun ? '/' + t_com('rerun') : ''}`;
+
+      addItem('event', {
+        id: `event-${item.id}`,
+        type: 'event',
+        startTime: item.openTime,
+        endTime: item.closeTime,
+        title: title,
+        label: label,
+        link: item.planable == false ? undefined : `/planner/event/${item.id}`,
+        details: {
+          rerun: item.rerun,
+          studentId: item.studentId,
+          prediction: !!item.prediction,
+        },
+      });
     });
   }
 
   if (tracksToLoadArray.includes('raid')) {
     // 2. Total Assault (Raid)
-    parseCsvString<any>(sources.raid).forEach(item => {
+    parseCsvString<any>(sources.raid).forEach((item) => {
       if (item.boss) {
         const bossInfo = (bossData as any)[item.boss];
         let title = `${item.boss}`;
-        let details: any = { maxDifficulty: item.maxDifficulty, prediction: !!item.prediction };
+        let details: any = {
+          maxDifficulty: item.maxDifficulty,
+          prediction: !!item.prediction,
+        };
         if (bossInfo) {
           title = `${bossInfo.name[getLocaleShortName(locale)]}`;
           details.terrain = bossInfo.teran;
@@ -178,31 +247,41 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         const endMs = new Date(parseKST(item.endTime)).getTime();
 
         let link: string | undefined = undefined;
-        if (server=='jp' && item.season < JP_RAID_SEASON_EXIST_START){
+        if (server == 'jp' && item.season < JP_RAID_SEASON_EXIST_START) {
           // nothing
-        }
-        else if (server=='kr' && item.season < KR_RAID_SEASON_EXIST_START){
+        } else if (server == 'kr' && item.season < KR_RAID_SEASON_EXIST_START) {
           // nothing
-        }
-        else if (nowMs >= startMs && nowMs <= endMs && server == 'jp') {
+        } else if (nowMs >= startMs && nowMs <= endMs && server == 'jp') {
           link = '/live';
         } else if (nowMs > endMs) {
           link = `/dashboard/${server}/R${item.season}`;
         } else if (server == 'kr') {
-          const id = 'R' + (item.season + 3)
+          const id = 'R' + (item.season + 3);
           if (loadRaidInfosById('jp', locale, id).length) {
             link = `/dashboard/jp/R${item.season + 3}`;
           }
         }
-        addItem('raid', { id: `raid-${item.season}`, type: 'raid', startTime: item.startTime, endTime: item.endTime, title: title, link: link, details: details });
+        const label = t_com('raid');
+
+        addItem('raid', {
+          id: `raid-${item.season}`,
+          type: 'raid',
+          startTime: item.startTime,
+          endTime: item.endTime,
+          title: title,
+          label: label,
+          link: link,
+          details: details,
+        });
       }
     });
+
     // 3. Joint Firing Drill (JFD)
-    parseCsvString<any>(sources.eraid).forEach(item => {
+    parseCsvString<any>(sources.eraid).forEach((item) => {
       if (item.boss1) {
         const bossInfo = (bossData as any)[item.boss1.split('_')[0]];
-        const title = `${bossInfo.name[getLocaleShortName(locale)]}`;
-        const terrain = item.boss1.split('_')[1];
+        const title = `${bossInfo?.name[getLocaleShortName(locale)] || '???'}`;
+        const terrain = item?.boss1?.split('_')?.[1];
         const bosses: any[] = [];
         const parseBossDetails = (bossString: string, difficulty: string) => {
           if (!bossString) return null;
@@ -212,10 +291,12 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
           return {
             armorType: armorType,
             armorName: (armorTypeTranslation as any)[armorType]?.[getLocaleShortName(locale)] || armorType,
-            difficulty: difficulty
+            difficulty: difficulty,
           };
         };
-        [parseBossDetails(item.boss1, item.difficulty1), parseBossDetails(item.boss2, item.difficulty2), parseBossDetails(item.boss3, item.difficulty3)].forEach(b => { if (b) bosses.push(b); });
+        [parseBossDetails(item.boss1, item.difficulty1), parseBossDetails(item.boss2, item.difficulty2), parseBossDetails(item.boss3, item.difficulty3)].forEach((b) => {
+          if (b) bosses.push(b);
+        });
 
         // Time comparison for link logic is also performed using KST-parsed time (ms)
         const startMs = new Date(parseKST(item.startTime)).getTime();
@@ -227,47 +308,91 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         } else if (nowMs > endMs) {
           link = `/dashboard/${server}/E${item.season}`;
         } else if (server == 'kr') {
-          const id = 'E' + (item.season)
+          const id = 'E' + item.season;
           if (loadRaidInfosById('jp', locale, id).length) {
             link = `/dashboard/jp/E${item.season}`;
           }
         }
+        const label = t_com('eraid');
+
         addItem('raid', {
-          id: `eraid-${item.season}`, type: 'eraid',
-          startTime: item.startTime, endTime: item.endTime,
-          title: title, link: link,
-          details: { terrain: terrain, bosses: bosses, prediction: !!item.prediction }
+          id: `eraid-${item.season}`,
+          type: 'eraid',
+          startTime: item.startTime,
+          endTime: item.endTime,
+          title: title,
+          label: label,
+          link: link,
+          details: {
+            terrain: terrain,
+            bosses: bosses,
+            prediction: !!item.prediction,
+          },
         });
       }
     });
+
     // 8. Comprehensive Tactical Exam
-    parseCsvString<any>(sources.jfd).forEach(item => {
+    parseCsvString<any>(sources.jfd).forEach((item) => {
       if (item.startTime) {
         const armorKo = (armorTypeTranslation as any)[item.armorType]?.[locale] || item.armorType;
+        const label = t_com('jfd') || 'JFD';
+
         addItem('raid', {
-          id: `jfd-${item.season}`, type: 'jointFiringDrill', startTime: item.startTime, endTime: item.endTime,
-          title: `#${item.season}`,
-          details: { jfdType: item.type, terrain: item.teran, armorType: item.armorType, armorName: armorKo, prediction: !!item.prediction }
+          id: `jfd-${item.season}`,
+          type: 'jointFiringDrill',
+          startTime: item.startTime,
+          endTime: item.endTime,
+          title: `#${item.season} ${t_cal(`jfd:${item.type}`)}`,
+          label: label,
+          details: {
+            jfdType: item.type,
+            terrain: item.teran,
+            armorType: item.armorType,
+            armorName: armorKo,
+            prediction: !!item.prediction,
+          },
         });
       }
     });
   }
 
   if (tracksToLoadArray.includes('multifloor')) {
-    parseCsvString<any>(sources.multifloor).forEach(item => {
+    parseCsvString<any>(sources.multifloor).forEach((item) => {
       const bossInfo = (bossData as any)[item.boss];
       let title = `${item.boss}`;
       if (bossInfo) {
-        title = bossInfo.name?.[getLocaleShortName(locale)]
+        title = bossInfo.name?.[getLocaleShortName(locale)];
       }
       const armorKo = (armorTypeTranslation as any)[item.armorType]?.[getLocaleShortName(locale)] || item.armorType;
-      addItem('multifloor', { id: `multifloor-${item.season}`, type: 'multifloor', startTime: item.startTime, endTime: item.endTime, title: `${title}`, details: { armorType: item.armorType, armorName: armorKo, prediction: !!item.prediction } });
+      addItem('multifloor', {
+        id: `multifloor-${item.season}`,
+        type: 'multifloor',
+        startTime: item.startTime,
+        endTime: item.endTime,
+        title: `${title}`,
+        details: {
+          armorType: item.armorType,
+          armorName: armorKo,
+          prediction: !!item.prediction,
+        },
+      });
     });
   }
 
   if (tracksToLoadArray.includes('campaign')) {
     parseCsvString<any>(sources.campaign).forEach((item, index) => {
-      addItem('campaign', { id: `campaign-${item.startTime}-${index}`, type: 'campaign', startTime: item.startTime, endTime: item.endTime, title: `${item.campaignType} x${item.multiplier}`, details: { campaignType: item.campaignType, prediction: !!item.prediction } });
+      addItem('campaign', {
+        id: `campaign-${item.startTime}-${index}`,
+        type: 'campaign',
+        startTime: item.startTime,
+        endTime: item.endTime,
+        title: `${item.campaignType} x${item.multiplier}`,
+        details: {
+          campaignType: item.campaignType,
+          prediction: !!item.prediction,
+        },
+      });
     });
   }
 
@@ -276,10 +401,22 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
     parseCsvString<any>(sources.pickup).forEach((item, index) => {
       if (!item.startTime || !item.endTime) return;
       const groupKey = `${item.startTime}|${item.endTime}`; // Grouping based on KST string
-      const studentInfo: PickupStudentInfo = { id: item.studentId, limited: item.limited, rerun: item.rerun, fast: item.fast };
+      const studentInfo: PickupStudentInfo = {
+        id: item.studentId,
+        limited: item.limited,
+        rerun: item.rerun,
+        fast: item.fast,
+      };
       const isPrediction = !!item.prediction;
       if (!pickupGroups.has(groupKey)) {
-        pickupGroups.set(groupKey, { id: `pickup-group-${groupKey}`, type: 'pickup', startTime: item.startTime, endTime: item.endTime, title: 'Pickup', details: { students: [studentInfo], prediction: isPrediction } });
+        pickupGroups.set(groupKey, {
+          id: `pickup-group-${groupKey}`,
+          type: 'pickup',
+          startTime: item.startTime,
+          endTime: item.endTime,
+          title: 'Pickup',
+          details: { students: [studentInfo], prediction: isPrediction },
+        });
       } else {
         const group = pickupGroups.get(groupKey)!;
         group.details!.students!.push(studentInfo);
@@ -288,12 +425,19 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         }
       }
     });
-    pickupGroups.forEach(groupedItem => addItem('pickup', groupedItem));
+    pickupGroups.forEach((groupedItem) => addItem('pickup', groupedItem));
   }
 
   if (tracksToLoadArray.includes('maintenance')) {
-    parseCsvString<any>(sources.maintenance).forEach(item => {
-      addItem('maintenance', { id: `maintenance-${item.startTime}`, type: 'maintenance', startTime: item.startTime, endTime: item.endTime, title: i18n.t("calendar:track.maintenance"), details: { noticeURL: item.noticeURL, prediction: !!item.prediction } });
+    parseCsvString<any>(sources.maintenance).forEach((item) => {
+      addItem('maintenance', {
+        id: `maintenance-${item.startTime}`,
+        type: 'maintenance',
+        startTime: item.startTime,
+        endTime: item.endTime,
+        title: i18n.t('calendar:track.maintenance'),
+        details: { noticeURL: item.noticeURL, prediction: !!item.prediction },
+      });
     });
   }
 
@@ -304,11 +448,12 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endTimeISO = new Date(startMs + MS_PER_HOUR).toISOString();
         addItem('mainstory', {
-          id: `mainstory-${item.startTime}-${index}`, type: 'mainstory',
+          id: `mainstory-${item.startTime}-${index}`,
+          type: 'mainstory',
           startTime: item.startTime,
           endTime: endTimeISO, // ISO string for 1 hour later
           title: `Vol.${item.volume} Ch.${item.chapter} ${item.part ? `Pt.${item.part}` : ''}`,
-          details: { isPointEvent: true, prediction: !!item.prediction }
+          details: { isPointEvent: true, prediction: !!item.prediction },
         });
       }
     });
@@ -317,12 +462,19 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         // Calculate endTime for one-time events based on KST
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endTimeISO = new Date(startMs + MS_PER_HOUR).toISOString();
+        const title = item[convTitleLnag(locale)] || item[convTitleLnag('en')];
         addItem('ministory', {
-          id: `ministory-${item.startTime}-${index}`, type: 'ministory',
+          id: `ministory-${item.startTime}-${index}`,
+          type: 'ministory',
           startTime: item.startTime,
           endTime: endTimeISO, // ISO string for 1 hour later
-          title: 'story.mini',
-          details: { isPointEvent: true, title: item[convTitleLnag(locale)], prediction: !!item.prediction }
+          title: `${String(t_cal('story.mini')).replace('{{title}}', title)}`,
+          // title: '',
+          details: {
+            isPointEvent: true,
+            title: item[convTitleLnag(locale)] || item[convTitleLnag('en')],
+            prediction: !!item.prediction,
+          },
         });
       }
     });
@@ -335,11 +487,12 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endTimeISO = new Date(startMs + MS_PER_HOUR).toISOString();
         addItem('patch', {
-          id: `patch-${item.startTime}-${index}`, type: 'patch',
+          id: `patch-${item.startTime}-${index}`,
+          type: 'patch',
           startTime: item.startTime,
           endTime: endTimeISO, // ISO string for 1 hour later
-          title: `${item[convTitleLnag(locale)]}`,
-          details: { isPointEvent: true, prediction: !!item.prediction }
+          title: `${item[convTitleLnag(locale)] || item[convTitleLnag('en')]}`,
+          details: { isPointEvent: true, prediction: !!item.prediction },
         });
       }
     });
@@ -351,8 +504,8 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
       minDate = new Date(Math.min(...allStartTimes));
       maxDate = new Date(Math.max(...allEndTimes));
     } else {
-      minDate = new Date(nowMs - (365 / 2 * 24 * MS_PER_HOUR));
-      maxDate = new Date(nowMs + (365 / 2 * 24 * MS_PER_HOUR));
+      minDate = new Date(nowMs - (365 / 2) * 24 * MS_PER_HOUR);
+      maxDate = new Date(nowMs + (365 / 2) * 24 * MS_PER_HOUR);
     }
 
     let currentMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
@@ -371,7 +524,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         startTime: resetTimeISO,
         endTime: endTimeISO,
         title: 'misc.shop-reset',
-        details: { isPointEvent: true, prediction: false }
+        details: { isPointEvent: true, prediction: false },
       });
       // UTC timestamp to allStartTimes as well
       allStartTimes.push(resetTime.getTime());
@@ -391,37 +544,32 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   const timeRange = { min: minTime, max: maxTime };
 
   // (filteredTracks return logic is the same)
-  const filteredTracks = Object.keys(tracks).reduce((acc, key) => {
-    // ...
-    if ((key === 'mainstory' || key === 'ministory') && tracksToLoadArray.includes('story')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'misc' && tracksToLoadArray.includes('misc')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'patch' && tracksToLoadArray.includes('patch')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'maintenance' && tracksToLoadArray.includes('maintenance')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'pickup' && tracksToLoadArray.includes('pickup')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'campaign' && tracksToLoadArray.includes('campaign')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'multifloor' && tracksToLoadArray.includes('multifloor')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'event' && tracksToLoadArray.includes('event')) {
-      acc[key] = tracks[key];
-    }
-    else if (key === 'raid' && tracksToLoadArray.includes('raid')) {
-      acc[key] = tracks[key];
-    }
-    return acc;
-  }, {} as Record<string, ScheduleItem[]>);
+  const filteredTracks = Object.keys(tracks).reduce(
+    (acc, key) => {
+      // ...
+      if ((key === 'mainstory' || key === 'ministory') && tracksToLoadArray.includes('story')) {
+        acc[key] = tracks[key];
+      } else if (key === 'misc' && tracksToLoadArray.includes('misc')) {
+        acc[key] = tracks[key];
+      } else if (key === 'patch' && tracksToLoadArray.includes('patch')) {
+        acc[key] = tracks[key];
+      } else if (key === 'maintenance' && tracksToLoadArray.includes('maintenance')) {
+        acc[key] = tracks[key];
+      } else if (key === 'pickup' && tracksToLoadArray.includes('pickup')) {
+        acc[key] = tracks[key];
+      } else if (key === 'campaign' && tracksToLoadArray.includes('campaign')) {
+        acc[key] = tracks[key];
+      } else if (key === 'multifloor' && tracksToLoadArray.includes('multifloor')) {
+        acc[key] = tracks[key];
+      } else if (key === 'event' && tracksToLoadArray.includes('event')) {
+        acc[key] = tracks[key];
+      } else if (key === 'raid' && tracksToLoadArray.includes('raid')) {
+        acc[key] = tracks[key];
+      }
+      return acc;
+    },
+    {} as Record<string, ScheduleItem[]>,
+  );
 
   return { tracks: filteredTracks, timeRange };
 }

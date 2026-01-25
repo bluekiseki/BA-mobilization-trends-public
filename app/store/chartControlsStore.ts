@@ -20,7 +20,7 @@ interface State {
   chartDataByZ: Map<number, ChartData>;
   error: string | null;
   difficulty: DifficultySelect;
-  raidInfo: RaidInfo[]
+  raidInfo: RaidInfo[];
 }
 
 interface Actions {
@@ -35,7 +35,7 @@ interface Actions {
   setDifficulty: (difficulty: DifficultySelect) => void;
   fetchAndProcessChartData: (server: GameServer, fetchAndProcessWithCache: fetchCacheProcessor<string>, locale: Locale) => Promise<void>;
   getFilteredRaidInfoByDifficulty: () => RaidInfoFiltered[];
-  setRaidInfo: (raidInfo: RaidInfo[]) => void
+  setRaidInfo: (raidInfo: RaidInfo[]) => void;
 }
 
 // Sets the initial state.
@@ -57,8 +57,8 @@ const initialState: State = {
 };
 
 // Create Store
-export const useChartControlsStore = create<State & Actions>()(devtools(
-  (set, get) => ({
+export const useChartControlsStore = create<State & Actions>()(
+  devtools((set, get) => ({
     ...initialState,
 
     setSelectedStudentId: (id) => set({ selectedStudentId: id }),
@@ -68,45 +68,37 @@ export const useChartControlsStore = create<State & Actions>()(devtools(
     setHideXThreshold: (threshold) => set({ hideXThreshold: threshold }),
     setXRange: (range) => set({ xRange: range }),
     setDifficulty: (difficulty) => set({ difficulty: difficulty }),
-    handleZSelectionChange: (z) => set((state) => {
-      const newSet = new Set(state.selectedZValues);
-      if (newSet.has(z)) {
-        newSet.delete(z);
-      } else {
-        newSet.add(z);
-      }
-      return { selectedZValues: newSet };
-    }),
-    setSelectedZValues: (zs) => set(() => {
-      const newSet = new Set(zs);
-      return { selectedZValues: newSet };
-    }),
+    handleZSelectionChange: (z) =>
+      set((state) => {
+        const newSet = new Set(state.selectedZValues);
+        if (newSet.has(z)) {
+          newSet.delete(z);
+        } else {
+          newSet.add(z);
+        }
+        return { selectedZValues: newSet };
+      }),
+    setSelectedZValues: (zs) =>
+      set(() => {
+        const newSet = new Set(zs);
+        return { selectedZValues: newSet };
+      }),
     getFilteredRaidInfoByDifficulty: () => {
-      const {
-        raidInfo,
-        difficulty
-      } = get();
-      return raidInfo.map((raid, index) => ({ ...raid, index })).filter(raidInfo => {
-        if (difficulty == 'All') return true
-        return difficulty in raidInfo.Cnt
-      })
+      const { raidInfo, difficulty } = get();
+      return raidInfo
+        .map((raid, index) => ({ ...raid, index }))
+        .filter((raidInfo) => {
+          if (difficulty == 'All') return true;
+          return difficulty in raidInfo.Cnt;
+        });
     },
     setRaidInfo: (raidInfo: RaidInfo[]) => {
-      set({ raidInfo })
+      set({ raidInfo });
     },
     fetchAndProcessChartData: async (server, fetchAndProcessWithCache, locale) => {
-      const {
-        selectedStudentId,
-        rankWidth,
-        hideXThreshold,
-        xRange,
-        heatmapMode,
-        histogramMode,
-        difficulty,
-        getFilteredRaidInfoByDifficulty
-      } = get();
+      const { selectedStudentId, rankWidth, hideXThreshold, xRange, heatmapMode, histogramMode, difficulty, getFilteredRaidInfoByDifficulty } = get();
 
-      const xLabels = getFilteredRaidInfoByDifficulty()
+      const xLabels = getFilteredRaidInfoByDifficulty();
 
       if (!selectedStudentId) {
         set({ isLoading: false, chartDataByZ: new Map() });
@@ -115,11 +107,9 @@ export const useChartControlsStore = create<State & Actions>()(devtools(
 
       set({ isLoading: true, error: null });
 
-      const rawTsvData = await getRawTsvData(server, selectedStudentId, fetchAndProcessWithCache)
+      const rawTsvData = await getRawTsvData(server, selectedStudentId, fetchAndProcessWithCache);
 
       try {
-
-
         const result = await processChartData({
           rankWidth,
           hideXThreshold,
@@ -129,7 +119,7 @@ export const useChartControlsStore = create<State & Actions>()(devtools(
           difficulty,
           xLabels,
           rawTsvData,
-          locale
+          locale,
         });
 
         // Update processing results to store status
@@ -139,10 +129,9 @@ export const useChartControlsStore = create<State & Actions>()(devtools(
           availableZValueCounter: result.availableZValueCounter,
           fullXRange: result.fullXRange,
         });
-
-
       } catch (e) {
         set({ isLoading: false, error: (e as Error).message });
       }
-    }
-  })));
+    },
+  })),
+);
