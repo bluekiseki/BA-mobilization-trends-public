@@ -1,12 +1,4 @@
 {
-  "currentLocale": "ja",
-  "navigation": {
-    "heatmap": "トレンド",
-    "ranking": "ランキング",
-    "home": "ホーム",
-    "dashboard": "ボード",
-    "planner": "プランナー"
-  },
   "common": {
     "greeting": "こんにちは！",
     "about": "このサイトについて",
@@ -37,13 +29,51 @@
     "limited": "限定",
     "clear": "クリア",
     "period": "期間",
-    "jfd": "合同火力演習"
-  },
-  "LocaleSwitcher": {
-    "en": "英語",
-    "ko": "韓国語",
-    "ja": "日本語",
-    "label": "言語"
+    "jfd": "合同火力演習",
+    "title": "ユズ Trends",
+    "site-title": "ユズ Trends",
+    "site-title_old": "ユズ Trends｜ブルアカのチナトロ編成トレンド",
+    "description_old": "『ブルーアーカイブ』の総力戦・大決戦における、プラチナトロフィー獲得編成のトレンドを可視化しました。",
+    "description": "NEXON Games開発のスマホゲーム『ブルーアーカイブ（ブルアカ）』の攻略に特化したデータ分析サイト。",
+    "btn1-go": "トレンド<0/>を<0/>見る",
+    "btn2-go": "ランキングを<0/>見る",
+    "btn1": "トレンド",
+    "btn2": "ランキング",
+    "last-update": "最終更新：",
+    "js-disable": "JavaScriptが無効です",
+    "js-disable-description": "このウェブサイトの全ての機能を利用するにはJavaScriptを有効にする必要があります。お使いのブラウザ設定をご確認ください。",
+    "404_not_found": "Page Not Found",
+    "dashboard-btn": "総力戦・大決戦<0/>ダッシュボード",
+    "dashboard-btn1": "総力戦・大決戦ダッシュボード",
+    "dashboard-btn-go": "総力戦・大決戦ダッシュボードを<0/>見る",
+    "changelog": {
+      "title": "変更履歴",
+      "noTranslation": "翻訳がありません",
+      "newUpdate": "最近のアップデート"
+    },
+    "currentLocale": "ja",
+    "navigation": {
+      "heatmap": "トレンド",
+      "ranking": "ランキング",
+      "home": "ホーム",
+      "dashboard": "ボード",
+      "planner": "プランナー"
+    },
+    "LocaleSwitcher": {
+      "en": "英語",
+      "ko": "韓国語",
+      "ja": "日本語",
+      "label": "言語"
+    },
+    "language_banner": {
+      "message": "{{language}}を使用しているようです。言語を切り替えますか？",
+      "switch_button": "{{language}}に切り替え",
+      "dismiss_button": "閉じる",
+      "unsupported": {
+        "message": "ご希望の言語はサポートされていません。翻訳に貢献するか、別の言語を選択してください。",
+        "contribute_button": "GitHubで貢献する"
+      }
+    }
   },
   "charts": {
     "ranking": {
@@ -133,29 +163,6 @@
         "rank": "順位：",
         "desp_chart": "グラフにカーソルを合わせると詳細が表示されます。"
       }
-    }
-  },
-  "home": {
-    "title": "ユズ Trends",
-    "site-title": "ユズ Trends",
-    "site-title_old": "ユズ Trends｜ブルアカのチナトロ編成トレンド",
-    "description_old": "『ブルーアーカイブ』の総力戦・大決戦における、プラチナトロフィー獲得編成のトレンドを可視化しました。",
-    "description": "NEXON Games開発のスマホゲーム『ブルーアーカイブ（ブルアカ）』の攻略に特化したデータ分析サイト。",
-    "btn1-go": "トレンド<0/>を<0/>見る",
-    "btn2-go": "ランキングを<0/>見る",
-    "btn1": "トレンド",
-    "btn2": "ランキング",
-    "last-update": "最終更新：",
-    "js-disable": "JavaScriptが無効です",
-    "js-disable-description": "このウェブサイトの全ての機能を利用するにはJavaScriptを有効にする必要があります。お使いのブラウザ設定をご確認ください。",
-    "404_not_found": "Page Not Found",
-    "dashboard-btn": "総力戦・大決戦<0/>ダッシュボード",
-    "dashboard-btn1": "総力戦・大決戦ダッシュボード",
-    "dashboard-btn-go": "総力戦・大決戦ダッシュボードを<0/>見る",
-    "changelog": {
-      "title": "変更履歴",
-      "noTranslation": "翻訳がありません",
-      "newUpdate": "最近のアップデート"
     }
   },
   "raidInfo": {
@@ -371,15 +378,6 @@
     "count": "回数",
     "change": "増減",
     "emblemSummary": "合計{{counts}}件、設定率: {{rate}}%"
-  },
-  "language_banner": {
-    "message": "{{language}}を使用しているようです。言語を切り替えますか？",
-    "switch_button": "{{language}}に切り替え",
-    "dismiss_button": "閉じる",
-    "unsupported": {
-      "message": "ご希望の言語はサポートされていません。翻訳に貢献するか、別の言語を選択してください。",
-      "contribute_button": "GitHubで貢献する"
-    }
   },
   "calendar": {
     "title": "カレンダー及び未来時",

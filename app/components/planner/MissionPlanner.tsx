@@ -5,6 +5,7 @@ import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useTranslation } from 'react-i18next';
 import { ChevronIcon } from '../Icon';
 import type { Locale } from '~/utils/i18n/config';
+import bossData from '~/data/bossdata.json';
 
 export type MissionResult = {
   rewards: Record<string, number>;
@@ -21,12 +22,12 @@ interface MissionPlannerProps {
 type MissionType = 'DailyMission' | 'Achievement';
 
 const formatMissionDescription = (mission: Mission, allStages: (Stage & { type: string })[], locale: Locale): string => {
-  let desc = locale == 'ko' ? mission.Description.Kr : locale == 'ja' ? mission.Description.Jp : locale == 'en' ? mission.Description.En : mission.Description.Tw || mission.Description.Jp;
+  let desc = (locale == 'ko' ? mission.Description.Kr : locale == 'ja' ? mission.Description.Jp : locale == 'en' ? mission.Description.En : mission.Description.Tw) || mission.Description.Jp;
 
   desc = desc.replace('{2}', mission.CompleteConditionCount.toString());
 
   // {1}, {0} -> Replace with Stage Information
-  const stageIdParam = mission?.CompleteConditionParameter?.find((p) => p > 20000);
+  const stageIdParam = mission?.CompleteConditionParameter?.find((p) => Number(p) > 20000);
   if (stageIdParam) {
     const stageInfo = allStages.find((s) => s.Id === stageIdParam);
     if (stageInfo) {
@@ -44,7 +45,12 @@ const formatMissionDescription = (mission: Mission, allStages: (Stage & { type: 
   }
 
   // e.g., "Complete {0} or more challenge missions")
-  desc = desc.replace('{0}', mission.CompleteConditionCount.toString());
+  if (mission?.CompleteConditionType == 186) {
+    const bossName = String(mission.CompleteConditionParameter?.[2]);
+    desc = desc.replace('{0}', (bossData as any)[bossName]?.name[locale] || '?');
+  } else {
+    desc = desc.replace('{0}', mission.CompleteConditionCount.toString());
+  }
 
   return desc;
 };
@@ -67,7 +73,7 @@ export const MissionPlanner = ({ eventId, eventData, iconData, allStages, onCalc
       } else if (mission.CategoryStr === 'EventAchievement') {
         types[mission.Id] = 'Achievement';
       } else if (mission.CategoryStr === 'EventFixed') {
-        const dependencies = mission.CompleteConditionParameter.filter((p) => p > 20000);
+        const dependencies = mission.CompleteConditionParameter.filter((p) => Number(p) > 20000);
         if (dependencies.length > 0 && dependencies.every((depId) => missionData.find((m) => m.Id === depId)?.CategoryStr === 'Daily')) {
           types[mission.Id] = 'DailyMission'; // If all sub missions are "Daily Mission", this is also "Daily Mission"
         } else {

@@ -5,7 +5,7 @@ import type { GameServer, RaidInfo } from '~/types/data';
 import type { ReportEntry } from './common';
 import { TerrainIconGameStyle, type Terrain } from '../teran';
 import { getMostDifficultLevel, type_translation, typecolor } from '../raidToString';
-import type { Locale } from '~/utils/i18n/config';
+import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { DownloadButton } from './DownloadButton';
 import { YouTubeSearchGenerator } from './YouTubeSearchGenerator';
 
@@ -50,7 +50,7 @@ export default function RaidHeader({ raidInfo, server, isGrandAssault, allData, 
 
         {showType && raidInfo.Type && (
           <p className="text-2xl font-bold mt-2" style={{ color: typecolor[raidInfo.Type] }}>
-            {type_translation[raidInfo.Type][i18n.language as Locale]}
+            {type_translation[raidInfo.Type][getLocaleShortName(i18n.language as Locale)]}
           </p>
         )}
 

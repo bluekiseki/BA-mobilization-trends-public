@@ -16,7 +16,8 @@ async function main() {
       // Here we only want to detect the language from the html tag
       // since the middleware already detected the language server-side
       load: 'currentOnly',
-      ns: ['home', 'common'],
+      // ns: ['home', 'common'],
+      ns: ['common'],
       detection: { order: ['htmlTag'], caches: [] },
       // Update this to the path where your locales will be served
       backend: { loadPath: '/api/locales/{{lng}}/{{ns}}' },

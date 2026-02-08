@@ -1,6 +1,6 @@
 // src/components/CardShopPlanner.tsx
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { ItemIcon } from '../common/Icon';
 import type { CardShopItem, EventData, IconData } from '~/types/plannerData';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
@@ -111,10 +111,10 @@ export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculate
   const { cardSimResult: simulationTotalResult, setCardSimResult: setSimulationTotalResult } = useEventSettings(eventId);
 
   const cardShopData = eventData.card_shop;
-  const refreshGroups = useMemo(() => {
-    if (!cardShopData) return [];
-    return [...new Set(cardShopData.map((c) => c.RefreshGroup))];
-  }, [cardShopData]);
+  // const refreshGroups = useMemo(() => {
+  //   if (!cardShopData) return [];
+  //   return [...new Set(cardShopData.map((c) => c.RefreshGroup))];
+  // }, [cardShopData]);
 
   if (!config) return;
 

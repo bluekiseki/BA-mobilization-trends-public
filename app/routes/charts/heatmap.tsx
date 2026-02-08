@@ -32,27 +32,13 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
 
   return {
-    siteTitle: i18n.t('home:title'),
-    title: i18n.t('navigation:heatmap'),
+    siteTitle: i18n.t('common:title'),
+    title: i18n.t('common:navigation.heatmap'),
     description: i18n.t('charts:heatmap.description1'),
     server: g_server,
   };
 }
 
-// export const meta: MetaFunction<typeof rootLorder, {
-//   "root": typeof rootLorder,
-// }> = ({matches}) => {
-//   matches.find(m => m.id)
-//   const rootMatch = matches.find(m => m.id === "root");
-//   const locale_data = rootMatch ? rootMatch.loaderData : null;
-//   const locale = locale_data ? locale_data.locale : DEFAULT_LOCALE;
-
-//   // let { t } = useTranslation(undefined, { keyPrefix: 'home' });
-//   // let { t:t_nav } = useTranslation(undefined, { keyPrefix: 'layout-nav' });
-//   // let { t:t_ranking } = useTranslation(undefined, { keyPrefix: 'charts.heatmap' });
-//   const t = i18n.getFixedT("home");
-//   const t_nav = i18n.getFixedT("navigation");
-//   const t_heatmap = i18n.getFixedT(locale, undefined, 'charts.heatmap');
 export function meta({ loaderData }: Route.MetaArgs) {
   return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/2.webp');
 }

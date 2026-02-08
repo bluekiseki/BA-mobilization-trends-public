@@ -7,7 +7,7 @@ import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { getDifficultyFromScoreAndBoss } from '../Difficulty';
 import { type_translation } from '../raidToString';
 import { useTranslation } from 'react-i18next';
-import type { Locale } from '~/utils/i18n/config';
+import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 
 // --- Type Definitions ---
 interface TotalRankEntry {
@@ -38,7 +38,7 @@ const BossTeamDetails: FC<{
 }> = ({ entry, bossName, raidInfo, server, studentData, portraitData }) => {
   if (!entry || !raidInfo) return null;
 
-  const { t, i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation('dashboard');
   const locale = i18n.language as Locale;
 
   return (
@@ -46,7 +46,7 @@ const BossTeamDetails: FC<{
       <div className="flex justify-between items-start mb-2">
         {/* Boss Name & Difficulty */}
         <div>
-          <h4 className="font-bold text-blue-600 dark:text-blue-400">{type_translation[bossName as keyof typeof type_translation][locale]}</h4>
+          <h4 className="font-bold text-blue-600 dark:text-blue-400">{type_translation[bossName as keyof typeof type_translation][getLocaleShortName(locale)]}</h4>
           <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{getDifficultyFromScoreAndBoss(entry.s, server, raidInfo.Id).toUpperCase()}</span>
         </div>
         {/* Score & Time */}

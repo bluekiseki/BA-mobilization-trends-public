@@ -8,9 +8,9 @@ export default function ContactButton({ children }: { children: string }) {
       setLoading(true);
 
       const response = await fetch('/api/contract');
-      const json = await response.json();
+      const json = (await response.json()) as any;
 
-      if (!json.data) throw new Error('Error');
+      if (!json?.data) throw new Error('Error');
 
       const email = atob(json.data);
 

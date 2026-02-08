@@ -1,12 +1,4 @@
 {
-  "currentLocale": "ko",
-  "navigation": {
-    "heatmap": "동향",
-    "ranking": "순위",
-    "home": "홈",
-    "dashboard": "대시보드",
-    "planner": "플래너"
-  },
   "common": {
     "greeting": "안녕하세요!",
     "about": "소개",
@@ -37,13 +29,50 @@
     "limited": "한정",
     "clear": "클리어",
     "period": "기간",
-    "jfd": "종합전술시험"
-  },
-  "LocaleSwitcher": {
-    "en": "영어",
-    "ko": "한국어",
-    "ja": "일본어",
-    "label": "label"
+    "jfd": "종합전술시험",
+    "title": "유즈 Trends",
+    "site-title": "유즈 Trends",
+    "site-title_old": "유즈 Trends | 블루아카 출전동향",
+    "description_old": "\"블루 아카이브\" 국내·일본 서버의 총력전·대결전 편성 통계",
+    "description": "넥슨게임즈가 개발한 모바일 게임 \"블루 아카이브\"의 공략을 위한 비공식 데이터베이스",
+    "btn1-go": "학생별 차트 보기",
+    "btn2-go": "순위 차트 보기",
+    "btn1": "학생별 차트",
+    "btn2": "순위 차트",
+    "last-update": "데이터 시점:",
+    "js-disable": "JavaScript 비활성화됨",
+    "js-disable-description": "이 페이지는 JavaScript가 필수적입니다. 웹사이트의 주요 기능을 사용하려면 브라우저 설정을 확인하여 JavaScript를 활성화해주세요.",
+    "404_not_found": "Page Not Found",
+    "dashboard-btn": "총력전·대결전 대시보드",
+    "dashboard-btn-go": "총력전·대결전 대시보드 보기",
+    "changelog": {
+      "title": "변경사항",
+      "noTranslation": "번역 없음",
+      "newUpdate": "최근 업데이트"
+    },
+    "currentLocale": "ko",
+    "navigation": {
+      "heatmap": "동향",
+      "ranking": "순위",
+      "home": "홈",
+      "dashboard": "대시보드",
+      "planner": "플래너"
+    },
+    "LocaleSwitcher": {
+      "en": "영어",
+      "ko": "한국어",
+      "ja": "일본어",
+      "label": "label"
+    },
+    "language_banner": {
+      "message": "{{language}}를 사용하시는 것 같습니다. 언어를 변경하시겠습니까?",
+      "switch_button": "{{language}}로 변경",
+      "dismiss_button": "닫기",
+      "unsupported": {
+        "message": "선호하시는 언어가 지원되지 않습니다. 번역에 기여하거나 다른 언어를 선택할 수 있습니다.",
+        "contribute_button": "GitHub에서 기여하기"
+      }
+    }
   },
   "charts": {
     "ranking": {
@@ -128,28 +157,6 @@
         "rank": "순위:",
         "desp_chart": "그래프를 탭하면 상세 정보를 확인할 수 있습니다."
       }
-    }
-  },
-  "home": {
-    "title": "유즈 Trends",
-    "site-title": "유즈 Trends",
-    "site-title_old": "유즈 Trends | 블루아카 출전동향",
-    "description_old": "\"블루 아카이브\" 국내·일본 서버의 총력전·대결전 편성 통계",
-    "description": "넥슨게임즈가 개발한 모바일 게임 \"블루 아카이브\"의 공략을 위한 비공식 데이터베이스",
-    "btn1-go": "학생별 차트 보기",
-    "btn2-go": "순위 차트 보기",
-    "btn1": "학생별 차트",
-    "btn2": "순위 차트",
-    "last-update": "데이터 시점:",
-    "js-disable": "JavaScript 비활성화됨",
-    "js-disable-description": "이 페이지는 JavaScript가 필수적입니다. 웹사이트의 주요 기능을 사용하려면 브라우저 설정을 확인하여 JavaScript를 활성화해주세요.",
-    "404_not_found": "Page Not Found",
-    "dashboard-btn": "총력전·대결전 대시보드",
-    "dashboard-btn-go": "총력전·대결전 대시보드 보기",
-    "changelog": {
-      "title": "변경사항",
-      "noTranslation": "번역 없음",
-      "newUpdate": "최근 업데이트"
     }
   },
   "raidInfo": {
@@ -365,15 +372,6 @@
     "count": "횟수",
     "change": "증감",
     "emblemSummary": "총 {{counts}}건, 설정률: {{rate}}%"
-  },
-  "language_banner": {
-    "message": "{{language}}를 사용하시는 것 같습니다. 언어를 변경하시겠습니까?",
-    "switch_button": "{{language}}로 변경",
-    "dismiss_button": "닫기",
-    "unsupported": {
-      "message": "선호하시는 언어가 지원되지 않습니다. 번역에 기여하거나 다른 언어를 선택할 수 있습니다.",
-      "contribute_button": "GitHub에서 기여하기"
-    }
   },
   "calendar": {
     "title": "일정 캘린더 및 미래시",

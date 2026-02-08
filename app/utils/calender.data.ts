@@ -261,7 +261,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
             link = `/dashboard/jp/R${item.season + 3}`;
           }
         }
-        const label = t_com('raid');
+        const label = String(t_com('raid'));
 
         addItem('raid', {
           id: `raid-${item.season}`,
@@ -313,7 +313,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
             link = `/dashboard/jp/E${item.season}`;
           }
         }
-        const label = t_com('eraid');
+        const label = String(t_com('eraid'));
 
         addItem('raid', {
           id: `eraid-${item.season}`,
@@ -336,7 +336,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
     parseCsvString<any>(sources.jfd).forEach((item) => {
       if (item.startTime) {
         const armorKo = (armorTypeTranslation as any)[item.armorType]?.[locale] || item.armorType;
-        const label = t_com('jfd') || 'JFD';
+        const label = String(t_com('jfd') || 'JFD');
 
         addItem('raid', {
           id: `jfd-${item.season}`,

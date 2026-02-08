@@ -26,7 +26,8 @@ const getNativeLanguageName = (locale: string) => {
 };
 
 export function LanguageBanner({ bannerData, onDismiss }: Props) {
-  const { i18n } = useTranslation('language_banner', {
+  const { i18n } = useTranslation('common', {
+    keyPrefix: 'language_banner',
     lng: bannerData.displayLocale,
   });
 
@@ -34,7 +35,7 @@ export function LanguageBanner({ bannerData, onDismiss }: Props) {
   // Display the banner text not in the current page language (locale)
   // but in the preferred language detected by the server (displayLocale)
 
-  const t = i18n.getFixedT(bannerData.displayLocale, 'language_banner'); // Assuming 'common' namespace
+  const t = i18n.getFixedT(bannerData.displayLocale, 'common', 'language_banner'); // Assuming 'common' namespace
   // console.log('bannerData.displayLocale', bannerData.displayLocale, t("message"))
 
   const languageName = bannerData.suggestedLocale ? getNativeLanguageName(bannerData.suggestedLocale) : '';

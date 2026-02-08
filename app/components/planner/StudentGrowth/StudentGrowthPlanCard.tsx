@@ -285,15 +285,41 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
   ];
 
   return (
-    <div className="flex flex-col bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-gray-100 dark:border-neutral-800 overflow-hidden transition-all duration-200">
-      {/* 1. Header Area */}
-      <div className="relative z-20">
-        <div className="absolute top-0 left-0 bottom-0 w-1" style={{ backgroundColor: bulletColor }} />
+    <div className="flex flex-col bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-800 overflow-hidden transition-all duration-200">
+      {/* 1. macOS Style Top Header (Compact) */}
+      <div className="relative">
+        {/* Top accent border: uses the provided bulletColor */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] z-10" style={{ backgroundColor: bulletColor || '#3b82f6' }} />
 
-        {/* Top Row: Portrait, Select, Delete/Close */}
-        <div className="flex items-center gap-3 p-3 pl-4 bg-white dark:bg-neutral-900">
-          {/* Portrait */}
-          <div className="relative shrink-0">
+        <div className="flex items-center justify-between px-3 pt-3 pb-2 bg-gray-50/50 dark:bg-neutral-800/30">
+          {/* Left: macOS Signal Colors with Permanent Icons */}
+          <div className="flex items-center gap-2">
+            {/* Delete Button (Yellow/Amber) */}
+            <button
+              onClick={() => {
+                if (confirm(t('common.confirmRemove'))) removePlan(plan.uuid);
+              }}
+              className="w-5 h-5 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 flex items-center justify-center text-white transition-colors "
+              title={t('common.remove')}
+            >
+              <FiTrash2 size={11} strokeWidth={2.5} />
+            </button>
+            {/* Close Button (Red) */}
+            <button onClick={onClose} className="w-5 h-5 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center text-[#926600] transition-colors " title={t('common.close')}>
+              <FiX size={11} strokeWidth={2.5} />
+            </button>
+          </div>
+
+          {/* Right: Status Badge or Student ID */}
+          {plan.studentId && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200/50 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400">ID: {plan.studentId}</div>}
+        </div>
+      </div>
+
+      {/* 2. Main Content Area (Dropdown focused) */}
+      <div className="px-4 pb-4">
+        <div className="flex items-center gap-4">
+          {/* Portrait: Keep portrait image small to save space */}
+          <div className="shrink-0">
             {plan.studentId && studentPortraits[plan.studentId] ? (
               <div className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-50 dark:ring-neutral-800 shrink-0 overflow-hidden" style={{ backgroundColor: bulletColor || '#f3f4f6' }}>
                 <img src={`data:image/webp;base64,${studentPortraits[plan.studentId]}`} className="w-full h-full object-cover" alt="" />
@@ -303,44 +329,29 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
             )}
           </div>
 
-          {/* Student Selector */}
-          <div className="flex-1 min-w-0">
+          {/* Student Search Dropdown: Secure maximum horizontal width */}
+          <div className="flex-1 min-w-0 text-xs">
             <StudentSearchDropdown students={allStudents} selectedStudentId={plan.studentId} setSelectedStudentId={(id) => handlePlanChange('studentId', Number(id))} />
-          </div>
-
-          {/* Window Controls (Delete & Close) */}
-          <div className="flex items-center gap-1 pl-2 border-l border-gray-100 dark:border-neutral-800">
-            <button
-              onClick={() => {
-                // if (confirm(t('common.confirmRemove')))
-                removePlan(plan.uuid);
-              }}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              title={t('common.remove')}
-            >
-              <FiTrash2 size={18} />
-            </button>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800" title={t('common.close')}>
-              <FiX size={18} />
-            </button>
           </div>
         </div>
 
-        {/* Action Row: 4 Visible Buttons with Descriptions */}
+        {/* 3. Action Buttons Grid */}
         {studentInfo && (
-          <div className="px-3 pb-3">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="mt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {globalActions.map((btn) => (
                 <button
                   key={btn.action}
                   onClick={() => handleGlobalAction(btn.action)}
-                  className={`flex flex-col items-start p-2 rounded-lg border transition-all active:scale-[0.98] ${btn.colorClass}`}
+                  className={`
+                    flex flex-col items-center justify-center p-3 rounded-xl border
+                    transition-all active:scale-[0.95] hover:shadow-sm
+                    ${btn.colorClass}
+                  `}
                 >
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    {btn.icon}
-                    <span className="text-xs font-bold">{btn.label}</span>
-                  </div>
-                  <span className="text-[10px] opacity-80 leading-tight text-left break-keep">{btn.desc}</span>
+                  {btn.icon}
+                  <span className="text-[11px] font-bold mt-1">{btn.label}</span>
+                  <span className="text-[9px] opacity-70 mt-0.5 text-center  italic">{btn.desc}</span>
                 </button>
               ))}
             </div>

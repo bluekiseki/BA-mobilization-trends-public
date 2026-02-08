@@ -1,3 +1,4 @@
+// app/root.tsx
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, data, redirect } from 'react-router';
 
 import type { Route } from './+types/root';

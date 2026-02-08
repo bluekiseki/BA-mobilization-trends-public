@@ -17,7 +17,7 @@
       "zh_Hant": "霍刻瑪"
     },
     "teran": "Outdoor",
-    "armorType": "LightArmor"
+    "armorType": "Unarmed"
   },
   "EN0010": {
     "name": {
@@ -66,7 +66,7 @@
       "en": "Hieronymus",
       "zh_Hant": "耶羅尼姆斯"
     },
-    "teran": "Street",
+    "teran": "Indoor",
     "armorType": "LightArmor"
   },
   "Binah": {
@@ -77,7 +77,7 @@
       "zh_Hant": "薇娜"
     },
     "teran": "Street",
-    "armorType": "LightArmor"
+    "armorType": "HeavyArmor"
   },
   "Kaitenger": {
     "name": {
@@ -96,7 +96,7 @@
       "ja": "グレゴリオ",
       "zh_Hant": "葛利果"
     },
-    "teran": "Street",
+    "teran": "Indoor",
     "armorType": "LightArmor"
   },
   "Perorozilla": {
@@ -106,7 +106,7 @@
       "ja": "ペロロジラ",
       "zh_Hant": "佩洛洛吉拉"
     },
-    "teran": "Street",
+    "teran": "Indoor",
     "armorType": "Unarmed"
   },
   "Perorozilla_Outdoor": {
@@ -136,8 +136,8 @@
       "en": "HoverCraft",
       "zh_Hant": "氣墊船"
     },
-    "teran": "Street",
-    "armorType": "LightArmor"
+    "teran": "Outdoor",
+    "armorType": "HeavyArmor"
   },
   "Chesed": {
     "name": {
@@ -147,7 +147,7 @@
       "zh_Hant": "赫賽德"
     },
     "teran": "Street",
-    "armorType": "LightArmor"
+    "armorType": "HeavyArmor"
   },
   "Goz": {
     "name": {
@@ -167,7 +167,17 @@
       "zh_Hant": "霍德"
     },
     "teran": "Street",
-    "armorType": "LightArmor"
+    "armorType": "HeavyArmor"
+  },
+  "Hod": {
+    "name": {
+      "ko": "호드",
+      "ja": "ホド",
+      "en": "HOD",
+      "zh_Hant": "霍德"
+    },
+    "teran": "Street",
+    "armorType": "HeavyArmor"
   },
   "EN0006": {
     "name": {
@@ -178,5 +188,25 @@
     },
     "teran": "Street",
     "armorType": "ElasticArmor"
+  },
+  "Kether": {
+    "name": {
+      "ko": "케테르",
+      "ja": "ケテル",
+      "en": "Kether",
+      "zh_Hant": "凱瑟"
+    },
+    "teran": "Street",
+    "armorType": "HeavyArmor"
+  },
+  "EN0015": {
+    "name": {
+      "ko": "말쿠트",
+      "ja": "マルクト",
+      "en": "Malkuth",
+      "zh_Hant": "Malkuth"
+    },
+    "teran": "Street",
+    "armorType": "Normal"
   }
 }

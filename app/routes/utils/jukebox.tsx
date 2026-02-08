@@ -169,25 +169,12 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   return data({
     locale,
-    site_title: i18n.t('home:title'),
+    site_title: i18n.t('common:title'),
     title: i18n.t('jukebox:title'),
     description: i18n.t('jukebox:description'),
   });
 }
-
-// export const meta: MetaFunction<typeof rootLorder, {
-//     "root": typeof rootLorder,
-// }> = ({ matches, params }) => {
-//     matches.find(m => m.id)
-//     const rootMatch = matches.find(m => m.id === "root");
-//     const locale_data = rootMatch ? rootMatch.loaderData : null;
-//     const locale = locale_data ? locale_data.locale : DEFAULT_LOCALE;
-
-//     const t = i18n.getFixedT(locale, undefined, 'home');
-
 export function meta({ loaderData }: Route.MetaArgs) {
-  // const language = { ja: 'jp', ko: 'ko', en: 'en', 'zh-Hant': 'zh_Hant' }[loaderData.locale] as Language;
-
   return createMetaDescriptor(loaderData.title + ' | ' + loaderData.site_title, loaderData.description, '/img/j.webp');
 }
 export const handle: AppHandle = {

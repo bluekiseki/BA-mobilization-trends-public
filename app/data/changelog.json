@@ -1,5 +1,13 @@
 [
   {
+    "date": "2026-02-07",
+    "changes": {
+      "en": ["Added Favor Rank Status"],
+      "ko": ["인연 칭호 설정 현황 추가"],
+      "ja": ["絆ランク称号の状況追加"]
+    }
+  },
+  {
     "date": "2026-01-13",
     "changes": {
       "en": ["Updated 'Student Growth Planner' UI", "Fixed an issue where 'Equipment Planner' was not working"],

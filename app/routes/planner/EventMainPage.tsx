@@ -19,7 +19,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   const locale = i18n.language as Locale;
   return data({
     locale,
-    siteTitle: i18n.t('home:title'),
+    siteTitle: i18n.t('common:title'),
     title: i18n.t('planner:page.eventPlanner'),
     description: i18n.t('planner:page.plannerescription'),
     rerun: i18n.t('planner:common.rerun'),

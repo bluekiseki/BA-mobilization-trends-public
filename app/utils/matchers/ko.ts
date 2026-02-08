@@ -3,7 +3,7 @@ import { disassemble, getChoseong } from 'es-hangul';
 export default function match(target: string, query: string): boolean {
   if (!target || !query) return false;
 
-  const t = target.trim(); 
+  const t = target.trim();
   const q = query.trim();
 
   // 1. [Basic] Match full characters (Fastest)

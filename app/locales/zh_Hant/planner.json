@@ -407,7 +407,7 @@
     "btnResetTargets": "Reset Goals",
     "btnMaxTargets": "Goal Max",
     "btnMaxAll": "Max Growth",
-    "tooltipMinAll": "Reset current status and targets to minimum values (Lv.1).",
+    "tooltipMinAll": "Reset current status and targets to minimum values.",
     "tooltipResetTargets": "Set targets equal to current status.",
     "tooltipMaxTargets": "Set only targets to maximum values.",
     "tooltipMaxAll": "Set both current status and targets to maximum values."
@@ -427,20 +427,24 @@
     "levelLockWarning": "Target level is too low to equip this tier."
   },
   "affectionTab": {
-    "rank": "好感度等級：",
-    "currentLevelProgress": "當前等級進度：",
-    "ownedGiftsTitle": "輸入擁有的禮物",
-    "reset": "重置",
-    "resetConfirm": "您確定要重置所有擁有的禮物數量嗎？",
-    "showPreferredOnly": "僅顯示偏好禮物",
-    "calculateWithOwned": "根據擁有的禮物計算",
-    "results": {
-      "achievableLevel": "利用擁有的禮物，可以達到Lv.{{level}} ({{progressExp}}/{{expForLevel}})",
-      "targetMet": "目標達成！",
-      "targetMetWithOwned": "✅ 利用擁有的禮物，可以達成目標！ (多餘 {{surplusExp}} 經驗值)",
-      "deficit": "禮物不足！ (需要 {{deficitExp}} 經驗值)",
-      "cafeTouches": "{{counts}} 次咖啡廳互動",
-      "or": "或"
+    "result": {
+      "title": "模擬結果",
+      "success": "達成目標",
+      "missing": "經驗值不足",
+      "expGap": "經驗值差距",
+      "cafe": "咖啡廳互動",
+      "schedule": "日程安排",
+      "craftingNeeded": "所需製造次數",
+      "lowTierConversion": "低級材料轉換"
+    },
+    "labels": {
+      "current": "目前等級",
+      "target": "目標等級",
+      "choiceBox": "一般禮物自選匣"
+    },
+    "actions": {
+      "craftingFill": "轉換為偏好禮物",
+      "showPreferredOnly": "僅顯示偏好禮物"
     }
   },
   "potentialTab": {

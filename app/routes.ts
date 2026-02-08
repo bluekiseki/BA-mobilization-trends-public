@@ -1,28 +1,40 @@
-import { type RouteConfig, route } from '@react-router/dev/routes';
+// app/routes.ts
+import { type RouteConfig, route, index } from '@react-router/dev/routes';
 
 export default [
-  // index("routes/home.tsx"),
-  route(':locale?', './routes/home.tsx'),
-  route(':locale?/source', 'routes/licence.tsx'),
-  route(':locale?/charts/:server/heatmap', 'routes/charts/heatmap.tsx'),
-  route(':locale?/charts/:server/ranking', 'routes/charts/ranking.tsx'),
-  route(':locale?/charts/favor', 'routes/charts/favor.tsx'),
-  route(':locale?/dashboard/:server/', 'routes/dashboard/index.tsx'),
-
-  route(':locale?/dashboard/:server/:id/:type', 'routes/dashboard/$server.$id.$type.tsx'),
-  route(':locale?/dashboard/:server/:id', 'routes/dashboard/$server.$id.tsx'),
-
-  route(':locale?/planner/event', 'routes/planner/EventMainPage.tsx'),
-  route(':locale?/planner/event/:eventId', 'routes/planner/EventPage.tsx'),
-  route(':locale?/planner/students', 'routes/planner/Student.tsx'),
-  route(':locale?/planner/equipment', 'routes/planner/Equipment.tsx'),
-  route(':locale?/planner/gacha', 'routes/planner/Gacha.tsx'),
-  route(':locale?/utils/jukebox', 'routes/utils/jukebox.tsx'),
-
-  route(':locale?/live', 'routes/live/index.tsx'),
+  // 1. Routes that do not require a locale, such as APIs (placed at the top)
   route('/api/locales/:lng/:ns', 'routes/api/locales.ts'),
   route('/api/contract', 'routes/api/email.ts'),
-  route(':locale?/calendar/:server?', 'routes/calendar.tsx'),
 
+  // 2. Layout wrapping all routes that require locale processing
+  // Set path to ':locale?' so all child routes can receive the locale parameter
+  route(':locale?', 'routes/layout.tsx', [
+    index('routes/home.tsx'), // -> / or /ko
+    route('source', 'routes/licence.tsx'), // -> /source or /ko/source
+
+    // Charts
+    route('charts/:server/heatmap', 'routes/charts/heatmap.tsx'),
+    route('charts/:server/ranking', 'routes/charts/ranking.tsx'),
+    route('charts/favor', 'routes/charts/favor.tsx'),
+
+    // Dashboard
+    route('dashboard/:server/', 'routes/dashboard/index.tsx'),
+    route('dashboard/:server/:id/:type', 'routes/dashboard/$server.$id.$type.tsx'),
+    route('dashboard/:server/:id', 'routes/dashboard/$server.$id.tsx'),
+
+    // Planner
+    route('planner/event', 'routes/planner/EventMainPage.tsx'),
+    route('planner/event/:eventId', 'routes/planner/EventPage.tsx'),
+    route('planner/students', 'routes/planner/Student.tsx'),
+    route('planner/equipment', 'routes/planner/Equipment.tsx'),
+    route('planner/gacha', 'routes/planner/Gacha.tsx'),
+
+    // Others
+    route('utils/jukebox', 'routes/utils/jukebox.tsx'),
+    route('live', 'routes/live/index.tsx'),
+    route('calendar/:server?', 'routes/calendar.tsx'),
+  ]),
+
+  // 3. All other requests that do not match the conditions above (404)
   route('*', 'routes/404.tsx'),
 ] satisfies RouteConfig;

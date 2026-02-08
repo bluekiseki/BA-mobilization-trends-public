@@ -463,3 +463,7 @@ studentId,name,startTime,endTime,rerun,limited,fast,prediction
 10135,Kei (Battle),2026-01-29 11:00,2026-02-05 10:59,false,true,true
 10098,Hoshino (Battle),2026-01-29 11:00,2026-02-05 10:59,true,true,true
 10100,Shiroko＊Terror,2026-01-29 11:00,2026-02-05 10:59,true,true,true
+10077,Ichika,2026-02-05 11:00,2026-02-12 10:59,true,false,false
+10078,Kasumi,2026-02-05 11:00,2026-02-12 10:59,true,false,false
+10061,Sakurako,2026-02-05 11:00,2026-02-12 10:59,true,false,false
+20032,Eimi (Swimsuit),2026-02-05 11:00,2026-02-12 10:59,true,false,false

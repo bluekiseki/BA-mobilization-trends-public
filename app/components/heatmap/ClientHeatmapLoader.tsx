@@ -25,7 +25,7 @@ const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
     })),
   );
 
-  const { i18n } = useTranslation('currentLocale');
+  const { i18n } = useTranslation('common', { keyPrefix: 'currentLocale' });
   const currentLocale = i18n.language as Locale;
 
   useEffect(() => {

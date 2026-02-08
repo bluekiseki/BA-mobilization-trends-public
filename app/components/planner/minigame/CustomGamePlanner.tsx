@@ -154,7 +154,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
       const data = eventData?.icons?.[item.type as keyof IconInfos]?.[item.id];
       const nameData = data && ('LocalizeEtc' in data ? data.LocalizeEtc : undefined);
 
-      const name = getLocalizeEtcName(nameData, locale) || ''; //(locale === 'ko' ? nameData?.NameKr : (locale == 'en' ? (nameData?.NameEn || nameData?.NameJp) : (nameData?.NameJp))) || '';
+      const name = getLocalizeEtcName(nameData, locale) || '';
       return name.toLowerCase().includes(lowerCaseQuery);
     });
   }, [isSelecting, searchQuery, farmingItemsForCost, prioritizedItems, iconData, locale]);

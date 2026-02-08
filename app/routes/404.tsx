@@ -7,7 +7,7 @@ export async function loader({ params }: Route.ActionArgs) {
 }
 
 export default function NoMatch() {
-  const { t } = useTranslation('home');
+  const { t } = useTranslation('common');
   return (
     <main className="pt-16 p-4 container mx-auto">
       <h1>404</h1>

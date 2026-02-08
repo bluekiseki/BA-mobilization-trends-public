@@ -30,7 +30,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   // ... (loader logic is ) ...
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
-  const siteTitle = i18n.t('home:title');
+  const siteTitle = i18n.t('common:title');
   const title: string = i18n.t('planner:page.equipmentFarmingPlanner', 'Equipment Farming Planner');
   const description: string = i18n.t('planner:page.description.equipmentFarmingPlanner');
 

@@ -427,20 +427,35 @@
     "levelLockWarning": "Target level is too low to equip this tier."
   },
   "affectionTab": {
-    "rank": "Affection Rank:",
-    "currentLevelProgress": "Current Level Progress:",
-    "ownedGiftsTitle": "Enter Owned Gifts",
-    "reset": "Reset",
-    "resetConfirm": "Are you sure you want to reset all owned gift quantities?",
-    "showPreferredOnly": "Show Preferred Only",
-    "calculateWithOwned": "Calculate based on owned gifts",
-    "results": {
-      "achievableLevel": "With owned gifts, can reach Lv.{{level}} ({{progressExp}}/{{expForLevel}})",
-      "targetMet": "Target achieved!",
-      "targetMetWithOwned": "✅ Target can be achieved with owned gifts! ({{surplusExp}} EXP surplus)",
-      "deficit": "Not enough gifts! ({{deficitExp}} EXP needed)",
-      "cafeTouches": "{{counts}} Cafe Pats",
-      "or": "or"
+    "result": {
+      "title": "Simulation",
+      "success": "Success",
+      "missing": "Missing",
+      "expGap": "Exp Gap",
+      "cafe": "Cafe",
+      "schedule": "Schedule",
+      "craftingNeeded": "Crafting Needed",
+      "lowTierConversion": "Low-Tier Conversion"
+    },
+    "labels": {
+      "current": "Current",
+      "target": "Target",
+      "choiceBox": "Choice Box"
+    },
+    "actions": {
+      "craftingFill": "Convert to Favorite Gifts",
+      "showPreferredOnly": "Preferred Only"
+    },
+    "item": {
+      "need": "Need {{counts}}"
+    },
+    "units": {
+      "taps": "taps",
+      "runs": "runs",
+      "times": "times"
+    },
+    "messages": {
+      "noItems": "No items found."
     }
   },
   "potentialTab": {

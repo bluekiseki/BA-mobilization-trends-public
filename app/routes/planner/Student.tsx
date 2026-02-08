@@ -28,7 +28,7 @@ import { PlannerJsonExchange } from '~/components/planner/StudentGrowth/PlannerJ
 export async function loader({ context }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
   return data({
-    siteTitle: i18n.t('home:title'),
+    siteTitle: i18n.t('common:title'),
     title: i18n.t('planner:page.studentGrowthPlanner'),
     description: i18n.t('planner:page.description.studentGrowthPlanner'),
   });
@@ -168,7 +168,7 @@ export const StudentPlannerPage = () => {
 
   if (selectedPlanUuid && selectedPlan) {
     return (
-      <div className="bg-gray-100 dark:bg-neutral-900 min-h-screen p-4">
+      <div className="bg-gray-100 dark:bg-neutral-900 min-h-screen p-2 md:p-4">
         <div className="max-w-5xl mx-auto">
           <button onClick={() => setSelectedPlanUuid(null)} className="flex items-center gap-2 mb-4 text-gray-600 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">
             <FaArrowLeft size={14} />

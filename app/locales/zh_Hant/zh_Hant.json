@@ -1,12 +1,4 @@
 {
-  "currentLocale": "zh_Hant",
-  "navigation": {
-    "heatmap": "熱圖",
-    "ranking": "排名",
-    "home": "首頁",
-    "dashboard": "儀表板",
-    "planner": "規劃器"
-  },
   "common": {
     "greeting": "你好!",
     "about": "關於",
@@ -37,14 +29,52 @@
     "limited": "限時",
     "clear": "清除",
     "period": "期間",
-    "jdf": "綜合戰術考試"
-  },
-  "LocaleSwitcher": {
-    "en": "英文",
-    "ko": "韓文",
-    "ja": "日文",
-    "zh-Hant-TW": "繁體中文",
-    "label": "label"
+    "jdf": "綜合戰術考試",
+    "title": "柚子 Trends",
+    "site-title": "柚子 Trends",
+    "site-title_old": "Yuzu Trends | Blue Archive Mobilization Info",
+    "description_old": "Visualizing mobilization trends in Platinum Trophy on the \"Blue Archive\" JP & KR Server",
+    "description": "粉絲製作的資料庫，專為由Nexon Games開發的手機遊戲「蔚藍檔案」而設。",
+    "btn1-go": "查看趨勢圖",
+    "btn2-go": "查看排名圖",
+    "btn1": "趨勢圖",
+    "btn2": "排名圖",
+    "last-update": "最後資料更新：",
+    "js-disable": "JavaScript 已停用",
+    "js-disable-description": "此網站需要啟用 JavaScript 才能正常運作。請在瀏覽器設定中啟用 JavaScript 後繼續使用。",
+    "404_not_found": "找不到頁面",
+    "dashboard-btn": "儀表板",
+    "dashboard-btn-go": "查看儀表板",
+    "changelog": {
+      "title": "更新日誌",
+      "noTranslation": "無可用翻譯",
+      "newUpdate": "最新更新"
+    },
+    "currentLocale": "zh_Hant",
+    "navigation": {
+      "heatmap": "熱圖",
+      "ranking": "排名",
+      "home": "首頁",
+      "dashboard": "儀表板",
+      "planner": "規劃器"
+    },
+    "LocaleSwitcher": {
+      "en": "英文",
+      "ko": "韓文",
+      "ja": "日文",
+      "zh-Hant-TW": "繁體中文",
+      "label": "label"
+    },
+
+    "language_banner": {
+      "message": "看起來您使用的是 {{language}}。是否要切換？",
+      "switch_button": "切換到 {{language}}",
+      "dismiss_button": "關閉",
+      "unsupported": {
+        "message": "您偏好的語言尚未支援。您可以協助翻譯或選擇其他語言。",
+        "contribute_button": "在 GitHub 上貢獻"
+      }
+    }
   },
   "charts": {
     "ranking": {
@@ -131,28 +161,6 @@
         "rank": "排名:",
         "desp_chart": "將滑鼠懸停在圖表上以查看詳細資訊。"
       }
-    }
-  },
-  "home": {
-    "title": "柚子 Trends",
-    "site-title": "柚子 Trends",
-    "site-title_old": "Yuzu Trends | Blue Archive Mobilization Info",
-    "description_old": "Visualizing mobilization trends in Platinum Trophy on the \"Blue Archive\" JP & KR Server",
-    "description": "粉絲製作的資料庫，專為由Nexon Games開發的手機遊戲「蔚藍檔案」而設。",
-    "btn1-go": "查看趨勢圖",
-    "btn2-go": "查看排名圖",
-    "btn1": "趨勢圖",
-    "btn2": "排名圖",
-    "last-update": "最後資料更新：",
-    "js-disable": "JavaScript 已停用",
-    "js-disable-description": "此網站需要啟用 JavaScript 才能正常運作。請在瀏覽器設定中啟用 JavaScript 後繼續使用。",
-    "404_not_found": "找不到頁面",
-    "dashboard-btn": "儀表板",
-    "dashboard-btn-go": "查看儀表板",
-    "changelog": {
-      "title": "更新日誌",
-      "noTranslation": "無可用翻譯",
-      "newUpdate": "最新更新"
     }
   },
   "raidInfo": {
@@ -368,15 +376,6 @@
     "count": "計數",
     "change": "變化",
     "emblemSummary": "總共 {{counts}} 次出現，比例：{{rate}}%"
-  },
-  "language_banner": {
-    "message": "看起來您使用的是 {{language}}。是否要切換？",
-    "switch_button": "切換到 {{language}}",
-    "dismiss_button": "關閉",
-    "unsupported": {
-      "message": "您偏好的語言尚未支援。您可以協助翻譯或選擇其他語言。",
-      "contribute_button": "在 GitHub 上貢獻"
-    }
   },
   "calendar": {
     "title": "日曆和未來預測",

@@ -57,5 +57,5 @@ export async function loader({ params }: Route.LoaderArgs) {
     );
   }
 
-  return data(namespaces[ns.data], { headers });
+  return data((namespaces as any)[ns.data], { headers });
 }

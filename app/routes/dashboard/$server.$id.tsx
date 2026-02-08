@@ -115,7 +115,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
     locale,
     title: i18n.t('dashboard:shorttitle'),
     description: i18n.t('dashboard:description1'),
-    siteTitle: i18n.t('home:title'),
+    siteTitle: i18n.t('common:title'),
     raidType: isRaid ? i18n.t('common:raid') : i18n.t('common:eraid'),
     raidInfos,
     server: server as GameServer,
@@ -175,7 +175,7 @@ export default function RaidDetailsPage() {
   // Loading common data (student info, etc.)
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json())])
+    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as any)])
       .then(([studentJson, portraitJson]) => {
         setStudentData(studentJson);
         setPortraitData(portraitJson);

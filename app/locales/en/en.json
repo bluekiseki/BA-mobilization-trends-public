@@ -1,12 +1,4 @@
 {
-  "currentLocale": "en",
-  "navigation": {
-    "heatmap": "Trending",
-    "ranking": "Ranking",
-    "home": "Home",
-    "dashboard": "Board",
-    "planner": "Planner"
-  },
   "common": {
     "greeting": "Hello!",
     "about": "About",
@@ -37,13 +29,51 @@
     "limited": "Limited",
     "clear": "Clear",
     "period": "Period",
-    "jfd": "Joint Firing Drill"
-  },
-  "LocaleSwitcher": {
-    "en": "English",
-    "ko": "Korean",
-    "ja": "Japanese",
-    "label": "label"
+    "jfd": "Joint Firing Drill",
+    "title": "Yuzu Trends",
+    "site-title": "Yuzu Trends",
+    "site-title_old": "Yuzu Trends | Blue Archive Mobilization Info",
+    "description_old": "Visualizing mobilization trends in Platinum Trophy on the \"Blue Archive\" JP & KR Server",
+    "description": "A fan-made database for mobile game \"Blue Archive\" developed by Nexon Games",
+    "btn1-go": "View Trending Chart",
+    "btn2-go": "View Ranking Chart",
+    "btn1": "Trending Chart",
+    "btn2": "Ranking Chart",
+    "last-update": "Last data update:",
+    "js-disable": "JavaScript Disabled",
+    "js-disable-description": "This website requires JavaScript to function properly. Please enable it in your browser settings to continue.",
+    "404_not_found": "Page Not Found",
+    "dashboard-btn": "Assault Dashboard",
+    "dashboard-btn-go": "View Assault Dashboard",
+    "changelog": {
+      "title": "Changelog",
+      "noTranslation": "No translation available",
+      "newUpdate": "Recent updates"
+    },
+    "currentLocale": "en",
+    "navigation": {
+      "heatmap": "Trending",
+      "ranking": "Ranking",
+      "home": "Home",
+      "dashboard": "Board",
+      "planner": "Planner"
+    },
+    "LocaleSwitcher": {
+      "en": "English",
+      "ko": "Korean",
+      "ja": "Japanese",
+      "label": "label"
+    },
+
+    "language_banner": {
+      "message": "It looks like you speak {{language}}. Would you like to switch?",
+      "switch_button": "Switch to {{language}}",
+      "dismiss_button": "Dismiss",
+      "unsupported": {
+        "message": "Your preferred language isn't supported. You can help translate or select a language.",
+        "contribute_button": "Contribute on GitHub"
+      }
+    }
   },
   "charts": {
     "ranking": {
@@ -132,28 +162,6 @@
         "rank": "rank:",
         "desp_chart": "Hover over the graph to view details."
       }
-    }
-  },
-  "home": {
-    "title": "Yuzu Trends",
-    "site-title": "Yuzu Trends",
-    "site-title_old": "Yuzu Trends | Blue Archive Mobilization Info",
-    "description_old": "Visualizing mobilization trends in Platinum Trophy on the \"Blue Archive\" JP & KR Server",
-    "description": "A fan-made database for mobile game \"Blue Archive\" developed by Nexon Games",
-    "btn1-go": "View Trending Chart",
-    "btn2-go": "View Ranking Chart",
-    "btn1": "Trending Chart",
-    "btn2": "Ranking Chart",
-    "last-update": "Last data update:",
-    "js-disable": "JavaScript Disabled",
-    "js-disable-description": "This website requires JavaScript to function properly. Please enable it in your browser settings to continue.",
-    "404_not_found": "Page Not Found",
-    "dashboard-btn": "Assault Dashboard",
-    "dashboard-btn-go": "View Assault Dashboard",
-    "changelog": {
-      "title": "Changelog",
-      "noTranslation": "No translation available",
-      "newUpdate": "Recent updates"
     }
   },
   "raidInfo": {
@@ -369,15 +377,6 @@
     "count": "Count",
     "change": "Change",
     "emblemSummary": "Total {{counts}} occurrences, Rate: {{rate}}%"
-  },
-  "language_banner": {
-    "message": "It looks like you speak {{language}}. Would you like to switch?",
-    "switch_button": "Switch to {{language}}",
-    "dismiss_button": "Dismiss",
-    "unsupported": {
-      "message": "Your preferred language isn't supported. You can help translate or select a language.",
-      "contribute_button": "Contribute on GitHub"
-    }
   },
   "calendar": {
     "title": "Calendar and future predictions",

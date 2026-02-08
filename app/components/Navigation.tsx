@@ -50,7 +50,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
   // const { darkMode, toggleDarkMode } = useThemeStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // const {t} = useTranslation('layout-nav');
-  const { t, i18n } = useTranslation('navigation');
+  const { t, i18n } = useTranslation('common', { keyPrefix: 'navigation' });
   const locale = i18n.language as Locale;
 
   // console.log('Navigation', locale, t('home'))

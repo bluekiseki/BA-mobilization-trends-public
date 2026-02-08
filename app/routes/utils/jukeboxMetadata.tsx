@@ -50,6 +50,7 @@ export const eventConvertor = {
   49: 851, // Magical Girl
   50: 852,
   51: 853,
+  52: 854,
 };
 
 // --- ICON COMPONENTS ---

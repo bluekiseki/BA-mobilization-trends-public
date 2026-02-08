@@ -17,6 +17,7 @@ import type { GameServer } from '~/types/data';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/calendar';
 import { FiClock } from 'react-icons/fi';
+import { localeLink } from '~/utils/localeLink';
 
 export async function loader({ request, context, params }: LoaderFunctionArgs) {
   const server = params.server || 'jp';
@@ -128,7 +129,7 @@ export default function SchedulePageGantt() {
 
   // 4. Server Change Handler
   const handleServerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    navigate(`/calendar/${e.target.value}`);
+    navigate(localeLink(locale, `/calendar/${e.target.value}`));
   };
 
   return (

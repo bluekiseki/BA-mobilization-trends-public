@@ -1,7 +1,8 @@
 import { useRef } from 'react';
 import { CustomNumberInput } from '~/components/CustomInput';
 
-interface NumberInputProps {
+// interface NumberInputProps {
+interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'min' | 'max' | 'type'> {
   value: number;
   onChange: (newValue: number) => void;
   min: number;
@@ -53,7 +54,7 @@ const useLongPress = (onShortPress: () => void, onLongPress: () => void, disable
   };
 };
 
-export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonType = 'max' }: NumberInputProps) => {
+export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonType = 'max', ...rest }: NumberInputProps) => {
   const handleDecrement = () => {
     if (disabled) return;
     onChange(Math.max(min, value - 1));
@@ -128,6 +129,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         disabled={disabled}
         className="w-full h-full text-center text-xs font-semibold focus:outline-none dark:text-gray-200"
         style={{ appearance: 'textfield' }}
+        {...rest}
       />
 
       <button

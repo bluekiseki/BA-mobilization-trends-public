@@ -75,7 +75,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     // Pass data to components in JSON format.
     return data({
       locale,
-      siteTitle: i18n.t('home:title'),
+      siteTitle: i18n.t('common:title'),
       pageTitle: i18n.t('dashboardIndex:liveBetaTitle'),
       description: i18n.t('liveDashboard:description'),
       raidType: isRaid ? i18n.t('common:raid') : i18n.t('common:eraid'),

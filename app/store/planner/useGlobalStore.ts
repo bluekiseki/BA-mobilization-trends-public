@@ -81,7 +81,7 @@ export const useGlobalStore = create<GlobalState>()(
           studentId: null,
           current: {
             level: 1,
-            star: 1,
+            star: 3,
             uw: 0,
             uwLevel: 1,
             ex: 1,
@@ -96,7 +96,7 @@ export const useGlobalStore = create<GlobalState>()(
           },
           target: {
             level: 1,
-            star: 1,
+            star: 3,
             uw: 0,
             uwLevel: 1,
             ex: 1,

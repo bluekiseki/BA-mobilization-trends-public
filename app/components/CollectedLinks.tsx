@@ -1,5 +1,5 @@
 import { useMatches } from 'react-router';
-import type { AppUIMatch, CollectedLink } from '~/types/link';
+import type { AppUIMatch } from '~/types/link';
 
 /**
  * Collect preload information from the 'handle' of all currently active routes

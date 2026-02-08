@@ -16,7 +16,7 @@ interface ChangelogProps {
 }
 
 export function Changelog({ changelogData }: ChangelogProps) {
-  const { i18n, t } = useTranslation('home'); // Assuming keys are in 'home' namespace
+  const { i18n, t } = useTranslation('common'); // Assuming keys are in 'home' namespace
   const locale = i18n.language as Locale;
 
   // Sort data by date descending (most recent first)

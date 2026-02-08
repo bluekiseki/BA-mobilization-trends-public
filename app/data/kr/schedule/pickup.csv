@@ -410,20 +410,18 @@ studentId,name,startTime,endTime,rerun,limited,fast,prediction
 20037,Fubuki (Swimsuit),2025-12-30 11:00,2026-01-06 10:59,true,false,false
 20027,20027,2025-12-30 11:00,2026-01-06 10:59,true,false,false
 10044,10044,2025-12-30 11:00,2026-01-06 10:59,true,false,false
-10062,Toki,2026-01-06 11:00,2026-01-13 10:59,true,true,false,true
-20024,Nagisa,2026-01-06 11:00,2026-01-13 10:59,true,true,false,true
-20023,Kanna,2026-01-06 11:00,2026-01-13 10:59,true,false,false,true
-10107,Chiaki,2026-01-06 11:00,2026-01-13 10:59,true,false,false,true
+10062,Toki,2026-01-06 11:00,2026-01-13 10:59,true,true,false
+20024,Nagisa,2026-01-06 11:00,2026-01-13 10:59,true,true,false
+20023,Kanna,2026-01-06 11:00,2026-01-13 10:59,true,false,false
+10107,Chiaki,2026-01-06 11:00,2026-01-13 10:59,true,false,false
 10125,Eri,2026-01-13 11:00,2026-01-27 10:59,false,false,false
 10126,Kanoe,2026-01-13 11:00,2026-01-27 10:59,false,false,false
-20049,Misaki (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,false,false,false,true
-10101,Saori (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,true,false,true
-10102,Hiyori (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,true,false,true
-20027,Shiroko (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,false,false,true
-10044,Nonomi (Swimsuit),2026-01-27 11:00,2026-02-10 10:59,true,false,false,true
-10026,Neru (Bunny Girl),2026-02-03 11:00:00,2026-02-10 10:59:00,true,true,false,true
-10027,Karin (Bunny Girl),2026-02-03 11:00:00,2026-02-10 10:59:00,true,true,false,true
-20019,Akane (Bunny Girl),2026-02-03 11:00:00,2026-02-10 10:59:00,true,false,false,true
+20049,Misaki (Swimsuit),2026-01-27 11:00:00,2026-02-10 10:59:00,false,false,false
+10101,Saori (Swimsuit),2026-01-27 11:00:00,2026-02-10 10:59:00,true,true,false
+10102,Hiyori (Swimsuit),2026-01-27 11:00:00,2026-02-10 10:59:00,true,true,false
+10026,Neru (Bunny Girl),2026-01-27 11:00:00,2026-02-10 10:59:00,true,true,false
+10027,Karin (Bunny Girl),2026-01-27 11:00:00,2026-02-10 10:59:00,true,true,false
+20019,Akane (Bunny Girl),2026-01-27 11:00:00,2026-02-10 10:59:00,true,false,false
 10127,Miyo,2026-02-10 11:00:00,2026-02-24 10:59:00,false,false,false,true
 10128,Fuyu,2026-02-10 11:00:00,2026-02-24 10:59:00,false,false,false,true
 20040,Satsuki,2026-02-10 11:00:00,2026-02-24 10:59:00,true,false,false,true
@@ -461,3 +459,13 @@ studentId,name,startTime,endTime,rerun,limited,fast,prediction
 10033,Wakamo,2026-05-19 11:00:00,2026-05-26 10:59:00,true,true,false,true
 10045,Hoshino (Swimsuit),2026-05-19 11:00:00,2026-05-26 10:59:00,true,true,false,true
 10059,Mika,2026-05-19 11:00:00,2026-05-26 10:59:00,true,true,false,true
+20039,Kisaki,2026-05-26 11:00:00,2026-06-08 10:59:00,false,false,false
+10104,Reijo,2026-05-26 11:00:00,2026-06-08 10:59:00,false,false,false
+10053,Yuuka (Sportswear),2026-05-26 11:00:00,2026-06-08 10:59:00,true,true,false
+10054,Mari (Sportswear),2026-05-26 11:00:00,2026-06-08 10:59:00,true,true,false
+10133,Rio (Battle),2026-06-08 11:00:00,2026-06-17 10:59:00,false,true,false
+20054,Himari (Battle),2026-06-08 11:00:00,2026-06-17 10:59:00,false,true,false
+10134,Aris (Battle),2026-06-17 11:00:00,2026-06-24 10:59:00,false,true,true
+10135,Kei (Battle),2026-06-17 11:00:00,2026-06-24 10:59:00,false,true,true
+10098,Hoshino (Battle),2026-06-17 11:00:00,2026-06-24 10:59:00,true,true,true
+10100,Shiroko＊Terror,2026-06-17 11:00:00,2026-06-24 10:59:00,true,true,true

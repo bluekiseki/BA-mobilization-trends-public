@@ -7,7 +7,7 @@ import { issuesURL } from '~/data/livedataServer.json';
 export async function loader({ context }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
   return data({
-    title: i18n.t('home:title'),
+    title: i18n.t('common:title'),
   });
 }
 

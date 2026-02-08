@@ -212,8 +212,9 @@ export interface Mission {
   MissionRewardAmount: number[];
   MissionRewardParcelTypeStr: string[];
   CompleteConditionCount: number;
-  CompleteConditionParameter: number[];
+  CompleteConditionParameter: (number | string)[];
   CategoryStr: string;
+  CompleteConditionType: number;
 }
 
 export interface CardShopCostGoods {

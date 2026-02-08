@@ -40,7 +40,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   }
   return data({
     locale,
-    siteTitle: i18n.t('home:title'),
+    siteTitle: i18n.t('common:title'),
     // title: i18n.t("dashboardIndex:title"),
     description: i18n.t('planner:page.plannerescription'),
     rerun: i18n.t('planner:common.rerun'),

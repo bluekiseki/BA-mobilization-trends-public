@@ -52,7 +52,7 @@ export const createLinkHreflang: (path: string) => LinkHreflang[] = (path: strin
 
 export const Title = () => {
   // const {t} = useTranslation(undefined, { keyPrefix: 'home' });
-  const { t } = useTranslation('home');
+  const { t } = useTranslation('common');
 
   return (
     <>
@@ -64,7 +64,7 @@ export const Title = () => {
 
 export const NoScript = () => {
   // const {t} = useTranslation(undefined, { keyPrefix: 'home' });
-  const { t } = useTranslation('home');
+  const { t } = useTranslation('common');
   return (
     <noscript>
       <div className="fixed inset-0 z-9999 flex items-center justify-center bg-gray-100 bg-opacity-90 text-gray-800 p-5 box-border">

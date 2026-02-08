@@ -35,15 +35,15 @@ export async function loader(args: Route.LoaderArgs) {
   const [calendarDataJp, calendarDataKr] = await Promise.all([loadCalendarWidgetData(context, 'jp'), loadCalendarWidgetData(context, 'kr')]);
 
   return data({
-    title: i18n.t('home:site-title'),
-    description: i18n.t('home:description'),
+    title: i18n.t('common:site-title'),
+    description: i18n.t('common:description'),
     calendarDataJp,
     calendarDataKr,
     trans: {
       dashboard: {
-        title: i18n.t('home:dashboard-btn'),
+        title: i18n.t('common:dashboard-btn'),
         description: i18n.t('dashboard:description1'),
-        go: i18n.t('home:dashboard-btn-go'),
+        go: i18n.t('common:dashboard-btn-go'),
       },
       planner: {
         title: i18n.t('planner:page.planner'),
@@ -56,14 +56,14 @@ export async function loader(args: Route.LoaderArgs) {
         go: i18n.t('planner:page.jukebox-go'),
       },
       ranking: {
-        title: i18n.t('home:btn2'),
+        title: i18n.t('common:btn2'),
         description: i18n.t('charts:ranking.description1'),
-        go: i18n.t('home:btn2-go'),
+        go: i18n.t('common:btn2-go'),
       },
       heatmap: {
-        title: i18n.t('home:btn1'),
+        title: i18n.t('common:btn1'),
         description: i18n.t('charts:heatmap.description1'),
-        go: i18n.t('home:btn1-go'),
+        go: i18n.t('common:btn1-go'),
       },
       emblem: {
         title: i18n.t('emblemCounter:title'),
@@ -102,9 +102,8 @@ export const handle: AppHandle = {
 };
 
 export default function Home() {
-  // const { t } = useTranslation(undefined, { keyPrefix: 'home' });
   const locale = useTranslation().i18n.language as Locale;
-  const { t } = useTranslation('home');
+  const { t } = useTranslation('common');
   const { t: t_c } = useTranslation('common');
   // const { t: t_d } = useTranslation("dashboard");
   // const { t: t_p } = useTranslation("planner");
@@ -165,7 +164,7 @@ export default function Home() {
             </div>
             <div className="p-6 flex flex-col grow" style={{ wordBreak: 'keep-all' }}>
               <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="home:dashboard-btn" components={[<wbr />]} /> */}
+                {/* <Trans i18nKey="common:dashboard-btn" components={[<wbr />]} /> */}
                 <Trans components={[<wbr />]}>{trans.dashboard.title}</Trans>
               </h3>
               <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
@@ -173,7 +172,7 @@ export default function Home() {
                 <Trans components={[<wbr />]}>{trans.dashboard.description}</Trans>
               </p>
               <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="home:dashboard-btn-go" components={[<wbr />]} /> */}
+                {/* <Trans i18nKey="common:dashboard-btn-go" components={[<wbr />]} /> */}
                 <Trans components={[<wbr />]}>{trans.dashboard.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>
@@ -239,7 +238,7 @@ export default function Home() {
             </div>
             <div className="p-6 flex flex-col grow">
               <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="home:btn2" components={[<wbr />]} /> */}
+                {/* <Trans i18nKey="common:btn2" components={[<wbr />]} /> */}
                 <Trans components={[<wbr />]}>{trans.ranking.title}</Trans>
               </h3>
               <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
@@ -247,7 +246,7 @@ export default function Home() {
                 <Trans components={[<wbr />]}>{trans.ranking.description}</Trans>
               </p>
               <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="home:btn2-go" components={[<wbr />]} />  */}
+                {/* <Trans i18nKey="common:btn2-go" components={[<wbr />]} />  */}
                 <Trans components={[<wbr />]}>{trans.ranking.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>
@@ -263,7 +262,7 @@ export default function Home() {
             </div>
             <div className="p-6 flex flex-col grow">
               <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="home:btn1" components={[<wbr />]} /> */}
+                {/* <Trans i18nKey="common:btn1" components={[<wbr />]} /> */}
                 <Trans components={[<wbr />]}>{trans.heatmap.title}</Trans>
               </h3>
               <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
@@ -271,7 +270,7 @@ export default function Home() {
                 <Trans components={[<wbr />]}>{trans.heatmap.description}</Trans>
               </p>
               <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="home:btn1-go" components={[<wbr />]} />  */}
+                {/* <Trans i18nKey="common:btn1-go" components={[<wbr />]} />  */}
                 <Trans components={[<wbr />]}>{trans.heatmap.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>

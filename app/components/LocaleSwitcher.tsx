@@ -3,7 +3,7 @@ import LocaleSwitcherSelect from './LocaleSwitcherSelect';
 
 export default function LocaleSwitcher() {
   // const {t, i18n} = useTranslation('LocaleSwitcher');
-  const { t, i18n } = useTranslation('LocaleSwitcher');
+  const { t, i18n } = useTranslation('common', { keyPrefix: 'LocaleSwitcher' });
   const locale = i18n.language;
 
   return (

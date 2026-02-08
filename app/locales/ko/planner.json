@@ -156,7 +156,7 @@
     "viewSummary": "총합 보기",
     "viewDetails": "상세 내역 보기",
     "totalNeededTitle": "총 필요 재화",
-    "backToPlanner": "목록으로 돌아가기",
+    "backToPlanner": "목록으로",
     "searchStudentPlaceholder": "학생 검색...",
     "sortByDate": "등록순",
     "sortByName": "이름순",
@@ -401,46 +401,61 @@
     "affection": "인연랭크",
     "includeInEventsQuestion": "선택된 이벤트 플레너에서 계산에 활용됩니다.",
     "searchEventsPlaceholder": "이벤트 검색...",
-    "selectStudentPrompt": "학생을 선택하여 상세 정보를 확인하세요",
-    "selectStudentPlaceholder": "학생을 선택해주세요...",
+    "selectStudentPrompt": "학생을 선택하여 상세 정보를 확인",
+    "selectStudentPlaceholder": "학생 선택...",
     "btnMinAll": "초기화",
     "btnResetTargets": "목표 리셋",
     "btnMaxTargets": "목표 최대",
     "btnMaxAll": "모두 최대",
-    "tooltipMinAll": "현재 및 목표 상태를 모두 초기값(1레벨)으로 되돌립니다.",
-    "tooltipResetTargets": "목표 상태를 현재 상태와 동일하게 맞춥니다.",
-    "tooltipMaxTargets": "목표 상태만 최대치로 설정합니다.",
-    "tooltipMaxAll": "현재 상태와 목표 상태를 모두 최대치로 설정합니다."
+    "tooltipMinAll": "모든 상태를 초기화",
+    "tooltipResetTargets": "목표를 현재 상태와 동기화",
+    "tooltipMaxTargets": "목표 상태만 최대치로",
+    "tooltipMaxAll": "모든 상태를 최대치로"
   },
   "accordion": {
     "btnMin": "최소",
     "btnReset": "리셋",
     "btnTargetMax": "목표최대",
     "btnFullMax": "최대성장",
-    "tooltipMin": "이 항목의 현재 상태와 목표를 초기화합니다.",
-    "tooltipReset": "목표를 현재 상태와 동일하게 맞춥니다.",
-    "tooltipTargetMax": "목표만 최대치로 설정합니다.",
-    "tooltipFullMax": "현재 상태와 목표를 모두 최대치로 성장시킵니다."
+    "tooltipMin": "모든 상태를 초기화",
+    "tooltipReset": "목표를 현재 상태와 동기화",
+    "tooltipTargetMax": "목표 상태만 최대치로",
+    "tooltipFullMax": "모든 상태를 최대치로"
   },
   "equipmentTab": {
     "selectStudentPrompt": "학생을 먼저 선택해주세요.",
     "levelLockWarning": "해당 티어를 장착하기 위한 목표 레벨이 부족합니다."
   },
   "affectionTab": {
-    "rank": "인연 랭크:",
-    "currentLevelProgress": "현재 레벨 진행도:",
-    "ownedGiftsTitle": "보유 선물 입력",
-    "reset": "초기화",
-    "resetConfirm": "입력된 모든 보유 선물 수량을 초기화하시겠습니까?",
-    "showPreferredOnly": "선호 선물만 보기",
-    "calculateWithOwned": "보유 선물 기준으로 계산",
-    "results": {
-      "achievableLevel": "보유 선물로 Lv.{{level}} ({{progressExp}}/{{expForLevel}}) 까지 달성 가능",
-      "targetMet": "목표 달성 완료!",
-      "targetMetWithOwned": "✅ 보유한 선물로 목표 달성이 가능합니다. (약 {{surplusExp}} EXP 초과)",
-      "deficit": "선물이 부족합니다! (부족분: {{deficitExp}} EXP)",
-      "cafeTouches": "카페 쓰담 {{counts}}번",
-      "or": "또는"
+    "result": {
+      "title": "시뮬레이션",
+      "success": "목표 달성",
+      "missing": "경험치 부족",
+      "expGap": "경험치 차이",
+      "cafe": "카페 터치",
+      "schedule": "스케줄",
+      "craftingNeeded": "필요 제조 횟수",
+      "lowTierConversion": "하위 재료 변환"
+    },
+    "labels": {
+      "current": "현재 레벨",
+      "target": "목표 레벨",
+      "choiceBox": "일반 선물 선택권"
+    },
+    "actions": {
+      "craftingFill": "선호 선물로 변환",
+      "showPreferredOnly": "선호 선물만 보기"
+    },
+    "item": {
+      "need": "필요 {{counts}}"
+    },
+    "units": {
+      "taps": "회",
+      "runs": "회",
+      "times": "회"
+    },
+    "messages": {
+      "noItems": "표시할 아이템이 없습니다."
     }
   },
   "potentialTab": {

@@ -408,7 +408,7 @@
     "btnMaxTargets": "目標最大",
     "btnMaxAll": "最大成長",
 
-    "tooltipMinAll": "現在および目標ステータスを初期値(Lv.1)に戻します。",
+    "tooltipMinAll": "現在および目標ステータスを初期値に戻します。",
     "tooltipResetTargets": "目標を現在のステータスと同じに設定します。",
     "tooltipMaxTargets": "目標ステータスのみ最大値に設定します。",
     "tooltipMaxAll": "現在および目標ステータスをすべて最大まで成長させます。"
@@ -429,20 +429,35 @@
     "levelLockWarning": "装備ティアに対して目標レベルが不足しています。"
   },
   "affectionTab": {
-    "rank": "絆ランク:",
-    "currentLevelProgress": "現在レベルの進行度:",
-    "ownedGiftsTitle": "所持プレゼント入力",
-    "reset": "リセット",
-    "resetConfirm": "入力されたすべてのプレゼントの数量をリセットしますか？",
-    "showPreferredOnly": "好きなプレゼントのみ表示",
-    "calculateWithOwned": "所持プレゼントを基準に計算",
-    "results": {
-      "achievableLevel": "所持プレゼントでLv.{{level}} ({{progressExp}}/{{expForLevel}}) まで達成可能",
-      "targetMet": "目標達成完了！",
-      "targetMetWithOwned": "✅ 所持プレゼントで目標達成が可能です。(約 {{surplusExp}} EXP 超過)",
-      "deficit": "プレゼントが不足しています！(不足分: {{deficitExp}} EXP)",
-      "cafeTouches": "カフェで{{counts}}回ナデナデ",
-      "or": "または"
+    "result": {
+      "title": "シミュレーション",
+      "success": "達成可能",
+      "missing": "不足",
+      "expGap": "経験値差",
+      "cafe": "カフェ",
+      "schedule": "スケジュール",
+      "craftingNeeded": "製造回数",
+      "lowTierConversion": "下位素材変換"
+    },
+    "labels": {
+      "current": "現在",
+      "target": "目標",
+      "choiceBox": "選択ボックス"
+    },
+    "actions": {
+      "craftingFill": "好みの贈り物に変換",
+      "showPreferredOnly": "好みのみ表示"
+    },
+    "item": {
+      "need": "あと {{counts}}"
+    },
+    "units": {
+      "taps": "回",
+      "runs": "回",
+      "times": "回"
+    },
+    "messages": {
+      "noItems": "アイテムが見つかりません。"
     }
   },
   "potentialTab": {

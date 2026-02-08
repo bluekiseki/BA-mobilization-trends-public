@@ -46,8 +46,8 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   const g_server = server as GameServer;
   let i18n = getInstance(context);
   return {
-    siteTitle: i18n.t('home:title'),
-    title: i18n.t('navigation:ranking'),
+    siteTitle: i18n.t('common:title'),
+    title: i18n.t('common:navigation.ranking'),
     description: i18n.t('charts:ranking.description1'),
     server: g_server,
   };
@@ -63,21 +63,6 @@ export const links: Route.LinksFunction = () => {
     },
   ];
 };
-
-// export const meta: MetaFunction<typeof rootLorder, {
-//   "root": typeof rootLorder,
-// }> = ({ matches }) => {
-//   // let { t } = useTranslation(undefined, { keyPrefix: 'home' });
-//   // let { t:t_nav } = useTranslation(undefined, { keyPrefix: 'layout-nav' });
-//   // let { t:t_ranking } = useTranslation(undefined, { keyPrefix: 'charts.ranking' });
-//   matches.find(m => m.id)
-//   const rootMatch = matches.find(m => m.id === "root");
-//   const locale_data = rootMatch ? rootMatch.loaderData : null;
-//   const locale = locale_data ? locale_data.locale : DEFAULT_LOCALE;
-
-//   const t = i18n.getFixedT(locale, undefined, 'home');
-//   const t_nav = i18n.getFixedT(locale, undefined, 'layout-nav');
-//   const t_ranking = i18n.getFixedT(locale, undefined, 'charts.heatmap');
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/1.webp');
