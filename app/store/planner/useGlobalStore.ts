@@ -2,6 +2,44 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+/**
+ * return true when a>b
+ */
+const isLarger = (a: any, b: any) => {
+  // 1. Number vs Number comparison
+  if (typeof a === 'number' && typeof b === 'number') {
+    return a > b;
+  }
+
+  // 2. Array vs Array comparison
+  if (Array.isArray(a) && Array.isArray(b)) {
+    // 2-1. If lengths differ, the longer one is considered greater
+    if (a.length !== b.length) {
+      return a.length > b.length;
+    }
+    // 2-2. If lengths are equal, compare internal elements sequentially
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] === b[i]) continue; // If equal, move to the next element
+      return a[i] > b[i]; // If different, determine based on the size of the element
+    }
+    return false; // If all elements are identical, it is not greater
+  }
+
+  // 3. Object comparison (based on key count)
+  if (typeof a === 'object' && a !== null && typeof b === 'object' && b !== null) {
+    const aKeys = Object.keys(a).length;
+    const bKeys = Object.keys(b).length;
+    if (aKeys !== bKeys) return aKeys > bKeys;
+  }
+
+  // 4. String comparison (based on length)
+  if (typeof a === 'string' && typeof b === 'string') {
+    return a.length > b.length;
+  }
+
+  return false;
+};
+
 export interface GrowthPlan {
   uuid: string;
   studentId: number | null;
@@ -47,7 +85,7 @@ export interface GrowthPlan {
 interface GlobalState {
   growthPlans: GrowthPlan[];
   ownedGifts: Record<string, number>;
-  addPlan: (eventId: number | null) => void;
+  addPlan: (eventId: number | null) => string | undefined;
   removePlan: (uuid: string) => void;
   updatePlan: (uuid: string, field: string, value: any) => void;
   toggleEventInclusion: (uuid: string, eventId: number) => void;
@@ -117,6 +155,7 @@ export const useGlobalStore = create<GlobalState>()(
           isSelected: true,
         };
         set({ growthPlans: [...get().growthPlans, newPlan] });
+        return newPlan.uuid;
       },
       removePlan: (uuid) => {
         set({ growthPlans: get().growthPlans.filter((p) => p.uuid !== uuid) });
@@ -135,9 +174,9 @@ export const useGlobalStore = create<GlobalState>()(
                 (newPlan as any)[field] = value;
               }
               if (main === 'current' && sub) {
-                if (newPlan.current[sub] > newPlan.target[sub]) {
+                if (isLarger(newPlan.current[sub], newPlan.target[sub])) {
                   newPlan.target[sub] = newPlan.current[sub];
-                } else if (typeof newPlan.current[sub] == 'object' && Object.values(newPlan.current[sub]) > Object.values(newPlan.target[sub])) {
+                } else if (typeof newPlan.current[sub] == 'object' && isLarger(Object.values(newPlan.current[sub]), Object.values(newPlan.target[sub]))) {
                   newPlan.target[sub] = newPlan.current[sub];
                 }
                 // ★ rank

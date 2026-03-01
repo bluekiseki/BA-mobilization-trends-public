@@ -299,15 +299,15 @@ export const GrowthAccordion = ({
 }: GrowthAccordionProps) => {
   const { t } = useTranslation('planner');
 
-  const actionBtnClass = 'p-1 rounded text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-neutral-700 transition-all';
+  const actionBtnClass = 'p-1 rounded text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-neutral-700 transition-all';
 
   return (
     <div className="border-b border-gray-100 dark:border-neutral-800 last:border-0">
       {/* 1. Header Area */}
       <div
         className={`
-          flex items-center justify-between py-3 px-4 cursor-pointer select-none transition-colors duration-200
-          ${isOpen ? 'bg-gray-50 dark:bg-neutral-800/60' : 'hover:bg-gray-50/50 dark:hover:bg-neutral-800/30 bg-white dark:bg-neutral-900'}
+          flex items-center justify-between py-3 sm:py-6 px-4 cursor-pointer select-none transition-colors duration-200
+          ${isOpen ? 'bg-gray-100 dark:bg-neutral-500/60' : 'hover:bg-gray-100 dark:hover:bg-neutral-500/60 bg-white dark:bg-neutral-900'}
         `}
         onClick={onToggle}
       >
@@ -320,14 +320,15 @@ export const GrowthAccordion = ({
 
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-3 overflow-hidden">
             {/* Title */}
-            <span className="font-bold text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center gap-1.5">
+            <span className="font-bold text-md text-gray-700 dark:text-gray-200 whitespace-nowrap flex items-center gap-1.5">
               {title}
               {isWarning && <FiAlertTriangle size={12} className="text-amber-500" />}
             </span>
 
             {/* Summary Line: Simple Text Arrow */}
             <div className="flex items-center gap-1.5 text-xs truncate opacity-70 group-hover:opacity-100 transition-opacity">
-              <span className="font-mono text-gray-500 dark:text-gray-400">{currentSummary}</span>
+              {/* <span className="font-mono text-gray-500 dark:text-gray-400">{currentSummary}</span> */}
+              <span className={`font-mono font-semibold ${isWarning ? 'text-amber-600 dark:text-amber-500' : 'text-gray-500 dark:text-gray-200'}`}>{currentSummary}</span>
               <span className="text-gray-500 dark:text-neutral-400 text-[10px]">→</span>
               <span className={`font-mono font-semibold ${isWarning ? 'text-amber-600 dark:text-amber-500' : 'text-blue-600 dark:text-blue-400'}`}>{targetSummary}</span>
             </div>
@@ -363,7 +364,7 @@ export const GrowthAccordion = ({
       {/* 2. Content Body */}
       {isOpen && (
         <div className="bg-white dark:bg-neutral-900 animate-in slide-in-from-top-1 duration-200">
-          <div className="px-4 py-4 mb-8 border-t border-gray-100 dark:border-neutral-800">
+          <div className="px-6 py-4 mb-8 border-t border-gray-100 dark:border-neutral-800">
             {/* Warning Banner (Compact & Flat) */}
             {isWarning && warningText && (
               <div className="mb-4 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded">

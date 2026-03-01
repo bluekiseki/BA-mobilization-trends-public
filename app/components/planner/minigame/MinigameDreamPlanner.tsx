@@ -475,7 +475,6 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
   }, [eventData, minigameEntryCurrencyId, totalBonus]);
 
   const handleCalculate = (result: DreamMakerResult | null) => {
-    // console.log('[handleCalculate] ', result)
     setDreamMakerResult(result);
     onCalculate(result);
   };
@@ -563,7 +562,6 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
         // Calculate leftover based on initial + rewards - sim cost
         const epRewardFromSim = simResult.avgEventPoints || 0;
         const leftoverEp = initialEp - epCostFromSimOnly + epRewardFromSim; // - epCostFromSimOnly;
-        // console.log(`leftoverEp = ${leftoverEp} = ${initialEp} - ${epCostFromSimOnly} + ${epRewardFromSim}`)
 
         if (leftoverEp > 0) {
           const numberOfPurchases = Math.floor(leftoverEp / conversionTargetInfo.cost) + ((purchaseCounts && purchaseCounts[conversionTargetInfo.id]) || 0);

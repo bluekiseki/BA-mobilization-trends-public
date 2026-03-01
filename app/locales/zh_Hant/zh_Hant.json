@@ -29,7 +29,8 @@
     "limited": "限時",
     "clear": "清除",
     "period": "期間",
-    "jdf": "綜合戰術考試",
+    "jfd": "綜合戰術考試",
+    "pred": "pred",
     "title": "柚子 Trends",
     "site-title": "柚子 Trends",
     "site-title_old": "Yuzu Trends | Blue Archive Mobilization Info",
@@ -56,7 +57,18 @@
       "ranking": "排名",
       "home": "首頁",
       "dashboard": "儀表板",
-      "planner": "規劃器"
+      "planner": "規劃器",
+      "help": "幫助",
+      "viewDescription": "查看說明",
+      "reportBug": "使用指南",
+      "email": "email",
+      "viewCode": "查看代碼",
+      "theme": "主題",
+      "lightMode": "亮色模式",
+      "darkMode": "暗色模式",
+      "systemTheme": "系統設定",
+      "language": "語言",
+      "serverSettings": "伺服器設定"
     },
     "LocaleSwitcher": {
       "en": "英文",
@@ -74,6 +86,35 @@
         "message": "您偏好的語言尚未支援。您可以協助翻譯或選擇其他語言。",
         "contribute_button": "在 GitHub 上貢獻"
       }
+    },
+    "helpSidebar": {
+      "title": "使用指南",
+      "noGuide": "目前頁面沒有指南。",
+      "startGuide": "開始指南",
+      "driver": {
+        "next": "下一步 ➔",
+        "prev": "⬅ 上一步",
+        "done": "完成"
+      }
+    },
+    "promoBanner": {
+      "noMoreToday": "今天不再顯示"
+    },
+    "bugReport": {
+      "title": "傳送意見",
+      "successTitle": "傳送成功。",
+      "successDesc": "感謝您的寶貴意見。",
+      "close": "關閉",
+      "typeBug": "錯誤回報",
+      "typeSuggestion": "功能建議",
+      "inputTitle": "請輸入標題",
+      "inputDesc": "請輸入詳細內容",
+      "inputEmail": "接收回覆的電子郵件（選填）",
+      "submitBtn": "提交",
+      "submittingBtn": "傳送中...",
+      "errorMsg": "傳送失敗，請重試。",
+      "githubIssue": "透過 GitHub Issues 回報",
+      "poweredBy": "此請求透過 Web3Forms 傳送。"
     }
   },
   "charts": {

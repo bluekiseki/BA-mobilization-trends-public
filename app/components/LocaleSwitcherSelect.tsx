@@ -1,3 +1,4 @@
+// app/components/LocaleSwitcherSelect.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { DEFAULT_LOCALE, type Locale } from '~/utils/i18n/config';
@@ -17,11 +18,9 @@ const BLACKLISTED_PATHS = ['/source'];
 
 export function changePathLanguage(currentLocale: Locale, newLocale: Locale, pathname: string) {
   let basePath = pathname;
-  // console.log('[changePathLanguage], basePath', basePath)
   if (currentLocale && pathname.startsWith(`/${currentLocale}`)) {
     basePath = pathname.replace(`/${currentLocale.replace(/\-/gi, '\-')}`, '');
   }
-  // console.log('[changePathLanguage], 2 basePath', basePath)
   // e.g., '/ko' -> '/' (root path must be '/' not an empty string)
   if (basePath === '') {
     basePath = '/';

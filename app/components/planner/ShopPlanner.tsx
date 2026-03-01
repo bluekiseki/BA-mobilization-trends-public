@@ -348,7 +348,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div data-component-name="ShopPlanner" className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         {/* Title */}
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">{t('page.eventShop')}</h2>
 
@@ -374,9 +374,11 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
         {shopCategories.map(([categoryId]) => {
           const shopInfo = eventData.shop_info?.find((info) => info.CategoryType.toString() === categoryId);
           const currencyId = shopInfo?.CostParcelId[0];
-          // const currencyName = currencyId ? eventData.icons.Item[currencyId]?.LocalizeEtc?.NameKr : `Shop ${categoryId}`;
+
           const currencyName = currencyId
-            ? getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, locale) || getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, 'ja')
+            ? getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, locale) ||
+              getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, 'ja') ||
+              getLocalizeEtcName(eventData.icons.Currency[currencyId]?.LocalizeEtc, locale)
             : `Shop ${categoryId}`;
           return (
             <button
@@ -389,7 +391,11 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
               }`}
             >
               <span>
-                <img src={`data:image/webp;base64,${iconData.Item?.[currencyId?.toString() ?? '']}`} alt={currencyName || undefined} className="w-6 h-6 object-cover rounded-full" />
+                <img
+                  src={`data:image/webp;base64,${iconData.Item?.[currencyId?.toString() ?? ''] || iconData.Currency?.[currencyId?.toString() ?? '']}`}
+                  alt={currencyName || undefined}
+                  className="w-6 h-6 object-cover rounded-full"
+                />
               </span>
               <span>{currencyName}</span>
             </button>
@@ -397,7 +403,11 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
         })}
       </div>
 
-      {displayUnit === 'ap' && <div className="p-2 mb-4 bg-orange-50 dark:bg-orange-900/40 rounded-md border border-orange-200 dark:border-orange-800">{apConversionNotice}</div>}
+      {displayUnit === 'ap' && (
+        <div data-component-name="ShopPlanner_apbanner" className="p-2 mb-4 bg-orange-50 dark:bg-orange-900/40 rounded-md border border-orange-200 dark:border-orange-800">
+          {apConversionNotice}
+        </div>
+      )}
 
       <div className="space-y-6">
         {shopCategories.map(([categoryId, items]) => {
@@ -486,7 +496,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div data-component-name="ShopPlanner_goodsStand" className="flex flex-wrap gap-2 justify-center">
                 {items.map((item) => {
                   if (!item.Goods?.length) return null;
                   const goodsInfo = item.Goods[0];

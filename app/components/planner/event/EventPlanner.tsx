@@ -784,12 +784,12 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
 
   return (
     <>
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start">
+      <div data-component-name="EventPlanner" className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start">
         {/* Mobile Navigation (< lg) */}
         <div ref={tabNavRef} className="lg:hidden z-30 w-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-gray-200 dark:border-neutral-800 shadow-sm">
           {/* Level 1: Main Tabs (Grid Layout - No Scroll) */}
           <div className="p-2">
-            <div className="grid grid-cols-3 gap-1">
+            <div data-component-name="EventPlanner_Tab" className="grid grid-cols-3 gap-1">
               {TABS.map((tab) => {
                 const isActive = activeMainTab === tab.id;
                 return (
@@ -842,7 +842,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
             {/* BONUS TAB */}
             {activeMainTab === 'bonus' && (
               <div className="space-y-8">
-                <TotalBonusDisplay eventData={eventData} iconData={iconData} totalBonus={totalBonus} />
+                <TotalBonusDisplay eventData={eventData} iconData={iconData} totalBonus={totalBonus} allStudents={allStudents} />
                 <BonusSelector eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} onBonusCalculate={setTotalBonus} />
               </div>
             )}
@@ -941,7 +941,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                   }}
                   className="
                             group flex items-center gap-2 px-6 py-3 
-                            bg-blue-600 text-white text-sm font-bold rounded-full shadow-md 
+                            bg-blue-600 text-white text-sm font-bold rounded-xl shadow-md 
                             hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all
                           "
                 >
@@ -963,7 +963,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
         <div className="hidden lg:block w-64 shrink-0 sticky top-4 self-start pr-4 mt-6 ml-6">
           <nav className="p-4 bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm max-h-[calc(100vh-2rem)] overflow-y-auto">
             <div className="mb-4 px-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</div>
-            <div className="space-y-1">
+            <div data-component-name="EventPlanner_Tab" className="space-y-1">
               {TABS.map((tab) => {
                 const isActiveMain = activeMainTab === tab.id;
                 return (

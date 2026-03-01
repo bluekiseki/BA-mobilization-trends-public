@@ -9,7 +9,7 @@ export interface Student extends StudentBase {
   // SquadType: "Main" | "Support";
   // TacticRole: "DamageDealer" | "Healer" | "Supporter" | "Tanker" | "Vehicle";
   School: string;
-  BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic';
+  BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic' | 'Chemical';
   PotentialMaterial: number;
   SkillExMaterial: number[][];
   SkillExMaterialAmount: number[][];

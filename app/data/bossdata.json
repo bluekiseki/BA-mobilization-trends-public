@@ -76,6 +76,16 @@
       "ja": "ビナー",
       "zh_Hant": "薇娜"
     },
+    "teran": "Outdoor",
+    "armorType": "HeavyArmor"
+  },
+  "Binah_Street": {
+    "name": {
+      "en": "Binah",
+      "ko": "비나",
+      "ja": "ビナー",
+      "zh_Hant": "薇娜"
+    },
     "teran": "Street",
     "armorType": "HeavyArmor"
   },
@@ -205,6 +215,16 @@
       "ja": "マルクト",
       "en": "Malkuth",
       "zh_Hant": "Malkuth"
+    },
+    "teran": "Street",
+    "armorType": "Normal"
+  },
+  "EN0020": {
+    "name": {
+      "ko": "데카그라마톤",
+      "ja": "デカグラマトン",
+      "en": "Decagrammaton",
+      "zh_Hant": "Decagrammaton"
     },
     "teran": "Street",
     "armorType": "Normal"

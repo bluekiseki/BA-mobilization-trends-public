@@ -45,7 +45,7 @@ export interface Student {
   SquadType: 'Main' | 'Support';
   TacticRole: "DamageDealer'| 'Healer'| 'Supporter'| 'Tanker'| 'Vehicle";
   School: string;
-  BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic';
+  BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic' | 'Chemical';
   Portrait?: string;
   CombatStyleIndex?: 1 | 2; // for hosino
   FamilyName?: string;
@@ -56,7 +56,7 @@ export interface Student {
 export interface RaidInfo {
   Id: string;
   Boss: string;
-  Type?: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor';
+  Type?: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
   Date: string;
   Location: string;
   Alias?: string;

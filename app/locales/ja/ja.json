@@ -30,6 +30,7 @@
     "clear": "クリア",
     "period": "期間",
     "jfd": "合同火力演習",
+    "pred": "予想",
     "title": "ユズ Trends",
     "site-title": "ユズ Trends",
     "site-title_old": "ユズ Trends｜ブルアカのチナトロ編成トレンド",
@@ -57,7 +58,18 @@
       "ranking": "ランキング",
       "home": "ホーム",
       "dashboard": "ボード",
-      "planner": "プランナー"
+      "planner": "プランナー",
+      "help": "ヘルプ",
+      "viewDescription": "説明を見る",
+      "reportBug": "フィードバックを送信",
+      "email": "メール",
+      "viewCode": "コードを見る",
+      "theme": "テーマ",
+      "lightMode": "ライトモード",
+      "darkMode": "ダークモード",
+      "systemTheme": "システム設定",
+      "language": "言語",
+      "serverSettings": "サーバー設定"
     },
     "LocaleSwitcher": {
       "en": "英語",
@@ -73,6 +85,35 @@
         "message": "ご希望の言語はサポートされていません。翻訳に貢献するか、別の言語を選択してください。",
         "contribute_button": "GitHubで貢献する"
       }
+    },
+    "helpSidebar": {
+      "title": "使用指南",
+      "noGuide": "目前頁面沒有指南。",
+      "startGuide": "開始指南",
+      "driver": {
+        "next": "下一步 ➔",
+        "prev": "⬅ 上一步",
+        "done": "完成"
+      }
+    },
+    "promoBanner": {
+      "noMoreToday": "本日表示しない"
+    },
+    "bugReport": {
+      "title": "フィードバックを送信",
+      "successTitle": "送信に成功しました。",
+      "successDesc": "貴重なご意見ありがとうございます。",
+      "close": "閉じる",
+      "typeBug": "バグ報告",
+      "typeSuggestion": "機能の提案",
+      "inputTitle": "タイトルを入力してください",
+      "inputDesc": "詳細を入力してください",
+      "inputEmail": "返信用メールアドレス（任意）",
+      "submitBtn": "送信する",
+      "submittingBtn": "送信中...",
+      "errorMsg": "送信に失敗しました。もう一度お試しください。",
+      "githubIssue": "GitHub Issuesで報告する",
+      "poweredBy": "このリクエストは Web3Forms を通じて送信されます。"
     }
   },
   "charts": {

@@ -97,8 +97,6 @@ export const BonusSelector = ({
         })
         .filter((s): s is NonNullable<typeof s> => s !== null);
 
-      // console.log('selectedStudents',selectedStudents)
-      // console.log('relevantStudents',relevantStudents)
       const strikers = relevantStudents.filter((s) => s.squadType === 'Main');
       const specials = relevantStudents.filter((s) => s.squadType === 'Support');
       strikers.sort((a, b) => b.bonusValue - a.bonusValue);
@@ -231,7 +229,7 @@ export const BonusSelector = ({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div data-component-name="BonusSelector_body" className="mt-4">
         <div className="flex flex-wrap gap-3 justify-center">
           {filteredBonusStudents.map((student) => {
             const isSelected = selectedStudents.includes(student.id);

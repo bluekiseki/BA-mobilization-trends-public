@@ -8,8 +8,14 @@ import { useShallow } from 'zustand/react/shallow';
 import TooltipSlider from '../HandleTooltip';
 import 'rc-slider/assets/index.css';
 import { raidToString, raidToStringTsx } from '../raidToString';
-import lodash from 'lodash';
-const { debounce } = lodash;
+
+function debounce<T extends (...args: any[]) => void>(func: T, wait: number) {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout !== null) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
 
 import React from 'react';
 import { ToggleButtonGroup } from '../ToggleButtonGroupProps';
@@ -129,7 +135,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
   };
 
   return (
-    <>
+    <div data-component-name="ChartControls">
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
       {/* Student Search - Full Width */}
       <div className="mb-2">
@@ -138,7 +144,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
 
       {/* Main Controls Grid */}
-      <div>
+      <div data-component-name="ChartControls_Main">
         <div>
           {/* Section 1: Display Options */}
           <h3 className="font-semibold text-neutral-800 dark:text-white transition-colors duration-300">{t('displayOptions.title')}</h3>
@@ -173,7 +179,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
                 />
                 <button
                   onClick={() => setRankWidth(tempRankWidth)}
-                  className="px-3 py-1 bg-bluearchive-botton-blue  hover:bg-sky-400  transition-colors  w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold" // dark:hover:bg-sky-500 dark:text-white dark:bg-sky-600
+                  className="px-3 py-1 bg-bluearchive-botton-blue hover:bg-sky-400 transition-colors w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold"
                 >
                   {t('setButton')}
                 </button>
@@ -187,11 +193,11 @@ const ChartControls = ({ students }: ChartControlsProps) => {
                   min={1}
                   value={hideXThreshold}
                   onChange={(e) => setHideXThreshold(Number(e.target.value))}
-                  className="w-16  px-1 py-0.5 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white border rounded-l-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-colors duration-300"
+                  className="w-16 px-1 py-0.5 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white border rounded-l-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-colors duration-300"
                 />
                 <button
                   onClick={() => setHideXThreshold(hideXThreshold)}
-                  className="px-3 py-1.5 bg-bluearchive-botton-blue  hover:bg-sky-400  transition-colors  w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold" // dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white
+                  className="px-3 py-1.5 bg-bluearchive-botton-blue hover:bg-sky-400 transition-colors w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold"
                 >
                   {t('setButton')}
                 </button>
@@ -224,7 +230,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
           <div className="flex gap-1 mb-2">
             <button
               onClick={handleSelectAllZValues}
-              className="px-3 py-1 text-xs font-medium text-black bg-bluearchive-botton-blue  rounded-md hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors w-full shadow-bluearchive" // dark:bg-sky-600 dark:text-white
+              className="px-3 py-1 text-xs font-medium text-black bg-bluearchive-botton-blue rounded-md hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors w-full shadow-bluearchive"
             >
               {t('filterByStars.all')}
             </button>
@@ -273,12 +279,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
           <div className="w-full text-center text-sm text-neutral-700 dark:text-neutral-400 mb-2 transition-colors duration-300 flex flex-col sm:flex-row justify-center">
             <span>
               <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">
-                {/* <RaidNoWrapFormatter
-                  raid={xLabels[Math.max(fullXRange[0], xRange[0])]}
-                /> */}
-                {raidToStringTsx(xLabels[Math.max(fullXRange[0], xRange[0])], locale, true)}
-              </span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.max(fullXRange[0], xRange[0])], locale, true)}</span>
             </span>
             <span className="mx-2 font-medium">—</span>
             <span>
@@ -290,7 +291,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
           <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

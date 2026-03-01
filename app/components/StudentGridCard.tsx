@@ -82,6 +82,7 @@ export const StudentGridCard = ({
           Pierce: '#bc8800',
           Mystic: '#206d9b',
           Sonic: '#9a46a8',
+          Chemical: '#137973',
         } as any
       )[studentInfo.BulletType as any]
     : null;

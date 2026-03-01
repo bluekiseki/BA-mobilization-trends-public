@@ -116,7 +116,6 @@ export default function EquipmentPlannerPage() {
   const resolvedStages = useMemo((): ResolvedStage[] => {
     const stages = campaigns;
     const iconInfo = iconInfoData;
-    console.log('resolvedStages return');
     if (!stages) return [];
 
     return Object.entries(stages).map(([stageId, stageData]) => {
@@ -153,7 +152,6 @@ export default function EquipmentPlannerPage() {
   const { growthPlans } = useGlobalStore();
   // --- Reflect Student Selection Logic ---
   const selectedPlans = useMemo(() => {
-    console.log('selectedPlans - return');
     return growthPlans.filter((p) => selectedPlanUuids.has(p.uuid));
   }, [growthPlans, selectedPlanUuids]);
 
@@ -344,24 +342,6 @@ export default function EquipmentPlannerPage() {
       return idA - idB; // ID Ascending
     });
   }, [resolvedStages]);
-
-  // const filteredAndSortedStages = useMemo(() => {
-  //   let stages = resolvedStages
-  //     .filter(s => Object.keys(s.drops).length > 0);
-
-  //   // Apply Currency Filter here (Remove duplicate logic in child components)
-  //   if (itemFilter.size > 0) {
-  //     stages = stages.filter(stage =>
-  //       Object.keys(stage.drops).some(dropKey => itemFilter.has(dropKey))
-  //     );
-  //   }
-
-  //   // Apply Sorting here as well (Remove duplicate logic in child components)
-  //   if (isSortedDesc) {
-  //     return stages.sort((a, b) => b.id - a.id);
-  //   }
-  //   return stages.sort((a, b) => a.id - b.id);
-  // }, [resolvedStages, isSortedDesc, itemFilter]);
 
   const getSortedEquipmentList = useCallback(
     (items: Record<string, number>, sortMode: 'tier' | 'id' | 'amount'): [string, number][] => {

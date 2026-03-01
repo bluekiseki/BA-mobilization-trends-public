@@ -11,13 +11,17 @@ import { CollectedLinks } from './components/CollectedLinks';
 // import { Analytics } from "@vercel/analytics/react" // for vercel
 import { lazy, useEffect } from 'react';
 import { DEFAULT_LOCALE, type Locale } from './utils/i18n/config';
-import { getLocale, i18nextMiddleware, localeCookie } from './middleware/i18next';
+import { getLocale, i18nextMiddleware } from './middleware/i18next';
 import { useTranslation } from 'react-i18next';
 import { getLocaleFromHeaders } from './utils/i18n/service';
 import { PostHogProvider } from 'posthog-js/react';
 import { domain, cdn as cdn_domain, vercelDomain } from './data/livedataServer.json';
 const DynamicDevtoolsdetector = lazy(() => import('./components/devtools-detector'));
 import { env } from 'cloudflare:workers'; // for cloudflare
+// import { env } from 'node:process';
+import { FaExternalLinkAlt } from 'react-icons/fa';
+import { HelpSidebar } from './components/common/HelpSidebar';
+const DynamicBanner = lazy(() => import('~/components/FeatureBanner/FeatureBanner'));
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -34,7 +38,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   let locale = getLocale(context) as Locale;
   const reqLocale = getLocaleFromHeaders(request);
-  return data({ context, locale, reqLocale, params, env }, { headers: { 'Set-Cookie': await localeCookie.serialize(locale) } });
+  return data({ context, locale, reqLocale, params, env } /*{ headers: { 'Set-Cookie': await localeCookie.serialize(locale) } }*/);
 }
 
 export const middleware = [i18nextMiddleware];
@@ -83,6 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* for fonts */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="preconnect" href={`https://${cdn_domain}`} />
+        <link rel="preconnect" href={`${(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST}`} />
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Medium.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Bold.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
         <script id="website-ld" type="application/ld+json">
@@ -104,13 +109,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
         <PostHogProvider
-          apiKey={(data.env || import.meta.env).VITE_PUBLIC_POSTHOG_KEY}
+          apiKey={(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_KEY}
           options={{
-            api_host: (data.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST,
+            api_host: (data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST,
+            ui_host: 'https://us.posthog.com',
             defaults: '2025-05-24',
             capture_exceptions: true,
+            capture_performance: true,
             // debug: import.meta.env.MODE === "development",
             cookieless_mode: 'always', // Banner required,
+            loaded: (ph) => {
+              fetch(`${(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST}/api/geoip`)
+                .then((res) => res.json() as any)
+                .then(({ data }) => ph.register(data));
+            },
           }}
         >
           <ThemeProvider>
@@ -118,38 +130,50 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
                 <Navigation reqLocale={data.reqLocale} />
               </nav>
+              <DynamicBanner />
 
               <main className="max-w-7xl mx-auto" style={{ minHeight: 'calc(100vh - 170px)' }}>
                 {children}
               </main>
 
               <footer className="mt-auto py-4 px-2 text-center text-neutral-500 dark:text-neutral-400 text-sm border-t border-neutral-200 dark:border-neutral-700 transition-colors duration-300 space-y-0.5">
-                <p>This is just a non-commercial fan site,</p>
+                <p>
+                  This is just a non-commercial fan site of mobile game{' '}
+                  <b className="italic hover:underline">
+                    <i>Blue Archive</i>
+                  </b>
+                  ,
+                </p>
                 <p>
                   And all copyright of{' '}
                   <a href="https://bluearchive.jp/" target="_blank" rel="noopener noreferrer">
-                    <b className="hover:underline">&ldquo;Blue Archive&rdquo;</b>
+                    <b className="italic hover:underline">Blue Archive</b>
                   </a>{' '}
                   belongs to{' '}
                   <a href="https://www.nexon.com" target="_blank" rel="noopener noreferrer">
-                    <b className="hover:underline">NEXON Korea Corp.</b>
+                    <span className="italic hover:underline">NEXON Korea Corp.</span>
                   </a>{' '}
                   &{' '}
                   <a href="https://www.nexongames.co.kr/" target="_blank" rel="noopener noreferrer">
-                    <b className="hover:underline">NEXON GAMES Co., Ltd.</b>
+                    <span className="italic hover:underline">NEXON GAMES Co., Ltd.</span>
                   </a>{' '}
                   &{' '}
                   <a href="https://www.yo-star.com" target="_blank" rel="noopener noreferrer">
-                    <b className="hover:underline">YOSTAR, Inc.</b>
+                    <span className="italic hover:underline">YOSTAR, Inc.</span>
                   </a>{' '}
                 </p>
                 <p>
-                  <a className="hover:underline" href="/source">
-                    <b>Data Sources & Bug Reports</b>
+                  <a className="" href="/source">
+                    <span className="inline-flex items-center gap-1.5 hover:underline">
+                      Data Sources & Bug Reports
+                      <FaExternalLinkAlt className="text-xs" />
+                    </span>
                   </a>
                 </p>
               </footer>
             </div>
+
+            <HelpSidebar />
           </ThemeProvider>
         </PostHogProvider>
 

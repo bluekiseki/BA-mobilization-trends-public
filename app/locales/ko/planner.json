@@ -78,7 +78,8 @@
     "cardShopSimulator": "카드깡 시뮬레이터",
     "description": {
       "studentGrowthPlanner": "모든 학생의 성장 계획을 한 곳에서 관리하고 필요한 재화를 계산합니다.",
-      "equipmentFarmingPlanner": "학생 육성에 필요한 장비를 AP 효율에 맞게 최적화합니다."
+      "equipmentFarmingPlanner": "학생 육성에 필요한 장비를 AP 효율에 맞게 최적화합니다.",
+      "favorCalculator": "목표 인연 랭크 도달에 필요한 선물을 계산합니다."
     },
     "farmingPlan": "파밍 계획",
     "jukebox": "BGM 플레이어",
@@ -87,11 +88,12 @@
     "planner": "재화 플래너",
     "plannerescription": "학생 성장을 위한 재화 소모 및 이벤트에서의 재화 획득 시물레이션",
     "planner-go": "계산하기",
-    "equipmentFarmingPlanner": "장비 파밍 플래너"
+    "equipmentFarmingPlanner": "장비 파밍 플래너",
+    "favorCalculator": "인연 랭크 계산기"
   },
   "ui": {
     "disclaimer": "일부 데이터가 생략되었거나 오류가 있을 수 있으니 참고용으로만 사용해 주세요.",
-    "navigateToEvent": "다른 이벤트로 이동 ↗",
+    "navigateToEvent": "다른 이벤트로 이동",
     "remainingCurrency": "잔여 재화",
     "initialAmount": "초기 보유량 입력",
     "finalResultPreview": "최종 결과 미리보기",
@@ -128,7 +130,7 @@
     "purchase": "구매:",
     "bonusStudent": "보너스 학생 선택",
     "pastEvents": "지난 이벤트 목록",
-    "currentEventJP": "현재 진행중인 이벤트 (JP 서버 기준)",
+    "currentEventJP": "현재 일본 서버 이벤트",
     "selectCostItem": "비용 아이템 선택 (파밍 재화)",
     "setCostPerExchange": "비용 설정 (1회 교환 당)",
     "setRewardPerExchange": "보상 설정 (1회 교환 당)",
@@ -171,7 +173,11 @@
     "selectAllTooltip": "모든 학생 선택",
     "deselectAllTooltip": "모든 선택 해제",
     "summaryForSelected": "선택된 {{count}}명의 합계",
-    "noStudentSelected": "선택된 학생이 없습니다."
+    "noStudentSelected": "선택된 학생이 없습니다.",
+    "openInPlanner": "학생 성장 플래너에서 열기",
+    "selectStudentToStart": "시작하려면 학생을 선택해주세요.",
+    "remainingTime": "{{day}}일 {{hour}}시간 남음",
+    "startTime": "{{day}}일 {{hour}}시간 후 시작"
   },
   "button": {
     "runAutoFarmCalc": "자동 주회 계산 실행",
@@ -424,7 +430,9 @@
   },
   "equipmentTab": {
     "selectStudentPrompt": "학생을 먼저 선택해주세요.",
-    "levelLockWarning": "해당 티어를 장착하기 위한 목표 레벨이 부족합니다."
+    "levelLockWarning": "해당 티어를 장착하기 위한 목표 레벨이 부족합니다.",
+    "reqCurrent": "현재: 학생 Lv.{{level}} 필요",
+    "reqTarget": "목표: 학생 Lv.{{level}} 필요"
   },
   "affectionTab": {
     "result": {
@@ -460,18 +468,21 @@
   },
   "potentialTab": {
     "title": "능력 해방",
-    "unlockCondition": "(목표 Lv.90 & 전용무기 장착 시 활성)",
-    "lockedMessage": "능력 개방은 90레벨 달성 및 고유무기 장착 후 이용 가능합니다."
+    "unlockCondition": "(목표 Lv.90 & 고유무기 장착 시 활성)",
+    "lockedMessage": "능력 개방은 90레벨 달성 및 고유무기 장착 후 이용 가능합니다.",
+    "reqCurrent": "현재: 학생 Lv.90 및 고유무기 장착 필요",
+    "reqTarget": "목표: 학생 Lv.90 및 고유무기 장착 필요"
   },
   "basicStatsTab": {
     "level": "레벨:",
-    "rank": "★ 랭크:",
+    "rank": "랭크:",
     "affectionRank": "인연 랭크:",
     "growthOptionsTitle": "성장 옵션",
     "useEligmaForRankUp": "★ 랭크 해방에 엘리그마 사용",
     "currentElephPrice": "현재 엘레프 가격:",
     "purchasableEleph": "구매 가능 엘레프:",
-    "ownedEleph": "보유 엘레프"
+    "ownedEleph": "보유 엘레프",
+    "affectionWarning": "현재 성급의 인연 랭크 최대치는 {{limit}}입니다."
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -698,5 +709,248 @@
     "deselect_all": "전체 해제",
     "calc_tip": "행을 추가하여 계산하세요. 3-7 스테이지 보상이 가장 효율이 좋습니다.",
     "add_row": "행 추가"
+  },
+  "gacha": {
+    "title": "청휘석 및 가챠 플래너",
+    "intro": {
+      "title": "플래너 사용 가이드",
+      "summary": "미래시 일정을 기반으로 예상 청휘석 수급량을 계산하고, 원하는 학생의 픽업 전략을 세워 가챠 성공 확률을 시뮬레이션합니다.",
+      "feat1_title": "수급량 계산",
+      "feat1_desc": "보유한 재화와 월정액, 총력전·대결전 등 미래시 일정을 반영하여 가용 청휘석을 예측합니다.",
+      "feat2_title": "픽업 전략",
+      "feat2_desc": "목표 학생을 설정하고, 고의 천장이나 조건부 가챠 등 상세한 전략을 수립합니다.",
+      "feat3_title": "결과 예측",
+      "feat3_desc": "설정한 전략을 바탕으로 시뮬레이션을 돌려 성공 확률과 파산 위험을 분석합니다.",
+      "notes": {
+        "title": "참고사항 및 가정",
+        "note1_pre": "본 웹페이지는 BETA 버전이며, 다음의 ",
+        "note1_post": "를 참조하여 제작되었습니다. 아직 불안정한 부분이 있을 수 있으므로 저 스프레드시트 사용을 권장합니다.",
+        "note2": "대결전 티켓은 유효기간이 무제한이라고 가정합니다.",
+        "note3": "점검 보상, 일부 스토리, 전술대항전 초기화, 모모톡, 도전과제 등으로 얻는 청휘석은 반영되지 않습니다. 대신 실제 수급량과 엇비슷하게 맞추기 위해 기본적으로 '월 1,200개'의 추가 수급이 있다고 가정합니다.",
+        "note4": "모든 이벤트의 청휘석 소모 및 획득은 이벤트 첫날에 이루어진다고 가정합니다.",
+        "note5": "총력전 및 대결전의 청휘석 획득은 해당 기간의 마지막 날에 이루어진다고 가정합니다.",
+        "note6": "수급 데이터가 있는 이벤트는 1회당 수급량(스프레드시트 수동 추출)이 반영되어 있으며, 데이터가 없는 이벤트는 1,800개를 기본값으로 반영합니다.",
+        "note7": "아로나의 출석부는 오늘을 1일차로 시작한다고 가정합니다.",
+        "note8": "가챠 전략 탭에서 한 배너에서 여러 캐릭터를 뽑으려 할 경우, 반드시 '최대 예산(최대 천장 횟수)'을 알맞게 변경해 주시기 바랍니다.",
+        "note9": "모든 10연차 및 단일 가챠 티켓은 동등한 가치의 청휘석(1연차 = 120 청휘석)으로 변환되어 계산됩니다."
+      }
+    },
+    "server": {
+      "kr_global": "KR / 글로벌",
+      "jp": "JP 서버"
+    },
+    "tabs": {
+      "income": "수급 & 미래시",
+      "strategy": "가챠 계획 수립",
+      "result": "시뮬레이션 실행"
+    },
+    "errors": {
+      "load_students": "학생 데이터를 불러오는데 실패했습니다.",
+      "load_data": "데이터 로드 실패"
+    },
+    "income": {
+      "timeline": {
+        "title": "일정 & AP 설정",
+        "total_count": "총 {{count}}건",
+        "headers": {
+          "start": "START",
+          "type": "TYPE",
+          "name": "NAME",
+          "ap": "AP"
+        },
+        "empty": "예정된 일정이 없습니다.",
+        "types": {
+          "evt": "이벤트",
+          "raid": "총력전",
+          "elim": "대결전",
+          "towr": "제결전",
+          "camp": "캠페인",
+          "etc": "ETC"
+        }
+      },
+      "stats": {
+        "title": "시뮬레이션 상세 리포트",
+        "survival_rate": "생존 확률",
+        "total_income": "총 수입",
+        "total_ap_expense": "총 AP 지출",
+        "gacha_expense_avg": "가챠 지출 (평균)",
+        "final_balance_avg": "최종 잔액 (평균)",
+        "category": {
+          "regular": "정기 수급",
+          "content": "컨텐츠 보상",
+          "misc_expense": "기타 & 지출"
+        },
+        "items": {
+          "mission": "일일/주간 미션",
+          "arona": "아로나 출석",
+          "pvp": "전술대회 (PvP)",
+          "monthly": "월정액",
+          "raid_elim": "총력전/대결전",
+          "multifloor": "제약해제결전",
+          "jfd": "종합전술시험",
+          "event_etc": "이벤트/스토리/점검",
+          "manual": "추가 입력",
+          "ap_refresh": "AP 충전",
+          "gacha": "가챠"
+        }
+      },
+      "settings": {
+        "title": "시뮬레이션 설정",
+        "include_gacha": "가챠 반영",
+        "current_resources": "현재 자원",
+        "monthly_income": "월간 수급",
+        "monthly_card": "월정액",
+        "half_monthly_card": "반정액",
+        "extra_placeholder": "추가",
+        "pvp_ranking": "전술대항전 / 총력전 트로피",
+        "pvp_rank_format": "In {{rank}}위 ({{amount}}/일)",
+        "raid_rank": {
+          "platinum": "플래티넘",
+          "gold": "골드",
+          "silver": "실버",
+          "bronze": "브론즈"
+        },
+        "ap_refresh_daily": "AP 충전 (매일)",
+        "event_period": "이벤트 기간",
+        "normal_period": "평상시 (없을 때)",
+        "refresh_count": "{{count}}충",
+
+        "custom_income_title": "특정 일자 청휘석 추가/지출 내역",
+        "custom_income_desc": "내용 (예: 사료, 한정팩)",
+        "custom_income_amount": "청휘석량"
+      },
+      "chart": {
+        "survival_rate": "생존 확률",
+        "lucky": "상위 10% (Lucky)",
+        "unlucky": "하위 10% (Unlucky)",
+        "worst": "하위 100% (Worst)",
+        "avg_balance": "평균 잔액",
+        "avg": "평균",
+        "upper_10": "상위 10%",
+        "lower_10": "하위 10%",
+        "hide_details": "상세 내역 숨기기",
+        "show_details": "일별 수입/지출 상세 내역 보기",
+        "table_date": "날짜",
+        "table_reason": "증감 내역",
+        "table_delta": "변동량",
+        "table_balance": "잔여량 (평균)",
+        "start_balance": "시작 자산",
+        "daily_calc": "일일/이벤트 정산"
+      },
+      "log": {
+        "fixed_daily_sunday": "일일/주간/월정액 등 고정 수급",
+        "fixed_daily": "일일/월정액 등 고정 수급",
+        "monthly_extra": "월간 추가 수급 (월초)",
+        "raid": "[총력전] {{name}} 정산",
+        "elimination": "[대결전] {{name}} 정산",
+        "jfd": "[종전시] {{name}} 참여보상",
+        "event": "[이벤트] {{name}}",
+        "multifloor": "[제약해제] {{name}} 참여보상",
+        "mainstory": "[메인스토리] {{name}} 보상",
+        "ap_refresh": "AP 충전"
+      }
+    },
+    "result": {
+      "alert_error": "시뮬레이션 오류 발생",
+      "panel": {
+        "title": "시뮬레이션 실행",
+        "desc": "설정된 <1>{{amount}} 청휘석</1>으로 계획된 가챠를 시뮬레이션합니다.",
+        "iteration_count": "반복 횟수",
+        "btn_running": "계산 중...",
+        "btn_start": "시뮬레이션 시작"
+      },
+      "empty_state": "상단의 버튼을 눌러 시뮬레이션을 시작하세요."
+    },
+    "result_view": {
+      "unit_toggle": {
+        "pyroxenes": "소모 청휘석",
+        "pulls": "총 연차 횟수"
+      },
+      "disclaimer": "* 무료연차는 우선 소모되며, 청휘석 소모량에는 포함되지 않습니다.",
+      "summary": {
+        "success_rate": {
+          "title": "목표 달성률",
+          "desc": "Must 학생 전체 획득 확률"
+        },
+        "avg_cost": {
+          "title_pyroxenes": "평균 소모 청휘석",
+          "title_pulls": "평균 총 연차",
+          "approx_pulls": "(약 {{amount}} 연차 분량)",
+          "includes_free": "(무료연차 포함)"
+        },
+        "safety": {
+          "title": "자원 안정성",
+          "safe": "안전함",
+          "unsafe": "부족 위험",
+          "bankruptcy_prob": "보유 청휘석 초과 확률: {{rate}}%"
+        }
+      },
+      "chart": {
+        "title_pyroxenes": "예상 청휘석 소모 분포",
+        "title_pulls": "예상 총 연차 횟수 분포",
+        "mode_pdf": "빈도(PDF)",
+        "mode_cdf": "누적(CDF)",
+        "unit_count": "{{count}}회",
+        "range_count": "{{start}} ~ {{end}}회",
+        "tooltip_prob": "확률: {{rate}}%",
+        "cdf_label_pyroxenes": "{{amount}} 청휘석 이내",
+        "cdf_label_pulls": "{{amount}}회 이내"
+      },
+      "student_stats": {
+        "title": "학생별 획득 및 엘레프 예측",
+        "tag_limited": "한정",
+        "tag_fes": "페스",
+        "rate_obtain": "획득률",
+        "avg_eleph": "평균 엘레프",
+        "collapse": "접기 ▲",
+        "expand": "분포 보기 ▼",
+        "chart_x_eleph": "엘레프"
+      }
+    },
+    "banner_planner": {
+      "header": {
+        "title": "픽업 일정 및 전략",
+        "toggle_show": "{{count}}개의 지난 배너 보기",
+        "toggle_hide": "오래된 배너 접기",
+        "auto_scroll_hint": "* 자동 스크롤 지원"
+      },
+      "badge": {
+        "now": "NOW",
+        "fes": "★ FES 6%",
+        "free_pulls": "무료 {{count}}연",
+        "limited": "한정"
+      },
+      "toggle": {
+        "include": "계획 포함",
+        "skip": "건너뛰기"
+      },
+      "settings": {
+        "max_budget": "최대 예산",
+        "spark_option": "{{spark}}천장 ({{pulls}}연)",
+        "max_budget_suffix": "까지 허용",
+        "min_pulls": "최소 보장",
+        "min_pulls_suffix": "연차 진행"
+      },
+      "mode": {
+        "skip": "건너뛰기",
+        "must": "필수",
+        "opportunistic": "조건부"
+      },
+      "condition": {
+        "label": "조건",
+        "remains_le": "천장 잔여 ≤",
+        "try_pulls": "연이면 시도"
+      },
+      "intentional_spark": {
+        "label": "고의 천장",
+        "option_prefix": "옵션",
+        "after_obtain": "획득 후",
+        "proceed_if_remains": "연 남으면 진행"
+      },
+      "empty_state": {
+        "no_banners": "표시할 배너가 없습니다.",
+        "hint_show_old": "상단의 '지난 배너 보기'를 눌러보세요."
+      }
+    }
   }
 }

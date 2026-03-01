@@ -26,7 +26,7 @@ season,startTime,endTime,boss1,boss2,boss3,difficulty1,difficulty2,difficulty3
 25,2025-08-13 11:00:00,2025-08-20 03:59:59,Binah_Street_LightArmor,Binah_Street_Unarmed,Binah_Street_ElasticArmor,Insane,Insane,Torment
 26,2025-09-10 11:00:00,2025-09-17 03:59:59,Chesed_Outdoor_LightArmor,Chesed_Outdoor_ElasticArmor,Chesed_Outdoor_HeavyArmor,Insane,Torment,Insane
 27,2025-10-15 11:00:00,2025-10-22 03:59:59,ShiroKuro_Indoor_LightArmor,ShiroKuro_Indoor_ElasticArmor,ShiroKuro_Indoor_Unarmed,Torment,Torment,Insane
-28,2025-11-12 11:00:00,2025-11-19 03:59:59,Hieronymus_Street_LightArmor,Chesed_Outdoor_Unarmed,Hieronymus_Street_ElasticArmor,Torment,Torment,Insane
+28,2025-11-12 11:00:00,2025-11-19 03:59:59,Hieronymus_Street_LightArmor,Hieronymus_Street_Unarmed,Hieronymus_Street_ElasticArmor,Torment,Torment,Insane
 29,2025-12-10 11:00:00,2025-12-17 03:59:59,Kaitenger_Street_Unarmed,Kaitenger_Street_LightArmor,Kaitenger_Street_HeavyArmor,Insane,Torment,Torment
 30,2026-01-14 11:00:00,2026-01-20 03:59:59,ShiroKuro_Street_HeavyArmor,ShiroKuro_Street_Unarmed,ShiroKuro_Street_ElasticArmor,Insane,Torment,Torment
-31,2026-03-04 11:00:00,2026-03-11 03:59:59,??,??,??,Insane,Torment,Torment
+31,2026-03-04 11:00:00,2026-03-11 03:59:59,Hieronymus_Street_HeavyArmor,Hieronymus_Street_Unarmed,Hieronymus_Street_LightArmor,Torment,Torment,Insane

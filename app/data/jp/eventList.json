@@ -39,7 +39,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Vacation!",
+    "En": "Head Prefect Hina's Summer Break!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2021-07-29 12:30:00",
     "CloseTime": "2021-08-12 12:00:00"
@@ -182,7 +182,7 @@
   "822": {
     "Name": "Event_Name_822",
     "Kr": "아트라하시스의 방주 점령전",
-    "Jp": "アトラ・ハシースの箱舟占領戦",
+    "Jp": "アトラ・ハシースの箱舟占領戦 ",
     "En": "The Ark of Atrahasis Conquest",
     "Tw": "阿特拉哈西斯的方舟占領戰",
     "OpenTime": "2023-02-22 11:00:00",
@@ -465,8 +465,16 @@
     "En": null,
     "Tw": null,
     "OpenTime": "2026-01-20 11:00:00",
-    "CloseTime": "2026-02-12 10:59:59",
-    "Planable": true
+    "CloseTime": "2026-02-18 10:59:59"
+  },
+  "855": {
+    "Name": "Event_Name_855",
+    "Kr": "???",
+    "Jp": "ゲーム開発部のお掃除大作戦！",
+    "En": "???",
+    "Tw": "???",
+    "OpenTime": "2026-02-18 11:00:00",
+    "CloseTime": "2026-03-04 10:59:59"
   },
   "10801": {
     "Name": "Event_Name_801",
@@ -499,7 +507,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Vacation!",
+    "En": "Head Prefect Hina's Summer Break!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2022-09-07 11:00:00",
     "CloseTime": "2022-09-14 10:59:59"
@@ -772,8 +780,7 @@
     "En": "The Senses Descend",
     "Tw": "五塵降臨",
     "OpenTime": "2026-01-07 11:00:00",
-    "CloseTime": "2026-01-20 10:59:59",
-    "Planable": true
+    "CloseTime": "2026-01-20 10:59:59"
   },
   "10841": {
     "Name": "Event_Name_841",
@@ -783,5 +790,35 @@
     "Tw": "Serenade Promenade",
     "OpenTime": "2025-12-03 11:00:00",
     "CloseTime": "2025-12-17 10:59:59"
+  },
+  "10842": {
+    "Name": "Event_Name_842",
+    "Kr": "비밀의 미드나잇 파티 ~종이 울리는 술래잡기~",
+    "Jp": "秘密のミッドナイトパーティー～オニの手は鐘と共に～",
+    "En": "Secret Midnight Party: The Chimes of Tag",
+    "Tw": "祕密的午夜派對～鐘響時刻的捉迷藏～",
+    "OpenTime": "2026-03-04 11:00:00",
+    "CloseTime": "2026-03-18 10:59:59",
+    "Planable": false
+  },
+  "100854": {
+    "Name": "Event_Name_854",
+    "Kr": "강철대륙 공략전 -말쿠트전-",
+    "Jp": "鋼鉄大陸攻略戦 -マルクト戦-",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-01-29 11:00:00",
+    "CloseTime": "2026-02-12 10:59:59",
+    "Planable": false
+  },
+  "200854": {
+    "Name": "Event_Name_854",
+    "Kr": "데카그라마톤 결전",
+    "Jp": "DECAGRAMMATON決戦",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-02-13 11:00:00",
+    "CloseTime": "2026-02-18 10:59:59",
+    "Planable": false
   }
 }

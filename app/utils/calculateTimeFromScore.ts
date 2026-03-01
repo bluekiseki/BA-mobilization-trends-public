@@ -12,7 +12,7 @@ const mat_4m = {
   Normal: { a: 959000, b: 120 },
 };
 const mat_3m = {
-  Lunatic: { a: 54393000, b: 2880 },
+  Lunatic: { a: 53603000, b: 2880 },
   Torment: { a: 39716000, b: 2400 },
   Insane: { a: 26161600, b: 1920 },
   Extreme: { a: 14576000, b: 1440 },
@@ -82,14 +82,12 @@ export function calculateTimeFromScore(score: number, boss: string, server: Game
   const timeout = getTimeoutFromBoss(boss);
   const difficulty = getDifficultyFromScoreAndBoss(score, server, id);
 
-  // console.log('calculateTimeFromScore', score, boss, server, timeout, difficulty)
   const needOldVersion = isNeedOldVersion(server, id);
   if (needOldVersion) {
   }
   const mat = needOldVersion ? (timeout == 4 ? mat_4m_old : mat_3m_old) : timeout == 4 ? mat_4m : timeout == 3 ? mat_3m : mat_4m30s;
 
   if (!(difficulty in mat)) {
-    // console.error('difficulty', difficulty, mat)
     return;
   }
 

@@ -78,7 +78,6 @@ export const getRawTsvData = async (server: GameServer, selectedStudentId: numbe
   const mainDataUrl = cdn(`/w/map/${server}/${selectedStudentId}.bin`);
 
   const mainDataText = await fetchAndProcessWithCache(mainDataUrl, (res) => res.text());
-  // console.log('mainDataText',{mainDataText})
   const rawTsvData: RawDataRow[] = tsvParseRows(
     mainDataText,
     (row): RawDataRow => ({

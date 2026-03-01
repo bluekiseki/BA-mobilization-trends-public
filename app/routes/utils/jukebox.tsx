@@ -15,6 +15,7 @@ import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { FilterModal, StudentFilterModal } from '~/components/jukebox/filterModal';
+import { useHelpKey } from '~/utils/usePageHelp';
 
 const PlayIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
@@ -29,19 +30,6 @@ const SoundWaveIcon = () => (
     <span className="w-1 h-2 bg-current animate-[wave_1s_ease-in-out_infinite]"></span>
   </div>
 );
-
-// const SortAscIcon = () => (
-//     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-//         <path d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zM3 7a1 1 0 000 2h14a1 1 0 100-2H3zM3 11a1 1 0 100 2h14a1 1 0 100-2H3zM3 15a1 1 0 100 2h14a1 1 0 100-2H3z" />
-//         <path fillRule="evenodd" d="M10 18a.5.5 0 01-.5-.5v-6.793l-1.646 1.647a.5.5 0 01-.708-.708l2.5-2.5a.5.5 0 01.708 0l2.5 2.5a.5.5 0 01-.708.708L10.5 10.707V17.5a.5.5 0 01-.5.5z" clipRule="evenodd" />
-//     </svg>
-// );
-// const SortDescIcon = () => (
-//      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-//         <path d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zM3 7a1 1 0 000 2h14a1 1 0 100-2H3zM3 11a1 1 0 100 2h14a1 1 0 100-2H3zM3 15a1 1 0 100 2h14a1 1 0 100-2H3z" />
-//         <path fillRule="evenodd" d="M10 5a.5.5 0 01.5.5v6.793l1.646-1.647a.5.5 0 01.708.708l-2.5 2.5a.5.5 0 01-.708 0l-2.5-2.5a.5.5 0 11.708-.708L9.5 12.207V5.5A.5.5 0 0110 5z" clipRule="evenodd" />
-//     </svg>
-// );
 
 // --- TYPE DEFINITIONS ---
 type Language = 'en' | 'jp' | 'ko' | 'tw';
@@ -249,6 +237,8 @@ export default function JukeboxPage() {
 
   const filterPanelRef = useRef<HTMLDivElement>(null);
   const fetchStudents = useDataCache<Record<string, Student>>();
+
+  useHelpKey('jukebox');
 
   useEffect(() => {
     fetch(cdn('/w/bgm_database_combined.json'))
@@ -534,8 +524,6 @@ export default function JukeboxPage() {
         baseString = `${getPrefix('limitraid')} ${xref.title}`;
         break;
       case 'Group_Story':
-        // console.log('xref',xref.title, otherStoryData.Group_Story, otherStoryData.Group_Story[String(xref.title)])
-        // const groupTitle = xref.title ? getLocalizedText(otherStoryData.Group_Story[String(xref.title) as keyof typeof otherStoryData.Group_Story], language) : '';
         const groupTitle =
           xref.title && String(xref.title) in otherStoryData.Group_Story ? t_club(otherStoryData.Group_Story[String(xref.title) as keyof typeof otherStoryData.Group_Story], language) : '';
         baseString = `${getPrefix('Group_Story')} ${groupTitle} - ${name}`;
@@ -553,7 +541,7 @@ export default function JukeboxPage() {
     return baseString;
   };
 
-  const pageBackground = 'bg-gradient-to-b from-sky-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 text-neutral-800 dark:text-neutral-200';
+  const pageBackground = 'bg-gradient-to-b from-sky-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-900 text-neutral-800 dark:text-neutral-200';
 
   if (isLoading) return <div className={`flex items-center justify-center min-h-screen font-sans ${pageBackground}`}>{t('status.loading')}</div>;
   if (error)
@@ -564,7 +552,7 @@ export default function JukeboxPage() {
     );
 
   return (
-    <div className={`min-h-screen font-sans ${pageBackground}`}>
+    <div data-component-name="JukeboxPage" className={`min-h-screen font-sans ${pageBackground}`}>
       <div className="max-w-7xl mx-auto p-2 sm:p-4 lg:p-8">
         <header className="mb-8 p-4 sm:p-0 ml-1">
           <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-500 to-cyan-400 mt-3 mb-2 tracking-tight">{t('title')}</h1>
@@ -704,7 +692,7 @@ export default function JukeboxPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2">
+              <div data-component-name="JukeboxPage_Action" className="grid grid-cols-2 gap-2">
                 <button
                   onClick={handleToggleAllDetails}
                   disabled={filteredBgm.length === 0}

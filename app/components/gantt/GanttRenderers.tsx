@@ -7,7 +7,7 @@ import { FaShield } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 
 import { TerrainIconGameStyle, type Terrain } from '~/components/teran';
-import type { ScheduleItem } from '~/utils/calender.data';
+import type { PickupStudentInfo, ScheduleItem } from '~/utils/calender.data';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
@@ -50,6 +50,7 @@ const ARMOR_COLORS: Record<string, string> = {
   HeavyArmor: '#eab308', // Yellow-500
   Unarmed: '#3b82f6', // Blue-500 (Special)
   ElasticArmor: '#a855f7', // Purple-500
+  CompositeArmor: '#137973',
   Normal: '#94a3b8', // Slate-400
   Structure: '#22c55e', // Green-500
 };
@@ -226,7 +227,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
   const isEraid = item.type === 'eraid' && item.details?.bosses && item.details.bosses.length > 0;
 
   const containerStyle = `
-    absolute z-10 transition-all hover:z-30 hover:scale-[1.01] hover:shadow-md rounded-[2px] group overflow-visible
+    absolute z-10 transition-all hover:z-30 hover:shadow-md rounded-[2px] group overflow-visible
     ${isPrediction ? 'opacity-90 shadow-none' : ''}
   `;
 
@@ -266,14 +267,26 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
 
           {}
           {portrait && (
-            <div className="relative -ml-3 z-20 shrink-0 select-none pointer-events-none flex items-end h-full">
+            <Link
+              to={localeLink(locale, `/charts/jp/heatmap`)}
+              state={
+                item.details
+                  ? {
+                      studentId: item.details?.studentId,
+                    }
+                  : undefined
+              }
+              className="relative -ml-3 z-20 shrink-0 flex items-end h-full"
+            >
+              {/* <div className="relative -ml-3 z-20 shrink-0 select-none pointer-events-none flex items-end h-full"> */}
               <img
                 src={`data:image/webp;base64,${portrait}`}
                 alt=""
                 className="h-[160%] w-auto max-w-none object-contain drop-shadow-lg translate-y-[10%]"
                 style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)' }}
               />
-            </div>
+              {/* </div> */}
+            </Link>
           )}
 
           <div className={`flex flex-col justify-center min-w-0 z-10 pl-1 ${portrait ? '-ml-1' : ''}`}>
@@ -325,7 +338,7 @@ const PickupStudentItem = ({
   laneHeight,
   TooltipComponent,
 }: {
-  student: any;
+  student: PickupStudentInfo;
   index: number;
   portrait: string;
   studentName: string;
@@ -333,7 +346,8 @@ const PickupStudentItem = ({
   TooltipComponent: any;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { t: t_c } = useTranslation('common');
+  const { t: t_c, i18n } = useTranslation('common');
+  const locale = i18n.language as Locale;
 
   return (
     <TooltipComponent placement="top" overlay={<span className="text-xs font-bold">{studentName}</span>} mouseEnterDelay={0.05}>
@@ -348,10 +362,21 @@ const PickupStudentItem = ({
           marginLeft: index === 0 ? 0 : '0px',
         }}
       >
-        <div className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-125 origin-bottom">
-          {}
-          <img src={`data:image/webp;base64,${portrait}`} className="h-[140%] w-auto max-w-none object-contain rounded-xl drop-shadow-md translate-y-[5%]" alt={studentName} />
-
+        {/* <div className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-125 origin-bottom"> */}
+        {}
+        <Link
+          to={localeLink(locale, `/charts/jp/heatmap`)}
+          state={{
+            studentId: student.id,
+          }}
+          className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-125 origin-bottom"
+        >
+          <img
+            src={`data:image/webp;base64,${portrait}`}
+            className="h-[140%] w-auto max-w-none object-contain rounded-xl drop-shadow-md translate-y-[5%]"
+            alt={studentName}
+            style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)' }}
+          />
           {}
           <div className="absolute top-[-4px] left-0 right-0 flex justify-between w-full px-0 pointer-events-none opacity-90 group-hover:opacity-100">
             {student.rerun ? <span className="bg-blue-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm backdrop-blur-[1px] whitespace-nowrap">{t_c('rerun')}</span> : <span />}
@@ -360,7 +385,8 @@ const PickupStudentItem = ({
               {!student.fast && student.limited && <span className="bg-pink-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('limited')}</span>}
             </div>
           </div>
-        </div>
+        </Link>
+        {/* </div> */}
       </div>
     </TooltipComponent>
   );

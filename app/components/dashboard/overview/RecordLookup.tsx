@@ -201,8 +201,6 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
       const index = rank - 1;
       const score = scores[index];
 
-      // console.log('rank->score',score)
-
       if (isTotalChart) {
         const bracket = getBracketFromTotalScore(score);
         results.push(createRecord(rank, score, 'exactRank', t('rankLookup', { rank: numericValue }), bracket));
@@ -349,7 +347,7 @@ export const RecordLookup: React.FC<RecordLookupProps> = ({ scores, raidInfo, se
 
   return (
     <>
-      <div ref={containerRef} className="relative">
+      <div ref={containerRef} data-component-name="RecordLookup" className="relative">
         <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 min-h-[44px]">
           {!isTotalChart &&
             Array.from(activeFilters).map((diff) => (

@@ -77,7 +77,7 @@ export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurr
   return (
     <>
       {!isExpanded && (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div data-component-name="FloatingCurrencyStatus" className="fixed bottom-4 right-4 z-50">
           <div className="relative bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md rounded-xl shadow-lg border dark:border-neutral-700">
             <button
               onClick={() => setIsExpanded(true)}

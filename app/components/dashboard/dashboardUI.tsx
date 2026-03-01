@@ -26,6 +26,7 @@ import { CompositionChart } from './teamDetail/compositionChart';
 import { TableFilterPanelComponent } from './teamDetail/tableFilterPanelComponent';
 import { RankingsTableComponent } from './teamDetail/rankingsTableComponent';
 import { HiOutlineBars3, HiOutlineChartBar, HiOutlineChartPie, HiOutlineTableCells, HiOutlineUserGroup, HiOutlineUsers, HiOutlineVariable, HiOutlineXMark } from 'react-icons/hi2';
+import { useLocalStorage } from '~/utils/useLocalStorage';
 
 const RANK_RANGES: RankRange[] = [
   { id: 'IN100', name: 'IN 100', min: 1, max: 100 },
@@ -48,7 +49,11 @@ interface DashboardUIProps {
 function DashboardUI({ dashboardData: allData, studentData, portraitData, raidInfo, server }: DashboardUIProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [tableFilters, setTableFilters] = useState<TableFilters>({
+  // const [tableFilters, setTableFilters] = useState<TableFilters>({
+  //   includable: [],
+  //   excludable: [],
+  // });
+  const [tableFilters, setTableFilters] = useLocalStorage<TableFilters>('table_filters_data_v1', {
     includable: [],
     excludable: [],
   });
@@ -115,6 +120,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
         } else {
           if (count > 1) return false;
           if (count == 1 && assist.length && assist[0].id != cond.id) return false;
+          if (count == 1 && assist_brrowed_id != null) return false;
           if (count == 1) assist_brrowed_id = cond.id;
         }
       }

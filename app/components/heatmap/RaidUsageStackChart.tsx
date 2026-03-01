@@ -18,6 +18,7 @@ interface RaidUsageData {
   raidId: string;
   displayName: string;
   bossName: string;
+  teran: string;
   dateLabel: string;
   totalCount: number;
   breakdown: Record<number, number>;
@@ -82,7 +83,8 @@ export const RaidUsageStackChart: React.FC = () => {
 
     raidLabels.forEach((label: string) => {
       const matchedInfo = raidInfoMap.get(label);
-      const bossName = matchedInfo ? (matchedInfo.Boss !== matchedInfo.Boss ? matchedInfo.Boss : matchedInfo.Boss) : '';
+      const bossName = matchedInfo ? matchedInfo.Boss : '';
+      const teran = matchedInfo ? matchedInfo.Location : '';
 
       let dateLabel = '';
       if (matchedInfo && matchedInfo.Date) {
@@ -92,6 +94,7 @@ export const RaidUsageStackChart: React.FC = () => {
       tempMap.set(label, {
         raidId: label,
         displayName: label,
+        teran: teran,
         bossName: bossName,
         dateLabel: dateLabel,
         totalCount: 0,
@@ -186,7 +189,9 @@ export const RaidUsageStackChart: React.FC = () => {
 
       return (
         <div className="rounded border bg-white p-3 text-sm shadow-xl dark:border-neutral-700 dark:bg-neutral-800 z-50">
-          <div className="font-bold mb-1 text-neutral-800 dark:text-neutral-100">{dataRow.bossName}</div>
+          <div className="font-bold mb-1 text-neutral-800 dark:text-neutral-100">
+            {dataRow.bossName} {dataRow.teran ? dataRow.teran : ''}
+          </div>
           <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-2 border-b pb-1 dark:border-neutral-600 flex items-center gap-1">
             {dataRow.dateLabel && <span>{dataRow.dateLabel}</span>}
             {dataRow.dateLabel && <span className="mx-0.5 opacity-50">|</span>}
@@ -262,7 +267,7 @@ export const RaidUsageStackChart: React.FC = () => {
   };
 
   return (
-    <div className="w-full mt-8 animate-fade-in-up">
+    <div data-component-name="RaidUsageStackChart" className="w-full mt-8 animate-fade-in-up">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-100 flex items-center gap-2">{t('usage_statistics', { defaultValue: 'Usage Statistics' })}</h3>
@@ -306,16 +311,13 @@ export const RaidUsageStackChart: React.FC = () => {
 
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
 
-          {}
           {starKeys.map((star) => (
             <Bar key={star} dataKey={star} stackId="a" fill={getBackgroundRatingColor(star, isDark) || '#8884d8'} animationDuration={500}>
               <LabelList dataKey={star} content={renderCustomizedLabel} />
             </Bar>
           ))}
 
-          {}
-          {}
-          <Bar dataKey="_anchor" stackId="a" fill="transparent" stroke="none" isAnimationActive={false} legendType="none">
+          <Bar key={`bar-anchor-${assistantFilter}`} dataKey="_anchor" stackId="a" fill="transparent" stroke="none" isAnimationActive={false} legendType="none">
             <LabelList dataKey="totalCount" content={renderTotalLabel} position="right" />
           </Bar>
 

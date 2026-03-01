@@ -1,56 +1,51 @@
-// app/components/CalendarWidget.tsx
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, type LoaderFunctionArgs } from 'react-router';
+import { Link } from 'react-router';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
 import type { GameServer } from '~/types/data';
-import { loadScheduleData, type ScheduleTrack } from '~/utils/calender.data';
-import { getInstance } from '~/middleware/i18next';
+import { type loadScheduleData } from '~/utils/calender.data';
 
-// Refactored Imports
 import { useGanttController } from '~/components/gantt/useGanttController';
 import { GanttChart } from '~/components/gantt/GanttChart';
 import { FiArrowRight } from 'react-icons/fi';
 import { localeLink } from '~/utils/localeLink';
 
-// --- 1. Loader Function (Must stay here for Home compatibility) ---
-export async function loadCalendarWidgetData(context: LoaderFunctionArgs['context'], server: GameServer) {
-  if (server !== 'jp' && server !== 'kr') {
-    throw new Response('Not Found: Invalid server parameter.', { status: 404 });
-  }
-
-  let i18n = getInstance(context);
-  const locale = i18n.language as Locale;
-
-  // Widget mode: Load only 4 tracks
-  const widgetTracks: ScheduleTrack[] = ['raid', 'event', 'campaign', 'pickup'];
-
-  const data = await loadScheduleData({
-    server: server as 'jp' | 'kr',
-    locale,
-    i18n,
-    tracksToLoad: widgetTracks,
-  });
-
-  return data; // { tracks, timeRange }
-}
-
 // --- 2. Widget Component ---
 interface CalendarWidgetProps {
-  loaderData: Awaited<ReturnType<typeof loadCalendarWidgetData>>;
   server: GameServer;
 }
 
-export function CalendarWidget({ loaderData, server }: CalendarWidgetProps) {
-  const { tracks, timeRange } = loaderData;
+export function CalendarWidget({ server }: CalendarWidgetProps) {
   const { t, i18n } = useTranslation('calendar');
   const locale = i18n.language as Locale;
+
+  const [widgetData, setWidgetData] = useState<Awaited<ReturnType<typeof loadScheduleData>> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
 
+  // 1. Widget data API call (re-called whenever server or language changes)
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(`/api/calendar?type=widget&server=${server}&lang=${locale}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch widget data');
+        return res.json() as any;
+      })
+      .then((json) => {
+        // Assumes API response structure is { data: { tracks, timeRange } }
+        setWidgetData(json.data);
+      })
+      .catch((err) => console.error('Calendar data error:', err))
+      .finally(() => setIsLoading(false));
+  }, [server, locale]);
+
+  // loaderData: Awaited<ReturnType<typeof loadCalendarWidgetData>>;
+
+  // 2. Fetch student data
   useEffect(() => {
     fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
       .then((r) => r.json() as any)
@@ -62,21 +57,29 @@ export function CalendarWidget({ loaderData, server }: CalendarWidgetProps) {
       .catch(console.error);
   }, [locale]);
 
-  // Use the Shared Controller
-  const ganttController = useGanttController({ timeRange, server });
+  // Set up GanttController
+  // Handle optional chaining since timeRange is missing during loading
+  const ganttController = useGanttController({
+    timeRange: widgetData?.timeRange || { min: 0, max: 1 },
+    server,
+  });
+
+  // UI for loading state or missing data (can be replaced with skeleton or spinner)
+  if (isLoading || !widgetData) {
+    return (
+      <div className="w-full h-132 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+        <span className="text-neutral-400 animate-pulse">{t('loading', { defaultValue: 'Loading calendar...' })}</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full bg-white dark:bg-neutral-900 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm">
+    <div className="w-full bg-white dark:bg-neutral-900 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm transition-opacity duration-300">
       <div className="pb-2">
         <GanttChart
-          // tracks={tracks}
-          // timeRange={timeRange}
-          // studentData={studentData}
-          // studentPortraits={studentPortraits}
-          // birthdayTrackItems={[]} // Widget doesn't show birthdays
           data={{
-            tracks,
-            timeRange,
+            tracks: widgetData.tracks,
+            timeRange: widgetData.timeRange,
             studentData,
             studentPortraits,
             birthdayTrackItems: [],
@@ -92,7 +95,7 @@ export function CalendarWidget({ loaderData, server }: CalendarWidgetProps) {
         </button>
 
         <Link
-          to={localeLink(locale, '/calendar')}
+          to={localeLink(locale, `/calendar/${server}`)}
           className="group flex items-center gap-2 text-sm font-bold text-neutral-700 dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
           <span>{t('widget.view-more', { defaultValue: 'Full Schedule' })}</span>

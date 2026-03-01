@@ -66,6 +66,14 @@ export const getBackgroundRatingColor = (index: number, theme: 'light' | 'dark' 
   return color;
 };
 
+export const getStarValue = (star: number, uw: number) => {
+  return getCharacterStarValue({
+    hasWeapon: uw > 0,
+    star: star,
+    weaponStar: uw,
+  } as Character);
+};
+
 export const getCharacterStarValue = (c: Character): number => {
   let out = c.hasWeapon ? 6 + c.weaponStar : c.star;
   if (c.hasWeapon && !c.weaponStar) out = 6;

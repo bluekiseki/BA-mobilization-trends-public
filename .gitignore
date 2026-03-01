@@ -5,8 +5,8 @@
 /.react-router/
 /build/
 
-public/*.json
-public/**/*.json
+public/dummy_*.json
+# public/**/*.json
 
 pnpm-workspace.yaml
 .env

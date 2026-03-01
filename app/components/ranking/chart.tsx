@@ -102,6 +102,7 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
                 Pierce: '#bc8800',
                 Mystic: '#206d9b',
                 Sonic: '#9a46a8',
+                Chemical: '#137973',
               }[item.bullettype],
             }}
           >
@@ -146,7 +147,7 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
       <div className="mb-4">
         <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 transition-colors duration-300">{isRelativeMode ? t('desp_percent') : t('desp_absolute')}</p>
       </div>
-      <div className="mb-4" ref={containerRef}>
+      <div data-component-name="RankingChart" className="mb-4" ref={containerRef}>
         <svg
           width={svgWidth}
           height={(barHeight + barSpacing) * processedData.length + 50}
@@ -176,6 +177,7 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
                       Pierce: '#bc8800',
                       Mystic: '#206d9b',
                       Sonic: '#9a46a8',
+                      Chemical: '#137973',
                     }[item.bullettype]
                   }
                   width="30"

@@ -17,12 +17,11 @@ import StudentSearchDropdown from '~/components/StudentSearchDropdown';
 import { MAX_LEVEL } from './const';
 
 // Icons
-import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown } from 'react-icons/fi';
+import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo } from 'react-icons/fi';
 import { IoSync } from 'react-icons/io5';
-
-// --- Constants ---
-const HighFlowerBouquetItemIds = [5996, 5997];
-const LowFlowerBouquetItemIds = [5998, 5999];
+import { StarRating } from '~/components/StarRatingProps';
+import { getStarValue } from '~/components/dashboard/common';
+import { getGiftAffectionList } from './giftAffectionList';
 
 // --- Types ---
 interface StudentGrowthPlanCardProps {
@@ -41,7 +40,8 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
   const { updatePlan, removePlan, toggleEventInclusion } = useGlobalStore();
   const { t } = useTranslation(['planner', 'common']);
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: true });
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false });
+  const [activeHelp, setActiveHelp] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
@@ -58,30 +58,8 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
 
   const giftAffectionList = useMemo(() => {
     if (!plan.studentId || !studentInfo || !eventData?.icons.Item) return [];
-    const studentTags = [...(studentInfo.FavorItemTags || []), ...(studentInfo.FavorItemUniqueTags || [])];
-    const allGifts = Object.entries(eventData.icons.Item)
-      .filter(([, itemData]) => itemData.ItemCategory === 6)
-      .map(([itemId, itemData]) => {
-        const matchCount = itemData.TagsStr?.filter((tag) => studentTags.includes(tag)).length || 0;
-        let preferenceLevel = matchCount + 1 + Number(itemData.Rarity === 3);
-        let affectionPoints = 0;
-        const idNum = Number(itemId);
-
-        if (HighFlowerBouquetItemIds.includes(idNum)) {
-          affectionPoints = 240;
-          preferenceLevel = 4;
-        } else if (LowFlowerBouquetItemIds.includes(idNum)) {
-          affectionPoints = 60;
-          preferenceLevel = 3;
-        } else if (itemData.Rarity === 3) {
-          affectionPoints = preferenceLevel >= 4 ? 240 : preferenceLevel === 3 ? 180 : 120;
-        } else {
-          affectionPoints = preferenceLevel >= 4 ? 80 : preferenceLevel === 3 ? 60 : preferenceLevel === 2 ? 40 : 20;
-        }
-
-        return { id: itemId, type: 'Item', rarity: itemData.Rarity, affectionPoints, preferenceLevel };
-      });
-    return allGifts.sort((a, b) => b.rarity - a.rarity || b.affectionPoints - a.affectionPoints);
+    const gifts = getGiftAffectionList(studentInfo, eventData);
+    return gifts;
   }, [plan.studentId, studentInfo, eventData]);
 
   // --- Handlers ---
@@ -214,18 +192,48 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
     });
   };
 
+  const UNLOCK_LEVELS = [1, 10, 20];
+
   const warnings = {
-    equipment: plan.target.equipment.some((tier, i) => {
-      const requiredLvl = i === 1 ? 15 : i === 2 ? 35 : 1;
-      return plan.target.level < requiredLvl && tier > 0;
-    }),
-    potential: (plan.target.level < 90 || plan.target.uw === 0) && Object.values(plan.target.potential).some((v) => v > 0),
+    // Equipment: Case where tier exists but level is insufficient for either (Target OR Current)
+    equipment:
+      plan.target.equipment.some((tier, i) => {
+        const requiredLvl = UNLOCK_LEVELS[i] ?? 1;
+        return tier > 0 && plan.target.level < requiredLvl;
+      }) ||
+      plan.current.equipment.some((tier, i) => {
+        const requiredLvl = UNLOCK_LEVELS[i] ?? 1;
+        return tier > 0 && plan.current.level < requiredLvl;
+      }),
+
+    // Potential: Case where potential is allocated but (level < 90 OR unique weapon missing) for either (Target OR Current)
+    potential:
+      ((plan.target.level < 90 || plan.target.uw === 0) && Object.values(plan.target.potential).some((v) => v > 0)) ||
+      ((plan.current.level < 90 || plan.current.uw === 0) && Object.values(plan.current.potential).some((v) => v > 0)),
   };
+
   const formatSkill = (val: number, max: number) => (val === max ? 'M' : val);
   const summaries = {
     stats: {
-      cur: `Lv.${plan.current.level} / ${plan.current.uw > 0 ? `${t('common.ue', 'UE')}${plan.current.uw}★` : `${plan.current.star}★`}`,
-      tar: `Lv.${plan.target.level} / ${plan.target.uw > 0 ? `${t('common.ue', 'UE')}${plan.target.uw}★` : `${plan.target.star}★`}`,
+      // Return JSX instead of a string
+      cur: (
+        <div className="flex items-center gap-1.5">
+          <span>Lv.{plan.current.level}</span>
+          <span className="text-gray-300 dark:text-neutral-450">/</span>
+          <div className="-mt-0.5">
+            <StarRating n={getStarValue(plan.current.star, plan.current.uw)} />
+          </div>
+        </div>
+      ),
+      tar: (
+        <div className="flex items-center gap-1.5">
+          <span>Lv.{plan.target.level}</span>
+          <span className="text-gray-300 dark:text-neutral-450">/</span>
+          <div className="-mt-0.5">
+            <StarRating n={getStarValue(plan.target.star, plan.target.uw)} />
+          </div>
+        </div>
+      ),
     },
     skills: {
       cur: `${formatSkill(plan.current.ex, 5)}${formatSkill(plan.current.normal, 10)}${formatSkill(plan.current.passive, 10)}${formatSkill(plan.current.sub, 10)}`,
@@ -241,6 +249,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
   const sortedEvents = useMemo(
     () =>
       Object.entries(eventList)
+        .filter(([id, details]) => (details as any)['Planable'] != false)
         .map(([id, details]) => ({ id: Number(id), name: `${Number(id) > 10000 ? `[${t('common.rerun')}] ` : ''}${details.Kr}` }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [],
@@ -250,7 +259,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
     [searchTerm, sortedEvents, plan.includedInEvents],
   );
 
-  const bulletColor = studentInfo?.BulletType ? { Explosion: '#b62915', Pierce: '#bc8800', Mystic: '#206d9b', Sonic: '#9a46a8' }[studentInfo.BulletType] : '#e5e7eb';
+  const bulletColor = studentInfo?.BulletType ? { Explosion: '#b62915', Pierce: '#bc8800', Mystic: '#206d9b', Sonic: '#9a46a8', Chemical: '#137973' }[studentInfo.BulletType] : '#e5e7eb';
 
   // --- Global Actions Configuration ---
   const globalActions = [
@@ -297,7 +306,8 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
             {/* Delete Button (Yellow/Amber) */}
             <button
               onClick={() => {
-                if (confirm(t('common.confirmRemove'))) removePlan(plan.uuid);
+                // if (confirm(t('common.confirmRemove')))
+                removePlan(plan.uuid);
               }}
               className="w-5 h-5 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 flex items-center justify-center text-white transition-colors "
               title={t('common.remove')}
@@ -331,30 +341,88 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
 
           {/* Student Search Dropdown: Secure maximum horizontal width */}
           <div className="flex-1 min-w-0 text-xs">
-            <StudentSearchDropdown students={allStudents} selectedStudentId={plan.studentId} setSelectedStudentId={(id) => handlePlanChange('studentId', Number(id))} />
+            <StudentSearchDropdown students={allStudents} selectedStudentId={plan.studentId} setSelectedStudentId={(id) => handlePlanChange('studentId', Number(id))} hideLavel={true} />
           </div>
         </div>
 
-        {/* 3. Action Buttons Grid */}
+        {/* 3. Global Actions Toolbar (Redesigned) */}
+
+        {/* 3. Global Actions (Horizontal Split-Chips) */}
         {studentInfo && (
-          <div className="mt-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {globalActions.map((btn) => (
-                <button
-                  key={btn.action}
-                  onClick={() => handleGlobalAction(btn.action)}
-                  className={`
-                    flex flex-col items-center justify-center p-3 rounded-xl border
-                    transition-all active:scale-[0.95] hover:shadow-sm
-                    ${btn.colorClass}
-                  `}
-                >
-                  {btn.icon}
-                  <span className="text-[11px] font-bold mt-1">{btn.label}</span>
-                  <span className="text-[9px] opacity-70 mt-0.5 text-center  italic">{btn.desc}</span>
+          <div className="mt-4 pt-3 border-t border-dashed border-gray-100 dark:border-neutral-800">
+            {/* Header Label */}
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('growthCard.globalActions', 'Quick Actions')}</span>
+              {activeHelp && (
+                <button onClick={() => setActiveHelp(null)} className="text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted">
+                  {t('common.closeHelp', 'Close Help')}
                 </button>
-              ))}
+              )}
             </div>
+
+            {/* Buttons Row */}
+            <div className="flex flex-wrap gap-2">
+              {globalActions.map((btn) => {
+                const isActive = activeHelp === btn.action;
+
+                return (
+                  <div
+                    key={btn.action}
+                    className={`
+                      inline-flex items-center rounded-md border transition-all duration-200
+                      ${
+                        isActive
+                          ? 'border-blue-300 ring-1 ring-blue-300/50 bg-blue-50/30 dark:border-blue-700 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800'
+                      }
+                    `}
+                  >
+                    {/* Action Part (Left) */}
+                    <button
+                      onClick={() => handleGlobalAction(btn.action)}
+                      className={`
+                        flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-l-md hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors
+                     
+                          text-gray-600 dark:text-gray-300
+                        
+                      `}
+                    >
+                      {btn.icon}
+                      <span>{btn.label}</span>
+                    </button>
+
+                    {/* Separator */}
+                    <div className="w-px h-3.5 bg-gray-200 dark:bg-neutral-700" />
+
+                    {/* Help Part (Right) */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveHelp(isActive ? null : btn.action);
+                      }}
+                      className={`
+                        px-1.5 py-1.5 transition-colors text-gray-400 hover:text-blue-500 cursor-help
+                        ${isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-200' : 'hover:bg-gray-50 dark:hover:bg-neutral-700'}
+                      `}
+                      title={btn.desc}
+                    >
+                      <FiHelpCircle size={13} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Description Panel (Shows only when activeHelp is set) */}
+            {activeHelp && (
+              <div className="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-neutral-800/50 border border-gray-100 dark:border-neutral-700/50 rounded-md p-2.5 animate-in fade-in slide-in-from-top-1 duration-200 flex gap-2 items-start">
+                <FiInfo className="shrink-0 mt-0.5 text-blue-500" size={14} />
+                <div>
+                  <span className="font-semibold text-gray-800 dark:text-gray-200 mr-1">{globalActions.find((a) => a.action === activeHelp)?.label}:</span>
+                  <span className="leading-relaxed opacity-90">{globalActions.find((a) => a.action === activeHelp)?.desc}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -380,7 +448,6 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                 handleBatchUpdate={handleBatchUpdate}
               />
             </GrowthAccordion>
-            {/* ... Other Tabs (Skills, Equipment, Potential, Affection) ... */}
             <GrowthAccordion
               title={t('growthCard.skills')}
               isOpen={openSections.skills}
@@ -402,7 +469,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               isWarning={warnings.equipment}
               warningText={t('equipmentTab.levelLockWarning')}
             >
-              <EquipmentTab plan={plan} studentInfo={studentInfo} handleBatchUpdate={handleBatchUpdate} />
+              <EquipmentTab plan={plan} studentInfo={studentInfo} handleBatchUpdate={handleBatchUpdate} iconData={iconData} eventData={eventData} />
             </GrowthAccordion>
 
             <GrowthAccordion
@@ -415,7 +482,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               isWarning={warnings.potential}
               warningText={t('potentialTab.unlockCondition')}
             >
-              <PotentialTab plan={plan} handleBatchUpdate={handleBatchUpdate} isWarning={warnings.potential} />
+              <PotentialTab plan={plan} handleBatchUpdate={handleBatchUpdate} iconData={iconData} />
             </GrowthAccordion>
 
             <GrowthAccordion

@@ -83,7 +83,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
   const [includeDefense, setIncludeDefense] = useState(false);
   const [includeAttack, setIncludeAttack] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [includeDateRange, setIncludeDateRange] = useState(false);
+  const [includeDateRange, setIncludeDateRange] = useState(true);
 
   const searchableDifficulties = useMemo(() => {
     return Object.keys(raidInfo.Cnt).filter((v) => v != 'All');
@@ -209,7 +209,6 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
     };
   }, [isOpen, wrapperRef]);
 
-  // Reset difficulty when Grand Assault attribute changes (UX improvement)
   useEffect(() => {
     setSearchDifficulty(null);
   }, [includeDefense, includeAttack]);
@@ -273,7 +272,6 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
                   {searchableDifficulties.map((diff) => (
                     <button
                       key={diff}
-                      // Change onClick handler
                       onClick={() => handleDifficultyToggle(diff)}
                       className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
                         // This activation logic works the same even without the 'None' button.

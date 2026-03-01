@@ -12,7 +12,6 @@ import { formatDateToDayString } from './formatDateToDayString';
 import { useIsDarkState } from '~/store/isDarkState';
 import { useTierDashboardStore } from '~/store/tierDashboardStore';
 
-// [New Imports]
 import { DateRangeSlider } from './DateRangeSlider';
 import { DifficultySelector } from './DifficultySelector';
 import { getKSTResetTimestamps } from './getKSTResetTimestamps';
@@ -319,7 +318,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
           ))}
         </nav>
 
-        {/* [New] Components: Range Slider & Difficulty Selector */}
+        {/* Components: Range Slider & Difficulty Selector */}
         <div className="bg-gray-50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 p-3">
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
             <div className="flex-1 min-w-0">
@@ -349,7 +348,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
               <ResponsiveContainer width="100%" height={isRaid ? 200 : 500}>
                 <BarChart data={analysisData.latestClearsByBoss} layout="vertical" barCategoryGap={isRaid ? '20%' : '10%'}>
                   {/* ... Axes, Tooltip, Legend ... */}
-                  <XAxis type="number" tickFormatter={(val) => val.toLocaleString()} />
+                  <XAxis type="number" domain={[0, (dataMax: number) => Math.ceil(dataMax)]} tickFormatter={(val) => val.toLocaleString()} />
                   {/* <YAxis type="category" dataKey="name" width={isRaid ? 0 : 80} tickFormatter={(name) => isRaid ? '' : name === 'total' ? t_c('total') : t(name, { ns: 'term', defaultValue: name })} /> */}
                   <YAxis
                     type="category"

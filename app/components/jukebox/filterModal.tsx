@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaSearch, FaTimes, FaCheckDouble, FaRegSquare, FaRegCheckSquare } from 'react-icons/fa';
+import type { Locale } from '~/utils/i18n/config';
+import { useSearchMatcher } from '~/utils/useSearchMatcher';
 
 // --- Types (If in a separate file, import these) ---
 interface Student {
@@ -23,14 +25,17 @@ interface FilterModalProps {
 }
 
 export const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, title, items, selectedItems, onToggleItem, onToggleAll }) => {
-  const { t } = useTranslation('jukebox');
+  const { t, i18n } = useTranslation('jukebox');
+  const locale = i18n.language as Locale;
+  const matcher = useSearchMatcher(locale);
+
   const [filterTerm, setFilterTerm] = useState('');
 
   // Filter items based on search term
   const filteredItems = useMemo(() => {
     if (!filterTerm) return items;
     const lowerTerm = filterTerm.toLowerCase();
-    return items.filter(([_, name]) => name.toLowerCase().includes(lowerTerm));
+    return items.filter(([_, name]) => matcher(name, lowerTerm));
   }, [items, filterTerm]);
 
   // Check if all *currently filtered* items are selected
@@ -114,13 +119,15 @@ interface StudentFilterModalProps {
 }
 
 export const StudentFilterModal: React.FC<StudentFilterModalProps> = ({ isOpen, onClose, title, items, selectedItems, onToggleItem, onToggleAll }) => {
-  const { t } = useTranslation('jukebox');
+  const { t, i18n } = useTranslation('jukebox');
+  const locale = i18n.language as Locale;
+  const matcher = useSearchMatcher(locale);
   const [filterTerm, setFilterTerm] = useState('');
 
   const filteredItems = useMemo(() => {
     if (!filterTerm) return items;
     const lowerTerm = filterTerm.toLowerCase();
-    return items.filter(([_, student]) => student.Name.toLowerCase().includes(lowerTerm));
+    return items.filter(([_, student]) => matcher(student.Name, lowerTerm));
   }, [items, filterTerm]);
 
   const areAllVisibleSelected = filteredItems.length > 0 && filteredItems.every(([id]) => selectedItems[id]);

@@ -1551,5 +1551,16 @@
     "Tier": { "4": 355756 },
     "Platinum": 527000,
     "TotalParticipants": 355756
+  },
+  {
+    "Id": "R86",
+    "Boss": "Binah",
+    "Location": "Outdoor",
+    "Date": "2026-02-18",
+    "MaxLv": 90,
+    "Cnt": { "All": 405323, "Lunatic": 24365, "Torment": 48253, "Insane": 125376, "Extreme": 93901, "Hardcore": 68889, "Veryhard": 18286, "Hard": 17860, "Normal": 8393 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 165323 },
+    "Platinum": 52667385,
+    "TotalParticipants": 405323
   }
 ]

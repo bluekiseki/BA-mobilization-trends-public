@@ -1,13 +1,15 @@
 // src/components/EventInfo.tsx
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import eventList from '~/data/jp/eventList.json';
 import { getlocaleMethond } from './common/locale';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
-import { HiOutlineCalendarDays, HiOutlineTag, HiOutlineInformationCircle, HiChevronDown, HiXMark, HiMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineCalendarDays, HiOutlineTag, HiOutlineInformationCircle, HiChevronDown, HiXMark, HiMagnifyingGlass, HiOutlineGlobeAlt, HiArrowsRightLeft } from 'react-icons/hi2';
 import { localeLink } from '~/utils/localeLink';
+import { getGlobalEventDates } from '~/data/globalEventDates';
+import { useSearchMatcher } from '~/utils/useSearchMatcher';
 
 interface EventInfoProps {
   name: string;
@@ -18,6 +20,7 @@ interface EventInfoProps {
 }
 
 export function formatInTimeZone(original: string, timeZone: string = '+09:00') {
+  if (!original) return new Date();
   const kstIsoString = original.replace(' ', 'T') + timeZone;
   const date = new Date(kstIsoString);
   return date;
@@ -27,6 +30,7 @@ interface SortedEvent {
   id: number;
   name: string;
   openTime: string;
+  closeTime: string;
   Planable?: boolean;
 }
 
@@ -49,12 +53,23 @@ export function eventTagTranslation(tag: string, t: any) {
 export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeStr }: EventInfoProps) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation('planner');
+  const { t: t_c } = useTranslation('common');
   const { t: t_d } = useTranslation('dashboard');
   const locale = i18n.language as Locale;
   const locale_key = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En';
 
+  const matcher = useSearchMatcher(locale);
+
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Current time (for checking ongoing events)
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    if (isPickerOpen) {
+      setNow(new Date());
+    }
+  }, [isPickerOpen]);
 
   const sortedEvents: SortedEvent[] = useMemo(() => {
     return Object.entries(eventList)
@@ -65,6 +80,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
         id: Number(id),
         name: (details as any)[locale_key] || (details as any).Jp || `Event ${id}`,
         openTime: (details as any).OpenTime,
+        closeTime: (details as any).CloseTime,
       }))
       .sort((a, b) => b.openTime.localeCompare(a.openTime));
   }, [locale, locale_key]);
@@ -73,19 +89,22 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
     if (!searchTerm) {
       return sortedEvents;
     }
-    return sortedEvents.filter((event) => event.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    // return sortedEvents.filter((event) => event.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return sortedEvents.filter((event) => matcher(event.name, searchTerm));
   }, [sortedEvents, searchTerm]);
 
   const currentEvent = useMemo(() => {
     const event = sortedEvents.find((e) => e.id === eventId);
     const eventName = event?.name || name || 'No event information';
     const isRerun = eventId > 10000;
+    const glData = getGlobalEventDates()[eventId];
+
     return {
       name: eventName,
       isRerun: isRerun,
-      formattedName: (isRerun ? `[${t('common.rerun')}] ` : '') + eventName,
+      glData,
     };
-  }, [eventId, sortedEvents, name, t]);
+  }, [eventId, sortedEvents, name]);
 
   const handleEventChange = (id: number) => {
     if (id) {
@@ -96,8 +115,14 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
   const handleSelectEvent = (id: number) => {
     handleEventChange(id);
     setIsPickerOpen(false);
-    setSearchTerm(''); // Initialize search terms
+    setSearchTerm('');
   };
+
+  const renderDateRange = (s: string, e: string) => (
+    <>
+      <time dateTime={s}>{formatInTimeZone(s).toLocaleString()}</time> {locale == 'en' ? '-' : '~'} <time dateTime={e}>{formatInTimeZone(e).toLocaleString()}</time>
+    </>
+  );
 
   return (
     <>
@@ -114,20 +139,45 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
       </button>
 
       <div className="mt-4 space-y-3">
-        {/* time */}
-        <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-          <HiOutlineCalendarDays className="h-5 w-5 shrink-0" />
-          <span>
-            <time dateTime={startTime}>{formatInTimeZone(startTime).toLocaleString()}</time> {locale == 'en' ? '-' : '~'} <time dateTime={endTime}>{formatInTimeZone(endTime).toLocaleString()}</time>
-          </span>
+        {/* Simple Vertical Stack for Dates */}
+        <div className="flex flex-col gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
+          {/* JP Schedule */}
+          <div className="flex items-start gap-2">
+            <div className="flex items-center gap-1.5 min-w-[50px] shrink-0 mt-0.5 font-bold text-neutral-500 dark:text-neutral-300">
+              <HiOutlineCalendarDays className="h-4 w-4" />
+              <span>JP</span>
+            </div>
+            <span className="leading-snug">{renderDateRange(startTime, endTime)}</span>
+          </div>
+
+          {/* GL Schedule */}
+          <div className="flex items-start gap-2">
+            <div className="flex items-center gap-1.5 min-w-[50px] shrink-0 mt-0.5 font-bold text-neutral-500 dark:text-neutral-300">
+              <HiOutlineGlobeAlt className="h-4 w-4" />
+              <span>GL</span>
+            </div>
+            <span className="leading-snug flex flex-wrap gap-2 items-center">
+              {currentEvent.glData ? (
+                <>
+                  <span className={currentEvent.glData.prediction ? 'text-neutral-500 italic' : ''}>{renderDateRange(currentEvent.glData.start, currentEvent.glData.end)}</span>
+                  {currentEvent.glData.prediction && (
+                    <span className="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-700 px-1.5 py-0.5 text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
+                      {t_c('pred')}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-neutral-400 italic">{t('ui.tba', 'TBA')}</span>
+              )}
+            </span>
+          </div>
         </div>
 
-        {/* tag */}
+        {/* Tags */}
         <div className="flex flex-wrap items-center gap-2">
           <HiOutlineTag className="h-5 w-5 shrink-0 text-neutral-600 dark:text-neutral-400" />
           {eventContentTypeStr.map((v, i) => (
             <span key={i} className="rounded-full bg-neutral-200 dark:bg-neutral-700 px-3 py-0.5 text-xs font-medium text-neutral-700 dark:text-neutral-200">
-              {/* {v} */}
               {eventTagTranslation(v, t)}
             </span>
           ))}
@@ -149,15 +199,16 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
         `}
       >
         <div className="flex flex-col max-h-[80vh]">
-          {/* Header */}
           <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 p-4">
-            <h2 className="text-lg font-semibold">{t('ui.navigateToEvent')}</h2>
+            <h2 className="text-lg font-semibold flex items-center gap-2 whitespace-nowrap">
+              <HiArrowsRightLeft className="h-4 w-4" />
+              {t('ui.navigateToEvent')}
+            </h2>
             <button type="button" onClick={() => setIsPickerOpen(false)} className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full">
               <HiXMark className="h-6 w-6" />
             </button>
           </div>
 
-          {/* Search bar */}
           <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
             <div className="relative">
               <input
@@ -171,17 +222,60 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
             </div>
           </div>
 
-          {/* List */}
           <ul className="flex-1 overflow-y-auto p-2 min-h-[70vh]">
             {filteredEvents.length > 0 ? (
-              filteredEvents.map((event) => (
-                <li key={event.id}>
-                  <button type="button" onClick={() => handleSelectEvent(event.id)} className="flex w-full flex-col rounded-md p-3 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                    <span className="block truncate font-medium text-neutral-900 dark:text-neutral-100">{(event.id > 10000 ? `[${t('common.rerun')}] ` : '') + event.name}</span>
-                    <span className="block text-sm text-neutral-500 dark:text-neutral-400">{new Date(event.openTime).toLocaleDateString()}</span>
-                  </button>
-                </li>
-              ))
+              filteredEvents.map((event) => {
+                const glInfo = getGlobalEventDates()[event.id];
+
+                // Check Active Status
+                const jpStart = formatInTimeZone(event.openTime);
+                const jpEnd = formatInTimeZone(event.closeTime);
+                const isJpActive = now >= jpStart && now <= jpEnd;
+
+                let isGlActive = false;
+                let glStart: Date | null = null;
+                if (glInfo && glInfo.start && glInfo.end) {
+                  glStart = formatInTimeZone(glInfo.start);
+                  const glEnd = formatInTimeZone(glInfo.end);
+                  isGlActive = now >= glStart && now <= glEnd;
+                }
+
+                return (
+                  <li key={event.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectEvent(event.id % 100000)}
+                      className="flex w-full flex-col rounded-md p-3 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 group"
+                    >
+                      <div className="flex items-center gap-2 max-w-full">
+                        <span className="truncate font-medium text-neutral-900 dark:text-neutral-100 flex-1">{(((event.id / 10000) | 0) == 1 ? `[${t('common.rerun')}] ` : '') + event.name}</span>
+                      </div>
+
+                      {/* Dates: Single Line */}
+                      <span className="mt-1 flex items-center flex-wrap gap-x-3 text-xs">
+                        {/* JP Date */}
+                        <span className={`whitespace-nowrap ${isJpActive ? 'font-bold text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                          <span className="font-bold mr-1">JP</span>
+                          {jpStart.toLocaleDateString()}
+                        </span>
+
+                        {/* GL Date */}
+                        {glInfo && (
+                          <span
+                            className={`whitespace-nowrap ${
+                              isGlActive ? 'font-bold text-blue-600 dark:text-blue-400' : glInfo.prediction ? 'text-neutral-400 italic' : 'text-neutral-500 dark:text-neutral-400'
+                            }`}
+                          >
+                            <span className="font-bold mr-1">GL</span>
+                            {glStart?.toLocaleDateString()}
+                            {glInfo.prediction && <span className="ml-1 text-[9px] border border-neutral-300 dark:border-neutral-600 px-0.5 rounded font-normal">{t_c('pred')}</span>}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })
             ) : (
               <li className="p-4 text-center text-sm text-neutral-500">{t_d('noResults')}</li>
             )}

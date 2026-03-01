@@ -97,15 +97,13 @@ interface EventPlanStoreState {
   setDurationDays: (eventId: number, days: number) => void;
   setApConfig: (eventId: number, config: ApCalculatorConfig) => void;
 
-  // --- Minigame Actions (Existing) ---
+  // --- Minigame Actions ---
   setFinalCardFlips: (eventId: number, flips: number) => void;
   setTreasureStartRound: (eventId: number, round: number) => void;
   setTreasureEndRound: (eventId: number, round: number) => void;
   setBoxGachaStartBox: (eventId: number, box: number) => void;
   setBoxGachaEndBox: (eventId: number, box: number) => void;
   setCustomGamePlays: (eventId: number, plays: number) => void;
-
-  // --- Minigame Actions (New) ---
   setBoxGachaFinalTotalBoxes: (eventId: number, boxes: number) => void;
   setCardShopConfig: (eventId: number, config: CardShopConfig) => void;
   setCustomGameCost: (eventId: number, cost: CustomGameItem | null) => void;
@@ -231,7 +229,7 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setBoxGachaEndBox: (eventId, box) => updatePlanForEvent(eventId, { boxGachaEndBox: box }),
         setCustomGamePlays: (eventId, plays) => updatePlanForEvent(eventId, { customGamePlays: plays }),
 
-        // --- Minigame Actions (New) ---
+        // --- Minigame Actions ---
         setBoxGachaFinalTotalBoxes: (eventId, boxes) => updatePlanForEvent(eventId, { boxGachaFinalTotalBoxes: boxes }),
         setCardShopConfig: (eventId, config) => updatePlanForEvent(eventId, { cardShopConfig: config }),
         setCustomGameCost: (eventId, cost) => updatePlanForEvent(eventId, { customGameCost: cost }),
@@ -305,7 +303,7 @@ export const usePlanForEvent = (eventId: number) => {
     setBoxGachaEndBox: (box: number) => eventId && actions.setBoxGachaEndBox(eventId, box),
     setCustomGamePlays: (plays: number) => eventId && actions.setCustomGamePlays(eventId, plays),
 
-    // Minigame Setters (New)
+    // Minigame Setters
     setBoxGachaFinalTotalBoxes: (boxes: number) => eventId && actions.setBoxGachaFinalTotalBoxes(eventId, boxes),
     setCardShopConfig: (config: CardShopConfig) => eventId && actions.setCardShopConfig(eventId, config),
     setCustomGameCost: (cost: CustomGameItem | null) => eventId && actions.setCustomGameCost(eventId, cost),

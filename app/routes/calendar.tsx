@@ -2,12 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useLoaderData, useNavigate, type LoaderFunctionArgs } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { loadScheduleData, type ScheduleItem } from '~/utils/calender.data';
+import { type loadScheduleData, type ScheduleItem } from '~/utils/calender.data';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import type { loader as rootLorder } from '~/root';
 
-// Refactored Imports
 import { useGanttController } from '~/components/gantt/useGanttController';
 import { GanttChart } from '~/components/gantt/GanttChart';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
@@ -19,6 +18,7 @@ import type { Route } from './+types/calendar';
 import { FiClock } from 'react-icons/fi';
 import { localeLink } from '~/utils/localeLink';
 
+// --- 1. Loader: Used only for metadata and parameter validation (heavy data fetching removed) ---
 export async function loader({ request, context, params }: LoaderFunctionArgs) {
   const server = params.server || 'jp';
   if (server !== 'jp' && server !== 'kr') {
@@ -28,17 +28,10 @@ export async function loader({ request, context, params }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
   const locale = i18n.language as Locale;
 
-  // Load all tracks in 'all' mode
-  const data = await loadScheduleData({
-    server: server as GameServer,
-    locale,
-    i18n,
-    tracksToLoad: 'all', // 'full' mode
-  });
+  // 🗑️ loadScheduleData call removed (called via API from the client)
 
   return {
-    ...data,
-    server,
+    server: server as GameServer,
     locale,
     title: i18n.t('calendar:title'),
     description: i18n.t('calendar:description.main'),
@@ -51,7 +44,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export const handle: AppHandle = {
   preload: (data) => {
-    const { server } = useLoaderData<typeof rootLorder>().params;
+    const { server, server: loadedServer } = useLoaderData<typeof rootLorder>().params;
     return [
       {
         rel: 'preload',
@@ -65,18 +58,29 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
+      {
+        rel: 'preload',
+        href: `/api/calendar?type=all&server=${loadedServer}&lang=${data?.locale}`,
+        as: 'fetch',
+        crossOrigin: 'anonymous',
+      },
       ...createLinkHreflang(`/calendar/${server}`),
     ];
   },
 };
 
+// --- 2. Main Component ---
 export default function SchedulePageGantt() {
-  const { tracks, timeRange, server: loadedServer } = useLoaderData<typeof loader>();
+  const { server: loadedServer } = useLoaderData<typeof loader>(); // Removed tracks and timeRange
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('calendar');
   const locale = i18n.language as Locale;
 
-  // 1. Data Fetching (Student Info & Portraits)
+  // State management for overall calendar data retrieved from the API
+  const [calendarData, setCalendarData] = useState<Awaited<ReturnType<typeof loadScheduleData>> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 1. Data Fetching (Student info and portraits)
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
 
@@ -91,21 +95,36 @@ export default function SchedulePageGantt() {
       .catch(console.error);
   }, [locale]);
 
-  // 2. Birthday Logic
+  // Call the full calendar data API (recall on server/language change)
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(`/api/calendar?type=all&server=${loadedServer}&lang=${locale}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch full calendar data');
+        return res.json() as any;
+      })
+      .then((json) => {
+        setCalendarData(json.data); // Assume API response structure is { data: { tracks, timeRange } }
+      })
+      .catch((err) => console.error('Full calendar data error:', err))
+      .finally(() => setIsLoading(false));
+  }, [loadedServer, locale]);
+
   const [birthdayTrackItems, setBirthdayTrackItems] = useState<ScheduleItem[]>([]);
   useEffect(() => {
-    if (!studentData || !timeRange.min) return;
+    if (!studentData || !calendarData?.timeRange?.min) return;
+
     const items: ScheduleItem[] = [];
-    const startYear = new Date(timeRange.min).getFullYear();
-    const endYear = new Date(timeRange.max).getFullYear();
+    const startYear = new Date(calendarData.timeRange.min).getFullYear();
+    const endYear = new Date(calendarData.timeRange.max).getFullYear();
     const MS_PER_HOUR = 1000 * 60 * 60;
 
     Object.values(studentData).forEach((student) => {
-      if (!student.BirthDay || student.Name.includes('(')) return;
+      if (!student.BirthDay || student.Name.includes('(') || student.Name.includes('（')) return;
       const [m, d] = student.BirthDay.split('/').map(Number);
       for (let y = startYear; y <= endYear; y++) {
         const date = new Date(y, m - 1, d);
-        if (date.getTime() >= timeRange.min && date.getTime() <= timeRange.max) {
+        if (date.getTime() >= calendarData.timeRange.min && date.getTime() <= calendarData.timeRange.max) {
           items.push({
             id: `bday-${student.Id}-${y}`,
             type: 'birthday',
@@ -119,25 +138,23 @@ export default function SchedulePageGantt() {
       }
     });
     setBirthdayTrackItems(items);
-  }, [studentData, timeRange]);
+  }, [studentData, calendarData?.timeRange]);
 
-  // 3. Gantt Controller Integration
+  // 4. Gantt Controller Integration (optional chaining applied for initialization after data load)
   const ganttController = useGanttController({
-    timeRange,
+    timeRange: calendarData?.timeRange || { min: 0, max: 1 },
     server: loadedServer,
   });
 
-  // 4. Server Change Handler
+  // 5. Server Change Handler
   const handleServerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     navigate(localeLink(locale, `/calendar/${e.target.value}`));
   };
 
   return (
     <div className="w-full bg-white dark:bg-neutral-900 text-gray-900 dark:text-white min-h-screen flex flex-col">
-      {/* Header Section */}
       <div className="px-4 py-6 sm:px-8 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm top-0 z-40">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Title & Description */}
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               {t('title')} <span className="text-blue-600 dark:text-blue-400 uppercase">({loadedServer})</span>
@@ -147,9 +164,7 @@ export default function SchedulePageGantt() {
             </p>
           </div>
 
-          {/* Controls */}
           <div className="flex items-center gap-3">
-            {/* Server Selector */}
             <div className="relative">
               <select
                 value={loadedServer}
@@ -166,7 +181,6 @@ export default function SchedulePageGantt() {
               </div>
             </div>
 
-            {/* Jump to Now Button */}
             <button
               onClick={ganttController.jumpToNow}
               title={t('scrollToNow', 'Scroll to current time')}
@@ -182,17 +196,22 @@ export default function SchedulePageGantt() {
       {/* Chart Section */}
       <div className="flex-1 w-full max-w-[100vw] overflow-hidden">
         <div className="py-4">
-          <GanttChart
-            mode="full"
-            data={{
-              tracks,
-              timeRange,
-              studentData,
-              studentPortraits,
-              birthdayTrackItems,
-            }}
-            controller={ganttController}
-          />
+          {/* Handle loading state */}
+          {isLoading || !calendarData ? (
+            <div className="flex justify-center items-center h-64 text-neutral-500 animate-pulse">{t('loading', 'Loading calendar data...')}</div>
+          ) : (
+            <GanttChart
+              mode="full"
+              data={{
+                tracks: calendarData.tracks,
+                timeRange: calendarData.timeRange,
+                studentData,
+                studentPortraits,
+                birthdayTrackItems,
+              }}
+              controller={ganttController}
+            />
+          )}
         </div>
       </div>
     </div>

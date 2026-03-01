@@ -1188,5 +1188,6 @@
     "Alias": "\uc2dc\ub85c\ucfe0\ub85c(\uc2e4\ub0b4)",
     "MaxLv": 90,
     "Cnt": { "All": 22017, "Insane": 22017 }
-  }
+  },
+  { "Id": "R86", "Boss": "\ube44\ub098", "Location": "\uc57c\uc678", "Date": "2026-02-18", "Alias": "\uc57c\ube44\ub098", "MaxLv": 90, "Cnt": { "All": 48593, "Lunatic": 24365, "Torment": 24228 } }
 ]

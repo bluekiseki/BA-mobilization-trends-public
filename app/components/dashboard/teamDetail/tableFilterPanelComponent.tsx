@@ -340,7 +340,7 @@ export const TableFilterPanelComponent: React.FC<{
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+    <div data-component-name="TableFilterPanelComponent" className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
       <div className="space-y-3">
         <h3 className="font-bold text-lg text-sky-600 dark:text-sky-300">{t('includableStudentTitle')}</h3>
         <FilterConditionBuilder

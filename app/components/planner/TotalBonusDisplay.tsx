@@ -1,7 +1,8 @@
 // src/components/TotalBonusDisplay.tsx
 
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { EventData, IconData } from '~/types/plannerData';
+import type { EventData, IconData, StudentData } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from './common/locale';
 import { ItemIcon } from './common/Icon';
@@ -10,18 +11,70 @@ interface TotalBonusDisplayProps {
   eventData: EventData;
   iconData: IconData;
   totalBonus: { [itemUniqueId: number]: number };
+  allStudents: StudentData; // Added to calculate theoretical max based on SquadType
 }
 
-export const TotalBonusDisplay = ({ eventData, iconData, totalBonus }: TotalBonusDisplayProps) => {
+export const TotalBonusDisplay = ({ eventData, iconData, totalBonus, allStudents }: TotalBonusDisplayProps) => {
   const { t, i18n } = useTranslation('planner');
-
   const locale = i18n.language as Locale;
-  const bonusItems = new Set<number>([]);
-  Object.entries(eventData.bonus).map(([studentId, bouns], b) => {
-    for (const itemID of bouns.EventContentItemType) {
-      bonusItems.add(itemID);
-    }
-  });
+
+  // 1. Identification of items that have bonuses in this event
+  const bonusItems = useMemo(() => {
+    const items = new Set<number>();
+    Object.values(eventData.bonus).forEach((bonus) => {
+      bonus.EventContentItemType.forEach((itemId) => items.add(itemId));
+    });
+    return items;
+  }, [eventData.bonus]);
+
+  // 2. Calculate Theoretical Max Bonus (Top 4 Strikers + Top 2 Specials)
+  const maxBonusMap = useMemo(() => {
+    const map: { [itemUniqueId: number]: number } = {};
+
+    eventData.currency.forEach((currency) => {
+      // Skip if this currency has no bonus students
+      if (!bonusItems.has(currency.EventContentItemType)) return;
+
+      const itemType = currency.EventContentItemType;
+
+      // Filter students who have a bonus for this specific item
+      const relevantStudents = Object.entries(eventData.bonus)
+        .map(([id, bonusInfo]) => {
+          const typeIndex = bonusInfo.EventContentItemType.indexOf(itemType);
+          if (typeIndex === -1) return null;
+
+          const studentInfo = allStudents[Number(id)];
+          // Fallback logic for SquadType if data is missing (10000~19999 is usually Main)
+          const squadType = studentInfo?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support');
+
+          return {
+            id,
+            squadType,
+            bonusValue: bonusInfo.BonusPercentage[typeIndex],
+          };
+        })
+        .filter((s): s is NonNullable<typeof s> => s !== null);
+
+      // Separate into Main (Striker) and Support (Special)
+      const strikers = relevantStudents.filter((s) => s.squadType === 'Main');
+      const specials = relevantStudents.filter((s) => s.squadType === 'Support');
+
+      // Sort descending by bonus value
+      strikers.sort((a, b) => b.bonusValue - a.bonusValue);
+      specials.sort((a, b) => b.bonusValue - a.bonusValue);
+
+      // Sum: Top 4 Strikers + Top 2 Specials
+      const topStrikers = strikers.slice(0, 4);
+      const topSpecials = specials.slice(0, 2);
+
+      const totalStrikersBonus = topStrikers.reduce((sum, s) => sum + s.bonusValue, 0);
+      const totalSpecialsBonus = topSpecials.reduce((sum, s) => sum + s.bonusValue, 0);
+
+      map[currency.ItemUniqueId] = totalStrikersBonus + totalSpecialsBonus;
+    });
+
+    return map;
+  }, [eventData, allStudents, bonusItems]);
 
   return (
     <>
@@ -32,17 +85,24 @@ export const TotalBonusDisplay = ({ eventData, iconData, totalBonus }: TotalBonu
         {eventData.currency
           .filter((c) => bonusItems.has(c.EventContentItemType))
           .map((currency) => {
-            const bonusValue = totalBonus[currency.ItemUniqueId] || 0;
+            const currentVal = totalBonus[currency.ItemUniqueId] || 0;
+            const maxVal = maxBonusMap[currency.ItemUniqueId] || 0;
             const itemId = currency.ItemUniqueId.toString();
-            // const itemInfo = eventData.icons.Item[itemId as any];
 
             return (
               <div key={currency.ItemUniqueId} className="flex items-center gap-2">
-                <ItemIcon type={'Item'} itemId={itemId} amount={bonusValue / 100} size={12} eventData={eventData} iconData={iconData} />
+                {/* Icon size maintained as original */}
+                <ItemIcon type={'Item'} itemId={itemId} amount={currentVal / 100} size={12} eventData={eventData} iconData={iconData} />
 
                 <div>
-                  <p className="font-bold text-blue-600 dark:text-blue-400 text-base">+{bonusValue / 100}%</p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1 truncate" style={{ maxWidth: '80px' }}>
+                  <div className="flex items-baseline gap-1">
+                    {/* Current Bonus: Blue color maintained */}
+                    <p className="font-bold text-blue-600 dark:text-blue-400 text-base">+{currentVal / 100}%</p>
+                    {/* Max Bonus: Gray color, smaller font */}
+                    {maxVal > 0 && <p className="font-medium text-gray-400 dark:text-gray-500 text-xs">/ {maxVal / 100}%</p>}
+                  </div>
+
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5 truncate" style={{ maxWidth: '90px' }}>
                     {getLocalizeEtcName(eventData.icons.Item?.[itemId]?.LocalizeEtc, locale)}
                   </p>
                 </div>

@@ -35,6 +35,5 @@ export function loadRaidInfo(server: GameServer, locale: Locale, id: string, bos
 
 export function loadRaidInfosById(server: GameServer, locale: Locale, id: string): RaidInfo[] {
   const raidInfos = loadRaidInfos(server, locale);
-  // console.log('loadRaidInfos', raidInfos, id, 'locale', locale)
   return raidInfos.filter((raid) => raid.Id === id);
 }

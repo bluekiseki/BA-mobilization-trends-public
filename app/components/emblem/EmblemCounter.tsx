@@ -421,7 +421,7 @@ export function EmblemCounter({}) {
   const possessionRate = totalCount <= totalPlayers && totalCount > 0 ? ((totalCount / totalPlayers) * 100).toFixed(2) : totalCount > totalPlayers ? '???' : '0.00';
 
   return (
-    <div className=" border-neutral-200 dark:border-neutral-700 p-6 px-3 sm:px-6">
+    <div data-component-name="EmblemCounter" className=" border-neutral-200 dark:border-neutral-700 p-6 px-3 sm:px-6">
       <h2 className="text-xl font-bold mb-4 text-neutral-800 dark:text-white">{t('title')} (JP)</h2>
       <h2 className="text-sm font-light mb-4 text-neutral-600 dark:text-neutral-400">{t('description')}</h2>
 

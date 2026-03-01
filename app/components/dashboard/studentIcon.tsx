@@ -48,6 +48,7 @@ export const StudentIcon: React.FC<{
               Pierce: '#bc8800',
               Mystic: '#206d9b',
               Sonic: '#9a46a8',
+              Chemical: '#137973',
               '-': '#00000000',
             }[student?.BulletType || '-'],
           }}

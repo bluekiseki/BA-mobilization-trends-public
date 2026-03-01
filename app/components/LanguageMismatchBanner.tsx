@@ -31,12 +31,7 @@ export function LanguageBanner({ bannerData, onDismiss }: Props) {
     lng: bannerData.displayLocale,
   });
 
-  // (Improvement 1)
-  // Display the banner text not in the current page language (locale)
-  // but in the preferred language detected by the server (displayLocale)
-
   const t = i18n.getFixedT(bannerData.displayLocale, 'common', 'language_banner'); // Assuming 'common' namespace
-  // console.log('bannerData.displayLocale', bannerData.displayLocale, t("message"))
 
   const languageName = bannerData.suggestedLocale ? getNativeLanguageName(bannerData.suggestedLocale) : '';
 
@@ -66,7 +61,6 @@ export function LanguageBanner({ bannerData, onDismiss }: Props) {
               {t('switch_button', { language: languageName })}
             </Link>
           ) : (
-            // Scenario 2: GitHub contribution and language switcher (Improvement 3)
             <>
               <a
                 href={GITHUB_TRANSLATE_URL}
@@ -76,7 +70,6 @@ export function LanguageBanner({ bannerData, onDismiss }: Props) {
               >
                 {t('unsupported.contribute_button')}
               </a>
-              {/* Add z-index to display dropdown above the banner */}
               <div className="relative z-10">
                 <LocaleSwitcher />
               </div>
@@ -90,7 +83,6 @@ export function LanguageBanner({ bannerData, onDismiss }: Props) {
             className="p-1.5 rounded-md text-sky-700 dark:text-sky-200 hover:bg-sky-200 dark:hover:bg-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors"
             aria-label={t('dismiss_button')}
           >
-            {/* ... (X icon SVG) ... */}
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

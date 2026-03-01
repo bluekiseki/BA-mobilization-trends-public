@@ -68,7 +68,6 @@ const SCHOOL_COLORS = [
 
 const CustomizedContent: React.FC<any> = (props) => {
   const { depth, x, y, width, height, name, schoolColor, iconId, portraitData, children } = props;
-  // console.table({depth, x, y, width, height, name, schoolColor, iconId})
 
   if (width < 2 || height < 2) return null;
 
@@ -131,24 +130,16 @@ const CustomizedContent: React.FC<any> = (props) => {
     labelSize = 11;
   }
 
-  // let minHeight = 0;
-  // if (depth === 1) minHeight = 35;
-  // else if (depth === 2) minHeight = 50;
-  // else if (depth === 3) minHeight = 65;
-
-  // Do not display labels on leaf nodes (images)
-  // const canRenderLabel = !isLeaf && width > 80 && height > minHeight;
-
-  let imageSize; //, imageX, imageY;
-  const NATURAL_IMAGE_SIZE = 250;
+  // let imageSize; //, imageX, imageY;
+  // const NATURAL_IMAGE_SIZE = 250;
 
   // 2. Limit image size to the *smaller* of 'cell size' and 'original size' (prevent distortion)
   // (However, use smaller of width/height to maintain aspect ratio)
-  const maxImageSize = Math.max(width, height);
-  imageSize = Math.min(maxImageSize, NATURAL_IMAGE_SIZE);
+  // const maxImageSize = Math.max(width, height);
+  // imageSize = Math.min(maxImageSize, NATURAL_IMAGE_SIZE);
 
   // const useHighRes = width * height > 150 * 150; // High-res condition requested by user
-  const useHighRes = Math.max(width, height) > 150; // High-res condition requested by user
+  const useHighRes = Math.max(width, height) > 100 || width * height > 5_000; // High-res condition requested by user
   const highResPath = cdn(`/img/portrait/${iconId}.webp`);
   const lowResPath = `data:image/webp;base64,${portraitBase64}`;
 

@@ -4,6 +4,7 @@ import club from './club.json';
 import stat from './stat.json';
 import planner from './planner.json';
 import jukebox from './jukebox.json';
+import help from './help.json';
 
 export default {
   // translation: {},
@@ -20,4 +21,5 @@ export default {
   club,
   stat,
   jukebox,
+  help,
 } satisfies ResourceLanguage;

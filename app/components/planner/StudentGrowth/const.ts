@@ -23,3 +23,7 @@ export const TIER_TO_LEVEL: Record<number, number> = {
 
 export const MAX_LEVEL = 90;
 export const MAX_TIER = 10;
+
+// --- Constants ---
+export const HighFlowerBouquetItemIds = [5996, 5997];
+export const LowFlowerBouquetItemIds = [5998, 5999];

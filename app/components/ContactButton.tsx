@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 
-export default function ContactButton({ children }: { children: string }) {
+export default function ContactButton({ children }: { children: ReactElement | string }) {
   const [loading, setLoading] = useState(false);
 
   const handleSendEmail = async () => {

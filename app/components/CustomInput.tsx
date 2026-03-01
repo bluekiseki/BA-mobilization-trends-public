@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
-interface CustomNumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'min' | 'max' | 'type'> {
+import React, { useState, useEffect } from 'react';
+
+interface CustomNumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'min' | 'max' | 'type' | 'onBlur'> {
   value: number | null;
   onChange: (newValue: number | null) => void;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
   min?: number;
   max?: number;
 }
 
-export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({ value, onChange, min = 0, max = Infinity, placeholder = '', disabled = false, ...rest }) => {
+export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({ value, onChange, onBlur, min = 0, max = Infinity, placeholder = '', disabled = false, className = '', ...rest }) => {
   const [displayValue, setDisplayValue] = useState<string>(value !== null ? String(value) : '');
-  const [state, setState] = useState<'standby' | 'enable'>('enable');
 
-  // console.log('value', value)
+  // Synchronize when external value changes
   useEffect(() => {
-    if (state == 'enable') setDisplayValue(value !== null ? String(value) : '');
+    if (value !== null) {
+      setDisplayValue(String(value));
+    } else {
+      setDisplayValue('');
+    }
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,7 +25,6 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({ value, onC
 
     if (inputValue === '') {
       setDisplayValue('');
-      setState('standby');
       onChange(null);
       return;
     }
@@ -29,55 +33,68 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({ value, onC
       return;
     }
 
-    let num = parseInt(inputValue, 10);
+    const num = parseInt(inputValue, 10);
 
     if (isNaN(num)) {
       setDisplayValue(inputValue);
       return;
     }
 
-    setState('enable');
-    if (num) {
-      num = Math.max(min, Math.min(max === Infinity ? num : max, num));
-      onChange(num);
-    }
-    setDisplayValue(String(num));
+    setDisplayValue(inputValue);
+    onChange(num);
   };
 
-  const handleBlur = () => {
-    const value = Number(displayValue);
-    console.log('handleBlur', { value, displayValue });
-    if (value === null || isNaN(value)) {
-      return;
-    }
-    const clampedValue = Math.max(min, Math.min(max === Infinity ? value : max, value));
+  const handleInternalBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    let num = parseInt(displayValue, 10);
 
-    onChange(clampedValue);
-    setDisplayValue(String(clampedValue));
-    setState('enable');
+    // Revert if not a number
+    if (isNaN(num)) {
+      if (value !== null) setDisplayValue(String(value));
+      else setDisplayValue('');
+    } else {
+      // Range clamping (performed on final confirmation)
+      const clampedValue = Math.max(min, Math.min(max === Infinity ? num : max, num));
+      setDisplayValue(String(clampedValue));
+      onChange(clampedValue); // Update with clamped value
+    }
+
+    // Important: Execute external onBlur if provided (triggers commit in RenderRow)
+    if (onBlur) {
+      onBlur(e);
+    }
   };
 
-  const handleKeyUp = (e: React.KeyboardEvent) => {
-    if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
-      handleBlur();
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select(); // Select all
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['Enter'].includes(e.key)) {
+      e.currentTarget.blur();
     }
   };
 
   return (
     <input
       type="number"
+      pattern="[0-9]*"
+      inputMode="numeric"
       value={displayValue}
       onChange={handleChange}
-      onBlur={handleBlur}
+      onBlur={handleInternalBlur} // Connect internal handlers
+      onFocus={handleFocus}
       onKeyUp={handleKeyUp}
-      min={min}
-      max={max === Infinity ? undefined : max}
-      placeholder={placeholder}
       disabled={disabled}
+      placeholder={placeholder}
+      className={`
+        outline-none bg-transparent text-center font-mono font-bold p-0 m-0
+        ${className}
+      `}
       {...rest}
       style={{
-        MozAppearance: 'textfield', // Remove Firefox Spinner
-        appearance: 'textfield', // Remove common spinners
+        MozAppearance: 'textfield',
+        appearance: 'textfield',
+        ...rest.style,
       }}
     />
   );

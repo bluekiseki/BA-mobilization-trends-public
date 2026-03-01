@@ -21,6 +21,9 @@ import { HiUserGroup } from 'react-icons/hi';
 // import { FaTrophy } from 'react-icons/fa6';
 // import { IoMdTime } from 'react-icons/io';
 import { BsPinAngleFill } from 'react-icons/bs';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
+import { getCurrentGlobalraid } from '~/data/globalRaidDates';
+// import { usePageHelp } from '~/utils/usePageHelp';
 
 // Define types: Total Assault is RaidInfo, Joint Firing Drill is RaidInfo array.
 type GroupedRaidInfo = RaidFullInfo | RaidFullInfo[];
@@ -67,10 +70,12 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
       return new Date(dateB.split(' ~ ')[0]).getTime() - new Date(dateA.split(' ~ ')[0]).getTime();
     });
 
+    const currentGlobalraids = getCurrentGlobalraid();
+
     for (const raidGroup of sortedForPin) {
       if (Array.isArray(raidGroup)) {
-        if (raidGroup[0].Id == 'E26') pinnedGrandAssault = raidGroup;
-      } else if (raidGroup.Id == 'R82') pinnedTotalAssault = raidGroup;
+        if (currentGlobalraids.includes(raidGroup[0].Id)) pinnedGrandAssault = raidGroup;
+      } else if (currentGlobalraids.includes(raidGroup.Id)) pinnedTotalAssault = raidGroup;
 
       // Stop scanning if you find both types
       if (pinnedTotalAssault && pinnedGrandAssault) break;
@@ -95,6 +100,13 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export function links() {
   return [...createLinkHreflang('/dashboard')];
+}
+
+export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production')
+    return {
+      'Cache-Control': CACHE_CONTROL_CONFIG,
+    };
 }
 
 function MiniStat({ icon, value, sub, className = '' }: { icon?: React.ReactNode; value: React.ReactNode; sub?: React.ReactNode; className?: string }) {
@@ -247,7 +259,7 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
   // Use the first data entry as the representative info
   const primaryRaid = raidInfos[0];
   const { Id: id, Boss, Date: date, Location: location } = primaryRaid;
-  const liveExpired = Number(new Date(date + 'T02:00:00Z')) /* GMT+9 11:00 */ + 3600_000 * 24 * 6 /* add 7 day */ - 3600_000 * 7 < Date.now();
+  const liveExpired = Number(new Date(date + 'T02:00:00Z')) /* GMT+9 11:00 */ + 3600_000 * 24 * 7 /* add 7 day */ - 3600_000 * 7 < Date.now();
 
   const israid = isTotalAssault(primaryRaid);
 

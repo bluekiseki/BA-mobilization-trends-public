@@ -26,10 +26,11 @@
     "loop": "Loop",
     "rerun": "Rerun",
     "fast": "Fast",
-    "limited": "Limited",
+    "limited": "Ltd.",
     "clear": "Clear",
     "period": "Period",
     "jfd": "Joint Firing Drill",
+    "pred": "pred",
     "title": "Yuzu Trends",
     "site-title": "Yuzu Trends",
     "site-title_old": "Yuzu Trends | Blue Archive Mobilization Info",
@@ -56,7 +57,18 @@
       "ranking": "Ranking",
       "home": "Home",
       "dashboard": "Board",
-      "planner": "Planner"
+      "planner": "Planner",
+      "help": "Help",
+      "viewDescription": "View Description",
+      "reportBug": "Send Feedback",
+      "email": "email",
+      "viewCode": "View Code",
+      "theme": "Theme",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode",
+      "systemTheme": "System Default",
+      "language": "Language",
+      "serverSettings": "Server Settings"
     },
     "LocaleSwitcher": {
       "en": "English",
@@ -73,6 +85,35 @@
         "message": "Your preferred language isn't supported. You can help translate or select a language.",
         "contribute_button": "Contribute on GitHub"
       }
+    },
+    "helpSidebar": {
+      "title": "Help Guide",
+      "noGuide": "No guides available for this page.",
+      "startGuide": "Start Guide",
+      "driver": {
+        "next": "Next ➔",
+        "prev": "⬅ Prev",
+        "done": "Done"
+      }
+    },
+    "promoBanner": {
+      "noMoreToday": "Hide for today"
+    },
+    "bugReport": {
+      "title": "Send Feedback",
+      "successTitle": "Successfully sent.",
+      "successDesc": "Thank you for your valuable feedback.",
+      "close": "Close",
+      "typeBug": "Bug Report",
+      "typeSuggestion": "Feature Request",
+      "inputTitle": "Enter title",
+      "inputDesc": "Please provide details",
+      "inputEmail": "Email for reply (optional)",
+      "submitBtn": "Submit",
+      "submittingBtn": "Submitting...",
+      "errorMsg": "Failed to send. Please try again.",
+      "githubIssue": "Report via GitHub Issues",
+      "poweredBy": "This request is sent via Web3Forms."
     }
   },
   "charts": {

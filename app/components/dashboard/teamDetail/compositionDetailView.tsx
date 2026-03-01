@@ -336,7 +336,7 @@ export const CompositionDetailView: React.FC<{
 
   const studentsToDisplay = selectedStudentId === 'all' ? comp.ids : [selectedStudentId];
   return (
-    <div className="w-full mt-2 p-2 sm:p-4 border border-teal-500 rounded-lg bg-white dark:bg-neutral-800 shadow-xl space-y-4">
+    <div data-component-name="CompositionDetailView" className="w-full mt-2 p-2 sm:p-4 space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           <div className="text-xs">

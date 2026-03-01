@@ -5,8 +5,18 @@ import { z } from 'zod';
 import resources from '~/locales';
 import type { Route } from './+types/locales';
 import { type Locale } from '~/utils/i18n/config';
+import { vaildClient } from '~/utils/vaildClient';
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ request, params }: Route.LoaderArgs) {
+  if (!vaildClient(request)) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
   if (params.ns == 'translation') {
     const headers = new Headers();
 
@@ -17,7 +27,7 @@ export async function loader({ params }: Route.LoaderArgs) {
         cacheHeader({
           maxAge: '10m',
           sMaxage: '1d',
-          staleWhileRevalidate: '7d',
+          staleWhileRevalidate: '4h',
           staleIfError: '7d',
         }),
       );
@@ -26,18 +36,11 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 
   const lng = z.enum(Object.keys(resources) as Array<keyof typeof resources>).safeParse(params.lng as Locale);
-
   if (lng.error) return data({ error: lng.error }, { status: 400 });
-
   const namespaces = resources[lng.data];
-
-  // const ns = z.enum(Object.keys(namespaces) as Array<keyof typeof namespaces>).safeParse(params.ns);
-
   const nsKeys = Object.keys(namespaces) as [string, ...string[]];
+
   const ns = z.enum(nsKeys).safeParse(params.ns);
-
-  // console.log('Object.keys(namespaces)',resources)
-
   if (ns.error) return data({ error: ns.error }, { status: 400 });
 
   const headers = new Headers();
@@ -47,11 +50,9 @@ export async function loader({ params }: Route.LoaderArgs) {
     headers.set(
       'Cache-Control',
       cacheHeader({
-        maxAge: '10m', // Cache in the browser for 5 minutes
-        sMaxage: '1d', // Cache in the CDN for 1 day
-        // Serve stale content while revalidating for 7 days
-        staleWhileRevalidate: '7d',
-        // Serve stale content if there's an error for 7 days
+        maxAge: '10m', // Short-term browser cache
+        sMaxage: '2h', // CDN cache
+        staleWhileRevalidate: '4h',
         staleIfError: '7d',
       }),
     );

@@ -22,6 +22,8 @@ import TierSummary from '~/components/dashboard/TierSummary';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/$server.$id';
 import { cdn } from '~/utils/cdn';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
+import { useHelpKey } from '~/utils/usePageHelp';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const raidInfo = loaderData.raidInfos[0]; //loadRaidInfo(server, locale, params.id || '', params.type || '')
@@ -124,12 +126,29 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   });
 }
 
+export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production')
+    return {
+      // Browser: 5m, Cloudflare Edge: 7d (604800s), SWR: 30d
+      'Cache-Control': CACHE_CONTROL_CONFIG,
+    };
+}
+
 export default function RaidDetailsPage() {
   const { raidInfos, server, isGrandAssault, id } = useLoaderData<typeof loader>();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const mainView = searchParams.get('view') === 'detail' ? 'detail' : 'overview'; // Default value 'overview'
   const grandAssaultTabs = useMemo(() => (isGrandAssault ? ['All', ...raidInfos.map((r) => r.Type!)] : []), [isGrandAssault, raidInfos]);
+
+  const isRaid = isTotalAssault(raidInfos[0]);
+  const helpKeys = useMemo(() => {
+    return [
+      'dashboard.common', // 1. Common guide to show unconditionally
+      isRaid ? 'dashboard.raid' : 'dashboard.elimination', // 2. Conditional-only guide
+    ];
+  }, [isRaid]);
+  useHelpKey(helpKeys);
   const activeTab = useMemo(() => {
     const tabFromUrl = searchParams.get('tab');
 

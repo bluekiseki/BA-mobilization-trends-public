@@ -72,7 +72,6 @@ const ChartDataContainer = ({
     fetchAndProcessWithCache,
   ]);
 
-  // console.log('chartDataByZ',chartDataByZ)
   // Chart Data Processing Logic
   const aggregatedChartData = useMemo<ChartData | null>(() => {
     if (selectedZValues.size === 0 || chartDataByZ.size === 0) return null;
@@ -159,7 +158,7 @@ const ChartDataContainer = ({
 
   // final chart component rendering
   return (
-    <div>
+    <div data-component-name="ChartDataContainer">
       <div className="md-4">
         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">{t('desp_chart')}</p>
       </div>

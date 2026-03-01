@@ -11,6 +11,7 @@ import { useChartControlsStore } from '~/store/chartControlsStore';
 import { useShallow } from 'zustand/shallow';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
+import { useLocation } from 'react-router';
 
 const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
   const [students, setStudents] = useState<Record<string, Student>>({});
@@ -27,6 +28,21 @@ const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
 
   const { i18n } = useTranslation('common', { keyPrefix: 'currentLocale' });
   const currentLocale = i18n.language as Locale;
+
+  const { selectedStudentId, setSelectedStudentId } = useChartControlsStore(
+    useShallow((state) => ({
+      selectedStudentId: state.selectedStudentId,
+      setSelectedStudentId: state.setSelectedStudentId,
+    })),
+  );
+
+  const location = useLocation();
+  useEffect(() => {
+    const state = location.state as { studentId?: number } | null;
+    if (state && state.studentId && selectedStudentId != state.studentId) {
+      setSelectedStudentId(state.studentId);
+    }
+  }, [location.state, location.pathname]);
 
   useEffect(() => {
     const fetchInitialData = async () => {

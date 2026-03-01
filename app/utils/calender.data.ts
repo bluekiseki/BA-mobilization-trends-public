@@ -39,6 +39,8 @@ const armorTypeTranslation = type_translation;
 const MS_PER_HOUR = 1000 * 60 * 60;
 const JP_RAID_SEASON_EXIST_START = 47;
 const KR_RAID_SEASON_EXIST_START = 15;
+const KR_RAID_SEASON_EXIST_END = 73;
+const KR_ERAID_SEASON_EXIST_END = 20;
 
 function convTitleLnag(locale: Locale) {
   if (locale == 'en') return 'titleEn';
@@ -47,7 +49,7 @@ function convTitleLnag(locale: Locale) {
   else return 'titleJa';
 }
 
-interface PickupStudentInfo {
+export interface PickupStudentInfo {
   id: number;
   limited: boolean;
   rerun: boolean;
@@ -203,7 +205,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
 
   if (tracksToLoadArray.includes('event')) {
     parseCsvString<any>(sources.event).forEach((item) => {
-      const eventInfo = (eventList as any)[(item.id % 10000)?.toString()];
+      const eventInfo = (eventList as any)[item.id?.toString()];
       const title = eventInfo?.[{ en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' }[locale]] || eventInfo?.Jp || item.name || `Event`;
 
       const label = `${t_cal('track.event')}${item.rerun ? '/' + t_com('rerun') : ''}`;
@@ -215,7 +217,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         endTime: item.closeTime,
         title: title,
         label: label,
-        link: item.planable == false ? undefined : `/planner/event/${item.id}`,
+        link: item.planable == false ? undefined : `/planner/event/${item.id % 100000}`,
         details: {
           rerun: item.rerun,
           studentId: item.studentId,
@@ -253,13 +255,13 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
           // nothing
         } else if (nowMs >= startMs && nowMs <= endMs && server == 'jp') {
           link = '/live';
-        } else if (nowMs > endMs) {
-          link = `/dashboard/${server}/R${item.season}`;
-        } else if (server == 'kr') {
+        } else if (server == 'kr' && item.season > KR_RAID_SEASON_EXIST_END) {
           const id = 'R' + (item.season + 3);
           if (loadRaidInfosById('jp', locale, id).length) {
             link = `/dashboard/jp/R${item.season + 3}`;
           }
+        } else if (nowMs > endMs) {
+          link = `/dashboard/${server}/R${item.season}`;
         }
         const label = String(t_com('raid'));
 
@@ -276,7 +278,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
       }
     });
 
-    // 3. Joint Firing Drill (JFD)
+    // 3. E. Raid
     parseCsvString<any>(sources.eraid).forEach((item) => {
       if (item.boss1) {
         const bossInfo = (bossData as any)[item.boss1.split('_')[0]];
@@ -305,13 +307,13 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         let link: string | undefined = undefined;
         if (nowMs >= startMs && nowMs <= endMs && server == 'jp') {
           link = '/live';
-        } else if (nowMs > endMs) {
-          link = `/dashboard/${server}/E${item.season}`;
-        } else if (server == 'kr') {
+        } else if (server == 'kr' && item.season > KR_ERAID_SEASON_EXIST_END) {
           const id = 'E' + item.season;
           if (loadRaidInfosById('jp', locale, id).length) {
             link = `/dashboard/jp/E${item.season}`;
           }
+        } else if (nowMs > endMs) {
+          link = `/dashboard/${server}/E${item.season}`;
         }
         const label = String(t_com('eraid'));
 

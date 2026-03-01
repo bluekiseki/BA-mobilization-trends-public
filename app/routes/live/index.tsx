@@ -21,6 +21,7 @@ import { lastdataURL, timelineURL } from '~/data/livedataServer.json';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types';
 import { cdn } from '~/utils/cdn';
+import { env } from 'cloudflare:workers';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const raidInfo = loaderData.raidInfos[0];
@@ -55,22 +56,34 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
   }
   const isRaid = isTotalAssault(raidInfos[0]);
 
-  try {
-    const [lastDataRes, timelineRes] = await Promise.all([
-      fetch(lastdataURL),
-      fetch(timelineURL),
-      // for dev
-      // fetch('http://localhost:8080/lastdata-error.json'),
-      // fetch('http://localhost:5173/dummy_lastdata.json'),
-      // fetch('http://localhost:5173/dummy_timeline.json')
-    ]);
+  // Extract Cloudflare environment variables (env) from context only once.
+  // const env = (context as any).cloudflare?.env;
 
-    if (!lastDataRes.ok || !timelineRes.ok) {
-      throw new Response('Failed to fetch live data', { status: 500 });
+  // Check R2 first; if missing, request via fallbackUrl.
+  // Not sure if it's actually faster. Existing ~600ms vs current 500~800ms range is similar.
+  const fetchWithR2Fallback = async <T,>(filename: string, fallbackUrl: string) => {
+    if (env && (env as any).MY_BUCKET) {
+      try {
+        const r2Object = await (env as any).MY_BUCKET.get(filename);
+        if (r2Object !== null) {
+          // console.log(`[HIT] Retrieved ${filename} from R2.`);
+          return (await r2Object.json()) as T;
+        }
+      } catch (error) {
+        // console.error(`[ERROR] Error querying R2 for ${filename}, falling back to original URL:`, error);
+      }
     }
 
-    const lastData = (await lastDataRes.json()) as LastData;
-    const timelineData = (await timelineRes.json()) as TimelineData;
+    // Call external URL only if the file is missing in R2 or an error occurred
+    // console.log(`[MISS] Data not in R2. Fetching ${filename} from external URL.`);
+    const res = await fetch(fallbackUrl);
+    if (!res.ok) throw new Error(`Failed to fetch ${filename}`);
+    return res.json() as Promise<T>;
+  };
+
+  try {
+    // Using a common function to call both data points in parallel cleanly!
+    const [lastData, timelineData] = await Promise.all([fetchWithR2Fallback<LastData>('lastdata.json', lastdataURL), fetchWithR2Fallback<TimelineData>('timeline.json', timelineURL)]);
 
     // Pass data to components in JSON format.
     return data({

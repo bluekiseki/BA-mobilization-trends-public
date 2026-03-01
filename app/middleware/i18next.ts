@@ -18,14 +18,15 @@ export const [i18nextMiddleware, getLocale, getInstance] = createI18nextMiddlewa
     supportedLanguages: SUPORTED_LOCALES, // Your supported languages, the fallback should be last
     fallbackLanguage: DEFAULT_LOCALE, // Your fallback language
     async findLocale(request) {
-      let locale = new URL(request.url).pathname.split('/').at(1);
+      const url = new URL(request.url);
+      let locale = url.searchParams.get('lang') || url.pathname.split('/').at(1);
 
       if (!locale) return DEFAULT_LOCALE;
       return SUPORTED_LOCALES.includes(locale as any) ? locale : DEFAULT_LOCALE;
     },
     cookie: localeCookie, // The cookie to store the user preference
   },
-  i18next: { resources }, // Your locales
+  i18next: { resources, showSupportNotice: false }, // Your locales
   plugins: [initReactI18next], // Plugins you may need, like react-i18next
 });
 

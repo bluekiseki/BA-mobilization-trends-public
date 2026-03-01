@@ -1,3 +1,4 @@
+// app/components/StudentSearchDropdown.tsx
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Student } from '~/types/data';
@@ -8,9 +9,10 @@ interface StudentSearchDropdownProps {
   students: Record<number, Student>;
   selectedStudentId: number | null;
   setSelectedStudentId: (id: number) => void;
+  hideLavel?: boolean;
 }
 
-function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudentId }: StudentSearchDropdownProps) {
+function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudentId, hideLavel }: StudentSearchDropdownProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -19,6 +21,7 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
   const { t: t_student } = useTranslation('charts', {
     keyPrefix: 'ranking.control',
   });
+  const { t: t_club } = useTranslation('club');
 
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
@@ -35,7 +38,7 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
     const searchText = searchTerm.toLowerCase();
     const nameMatch = matcher(student.Name, searchText);
     const tagsMatch = student.SearchTags.some((tag) => matcher(tag, searchText));
-    const schoolMatch = matcher(student.School, searchText);
+    const schoolMatch = matcher(t_club(student.School, student.School), t_club(searchText, searchText));
     const familyNameMatch = matcher(student.FamilyName || '', searchText);
     const roleString = String(t_student(`tactic_role_${student.TacticRole}` as any));
     const roleMatch = matcher(roleString, searchText);
@@ -63,10 +66,12 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
   }, [wrapperRef]);
 
   return (
-    <div className="relative w-full" ref={wrapperRef}>
-      <label htmlFor="student-search" className="block font-semibold text-black dark:text-white mb-1 transition-colors duration-300">
-        {t('selectStudent')}
-      </label>
+    <div data-component-name="StudentSearchDropdown" className="relative w-full" ref={wrapperRef}>
+      {!hideLavel && (
+        <label htmlFor="student-search" className="block font-semibold text-black dark:text-white mb-1 transition-colors duration-300">
+          {t('selectStudent')}
+        </label>
+      )}
 
       <div className="relative">
         <input
@@ -107,6 +112,7 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
                       Pierce: '#bc8800',
                       Mystic: '#206d9b',
                       Sonic: '#9a46a8',
+                      Chemical: '#137973',
                     }[student.BulletType],
                   }}
                 >
@@ -131,7 +137,7 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
                   </div>
 
                   <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400 transition-colors duration-300">
-                    <span className="mr-2 text-blue-500 dark:text-blue-400">{student.School}</span>
+                    <span className="mr-2 text-blue-500 dark:text-blue-400">{t_club(student.School, student.School)}</span>
                     <span className="bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 rounded-full px-2 py-0.5 text-xs font-medium">{student.Position}</span>
                     {student.SearchTags.map((tag) => (
                       <span key={tag} className="inline-block bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 rounded-full px-2 py-0.5 text-xs font-medium mr-1">

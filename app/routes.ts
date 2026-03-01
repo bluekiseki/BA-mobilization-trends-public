@@ -5,6 +5,7 @@ export default [
   // 1. Routes that do not require a locale, such as APIs (placed at the top)
   route('/api/locales/:lng/:ns', 'routes/api/locales.ts'),
   route('/api/contract', 'routes/api/email.ts'),
+  route('/api/calendar', 'routes/api/calendar.ts'),
 
   // 2. Layout wrapping all routes that require locale processing
   // Set path to ':locale?' so all child routes can receive the locale parameter
@@ -31,6 +32,7 @@ export default [
 
     // Others
     route('utils/jukebox', 'routes/utils/jukebox.tsx'),
+    route('utils/favor', 'routes/utils/favor.tsx'),
     route('live', 'routes/live/index.tsx'),
     route('calendar/:server?', 'routes/calendar.tsx'),
   ]),

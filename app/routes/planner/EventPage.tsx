@@ -17,6 +17,8 @@ import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { EventPlannerLoader } from '~/components/planner/event/EventPlannerLoader';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
+import { useHelpKey } from '~/utils/usePageHelp';
 
 const fetchEventSeasonData = async (eventId: number) => {
   try {
@@ -26,7 +28,7 @@ const fetchEventSeasonData = async (eventId: number) => {
 
     return eventDataModule;
   } catch (e) {
-    console.log('e', e);
+    console.warn('e', e);
     return null;
   }
 };
@@ -80,6 +82,13 @@ export const handle: AppHandle = {
   },
 };
 
+export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production')
+    return {
+      'Cache-Control': CACHE_CONTROL_CONFIG,
+    };
+}
+
 export const EventPage = () => {
   const { eventId: eventIdStr } = useParams<{ eventId: string }>(); // Extract event ID from URL
   const { evnetSeasonData } = useLoaderData<typeof loader>();
@@ -93,33 +102,11 @@ export const EventPage = () => {
   const [allStudents, setAllStudents] = useState<StudentData>({});
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
 
-  // const currencyStatusRef = useRef<HTMLDivElement | null>(null);
-
-  // const [isMainCurrencyStatusVisible, setIsMainCurrencyStatusVisible] = useState(true);
-
   const { t, i18n } = useTranslation('planner');
   // const { t: t_c } = useTranslation("common");
   const locale = i18n.language as Locale;
 
-  // useEffect(() => {
-  //   const observer = new IntersectionObserver(
-  //     ([entry]) => {
-  //       setIsMainCurrencyStatusVisible(entry.isIntersecting);
-  //     },
-  //     { threshold: 0.1 } // Considered visible even if only 10% is showing
-  //   );
-
-  //   const currentRef = currencyStatusRef.current;
-  //   if (currentRef) {
-  //     observer.observe(currentRef);
-  //   }
-
-  //   return () => {
-  //     if (currentRef) {
-  //       observer.unobserve(currentRef);
-  //     }
-  //   };
-  // }, [currencyStatusRef.current]);
+  if (![854].includes(eventId)) useHelpKey('planner.event');
 
   //  dynamic loading useEffect
   useEffect(() => {

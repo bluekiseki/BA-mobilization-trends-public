@@ -32,7 +32,6 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
 
   useEffect(() => {
     setIsCalculating(true);
-    // console.log('OverviewDashboardUI Effect: Start Calculating', { activeTab });
 
     const timerId = setTimeout(() => {
       if (!fullData) {
@@ -45,7 +44,6 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
 
       if (isGrandAssault) {
         if (activeTab === 'TotalType') {
-          // console.log('OverviewDashboardUI -> GA Total', activeTab);
           newScores = fullData.rank ?? new Int32Array();
         } else {
           const armorTypeIndex = raidInfos.findIndex((info) => info.Type === activeTab);
@@ -53,7 +51,6 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
           // rank_1, rank_2, rank_3 ...
           const keyNumber = armorTypeIndex + 1;
           const key = `rank_${keyNumber}` as keyof FullData;
-          // console.log('OverviewDashboardUI -> GA Armor', key);
           newScores = (fullData[key] as Int32Array | undefined) ?? new Int32Array();
         }
       } else {
@@ -63,9 +60,7 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
 
       setScores(newScores);
 
-      // Change 'Inside' loading status to false because calculation is complete
       setIsCalculating(false);
-      // console.log('OverviewDashboardUI Effect: Finish Calculating');
     }, 0); // 0ms
     // Remove timer when component unmount or dependency changes
     return () => clearTimeout(timerId);
@@ -78,8 +73,6 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
       </>
     );
   }
-
-  // console.log('OverviewDashboardUI return', scores,fullData, currentRaidInfo)
 
   return (
     <>

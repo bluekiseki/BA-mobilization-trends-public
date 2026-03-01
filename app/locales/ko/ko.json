@@ -30,6 +30,7 @@
     "clear": "클리어",
     "period": "기간",
     "jfd": "종합전술시험",
+    "pred": "예상",
     "title": "유즈 Trends",
     "site-title": "유즈 Trends",
     "site-title_old": "유즈 Trends | 블루아카 출전동향",
@@ -56,7 +57,18 @@
       "ranking": "순위",
       "home": "홈",
       "dashboard": "대시보드",
-      "planner": "플래너"
+      "planner": "플래너",
+      "help": "도움말",
+      "viewDescription": "기능 해설",
+      "reportBug": "의견 보내기",
+      "email": "이메일",
+      "viewCode": "코드 보기",
+      "theme": "테마",
+      "lightMode": "라이트 모드",
+      "darkMode": "다크 모드",
+      "systemTheme": "시스템 설정",
+      "language": "언어",
+      "serverSettings": "서버 설정"
     },
     "LocaleSwitcher": {
       "en": "영어",
@@ -72,6 +84,35 @@
         "message": "선호하시는 언어가 지원되지 않습니다. 번역에 기여하거나 다른 언어를 선택할 수 있습니다.",
         "contribute_button": "GitHub에서 기여하기"
       }
+    },
+    "helpSidebar": {
+      "title": "이용 가이드",
+      "noGuide": "현재 페이지에 대한 가이드가 없습니다.",
+      "startGuide": "가이드 시작하기",
+      "driver": {
+        "next": "다음 ➔",
+        "prev": "⬅ 이전",
+        "done": "완료"
+      }
+    },
+    "promoBanner": {
+      "noMoreToday": "하루동안 안 보기"
+    },
+    "bugReport": {
+      "title": "의견 보내기",
+      "successTitle": "성공적으로 전송되었습니다.",
+      "successDesc": "소중한 의견 감사합니다.",
+      "close": "닫기",
+      "typeBug": "버그 제보",
+      "typeSuggestion": "기능 건의",
+      "inputTitle": "제목을 입력하세요",
+      "inputDesc": "상세 내용을 적어주세요",
+      "inputEmail": "답변 받을 이메일 (선택)",
+      "submitBtn": "제보하기",
+      "submittingBtn": "전송 중...",
+      "errorMsg": "전송에 실패했습니다. 다시 시도해주세요.",
+      "githubIssue": "GitHub 이슈에서 제보하기",
+      "poweredBy": "이 요청은 Web3Forms를 통해 전송됩니다."
     }
   },
   "charts": {
@@ -307,8 +348,8 @@
       "dateRange": "기간"
     },
     "composition": {
-      "mode_team": "팀",
-      "mode_report": "리포트",
+      "mode_team": "파티",
+      "mode_report": "전체",
       "total_parties": "부대 투입 수",
       "full_party_only": "모든 자리에 편성된 팀만",
       "specific_team": "특정 순서의 팀",

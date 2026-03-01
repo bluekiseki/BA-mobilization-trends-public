@@ -17,7 +17,7 @@ export const Card: React.FC<{
   };
 
   return (
-    <div className={`bg-neutral-50 dark:bg-neutral-900 pb-10 ${className}`}>
+    <div data-component-name="Card" className={`bg-neutral-50 dark:bg-neutral-900 pb-10 ${className}`}>
       <div
         // type="button"
         onClick={handleToggle}

@@ -6,6 +6,15 @@ import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { domain, vercelDomain } from './app/data/livedataServer.json';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import { execSync } from 'child_process';
+// import { visualizer } from 'rollup-plugin-visualizer';
+
+let commitHash = 'dev';
+try {
+  commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+} catch (error) {
+  console.warn("Unable to get Git commit hash, replace with 'dev'.");
+}
 
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
@@ -13,6 +22,10 @@ export default defineConfig(({ isSsrBuild }) => ({
     tailwindcss(),
     reactRouter(),
     tsconfigPaths(),
+    // visualizer({
+    //   open: true, // When the build is completed, the report automatically appears in the browser.
+    //   filename: 'bundle-report.html',
+    // }),
     !isSsrBuild &&
       vitePluginObfuscator({
         obfuscatorOptions: {
@@ -48,12 +61,14 @@ export default defineConfig(({ isSsrBuild }) => ({
     noExternal: ['posthog-js', '@posthog/react'],
   },
   build: {
+    // target: "esnext",
     sourcemap: false,
     rollupOptions: isSsrBuild
       ? // For server (isSrBuild = true):
         {
           // input: './server/app.ts', // for Vercel
           input: './worker/app.ts', // for cloudflare worker
+          // input: './server/lambda.ts', // for aws lambda
         }
       : // For client (isSrBuild = false):
         {
@@ -61,11 +76,16 @@ export default defineConfig(({ isSsrBuild }) => ({
             entryFileNames: `assets/[hash].js`,
             chunkFileNames: `assets/[hash].js`,
             assetFileNames: `assets/[hash].[ext]`,
+            // entryFileNames: `assets/[name]-[hash].js`,
+            // chunkFileNames: 'chunks/[name]-[hash].js',
+            // assetFileNames: `assets/[name]-[hash].[ext]`,
           },
         },
   },
   define: {
     // 'global': 'window', // not work for web worker
+    // __COMMIT_SHA__: JSON.stringify(process.env.CF_PAGES_COMMIT_SHA || 'dev-mode'),
+    __COMMIT_SHA__: JSON.stringify(commitHash),
   },
   server: {
     allowedHosts: [domain, vercelDomain],

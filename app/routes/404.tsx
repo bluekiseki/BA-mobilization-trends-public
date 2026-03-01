@@ -6,6 +6,8 @@ export async function loader({ params }: Route.ActionArgs) {
   throw data(null, { status: 404 });
 }
 
+export const action = async () => null;
+
 export default function NoMatch() {
   const { t } = useTranslation('common');
   return (

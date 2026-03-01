@@ -147,7 +147,6 @@ export const StackedPickRateChart: React.FC<{
               if (active && payload && payload.length) {
                 const studentId = Number(label);
                 const studentInfo = payload[0].payload; // Access the underlying data point
-                // console.log('studentInfo', studentInfo, currentRank)
                 const totalPickRate = (studentInfo.total / currentRank) * 100; // Calculate total %
 
                 return (

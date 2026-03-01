@@ -7,6 +7,7 @@ export const typecolor = {
   HeavyArmor: '#bc8800',
   Unarmed: '#206d9b',
   ElasticArmor: '#9a46a8',
+  CompositeArmor: '#137973',
 };
 
 export const type_translation = {

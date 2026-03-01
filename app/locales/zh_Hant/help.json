@@ -1,0 +1,695 @@
+{
+  "dashboard": {
+    "raid": [
+      {
+        "title": "查看最常使用的隊伍統計",
+        "description": "參考使用量高且穩定的隊伍，\n能讓您更輕鬆地達成一檔（白金）排名。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 查看詳細隊伍",
+              "description": "移動至可查看詳細隊伍統計的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#formations",
+            "popover": {
+              "title": "2. 熱門出戰編成",
+              "description": "此頁籤可確認最常被使用的隊伍組合。"
+            }
+          },
+          {
+            "element": "#formations button:nth-child(2)",
+            "popover": {
+              "title": "3. 變更為全屬性",
+              "description": "變更選項以查看整體隊伍統計，\n而不受攻擊/防禦類型的限制。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionChart]>div",
+            "popover": {
+              "title": "4. 查看隊伍詳細資訊",
+              "description": "依使用頻率排序的隊伍清單。\n點擊各隊伍可查看詳細統計。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionDetailView] div:has(label)",
+            "popover": {
+              "title": "5. 查看學生詳細資訊",
+              "description": "點擊學生圖示可查看該學生的\n平均星級、專武等級等培育統計。"
+            }
+          },
+          {
+            "element": "div[data-component-name=VariantStats]",
+            "popover": {
+              "title": "6. 其他資訊",
+              "description": "可確認初始技能固定、學生配置順序等\n詳細的實戰操作資訊。"
+            }
+          }
+        ]
+      },
+      {
+        "title": "查看助戰統計",
+        "description": "確認需求量高、適合設置為\n社團助戰的學生。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 查看詳細隊伍",
+              "description": "移動至可查看詳細隊伍統計的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#participation",
+            "popover": {
+              "title": "2. 確認出場率",
+              "description": "此頁籤可確認各學生的整體出場率。"
+            }
+          },
+          {
+            "element": "#participation button:nth-child(3)",
+            "popover": {
+              "title": "3. 僅查看助戰",
+              "description": "點擊按鈕可單獨查看作為\n助戰（租借）最常被使用的學生統計。"
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "搜尋條件篩選隊伍",
+        "description": "排除特定學生，或為了節省培育資源，\n僅搜尋使用了指定學生的隊伍組合。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 查看詳細隊伍",
+              "description": "移動至可查看詳細隊伍統計的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankRange",
+            "popover": {
+              "title": "2. 設置統計排名範圍",
+              "description": "設置要進行統計的排名範圍。\n\n指定 START 與 END 值後，\n即可僅查看該區間內玩家的數據。"
+            }
+          },
+          {
+            "element": "#rankings",
+            "popover": {
+              "title": "3. 確認排名與隊伍",
+              "description": "依序顯示實際玩家的通關排名與隊伍。\n可透過右側的篩選功能過濾出想要的條件。"
+            }
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
+            "popover": {
+              "title": "4. 選擇要出場/包含的學生",
+              "description": "直接搜尋或選擇要包含在編成中的學生。\n(日服/繁體版支援英文名稱搜尋)\n\n選擇學生後，可進一步設定是否必須包含在隊伍中，\n以及指定的星級範圍（例如：3星~專武3星）。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
+            "popover": {
+              "title": "5. 設置排除學生 / 助戰",
+              "description": "設定自己沒有或因培育不足而難以投入的學生。\n\n• 完全排除：從隊伍清單中徹底移除。\n• 可租借助戰：僅將從他人處租借 1 次的情況納入搜尋。"
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ],
+    "elimination": [
+      {
+        "title": "查看最常使用的隊伍統計",
+        "description": "參考使用量高且穩定的隊伍，\n能讓您更輕鬆地達成一檔（白金）排名。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 查看詳細隊伍",
+              "description": "移動至可查看詳細隊伍統計的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. 選擇裝甲屬性",
+              "description": "大決戰會根據裝甲屬性而有不同的隊伍。\n請先選擇想要確認的頭目裝甲屬性。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#formations",
+            "popover": {
+              "title": "2. 熱門出戰編成",
+              "description": "此頁籤可確認最常被使用的隊伍組合。"
+            }
+          },
+          {
+            "element": "#formations button:nth-child(2)",
+            "popover": {
+              "title": "3. 變更為全屬性",
+              "description": "變更選項以查看整體隊伍統計，\n而不受攻擊/防禦類型的限制。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionChart]>div",
+            "popover": {
+              "title": "4. 查看隊伍詳細資訊",
+              "description": "依使用頻率排序的隊伍清單。\n點擊各隊伍可查看詳細統計。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionDetailView] div:has(label)",
+            "popover": {
+              "title": "5. 查看學生詳細資訊",
+              "description": "點擊學生圖示可查看該學生的\n平均星級、專武等級等培育統計。"
+            }
+          },
+          {
+            "element": "div[data-component-name=VariantStats]",
+            "popover": {
+              "title": "6. 其他資訊",
+              "description": "可確認初始技能固定、學生配置順序等\n詳細的實戰操作資訊。"
+            }
+          }
+        ]
+      },
+      {
+        "title": "查看助戰統計",
+        "description": "確認需求量高、適合設置為\n社團助戰的學生。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 查看詳細隊伍",
+              "description": "移動至可查看詳細隊伍統計的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. 選擇裝甲屬性",
+              "description": "大決戰會根據裝甲屬性而有不同的隊伍。\n請先選擇想要確認的頭目裝甲屬性。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#participation",
+            "popover": {
+              "title": "2. 確認出場率",
+              "description": "此頁籤可確認各學生的整體出場率。"
+            }
+          },
+          {
+            "element": "#participation button:nth-child(3)",
+            "popover": {
+              "title": "3. 僅查看助戰",
+              "description": "點擊按鈕可單獨查看作為\n助戰（租借）最常被使用的學生統計。"
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "搜尋條件篩選隊伍",
+        "description": "排除特定學生，或為了節省培育資源，\n僅搜尋使用了指定學生的隊伍組合。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 查看詳細隊伍",
+              "description": "移動至可查看詳細隊伍統計的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. 選擇裝甲屬性",
+              "description": "大決戰會根據裝甲屬性而有不同的隊伍。\n請先選擇想要確認的頭目裝甲屬性。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankRange",
+            "popover": {
+              "title": "2. 設置統計排名範圍",
+              "description": "設置要進行統計的排名範圍。\n\n指定 START 與 END 值後，\n即可僅查看該區間內玩家的數據。"
+            }
+          },
+          {
+            "element": "#rankings",
+            "popover": {
+              "title": "3. 確認排名與隊伍",
+              "description": "依序顯示實際玩家的通關排名與隊伍。\n可透過右側的篩選功能過濾出想要的條件。"
+            }
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
+            "popover": {
+              "title": "4. 選擇要出場/包含的學生",
+              "description": "直接搜尋或選擇要包含在編成中的學生。\n(日服/繁體版支援英文名稱搜尋)\n\n選擇學生後，可進一步設定是否必須包含在隊伍中，\n以及指定的星級範圍（例如：3星~專武3星）。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
+            "popover": {
+              "title": "5. 設置排除學生 / 助戰",
+              "description": "設定自己沒有或因培育不足而難以投入的學生。\n\n• 完全排除：從隊伍清單中徹底移除。\n• 可租借助戰：僅將從他人處租借 1 次的情況納入搜尋。"
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ],
+    "common": [
+      {
+        "title": "根據過去日服數據估算個人排名/分數 (共通)",
+        "description": "根據過去日服的數據確認個人分數與預測排名。\n可提前評估在本次總力戰/大決戰中是否能達成白金排名。",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(1)",
+            "popover": {
+              "title": "1. 查看整體分數分佈",
+              "description": "移動至可查看所有玩家分數分佈的頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "*:has(>div>div>div[data-component-name=RecordLookup])",
+            "popover": {
+              "title": "2. 紀錄查詢區域",
+              "description": "根據個人紀錄搜尋過去日服數據的區域。"
+            }
+          },
+          {
+            "element": "div[data-component-name=RecordLookup]",
+            "popover": {
+              "title": "3. 詳細紀錄搜尋",
+              "description": "請輸入您的通關分數、剩餘時間或目標日服排名。\n系統將立即比對符合條件的日服歷史紀錄與排名分數線。"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "jukebox": [
+    {
+      "title": "尋找特定 BGM 的使用處",
+      "description": "搜尋遊戲中特定 BGM 使用在何處，\n或是特定劇情中播放了哪首 BGM。",
+      "tour": [
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(2)",
+          "popover": {
+            "title": "1. 選擇劇透篩選",
+            "description": "選擇要搜尋的劇情範圍。\n由於搜尋結果可能包含僅在日服公開的最新劇情，為避免劇透，系統僅在指定範圍內進行搜尋。\n(點擊「全選」按鈕可一次選擇所有範圍。)"
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(1) input",
+          "popover": {
+            "title": "2. 搜尋 BGM",
+            "description": "可透過曲名或作曲者姓名\n快速搜尋想要的 BGM。"
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage_Action] button:nth-child(1)",
+          "popover": {
+            "title": "3. 查看詳細資訊",
+            "description": "點擊「展開詳細資訊」，即可在設定的劇透篩選範圍內\n確認該 BGM 被使用的具體位置。\n\n點擊「全部展開」可一次顯示所有資訊，\n開啟「顯示劇情標題」開關則會顯示具體的劇情名稱。"
+          }
+        }
+      ]
+    },
+    {
+      "title": "BGM 隨機循環播放",
+      "description": "隨機連續播放遊戲內 BGM。\n(透過 YouTube 播放器播放，建議搭配 YouTube Premium 或廣告阻擋擴充功能以獲得最佳體驗。)",
+      "tour": [
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(2)",
+          "popover": {
+            "title": "1. 選擇播放範圍(劇透)篩選",
+            "description": "為防劇透，僅將指定範圍內的 BGM 納入播放清單。\n雖然點擊全選按鈕可一次選中所有曲目，但可能包含最新劇情的劇透曲。"
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage_Action] button:nth-child(2)",
+          "popover": {
+            "title": "2. 開始隨機播放",
+            "description": "點擊按鈕後將隨機播放選定範圍內的 BGM。\n(註：若選中未關聯 YouTube 影片資訊的曲目，播放可能會暫時中斷。)"
+          }
+        }
+      ]
+    }
+  ],
+  "chart": {
+    "heatmap": [
+      {
+        "title": "這名學生在哪些總力戰/大決戰中表現活躍？",
+        "description": "確認特定學生在哪些頭目戰中被頻繁使用。\n是判斷是否招募(抽卡)或使用神名文字碎片培育時的重要參考資料。",
+        "tour": [
+          {
+            "element": "div[data-component-name=StudentSearchDropdown]",
+            "popover": {
+              "title": "1. 搜尋欲分析的學生",
+              "description": "搜尋並選擇想要確認統計數據的學生名稱。\n(支援韓文初聲、日文假名/英文、繁中英文名稱搜尋。)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(1) > div>div:nth-child(5)",
+            "popover": {
+              "title": "2. 選擇難易度",
+              "description": "選擇欲確認的頭目難易度（如：Insane, Torment 等），\n系統將僅顯示該難易度的採用統計。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=RaidUsageStackChart]",
+            "popover": {
+              "title": "3. 採用統計摘要",
+              "description": "顯示該學生在各總力戰及大決戰中，\n以何種星級出場及其熱門程度（出場率）。"
+            }
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2)",
+            "popover": {
+              "title": "4. 星級篩選與熱點圖準備",
+              "description": "利用下方的熱點圖，可一目瞭然各頭目/賽季的採用率。\n(※ 建議使用寬螢幕 PC 或平板電腦觀看。)\n\n請先設定熱點圖要顯示的星級範圍。"
+            }
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2) button",
+            "popover": {
+              "title": "5. 全選星級",
+              "description": "點擊「全選」按鈕即可一次包含所有星級的數據。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ChartDataContainer]",
+            "popover": {
+              "title": "6. 查看熱點圖詳情",
+              "description": "系統將顯示符合條件的所有賽季採用率熱點圖。\n點擊圖表中的特定格子（賽季），\n即可查看該頭目戰更深入的詳細統計。"
+            }
+          }
+        ]
+      }
+    ],
+    "ranking": [
+      {
+        "title": "未來視總力戰/大決戰學生出場排名",
+        "description": "確認在即將到來的總力戰及大決戰賽季中，哪些學生最常被起用，\n以及作為主力使用的平均星級。",
+        "tour": [
+          {
+            "element": "div[data-component-name=RankingChartPage_Slider]",
+            "popover": {
+              "title": "1. 選擇查詢期間",
+              "description": "移動上方滑桿以選擇要查詢數據的期間（賽季範圍）。"
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChart]",
+            "popover": {
+              "title": "2. 確認綜合排名",
+              "description": "可確認在選定期間內出場次數最多的\n學生綜合排名及其星級比例。"
+            }
+          }
+        ]
+      },
+      {
+        "title": "特定難易度(Torment 等)學生出場排名",
+        "description": "詳細確認在「Torment」或「Insane」等特定最高難易度下，\n哪些學生主要以何種星級出場。",
+        "tour": [
+          {
+            "element": "div[data-component-name=RankingChartPage_DetailedFilter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. 選擇欲分析的難易度",
+              "description": "從篩選器中選擇想要分析的特定難易度（如：Torment）。"
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChartPage_Slider]",
+            "popover": {
+              "title": "2. 選擇查詢期間",
+              "description": "移動上方滑桿以設定要查詢數據的期間（賽季範圍）。"
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChart]",
+            "popover": {
+              "title": "3. 確認詳細排名",
+              "description": "確認符合設定期間及難易度的\n學生出場排名與詳細星級培育比例。"
+            }
+          }
+        ]
+      }
+    ],
+    "favor": [
+      {
+        "title": "最常被使用的個人頭像（大頭貼）是？",
+        "description": "查看總力戰/大決戰上位圈玩家們\n最常使用哪些頭像的有趣統計數據。",
+        "tour": [
+          {
+            "element": "div[data-component-name=EmblemCounter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. 變更稱號類型",
+              "description": "在下拉選單中將稱號類型設定為「個人頭像」。"
+            }
+          },
+          {
+            "element": "div[data-component-name=EmblemCounter] thead th:nth-child(4)",
+            "popover": {
+              "title": "2. 進行排名排序",
+              "description": "點擊表格標題，即可依整體使用量排名\n或最近變動量（增減）進行數據排序。"
+            }
+          }
+        ]
+      },
+      {
+        "title": "羈絆 100 稱號排名 & 飆升稱號確認",
+        "description": "查詢玩家們「羈絆 100 稱號」的裝備統計，\n藉此確認誰才是最受歡迎的學生（正宮）。",
+        "tour": [
+          {
+            "element": "div[data-component-name=EmblemCounter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. 變更稱號類型",
+              "description": "在下拉選單中將稱號類型設定為「羈絆 100 稱號」。"
+            }
+          },
+          {
+            "element": "div[data-component-name=EmblemCounter] thead th:nth-child(4)",
+            "popover": {
+              "title": "2. 排序排名與飆升榜",
+              "description": "點擊表格標題即可查看整體排名，\n或依變動量排序以找出最近人氣飆升最快的稱號。"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "planner": {
+    "event": [
+      {
+        "title": "確認報告書與強化石購買效率",
+        "description": "比較在活動商店購買報告書與強化石時的 AP 效率。\n\n但由於重複通關活動關卡有低機率獲得最高級技術光碟，若缺乏技術光碟，刷關卡可能比在商店購買更有效益。",
+        "tour": [
+          {
+            "element": "div[data-component-name=EventPlanner_Tab] button:nth-child(1)",
+            "popover": {
+              "title": "前往加成頁籤",
+              "description": "若尚未設置學生加成，請前往加成頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=BonusSelector_body]",
+            "popover": {
+              "title": "選擇加成學生",
+              "description": "請點擊您擁有的學生圖示。\n將以所選學生的加成數值為基準計算 AP 效率。"
+            }
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(2)",
+            "popover": {
+              "title": "前往目標設置",
+              "description": "前往目標設置頁籤後，在詳細目標中點擊「商店」。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner] label",
+            "popover": {
+              "title": "轉換為 AP 單位",
+              "description": "反映當前應用的加成數值，將商店道具的價格轉換為 AP 單位顯示。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner_apbanner]",
+            "popover": {
+              "title": "確認效率標籤",
+              "description": "會一併顯示以特別任務 2 倍活動為基準的效率。\n\n(參考：在特別任務 3 倍活動期間，請將此數值乘以 1.5 倍進行比較。但通常在 3 倍期間直接刷特別任務效益更高。)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner_goodsStand]>div:nth-child(4)",
+            "popover": {
+              "title": "確認道具效率",
+              "description": "參考轉換後的 AP 數值確認購買效率。\n若沒有想要的道具，可點擊上方的頁籤切換到其他商店。"
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "計算購買商店全部道具所需 AP",
+        "description": "計算購買活動商店全部道具所需的總 AP 與應獲得的貨幣量，並制定最佳的刷關計劃。",
+        "tour": [
+          {
+            "element": "div[data-component-name=FloatingCurrencyStatus]",
+            "popover": {
+              "title": "確認貨幣小地圖",
+              "description": "此小地圖會顯示活動貨幣的過剩或不足狀態。\n請參考此資訊制定整體的刷關計劃。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab] button:nth-child(1)",
+            "popover": {
+              "title": "前往加成頁籤",
+              "description": "首先，為了精確計算，請前往加成頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=BonusSelector_body]",
+            "popover": {
+              "title": "選擇加成學生",
+              "description": "選擇持有的學生以應用加成數值。\n以此計算所需的貨幣量與效率。"
+            }
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(2)",
+            "popover": {
+              "title": "前往目標設置",
+              "description": "前往目標設置頁籤後點擊「商店」。\n請確認各商店頁籤並選擇目標道具。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner] button",
+            "popover": {
+              "title": "選擇所有道具",
+              "description": "為了進行教學，請點擊「購買所有道具」。\n(點擊直接跳至下一步的按鈕也會自動選擇所有道具。)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(3)",
+            "popover": {
+              "title": "小遊戲設置 (選擇性)",
+              "description": "若有抽獎或抽籤等小遊戲，可在這裡進行模擬。\n\n按下「最大」按鈕會根據商店需求量自動設置目標貨幣量。\n按下模擬執行按鈕計算概略機率與效率後，請繼續下一步。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(4)",
+            "popover": {
+              "title": "前往 AP 獲取頁籤",
+              "description": "為了計算總需求 AP，請前往獲取頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ApCalculator] > div",
+            "popover": {
+              "title": "設置 AP 獲取量",
+              "description": "計算活動期間自然恢復的 AP 量。\n預設日程是以日服為基準，可使用快捷鍵變更為國際服日程。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(5)",
+            "popover": {
+              "title": "前往刷關設置頁籤",
+              "description": "前往設置要刷哪個關卡來獲得貨幣。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=FarmingPlanner_tab] > button:nth-child(1)",
+            "popover": {
+              "title": "設置重複刷關",
+              "description": "設置要在活動任務關卡中重複獲得的貨幣。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_f1]",
+            "popover": {
+              "title": "首次通關獎勵",
+              "description": "選擇是否將首次通關及 3 星通關僅限 1 次的獎勵納入結果模擬器中。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=FarmingPlanner_tab] > button:nth-child(2)",
+            "popover": {
+              "title": "設置首次獎勵 (劇情/挑戰)",
+              "description": "這是添加劇情或挑戰等只能通關一次的關卡獎勵的地方。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_f2]",
+            "popover": {
+              "title": "應用所有關卡首次通關",
+              "description": "同樣地，若要將相關關卡的首次通關及 3 星達成獎勵批量添加到計算器中，請點擊此按鈕。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_run]",
+            "popover": {
+              "title": "執行刷關計算",
+              "description": "根據所選項目計算消耗最少 AP 的最佳刷關路徑。\n預設為高效率關卡（第 9~12 關等）優先，可在下方選項中調整。\n\n計算結果通常會顯示 AP 不足。現在為了解決這個問題，我們回到上一個頁籤吧。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(4)",
+            "popover": {
+              "title": "回到 AP 獲取頁籤",
+              "description": "為了補充不足的 AP，再次前往獲取頁籤。"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ApCalculator] > div",
+            "popover": {
+              "title": "設置補充不足 AP",
+              "description": "若刷關所需的 AP 不足，可在這裡制定使用青輝石或戰術對抗賽硬幣等補充 AP 的計劃，以滿足需求。"
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ]
+  }
+}

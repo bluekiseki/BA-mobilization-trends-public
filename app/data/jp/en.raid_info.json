@@ -221,5 +221,6 @@
     "MaxLv": 90,
     "Cnt": { "All": 22059, "Torment": 21814, "Insane": 245 }
   },
-  { "Id": "E30", "Boss": "Shiro&Kuro", "Location": "Street", "Type": "HeavyArmor", "Date": "2026-01-14", "Alias": "S.ShiroKuro", "MaxLv": 90, "Cnt": { "All": 22017, "Insane": 22017 } }
+  { "Id": "E30", "Boss": "Shiro&Kuro", "Location": "Street", "Type": "HeavyArmor", "Date": "2026-01-14", "Alias": "S.ShiroKuro", "MaxLv": 90, "Cnt": { "All": 22017, "Insane": 22017 } },
+  { "Id": "R86", "Boss": "Binah", "Location": "Outdoor", "Date": "2026-02-18", "Alias": "O.Binah", "MaxLv": 90, "Cnt": { "All": 48593, "Lunatic": 24365, "Torment": 24228 } }
 ]

@@ -61,7 +61,6 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
   };
 
   const handleIncrement = () => {
-    // console.log('handleIncrement', e)
     if (disabled) return;
     const nextValue = value + 1;
     onChange(nextValue > max ? max : nextValue);
@@ -102,7 +101,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         disabled={disabled || value === min}
         className={
           (narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') +
-          ' w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors'
+          ' w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors select-none'
         }
       >
         0
@@ -114,7 +113,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         disabled={disabled || value <= min}
         className={
           (narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') +
-          '  w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-r border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500'
+          ' w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-r border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500 select-none'
         }
       >
         -
@@ -127,7 +126,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         min={min}
         max={max === Infinity ? undefined : max}
         disabled={disabled}
-        className="w-full h-full text-center text-xs font-semibold focus:outline-none dark:text-gray-200"
+        className="w-full h-full text-center text-base scale-[0.75] font-semibold focus:outline-none dark:text-gray-200"
         style={{ appearance: 'textfield' }}
         {...rest}
       />
@@ -138,7 +137,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         disabled={disabled || value >= max}
         className={
           (narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') +
-          ' w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-l border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500'
+          ' w-6 h-full bg-gray-300 dark:bg-neutral-600 text-sm font-bold disabled:opacity-5 border-l border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500 select-none'
         }
       >
         +
@@ -150,7 +149,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         disabled={disabled || value === max || max === Infinity}
         className={
           (narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') +
-          'w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors'
+          ' w-8 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors select-none'
         }
       >
         M

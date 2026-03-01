@@ -84,7 +84,7 @@ const LicencePage = () => {
           <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Total Assault Overall</h3>
           <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
             <li>
-              <b>S47-S76:</b>{' '}
+              <b>S43-S76:</b>{' '}
               <a href="https://storage.googleapis.com/info.herdatasam.me" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                 Someone's Google Storage API
               </a>
@@ -105,19 +105,25 @@ const LicencePage = () => {
               </a>
             </li>
             <li>
-              <b>S83:</b> Provided by an anonymous data contributor
+              <b>S83-Current:</b> Provided by an anonymous data contributor
             </li>
           </ul>
           <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Total Assault Teams</h3>
           <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
             <li>
-              <b>S47-S79:</b>{' '}
-              <a href="https://arona.ai/raidreport" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                Arona.AI Total Assault Report
+              <b>S43-S46:</b>{' '}
+              <a href="https://storage.googleapis.com/info.herdatasam.me" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                Someone's Google Storage API
               </a>
             </li>
             <li>
-              <b>S80-S84:</b>{' '}
+              <b>S47-S79:</b>{' '}
+              <a href="https://arona.ai/raidreport" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                Arona.AI Total Assault Report (no longer accessible)
+              </a>
+            </li>
+            <li>
+              <b>S80-Current:</b>{' '}
               <a href="https://www.plana-stats.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                 Plana Stats
               </a>
@@ -138,7 +144,7 @@ const LicencePage = () => {
               </a>
             </li>
             <li>
-              <b>S26-S28:</b> Provided by an anonymous data contributor
+              <b>S26-Current:</b> Provided by an anonymous data contributor
             </li>
           </ul>
           <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Grand Assault Teams</h3>
@@ -146,12 +152,12 @@ const LicencePage = () => {
             <li>
               <b>S1-S23:</b>{' '}
               <a href="https://arona.ai/eraidreport" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                Arona.AI Grand Assault Report
+                Arona.AI Grand Assault Report (no longer accessible)
               </a>
             </li>
 
             <li>
-              <b>S24-S28:</b>{' '}
+              <b>S24-Current:</b>{' '}
               <a href="https://www.plana-stats.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                 Plana Stats
               </a>
@@ -173,7 +179,7 @@ const LicencePage = () => {
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline break-all"
               >
-                docs.google.com/...
+                docs.google.com/spreadsheets/...
               </a>
             </li>
             <li>
@@ -208,7 +214,7 @@ const LicencePage = () => {
               Base Data:
               <br />
               <a href="https://arona.ai/jukebox/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                Arona.AI BGM Player (Only Korean)
+                Arona.AI BGM Player (no longer accessible)
               </a>
             </li>
             <li>
@@ -236,6 +242,21 @@ const LicencePage = () => {
               </a>
             </li>
           </ul>
+
+          <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
+            <li>
+              Pyroxene Data
+              <br />
+              <a
+                href="https://docs.google.com/spreadsheets/d/1_Zjt_OM9XXidY3uYYDK92W9GrR3DN5cQsZ0IJsoEbjY/edit#gid=1082031226/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                Pyroxene Memo Planner 2.09 (Google Spreadsheets)
+              </a>
+            </li>
+          </ul>
         </section>
 
         {/* Section: References */}
@@ -259,7 +280,12 @@ const LicencePage = () => {
             </li>
             <li>
               <a href="https://mollulog.net/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                몰루로그
+                몰루로그 - 블루 아카이브 미래시/통계 정보 모음
+              </a>
+            </li>
+            <li>
+              <a href="https://kina-ko-m-ochi.net/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                ブルアカの攻略・ファンツールまとめ｜きなこもち
               </a>
             </li>
             <li>and various source codes found on GitHub.</li>
@@ -286,12 +312,12 @@ const LicencePage = () => {
         <section className="mt-10 mb-10">
           <h2 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">3rd Party Data Collection</h2>
           <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 mt-4 pl-2">
-            <li>
+            {/* <li>
               <a href="https://vercel.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                 Vercel
               </a>
               : Server Hosting.
-            </li>
+            </li> */}
             <li>
               <a href="https://pages.cloudflare.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                 Cloudflare Pages
@@ -318,13 +344,31 @@ const LicencePage = () => {
               : Provides user analytics and tracking. Cookies are disabled.
             </li>
           </ul>
+
+          {/* Data Usage Notice - Updated */}
+          <div className="mt-6 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700 text-sm">
+            <p className="font-semibold text-neutral-800 dark:text-neutral-200 mb-2">Data Collection Details</p>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-3">These third-party services may collect standard technical data commonly used in web analytics, including but not limited to:</p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1 mb-4 text-neutral-600 dark:text-neutral-400 list-disc list-inside pl-2 font-mono text-xs">
+              <li>IP Address</li>
+              <li>User-Agent</li>
+              <li>Timezone</li>
+              <li>Screen Size</li>
+              <li>Session Duration</li>
+              <li>Referring Domain</li>
+            </ul>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              This data is utilized strictly for operational purposes, such as debugging, site stability, security defense (e.g., preventing malicious attacks), and analyzing demographic trends to
+              assist with future service direction.
+            </p>
+          </div>
         </section>
 
         <section className="mt-10 mb-10">
-          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">Bug Reports & Contact</h2>
+          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">Bug Reports, Translation & Contact</h2>
           <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-400 pl-2">
             <li>
-              Please report to{' '}
+              For bug reports or translation contributions, please visit{' '}
               <a href={issuesURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                 Github issues
               </a>

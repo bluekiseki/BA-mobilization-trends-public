@@ -16,7 +16,7 @@ export const MinMaxControls = ({ label, onMin, onMax, className = '', isTarget =
   `;
 
   return (
-    <div className={`flex justify-between items-end mb-1.5 ${className}`}>
+    <div className={`flex justify-between items-end mb-0.5 ${className}`}>
       {/* Label */}
       <span className={`text-[11px] font-bold tracking-tight ${isTarget ? 'text-blue-500/80 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>{label}</span>
 

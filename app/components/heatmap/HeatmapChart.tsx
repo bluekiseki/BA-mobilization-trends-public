@@ -43,8 +43,17 @@ export interface HeatmapChartProps {
 //   };
 // })
 
+// const PlotlyComponent = lazy(() => {
+//   return import('./PlotlyComponent');
+// });
+
 const PlotlyComponent = lazy(() => {
-  return import('./PlotlyComponent');
+  // Import the actual file only in a browser environment where 'window' exists.
+  if (typeof window !== 'undefined') {
+    return import('./PlotlyComponent');
+  }
+  // Return an empty component in server environments to prevent errors.
+  return Promise.resolve({ default: () => <div /> });
 });
 
 const HeatmapChart = ({ isLoading, error, aggregatedChartData, layout, heatmapData, unit }: HeatmapChartProps) => {

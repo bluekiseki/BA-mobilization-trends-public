@@ -14,7 +14,6 @@ export const getlocaleMethond = (txt: string, type: 'Ja' | 'jp' | 'Jp', locale: 
   }
 };
 
-// [getlocaleMethond('Name', 'Jp', locale) as keyof LocalizeEtc]
 export const getLocalizeEtcName = (localizeEtc: LocalizeEtc | undefined, locale: Locale) => {
   if (!localizeEtc) return null;
   switch (locale) {

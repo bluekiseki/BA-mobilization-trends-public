@@ -11,7 +11,7 @@ All copyright of <a href='https://bluearchive.jp/' target="_blank" rel="noopener
 
 ## Requirements
 
-- Vite 7 + React Router v7.13 (Remix renamed since v7 in November 2024) + \*.tsx + Tailwind CSS. Deploying in a Cloudfalre Pages environment
+- Vite 7 + React Router v7.13 (Remix renamed since v7 in November 2024) + \*.tsx + Tailwind CSS. Deploying in a Cloudflare Pages environment
 
 ## Q&A
 

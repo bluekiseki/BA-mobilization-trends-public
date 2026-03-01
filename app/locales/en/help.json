@@ -1,0 +1,695 @@
+{
+  "dashboard": {
+    "raid": [
+      {
+        "title": "Check Most Used Party Statistics",
+        "description": "Referring to stable parties that are moderately popular\ncan help you achieve Platinum more easily.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. View Detailed Parties",
+              "description": "Move to the tab where you can see detailed party statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#formations",
+            "popover": {
+              "title": "2. Frequently Deployed Formations",
+              "description": "This tab allows you to check the most commonly used party combinations."
+            }
+          },
+          {
+            "element": "#formations button:nth-child(2)",
+            "popover": {
+              "title": "3. Change to All Types",
+              "description": "Change the options to check overall party statistics\nregardless of attack or defense types."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionChart]>div",
+            "popover": {
+              "title": "4. View Party Details",
+              "description": "List of parties sorted by usage frequency.\nClick each party to view detailed statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionDetailView] div:has(label)",
+            "popover": {
+              "title": "5. View Student Details",
+              "description": "Click a student icon to see growth statistics for that student,\nsuch as average star level and Unique Weapon level."
+            }
+          },
+          {
+            "element": "div[data-component-name=VariantStats]",
+            "popover": {
+              "title": "6. Other Information",
+              "description": "Check detailed operational information such as\nfixed starting skills and student deployment order."
+            }
+          }
+        ]
+      },
+      {
+        "title": "Check Assistant Statistics",
+        "description": "Check students with high demand\nthat are good to set as Circle Assistants.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. View Detailed Parties",
+              "description": "Move to the tab where you can see detailed party statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#participation",
+            "popover": {
+              "title": "2. Check Participation Rate",
+              "description": "This tab shows the overall participation rate for each student."
+            }
+          },
+          {
+            "element": "#participation button:nth-child(3)",
+            "popover": {
+              "title": "3. View Assistants Only",
+              "description": "Click the button to see statistics only for students\nmost frequently used as Assistants (Rentals)."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "Search for Custom Condition Parties",
+        "description": "Exclude specific students or search only for parties using desired students\nto reduce investment costs.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. View Detailed Parties",
+              "description": "Move to the tab where you can see detailed party statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankRange",
+            "popover": {
+              "title": "2. Set Rank Range for Statistics",
+              "description": "Set the rank range for generating statistics.\n\nBy specifying START and END values,\nyou can view data aggregated only from users in that range."
+            }
+          },
+          {
+            "element": "#rankings",
+            "popover": {
+              "title": "3. Check Rankings & Teams",
+              "description": "Shows the actual clear rankings and parties of users in order.\nYou can filter for specific conditions using the filter function on the right."
+            }
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
+            "popover": {
+              "title": "4. Select Students to Include/Deploy",
+              "description": "Search or select students to include in the formation.\n(Supports English name search for JP/Hant users)\n\nYou can precisely set whether a student must be included in the party\nand the desired star level (e.g., 3★ to UE50)."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
+            "popover": {
+              "title": "5. Set Excluded Students / Assistants",
+              "description": "Set students you do not own or cannot deploy due to lack of growth.\n\n• Completely Exclude: Remove entirely from the party list.\n• Assistant Available: Include in search only if borrowed once from others."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ],
+    "elimination": [
+      {
+        "title": "Check Most Used Party Statistics",
+        "description": "Referring to stable parties that are moderately popular\ncan help you achieve Platinum more easily.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. View Detailed Parties",
+              "description": "Move to the tab where you can see detailed party statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. Select Armor Type",
+              "description": "Parties in Grand Assault vary by armor type.\nPlease first select the armor type of the boss you want to check."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#formations",
+            "popover": {
+              "title": "2. Frequently Deployed Formations",
+              "description": "This tab allows you to check the most commonly used party combinations."
+            }
+          },
+          {
+            "element": "#formations button:nth-child(2)",
+            "popover": {
+              "title": "3. Change to All Types",
+              "description": "Change the options to check overall party statistics\nregardless of attack or defense types."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionChart]>div",
+            "popover": {
+              "title": "4. View Party Details",
+              "description": "List of parties sorted by usage frequency.\nClick each party to view detailed statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionDetailView] div:has(label)",
+            "popover": {
+              "title": "5. View Student Details",
+              "description": "Click a student icon to see growth statistics for that student,\nsuch as average star level and Unique Weapon level."
+            }
+          },
+          {
+            "element": "div[data-component-name=VariantStats]",
+            "popover": {
+              "title": "6. Other Information",
+              "description": "Check detailed operational information such as\nfixed starting skills and student deployment order."
+            }
+          }
+        ]
+      },
+      {
+        "title": "Check Assistant Statistics",
+        "description": "Check students with high demand\nthat are good to set as Circle Assistants.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. View Detailed Parties",
+              "description": "Move to the tab where you can see detailed party statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. Select Armor Type",
+              "description": "Parties in Grand Assault vary by armor type.\nPlease first select the armor type of the boss you want to check."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#participation",
+            "popover": {
+              "title": "2. Check Participation Rate",
+              "description": "This tab shows the overall participation rate for each student."
+            }
+          },
+          {
+            "element": "#participation button:nth-child(3)",
+            "popover": {
+              "title": "3. View Assistants Only",
+              "description": "Click the button to see statistics only for students\nmost frequently used as Assistants (Rentals)."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "Search for Custom Condition Parties",
+        "description": "Exclude specific students or search only for parties using desired students\nto reduce investment costs.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. View Detailed Parties",
+              "description": "Move to the tab where you can see detailed party statistics."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. Select Armor Type",
+              "description": "Parties in Grand Assault vary by armor type.\nPlease first select the armor type of the boss you want to check."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankRange",
+            "popover": {
+              "title": "2. Set Rank Range for Statistics",
+              "description": "Set the rank range for generating statistics.\n\nBy specifying START and END values,\nyou can view data aggregated only from users in that range."
+            }
+          },
+          {
+            "element": "#rankings",
+            "popover": {
+              "title": "3. Check Rankings & Teams",
+              "description": "Shows the actual clear rankings and parties of users in order.\nYou can filter for specific conditions using the filter function on the right."
+            }
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
+            "popover": {
+              "title": "4. Select Students to Include/Deploy",
+              "description": "Search or select students to include in the formation.\n(Supports English name search for JP/Hant users)\n\nYou can precisely set whether a student must be included in the party\nand the desired star level (e.g., 3★ to UE50)."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
+            "popover": {
+              "title": "5. Set Excluded Students / Assistants",
+              "description": "Set students you do not own or cannot deploy due to lack of growth.\n\n• Completely Exclude: Remove entirely from the party list.\n• Assistant Available: Include in search only if borrowed once from others."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ],
+    "common": [
+      {
+        "title": "Estimate Rank/Score based on Past JP Data (Common)",
+        "description": "Check your score and expected rank based on past JP server data.\nYou can gauge whether achieving Platinum is possible in the current Total/Grand Assault.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(1)",
+            "popover": {
+              "title": "1. View Overall Score Distribution",
+              "description": "Move to the tab where you can check the score distribution of all users."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "*:has(>div>div>div[data-component-name=RecordLookup])",
+            "popover": {
+              "title": "2. Record Lookup Area",
+              "description": "This area allows you to search past JP server data based on your records."
+            }
+          },
+          {
+            "element": "div[data-component-name=RecordLookup]",
+            "popover": {
+              "title": "3. Detailed Record Search",
+              "description": "Enter your clear score, remaining time, or target JP rank.\nYou can immediately check historical records and rank cut-offs from the JP server."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "jukebox": [
+    {
+      "title": "Find BGM Usage",
+      "description": "Search for where a specific BGM was used in-game\nor which BGM played during a specific story.",
+      "tour": [
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(2)",
+          "popover": {
+            "title": "1. Select Spoiler Filter",
+            "description": "Select the story range to search.\nAs search results may include the latest stories released only on the JP server,\nsearches are performed only within the designated range to prevent spoilers.\n(Press the 'Select All' button to select the entire range at once.)"
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(1) input",
+          "popover": {
+            "title": "2. Search BGM",
+            "description": "Quickly search for your desired BGM by track title or composer name."
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage_Action] button:nth-child(1)",
+          "popover": {
+            "title": "3. View Detailed Information",
+            "description": "Click 'Expand Details' to see where the BGM is used within your spoiler filter range.\n\nClick 'Expand All' to display all information at once,\nor toggle 'Show Story Title' to see specific story names."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Random Loop BGM Playback",
+      "description": "Randomly and continuously plays in-game BGMs.\n(Played via YouTube player; YouTube Premium or ad-blocking extensions are recommended for uninterrupted listening.)",
+      "tour": [
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(2)",
+          "popover": {
+            "title": "1. Select Playback Range (Spoiler) Filter",
+            "description": "To prevent spoilers, only BGMs within the designated range are included in the playback pool.\nYou can select all tracks at once, but be aware it may include spoiler tracks from the latest stories."
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage_Action] button:nth-child(2)",
+          "popover": {
+            "title": "2. Start Random Play",
+            "description": "Click the button to randomly play BGMs within the selected range.\n(Playback may temporarily stop if a track without linked YouTube video information is selected.)"
+          }
+        }
+      ]
+    }
+  ],
+  "chart": {
+    "heatmap": [
+      {
+        "title": "Where will this student shine?",
+        "description": "Check which boss battles a specific student is frequently used in.\nUseful for deciding whether to recruit (Gacha) or invest Eligma into a student.",
+        "tour": [
+          {
+            "element": "div[data-component-name=StudentSearchDropdown]",
+            "popover": {
+              "title": "1. Search Student to Analyze",
+              "description": "Search and select the name of the student whose statistics you want to check.\n(Supports English name/Romaji search.)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(1) > div>div:nth-child(5)",
+            "popover": {
+              "title": "2. Select Difficulty",
+              "description": "Select the boss difficulty (e.g., Insane, Torment) to display\ndeployment statistics specifically for that difficulty."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=RaidUsageStackChart]",
+            "popover": {
+              "title": "3. Recruitment Statistics Summary",
+              "description": "Shows the pick rate and the star levels at which\nthe student was used in each Total and Grand Assault."
+            }
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2)",
+            "popover": {
+              "title": "4. Star Level Filtering & Heatmap Preparation",
+              "description": "Use the heatmap below to see deployment rates by boss and season at a glance.\n(※ Recommended for wide PC or tablet screens.)\n\nFirst, set the star level range to be displayed on the heatmap."
+            }
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2) button",
+            "popover": {
+              "title": "5. Select All Star Levels",
+              "description": "Click the 'Select All' button to include data for all star levels at once."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ChartDataContainer]",
+            "popover": {
+              "title": "6. View Heatmap Details",
+              "description": "A heatmap of deployment rates for all seasons based on your conditions will appear.\nClick a specific cell (season) in the graph to view more detailed statistics for that boss battle."
+            }
+          }
+        ]
+      }
+    ],
+    "ranking": [
+      {
+        "title": "Future Sight Total/Grand Assault Student Usage Ranking",
+        "description": "Check which students were most frequently deployed in upcoming seasons\nand the average star level at which they were primarily used.",
+        "tour": [
+          {
+            "element": "div[data-component-name=RankingChartPage_Slider]",
+            "popover": {
+              "title": "1. Select Inquiry Period",
+              "description": "Move the slider bar at the top to select the period (season range) to view data."
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChart]",
+            "popover": {
+              "title": "2. Check Comprehensive Ranking",
+              "description": "View the overall ranking and star level distribution of students\nwho were deployed most frequently during the selected period."
+            }
+          }
+        ]
+      },
+      {
+        "title": "Specific Difficulty (Torment, etc.) Student Deployment Ranking",
+        "description": "Check in detail which students were primarily used and at what star level\nfor specific high difficulties like 'Torment' or 'Insane'.",
+        "tour": [
+          {
+            "element": "div[data-component-name=RankingChartPage_DetailedFilter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. Select Difficulty to Analyze",
+              "description": "Select the specific difficulty (e.g., Torment) you wish to analyze from the filter."
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChartPage_Slider]",
+            "popover": {
+              "title": "2. Select Inquiry Period",
+              "description": "Move the slider bar at the top to set the period (season range) to view data."
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChart]",
+            "popover": {
+              "title": "3. Check Detailed Ranking",
+              "description": "Confirm the student deployment rankings and detailed star level ratios\ncorresponding to the selected period and difficulty."
+            }
+          }
+        ]
+      }
+    ],
+    "favor": [
+      {
+        "title": "What's the Most Used Profile Picture?",
+        "description": "Check interesting statistics on which profile pictures\ntop-tier Total/Grand Assault users use the most.",
+        "tour": [
+          {
+            "element": "div[data-component-name=EmblemCounter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. Change Title Type",
+              "description": "Set the title type to 'Profile Picture' in the dropdown menu."
+            }
+          },
+          {
+            "element": "div[data-component-name=EmblemCounter] thead th:nth-child(4)",
+            "popover": {
+              "title": "2. Sort Ranking",
+              "description": "Click the table header to sort data by total usage frequency\nor by recent changes (increase/decrease)."
+            }
+          }
+        ]
+      },
+      {
+        "title": "Relationship 100 Title Ranking & Trending Titles",
+        "description": "Inquire into Relationship 100 title equipment statistics\nto see which students are the most loved.",
+        "tour": [
+          {
+            "element": "div[data-component-name=EmblemCounter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. Change Title Type",
+              "description": "Set the title type to 'Relationship 100 Title' in the dropdown menu."
+            }
+          },
+          {
+            "element": "div[data-component-name=EmblemCounter] thead th:nth-child(4)",
+            "popover": {
+              "title": "2. Sort Rankings and Trends",
+              "description": "Click the table header to view by overall rank\nor sort by change to find titles that have recently surged in popularity."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "planner": {
+    "event": [
+      {
+        "title": "Check Report and Enhancement Stone Purchase Efficiency",
+        "description": "Compare AP efficiency when purchasing Reports and Enhancement Stones from the event shop.\n\nHowever, since repeating event stages has a low probability of dropping Top-tier Outfits, farming stages might be more advantageous than shop purchases if you are low on Outfits.",
+        "tour": [
+          {
+            "element": "div[data-component-name=EventPlanner_Tab] button:nth-child(1)",
+            "popover": {
+              "title": "Move to Bonus Tab",
+              "description": "If you haven't set up student bonuses yet, please move to the Bonus tab."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=BonusSelector_body]",
+            "popover": {
+              "title": "Select Bonus Students",
+              "description": "Click the icons of the students you own.\nAP efficiency is calculated based on the bonus values of the selected students."
+            }
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(2)",
+            "popover": {
+              "title": "Move to Goal Setting",
+              "description": "Move to the Goal Setting tab and click 'Shop' in the detailed goals."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner] label",
+            "popover": {
+              "title": "Convert to AP Unit",
+              "description": "Converts the prices of shop items into AP units based on the currently applied bonus values."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner_apbanner]",
+            "popover": {
+              "title": "Check Efficiency Labels",
+              "description": "Efficiency based on the Special Mission 2x event is displayed together.\n\n(Note: During the Special Mission 3x event period, you can compare by multiplying this value by 1.5. However, usually it is more beneficial to directly run Special Missions during the 3x period.)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner_goodsStand]>div:nth-child(4)",
+            "popover": {
+              "title": "Check Item Efficiency",
+              "description": "Check the purchase efficiency based on the converted AP value.\nIf the desired item is not there, you can switch to another shop by clicking the tabs at the top."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "Calculate AP Needed for Full Shop Purchase",
+        "description": "Calculate the total AP and amount of currency needed to purchase all items in the event shop, and set up an optimal farming plan.",
+        "tour": [
+          {
+            "element": "div[data-component-name=FloatingCurrencyStatus]",
+            "popover": {
+              "title": "Check Currency Minimap",
+              "description": "The excess or shortage status of event currency is displayed on this minimap.\nUse this information to establish an overall farming plan."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab] button:nth-child(1)",
+            "popover": {
+              "title": "Move to Bonus Tab",
+              "description": "First, move to the Bonus tab for accurate calculation."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=BonusSelector_body]",
+            "popover": {
+              "title": "Select Bonus Students",
+              "description": "Select the students you own to apply the bonus values.\nBased on this, the required currency amount and efficiency will be calculated."
+            }
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(2)",
+            "popover": {
+              "title": "Move to Goal Setting",
+              "description": "Move to the Goal Setting tab and click 'Shop'.\nCheck each shop tab and select the items you aim for."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner] button",
+            "popover": {
+              "title": "Select All Items",
+              "description": "Click 'Purchase All Items' to proceed with the guide.\n(Clicking the button that immediately skips to the next step also automatically selects all items.)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(3)",
+            "popover": {
+              "title": "Mini-game Settings (Optional)",
+              "description": "If there are mini-games like prize exchanges or Omikuji, you can run simulations here.\n\nPressing the 'Max' button automatically sets the target currency amount based on shop requirements.\nClick the simulation run button to calculate approximate probabilities and efficiency, then move to the next step."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(4)",
+            "popover": {
+              "title": "Move to AP Supply Tab",
+              "description": "Move to the Supply tab to calculate the total AP required."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ApCalculator] > div",
+            "popover": {
+              "title": "Set AP Supply Amount",
+              "description": "Calculate the amount of AP naturally supplied during the event period.\nThe default schedule is set based on the Japanese server, but you can change it to the global server schedule using the shortcut."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(5)",
+            "popover": {
+              "title": "Move to Farming Settings Tab",
+              "description": "Move here to set which stages to farm for currency."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=FarmingPlanner_tab] > button:nth-child(1)",
+            "popover": {
+              "title": "Set Recurring Farming",
+              "description": "Set the currency that can be repeatedly obtained from event quest stages."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_f1]",
+            "popover": {
+              "title": "First Clear Rewards",
+              "description": "Choose whether to include rewards given only once for the first clear and 3-star clear in the result simulator."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=FarmingPlanner_tab] > button:nth-child(2)",
+            "popover": {
+              "title": "Set First Rewards (Story/Challenge)",
+              "description": "This is where you add rewards for stages that can only be cleared once, such as story or challenge stages."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_f2]",
+            "popover": {
+              "title": "Apply Clearing Each Once",
+              "description": "Similarly, click this button to collectively add the rewards for the first clear and 3-star achievement of those stages to the calculator."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_run]",
+            "popover": {
+              "title": "Execute Farming Calculation",
+              "description": "Calculate the optimal farming route that consumes minimum AP based on the selected items.\nBy default, it is set to farm high-efficiency stages (Stages 9-12, etc.), which can be adjusted in the options below.\n\nUsually, the calculation result will show a shortage of AP. Now, let's go back to the previous tab to resolve this."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(4)",
+            "popover": {
+              "title": "Back to AP Supply Tab",
+              "description": "Move back to the Supply tab to replenish the lacking AP."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ApCalculator] > div",
+            "popover": {
+              "title": "Set Lacking AP Recharge",
+              "description": "If you lack the AP required for farming, you can set a plan to recharge AP using Pyroxenes or Tactical Challenge Coins here to meet the shortage."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,145 +1,88 @@
 //'use client'
-
+// app/components/Navigation.tsx
 import { useEffect, useRef, useState } from 'react';
-import LocaleSwitcher from './LocaleSwitcher';
-import { ThemeSwitcher } from './ThemeToggleButton';
-import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
-import ServerSwitcher from './ServerSwitcher';
+import { useTranslation } from 'react-i18next';
+import { issuesURL } from '~/data/livedataServer.json';
+
+import { HiOutlineQuestionMarkCircle, HiOutlineBars3, HiOutlineXMark, HiOutlineLightBulb, HiOutlineFlag } from 'react-icons/hi2';
+
 import { PyroxenesIcon } from './Icon';
 import { localeLink } from '~/utils/localeLink';
 import { DEFAULT_LOCALE, SUPORTED_LOCALES, type Locale } from '~/utils/i18n/config';
+import { useHelpStore } from '~/store/helpStore';
+import { type GameServer } from '~/types/data';
+
 import { LanguageBanner } from './LanguageMismatchBanner';
 import { useLanguageBannerStore } from '~/store/languageBannerState';
+import { HiCode, HiOutlineMail } from 'react-icons/hi';
+import ContactButton from './ContactButton';
+import BugReportModal from './common/BugReportModal';
+import { useOutsideClick } from '~/utils/useOutsideClick';
+import { ThemeDropdown } from './ThemeToggleButton';
+import { LocaleDropdown } from './LocaleSwitcher';
 import { changePathLanguage } from './LocaleSwitcherSelect';
+import { ServerToggleSwitch } from './ServerSwitcher';
 
+// ==========================================
+// 1. Utilities & configuration data
+// ==========================================
 const navLinks = [
-  {
-    key: 'dashboard',
-    label: 'dashboard',
-    path: (country: string | null) => `/dashboard/${country || 'jp'}`,
-    regex: /^\/dashboard\/(kr|jp)/,
-  },
-  {
-    key: 'ranking',
-    label: 'ranking',
-    path: (country: string | null) => `/charts/${country || 'jp'}/ranking`,
-    regex: /^\/charts\/(kr|jp)\/ranking$/,
-  },
-  {
-    key: 'heatmap',
-    label: 'heatmap',
-    path: (country: string | null) => `/charts/${country || 'jp'}/heatmap`,
-    regex: /^\/charts\/(kr|jp)\/heatmap$/,
-  },
-  {
-    key: 'planner',
-    label: 'planner',
-    path: () => `/planner/event`,
-    regex: /^\/planner\/event/,
-  },
-  {
-    key: 'bgm',
-    label: 'BGM',
-    path: () => `/utils/jukebox`,
-    regex: /^\/utils\/jukebox/,
-  },
+  { key: 'dashboard', label: 'dashboard', path: (c: string | null) => `/dashboard/${c || 'jp'}`, regex: /\/dashboard\/(kr|jp)/ },
+  { key: 'ranking', label: 'ranking', path: (c: string | null) => `/charts/${c || 'jp'}/ranking`, regex: /\/charts\/(kr|jp)\/ranking$/ },
+  { key: 'heatmap', label: 'heatmap', path: (c: string | null) => `/charts/${c || 'jp'}/heatmap`, regex: /\/charts\/(kr|jp)\/heatmap$/ },
+  { key: 'planner', label: 'planner', path: () => `/planner/event`, regex: /\/planner\/event/ },
+  { key: 'bgm', label: 'BGM', path: () => `/utils/jukebox`, regex: /\/utils\/jukebox/ },
 ];
 
-export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
-  // const { darkMode, toggleDarkMode } = useThemeStore();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // const {t} = useTranslation('layout-nav');
-  const { t, i18n } = useTranslation('common', { keyPrefix: 'navigation' });
-  const locale = i18n.language as Locale;
+const helpWhitelist = [
+  /^(?:\/(?:ko|ja|zh-Hant))?\/dashboard\/(kr|jp)\/\w/,
+  /^(?:\/(?:ko|ja|zh-Hant))?\/charts/,
+  /^(?:\/(?:ko|ja|zh-Hant))?\/planner\/event\/\d+/,
+  /^(?:\/(?:ko|ja|zh-Hant))?\/utils\/jukebox/,
+  // /^(?:\/(?:ko|ja|zh-Hant))?\/live/,
+];
 
-  // console.log('Navigation', locale, t('home'))
+// ==========================================
+// 2. Integrated components
+// ==========================================
+
+const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
   const [bannerData, setBannerData] = useState<{
     type: 'mismatch' | 'unsupported';
-    displayLocale: Locale; // Banner text language
-    suggestedLocale?: Locale; // Language to suggest
-    targetPath?: string; // Path to suggest
+    displayLocale: Locale;
+    suggestedLocale?: Locale;
+    targetPath?: string;
   } | null>(null);
-  const { hasShownLanguageBanner, setHasShownLanguageBanner } = useLanguageBannerStore();
 
-  // Effect of closing the dropdown when clicking outside a component
-
-  const menurRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menurRef.current && !menurRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [menurRef]);
-
+  const { hasShownLanguageBanner, _hasHydrated, setHasShownLanguageBanner } = useLanguageBannerStore();
   const { pathname, search } = useLocation();
-  const country = ((pathname: string) => {
-    if (pathname.startsWith('/charts/jp')) return 'jp';
-    if (pathname.startsWith('/charts/kr')) return 'kr';
-    if (pathname.startsWith('/dashboard/jp')) return 'jp';
-    if (pathname.startsWith('/dashboard/kr')) return 'kr';
-    return null;
-  })(pathname);
-
-  const activeLinkStyle =
-    "relative after:content-[''] after:absolute after:left-0 after:bottom-[2px] after:w-full after:h-[4px] after:bg-yellow-500 after:-z-10 dark:after:bg-bluearchive-botton-yellow";
-
-  const isOptionalLinkActive = navLinks.some((link) => !['dashboard', 'planner', 'ranking'].includes(link.key) && link.regex.test(pathname));
-
-  const getVisibilityClass = (link: (typeof navLinks)[0]) => {
-    const isActive = link.regex.test(pathname);
-
-    switch (link.key) {
-      case 'dashboard':
-      case 'planner':
-        return 'block';
-      // Rankings are hidden on small screens with other "add" links enabled.
-      case 'ranking':
-        return isOptionalLinkActive ? 'hidden sm:block' : 'block';
-      // The remaining links are hidden by default on the small screen, and are only visible when enabled.
-      case 'heatmap':
-      case 'bgm':
-        return isActive ? 'block' : 'hidden sm:block';
-
-      default:
-        return 'block';
-    }
-  };
+  const { i18n } = useTranslation();
+  const locale = i18n.language as Locale;
 
   useEffect(() => {
-    // 1. If banner has already been shown, do nothing
+    if (!_hasHydrated) return;
+
     if (hasShownLanguageBanner) {
-      setBannerData(null); // Prevent banner from reappearing when navigating to other pages
+      setBannerData(null);
       return;
     }
 
     const browserPrefs = [
       ...new Set(
         navigator.languages.map((l) => {
-          if (['zh-TW', 'zh-HK', 'zh-MO', 'zh-hant', 'zh'].includes(l)) return 'zh-Hant'; // TODO
+          if (['zh-TW', 'zh-HK', 'zh-MO', 'zh-hant', 'zh'].includes(l)) return 'zh-Hant';
           return l.split('-')[0];
         }),
       ),
     ] as Locale[];
 
     const supportedLngs = SUPORTED_LOCALES as readonly Locale[];
-    const currentLocale = locale; // Current page language
     const bestSupportedBrowserLocale = browserPrefs.find((lang) => supportedLngs.includes(lang));
-
-    // 4. (Improvement 1) Determine the language to display the banner in
-    // If reqLocale is supported, use it; otherwise, display banner in default language (DEFAULT_LOCALE)
     const bannerDisplayLocale = supportedLngs.includes(reqLocale) ? reqLocale : DEFAULT_LOCALE;
 
-    if (bestSupportedBrowserLocale && bestSupportedBrowserLocale !== currentLocale) {
-      // 5. Scenario 1: 'Language Mismatch'
-      // (User has a preferred supported language, but it&#39;s different from the current page language)
-      const newPath = changePathLanguage(currentLocale, bestSupportedBrowserLocale, pathname);
-
+    if (bestSupportedBrowserLocale && bestSupportedBrowserLocale !== locale) {
+      const newPath = changePathLanguage(locale, bestSupportedBrowserLocale, pathname);
       setBannerData({
         type: 'mismatch',
         displayLocale: bannerDisplayLocale,
@@ -147,150 +90,222 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
         targetPath: newPath + search,
       });
     } else if (!bestSupportedBrowserLocale) {
-      // 6. Scenario 2: 'Unsupported Language'
-      // (None of the browser&#39;s preferred languages are supported)
       setBannerData({
         type: 'unsupported',
         displayLocale: bannerDisplayLocale,
       });
     } else {
-      // 7. Scenario 3: 'Match' (Preferred language == Current language)
-      // Don't show the banner, treat it as "seen"
       if (!bannerData) {
         setHasShownLanguageBanner();
       }
     }
-  }, [hasShownLanguageBanner, setHasShownLanguageBanner, pathname, search, locale, reqLocale]);
+  }, [_hasHydrated, hasShownLanguageBanner, pathname, search, locale, reqLocale]);
+
+  if (!bannerData) return null;
+
+  console.log('show LanguageBanner', _hasHydrated, hasShownLanguageBanner);
+
+  return (
+    <LanguageBanner
+      bannerData={bannerData}
+      onDismiss={() => {
+        setHasShownLanguageBanner();
+        setBannerData(null);
+      }}
+    />
+  );
+};
+
+export const HelpDropdown = ({ isHelpAvailable, isMobileText = false }: { isHelpAvailable: boolean; isMobileText?: boolean }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [isBugModalOpen, setIsBugModalOpen] = useState(false);
+
+  const openSidebar = useHelpStore((state) => state.openSidebar);
+
+  const { t } = useTranslation('common', { keyPrefix: 'navigation' });
+
+  // Close dropdown on outside click
+  useOutsideClick(ref, () => setIsOpen(false));
 
   return (
     <>
-      {bannerData && (
-        <LanguageBanner
-          bannerData={bannerData}
-          onDismiss={() => {
-            setHasShownLanguageBanner(); // Save the "shown" state to the Zustand store
-            setBannerData(null); // Hide banner
-          }}
-        />
-      )}
-      <div className="p-3">
-        <nav className="max-w-7xl mx-auto flex h-7 items-center justify-between px-2 sm:px-6 lg:px-8">
-          {/* Left Section: Takes up equal space to center the links */}
-          <div className="flex-1">
-            <Link to={localeLink(locale, '/')} className="text-xl font-semibold text-slate-900 dark:text-slate-50 transition-opacity hover:opacity-80">
-              {/* {t('home')} */}
-              <PyroxenesIcon />
-              {/* <ThemedPyroxenesIcon theme="light" title="Home"/> */}
-            </Link>
+      <div className="relative flex items-center" ref={ref}>
+        {/* 1. Help icon button (opens dropdown on click) */}
+        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <HiOutlineQuestionMarkCircle className="text-xl" strokeWidth={1.5} />
+          <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('help')}</span>
+        </button>
+
+        {/* 2. Dropdown menu */}
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
+            {isHelpAvailable && (
+              <button
+                onClick={() => {
+                  openSidebar();
+                  setIsOpen(false); // Close the dropdown menu.
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+              >
+                <HiOutlineLightBulb className="text-lg" /> {t('viewDescription')}
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                setIsBugModalOpen(true);
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+            >
+              <HiOutlineFlag className="text-lg" /> {t('reportBug')}
+            </button>
+
+            <ContactButton>
+              <span
+                // href={issuesURL}
+                // target="_blank"
+                // rel="noreferrer"
+                // onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+              >
+                <HiOutlineMail className="text-lg" /> {t('email')}
+              </span>
+            </ContactButton>
+
+            <a
+              href={issuesURL.replace('/issues', '')}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+            >
+              <HiCode className="text-lg" /> {t('viewCode')}
+            </a>
           </div>
+        )}
+      </div>
 
-          {/* Center Section: Always visible nav links */}
-          <div className="flex items-center justify-center gap-4 sm:gap-6">
-            {/* <Link
-                // pathname === '/charts/heatmap'
-                to={`/dashboard/${country ? country : 'jp'}`}
-                className={`font-medium transition-colors ${/^\/dashboard\/(kr|jp)/.test(pathname)
-                    ? 'text-neutral-900 dark:text-neutral-50 ' + activeLinkStyle
-                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50'
-                    }`}
-            >
-                {t('dashboard')}
-            </Link>
-            <Link
-                to={`/charts/${country ? country : 'jp'}/ranking`}
-                className={`sm:block font-medium transition-colors ${/^\/charts\/(kr|jp)\/ranking$/.test(pathname)
-                    ? 'text-neutral-900 dark:text-neutral-50 text-underline-offset block ' + activeLinkStyle
-                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50'
-                    }`}
-            >
-                {t('ranking')}
-            </Link>
-            <Link
-                // pathname === '/charts/heatmap'
-                to={`/charts/${country ? country : 'jp'}/heatmap`}
-                className={`sm:block font-medium transition-colors ${/^\/charts\/(kr|jp)\/heatmap$/.test(pathname)
-                    ? 'text-neutral-900 dark:text-neutral-50 block ' + activeLinkStyle
-                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50 hidden'
-                    }`}
-            >
-                {t('heatmap')}
-            </Link>
-            <Link
-                // pathname === '/charts/heatmap'
-                to={`/planner/event`}
-                className={`font-medium transition-colors ${/^\/planner\/event/.test(pathname)
-                    ? 'text-neutral-900 dark:text-neutral-50 ' + activeLinkStyle
-                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50'
-                    }`}
-            >
-                {t('planner')}
-            </Link>
-            <Link
-                // pathname === '/charts/heatmap'
-                to={`/utils/jukebox`}
-                className={`sm:block font-medium transition-colors ${/^\/utils\/jukebox/.test(pathname)
-                    ? 'text-neutral-900 dark:text-neutral-50 block ' + activeLinkStyle
-                    : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50 hidden'
-                    }`}
-            >
-                {"BGM"}
-            </Link> */}
+      {isBugModalOpen && <BugReportModal onClose={() => setIsBugModalOpen(false)} issuesURL={issuesURL} />}
+    </>
+  );
+};
 
+// ==========================================
+// 3. Main Navigation
+// ==========================================
+export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t, i18n } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_c } = useTranslation('common');
+  const locale = i18n.language as Locale;
+  const { pathname } = useLocation();
+
+  const headerRef = useRef<HTMLElement>(null);
+  useOutsideClick(headerRef, () => {
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+  });
+
+  const country = (() => {
+    if (pathname.includes('/jp')) return 'jp';
+    if (pathname.includes('/kr')) return 'kr';
+    return null;
+  })();
+
+  // Variable to determine whether to expose server settings
+  const match = pathname.match(/^(|\/ko|\/ja|\/zh\-Hant)\/(charts|dashboard)\/(jp|kr)/);
+  let currentServer = match ? (match[3] as GameServer) : null;
+  if (pathname.match(/^(|\/ko|\/ja|\/zh\-Hant)\/dashboard\/(jp|kr)\/\w\d+/)) {
+    currentServer = null;
+  }
+
+  const isHelpAvailable = helpWhitelist.some((pattern) => pattern.test(pathname));
+  const activeLinkStyle =
+    "relative after:content-[''] after:absolute after:left-0 after:bottom-[2px] after:w-full after:h-[4px] after:bg-yellow-500 after:-z-10 dark:after:bg-bluearchive-botton-yellow";
+
+  return (
+    <>
+      {/* Place banner controller at the top of the component */}
+      <LanguageBannerController reqLocale={reqLocale} />
+
+      <header ref={headerRef} className="sticky top-0 z-40 w-full bg-white/95 dark:bg-neutral-800 backdrop-blur-md">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-4 lg:px-6 flex justify-between items-center h-14">
+          {/* Left: Logo */}
+          <Link to={localeLink(locale, '/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <PyroxenesIcon />
+            <span className="hidden min-[320px]:flex md:hidden font-extrabold  ">{t_c('site-title')}</span>
+          </Link>
+
+          {/* Center: Navigation links (Desktop) */}
+          <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-7 items-center">
             {navLinks.map((link) => {
               const isActive = link.regex.test(pathname);
-              const visibilityClass = getVisibilityClass(link);
-
-              // console.log('link.label, t(link.label as any', locale,  link.label, '->', t(link.label as any), )
-
               return (
                 <Link
                   key={link.key}
                   to={localeLink(locale, link.path(country))}
-                  // to={link.path(country)}
-                  className={`font-medium transition-colors ${isActive ? `text-neutral-900 dark:text-neutral-50 ${activeLinkStyle}` : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-50'} ${visibilityClass}`}
+                  className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'}`}
                 >
                   {link.key === 'bgm' ? link.label : t(link.label as any)}
                 </Link>
               );
             })}
-          </div>
+          </nav>
 
-          {/* Right Section: Takes up equal space and aligns content to the right */}
-          <div className="flex-1 flex items-center justify-end">
-            {/* Desktop Controls */}
-            <div className="hidden xl:flex items-center gap-4">
-              <LocaleSwitcher />
-              <ThemeSwitcher />
-              <ServerSwitcher />
+          {/* Right: Utilities (Icons common to desktop & mobile) */}
+          <div className="flex items-center gap-3 sm:gap-5">
+            <ThemeDropdown />
+            <LocaleDropdown currentLocale={locale} />
+            <HelpDropdown isHelpAvailable={isHelpAvailable} />
+
+            {/* Show desktop toggle switch only if server selection is available on the current page */}
+            {currentServer && (
+              <div className="hidden md:block">
+                <ServerToggleSwitch currentServer={currentServer} variant="dropdown" />
+              </div>
+            )}
+
+            {/* Mobile hamburger icon */}
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-slate-600 dark:text-neutral-300 ml-1">
+              {isMobileMenuOpen ? <HiOutlineXMark className="text-2xl" strokeWidth={1.5} /> : <HiOutlineBars3 className="text-2xl" strokeWidth={1.5} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile hamburger menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-14 left-0 w-full bg-white dark:bg-neutral-950 border-b border-slate-200 dark:border-neutral-800 shadow-xl px-5 py-5 space-y-5 z-10">
+            <div className="flex flex-col gap-4">
+              {navLinks.map((link) => {
+                const isActive = link.regex.test(pathname);
+                return (
+                  <Link
+                    key={link.key}
+                    to={localeLink(locale, link.path(country))}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-base font-bold transition-colors ${isActive ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
+                  >
+                    {link.key === 'bgm' ? link.label : t(link.label as any)}
+                  </Link>
+                );
+              })}
             </div>
 
-            <div className="relative xl:hidden" ref={menurRef}>
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                aria-expanded={isMenuOpen}
-              >
-                <span className="sr-only">Open settings menu</span>
-                {/* Settings (Cog) Icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                  <path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z" />
-                </svg>
-              </button>
+            <div className="h-px bg-slate-100 dark:bg-neutral-800 w-full" />
 
-              <div
-                className={`${isMenuOpen ? 'block' : 'hidden'} absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-neutral-900 shadow-lg ring-1 ring-neutral-300 dark:ring-neutral-700 ring-opacity-5 focus:outline-none`}
-              >
-                <div className="py-4 flex flex-col items-center gap-4">
-                  <LocaleSwitcher />
-                  <ThemeSwitcher />
-                  <ServerSwitcher />
+            {/* Render mobile toggle switch only if server selection is available on the current page */}
+            {currentServer && (
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-semibold text-slate-500 dark:text-neutral-400 mb-1">{t('serverSettings')}</span>
+                <div className="-ml-2">
+                  <ServerToggleSwitch currentServer={currentServer} />
                 </div>
               </div>
-            </div>
+            )}
           </div>
-        </nav>
-      </div>
+        )}
+      </header>
     </>
   );
-  // return <></>
 };

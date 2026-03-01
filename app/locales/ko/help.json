@@ -1,0 +1,696 @@
+{
+  "dashboard": {
+    "raid": [
+      {
+        "title": "가장 많이 사용된 파티 통계 확인하기",
+        "description": "적당히 많이 쓰인 안정적인 파티를 참고하면\n보다 쉽게 플래티넘을 달성할 수 있습니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 세부 파티 보기",
+              "description": "세부 파티 통계를 볼 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#formations",
+            "popover": {
+              "title": "2. 많이 출전한 편성",
+              "description": "가장 많이 사용된 파티 조합을 확인하는 탭입니다."
+            }
+          },
+          {
+            "element": "#formations button:nth-child(2)",
+            "popover": {
+              "title": "3. 전체 속성으로 변경",
+              "description": "공격/방어 타입과 무관하게\n전체 파티 통계를 확인할 수 있도록 옵션을 변경합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionChart]>div",
+            "popover": {
+              "title": "4. 파티 세부정보 보기",
+              "description": "가장 많이 쓰인 순서대로 정렬된 파티 목록입니다.\n각 파티를 클릭하면 세부 통계를 볼 수 있습니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionDetailView] div:has(label)",
+            "popover": {
+              "title": "5. 학생별 세부정보 보기",
+              "description": "학생 아이콘을 클릭하면 해당 학생의\n평균 성급, 전무 레벨 등 육성 통계를 볼 수 있습니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=VariantStats]",
+            "popover": {
+              "title": "6. 기타 정보",
+              "description": "초기 손패 고정, 학생 배치 순서 등\n상세한 운영 정보를 확인할 수 있습니다."
+            }
+          }
+        ]
+      },
+      {
+        "title": "조력자 통계 확인하기",
+        "description": "서클 조력자로 설정해두면 좋은\n수요가 많은 학생들을 확인합니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 세부 파티 보기",
+              "description": "세부 파티 통계를 볼 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#participation",
+            "popover": {
+              "title": "2. 출전율 확인",
+              "description": "학생별 전체 출전율을 확인할 수 있는 탭입니다."
+            }
+          },
+          {
+            "element": "#participation button:nth-child(3)",
+            "popover": {
+              "title": "3. 조력자만 보기",
+              "description": "버튼을 클릭하면 조력자(렌탈)로\n가장 많이 사용된 학생 통계만 따로 모아볼 수 있습니다."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "조건 맞춤형 파티 검색하기",
+        "description": "특정 학생을 제외하거나, 육성 비용 절감을 위해\n원하는 조건의 학생을 사용한 파티만 골라서 검색합니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 세부 파티 보기",
+              "description": "세부 파티 통계를 볼 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankRange",
+            "popover": {
+              "title": "2. 통계 등수 범위 설정",
+              "description": "통계를 낼 등수 범위를 설정합니다.\n\nSTART와 END 값을 지정하면,\n해당 구간에 위치한 유저들의 데이터만 모아서 볼 수 있습니다."
+            }
+          },
+          {
+            "element": "#rankings",
+            "popover": {
+              "title": "3. 랭킹 & 팀 확인",
+              "description": "실제 유저들의 클리어 랭킹과 파티를 순위대로 보여줍니다.\n우측의 필터 기능을 통해 원하는 조건만 걸러낼 수 있습니다."
+            }
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
+            "popover": {
+              "title": "4. 출전/포함할 학생 선택",
+              "description": "편성에 포함할 학생을 직접 검색하거나 선택합니다.\n(한국어 초성, 일본어/번체는 영어 이름 검색 지원)\n\n학생 선택 후 파티에 무조건 포함할지 여부와,\n원하는 성급(예: 3성~전무3성)만 포함되도록 세밀한 설정이 가능합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
+            "popover": {
+              "title": "5. 제외할 학생 / 조력자 설정",
+              "description": "내게 없거나 육성이 덜 되어 투입하기 힘든 학생을 설정합니다.\n\n• 아예 투입 불가: 파티 목록에서 완전히 제외합니다.\n• 조력자 대여 가능: 다른 사람에게 1번 빌려서 쓰는 경우만 검색에 포함합니다."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ],
+    "elimination": [
+      {
+        "title": "가장 많이 사용된 파티 통계 확인하기",
+        "description": "적당히 많이 쓰인 안정적인 파티를 참고하면\n보다 쉽게 플래티넘을 달성할 수 있습니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 세부 파티 보기",
+              "description": "세부 파티 통계를 볼 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. 장갑 속성 선택",
+              "description": "대결전은 장갑 속성별로 파티가 다릅니다.\n확인하고자 하는 보스의 장갑 속성을 먼저 선택해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#formations",
+            "popover": {
+              "title": "2. 많이 출전한 편성",
+              "description": "가장 많이 사용된 파티 조합을 확인하는 탭입니다."
+            }
+          },
+          {
+            "element": "#formations button:nth-child(2)",
+            "popover": {
+              "title": "3. 전체 속성으로 변경",
+              "description": "공격/방어 타입과 무관하게\n전체 파티 통계를 확인할 수 있도록 옵션을 변경합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionChart]>div",
+            "popover": {
+              "title": "4. 파티 세부정보 보기",
+              "description": "가장 많이 쓰인 순서대로 정렬된 파티 목록입니다.\n각 파티를 클릭하면 세부 통계를 볼 수 있습니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=CompositionDetailView] div:has(label)",
+            "popover": {
+              "title": "5. 학생별 세부정보 보기",
+              "description": "학생 아이콘을 클릭하면 해당 학생의\n평균 성급, 전무 레벨 등 육성 통계를 볼 수 있습니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=VariantStats]",
+            "popover": {
+              "title": "6. 기타 정보",
+              "description": "초기 손패 고정, 학생 배치 순서 등\n상세한 운영 정보를 확인할 수 있습니다."
+            }
+          }
+        ]
+      },
+      {
+        "title": "조력자 통계 확인하기",
+        "description": "서클 조력자로 설정해두면 좋은\n수요가 많은 학생들을 확인합니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 세부 파티 보기",
+              "description": "세부 파티 통계를 볼 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. 장갑 속성 선택",
+              "description": "대결전은 장갑 속성별로 파티가 다릅니다.\n확인하고자 하는 보스의 장갑 속성을 먼저 선택해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#participation",
+            "popover": {
+              "title": "2. 출전율 확인",
+              "description": "학생별 전체 출전율을 확인할 수 있는 탭입니다."
+            }
+          },
+          {
+            "element": "#participation button:nth-child(3)",
+            "popover": {
+              "title": "3. 조력자만 보기",
+              "description": "버튼을 클릭하면 조력자(렌탈)로\n가장 많이 사용된 학생 통계만 따로 모아볼 수 있습니다."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "조건 맞춤형 파티 검색하기",
+        "description": "특정 학생을 제외하거나, 육성 비용 절감을 위해\n원하는 조건의 학생을 사용한 파티만 골라서 검색합니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(2)",
+            "popover": {
+              "title": "1. 세부 파티 보기",
+              "description": "세부 파티 통계를 볼 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[title=totalTabDisabledInDetailView]~button",
+            "popover": {
+              "title": "1-2. 장갑 속성 선택",
+              "description": "대결전은 장갑 속성별로 파티가 다릅니다.\n확인하고자 하는 보스의 장갑 속성을 먼저 선택해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankRange",
+            "popover": {
+              "title": "2. 통계 등수 범위 설정",
+              "description": "통계를 낼 등수 범위를 설정합니다.\n\nSTART와 END 값을 지정하면,\n해당 구간에 위치한 유저들의 데이터만 모아서 볼 수 있습니다."
+            }
+          },
+          {
+            "element": "#rankings",
+            "popover": {
+              "title": "3. 랭킹 & 팀 확인",
+              "description": "실제 유저들의 클리어 랭킹과 파티를 순위대로 보여줍니다.\n우측의 필터 기능을 통해 원하는 조건만 걸러낼 수 있습니다."
+            }
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
+            "popover": {
+              "title": "4. 출전/포함할 학생 선택",
+              "description": "편성에 포함할 학생을 직접 검색하거나 선택합니다.\n(한국어 초성, 일본어/번체는 영어 이름 검색 지원)\n\n학생 선택 후 파티에 무조건 포함할지 여부와,\n원하는 성급(예: 3성~전무3성)만 포함되도록 세밀한 설정이 가능합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
+            "popover": {
+              "title": "5. 제외할 학생 / 조력자 설정",
+              "description": "내게 없거나 육성이 덜 되어 투입하기 힘든 학생을 설정합니다.\n\n• 아예 투입 불가: 파티 목록에서 완전히 제외합니다.\n• 조력자 대여 가능: 다른 사람에게 1번 빌려서 쓰는 경우만 검색에 포함합니다."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ],
+    "common": [
+      {
+        "title": "과거 일섭 기준으로 내 등수/점수 가늠하기 (공통)",
+        "description": "과거 일본 서버 데이터를 바탕으로 내 점수와 예상 등수를 확인합니다.\n이번 총력전/대결전에서 플래티넘 달성이 가능할지 미리 가늠해 볼 수 있습니다.",
+        "tour": [
+          {
+            "element": "main nav button:nth-child(1)",
+            "popover": {
+              "title": "1. 전체 점수 분포 보기",
+              "description": "전체 유저들의 점수 분포를 확인할 수 있는 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "*:has(>div>div>div[data-component-name=RecordLookup])",
+            "popover": {
+              "title": "2. 기록 조회 영역",
+              "description": "내 기록을 바탕으로 과거 일섭 데이터를 검색하는 영역입니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=RecordLookup]",
+            "popover": {
+              "title": "3. 상세 기록 검색",
+              "description": "내 클리어 점수, 남은 시간, 혹은 목표로 하는 일섭 등수를 입력해 보세요.\n조건에 맞는 과거 일본 서버의 기록과 등수 컷을 바로 확인할 수 있습니다."
+            }
+          }
+        ]
+      }
+    ]
+  },
+
+  "jukebox": [
+    {
+      "title": "특정 BGM의 사용처 찾기",
+      "description": "게임 내에서 특정 BGM이 어디에 사용되었는지,\n또는 특정 스토리에서 어떤 BGM이 재생되었는지 검색합니다.",
+      "tour": [
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(2)",
+          "popover": {
+            "title": "1. 스포일러 필터 선택",
+            "description": "검색할 스토리 범위를 선택합니다.\n일본 서버에만 공개된 최신 스토리가 포함되어 스포일러가 발생할 수 있으므로, 지정한 범위 내에서만 검색을 수행합니다.\n(전체 선택 버튼을 누르면 한 번에 모든 범위를 선택할 수 있습니다.)"
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(1) input",
+          "popover": {
+            "title": "2. BGM 검색",
+            "description": "곡의 제목이나 작곡가의 이름으로\n원하는 BGM을 빠르게 검색할 수 있습니다."
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage_Action] button:nth-child(1)",
+          "popover": {
+            "title": "3. 상세정보 보기",
+            "description": "'상세정보 펼치기'를 누르면 설정한 스포일러 필터 범위 내에서\n해당 BGM이 사용된 위치를 확인할 수 있습니다.\n\n'모두 펼치기'를 누르면 전체 정보가 한 번에 표시되며,\n'스토리 제목 표시' 토글을 켜면 구체적인 스토리 제목도 함께 나타납니다."
+          }
+        }
+      ]
+    },
+    {
+      "title": "BGM 랜덤 반복 재생하기",
+      "description": "게임 내 BGM을 무작위로 연속 재생합니다.\n(YouTube 플레이어를 통해 재생되며, 끊김 없는 감상을 위해 YouTube Premium 또는 광고 차단 확장 프로그램 사용을 권장합니다.)",
+      "tour": [
+        {
+          "element": "div[data-component-name=JukeboxPage] main>div>div:nth-child(2)",
+          "popover": {
+            "title": "1. 재생할 범위(스포일러) 필터 선택",
+            "description": "스포일러 방지를 위해 지정한 범위의 BGM만 재생 풀에 포함합니다.\n전체 선택 버튼을 누르면 모든 곡을 한 번에 선택할 수 있지만, 최신 스토리의 스포일러 곡이 포함될 수 있습니다."
+          }
+        },
+        {
+          "element": "div[data-component-name=JukeboxPage_Action] button:nth-child(2)",
+          "popover": {
+            "title": "2. 랜덤 재생 시작",
+            "description": "버튼을 클릭하면 선택된 범위 내의 BGM이 무작위로 재생됩니다.\n(단, YouTube 영상 정보가 연결되지 않은 곡이 선택될 경우 재생이 일시적으로 끊길 수 있습니다.)"
+          }
+        }
+      ]
+    }
+  ],
+  "chart": {
+    "heatmap": [
+      {
+        "title": "이 학생은 어느 총력전/대결전에서 활약할까?",
+        "description": "특정 학생이 어떤 보스전에서 자주 쓰이는지 확인합니다.\n학생을 모집(가챠)하거나 엘리그마로 성장시킬지 판단할 때 유용한 참고 자료가 됩니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=StudentSearchDropdown]",
+            "popover": {
+              "title": "1. 분석할 학생 검색",
+              "description": "통계를 확인하고 싶은 학생의 이름을 검색하여 선택합니다.\n(한국어 초성, 일본어 가나/영어, 중국어 영어 발음 검색을 지원합니다.)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(1) > div>div:nth-child(5)",
+            "popover": {
+              "title": "2. 난이도 선택",
+              "description": "확인하고 싶은 보스의 난이도(예: 인세인, 토먼트 등)를 선택하면,\n해당 난이도에서의 채용 통계만 표시됩니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=RaidUsageStackChart]",
+            "popover": {
+              "title": "3. 채용 통계 요약",
+              "description": "각 총력전 및 대결전에서 해당 학생이\n어떤 성급(별)으로 얼마나 많이 사용되었는지 픽률을 보여줍니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2)",
+            "popover": {
+              "title": "4. 성급 필터링 및 히트맵 준비",
+              "description": "아래의 히트맵을 활용하면 보스별/시즌별 채용률을 한눈에 볼 수 있습니다.\n(※ 넓은 화면의 PC나 태블릿 환경을 권장합니다.)\n\n먼저 히트맵에 표시할 성급 범위를 설정해 주세요."
+            }
+          },
+          {
+            "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2) button",
+            "popover": {
+              "title": "5. 성급 모두 선택",
+              "description": "'모두 선택' 버튼을 누르면\n모든 성급의 데이터를 한 번에 포함할 수 있습니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ChartDataContainer]",
+            "popover": {
+              "title": "6. 히트맵 상세 보기",
+              "description": "설정한 조건에 따른 전체 시즌 채용률 히트맵이 나타납니다.\n그래프의 특정 칸(시즌)을 클릭하면,\n해당 보스전의 더 자세한 세부 통계를 확인할 수 있습니다."
+            }
+          }
+        ]
+      }
+    ],
+    "ranking": [
+      {
+        "title": "미래시 총력전/대결전 학생 기용 순위",
+        "description": "다가올 총력전 및 대결전 시즌에서 어떤 학생이 가장 많이 기용되었는지,\n주력으로 사용된 평균 성급은 어느 정도인지 확인합니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=RankingChartPage_Slider]",
+            "popover": {
+              "title": "1. 조회 기간 선택",
+              "description": "상단의 슬라이드 바를 움직여\n데이터를 조회할 기간(시즌 범위)을 선택합니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChart]",
+            "popover": {
+              "title": "2. 종합 순위 확인",
+              "description": "선택한 기간 동안 가장 많이 출전한\n학생들의 종합 순위와 성급 비율을 확인할 수 있습니다."
+            }
+          }
+        ]
+      },
+      {
+        "title": "특정 난이도(토먼트 등) 학생 출전 순위",
+        "description": "'토먼트'나 '인세인' 등 특정 최고 난이도에서\n어떤 학생이 주로 어떤 성급으로 기용되었는지 상세히 확인합니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=RankingChartPage_DetailedFilter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. 분석할 난이도 선택",
+              "description": "필터에서 분석을 원하는 특정 난이도(예: 토먼트)를 선택합니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChartPage_Slider]",
+            "popover": {
+              "title": "2. 조회 기간 선택",
+              "description": "상단의 슬라이드 바를 움직여\n데이터를 조회할 기간(시즌 범위)을 설정합니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=RankingChart]",
+            "popover": {
+              "title": "3. 상세 순위 확인",
+              "description": "설정한 기간 및 난이도에 해당하는\n학생 출전 순위와 세부 성작 비율을 확인합니다."
+            }
+          }
+        ]
+      }
+    ],
+    "favor": [
+      {
+        "title": "가장 많이 쓰인 프로필 사진(프사)은?",
+        "description": "총력전/대결전 상위권 유저들이\n어떤 프로필 사진을 가장 많이 사용했는지 재미있는 통계를 확인합니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=EmblemCounter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. 칭호 타입 변경",
+              "description": "드롭다운에서 칭호 타입을 '프로필 사진'으로 설정합니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=EmblemCounter] thead th:nth-child(4)",
+            "popover": {
+              "title": "2. 순위 정렬하기",
+              "description": "테이블의 헤더를 클릭하면\n전체 사용량 순위순 또는 최근 변동량(증감)순으로 데이터를 정렬할 수 있습니다."
+            }
+          }
+        ]
+      },
+      {
+        "title": "인연 100 칭호 순위 & 급상승 칭호 확인하기",
+        "description": "유저들의 '인연 100 칭호' 장착 통계를 조회하여,\n가장 사랑받는 학생(정실)이 누구인지 확인합니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=EmblemCounter]>div>div:nth-child(3)",
+            "popover": {
+              "title": "1. 칭호 타입 변경",
+              "description": "드롭다운에서 칭호 타입을 '인연 100 칭호'로 설정합니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=EmblemCounter] thead th:nth-child(4)",
+            "popover": {
+              "title": "2. 순위 및 급상승 정렬하기",
+              "description": "테이블의 헤더를 클릭하여 전체 순위순으로 보거나,\n변동순으로 정렬해 최근 인기가 가장 많이 급상승한 칭호를 찾아볼 수 있습니다."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "planner": {
+    "event": [
+      {
+        "title": "보고서 및 강화석 구매 효율 확인하기",
+        "description": "이벤트 상점에서 보고서와 강화석을 구매할 때의 AP 효율을 비교합니다.\n\n단, 이벤트 지역을 반복 클리어하면 낮은 확률로 최상급 오파츠를 얻을 수 있으므로, 오파츠가 부족하다면 상점 구매보다 지역 파밍이 더 유리할 수 있습니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=EventPlanner_Tab] button:nth-child(1)",
+            "popover": {
+              "title": "보너스 탭으로 이동",
+              "description": "학생 보너스를 아직 설정하지 않았다면 보너스 탭으로 이동해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=BonusSelector_body]",
+            "popover": {
+              "title": "보너스 학생 선택",
+              "description": "보유하고 있는 학생의 아이콘을 클릭해 주세요.\n선택한 학생의 보너스 수치를 기준으로 AP 효율을 계산합니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(2)",
+            "popover": {
+              "title": "목표 설정으로 이동",
+              "description": "목표 설정 탭으로 이동한 뒤, 세부 목표에서 '상점'을 클릭해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner] label",
+            "popover": {
+              "title": "AP 단위로 변환",
+              "description": "현재 적용된 보너스 수치를 반영하여, 상점 아이템의 가격을 AP 단위로 변환해 표시합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner_apbanner]",
+            "popover": {
+              "title": "효율 라벨 확인",
+              "description": "특별의뢰 2배 이벤트 기준의 효율이 함께 표시됩니다.\n\n(참고: 특별의뢰 3배 이벤트 기간에는 이 값에 1.5배를 곱해 비교하시면 됩니다. 단, 보통 3배 기간에는 특별의뢰를 직접 도는 것이 더 이득인 경우가 많습니다.)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner_goodsStand]>div:nth-child(4)",
+            "popover": {
+              "title": "아이템 효율 확인",
+              "description": "변환된 AP 수치를 보고 구매 효율을 확인해 보세요.\n원하는 아이템이 없다면 상단의 탭을 눌러 다른 상점으로 전환할 수 있습니다."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      },
+      {
+        "title": "상점 전체 구매에 필요한 AP 계산하기",
+        "description": "이벤트 상점의 아이템을 모두 구매하기 위해 필요한 총 AP와 획득해야 할 재화량을 계산하고 최적의 파밍 계획을 세웁니다.",
+        "tour": [
+          {
+            "element": "div[data-component-name=FloatingCurrencyStatus]",
+            "popover": {
+              "title": "재화 미니맵 확인",
+              "description": "이벤트 재화의 과부족 상태가 이 미니맵에 표시됩니다.\n이 정보를 참고하여 전체적인 파밍 계획을 세워보세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab] button:nth-child(1)",
+            "popover": {
+              "title": "보너스 탭으로 이동",
+              "description": "우선 정확한 계산을 위해 보너스 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=BonusSelector_body]",
+            "popover": {
+              "title": "보너스 학생 선택",
+              "description": "보유 중인 학생을 선택하여 보너스 수치를 적용해 주세요.\n이를 바탕으로 필요 재화량과 효율이 계산됩니다."
+            }
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(2)",
+            "popover": {
+              "title": "목표 설정으로 이동",
+              "description": "목표 설정 탭으로 이동한 뒤 '상점'을 클릭합니다.\n각 상점 탭을 확인하며 목표로 하는 아이템을 선택해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ShopPlanner] button",
+            "popover": {
+              "title": "전체 아이템 선택",
+              "description": "가이드 진행을 위해 '모든 아이템 구매'를 클릭해 주세요.\n(다음 단계로 바로 넘어가는 버튼을 눌러도 전체 아이템이 자동으로 선택됩니다.)"
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(3)",
+            "popover": {
+              "title": "미니게임 설정 (선택)",
+              "description": "경품 교환이나 오미쿠지 같은 미니게임이 있다면 여기서 시뮬레이션을 돌려볼 수 있습니다.\n\n'최대로' 버튼을 누르면 상점 요구치에 맞춰 목표 재화량이 자동 설정됩니다.\n시뮬레이션 실행 버튼을 눌러 대략적인 확률과 효율을 계산한 뒤 다음으로 넘어가 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(4)",
+            "popover": {
+              "title": "AP 수급 탭으로 이동",
+              "description": "총 필요한 AP를 계산하기 위해 수급 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ApCalculator] > div",
+            "popover": {
+              "title": "AP 수급량 설정",
+              "description": "이벤트 기간 동안 자연적으로 수급되는 AP 양을 계산합니다.\n기본 일정은 일본 서버 기준으로 맞춰져 있으며, 숏컷을 이용해 글로벌 서버 일정으로 변경할 수 있습니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(5)",
+            "popover": {
+              "title": "파밍 설정 탭으로 이동",
+              "description": "어느 지역을 돌아 재화를 파밍할지 설정하기 위해 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=FarmingPlanner_tab] > button:nth-child(1)",
+            "popover": {
+              "title": "반복 파밍 설정",
+              "description": "이벤트 퀘스트 지역에서 반복적으로 얻을 수 있는 재화를 설정합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_f1]",
+            "popover": {
+              "title": "초회 클리어 보상",
+              "description": "최초 클리어 및 3성 클리어 시 1회 한정으로 지급되는 보상을 결과 시뮬레이터에 포함할지 선택합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=FarmingPlanner_tab] > button:nth-child(2)",
+            "popover": {
+              "title": "초회 보상 설정 (스토리/챌린지)",
+              "description": "스토리나 챌린지 등 한 번만 클리어할 수 있는 스테이지의 획득 보상을 추가하는 곳입니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_f2]",
+            "popover": {
+              "title": "모두 1번씩 클리어 적용",
+              "description": "마찬가지로 해당 스테이지들의 최초 클리어 및 3성 달성 보상을 계산기에 일괄 추가하려면 이 버튼을 클릭해 주세요."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "button[data-component-name=FarmingPlanner_run]",
+            "popover": {
+              "title": "파밍 계산 실행",
+              "description": "선택한 항목들을 바탕으로 최소 AP를 소모하는 최적의 파밍 경로를 계산합니다.\n기본적으로 고효율 지역(9~12지 등) 위주로 파밍하도록 설정되어 있으며, 하단 옵션에서 조절이 가능합니다.\n\n계산 결과 보통은 AP가 부족하다고 나타날 것입니다. 이제 이를 해결하기 위해 이전 탭으로 돌아가 보겠습니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=EventPlanner_Tab]>:nth-child(4)",
+            "popover": {
+              "title": "다시 AP 수급 탭으로",
+              "description": "부족한 AP를 채우기 위해 다시 수급 탭으로 이동합니다."
+            },
+            "actionOnNext": "click"
+          },
+          {
+            "element": "div[data-component-name=ApCalculator] > div",
+            "popover": {
+              "title": "부족한 AP 충전 설정",
+              "description": "파밍에 필요한 AP가 부족하다면, 이곳에서 청휘석이나 전술대항전 코인 등을 이용한 AP 충전 계획을 세워 부족분을 맞출 수 있습니다."
+            },
+            "actionOnNext": "click"
+          }
+        ]
+      }
+    ]
+  }
+}

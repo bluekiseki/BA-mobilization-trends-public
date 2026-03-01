@@ -8,7 +8,7 @@ const { XzReadableStream } = xz;
  */
 self.onmessage = async (event: MessageEvent<{ url: string; doXor: boolean }>) => {
   const { url, doXor } = event.data;
-  console.log('worker-start');
+  // console.log('worker-start');
 
   try {
     const response = await fetch(url);

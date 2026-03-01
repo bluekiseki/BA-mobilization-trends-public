@@ -13,7 +13,6 @@ import React from 'react';
 import { useIsDarkState } from '~/store/isDarkState';
 import { getKSTResetTimestamps } from './getKSTResetTimestamps';
 
-// [Imports]
 import { DateRangeSlider } from './DateRangeSlider';
 import { RankSelector } from './RankSelector';
 import { useTierDashboardStore } from '~/store/tierDashboardStore';

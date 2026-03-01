@@ -78,7 +78,8 @@
     "cardShopSimulator": "Card Open Simulator",
     "description": {
       "studentGrowthPlanner": "Manage growth plans for all students in one place and calculate the required materials.",
-      "equipmentFarmingPlanner": "Optimize equipment farming based on your student growth needs."
+      "equipmentFarmingPlanner": "Optimize equipment farming based on your student growth needs.",
+      "favorCalculator": "Calculate the gifts needed to reach your target relationship rank."
     },
     "farmingPlan": "Farming Plan",
     "jukebox": "BGM Player",
@@ -87,11 +88,12 @@
     "planner": "Item Planner",
     "plannerescription": "Consumption of items for student growth and simulation of acquiring items at events",
     "planner-go": "Going to plan",
-    "equipmentFarmingPlanner": "Equipment Farming Planner"
+    "equipmentFarmingPlanner": "Equipment Farming Planner",
+    "favorCalculator": "Relationship Rank Calculator"
   },
   "ui": {
     "disclaimer": "Some data may be omitted or incorrect. Please use for reference only.",
-    "navigateToEvent": "Switch to another event ↗",
+    "navigateToEvent": "Switch to another event",
     "remainingCurrency": "Remaining Currency",
     "initialAmount": "Enter Initial Amount",
     "finalResultPreview": "Final Results Preview",
@@ -171,7 +173,11 @@
     "selectAllTooltip": "Select All",
     "deselectAllTooltip": "Deselect All",
     "summaryForSelected": "Total for {{count}} selected students",
-    "noStudentSelected": "No students selected."
+    "noStudentSelected": "No students selected.",
+    "openInPlanner": "Open in Student Growth Planner",
+    "selectStudentToStart": "Please select a student to start.",
+    "remainingTime": "{{day}}d {{hour}}h left",
+    "startTime": "Starts in {{day}}d {{hour}}h"
   },
   "button": {
     "runAutoFarmCalc": "Run Auto-Farm Calculation",
@@ -424,7 +430,9 @@
   },
   "equipmentTab": {
     "selectStudentPrompt": "Please select a student first.",
-    "levelLockWarning": "Target level is too low to equip this tier."
+    "levelLockWarning": "Target level is too low to equip this tier.",
+    "reqCurrent": "Current needs student Lv.{{level}}",
+    "reqTarget": "Target needs student Lv.{{level}}"
   },
   "affectionTab": {
     "result": {
@@ -461,17 +469,20 @@
   "potentialTab": {
     "title": "Potential Unlock",
     "unlockCondition": "(Active when Target Lv.90 & Unique Weapon is equipped)",
-    "lockedMessage": "Potential unlock requires Level 90 and a Unique Weapon."
+    "lockedMessage": "Potential unlock requires Level 90 and a Unique Weapon.",
+    "reqCurrent": "Current: Requires Student Lv.90 & Unique Weapon",
+    "reqTarget": "Target: Requires Student Lv.90 & Unique Weapon"
   },
   "basicStatsTab": {
     "level": "Level:",
-    "rank": "★ Rank:",
+    "rank": "Rank:",
     "affectionRank": "Affection Rank:",
     "growthOptionsTitle": "Growth Options",
     "useEligmaForRankUp": "Use Eligma for ★ rank up",
     "currentElephPrice": "Current Eleph Price:",
     "purchasableEleph": "Purchasable Eleph:",
-    "ownedEleph": "Owned Eleph"
+    "ownedEleph": "Owned Eleph",
+    "affectionWarning": "Current Star Rank limits Max Bond to {{limit}}."
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -697,5 +708,247 @@
     "deselect_all": "Deselect All",
     "calc_tip": "Add rows to simulate runs. Stage 3-7 provides maximum rewards.",
     "add_row": "Add Row"
+  },
+  "gacha": {
+    "title": "Pyroxene & Gacha Planner",
+    "intro": {
+      "title": "Planner Guide",
+      "summary": "Calculate expected Pyroxene income based on future schedules, set pickup strategies, and simulate your gacha success rates.",
+      "feat1_title": "Income Calculation",
+      "feat1_desc": "Predicts available Pyroxenes based on current assets, monthly packs, and future raid schedules.",
+      "feat2_title": "Pickup Strategy",
+      "feat2_desc": "Set target students and define detailed strategies like intentional sparking or conditional pulls.",
+      "feat3_title": "Result Forecast",
+      "feat3_desc": "Analyze success rates and bankruptcy risks by running simulations based on your strategy.",
+      "notes": {
+        "title": "Notes & Assumptions",
+        "note1_pre": "This tool is currently in BETA and is based on this ",
+        "note1_post": ". For perfect accuracy, using the original spreadsheet is recommended.",
+        "note2": "Grand Assault tickets are assumed to have no expiration date.",
+        "note3": "Pyroxenes from maintenance, some stories, PvP resets, Momotalks, and achievements are not individually tracked. To balance this, a default extra income of 1,200 Pyroxenes per month is applied.",
+        "note4": "All Pyroxene consumption and acquisition from events are assumed to occur on the first day of the event.",
+        "note5": "Pyroxenes from Total Assault / Grand Assault are assumed to be acquired on the last day of the event.",
+        "note6": "Events with existing data use manually extracted yields from the spreadsheet. Events without data default to a yield of 1,800 Pyroxenes.",
+        "note7": "Arona's login bonus assumes today is Day 1.",
+        "note8": "In the Strategy Tab, if you plan to pull multiple characters from the same banner, please ensure you adjust the 'Max Budget (Max Pity limits)' accordingly.",
+        "note9": "All 10-pull and single recruitment tickets are converted and calculated as equivalent Pyroxenes (1 pull = 120 Pyroxenes)."
+      }
+    },
+    "server": {
+      "kr_global": "KR / Global",
+      "jp": "JP Server"
+    },
+    "tabs": {
+      "income": "Income & Future Sight",
+      "strategy": "Gacha Strategy",
+      "result": "Run Simulation"
+    },
+    "errors": {
+      "load_students": "Failed to load student data.",
+      "load_data": "Data load failed"
+    },
+    "income": {
+      "timeline": {
+        "title": "Schedule & AP",
+        "total_count": "Total {{count}}",
+        "headers": {
+          "start": "START",
+          "type": "TYPE",
+          "name": "NAME",
+          "ap": "AP"
+        },
+        "empty": "No scheduled events.",
+        "types": {
+          "evt": "EVT",
+          "raid": "RAID",
+          "elim": "ELIM",
+          "towr": "TOWR",
+          "camp": "CAMP",
+          "etc": "ETC"
+        }
+      },
+      "stats": {
+        "title": "Detailed Report",
+        "survival_rate": "Survival Rate",
+        "total_income": "Total Income",
+        "total_ap_expense": "Total AP Cost",
+        "gacha_expense_avg": "Gacha Cost (Avg)",
+        "final_balance_avg": "Final Balance (Avg)",
+        "category": {
+          "regular": "Regular Income",
+          "content": "Content Rewards",
+          "misc_expense": "Misc & Expenses"
+        },
+        "items": {
+          "mission": "Daily/Weekly Mission",
+          "arona": "Arona Login",
+          "pvp": "Tactical Challenge (PvP)",
+          "monthly": "Monthly Card",
+          "raid_elim": "Raid / G.Assault",
+          "multifloor": "Setlik (Tower)",
+          "jfd": "JFD (Drills)",
+          "event_etc": "Event/Story/Maint.",
+          "manual": "Manual Input",
+          "ap_refresh": "AP Refresh",
+          "gacha": "Gacha"
+        }
+      },
+      "settings": {
+        "title": "Simulation Settings",
+        "include_gacha": "Include Gacha",
+        "current_resources": "Current Resources",
+        "monthly_income": "Monthly Income",
+        "monthly_card": "Monthly Card",
+        "half_monthly_card": "Half-Monthly",
+        "extra_placeholder": "Extra",
+        "pvp_ranking": "Tactical Challenge / Raid Trophy",
+        "pvp_rank_format": "Rank {{rank}} ({{amount}}/day)",
+        "raid_rank": {
+          "platinum": "Platinum",
+          "gold": "Gold",
+          "silver": "Silver",
+          "bronze": "Bronze"
+        },
+        "ap_refresh_daily": "AP Refresh (Daily)",
+        "event_period": "Event Period",
+        "normal_period": "Normal Period",
+        "refresh_count": "{{count}}x",
+        "custom_income_title": "Custom Pyroxene Income/Expense by Date",
+        "custom_income_desc": "Description (e.g., Apologems, Packs)",
+        "custom_income_amount": "Amount"
+      },
+      "chart": {
+        "survival_rate": "Survival Rate",
+        "lucky": "Top 10% (Lucky)",
+        "unlucky": "Bottom 10% (Unlucky)",
+        "worst": "Bottom 100% (Worst)",
+        "avg_balance": "Avg Balance",
+        "avg": "Average",
+        "upper_10": "Top 10%",
+        "lower_10": "Bottom 10%",
+        "hide_details": "Hide Details",
+        "show_details": "View Daily Income/Expense Details",
+        "table_date": "Date",
+        "table_reason": "Description",
+        "table_delta": "Change",
+        "table_balance": "Balance (Avg.)",
+        "start_balance": "Starting Balance",
+        "daily_calc": "Daily/Event Calculation"
+      },
+      "log": {
+        "fixed_daily_sunday": "Daily/Weekly/Monthly Fixed Income",
+        "fixed_daily": "Daily/Monthly Fixed Income",
+        "monthly_extra": "Monthly Extra Income (1st Day)",
+        "raid": "[Total Assault] {{name}} Reward",
+        "elimination": "[Grand Assault] {{name}} Reward",
+        "jfd": "[JFD] {{name}} Reward",
+        "event": "[Event] {{name}}",
+        "multifloor": "[Set] {{name}} Reward",
+        "mainstory": "[Main Story] {{name}} Reward",
+        "ap_refresh": "AP Refresh"
+      }
+    },
+    "result": {
+      "alert_error": "Simulation error occurred.",
+      "panel": {
+        "title": "Run Simulation",
+        "desc": "Simulating planned pulls with <1>{{amount}} Pyroxenes</1>.",
+        "iteration_count": "Iterations",
+        "btn_running": "Calculating...",
+        "btn_start": "Start Simulation"
+      },
+      "empty_state": "Press the button above to start the simulation."
+    },
+    "result_view": {
+      "unit_toggle": {
+        "pyroxenes": "Pyroxenes Used",
+        "pulls": "Total Pulls"
+      },
+      "disclaimer": "* Free pulls are used first and not included in Pyroxene cost.",
+      "summary": {
+        "success_rate": {
+          "title": "Success Rate",
+          "desc": "Prob. to get all 'Must' students"
+        },
+        "avg_cost": {
+          "title_pyroxenes": "Avg. Pyroxenes",
+          "title_pulls": "Avg. Pulls",
+          "approx_pulls": "(Approx. {{amount}} pulls)",
+          "includes_free": "(Includes free pulls)"
+        },
+        "safety": {
+          "title": "Resource Safety",
+          "safe": "Safe",
+          "unsafe": "Risky",
+          "bankruptcy_prob": "Bankruptcy Prob: {{rate}}%"
+        }
+      },
+      "chart": {
+        "title_pyroxenes": "Expected Cost Distribution",
+        "title_pulls": "Expected Pulls Distribution",
+        "mode_pdf": "Freq (PDF)",
+        "mode_cdf": "Cumul (CDF)",
+        "unit_count": "{{count}}",
+        "range_count": "{{start}} ~ {{end}}",
+        "tooltip_prob": "Prob: {{rate}}%",
+        "cdf_label_pyroxenes": "Within {{amount}} Pyroxenes",
+        "cdf_label_pulls": "Within {{amount}} Pulls"
+      },
+      "student_stats": {
+        "title": "Acquisition & Eleph Forecast",
+        "tag_limited": "Limited",
+        "tag_fes": "Fes",
+        "rate_obtain": "Rate",
+        "avg_eleph": "Avg Eleph",
+        "collapse": "Collapse ▲",
+        "expand": "Expand ▼",
+        "chart_x_eleph": "Elephs"
+      }
+    },
+    "banner_planner": {
+      "header": {
+        "title": "Pickup Schedule & Strategy",
+        "toggle_show": "Show {{count}} Past Banners",
+        "toggle_hide": "Hide Past Banners",
+        "auto_scroll_hint": "* Auto-scroll supported"
+      },
+      "badge": {
+        "now": "NOW",
+        "fes": "★ FES 6%",
+        "free_pulls": "Free {{count}} Pulls",
+        "limited": "Limited"
+      },
+      "toggle": {
+        "include": "Included",
+        "skip": "Skip"
+      },
+      "settings": {
+        "max_budget": "Max Budget",
+        "spark_option": "{{spark}}× Pity ({{pulls}} Pulls)",
+        "max_budget_suffix": "Allowed",
+        "min_pulls": "Min Guarantee",
+        "min_pulls_suffix": "Pulls"
+      },
+      "mode": {
+        "skip": "Skip",
+        "must": "Must",
+        "opportunistic": "Opportunistic"
+      },
+      "condition": {
+        "label": "Cond",
+        "remains_le": "Until Pity ≤",
+        "try_pulls": "pulls left"
+      },
+      "intentional_spark": {
+        "label": "Forced Pity",
+        "option_prefix": "Opt",
+        "after_obtain": "After get,",
+        "proceed_if_remains": "pulls left → Go"
+      },
+      "empty_state": {
+        "no_banners": "No banners to display.",
+        "hint_show_old": "Try clicking 'Show Past Banners' above."
+      }
+    }
   }
 }

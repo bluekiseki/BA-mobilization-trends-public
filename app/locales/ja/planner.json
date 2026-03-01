@@ -78,7 +78,8 @@
     "cardShopSimulator": "カードショップシミュレーター",
     "description": {
       "studentGrowthPlanner": "全ての生徒の育成計画を一元管理し、必要な素材を計算します。",
-      "equipmentFarmingPlanner": "生徒の育成計画に基づき、装備ファーミングを最適化します。"
+      "equipmentFarmingPlanner": "生徒の育成計画に基づき、装備ファーミングを最適化します。",
+      "favorCalculator": "目標の絆ランクに到達するために必要な贈り物を計算します。"
     },
     "farmingPlan": "周回計画",
     "jukebox": "BGMプレーヤー",
@@ -87,11 +88,12 @@
     "planner": "プランナー",
     "plannerescription": "学生成長のための財貨消耗及びイベントでの財貨獲得シミュレーション",
     "planner-go": "計画しに行く",
-    "equipmentFarmingPlanner": "装備ファーミングプランナー"
+    "equipmentFarmingPlanner": "装備ファーミングプランナー",
+    "favorCalculator": "絆ランク計算機"
   },
   "ui": {
     "disclaimer": "一部のデータが省略または誤っている可能性があります。参考用としてのみご利用ください。",
-    "navigateToEvent": "他のイベントへ移動…",
+    "navigateToEvent": "他のイベントへ移動",
     "remainingCurrency": "残りの財貨",
     "initialAmount": "初期保有量を入力",
     "finalResultPreview": "最終結果プレビュー",
@@ -171,7 +173,11 @@
     "selectAllTooltip": "すべての生徒を選択",
     "deselectAllTooltip": "選択をすべて解除",
     "summaryForSelected": "選択した{{count}}名の合計",
-    "noStudentSelected": "選択した生徒がいません。"
+    "noStudentSelected": "選択した生徒がいません。",
+    "openInPlanner": "生徒成長プランナーで開く",
+    "selectStudentToStart": "開始するには生徒を選択してください。",
+    "remainingTime": "残り{{day}}日{{hour}}時間",
+    "startTime": "{{day}}日{{hour}}時間後に開始"
   },
   "button": {
     "runAutoFarmCalc": "自動周回計算を実行",
@@ -426,7 +432,9 @@
   },
   "equipmentTab": {
     "selectStudentPrompt": "先に生徒を選択してください。",
-    "levelLockWarning": "装備ティアに対して目標レベルが不足しています。"
+    "levelLockWarning": "装備ティアに対して目標レベルが不足しています。",
+    "reqCurrent": "現在: 生徒Lv.{{level}}が必要",
+    "reqTarget": "目標: 生徒Lv.{{level}}が必要"
   },
   "affectionTab": {
     "result": {
@@ -463,17 +471,20 @@
   "potentialTab": {
     "title": "能力解放",
     "unlockCondition": "(目標Lv.90&専用武器装着時に活性化)",
-    "lockedMessage": "能力解放はレベル90到達および固有武器装備後に利用可能です。"
+    "lockedMessage": "能力解放はレベル90到達および固有武器装備後に利用可能です。",
+    "reqCurrent": "現在: 生徒Lv.90と固有武器の装備が必要",
+    "reqTarget": "目標: 生徒Lv.90と固有武器の装備が必要"
   },
   "basicStatsTab": {
     "level": "レベル:",
-    "rank": "★ ランク:",
+    "rank": "ランク:",
     "affectionRank": "絆ランク:",
     "growthOptionsTitle": "育成オプション",
     "useEligmaForRankUp": "★ ランクアップにエリグマを使用",
     "currentElephPrice": "現在の神名文字の価格:",
     "purchasableEleph": "購入可能な神名文字:",
-    "ownedEleph": "所持神名文字"
+    "ownedEleph": "所持神名文字",
+    "affectionWarning": "現在のレアリティでは絆ランク{{limit}}が上限です。"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -699,5 +710,234 @@
     "deselect_all": "全て解除",
     "calc_tip": "行を追加して計算してください。ステージ3-7の報酬効率が最大です。",
     "add_row": "行を追加"
+  },
+  "gacha": {
+    "title": "青輝石・ガチャ計画",
+    "intro": {
+      "title": "プランナーガイド",
+      "summary": "未来視スケジュールに基づいて予想される青輝石の需給を計算し、希望する生徒のピックアップ戦略を立ててガチャの成功確率をシミュレーションします。",
+      "feat1_title": "需給計算",
+      "feat1_desc": "現在の資産、月額パッケージ、総力戦などのスケジュールを反映して、使用可能な青輝石を予測します。",
+      "feat2_title": "ピックアップ戦略",
+      "feat2_desc": "目標生徒を設定し、天井調整や条件付きガチャなど詳細な戦略を策定します。",
+      "feat3_title": "結果予測",
+      "feat3_desc": "設定した戦略をもとにシミュレーションを行い、成功確率と破産リスクを分析します。"
+    },
+    "server": {
+      "kr_global": "KR / グローバル",
+      "jp": "JP サーバー"
+    },
+    "tabs": {
+      "income": "需給 & 未来視",
+      "strategy": "ガチャ計画",
+      "result": "シミュレーション実行"
+    },
+    "errors": {
+      "load_students": "生徒データの読み込みに失敗しました。",
+      "load_data": "データの読み込みに失敗"
+    },
+    "income": {
+      "timeline": {
+        "title": "日程 & AP設定",
+        "total_count": "全 {{count}}件",
+        "headers": {
+          "start": "開始",
+          "type": "種類",
+          "name": "名前",
+          "ap": "AP"
+        },
+        "empty": "予定がありません。",
+        "types": {
+          "evt": "EVT",
+          "raid": "RAID",
+          "elim": "ELIM",
+          "towr": "TOWR",
+          "camp": "CAMP",
+          "etc": "ETC"
+        }
+      },
+      "stats": {
+        "title": "シミュレーション詳細",
+        "survival_rate": "生存確率",
+        "total_income": "総収入",
+        "total_ap_expense": "AP総支出",
+        "gacha_expense_avg": "ガチャ支出 (平均)",
+        "final_balance_avg": "最終残高 (平均)",
+        "category": {
+          "regular": "定期需給",
+          "content": "コンテンツ報酬",
+          "misc_expense": "その他 & 支出"
+        },
+        "items": {
+          "mission": "デイリー/ウィークリー",
+          "arona": "アロナ・ログイン",
+          "pvp": "戦術対抗戦 (PvP)",
+          "monthly": "マンスリー",
+          "raid_elim": "総力戦 / 大決戦",
+          "multifloor": "制約解除決戦",
+          "jfd": "合同火力演習",
+          "event_etc": "イベント/メンテ他",
+          "manual": "追加入力",
+          "ap_refresh": "AP回復",
+          "gacha": "ガチャ"
+        }
+      },
+      "settings": {
+        "title": "設定",
+        "include_gacha": "ガチャ反映",
+        "current_resources": "現在の保有量",
+        "monthly_income": "月間需給",
+        "monthly_card": "マンスリー",
+        "half_monthly_card": "マンスリー(ハーフ)",
+        "extra_placeholder": "追加",
+        "pvp_ranking": "戦術対抗戦 / トロフィー",
+        "pvp_rank_format": "{{rank}}位以内 ({{amount}}/日)",
+        "raid_rank": {
+          "platinum": "プラチナ",
+          "gold": "ゴールド",
+          "silver": "シルバー",
+          "bronze": "ブロンズ"
+        },
+        "ap_refresh_daily": "AP回復 (毎日)",
+        "event_period": "イベント期間",
+        "normal_period": "通常期間",
+        "refresh_count": "{{count}}割",
+        "custom_income_title": "特定日の青輝石追加・支出履歴",
+        "custom_income_desc": "内容（例：お詫び石、限定パッケージ）",
+        "custom_income_amount": "青輝石の量"
+      },
+      "chart": {
+        "survival_rate": "生存確率",
+        "lucky": "上位 10% (豪運)",
+        "unlucky": "下位 10% (不運)",
+        "worst": "下位 100% (天井)",
+        "avg_balance": "平均残高",
+        "avg": "平均",
+        "upper_10": "上位 10%",
+        "lower_10": "下位 10%",
+        "hide_details": "詳細を隠す",
+        "show_details": "日別の収入・支出の詳細を見る",
+        "table_date": "日付",
+        "table_reason": "増減内容",
+        "table_delta": "変動量",
+        "table_balance": "残高 (平均)",
+        "start_balance": "初期資産",
+        "daily_calc": "日次・イベント精算"
+      },
+      "log": {
+        "fixed_daily_sunday": "日次/週次/マンスリー等の固定収入",
+        "fixed_daily": "日次/マンスリー等の固定収入",
+        "monthly_extra": "月間追加収入（月初）",
+        "raid": "[総力戦] {{name}} 報酬",
+        "elimination": "[大決戦] {{name}} 報酬",
+        "jfd": "[合同火力演習] {{name}} 報酬",
+        "event": "[イベント] {{name}}",
+        "multifloor": "[制約解除] {{name}} 報酬",
+        "mainstory": "[メインストーリー] {{name}} 報酬",
+        "ap_refresh": "AP回復"
+      }
+    },
+    "result": {
+      "alert_error": "シミュレーションエラーが発生しました。",
+      "panel": {
+        "title": "シミュレーション実行",
+        "desc": "設定された<1>{{amount}}個の青輝石</1>で計画されたガチャをシミュレーションします。",
+        "iteration_count": "試行回数",
+        "btn_running": "計算中...",
+        "btn_start": "シミュレーション開始"
+      },
+      "empty_state": "上のボタンを押してシミュレーションを開始してください。"
+    },
+    "result_view": {
+      "unit_toggle": {
+        "pyroxenes": "消費青輝石",
+        "pulls": "総連チャ数"
+      },
+      "disclaimer": "* 無料ガチャは優先的に消費され、青輝石の消費量には含まれません。",
+      "summary": {
+        "success_rate": {
+          "title": "目標達成率",
+          "desc": "Must生徒全員獲得確率"
+        },
+        "avg_cost": {
+          "title_pyroxenes": "平均消費青輝石",
+          "title_pulls": "平均総連チャ数",
+          "approx_pulls": "(約 {{amount}} 連分)",
+          "includes_free": "(無料ガチャ含む)"
+        },
+        "safety": {
+          "title": "リソース安全性",
+          "safe": "安全",
+          "unsafe": "不足危険",
+          "bankruptcy_prob": "破産確率: {{rate}}%"
+        }
+      },
+      "chart": {
+        "title_pyroxenes": "予想青輝石消費分布",
+        "title_pulls": "予想総連チャ数分布",
+        "mode_pdf": "頻度(PDF)",
+        "mode_cdf": "累積(CDF)",
+        "unit_count": "{{count}}回",
+        "range_count": "{{start}} ~ {{end}}回",
+        "tooltip_prob": "確率: {{rate}}%",
+        "cdf_label_pyroxenes": "{{amount}} 青輝石以内",
+        "cdf_label_pulls": "{{amount}}回以内"
+      },
+      "student_stats": {
+        "title": "生徒別獲得・神名文字予測",
+        "tag_limited": "限定",
+        "tag_fes": "フェス",
+        "rate_obtain": "獲得率",
+        "avg_eleph": "平均神名文字",
+        "collapse": "閉じる ▲",
+        "expand": "分布を見る ▼",
+        "chart_x_eleph": "神名文字"
+      }
+    },
+    "banner_planner": {
+      "header": {
+        "title": "ピックアップ日程・戦略",
+        "toggle_show": "過去のガチャ{{count}}件を表示",
+        "toggle_hide": "過去のガチャを隠す",
+        "auto_scroll_hint": "* 自動スクロール対応"
+      },
+      "badge": {
+        "now": "開催中",
+        "fes": "★ FES 6%",
+        "free_pulls": "無料{{count}}連",
+        "limited": "限定"
+      },
+      "toggle": {
+        "include": "計画に含む",
+        "skip": "スルー"
+      },
+      "settings": {
+        "max_budget": "予算上限",
+        "spark_option": "{{spark}}天井 ({{pulls}}連)",
+        "max_budget_suffix": "まで許容",
+        "min_pulls": "最低保証",
+        "min_pulls_suffix": "連回す"
+      },
+      "mode": {
+        "skip": "スルー",
+        "must": "必須",
+        "opportunistic": "条件付"
+      },
+      "condition": {
+        "label": "条件",
+        "remains_le": "天井まで残り ≤",
+        "try_pulls": "連なら続行"
+      },
+      "intentional_spark": {
+        "label": "天井狙い",
+        "option_prefix": "Op",
+        "after_obtain": "確保後",
+        "proceed_if_remains": "連余れば続行"
+      },
+      "empty_state": {
+        "no_banners": "表示するガチャがありません。",
+        "hint_show_old": "上部の「過去のガチャを表示」を押してください。"
+      }
+    }
   }
 }

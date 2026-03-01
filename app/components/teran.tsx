@@ -37,8 +37,8 @@ const outdoorIcon = (
 export type Terrain = 'Indoor' | 'Outdoor' | 'Street';
 
 export const TerrainIcon = ({ terrain }: { terrain: Terrain }) => {
-  if (['Indoor', '실내', '屋内'].includes(terrain)) return indoorIcon;
-  if (['Outdoor', '야외', '屋外'].includes(terrain)) return outdoorIcon;
+  if (['Indoor', '실내', '屋内', '室內'].includes(terrain)) return indoorIcon;
+  if (['Outdoor', '야외', '屋外', '室外'].includes(terrain)) return outdoorIcon;
   return streetIcon;
 };
 

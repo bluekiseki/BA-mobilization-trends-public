@@ -7,6 +7,8 @@ import type { Route } from './+types/favor';
 import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
+import { useHelpKey } from '~/utils/usePageHelp';
 
 export async function loader({ context, params, request }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
@@ -21,6 +23,13 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/f.webp');
+}
+
+export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production')
+    return {
+      'Cache-Control': CACHE_CONTROL_CONFIG,
+    };
 }
 
 export const handle: AppHandle = {
@@ -45,6 +54,7 @@ export const handle: AppHandle = {
 };
 
 export default function emblemCounter() {
+  useHelpKey('chart.favor');
   return (
     <>
       <div className="mt-0">

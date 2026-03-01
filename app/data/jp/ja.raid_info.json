@@ -1261,5 +1261,14 @@
     "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
     "MaxLv": 90,
     "Cnt": { "All": 22017, "Insane": 22017 }
+  },
+  {
+    "Id": "R86",
+    "Boss": "\u30d3\u30ca\u30fc",
+    "Location": "\u5c4b\u5916",
+    "Date": "2026-02-18",
+    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 48593, "Lunatic": 24365, "Torment": 24228 }
   }
 ]

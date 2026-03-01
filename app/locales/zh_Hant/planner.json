@@ -78,7 +78,8 @@
     "cardShopSimulator": "卡片開啟模擬器",
     "description": {
       "studentGrowthPlanner": "在一個地方管理所有學生的成長計劃，並計算所需的材料。",
-      "equipmentFarmingPlanner": "根據您的學生成長需求優化裝備刷取。"
+      "equipmentFarmingPlanner": "根據您的學生成長需求優化裝備刷取。",
+      "favorCalculator": "計算達到目標羈絆等級所需的禮物。"
     },
     "farmingPlan": "刷取計劃",
     "jukebox": "BGM 播放器",
@@ -87,11 +88,12 @@
     "planner": "物品規劃器",
     "plannerescription": "學生成長所需物品的消耗與活動中獲得物品的模擬",
     "planner-go": "前往規劃",
-    "equipmentFarmingPlanner": "裝備刷取規劃器"
+    "equipmentFarmingPlanner": "裝備刷取規劃器",
+    "favorCalculator": "羈絆等級計算機"
   },
   "ui": {
     "disclaimer": "某些資料可能被省略或不正確。請僅供參考。",
-    "navigateToEvent": "切換到其他活動 ↗",
+    "navigateToEvent": "切換到其他活動",
     "remainingCurrency": "剩餘貨幣",
     "initialAmount": "輸入初始數量",
     "finalResultPreview": "最終結果預覽",
@@ -424,7 +426,9 @@
   },
   "equipmentTab": {
     "selectStudentPrompt": "請先選擇學生。",
-    "levelLockWarning": "Target level is too low to equip this tier."
+    "levelLockWarning": "Target level is too low to equip this tier.",
+    "reqCurrent": "當前: 需要Lv.{{level}}",
+    "reqTarget": "目標: 需要Lv.{{level}}"
   },
   "affectionTab": {
     "result": {
@@ -450,17 +454,20 @@
   "potentialTab": {
     "title": "能力解放",
     "unlockCondition": "(目標 Lv.90 且裝備專屬武器時啟用)",
-    "lockedMessage": "Potential unlock requires Level 90 and a Unique Weapon."
+    "lockedMessage": "Potential unlock requires Level 90 and a Unique Weapon.",
+    "reqCurrent": "當前: 需要學生Lv.90且裝備固有武器",
+    "reqTarget": "目標: 需要學生Lv.90且裝備固有武器"
   },
   "basicStatsTab": {
     "level": "等級",
-    "rank": "★ 等級",
+    "rank": "等級",
     "affectionRank": "好感度等級",
     "growthOptionsTitle": "成長選項",
     "useEligmaForRankUp": "使用 神明文字碎片 進行 ★ 等級提升",
     "currentElephPrice": "當前 神明文字 價格",
     "purchasableEleph": "可購買的 神明文字",
-    "ownedEleph": "擁有的 神明文字"
+    "ownedEleph": "擁有的 神明文字",
+    "affectionWarning": "目前的星級將羈絆等級上限限制為 {{limit}}。"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -686,5 +693,232 @@
     "deselect_all": "全不選",
     "calc_tip": "新增列(Row)以模擬運行。第3-7關提供最高獎勵。",
     "add_row": "新增列(Row)"
+  },
+  "gacha": {
+    "title": "青輝石與招募規劃",
+    "intro": {
+      "title": "規劃工具指南",
+      "summary": "基於未來視日程計算預期青輝石收入，制定目標學生的招募策略，並模擬抽卡成功率。",
+      "feat1_title": "收入計算",
+      "feat1_desc": "根據現有資源、月卡和未來總力戰日程，預測可用的青輝石數量。",
+      "feat2_title": "招募策略",
+      "feat2_desc": "設定目標學生，並制定故意保底或條件招募等詳細策略。",
+      "feat3_title": "結果預測",
+      "feat3_desc": "根據設定的策略進模擬，分析成功率與破產風險。"
+    },
+    "server": {
+      "kr_global": "KR / Global",
+      "jp": "JP 伺服器"
+    },
+    "tabs": {
+      "income": "收支 & 未來視",
+      "strategy": "招募規劃",
+      "result": "模擬運行"
+    },
+    "errors": {
+      "load_students": "讀取學生資料失敗。",
+      "load_data": "資料讀取失敗"
+    },
+    "income": {
+      "timeline": {
+        "title": "日程 & AP設定",
+        "total_count": "共 {{count}} 項",
+        "headers": {
+          "start": "START",
+          "type": "TYPE",
+          "name": "NAME",
+          "ap": "AP"
+        },
+        "empty": "尚無預定行程。",
+        "types": {
+          "evt": "EVT",
+          "raid": "RAID",
+          "elim": "ELIM",
+          "towr": "TOWR",
+          "camp": "CAMP",
+          "etc": "ETC"
+        }
+      },
+      "stats": {
+        "title": "模擬詳細報告",
+        "survival_rate": "生存機率",
+        "total_income": "總收入",
+        "total_ap_expense": "總 AP 支出",
+        "gacha_expense_avg": "招募支出 (平均)",
+        "final_balance_avg": "最終餘額 (平均)",
+        "category": {
+          "regular": "定期收入",
+          "content": "內容獎勵",
+          "misc_expense": "其他 & 支出"
+        },
+        "items": {
+          "mission": "每日/每週任務",
+          "arona": "阿羅娜簽到",
+          "pvp": "戰術對抗戰 (PvP)",
+          "monthly": "月卡",
+          "raid_elim": "總力戰 / 大決戰",
+          "multifloor": "制約解除決戰",
+          "jfd": "綜合戰術考試",
+          "event_etc": "活動/劇情/維護",
+          "manual": "額外輸入",
+          "ap_refresh": "回復 AP",
+          "gacha": "招募"
+        }
+      },
+      "settings": {
+        "title": "模擬設定",
+        "include_gacha": "包含招募",
+        "current_resources": "現有資源",
+        "monthly_income": "月間收入",
+        "monthly_card": "月卡",
+        "half_monthly_card": "半月卡",
+        "extra_placeholder": "額外",
+        "pvp_ranking": "PvP & 排名",
+        "pvp_rank_format": "第 {{rank}} 名以內 ({{amount}}/日)",
+        "raid_rank": {
+          "platinum": "白金",
+          "gold": "黃金",
+          "silver": "白銀",
+          "bronze": "青銅"
+        },
+        "ap_refresh_daily": "回復 AP (每日)",
+        "event_period": "活動期間",
+        "normal_period": "平時 (無活動)",
+        "refresh_count": "{{count}}管",
+        "custom_income_title": "特定日期青輝石追加/支出紀錄",
+        "custom_income_desc": "內容（例：補償、限定禮包）",
+        "custom_income_amount": "數量"
+      },
+      "chart": {
+        "survival_rate": "生存機率",
+        "lucky": "前 10% (歐)",
+        "unlucky": "後 10% (非)",
+        "worst": "後 100% (保底)",
+        "avg_balance": "平均餘額",
+        "avg": "平均",
+        "upper_10": "前 10%",
+        "lower_10": "後 10%",
+        "hide_details": "隱藏詳細紀錄",
+        "show_details": "查看每日收支詳細紀錄",
+        "table_date": "日期",
+        "table_reason": "收支明細",
+        "table_delta": "變動量",
+        "table_balance": "餘額 (平均)",
+        "start_balance": "初始資產",
+        "daily_calc": "每日/活動結算"
+      },
+      "fixed_daily_sunday": "每日/每週/月卡等固定收入",
+      "fixed_daily": "每日/月卡等固定收入",
+      "monthly_extra": "每月額外收入 (月初)",
+      "raid": "[總力戰] {{name}} 獎勵",
+      "elimination": "[大決戰] {{name}} 獎勵",
+      "jfd": "[綜合戰術考試] {{name}} 獎勵",
+      "event": "[活動] {{name}}",
+      "multifloor": "[制約解除] {{name}} 獎勵",
+      "mainstory": "[主線劇情] {{name}} 獎勵",
+      "ap_refresh": "購買 AP"
+    },
+    "result": {
+      "alert_error": "模擬發生錯誤",
+      "panel": {
+        "title": "執行模擬",
+        "desc": "使用設定的 <1>{{amount}} 青輝石</1> 模擬計畫中的招募。",
+        "iteration_count": "重複次數",
+        "btn_running": "計算中...",
+        "btn_start": "開始模擬"
+      },
+      "empty_state": "請點擊上方按鈕開始模擬。"
+    },
+    "result_view": {
+      "unit_toggle": {
+        "pyroxenes": "消耗青輝石",
+        "pulls": "總招募次數"
+      },
+      "disclaimer": "* 免費招募將優先消耗，不計入青輝石消耗量。",
+      "summary": {
+        "success_rate": {
+          "title": "目標達成率",
+          "desc": "獲得所有 Must 學生機率"
+        },
+        "avg_cost": {
+          "title_pyroxenes": "平均消耗青輝石",
+          "title_pulls": "平均總招募次數",
+          "approx_pulls": "(約 {{amount}} 次招募)",
+          "includes_free": "(含免費招募)"
+        },
+        "safety": {
+          "title": "資源安全性",
+          "safe": "安全",
+          "unsafe": "不足風險",
+          "bankruptcy_prob": "破產機率: {{rate}}%"
+        }
+      },
+      "chart": {
+        "title_pyroxenes": "預計青輝石消耗分佈",
+        "title_pulls": "預計總招募次數分佈",
+        "mode_pdf": "頻率(PDF)",
+        "mode_cdf": "累積(CDF)",
+        "unit_count": "{{count}}次",
+        "range_count": "{{start}} ~ {{end}}次",
+        "tooltip_prob": "機率: {{rate}}%",
+        "cdf_label_pyroxenes": "{{amount}} 青輝石以內",
+        "cdf_label_pulls": "{{amount}}次以內"
+      },
+      "student_stats": {
+        "title": "學生獲得與神名文字預測",
+        "tag_limited": "限定",
+        "tag_fes": "慶典",
+        "rate_obtain": "獲得率",
+        "avg_eleph": "平均神名文字",
+        "collapse": "收起 ▲",
+        "expand": "查看分佈 ▼",
+        "chart_x_eleph": "神名文字"
+      }
+    },
+    "banner_planner": {
+      "header": {
+        "title": "招募日程與策略",
+        "toggle_show": "顯示 {{count}} 個過去招募",
+        "toggle_hide": "隱藏過去招募",
+        "auto_scroll_hint": "* 支援自動捲動"
+      },
+      "badge": {
+        "now": "進行中",
+        "fes": "★ 慶典 6%",
+        "free_pulls": "免費 {{count}} 抽",
+        "limited": "限定"
+      },
+      "toggle": {
+        "include": "納入計畫",
+        "skip": "跳過"
+      },
+      "settings": {
+        "max_budget": "預算上限",
+        "spark_option": "{{spark}} 井 ({{pulls}} 抽)",
+        "max_budget_suffix": "允許",
+        "min_pulls": "最低保底",
+        "min_pulls_suffix": "抽"
+      },
+      "mode": {
+        "skip": "跳過",
+        "must": "必抽",
+        "opportunistic": "看情況"
+      },
+      "condition": {
+        "label": "條件",
+        "remains_le": "距離保底 ≤",
+        "try_pulls": "抽則嘗試"
+      },
+      "intentional_spark": {
+        "label": "補井策略",
+        "option_prefix": "選項",
+        "after_obtain": "獲得後剩餘",
+        "proceed_if_remains": "抽以上則補井"
+      },
+      "empty_state": {
+        "no_banners": "沒有可顯示的招募。",
+        "hint_show_old": "請點擊上方的「顯示過去招募」。"
+      }
+    }
   }
 }

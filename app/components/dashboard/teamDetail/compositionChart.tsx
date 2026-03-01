@@ -321,11 +321,11 @@ export const CompositionChart: React.FC<{
 
         return (
           <div
+            data-component-name="CompositionChart"
             key={comp.key}
             className={`bg-white dark:bg-neutral-800 p-1 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-teal-500 transition-all ${isExpanded ? 'ring-2 ring-teal-500' : 'hover:scale-101'}`}
           >
             <div
-              // [Change 1] Changed md:items-start to md:items-center for vertical center alignment
               className="group flex flex-col items-center md:flex-row md:items-center gap-4 cursor-pointer p-2 rounded-lg transition-colors "
               onClick={() => setSelectedCompKey((prev) => (prev === comp.key ? null : comp.key))}
             >
@@ -434,7 +434,7 @@ const VariantStats: React.FC<{
 }> = ({ comp, portraitData }) => {
   const { t } = useTranslation('dashboard');
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+    <div data-component-name="VariantStats" className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
       <div>
         <h4 className="font-bold mb-2 text-neutral-600 dark:text-neutral-400">{t('composition.placement_variants')}</h4>
         <ul className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar p-1">
@@ -444,7 +444,7 @@ const VariantStats: React.FC<{
                 {v.teams.map((team, tIdx) => (
                   <div key={tIdx} className="flex -space-x-1 scale-90 origin-left">
                     {[...team.m, ...team.s].map((c, ci) => (
-                      <div key={ci} className="w-8 h-8 rounded-full bg-gray-200 border border-white dark:border-neutral-600 overflow-hidden">
+                      <div key={ci} className="w-8 h-8 rounded-full border-white dark:border-neutral-600 overflow-hidden">
                         {c && <img src={`data:image/webp;base64,${portraitData[c.id]}`} alt="" className="w-full h-full object-cover" />}
                       </div>
                     ))}

@@ -11,6 +11,8 @@ import { GAMESERVER_LIST, type GameServer, type GameServerParams } from '~/types
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName } from '~/utils/i18n/config';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
+import { useHelpKey } from '~/utils/usePageHelp';
 
 export const links: Route.LinksFunction = () => {
   return [
@@ -71,6 +73,13 @@ export const handle: AppHandle = {
   },
 };
 
+export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production')
+    return {
+      'Cache-Control': CACHE_CONTROL_CONFIG,
+    };
+}
+
 export default function Home() {
   const { t } = useTranslation('charts', { keyPrefix: 'heatmap' });
 
@@ -78,6 +87,8 @@ export default function Home() {
   if (!server) return <></>;
 
   // const {t} = useTranslation('charts.heatmap')
+
+  useHelpKey('chart.heatmap');
 
   return (
     <div className="px-4 mx-auto py-6">

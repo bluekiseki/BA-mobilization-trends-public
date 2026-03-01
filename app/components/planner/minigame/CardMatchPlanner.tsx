@@ -183,17 +183,6 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     setCardMatchDisplayResult: setDisplayResult,
   } = useEventSettings(eventId);
 
-  // Config State
-  //  Set default Target Clears to 10
-  // const [config, setConfig] = useState({
-  //   startRound: 1,
-  //   targetClears: 10,
-  //   simIterations: 2000
-  // });
-
-  // // Result State
-  // const [displayResult, setDisplayResult] = useState<CardMatchResult | null>(null);
-
   let { cardMatchSimConfig: config, setCardMatchSimConfig: setConfig } = usePlanForEvent(eventId);
   if (!config) config = defaultCardMatchSimConfig;
 
@@ -400,10 +389,6 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
       return;
     }
 
-    // console.log('deficits',deficits)
-    // console.log('rewardItems',rewardItems)
-    // console.log('remainingCurrency',remainingCurrency)
-
     let simulatedRounds = 0;
     const accumulatedRewards: Record<number, number> = {};
     const maxLimit = 500;
@@ -413,8 +398,6 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
         const id = Number(idStr);
         return (accumulatedRewards[id] || 0) < needed;
       });
-
-      // console.log('unsatisfied', simulatedRounds, unsatisfied, accumulatedRewards)
 
       if (!unsatisfied) break;
 

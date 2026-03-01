@@ -25,20 +25,18 @@ import changelogJson from '~/data/changelog.json';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/home';
 import { localeLink } from '~/utils/localeLink';
-import { CalendarWidget, loadCalendarWidgetData } from '~/components/CalendarWidget';
+import { CalendarWidget } from '~/components/CalendarWidget';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 
 export async function loader(args: Route.LoaderArgs) {
   const { request: _request, context, params: _params } = args;
   let i18n = getInstance(context);
-  const [calendarDataJp, calendarDataKr] = await Promise.all([loadCalendarWidgetData(context, 'jp'), loadCalendarWidgetData(context, 'kr')]);
 
   return data({
     title: i18n.t('common:site-title'),
     description: i18n.t('common:description'),
-    calendarDataJp,
-    calendarDataKr,
     trans: {
       dashboard: {
         title: i18n.t('common:dashboard-btn'),
@@ -84,6 +82,7 @@ export function links() {
 
 export const handle: AppHandle = {
   preload: (data) => {
+    const calendarServer = data?.locale === 'ja' ? 'jp' : 'kr';
     return [
       {
         rel: 'preload',
@@ -97,33 +96,32 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
+      {
+        rel: 'preload',
+        href: `/api/calendar?type=widget&server=${calendarServer}&lang=${data?.locale}`,
+        as: 'fetch',
+        crossOrigin: 'anonymous',
+      },
     ];
   },
 };
+
+export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production')
+    return {
+      'Cache-Control': CACHE_CONTROL_CONFIG,
+    };
+}
 
 export default function Home() {
   const locale = useTranslation().i18n.language as Locale;
   const { t } = useTranslation('common');
   const { t: t_c } = useTranslation('common');
-  // const { t: t_d } = useTranslation("dashboard");
-  // const { t: t_p } = useTranslation("planner");
-  // const { t: t_e } = useTranslation("emblemCounter");
-  // const { t: t_chart } = useTranslation("charts");
   const { isDark } = useIsDarkState();
-  const { calendarDataJp, calendarDataKr, trans } = useLoaderData<typeof loader>();
+  const { trans } = useLoaderData<typeof loader>();
 
   const [selectedServer, setSelectedServer] = useState<GameServer>('jp');
-  // const getServerButtonStyle = (server: GameServer) => {
-  //   const baseStyle = "w-full sm:w-auto px-6 py-3 text-lg font-semibold rounded-lg shadow-md transition-colors duration-300";
-  //   if (selectedServer === server) {
-  //     // Selected
-  //     return `${baseStyle} bg-blue-600 text-white cursor-default`;
-  //   }
-  //   // Unselected
-  //   return `${baseStyle} bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600`;
-  // };
-
-  const calendarData = selectedServer === 'jp' ? calendarDataJp : calendarDataKr;
+  const [calendarServer, setCalendarServer] = useState<GameServer>(locale === 'ja' ? 'jp' : 'kr');
 
   return (
     <>
@@ -132,9 +130,10 @@ export default function Home() {
         <div className="relative m-auto max-w-4xl text-center py-20 px-6 transition-colors duration-300">
           <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-500 to-cyan-400 mb-4 tracking-tight font-pretendard">{t('title')}</h1>
           <p className={'text-lg md:text-xl max-w-2xl mx-auto text-neutral-600 dark:text-neutral-300 mb-10 ' + (locale == 'ko' ? 'break-keep' : '')}>{t('description')}</p>
+
           <div className="flex justify-center items-center gap-3 mb-4">
             <label htmlFor="server-select" className="text-lg font-semibold text-neutral-700 dark:text-neutral-200">
-              Select a Server:
+              Target Server:
             </label>
             <select
               id="server-select"
@@ -143,36 +142,58 @@ export default function Home() {
               className="px-4 py-2 text-base text-neutral-800 dark:text-white bg-white/80 dark:bg-neutral-700/80 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 backdrop-blur-sm transition"
             >
               <option value="jp">JP</option>
-              <option value="kr">KR</option>
+              <option value="kr">GL/KR</option>
             </select>
           </div>
         </div>
       </div>
 
-      <div className="m-auto max-w-5xl px-6 pb-20 -mt-1">
-        <div className="m-auto p-0 pt-4 pb-8">
-          <CalendarWidget loaderData={calendarData} server={selectedServer} />
+      <div className="m-auto max-w-5xl px-4 md:px-6 pb-20 -mt-1">
+        <div className="m-auto p-0 pt-4 pb-8 flex flex-col gap-3">
+          <div className="flex justify-end">
+            <div className="inline-flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg border border-neutral-200 dark:border-neutral-700">
+              <button
+                onClick={() => setCalendarServer('jp')}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${
+                  calendarServer === 'jp'
+                    ? 'bg-white dark:bg-neutral-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+                }`}
+              >
+                JP Calendar
+              </button>
+              <button
+                onClick={() => setCalendarServer('kr')}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${
+                  calendarServer === 'kr'
+                    ? 'bg-white dark:bg-neutral-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+                }`}
+              >
+                GL/KR Calendar
+              </button>
+            </div>
+          </div>
+
+          <CalendarWidget key={`${locale}-${calendarServer}`} server={calendarServer} />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-8">
           <Link
             to={localeLink(locale, `/dashboard/${selectedServer}`)}
-            // to={`/dashboard/${selectedServer}`}
-            className="group flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
+            className="group flex flex-row md:flex-col bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm md:shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
           >
-            <div className="aspect-square w-full p-4 max-h-60">
-              <img src={isDark == 'dark' ? dashboarDarkdImage : dashboardImage} alt="Dashboard" className="w-full h-full object-cover  object-top" />
+            <div className="w-28 sm:w-36 md:w-full shrink-0 p-3 md:p-4 flex items-center justify-center aspect-square md:max-h-60">
+              <img src={isDark == 'dark' ? dashboarDarkdImage : dashboardImage} alt="Dashboard" className="w-full h-full object-cover object-top rounded-lg md:rounded-none" />
             </div>
-            <div className="p-6 flex flex-col grow" style={{ wordBreak: 'keep-all' }}>
-              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="common:dashboard-btn" components={[<wbr />]} /> */}
+            <div className="py-3 pr-4 md:p-6 flex flex-col justify-center grow" style={{ wordBreak: 'keep-all' }}>
+              <h3 className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-white mb-1 md:mb-2">
                 <Trans components={[<wbr />]}>{trans.dashboard.title}</Trans>
               </h3>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
-                {/* <Trans i18nKey="dashboard:description1" components={[<wbr />]} /> */}
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 md:mb-4 grow line-clamp-2 md:line-clamp-none">
                 <Trans components={[<wbr />]}>{trans.dashboard.description}</Trans>
               </p>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="common:dashboard-btn-go" components={[<wbr />]} /> */}
+              <span className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-auto md:mt-2">
                 <Trans components={[<wbr />]}>{trans.dashboard.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>
@@ -180,49 +201,39 @@ export default function Home() {
 
           <Link
             to={localeLink(locale, `/planner/event`)}
-            // to={`/planner/event/`}
-            className="group flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
+            className="group flex flex-row md:flex-col bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm md:shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
           >
-            <div className="aspect-square w-full p-4 max-h-60">
-              <img src={isDark == 'dark' ? plannerDarkImage : plannerImage} alt="jukebox" className="w-full h-full object-cover" />
+            <div className="w-28 sm:w-36 md:w-full shrink-0 p-3 md:p-4 flex items-center justify-center aspect-square md:max-h-60">
+              <img src={isDark == 'dark' ? plannerDarkImage : plannerImage} alt="planner" className="w-full h-full object-cover rounded-lg md:rounded-none" />
             </div>
-            <div className="p-6 flex flex-col grow">
-              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="planner:page.planner" components={[<wbr />]} /> */}
+            <div className="py-3 pr-4 md:p-6 flex flex-col justify-center grow">
+              <h3 className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-white mb-1 md:mb-2">
                 <Trans components={[<wbr />]}>{trans.planner.title}</Trans>
-                {/* <b>(Experimental)</b> */}
               </h3>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
-                {/* <Trans i18nKey="planner:page.plannerescription" components={[<wbr />]} /> */}
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 md:mb-4 grow line-clamp-2 md:line-clamp-none">
                 <Trans components={[<wbr />]}>{trans.planner.description}</Trans>
               </p>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="planner:page.planner-go" components={[<wbr />]} /> */}
-                <Trans components={[<wbr />]}>{trans.planner.go}</Trans>
-                &rarr;
+              <span className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-auto md:mt-2">
+                <Trans components={[<wbr />]}>{trans.planner.go}</Trans> &rarr;
               </span>
             </div>
           </Link>
 
           <Link
             to={localeLink(locale, `/utils/jukebox`)}
-            // to={`/utils/jukebox`}
-            className="group flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
+            className="group flex flex-row md:flex-col bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm md:shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
           >
-            <div className="aspect-square w-full p-4 max-h-60">
-              <img src={isDark == 'dark' ? jukeboxDarkImage : jukeboxImage} alt="jukebox" className="w-full h-full object-cover" />
+            <div className="w-28 sm:w-36 md:w-full shrink-0 p-3 md:p-4 flex items-center justify-center aspect-square md:max-h-60">
+              <img src={isDark == 'dark' ? jukeboxDarkImage : jukeboxImage} alt="jukebox" className="w-full h-full object-cover rounded-lg md:rounded-none" />
             </div>
-            <div className="p-6 flex flex-col grow">
-              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="planner:page.jukebox" components={[<wbr />]} /> */}
+            <div className="py-3 pr-4 md:p-6 flex flex-col justify-center grow">
+              <h3 className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-white mb-1 md:mb-2">
                 <Trans components={[<wbr />]}>{trans.jukebox.title}</Trans>
               </h3>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
-                {/* <Trans i18nKey="planner:page.jukeboxdescription" components={[<wbr />]} /> */}
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 md:mb-4 grow line-clamp-2 md:line-clamp-none">
                 <Trans components={[<wbr />]}>{trans.jukebox.description}</Trans>
               </p>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="planner:page.jukebox-go" components={[<wbr />]} /> */}
+              <span className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-auto md:mt-2">
                 <Trans components={[<wbr />]}>{trans.jukebox.go}</Trans> &rarr;
               </span>
             </div>
@@ -230,23 +241,19 @@ export default function Home() {
 
           <Link
             to={localeLink(locale, `/charts/${selectedServer}/ranking`)}
-            // to={`/charts/${selectedServer}/ranking`}
-            className="group flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
+            className="group flex flex-row md:flex-col bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm md:shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
           >
-            <div className="aspect-square w-full p-4 max-h-60">
-              <img src={isDark == 'dark' ? rankingDarkImage : rankingImage} alt="Ranking" className="w-full h-full object-cover" />
+            <div className="w-28 sm:w-36 md:w-full shrink-0 p-3 md:p-4 flex items-center justify-center aspect-square md:max-h-60">
+              <img src={isDark == 'dark' ? rankingDarkImage : rankingImage} alt="Ranking" className="w-full h-full object-cover rounded-lg md:rounded-none" />
             </div>
-            <div className="p-6 flex flex-col grow">
-              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="common:btn2" components={[<wbr />]} /> */}
+            <div className="py-3 pr-4 md:p-6 flex flex-col justify-center grow">
+              <h3 className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-white mb-1 md:mb-2">
                 <Trans components={[<wbr />]}>{trans.ranking.title}</Trans>
               </h3>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
-                {/* <Trans i18nKey="charts:ranking.description1" components={[<wbr />]} /> */}
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 md:mb-4 grow line-clamp-2 md:line-clamp-none">
                 <Trans components={[<wbr />]}>{trans.ranking.description}</Trans>
               </p>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="common:btn2-go" components={[<wbr />]} />  */}
+              <span className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-auto md:mt-2">
                 <Trans components={[<wbr />]}>{trans.ranking.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>
@@ -254,23 +261,19 @@ export default function Home() {
 
           <Link
             to={localeLink(locale, `/charts/${selectedServer}/heatmap`)}
-            // to={`/charts/${selectedServer}/heatmap`}
-            className="group flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
+            className="group flex flex-row md:flex-col bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm md:shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
           >
-            <div className="aspect-square w-full p-4 max-h-60">
-              <img src={isDark == 'dark' ? heatmapDarkImage : heatmapImage} alt="Heatmap" className="w-full h-full object-cover" />
+            <div className="w-28 sm:w-36 md:w-full shrink-0 p-3 md:p-4 flex items-center justify-center aspect-square md:max-h-60">
+              <img src={isDark == 'dark' ? heatmapDarkImage : heatmapImage} alt="Heatmap" className="w-full h-full object-cover rounded-lg md:rounded-none" />
             </div>
-            <div className="p-6 flex flex-col grow">
-              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="common:btn1" components={[<wbr />]} /> */}
+            <div className="py-3 pr-4 md:p-6 flex flex-col justify-center grow">
+              <h3 className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-white mb-1 md:mb-2">
                 <Trans components={[<wbr />]}>{trans.heatmap.title}</Trans>
               </h3>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
-                {/* <Trans i18nKey="charts:heatmap.description1" components={[<wbr />]} /> */}
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 md:mb-4 grow line-clamp-2 md:line-clamp-none">
                 <Trans components={[<wbr />]}>{trans.heatmap.description}</Trans>
               </p>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="common:btn1-go" components={[<wbr />]} />  */}
+              <span className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-auto md:mt-2">
                 <Trans components={[<wbr />]}>{trans.heatmap.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>
@@ -278,23 +281,19 @@ export default function Home() {
 
           <Link
             to={localeLink(locale, `/charts/favor`)}
-            // to={`/charts/favor`}
-            className="group flex flex-col bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
+            className="group flex flex-row md:flex-col bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm md:shadow-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden z-10"
           >
-            <div className="aspect-square w-full p-4 max-h-60">
-              <img src={isDark == 'dark' ? favorDarkImage : favorImage} alt="Heatmap" className="w-full h-full object-cover" />
+            <div className="w-28 sm:w-36 md:w-full shrink-0 p-3 md:p-4 flex items-center justify-center aspect-square md:max-h-60">
+              <img src={isDark == 'dark' ? favorDarkImage : favorImage} alt="Favor" className="w-full h-full object-cover rounded-lg md:rounded-none" />
             </div>
-            <div className="p-6 flex flex-col grow">
-              <h3 className="text-2xl font-bold text-neutral-800 dark:text-white mb-2">
-                {/* <Trans i18nKey="emblemCounter:title" components={[<wbr />]} /> */}
+            <div className="py-3 pr-4 md:p-6 flex flex-col justify-center grow">
+              <h3 className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-white mb-1 md:mb-2">
                 <Trans components={[<wbr />]}>{trans.emblem.title}</Trans>
               </h3>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-4 grow">
-                {/* <Trans i18nKey="emblemCounter:description" components={[<wbr />]} /> */}
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 md:mb-4 grow line-clamp-2 md:line-clamp-none">
                 <Trans components={[<wbr />]}>{trans.emblem.description}</Trans>
               </p>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-2">
-                {/* <Trans i18nKey="emblemCounter:go" components={[<wbr />]} /> */}
+              <span className="text-sm md:text-base font-semibold text-blue-600 dark:text-blue-400 group-hover:underline mt-auto md:mt-2">
                 <Trans components={[<wbr />]}>{trans.emblem.go}</Trans>({selectedServer.toUpperCase()}) &rarr;
               </span>
             </div>

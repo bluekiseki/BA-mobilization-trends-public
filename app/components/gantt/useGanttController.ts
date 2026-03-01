@@ -61,7 +61,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
       const startMs = new Date(startTime).getTime();
       return ((startMs - timeRange.min) / MS_PER_HOUR) * pixelsPerHour;
     },
-    [timeRange.min, pixelsPerHour],
+    [timeRange.min, timeRange.max, locale, pixelsPerHour],
   );
 
   const calculateWidthPx = useCallback(
@@ -80,7 +80,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     const centerPx = el.scrollLeft + el.clientWidth / 2;
     const offsetMs = (centerPx / pixelsPerHour) * MS_PER_HOUR;
     return timeRange.min + offsetMs;
-  }, [timeRange.min, pixelsPerHour]);
+  }, [timeRange.min, timeRange.max, locale, pixelsPerHour]);
 
   // --- Actions ---
   const scrollToTime = useCallback(
@@ -102,7 +102,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
       // Keep current time updated even when forced to move
       lastViewedTimeRef.current = timestamp;
     },
-    [timeRange.min, pixelsPerHour],
+    [timeRange.min, timeRange.max, locale, pixelsPerHour],
   );
 
   const jumpToNow = useCallback(() => {
@@ -156,7 +156,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     }
 
     return { daily, weekly, monthly };
-  }, [timeRange.min, timeRange.max, server, locale, calculateLeftPx]);
+  }, [timeRange.min, timeRange.max, locale, server, locale, calculateLeftPx]);
 
   // --- Effects ---
 
@@ -183,7 +183,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
 
     el.addEventListener('scroll', handleScroll);
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [timeRange.min, pixelsPerHour]); // Dependency required because offset calculation changes as pixelsPerHour changes
+  }, [timeRange.min, timeRange.max, locale, pixelsPerHour]); // Dependency required because offset calculation changes as pixelsPerHour changes
 
   // 2. Data Update & Initialization Logic
   useEffect(() => {
@@ -216,7 +216,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     }
 
     return () => resizeObserver.disconnect();
-  }, [timeRange.min, calculateLeftPx, scrollToTime, initialTime]);
+  }, [timeRange.min, timeRange.max, locale, calculateLeftPx, scrollToTime, initialTime]);
   // This effect runs to readjust the position when timeRange.min changes (server change)
 
   return {

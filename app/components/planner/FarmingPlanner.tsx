@@ -47,14 +47,14 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
   const { farmingActiveTab: activeTab, setFarmingActiveTab: setActiveTab, showOneTimeRewards, setShowOneTimeRewards, minimizeRepeatableInfo, setMinimizeRepeatableInfo } = useEventSettings(eventId);
 
   const missionsByStageId = useMemo(() => {
-    const map = new Map<number, Mission[]>();
+    const map = new Map<number | string, Mission[]>();
     if (!eventData.mission) return map;
 
     eventData.mission.forEach((mission) => {
       // Filter only the 'Clear within N seconds' mission
       if (mission.Description.Kr.includes('초 이내 클리어')) {
         // Found the stage ID in the mission parameter (usually over 8500000)
-        const stageIdParam = mission?.CompleteConditionParameter?.find((p) => p > 1000000);
+        const stageIdParam = mission?.CompleteConditionParameter?.find((p) => Number(p) > 1000000);
         if (stageIdParam) {
           if (!map.has(stageIdParam)) {
             map.set(stageIdParam, []);
@@ -318,11 +318,6 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       }
     }
 
-    // console.log('--fin--',runCounts)
-    // console.log('runCounts',runCounts)
-    // console.log('additionalRunCounts',additionalRunCounts)
-    // console.log('optimizableStages',optimizableStages)
-    // console.log('new-stage',({...runCounts, ...additionalRunCounts}))
     const filtered = runCounts ? Object.fromEntries(Object.entries(runCounts).filter(([key]) => eventData.stage.stage.filter((v) => v.Id === Number(key)).length == 0)) : {};
 
     setRunCounts(() => ({ ...filtered, ...additionalRunCounts }));
@@ -464,11 +459,15 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       <div className={`text-right mt-2 font-semibold ${isApExceeded ? 'text-red-500 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
         {t('ui.usedAp')} {totalApUsed.toLocaleString()} / {availableAp.toLocaleString()}
       </div>
-      <button onClick={handleAutoCalculateRuns} className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+      <button
+        data-component-name="FarmingPlanner_run"
+        onClick={handleAutoCalculateRuns}
+        className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg"
+      >
         {t('button.runAutoFarmCalc')}
       </button>
 
-      <div className="flex border-b border-gray-200 dark:border-neutral-700">
+      <div data-component-name="FarmingPlanner_tab" className="flex border-b border-gray-200 dark:border-neutral-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -523,7 +522,11 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
                   </button>
                 </div>
                 <div className="h-5 border-l border-gray-300 dark:border-neutral-600 mx-2"></div>
-                <button onClick={handleToggleAllFirstClears} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-1 px-3 rounded-md text-sm">
+                <button
+                  data-component-name="FarmingPlanner_f1"
+                  onClick={handleToggleAllFirstClears}
+                  className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+                >
                   {t('button.setAllFirstClear')}
                 </button>
               </div>
@@ -613,7 +616,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
                           value={runCounts[s.Id] || 0}
                           onChange={(e) => handleRunCountChange(s.Id, e || 0)}
                           placeholder={t('common.count')}
-                          className="w-14 py-1 text-xs rounded bg-gray-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-gray-200"
+                          className="w-14 py-1 text-base scale-[0.75] rounded bg-gray-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-gray-200"
                         />
                         <button onClick={() => handleSetMaxRuns(s.Id)} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold px-2 py-1 rounded-md text-xs">
                           M
@@ -755,7 +758,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
                           value={runCounts[s.Id] || 0}
                           onChange={(e) => handleRunCountChange(s.Id, e || 0)}
                           placeholder={t('common.count')}
-                          className="grow sm:grow-0 w-14 py-1 text-xs rounded bg-gray-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-gray-200"
+                          className="grow sm:grow-0 w-14 py-1 text-base scale-[0.75] rounded bg-gray-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-gray-200"
                         />
                         <button
                           onClick={() => handleSetMaxRuns(s.Id)}
@@ -777,7 +780,11 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
           <>
             {/* --- Top Control Area --- */}
             <div className="text-right mb-4">
-              <button onClick={handleToggleAllOneTimeRuns} className="bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded-md text-sm">
+              <button
+                data-component-name="FarmingPlanner_f2"
+                onClick={handleToggleAllOneTimeRuns}
+                className="bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded-md text-sm"
+              >
                 {t('button.setAllOneTime')}
               </button>
             </div>
@@ -837,7 +844,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
                             max={1}
                             value={runCounts[s.Id] || 0}
                             onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                            className="w-12 px-0 text-xs p-1 text-center rounded bg-gray-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-gray-200"
+                            className="w-12 px-0 text-base scale-[0.75] p-1 text-center rounded bg-gray-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-gray-200"
                           />
                         </div>
                       </div>
@@ -899,7 +906,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
                           max={1}
                           value={runCounts[s.Id] || 0}
                           onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                          className="w-12 px-0 text-xs p-1 text-center rounded bg-gray-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-gray-200"
+                          className="w-12 px-0 text-base scale-[0.75] p-1 text-center rounded bg-gray-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-gray-200"
                         />
                       </div>
                     </div>

@@ -44,6 +44,11 @@ export const createLinkHreflang: (path: string) => LinkHreflang[] = (path: strin
     },
     {
       rel: 'alternate',
+      hrefLang: 'zh-Hant',
+      href: `${domain_name}/zh-Hant${path}`,
+    },
+    {
+      rel: 'alternate',
       hrefLang: 'x-default',
       href: `${domain_name}${path}`,
     },
