@@ -176,7 +176,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
           />
         </div>
 
-        <button onClick={handleInputConfirm} className="bg-bluearchive-botton-blue hover:bg-sky-500 active:bg-sky-600 text-white px-5 py-2 text-sm font-bold transition-colors shadow-sm">
+        <button onClick={handleInputConfirm} className="bg-bluearchive-botton-blue hover:bg-sky-500 active:bg-sky-600 text-black px-5 py-2 text-sm font-bold transition-colors shadow-sm">
           {t_c('confirm')}
         </button>
       </div>

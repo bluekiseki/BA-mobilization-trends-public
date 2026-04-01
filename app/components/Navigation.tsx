@@ -103,7 +103,7 @@ const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
 
   if (!bannerData) return null;
 
-  console.log('show LanguageBanner', _hasHydrated, hasShownLanguageBanner);
+  // console.log('show LanguageBanner', _hasHydrated, hasShownLanguageBanner);
 
   return (
     <LanguageBanner

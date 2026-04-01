@@ -128,7 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <ThemeProvider>
             <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-bluearchive">
               <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
-                <Navigation reqLocale={data.reqLocale} />
+                <Navigation reqLocale={data?.reqLocale || DEFAULT_LOCALE} />
               </nav>
               <DynamicBanner />
 

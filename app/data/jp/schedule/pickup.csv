@@ -483,3 +483,14 @@ studentId,name,startTime,endTime,rerun,limited,fast,bannerType,prediction
 10031,Aru (New Year),2026-02-25 11:00,2026-03-04 10:59,true,true,false,encore
 10047,Chise (Swimsuit),2026-02-25 11:00,2026-03-04 10:59,true,true,false,encore
 10046,Izuna (Swimsuit),2026-02-25 11:00,2026-03-04 10:59,true,true,false,encore
+20056,Koyuki (Pajama),2026-03-04 11:00,2026-03-18 10:59,false,false,false
+10108,Yuuka (Pajama),2026-03-04 11:00,2026-03-18 10:59,true,false,false
+10109,Noa (Pajama),2026-03-04 11:00,2026-03-18 10:59,true,false,false
+10057,Haruna (New Year),2026-03-04 11:00,2026-03-18 10:59,true,true,false
+20022,Fuuka (New Year),2026-03-04 11:00,2026-03-18 10:59,true,true,false
+10137,Konoka,2026-03-18 11:00,2026-04-01 10:59,false,false,false
+10138,Rena,2026-03-18 11:00,2026-04-01 10:59,false,false,false
+20057,Akane (School Uniform),2026-04-01 11:00,2026-04-15 10:59,false,false,false
+10110,Seia,2026-04-01 11:00,2026-04-15 10:59,true,true,false
+10112,Asuna (School Uniform),2026-04-01 11:00,2026-04-15 10:59,true,true,false
+10067,Toki (Bunny Girl),2026-04-01 11:00,2026-04-15 10:59,true,false,false

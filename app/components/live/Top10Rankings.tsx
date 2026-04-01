@@ -7,18 +7,20 @@ import { RankingList } from '~/components/live/RankingList';
 import { type_translation } from '../raidToString';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
+import React from 'react';
 
 interface Top10RankingsProps {
-  isRaid: boolean;
-  lastData: LastData;
-  raidInfos: RaidInfo[];
-  server: GameServer;
-  studentData: StudentData;
-  portraitData: PortraitData;
+  readonly isRaid: boolean;
+  readonly lastData: LastData;
+  readonly raidInfos: RaidInfo[];
+  readonly server: GameServer;
+  readonly studentData: StudentData;
+  readonly portraitData: PortraitData;
 }
 type Top10Tab = 'total' | 'boss1' | 'boss2' | 'boss3';
 
 export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidInfos, server, studentData, portraitData }) => {
+  // console.log('[Top10Rankings] ', { isRaid, lastData, raidInfos, server, studentData, portraitData });
   const [activeTab, setActiveTab] = useState<Top10Tab>('total');
   const { t, i18n } = useTranslation('liveDashboard');
   const locale = i18n.language as Locale;
@@ -140,3 +142,5 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
     </>
   );
 };
+
+export default React.memo(Top10Rankings);

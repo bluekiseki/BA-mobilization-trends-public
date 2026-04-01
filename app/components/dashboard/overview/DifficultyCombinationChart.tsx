@@ -311,7 +311,7 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
         {/* Now, the HistogramAnalysis component will ONLY be mounted
                   (and its logic run) when the user expands this Card.
                 */}
-        <HistogramAnalysis allPlayers={allPlayers} />
+        <HistogramAnalysis allPlayers={allPlayers} tierCounter={tierCounter} />
       </Card>
     </div>
   );

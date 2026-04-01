@@ -4,9 +4,9 @@ import { parseCsvString } from '~/utils/calender.data';
 
 const DIFF_ID_GL_JP = 3;
 
-const getKstTime = (dateString: string) => {
+export const getKstTime = (dateString: string, timeZoneString = '+09:00') => {
   // Convert to ISO 8601 format by replacing spaces with 'T' and appending '+09:00' for browser compatibility.
-  const isoString = dateString.trim().replace(' ', 'T') + '+09:00';
+  const isoString = dateString.trim().replace(' ', 'T') + timeZoneString; //'+09:00';
   return new Date(isoString).getTime();
 };
 

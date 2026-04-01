@@ -15,11 +15,12 @@ import { useTierDashboardStore } from '~/store/tierDashboardStore';
 import { DateRangeSlider } from './DateRangeSlider';
 import { DifficultySelector } from './DifficultySelector';
 import { getKSTResetTimestamps } from './getKSTResetTimestamps';
+import React from 'react';
 
 interface TierAnalysisDashboardProps {
-  isRaid: boolean;
-  timelineData: TimelineData;
-  raidInfos: RaidInfo[];
+  readonly isRaid: boolean;
+  readonly timelineData: TimelineData;
+  readonly raidInfos: RaidInfo[];
 }
 type TierTab = 'boss1' | 'boss2' | 'boss3' | 'total' | 'change' | 'total_change';
 
@@ -121,6 +122,7 @@ const CustomAreaChartTooltip = ({ active, payload, label, raidInfos }: { active?
 };
 
 export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, timelineData, raidInfos }) => {
+  // console.log('[TierAnalysisDashboard]', { isRaid, timelineData, raidInfos });
   const { t, i18n } = useTranslation('liveDashboard');
   const { t: t_c } = useTranslation('common');
   const locale = i18n.language as Locale;
@@ -298,6 +300,8 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
     };
   }, [filteredTimelineData, isRaid, raidInfos]);
 
+  // console.log({ analysisData: analysisData?.latestClearsByBoss });
+
   const showDifficultySelector = activeTab.startsWith('boss');
 
   if (!analysisData) return <div className="p-4 text-center">Data is loading or range is empty...</div>;
@@ -386,7 +390,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
                 <div key={boss.name} className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-neutral-800/50 rounded-lg text-center h-full">
                   {!isRaid && (
                     <h3 className="font-semibold text-lg mb-1">
-                      {type_translation[boss.name as keyof typeof type_translation][getLocaleShortName(locale)]} {t_c('clear', 'Clear')}
+                      {type_translation[boss.name as keyof typeof type_translation]?.[getLocaleShortName(locale)]} {t_c('clear', 'Clear')}
                     </h3>
                   )}
                   <p className="text-4xl font-bold text-sky-500">{boss.total.toLocaleString()}</p>
@@ -478,3 +482,5 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
     </>
   );
 };
+
+export default React.memo(TierAnalysisDashboard);

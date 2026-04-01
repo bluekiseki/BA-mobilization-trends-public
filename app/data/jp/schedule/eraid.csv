@@ -30,3 +30,4 @@ season,startTime,endTime,boss1,boss2,boss3,difficulty1,difficulty2,difficulty3
 29,2025-12-10 11:00:00,2025-12-17 03:59:59,Kaitenger_Street_Unarmed,Kaitenger_Street_LightArmor,Kaitenger_Street_HeavyArmor,Insane,Torment,Torment
 30,2026-01-14 11:00:00,2026-01-20 03:59:59,ShiroKuro_Street_HeavyArmor,ShiroKuro_Street_Unarmed,ShiroKuro_Street_ElasticArmor,Insane,Torment,Torment
 31,2026-03-04 11:00:00,2026-03-11 03:59:59,Hieronymus_Street_HeavyArmor,Hieronymus_Street_Unarmed,Hieronymus_Street_LightArmor,Torment,Torment,Insane
+32,2026-04-08 11:00:00,2026-04-15 03:59:59,Perorozilla_Outdoor_HeavyArmor,Perorozilla_Outdoor_Unarmed,Perorozilla_Outdoor_ElasticArmor,Torment,Torment,Insane

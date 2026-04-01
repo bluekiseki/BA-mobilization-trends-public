@@ -22,6 +22,7 @@ import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { useHelpKey } from '~/utils/usePageHelp';
+import { getCurrentGlobalraid } from '~/data/globalRaidDates';
 
 interface RawRatingData {
   [key: string]: number; // e.g., "6|10074|6": 1024
@@ -123,7 +124,14 @@ export default function RankingChartPage() {
   const [selectedStudentType, setSelectedStudentType] = useState<string>('All');
   const [allStudents, setAllStudents] = useState<Record<string, Student>>({});
   const [raidInfo, setraidInfo] = useState<RaidInfo[]>([]);
-  const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 102]); // Stores [min, max] range
+
+  const glFutureIndex = useMemo(() => {
+    const r = getCurrentGlobalraid()[0];
+    console.log('r', r);
+    const s = r.startsWith('R') ? Number(r.substring(1)) * 4 - 211 : Number(r.substring(1)) * 4 + 10;
+    return s;
+  }, []);
+  const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 134]); // Stores [min, max] range
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultySelect>('All'); // Stores [min, max] range
   const [isPlaying, setIsPlaying] = useState(false);
   const currentLocale = useTranslation().i18n.language as Locale;
@@ -198,7 +206,7 @@ export default function RankingChartPage() {
         setStudentMap(nameMap);
         setRawRatingData(ratings);
         setraidInfo(raids);
-        setSelectedRaidIds([0, raids.length - 1]);
+        setSelectedRaidIds([locale == 'ja' || server == 'kr' ? 0 : glFutureIndex, raids.length - 1]);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {

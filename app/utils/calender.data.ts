@@ -206,6 +206,8 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   if (tracksToLoadArray.includes('event')) {
     parseCsvString<any>(sources.event).forEach((item) => {
       const eventInfo = (eventList as any)[item.id?.toString()];
+
+      const planable = eventInfo ? (eventInfo.Planable == false ? false : true) : true;
       const title = eventInfo?.[{ en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' }[locale]] || eventInfo?.Jp || item.name || `Event`;
 
       const label = `${t_cal('track.event')}${item.rerun ? '/' + t_com('rerun') : ''}`;
@@ -217,7 +219,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         endTime: item.closeTime,
         title: title,
         label: label,
-        link: item.planable == false ? undefined : `/planner/event/${item.id % 100000}`,
+        link: item.planable == false || planable == false ? undefined : `/planner/event/${item.id % 100000}`,
         details: {
           rerun: item.rerun,
           studentId: item.studentId,

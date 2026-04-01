@@ -18,6 +18,7 @@ import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import { createMetaDescriptor } from '~/components/head';
 import type { Route } from './+types/Gacha';
 import { cdn } from '~/utils/cdn';
+import { useLocalStorage } from '~/utils/useLocalStorage';
 
 export interface PyroxeneConfig {
   currentPyroxene: number;
@@ -77,10 +78,12 @@ export default function GachaMain() {
   const [banners, setBanners] = useState<any[]>([]);
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [portraitMap, setPortraitMap] = useState<Record<number, string>>({});
-  const [strategies, setStrategies] = useState<Record<string, BannerStrategy>>({});
+  // const [strategies, setStrategies] = useState<Record<string, BannerStrategy>>({});
+  const [strategies, setStrategies] = useLocalStorage<Record<string, BannerStrategy>>('gacha_strategies_v1', {});
   const [_error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [gachaSimResult, setGachaSimResult] = useState<GlobalAggregatedResult | null>(null);
+  const [bankruptcyRate, setBankruptcyRate] = useState<number | null>(null);
 
   // State for currency supply settings
   const [incomeConfig, setIncomeConfig] = useState<PyroxeneConfig>({
@@ -297,19 +300,10 @@ export default function GachaMain() {
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed pr-8">{t('intro.summary')}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-              {/* Feature 1: Currency supply calculation */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center text-xs">1</div>
-                  {t('intro.feat1_title')}
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 pl-8">{t('intro.feat1_desc')}</div>
-              </div>
-
               {/* Feature 2: Strategy formulation */}
               <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 flex items-center justify-center text-xs">2</div>
+                  <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 flex items-center justify-center text-xs">1</div>
                   {t('intro.feat2_title')}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 pl-8">{t('intro.feat2_desc')}</div>
@@ -318,10 +312,19 @@ export default function GachaMain() {
               {/* Feature 3: Simulation */}
               <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 flex items-center justify-center text-xs">3</div>
+                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 flex items-center justify-center text-xs">2</div>
                   {t('intro.feat3_title')}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 pl-8">{t('intro.feat3_desc')}</div>
+              </div>
+
+              {/* Feature 1: Currency supply calculation */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center text-xs">3</div>
+                  {t('intro.feat1_title')}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 pl-8">{t('intro.feat1_desc')}</div>
               </div>
             </div>
 
@@ -362,14 +365,22 @@ export default function GachaMain() {
 
       {/* 3. Tab navigation */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto">
-        {server === 'KR' && <TabButton isActive={activeTab === 'income'} onClick={() => setActiveTab('income')} icon={<FaChartLine />} label={t('tabs.income')} />}
         <TabButton isActive={activeTab === 'strategy'} onClick={() => setActiveTab('strategy')} icon={<FaClipboardList />} label={t('tabs.strategy')} />
         <TabButton isActive={activeTab === 'result'} onClick={() => setActiveTab('result')} icon={<FaCalculator />} label={t('tabs.result')} />
+        {server === 'KR' && <TabButton isActive={activeTab === 'income'} onClick={() => setActiveTab('income')} icon={<FaChartLine />} label={t('tabs.income')} />}
       </div>
 
       <div className="mt-6">
         {activeTab === 'income' && (
-          <IncomeTab config={incomeConfig} setConfig={setIncomeConfig} banners={banners} strategies={strategies} schedules={plannerSchedules} gachaSimResult={gachaSimResult} />
+          <IncomeTab
+            config={incomeConfig}
+            setConfig={setIncomeConfig}
+            banners={banners}
+            strategies={strategies}
+            schedules={plannerSchedules}
+            gachaSimResult={gachaSimResult}
+            setBankruptcyRate={setBankruptcyRate}
+          />
         )}
         {activeTab === 'strategy' && (
           <StrategyTab banners={banners} strategies={strategies} portraitMap={portraitMap} onUpdateStrategy={updateStrategy} onUpdateStudentConfig={updateStudentConfig} server={server} />
@@ -383,6 +394,8 @@ export default function GachaMain() {
             portraitMap={portraitMap}
             gachaSimResult={gachaSimResult}
             setGachaSimResult={setGachaSimResult}
+            bankruptcyRate={bankruptcyRate}
+            setBankruptcyRate={setBankruptcyRate}
           />
         )}
       </div>

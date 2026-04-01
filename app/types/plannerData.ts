@@ -9,6 +9,7 @@ export interface Student extends StudentBase {
   // SquadType: "Main" | "Support";
   // TacticRole: "DamageDealer" | "Healer" | "Supporter" | "Tanker" | "Vehicle";
   School: string;
+  Club: string;
   BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic' | 'Chemical';
   PotentialMaterial: number;
   SkillExMaterial: number[][];
@@ -20,6 +21,11 @@ export interface Student extends StudentBase {
   Equipment: ['Hat' | 'Shoes' | 'Gloves', 'Hairpin' | 'Bag' | 'Badge', 'Watch' | 'Charm' | 'Necklace:'];
   FavorItemTags: string[];
   FavorItemUniqueTags: string[];
+  ArmorType: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
+  PathName: string;
+  StreetBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
+  OutdoorBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
+  IndoorBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
 }
 
 export type ImageMap = Record<string, string>;

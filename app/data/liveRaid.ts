@@ -2,38 +2,16 @@ import type { RaidInfo } from '~/types/data';
 import type { Locale } from '~/utils/i18n/config';
 import bossData from '~/data/bossdata.json';
 
-export const LiveRaidInfos = [
-  { Id: 'R86', Boss: 'Binah', Location: 'Outdoor', Date: '2026-02-18', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+export const LIVE_RAID_DURATION = 7;
 
-  //   Id: 'E30',
-  //   Boss: 'ShiroKuro',
-  //   Location: 'Street',
-  //   Type: 'Unarmed',
-  //   Date: '2026-01-14',
-  //   Alias: '',
-  //   MaxLv: 90,
-  //   Cnt: { All: 20000, Torment: 1, Insane: 1 },
-  // },
-  // {
-  //   Id: 'E30',
-  //   Boss: 'ShiroKuro',
-  //   Location: 'Street',
-  //   Type: 'ElasticArmor',
-  //   Date: '2026-01-14',
-  //   Alias: '',
-  //   MaxLv: 90,
-  //   Cnt: { All: 20000, Torment: 1, Insane: 1 },
-  // },
-  // {
-  //   Id: 'E30',
-  //   Boss: 'ShiroKuro',
-  //   Location: 'Street',
-  //   Type: 'HeavyArmor',
-  //   Date: '2026-01-14',
-  //   Alias: '',
-  //   MaxLv: 90,
-  //   Cnt: { All: 20000, Insane: 1 },
-  // },
+export const LiveRaidInfos = [
+  { Id: 'R87', Boss: 'Goz', Location: 'Outdoor', Date: '2026-03-25 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+  // { Id: 'E31', Boss: 'Hieronymus_Street', Location: 'Street', Type: 'HeavyArmor', Date: '2026-03-04 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E31', Boss: 'Hieronymus_Street', Location: 'Street', Type: 'Unarmed', Date: '2026-03-04 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E31', Boss: 'Hieronymus_Street', Location: 'Street', Type: 'LightArmor', Date: '2026-03-04 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },
+  // { Id: 'E30', Boss: 'ShiroKuro', Location: 'Street', Type: 'Unarmed', Date: '2026-01-14', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 },},
+  // { Id: 'E30', Boss: 'ShiroKuro', Location: 'Street', Type: 'ElasticArmor', Date: '2026-01-14', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 },},
+  // { Id: 'E30', Boss: 'ShiroKuro', Location: 'Street', Type: 'HeavyArmor', Date: '2026-01-14', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 },},
   // { "Id": "R85", "Boss": "HoverCraft", "Location": "Outdoor", "Date": "2025-12-31", "Alias": "", "MaxLv": 90, "Cnt": { "All": 20000, "Lunatic": 1, "Torment": 1, "Insane": 1 } },
   // { "Id": "E29", "Boss": "Kaitenger", "Location": "Street", "Type": "LightArmor", "Date": "2025-12-10", "Alias": "", "MaxLv": 90, "Cnt": { "All": 20000, "Insane": 1 } },
   // { "Id": "E29", "Boss": "Kaitenger", "Location": "Street", "Type": "HeavyArmor", "Date": "2025-12-10", "Alias": "", "MaxLv": 90, "Cnt": { "All": 20000, "Torment": 1, "Insane": 1 } },
@@ -47,9 +25,6 @@ export const LiveRaidInfos = [
   // { "Id": "E27", "Boss": "Shiro&Kuro", "Location": "Indoor", "Type": "ElasticArmor", "Date": "2025-10-15", "Alias": "", "MaxLv": 90, "Cnt": { "All": 20000, "Torment": 1,  "Insane": 1 } },
   // { "Id": "E27", "Boss": "Shiro&Kuro", "Location": "Indoor", "Type": "Unarmed", "Date": "2025-10-15", "Alias": "", "MaxLv": 90, "Cnt": { "All": 20000, "Insane": 1} }
 ] as RaidInfo[];
-
-// 25.10.29. ~ 25.11.05.
-// YESOD
 
 export const getLiveRaidInfo = (locale: Locale) => {
   // return []

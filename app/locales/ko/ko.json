@@ -153,7 +153,7 @@
       "desp_absolute": "각 막대 길이는 실제 출전수를 나타냅니다.",
       "unit_cnt": "회",
       "loading_txt": "데이터를 불러오는 중...",
-      "total_x": "총 {x}건",
+      "total_x": "총 {x}건 선택됨",
       "filters": "필터"
     },
     "heatmap": {
@@ -255,7 +255,7 @@
     "selectBossPrompt": "분석하고 싶은 보스를 선택하세요.",
     "histogramTitle": "종합 점수 분포 (히스토그램)",
     "scoreRangeFilter": "점수 범위 필터",
-    "binSize": "간격(Bin Size)",
+    "binSize": "간격",
     "bracketFilter": "난이도 단계 필터",
     "selectAll": "전체선택",
     "deselectAll": "전체해제",
@@ -281,6 +281,9 @@
     "unitSecond": "초",
     "tooltipTime": "시간: {{time}}",
     "tooltipDifficulty": "난이도: {{difficulty}}",
+    "scoreCondition": "점수 <= {{score}}",
+    "switchToRank": "랭크로 전환",
+    "switchToScore": "점수로 전환",
     "tooltipCumulativeRank": "누적 등수: ~{{rank}}위",
     "clearTime": "클리어 시간",
     "hideSettings": "설정 숨기기",
@@ -382,7 +385,14 @@
     "changePerHourLabel": "증가량 (명/시간)",
     "playersPerHourUnit": "명/시간",
     "playersUnit": "명",
-    "hoursUnit": "시간"
+    "hoursUnit": "시간",
+    "show_prediction_cutoff": "플래티넘 컷 예측 표시",
+    "prediction_mode_stats": "평균/최대·최소 범위",
+    "prediction_mode_compare": "과거 시즌 비교",
+    "platinum_prediction_avg": "{{rank}}등",
+    "compare_cutoff": "{{name}} 컷 ({{rank}}등)",
+    "total_combined": "{{types}}",
+    "predicted_score": "{{score}}점"
   },
   "emblemCounter": {
     "title": "인연 칭호 설정 현황",

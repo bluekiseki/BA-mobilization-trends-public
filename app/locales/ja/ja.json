@@ -261,6 +261,8 @@
     "selectBossPrompt": "分析したいボスを選択してください。",
     "histogramTitle": "総合スコア分布 (ヒストグラム)",
     "scoreRangeFilter": "スコア範囲フィルター",
+    "switchToRank": "ランク表示に切り替え",
+    "switchToScore": "スコア表示に切り替え",
     "binSize": "間隔 (Bin Size)",
     "bracketFilter": "難易度段階フィルター",
     "selectAll": "すべて選択",
@@ -287,6 +289,7 @@
     "unitSecond": "秒",
     "tooltipTime": "時間: {{time}}",
     "tooltipDifficulty": "難易度: {{difficulty}}",
+    "scoreCondition": "スコア <= {{score}}",
     "tooltipCumulativeRank": "累積順位: ~{{rank}}位",
     "clearTime": "クリアタイム",
     "hideSettings": "設定を隠す",
@@ -388,7 +391,14 @@
     "changePerHourLabel": "増加量 (人/時間)",
     "playersPerHourUnit": "人/時間",
     "playersUnit": "人",
-    "hoursUnit": "時間"
+    "hoursUnit": "時間",
+    "show_prediction_cutoff": "プラチナボーダー予測を表示",
+    "prediction_mode_stats": "平均/最大・最小範囲",
+    "prediction_mode_compare": "過去シーズン比較",
+    "platinum_prediction_avg": "{{rank}}位",
+    "compare_cutoff": "{{name}} ボーダー ({{rank}}位)",
+    "total_combined": "{{types}}",
+    "predicted_score": "{{score}}点"
   },
   "emblemCounter": {
     "title": "絆ランク称号の設定状況",

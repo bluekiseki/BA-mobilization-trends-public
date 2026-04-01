@@ -158,7 +158,7 @@
       "desp_absolute": "Each bar length represents the actual number of mobilizations.",
       "unit_cnt": " times",
       "loading_txt": "Loading data...",
-      "total_x": "Total {x} entries",
+      "total_x": "{x} entries selected",
       "filters": "Filters"
     },
     "heatmap": {
@@ -260,6 +260,8 @@
     "selectBossPrompt": "Select a boss to analyze.",
     "histogramTitle": "Total Score Distribution (Histogram)",
     "scoreRangeFilter": "Score Range Filter",
+    "switchToRank": "Switch to Rank",
+    "switchToScore": "Switch to Score",
     "binSize": "Interval (Bin Size)",
     "bracketFilter": "Difficulty Bracket Filter",
     "selectAll": "Select All",
@@ -286,6 +288,7 @@
     "unitSecond": "s",
     "tooltipTime": "Time: {{time}}",
     "tooltipDifficulty": "Difficulty: {{difficulty}}",
+    "scoreCondition": "Score <= {{score}}",
     "tooltipCumulativeRank": "Cumulative Rank: ~{{rank}}",
     "clearTime": "Clear Time",
     "hideSettings": "Hide Settings",
@@ -387,7 +390,14 @@
     "changePerHourLabel": "Players / hr",
     "playersPerHourUnit": "players/hr",
     "playersUnit": "players",
-    "hoursUnit": "hrs"
+    "hoursUnit": "hrs",
+    "show_prediction_cutoff": "Show Platinum Cutoff Prediction",
+    "prediction_mode_stats": "Avg / Min-Max Range",
+    "prediction_mode_compare": "Compare Past Seasons",
+    "platinum_prediction_avg": "Rank {{rank}}",
+    "compare_cutoff": "{{name}} Cutoff (Rank {{rank}})",
+    "total_combined": "{{types}}",
+    "predicted_score": "{{score}}pt"
   },
   "emblemCounter": {
     "title": "Favor Rank Status",
@@ -398,7 +408,7 @@
     "rankRange": "Rank Range",
     "in20k": "In 20,000 (Platinum)",
     "in120k": "In 120,000 (Platinum + Gold)",
-    "in240k": "In 240,000 (Platinum + Gold)",
+    "in240k": "In 240,000 (Platinum + Gold + Silver)",
     "overall": "Overall (Platinum + Gold + Silver + Bronze)",
     "emblemType": "Emblem Type",
     "bond0": "Profile student",

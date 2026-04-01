@@ -193,7 +193,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
             {avgRates && (
               <div className="mt-2 space-y-3">
                 <div>
-                  <p className="text-xs font-semibold text-red-700 dark:text-red-400">{t('avgCostPerPull')}</p>
+                  <p className="text-xs font-semibold text-green-700 dark:text-green-400">{t('avgRewardsPerPull')}</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {Object.entries(avgRates.avgRewards)
                       .sort(([, a], [, b]) => b - a)
@@ -205,7 +205,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-green-700 dark:text-green-400">{t('avgRewardsPerPull')}</p>
+                  <p className="text-xs font-semibold text-red-700 dark:text-red-400">{t('avgCostPerPull')}</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     <ItemIcon type={costKey.split('_')[0]} itemId={costKey.split('_')[1]} amount={avgRates.avgCost} size={10} eventData={eventData} iconData={iconData} />
                   </div>

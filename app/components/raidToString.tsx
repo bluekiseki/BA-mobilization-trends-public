@@ -41,6 +41,11 @@ export const type_translation = {
     ja: '複合装甲',
     zh_Hant: 'Composite',
   },
+  Explosion: { ko: '폭발', en: 'Explosive', ja: '爆発', zh_Hant: '爆炸' },
+  Pierce: { ko: '관통', en: 'Piercing', ja: '貫通', zh_Hant: '貫通' },
+  Mystic: { ko: '신비', en: 'Mystic', ja: '神秘', zh_Hant: '神祕' },
+  Sonic: { ko: '진동', en: 'Sonic', ja: '振動', zh_Hant: '振動' },
+  Chemical: { ko: '분해', en: 'Chemical', ja: '分解', zh_Hant: '分解' },
 };
 export const type_translation_sorted = {
   LightArmor: { ko: '경장', en: 'Light', ja: '爆発', zh_Hant: '輕型' },

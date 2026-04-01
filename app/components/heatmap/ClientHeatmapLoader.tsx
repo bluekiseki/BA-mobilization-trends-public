@@ -15,6 +15,7 @@ import { useLocation } from 'react-router';
 
 const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
   const [students, setStudents] = useState<Record<string, Student>>({});
+  const [portraitData, setPortraitData] = useState<Record<number, string>>({});
   const [isStaticDataLoading, setIsStaticDataLoading] = useState(true);
 
   type StudentDataType = Record<string, Student>;
@@ -50,12 +51,14 @@ const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
         const [studentData, labelData] = await Promise.all([
           fetchAndProcessWithCache_1(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res: Response) => res.json().then((data) => data as Promise<Record<string, Student>>)),
           fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as Promise<RaidInfo[]>),
+          // fetch(cdn('/w/students_portrait.json')).then((res) => res.json())
         ]);
 
         await (async () => {
           const students_portrait = (await fetch(cdn('/w/students_portrait.json')).then((res) => res.json())) as {
             [key: number]: string;
           };
+          setPortraitData(students_portrait);
           Object.entries(studentData).map(([studentId, student]) => {
             student.Portrait = students_portrait[parseInt(studentId)];
           });
@@ -78,7 +81,7 @@ const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
 
   return (
     <div>
-      <ChartControls students={students} />
+      <ChartControls students={students} portraitData={portraitData} />
       <ChartDataContainer server={server} />
     </div>
   );

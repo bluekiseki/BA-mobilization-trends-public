@@ -140,7 +140,7 @@ export const StackedPickRateChart: React.FC<{
       <ResponsiveContainer width="100%" height={calculatedHeight} className="animate-none">
         <BarChart layout="vertical" data={displayChartData} margin={{ left: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#404040' : '#e2e8f0'} /> {/* Adjusted dark color */}
-          <XAxis type="number" stroke="#64748b" domain={[0, 'dataMax + 10']} tickFormatter={(val) => `${val}%`} /> {/* Added % to tick */}
+          <XAxis type="number" stroke="#64748b" domain={[0, 'dataMax + 10']} tickFormatter={(val) => `${val.toPrecision(3).toLocaleString()}%`} /> {/* Added % to tick */}
           <YAxis type="category" dataKey="id" stroke="#64748b" width={2} tick={<CustomYAxisTick />} interval={0} />
           <Tooltip
             content={({ active, payload, label }) => {
@@ -160,7 +160,8 @@ export const StackedPickRateChart: React.FC<{
 
                     {/* Star Breakdown */}
                     {payload.map((entry, i) => {
-                      const star = Number(entry.name?.replace('★ ', ''));
+                      // const star = Number(entry.name?.replace('★ ', ''));
+                      const star = Number(entry.name);
                       return (
                         <div
                           key={i}

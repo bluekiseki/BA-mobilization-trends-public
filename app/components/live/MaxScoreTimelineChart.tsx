@@ -18,12 +18,13 @@ import { DateRangeSlider } from './DateRangeSlider';
 import { DifficultySelector } from './DifficultySelector';
 import { useTierDashboardStore } from '~/store/tierDashboardStore';
 import { getKSTResetTimestamps } from './getKSTResetTimestamps';
+import React from 'react';
 
 interface MaxScoreTimelineChartProps {
-  isRaid: boolean;
-  timelineData: TimelineData;
-  raidInfos: RaidInfo[];
-  server: GameServer;
+  readonly isRaid: boolean;
+  readonly timelineData: TimelineData;
+  readonly raidInfos: RaidInfo[];
+  readonly server: GameServer;
 }
 
 // --- Helper Function: Find the highest score by difficulty level ---
@@ -55,6 +56,7 @@ const findMaxScoresByDifficulty = (rankEntries: ReportEntry[], raidInfo: RaidInf
 };
 
 export const MaxScoreTimelineChart: FC<MaxScoreTimelineChartProps> = ({ isRaid, timelineData, raidInfos, server }) => {
+  // console.log('[MaxScoreTimelineChart]', { isRaid, timelineData, raidInfos, server });
   const { i18n } = useTranslation();
   const locale = i18n.language as Locale;
   const { isDark } = useIsDarkState();
@@ -261,7 +263,7 @@ export const MaxScoreTimelineChart: FC<MaxScoreTimelineChartProps> = ({ isRaid, 
           <YAxis
             type="number"
             domain={['dataMin', 'dataMax']}
-            tickFormatter={(val) => (axisType === 'score' ? `${(val / 1e6).toFixed(1)}M` : formatTimeToTimestamp(val).split('.')[0])}
+            tickFormatter={(val) => (axisType === 'score' ? `${(val / 1e6).toFixed(2)}M` : formatTimeToTimestamp(val).split('.')[0])}
             reversed={axisType === 'time'}
             width={40}
             fontSize={12}
@@ -328,6 +330,7 @@ export const MaxScoreTimelineChart: FC<MaxScoreTimelineChartProps> = ({ isRaid, 
                   stroke: 'none',
                 }}
                 connectNulls={false}
+                isAnimationActive={false}
               />
             ))}
         </LineChart>
@@ -335,3 +338,5 @@ export const MaxScoreTimelineChart: FC<MaxScoreTimelineChartProps> = ({ isRaid, 
     </div>
   );
 };
+
+export default React.memo(MaxScoreTimelineChart);

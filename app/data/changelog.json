@@ -1,5 +1,32 @@
 [
   {
+    "date": "2026-03-12",
+    "changes": {
+      "en": [
+        "Live Dashboard Grand Assault S31 (BETA) ended",
+        "Added Favor Rank Status",
+        "Added JP Grand Assault S31 top-ranking team data (from Plana Stats)",
+        "Added JP Grand Assault S31 overall score data",
+        "Added Platinum Cutoff Prediction to Live Dashboard"
+      ],
+      "ko": [
+        "라이브 대시보드 대결전 S31 (BETA) 종료",
+        "인연 칭호 설정 현황 추가",
+        "JP 대결전 S31 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 대결전 S31 전체 분포 데이터 추가",
+        "실시간 대시보드에 플래티넘 컷 예측 기능 추가"
+      ],
+      "ja": [
+        "リアルタイムダッシュボード 大決戦S31 (BETA) 終了",
+        "絆ランク称号の状況追加",
+        "JP 大決戦S31 上位編成データをの追加 (from Plana Stats)",
+        "JP 大決戦S31 全体スコア分布データをの追加",
+        "リアルタイムダッシュボードにプラチナボーダー予測機能を追加"
+      ]
+    },
+    "to": [null, "/charts/favor", "/dashboard/jp/E31?view=detail", "/dashboard/jp/E31", "/live"]
+  },
+  {
     "date": "2026-03-01",
     "changes": {
       "ko": [

@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next';
 import type { Skill, Student } from '~/types/plannerData';
 
 // --- Helper: Format Skill Descriptions (Buffs/Debuffs) ---
-const formatSkillBuffDesc = (str: string, t: any) => {
+export const formatSkillBuffDesc = (str: string, t: any) => {
   return str
-    .replace(/<b:(\w+)>/g, (_, param) => `<strong>${t(`stat:Buff_${param}`, { defaultValue: param })}</strong>`)
-    .replace(/<d:(\w+)>/g, (_, param) => `<strong>${t(`stat:Debuff_${param}`, { defaultValue: param })}</strong>`)
-    .replace(/<s:(\w+)>/g, (_, param) => `<strong>${t(`stat:Special_${param}`, { defaultValue: param })}</strong>`)
-    .replace(/<c:(\w+)>/g, (_, param) => `<strong>${t(`stat:CC_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<b:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:Buff_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<d:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:Debuff_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<s:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:Special_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<c:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:CC_${param}`, { defaultValue: param })}</strong>`)
     .replace(/\\n/g, '<br/>');
 };
 

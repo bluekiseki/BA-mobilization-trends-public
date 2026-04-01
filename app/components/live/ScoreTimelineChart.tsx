@@ -2,7 +2,7 @@
 
 import { Scatter, XAxis, YAxis, Label, Tooltip, ResponsiveContainer, Legend, ComposedChart, Line, ReferenceLine } from 'recharts';
 import { type FC, useMemo, useState, useRef, useEffect } from 'react';
-import type { ERaidTimelinePoint, RaidTimelinePoint, TimelineData } from '~/types/livetype';
+import type { /*ERaidTimelinePoint, RaidTimelinePoint,*/ TimelineData } from '~/types/livetype';
 import type { ReportEntry } from '../dashboard/common';
 import type { RaidInfo } from '~/types/data';
 import { type_translation } from '../raidToString';
@@ -58,11 +58,11 @@ const CustomScoreTimelineTooltip = ({ active, payload, label, raidInfos, rankCol
   return null;
 };
 
-const findScoreForRank = (rankEntries: ReportEntry[], targetRank: number): number | null => {
-  if (!rankEntries) return null;
-  const exactMatch = rankEntries.find((p) => p.r === targetRank);
-  return exactMatch ? exactMatch.s : null;
-};
+// const findScoreForRank = (rankEntries: ReportEntry[], targetRank: number): number | null => {
+//   if (!rankEntries) return null;
+//   const exactMatch = rankEntries.find((p) => p.r === targetRank);
+//   return exactMatch ? exactMatch.s : null;
+// };
 
 type GrandAssaultTab = 'total' | 'boss1' | 'boss2' | 'boss3';
 
@@ -78,6 +78,7 @@ const generateDistinctColors = (count: number): string[] => {
 };
 
 export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timelineData, ranksToPlot, raidInfos }) => {
+  // console.log('[ScoreTimelineChart] ', { isRaid, timelineData, ranksToPlot, raidInfos });
   const [activeTab, setActiveTab] = useState<GrandAssaultTab>('total');
   const { t, i18n } = useTranslation('liveDashboard');
   const locale = i18n.language as Locale;
@@ -85,7 +86,7 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
   const { dateRangeIndex } = useTierDashboardStore();
 
   // 1. Rank State & Colors
-  const [selectedRanks, setSelectedRanks] = useState<Set<number>>(new Set([1, 5000, 10000, 20000]));
+  const [selectedRanks, setSelectedRanks] = useState<Set<number>>(new Set([20000]));
 
   const rankColorMap = useMemo(() => {
     const colors = generateDistinctColors(ranksToPlot.length);
@@ -136,36 +137,36 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
     return () => observer.disconnect();
   }, []);
 
-  const distinctDays = useMemo(() => {
-    if (!timelineData) return [];
-    const days = new Set<string>();
-    timelineData.forEach((p) => {
-      const dayStr = formatDateToDayString(new Date(p.time.replace(' ', 'T') + 'Z'), raidInfos[0]);
-      days.add(dayStr);
-    });
-    return Array.from(days);
-  }, [timelineData, raidInfos]);
+  // const distinctDays = useMemo(() => {
+  //   if (!timelineData) return [];
+  //   const days = new Set<string>();
+  //   timelineData.forEach((p) => {
+  //     const dayStr = formatDateToDayString(new Date(p.time.replace(' ', 'T') + 'Z'), raidInfos[0]);
+  //     days.add(dayStr);
+  //   });
+  //   return Array.from(days);
+  // }, [timelineData, raidInfos]);
 
   const prevFilteredDataRef = useRef<any[]>([]);
 
-  const filteredDataPoints = useMemo(() => {
-    if (!isChartVisible && prevFilteredDataRef.current.length > 0) {
-      return prevFilteredDataRef.current;
-    }
+  // const filteredDataPoints = useMemo(() => {
+  //   if (!isChartVisible && prevFilteredDataRef.current.length > 0) {
+  //     return prevFilteredDataRef.current;
+  //   }
 
-    if (!timelineData || distinctDays.length === 0) return [];
-    const startIndex = Math.max(0, Math.min(dateRangeIndex[0], distinctDays.length - 1));
-    const endIndex = Math.max(0, Math.min(dateRangeIndex[1], distinctDays.length - 1));
+  //   if (!timelineData || distinctDays.length === 0) return [];
+  //   const startIndex = Math.max(0, Math.min(dateRangeIndex[0], distinctDays.length - 1));
+  //   const endIndex = Math.max(0, Math.min(dateRangeIndex[1], distinctDays.length - 1));
 
-    const result = timelineData.filter((p) => {
-      const dayStr = formatDateToDayString(new Date(p.time.replace(' ', 'T') + 'Z'), raidInfos[0]);
-      const dayIndex = distinctDays.indexOf(dayStr);
-      return dayIndex >= startIndex && dayIndex <= endIndex;
-    });
+  //   const result = timelineData.filter((p) => {
+  //     const dayStr = formatDateToDayString(new Date(p.time.replace(' ', 'T') + 'Z'), raidInfos[0]);
+  //     const dayIndex = distinctDays.indexOf(dayStr);
+  //     return dayIndex >= startIndex && dayIndex <= endIndex;
+  //   });
 
-    prevFilteredDataRef.current = result; // Update Cache
-    return result;
-  }, [timelineData, distinctDays, dateRangeIndex, raidInfos, isChartVisible]);
+  //   prevFilteredDataRef.current = result; // Update Cache
+  //   return result;
+  // }, [timelineData, distinctDays, dateRangeIndex, raidInfos, isChartVisible]);
 
   const prevChartDataRef = useRef<{
     chartData: any[];
@@ -173,11 +174,109 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
     resetTimestamps: number[];
   }>({ chartData: [], dataKeys: [], resetTimestamps: [] });
 
+  // const { chartData, dataKeys, resetTimestamps } = useMemo(() => {
+  //   if (!isChartVisible && prevChartDataRef.current.chartData.length > 0) {
+  //     return prevChartDataRef.current;
+  //   }
+
+  //   if (!filteredDataPoints || filteredDataPoints.length === 0) {
+  //     return { chartData: [], dataKeys: [], resetTimestamps: [] };
+  //   }
+
+  //   const activeRanks = Array.from(selectedRanks);
+  //   const keys = activeRanks.map((r) => `Rank ${r}`);
+
+  //   const data = isRaid
+  //     ? (filteredDataPoints as RaidTimelinePoint[]).map((timePoint) => {
+  //         const entry: { time: number; [key: string]: number | null } = {
+  //           time: new Date(timePoint.time.replace(' ', 'T') + 'Z').getTime(),
+  //         };
+  //         const rankEntries = timePoint.data.boss.d as ReportEntry[];
+  //         activeRanks.forEach((rank) => {
+  //           entry[`Rank ${rank}`] = findScoreForRank(rankEntries, rank);
+  //         });
+  //         return entry;
+  //       })
+  //     : (filteredDataPoints as ERaidTimelinePoint[]).map((timePoint) => {
+  //         const entry: { time: number; [key: string]: number | null } = {
+  //           time: new Date(timePoint.time.replace(' ', 'T') + 'Z').getTime(),
+  //         };
+  //         let rankEntries: ReportEntry[];
+  //         if (activeTab === 'total') {
+  //           rankEntries = timePoint.data.total as ReportEntry[];
+  //         } else {
+  //           rankEntries = timePoint.data[activeTab]?.d as ReportEntry[];
+  //         }
+  //         activeRanks.forEach((rank) => {
+  //           entry[`Rank ${rank}`] = findScoreForRank(rankEntries, rank);
+  //         });
+  //         return entry;
+  //       });
+
+  //   const startTime = data[0].time;
+  //   const endTime = data[data.length - 1].time;
+  //   const resets = getKSTResetTimestamps(startTime, endTime);
+
+  //   const result = {
+  //     chartData: data as any[],
+  //     dataKeys: keys,
+  //     resetTimestamps: resets as number[],
+  //   };
+  //   prevChartDataRef.current = result;
+  //   return result;
+  // }, [filteredDataPoints, activeTab, selectedRanks, isRaid, isChartVisible]);
+
+  // 1. Component Top: Parse source data only once and cache date/time values.
+  const processedTimelineData = useMemo(() => {
+    if (!timelineData) return [];
+    return timelineData.map((p) => {
+      // Perform string parsing and 'new Date' only once here.
+      const timeMs = new Date(p.time.replace(' ', 'T') + 'Z').getTime();
+      const dayStr = formatDateToDayString(new Date(timeMs), raidInfos[0]);
+      return { ...p, timeMs, dayStr };
+    });
+  }, [timelineData, raidInfos]);
+
+  // 2. Extract date list (Fast)
+  const distinctDays = useMemo(() => {
+    const days = new Set<string>();
+    processedTimelineData.forEach((p) => days.add(p.dayStr));
+    return Array.from(days);
+  }, [processedTimelineData]);
+
+  // 3. Filtering optimization (Removed 'new Date' and 'indexOf')
+  const filteredDataPoints = useMemo(() => {
+    if (!isChartVisible && prevFilteredDataRef.current.length > 0) {
+      return prevFilteredDataRef.current;
+    }
+    if (distinctDays.length === 0) return [];
+
+    const startIndex = Math.max(0, Math.min(dateRangeIndex[0], distinctDays.length - 1));
+    const endIndex = Math.max(0, Math.min(dateRangeIndex[1], distinctDays.length - 1));
+
+    // Get start date and end date strings
+    const startDayStr = distinctDays[startIndex];
+    const endDayStr = distinctDays[endIndex];
+
+    let isRecording = false;
+    const result = processedTimelineData.filter((p) => {
+      // Using a flag (isRecording) or simple comparison is much faster than indexOf.
+      // Logic assuming dates are sorted:
+      if (p.dayStr === startDayStr) isRecording = true;
+      const shouldInclude = isRecording;
+      if (p.dayStr === endDayStr) isRecording = false; // Include only up to this date
+      return shouldInclude || p.dayStr === endDayStr;
+    });
+
+    prevFilteredDataRef.current = result;
+    return result;
+  }, [processedTimelineData, distinctDays, dateRangeIndex, isChartVisible]);
+
+  // 4. Final chart data generation (Optimized O(N*M) -> O(N))
   const { chartData, dataKeys, resetTimestamps } = useMemo(() => {
     if (!isChartVisible && prevChartDataRef.current.chartData.length > 0) {
       return prevChartDataRef.current;
     }
-
     if (!filteredDataPoints || filteredDataPoints.length === 0) {
       return { chartData: [], dataKeys: [], resetTimestamps: [] };
     }
@@ -185,42 +284,45 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
     const activeRanks = Array.from(selectedRanks);
     const keys = activeRanks.map((r) => `Rank ${r}`);
 
-    const data = isRaid
-      ? (filteredDataPoints as RaidTimelinePoint[]).map((timePoint) => {
-          const entry: { time: number; [key: string]: number | null } = {
-            time: new Date(timePoint.time.replace(' ', 'T') + 'Z').getTime(),
-          };
-          const rankEntries = timePoint.data.boss.d as ReportEntry[];
-          activeRanks.forEach((rank) => {
-            entry[`Rank ${rank}`] = findScoreForRank(rankEntries, rank);
-          });
-          return entry;
-        })
-      : (filteredDataPoints as ERaidTimelinePoint[]).map((timePoint) => {
-          const entry: { time: number; [key: string]: number | null } = {
-            time: new Date(timePoint.time.replace(' ', 'T') + 'Z').getTime(),
-          };
-          let rankEntries: ReportEntry[];
-          if (activeTab === 'total') {
-            rankEntries = timePoint.data.total as ReportEntry[];
-          } else {
-            rankEntries = timePoint.data[activeTab]?.d as ReportEntry[];
-          }
-          activeRanks.forEach((rank) => {
-            entry[`Rank ${rank}`] = findScoreForRank(rankEntries, rank);
-          });
-          return entry;
-        });
+    const data = filteredDataPoints.map((timePoint) => {
+      const entry: any = { time: timePoint.timeMs };
+
+      // Extract target data
+      let rankEntries: ReportEntry[] = [];
+      if (isRaid) {
+        rankEntries = timePoint.data.boss.d as ReportEntry[];
+      } else {
+        rankEntries = activeTab === 'total' ? (timePoint.data.total as ReportEntry[]) : (timePoint.data[activeTab]?.d as ReportEntry[]);
+      }
+
+      // [Core Optimization] Eliminated .find() and find all necessary rank scores in a single loop.
+      const ranksToFind = new Set(activeRanks);
+      const foundScores: Record<number, number> = {};
+      let foundCount = 0;
+
+      for (let i = 0; i < rankEntries?.length; i++) {
+        const r = rankEntries[i].r;
+        if (ranksToFind.has(r)) {
+          foundScores[r] = rankEntries[i].s;
+          foundCount++;
+          // If all desired ranks are found, exit the loop immediately without completing all iterations (Early Exit).
+          if (foundCount === activeRanks.length) break;
+        }
+      }
+
+      // Map found scores to the entry
+      activeRanks.forEach((rank) => {
+        entry[`Rank ${rank}`] = foundScores[rank] || null;
+      });
+
+      return entry;
+    });
 
     const startTime = data[0].time;
     const endTime = data[data.length - 1].time;
     const resets = getKSTResetTimestamps(startTime, endTime);
 
-    const result = {
-      chartData: data as any[],
-      dataKeys: keys,
-      resetTimestamps: resets as number[],
-    };
+    const result = { chartData: data, dataKeys: keys, resetTimestamps: resets };
     prevChartDataRef.current = result;
     return result;
   }, [filteredDataPoints, activeTab, selectedRanks, isRaid, isChartVisible]);
@@ -275,7 +377,7 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
       <ResponsiveContainer width="100%" height={600}>
         <ComposedChart margin={{ top: 20, right: 20, bottom: 20, left: 30 }}>
           <XAxis type="number" dataKey="time" fontSize={12} domain={['dataMin', 'dataMax']} tickFormatter={(timestamp: number) => formatDateToDayString(new Date(timestamp), raidInfos[0])} />
-          <YAxis type="number" domain={['dataMin - 1000', 'dataMax + 1000']} tickFormatter={(s) => `${(s / 1e6).toFixed(1)}M`} width={30}>
+          <YAxis type="number" domain={['dataMin - 1000', 'dataMax + 1000']} tickFormatter={(s) => `${(s / 1e6).toFixed(2)}M`} width={30}>
             <Label value="Score" angle={-90} position="insideLeft" style={{ textAnchor: 'middle', fill: '#888' }} />
           </YAxis>
           <Tooltip content={<CustomScoreTimelineTooltip raidInfos={raidInfos} rankColorMap={rankColorMap} />} cursor={{ fill: 'rgba(200, 200, 200, 0.1)' }} />
@@ -291,8 +393,8 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
             const color = rankColorMap.get(rankNum) || '#888';
             return (
               <React.Fragment key={key}>
-                <Line dataKey={key} data={chartData} name={key} dot={false} stroke={color} strokeWidth={2} connectNulls={true} />
-                <Scatter dataKey={key} data={chartData} name={`${key} Points`} fill={color} shape="circle" legendType="none" />
+                <Line dataKey={key} data={chartData} name={key} dot={false} stroke={color} strokeWidth={2} connectNulls={true} isAnimationActive={false} />
+                <Scatter dataKey={key} data={chartData} name={`${key} Points`} fill={color} shape="circle" legendType="none" isAnimationActive={false} />
               </React.Fragment>
             );
           })}
@@ -301,3 +403,5 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
     </div>
   );
 };
+
+export default React.memo(ScoreTimelineChart);

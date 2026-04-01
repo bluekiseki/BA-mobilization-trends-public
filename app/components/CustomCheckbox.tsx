@@ -1,3 +1,4 @@
+// app/components/CustomCheckbox.tsx
 import { useEffect, useRef } from 'react';
 
 export const CustomCheckbox = ({

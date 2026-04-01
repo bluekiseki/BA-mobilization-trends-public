@@ -44,7 +44,7 @@
       "ko": "예소드",
       "ja": "イェソド",
       "en": "Yesod",
-      "zh_Hant": "Yesod"
+      "zh_Hant": "耶索德"
     },
     "teran": "Street",
     "armorType": "ElasticArmor"
@@ -167,6 +167,16 @@
       "zh_Hant": "高茲"
     },
     "teran": "Street",
+    "armorType": "Unarmed"
+  },
+  "Goz_Outdoor": {
+    "name": {
+      "ko": "고즈",
+      "ja": "ゴズ",
+      "en": "Goz",
+      "zh_Hant": "高茲"
+    },
+    "teran": "Outdoor",
     "armorType": "Unarmed"
   },
   "HOD": {

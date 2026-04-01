@@ -25,6 +25,7 @@ interface Props {
   strategies: Record<string, BannerStrategy>;
   schedules: PlannerSchedule[];
   gachaSimResult: GlobalAggregatedResult | null;
+  setBankruptcyRate: (r: number) => void;
 }
 
 // ----------------------------------------------------------------------
@@ -58,7 +59,7 @@ const SimpleTimeline = ({ schedules, apOverrides, onApChange }: { schedules: Pla
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-neutral-900 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden transition-colors">
+    <div className="flex flex-col h-[40vh] md:h-full bg-white dark:bg-neutral-900 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden transition-colors">
       <div className="p-3 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50 flex justify-between items-center shrink-0">
         <h3 className="font-bold text-slate-700 dark:text-neutral-200 flex items-center gap-2 text-sm">
           <FaCalendarAlt className="text-slate-500 dark:text-neutral-400" /> {t('title')}
@@ -224,7 +225,7 @@ const StatsPanel = ({ config, stats, planSuccessRate }: { config: PyroxeneConfig
 // 3. Main component
 // ----------------------------------------------------------------------
 
-export default function IncomeTab({ config, setConfig, banners, strategies, schedules, gachaSimResult }: Props) {
+export default function IncomeTab({ config, setConfig, banners, strategies, schedules, gachaSimResult, setBankruptcyRate }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const [includeGacha, setIncludeGacha] = useState(true);
   const [apOverrides, setApOverrides] = useState<Record<string, number>>({});
@@ -299,6 +300,7 @@ export default function IncomeTab({ config, setConfig, banners, strategies, sche
       };
     });
 
+    setBankruptcyRate(100 - minMaxCdf);
     return { probTimeline: processed, minMaxCdf };
   }, [baseTimeline, includeGacha, banners, strategies, gachaSimResult, stats]);
 
@@ -333,6 +335,7 @@ export default function IncomeTab({ config, setConfig, banners, strategies, sche
   };
 
   const off = 0.5;
+  setBankruptcyRate;
 
   return (
     <div className="flex flex-col gap-6 transition-colors">
@@ -621,7 +624,7 @@ export default function IncomeTab({ config, setConfig, banners, strategies, sche
         </div>
 
         {/* [Right] Timeline list */}
-        <div className="min-w-[280px] h-[700px]">
+        <div className="min-w-[280px] md:h-[700px] h-[320px]">
           <SimpleTimeline schedules={schedules} apOverrides={apOverrides} onApChange={handleApChange} />
         </div>
       </div>

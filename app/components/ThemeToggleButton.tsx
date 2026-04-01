@@ -166,7 +166,7 @@ export const ThemeDropdown = ({ isMobileText = false }: { isMobileText?: boolean
     <div className="relative flex items-center" ref={ref}>
       <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors">
         {currentIcon}
-        <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('theme', '테마')}</span>
+        <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('theme')}</span>
       </button>
 
       {isOpen && (

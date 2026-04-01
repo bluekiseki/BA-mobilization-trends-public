@@ -12,6 +12,7 @@ import 'rc-tooltip/assets/bootstrap.css';
 import { CustomNumberInput } from '../CustomInput';
 import { FaRedoAlt, FaRegStar } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
+import { CustomCheckbox } from '../CustomCheckbox';
 
 // Defining Stage Priority Type
 type StagePrio = 'include' | 'exclude' | 'priority';
@@ -341,15 +342,26 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     [setFirstClears],
   );
 
+  // const handleToggleAllFirstClears = useCallback(() => {
+  //   const shouldClearAll = farmingStages.some((s) => !firstClears?.[s.Id]);
+  //   const newClears: Record<number, boolean> = {};
+  //   if (shouldClearAll) {
+  //     farmingStages.forEach((s) => {
+  //       newClears[s.Id] = true;
+  //     });
+  //   }
+  //   setFirstClears(() => newClears);
+  // }, [farmingStages, firstClears, setFirstClears]);
   const handleToggleAllFirstClears = useCallback(() => {
     const shouldClearAll = farmingStages.some((s) => !firstClears?.[s.Id]);
-    const newClears: Record<number, boolean> = {};
-    if (shouldClearAll) {
+
+    setFirstClears((prev) => {
+      const nextState = { ...prev };
       farmingStages.forEach((s) => {
-        newClears[s.Id] = true;
+        nextState[s.Id] = shouldClearAll; // If true, check all; if false, uncheck all
       });
-    }
-    setFirstClears(() => newClears);
+      return nextState;
+    });
   }, [farmingStages, firstClears, setFirstClears]);
 
   const handleToggleAllOneTimeRuns = useCallback(() => {
@@ -436,6 +448,27 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     { id: 'onetime', name: '' + t('label.oneTimeClear'), icon: FaRegStar },
   ];
 
+  const allFirstClearsState = useMemo(() => {
+    if (!farmingStages || farmingStages.length === 0) return 'unchecked';
+
+    const checkedCount = farmingStages.filter((s) => firstClears?.[s.Id]).length;
+
+    if (checkedCount === 0) return 'unchecked';
+    if (checkedCount === farmingStages.length) return 'checked';
+    return 'indeterminate';
+  }, [farmingStages, firstClears]);
+
+  const allOneTimeRunsState = useMemo(() => {
+    if (!oneTimeStages || oneTimeStages.length === 0) return 'unchecked';
+
+    // Counts the number of one-time stages where runCounts is 1 or more.
+    const checkedCount = oneTimeStages.filter((s) => (runCounts?.[s.Id] || 0) > 0).length;
+
+    if (checkedCount === 0) return 'unchecked';
+    if (checkedCount === oneTimeStages.length) return 'checked';
+    return 'indeterminate';
+  }, [oneTimeStages, runCounts]);
+
   if (!stagePrio || !firstClears || !runCounts) {
     return null;
   }
@@ -486,20 +519,26 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       <>
         {activeTab === 'repeatable' && (
           <>
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setShowOneTimeRewards(!showOneTimeRewards)} className="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                  {showOneTimeRewards ? t('button.hideOneTimeRewards') : t('button.showOneTimeRewards')}
-                </button>
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+              {/* Left: Display toggle options */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setMinimizeRepeatableInfo(!minimizeRepeatableInfo)}
                   className="text-sm font-semibold text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
                 >
                   {minimizeRepeatableInfo ? t_c('viewMore') : t_c('viewSimple')}
                 </button>
+                <span className="text-gray-300 dark:text-neutral-600 mx-1">|</span>
+                {!minimizeRepeatableInfo && (
+                  <button onClick={() => setShowOneTimeRewards(!showOneTimeRewards)} className="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                    {showOneTimeRewards ? t('button.hideOneTimeRewards') : t('button.showOneTimeRewards')}
+                  </button>
+                )}
               </div>
 
+              {/* Right: Batch operation buttons */}
               <div className="flex flex-wrap items-center gap-2 justify-end">
+                {/* Quick exclusion group (maintaining the original rounded-md design) */}
                 <div className="flex items-center gap-2" role="group">
                   <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mr-1">{t('button.quickExclude')}</span>
                   <button
@@ -521,14 +560,18 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
                     9-12
                   </button>
                 </div>
-                <div className="h-5 border-l border-gray-300 dark:border-neutral-600 mx-2"></div>
-                <button
+
+                {/* Flat divider */}
+                <div className="h-4 border-l border-gray-300 dark:border-neutral-600 mx-1"></div>
+
+                {/* All first-clear settings (combining existing sky-500 style + CustomCheckbox) */}
+                <label
+                  className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-1 px-3 rounded-md text-sm cursor-pointer"
                   data-component-name="FarmingPlanner_f1"
-                  onClick={handleToggleAllFirstClears}
-                  className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-1 px-3 rounded-md text-sm"
                 >
-                  {t('button.setAllFirstClear')}
-                </button>
+                  <CustomCheckbox state={allFirstClearsState} onChange={handleToggleAllFirstClears} />
+                  <span className="select-none">{t('button.setAllFirstClear')}</span>
+                </label>
               </div>
             </div>
 
@@ -779,7 +822,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
         {activeTab === 'onetime' && (
           <>
             {/* --- Top Control Area --- */}
-            <div className="text-right mb-4">
+            {/* <div className="text-right mb-4">
               <button
                 data-component-name="FarmingPlanner_f2"
                 onClick={handleToggleAllOneTimeRuns}
@@ -787,6 +830,16 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
               >
                 {t('button.setAllOneTime')}
               </button>
+            </div> */}
+
+            <div className="flex justify-end my-2">
+              <label
+                className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded-md text-sm cursor-pointer"
+                data-component-name="FarmingPlanner_f2"
+              >
+                <CustomCheckbox state={allOneTimeRunsState} onChange={handleToggleAllOneTimeRuns} />
+                <span className="select-none">{t('button.setAllOneTime')}</span>
+              </label>
             </div>
 
             {/* --- List of stages --- */}

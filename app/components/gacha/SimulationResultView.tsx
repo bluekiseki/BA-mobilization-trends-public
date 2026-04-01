@@ -10,11 +10,12 @@ interface Props {
   result: GlobalAggregatedResult | null;
   initialPyroxenes: number;
   portraitMap: Record<number, string>;
+  bankruptcyRate: number | null;
 }
 
 type UnitType = 'pyroxenes' | 'pulls';
 
-export default function SimulationResultView({ result, initialPyroxenes, portraitMap }: Props) {
+export default function SimulationResultView({ result, initialPyroxenes, portraitMap, bankruptcyRate }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
 
   if (!result) return null;
@@ -31,9 +32,9 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
     rangeLabel: unit === 'pyroxenes' ? `${d.binStart.toLocaleString()} ~ ${d.binEnd.toLocaleString()}` : t('chart.range_count', { start: d.binStart, end: d.binEnd }),
   }));
 
-  const safeZone = result.distCost.find((d) => d.binEnd > initialPyroxenes);
-  const bankruptcyRate = safeZone ? 100 - safeZone.cdf : 0;
-  const isSafe = bankruptcyRate < 10;
+  // const safeZone = result.distCost.find((d) => d.binEnd > initialPyroxenes);
+  // const bankruptcyRate = safeZone ? 100 - safeZone.cdf : 0;
+  const isSafe = bankruptcyRate != null && bankruptcyRate < 10;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -92,19 +93,21 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
         </div>
 
         {/* Stability evaluation */}
-        <div
-          className={`p-5 rounded-xl border shadow-sm flex flex-col justify-between ${isSafe ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900/50' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'}`}
-        >
-          <div className={`flex items-center gap-2 text-sm font-bold uppercase ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-            <FaExclamationTriangle /> {t('summary.safety.title')}
-          </div>
-          <div className="mt-2">
-            <div className={`text-xl font-bold ${isSafe ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
-              {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
+        {bankruptcyRate != null && (
+          <div
+            className={`p-5 rounded-xl border shadow-sm flex flex-col justify-between ${isSafe ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900/50' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'}`}
+          >
+            <div className={`flex items-center gap-2 text-sm font-bold uppercase ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+              <FaExclamationTriangle /> {t('summary.safety.title')}
             </div>
-            <div className="text-xs mt-1 opacity-80 font-medium dark:text-neutral-300">{t('summary.safety.bankruptcy_prob', { rate: bankruptcyRate.toFixed(1) })}</div>
+            <div className="mt-2">
+              <div className={`text-xl font-bold ${isSafe ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
+              </div>
+              <div className="text-xs mt-1 opacity-80 font-medium dark:text-neutral-300">{t('summary.safety.bankruptcy_prob', { rate: bankruptcyRate.toFixed(1) })}</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 3. Distribution chart */}

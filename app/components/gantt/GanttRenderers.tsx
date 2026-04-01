@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Tooltip from 'rc-tooltip';
@@ -265,7 +265,6 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
             </div>
           )}
 
-          {}
           {portrait && (
             <Link
               to={localeLink(locale, `/charts/jp/heatmap`)}
@@ -346,8 +345,38 @@ const PickupStudentItem = ({
   TooltipComponent: any;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [tappedOnce, setTappedOnce] = useState(false); // State for checking mobile double-tap
   const { t: t_c, i18n } = useTranslation('common');
-  const locale = i18n.language as Locale;
+  const locale = i18n.language as Locale; // Need to verify Locale type definition
+
+  const isInvalidId = /ID: \d+/.test(studentName);
+
+  // Reset tap state when hover is lost (e.g., touching elsewhere on mobile)
+  useEffect(() => {
+    if (!isHovered) {
+      setTappedOnce(false);
+    }
+  }, [isHovered]);
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    // 1. Completely ignore clicks if the student ID is invalid
+    if (isInvalidId) {
+      e.preventDefault();
+      return;
+    }
+
+    // 2. Check if the device is touch-based
+    const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+    if (isTouchDevice) {
+      // For touch devices, prevent navigation on the first tap and only update state
+      if (!tappedOnce) {
+        e.preventDefault();
+        setTappedOnce(true);
+      }
+      // On the second tap (tappedOnce === true), navigation occurs normally as preventDefault() is not called
+    }
+  };
 
   return (
     <TooltipComponent placement="top" overlay={<span className="text-xs font-bold">{studentName}</span>} mouseEnterDelay={0.05}>
@@ -363,13 +392,15 @@ const PickupStudentItem = ({
         }}
       >
         {/* <div className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-125 origin-bottom"> */}
-        {}
         <Link
-          to={localeLink(locale, `/charts/jp/heatmap`)}
+          to={localeLink(locale, `/charts/jp/heatmap`)} // Adjust according to the link function being used
           state={{
             studentId: student.id,
           }}
-          className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-125 origin-bottom"
+          onClick={handleLinkClick}
+          className={`relative w-full h-full flex items-center justify-center transition-transform origin-bottom 
+            ${isInvalidId ? 'cursor-default' : 'hover:scale-125 cursor-pointer'}
+          `}
         >
           <img
             src={`data:image/webp;base64,${portrait}`}
@@ -377,7 +408,6 @@ const PickupStudentItem = ({
             alt={studentName}
             style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)' }}
           />
-          {}
           <div className="absolute top-[-4px] left-0 right-0 flex justify-between w-full px-0 pointer-events-none opacity-90 group-hover:opacity-100">
             {student.rerun ? <span className="bg-blue-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm backdrop-blur-[1px] whitespace-nowrap">{t_c('rerun')}</span> : <span />}
             <div className="flex gap-px whitespace-nowrap">
@@ -386,13 +416,11 @@ const PickupStudentItem = ({
             </div>
           </div>
         </Link>
-        {/* </div> */}
       </div>
     </TooltipComponent>
   );
 };
 
-// --- 2. Gantt Pickup Bar ---
 export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studentData, studentPortraits, lane, laneHeight }: GanttRenderProps) {
   const width = Math.max(calculateWidthPx(item.startTime, item.endTime), 2);
   const left = calculateLeftPx(item.startTime);

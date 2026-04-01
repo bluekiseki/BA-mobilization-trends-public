@@ -52,7 +52,7 @@ const mat_3m_old = {
 };
 
 const bosses_limit_3m = ['Binah', '비나', 'ビナー', '薇娜', 'KAITEN', '카이텐', 'カイテン', '凱坦澤'];
-const bosses_limit_4_30m = ['Yesod', '예소드', 'イェソド', 'EN0013'];
+const bosses_limit_4_30m = ['Yesod', '예소드', 'イェソド', 'EN0013', '耶索德'];
 
 export function getTimeoutFromBoss(boss: string): 3 | 4 | 4.5 {
   if (bosses_limit_3m.includes(boss)) return 3;

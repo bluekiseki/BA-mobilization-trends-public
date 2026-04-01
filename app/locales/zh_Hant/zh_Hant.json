@@ -259,6 +259,8 @@
     "selectBossPrompt": "選擇一個首領進行分析。",
     "histogramTitle": "總分分佈（直方圖）",
     "scoreRangeFilter": "分數範圍篩選",
+    "switchToRank": "切換至排名",
+    "switchToScore": "切換至分數",
     "binSize": "區間（區間大小）",
     "bracketFilter": "難度區間篩選",
     "selectAll": "全選",
@@ -285,6 +287,7 @@
     "unitSecond": "秒",
     "tooltipTime": "時間: {{time}}",
     "tooltipDifficulty": "難度: {{difficulty}}",
+    "scoreCondition": "分數 <= {{score}}",
     "tooltipCumulativeRank": "累計排名: ~{{rank}}",
     "clearTime": "清除時間",
     "hideSettings": "隱藏設定",
@@ -386,7 +389,14 @@
     "changePerHourLabel": "玩家 / 小時",
     "playersPerHourUnit": "玩家/小時",
     "playersUnit": "玩家",
-    "hoursUnit": "小時"
+    "hoursUnit": "小時",
+    "show_prediction_cutoff": "顯示白金檔線預測",
+    "prediction_mode_stats": "平均/最大·最小範圍",
+    "prediction_mode_compare": "過去賽季比較",
+    "platinum_prediction_avg": "第{{rank}}名",
+    "compare_cutoff": "{{name}} 檔線 (第{{rank}}名)",
+    "total_combined": "{{types}}",
+    "predicted_score": "{{score}}点"
   },
   "emblemCounter": {
     "title": "好感度排名狀態",

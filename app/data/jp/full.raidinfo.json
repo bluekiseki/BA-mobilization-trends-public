@@ -1562,5 +1562,41 @@
     "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 165323 },
     "Platinum": 52667385,
     "TotalParticipants": 405323
+  },
+  {
+    "Id": "E31",
+    "Boss": "Hieronymus",
+    "Location": "Street",
+    "Type": "HeavyArmor",
+    "Date": "2026-03-04",
+    "MaxLv": 90,
+    "Cnt": { "All": 304392, "Torment": 31628, "Insane": 70600, "Extreme": 92935, "Hardcore": 66253, "Veryhard": 15900, "Hard": 5826, "Normal": 5350 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 64392 },
+    "Platinum": 107651361,
+    "TotalParticipants": 304392
+  },
+  {
+    "Id": "E31",
+    "Boss": "Hieronymus",
+    "Location": "Street",
+    "Type": "Unarmed",
+    "Date": "2026-03-04",
+    "MaxLv": 90,
+    "Cnt": { "All": 304392, "Torment": 31515, "Insane": 72807, "Extreme": 95848, "Hardcore": 65630, "Veryhard": 14679, "Normal": 5178, "Hard": 5421 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 64392 },
+    "Platinum": 107651361,
+    "TotalParticipants": 304392
+  },
+  {
+    "Id": "E31",
+    "Boss": "Hieronymus",
+    "Location": "Street",
+    "Type": "LightArmor",
+    "Date": "2026-03-04",
+    "MaxLv": 90,
+    "Cnt": { "All": 304392, "Insane": 99585, "Extreme": 95795, "Hardcore": 68893, "Veryhard": 16569, "Hard": 6441, "Normal": 6910 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 64392 },
+    "Platinum": 107651361,
+    "TotalParticipants": 304392
   }
 ]

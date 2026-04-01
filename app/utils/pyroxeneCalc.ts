@@ -11,6 +11,10 @@ export const PYROXENE_PER_EVENT: Record<number, number> = {
   854: 6280 + 1200,
   100854: 0,
   200854: 1200 + 1200,
+  855: 2040,
+  10842: 1900,
+  856: 2100,
+  10843: 1250,
 };
 
 export const PYROXENE_PER_MAIN_STORY: Record<string, number> = {

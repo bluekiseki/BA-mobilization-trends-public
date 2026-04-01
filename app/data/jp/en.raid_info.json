@@ -222,5 +222,17 @@
     "Cnt": { "All": 22059, "Torment": 21814, "Insane": 245 }
   },
   { "Id": "E30", "Boss": "Shiro&Kuro", "Location": "Street", "Type": "HeavyArmor", "Date": "2026-01-14", "Alias": "S.ShiroKuro", "MaxLv": 90, "Cnt": { "All": 22017, "Insane": 22017 } },
-  { "Id": "R86", "Boss": "Binah", "Location": "Outdoor", "Date": "2026-02-18", "Alias": "O.Binah", "MaxLv": 90, "Cnt": { "All": 48593, "Lunatic": 24365, "Torment": 24228 } }
+  { "Id": "R86", "Boss": "Binah", "Location": "Outdoor", "Date": "2026-02-18", "Alias": "O.Binah", "MaxLv": 90, "Cnt": { "All": 48593, "Lunatic": 24365, "Torment": 24228 } },
+  {
+    "Id": "E31",
+    "Boss": "Hieronymus",
+    "Location": "Street",
+    "Type": "HeavyArmor",
+    "Date": "2026-03-04",
+    "Alias": "S.Hieronymus",
+    "MaxLv": 90,
+    "Cnt": { "All": 33419, "Torment": 31628, "Insane": 1791 }
+  },
+  { "Id": "E31", "Boss": "Hieronymus", "Location": "Street", "Type": "Unarmed", "Date": "2026-03-04", "Alias": "S.Hieronymus", "MaxLv": 90, "Cnt": { "All": 33403, "Torment": 31515, "Insane": 1888 } },
+  { "Id": "E31", "Boss": "Hieronymus", "Location": "Street", "Type": "LightArmor", "Date": "2026-03-04", "Alias": "S.Hieronymus", "MaxLv": 90, "Cnt": { "All": 33441, "Insane": 33441 } }
 ]

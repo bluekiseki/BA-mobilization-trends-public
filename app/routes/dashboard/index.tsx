@@ -8,7 +8,7 @@ import { getLocaleShortName, type Locale, type LocaleShortName } from '~/utils/i
 import { loadRaidFullInfos } from '~/utils/loadRaidInfo';
 import { TerrainIconGameStyle, type Terrain } from '~/components/teran';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
-import { getLiveRaidInfo } from '~/data/liveRaid';
+import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
 import { isTotalAssault } from '~/components/dashboard/common';
 import type { Route } from './+types';
 import { getInstance } from '~/middleware/i18next';
@@ -22,7 +22,7 @@ import { HiUserGroup } from 'react-icons/hi';
 // import { IoMdTime } from 'react-icons/io';
 import { BsPinAngleFill } from 'react-icons/bs';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { getCurrentGlobalraid } from '~/data/globalRaidDates';
+import { getCurrentGlobalraid, getKstTime } from '~/data/globalRaidDates';
 // import { usePageHelp } from '~/utils/usePageHelp';
 
 // Define types: Total Assault is RaidInfo, Joint Firing Drill is RaidInfo array.
@@ -259,14 +259,18 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
   // Use the first data entry as the representative info
   const primaryRaid = raidInfos[0];
   const { Id: id, Boss, Date: date, Location: location } = primaryRaid;
-  const liveExpired = Number(new Date(date + 'T02:00:00Z')) /* GMT+9 11:00 */ + 3600_000 * 24 * 7 /* add 7 day */ - 3600_000 * 7 < Date.now();
+  // console.log('date',date)
+  const liveExpired = getKstTime(date) /* GMT+9 11:00 */ + 3600_000 * 24 * LIVE_RAID_DURATION /* add 7 day */ - 3600_000 * 7 < Date.now();
 
   const israid = isTotalAssault(primaryRaid);
 
   return (
     <Link
       to={localeLink(locale, `/live`)}
-      className="group flex flex-col h-full w-full rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all p-3"
+      className={
+        'group flex flex-col h-full w-full rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all p-3' +
+        (!liveExpired ? '' : ' opacity-80')
+      }
     >
       {/* Header: Live Status + Terrain | Date */}
       <div className="flex justify-between items-center text-sm text-neutral-500 dark:text-neutral-400 mb-2">

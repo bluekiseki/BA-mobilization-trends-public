@@ -1115,10 +1115,10 @@
   },
   {
     "Id": "R83",
-    "Boss": "Yesod",
+    "Boss": "\u8036\u7d22\u5fb7",
     "Location": "\u5e02\u5340",
     "Date": "2025-10-29",
-    "Alias": "Yesod-\u5e02\u5340",
+    "Alias": "\u8036\u7d22\u5fb7-\u5e02\u5340",
     "MaxLv": 90,
     "Cnt": { "All": 33168, "Lunatic": 951, "Torment": 15802, "Insane": 16415 }
   },
@@ -1238,5 +1238,35 @@
     "Alias": "\u8587\u5a1c-\u5ba4\u5916",
     "MaxLv": 90,
     "Cnt": { "All": 48593, "Lunatic": 24365, "Torment": 24228 }
+  },
+  {
+    "Id": "E31",
+    "Boss": "\u8036\u7f85\u5c3c\u59c6\u65af",
+    "Location": "\u5e02\u5340",
+    "Type": "HeavyArmor",
+    "Date": "2026-03-04",
+    "Alias": "\u8036\u7f85\u5c3c\u59c6\u65af-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 33419, "Torment": 31628, "Insane": 1791 }
+  },
+  {
+    "Id": "E31",
+    "Boss": "\u8036\u7f85\u5c3c\u59c6\u65af",
+    "Location": "\u5e02\u5340",
+    "Type": "Unarmed",
+    "Date": "2026-03-04",
+    "Alias": "\u8036\u7f85\u5c3c\u59c6\u65af-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 33403, "Torment": 31515, "Insane": 1888 }
+  },
+  {
+    "Id": "E31",
+    "Boss": "\u8036\u7f85\u5c3c\u59c6\u65af",
+    "Location": "\u5e02\u5340",
+    "Type": "LightArmor",
+    "Date": "2026-03-04",
+    "Alias": "\u8036\u7f85\u5c3c\u59c6\u65af-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 33441, "Insane": 33441 }
   }
 ]

@@ -128,7 +128,7 @@ export default function InlinePromoBanner() {
         </div>
 
         {/* Right: Checkbox and close button */}
-        <div className="flex items-center gap-3 ml-0 md:ml-3 shrink-0 bg-slate-50 dark:bg-neutral-800 relative z-10 pl-2">
+        <div className="flex items-center gap-3 ml-0 md:ml-3 shrink-0 bg-slate-50 dark:bg-neutral-800/0 relative z-10 pl-2">
           <label className="hidden md:flex items-center gap-1 cursor-pointer hover:text-slate-700 dark:hover:text-neutral-300 transition-colors">
             <input
               type="checkbox"

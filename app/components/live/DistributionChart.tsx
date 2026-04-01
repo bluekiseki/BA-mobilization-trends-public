@@ -128,11 +128,11 @@ export const DistributionChart: FC<DistributionChartProps> = ({ title, rankData,
       if (axisType === 'score') {
         ticks.push({
           value: currentOffset,
-          label: `${(minVal / 1e6).toFixed(1)}M`,
+          label: `${(minVal / 1e6).toFixed(2)}M`,
         });
         ticks.push({
           value: currentOffset + PANEL_WIDTH,
-          label: `${(maxVal / 1e6).toFixed(1)}M`,
+          label: `${(maxVal / 1e6).toFixed(2)}M`,
         });
       } else {
         ticks.push({

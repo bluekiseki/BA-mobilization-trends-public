@@ -23,9 +23,11 @@ import type { Student } from '~/types/data';
 import { useTranslation } from 'react-i18next';
 import { difficultyInfo, type DifficultySelect } from '../Difficulty';
 import type { Locale } from '~/utils/i18n/config';
+import StudentProfileCard from '../common/StudentProfileCard';
 
 interface ChartControlsProps {
   students: Record<number, Student>;
+  portraitData: Record<number, string> | null;
 }
 
 const SliderComponent = ({
@@ -62,7 +64,7 @@ const SliderComponent = ({
   );
 };
 
-const ChartControls = ({ students }: ChartControlsProps) => {
+const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
   const { t, i18n } = useTranslation('charts', {
     keyPrefix: 'heatmap.control',
   });
@@ -141,6 +143,7 @@ const ChartControls = ({ students }: ChartControlsProps) => {
       <div className="mb-2">
         <StudentSearchDropdown students={students} selectedStudentId={selectedStudentId} setSelectedStudentId={setSelectedStudentId} />
       </div>
+      <StudentProfileCard portraitData={portraitData} />
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
 
       {/* Main Controls Grid */}

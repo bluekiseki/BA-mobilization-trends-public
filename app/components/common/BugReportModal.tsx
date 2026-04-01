@@ -15,7 +15,7 @@ export default function BugReportModal({ onClose, issuesURL }: BugReportModalPro
   const { t } = useTranslation('common');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const data = useLoaderData<typeof loader>();
-  
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {

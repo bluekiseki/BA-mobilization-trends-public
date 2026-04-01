@@ -12,6 +12,7 @@ import type { EventData, IconData } from '~/types/plannerData';
 import { ItemIcon } from '../common/Icon';
 import { CustomNumberInput } from '~/components/CustomInput';
 import { NumberInput } from '../common/NumberInput';
+import { HighFlowerBouquetItemIds, LowFlowerBouquetItemIds } from './const';
 
 // --- Constants ---
 
@@ -320,6 +321,7 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
   const displayedGifts = useMemo(() => {
     if (!hideNonPreferred) return giftAffectionList;
     return giftAffectionList.filter((gift) => {
+      if ([...HighFlowerBouquetItemIds, ...LowFlowerBouquetItemIds].includes(Number(gift.id))) return false;
       if (gift.rarity === 2) return gift.affectionPoints > 20;
       if (gift.rarity === 3) return gift.affectionPoints > 120;
       return false;

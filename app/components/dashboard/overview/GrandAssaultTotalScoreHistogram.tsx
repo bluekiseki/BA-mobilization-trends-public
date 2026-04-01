@@ -8,138 +8,161 @@ import type { PlayerAnalysisData } from './DifficultyCombinationChart';
 
 interface HistogramAnalysisProps {
   allPlayers: PlayerAnalysisData[];
+  tierCounter: { [key: string]: number };
 }
 
-/**
- * A self-contained component for rendering the histogram.
- * It will not mount or perform calculations until it is rendered by its parent.
- */
-function HistogramAnalysis({ allPlayers }: HistogramAnalysisProps) {
+export default function HistogramAnalysis({ allPlayers, tierCounter }: HistogramAnalysisProps) {
   const { t } = useTranslation('dashboard');
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
   const [histFilter, setHistFilter] = useState({
+    rankMin: 1,
+    rankMax: 20000,
     scoreMin: 0,
-    scoreMax: 900_000_000,
-    binSize: 20_000,
+    scoreMax: 999_999_999,
+    useScoreFilter: false, // Flag for toggling between rank and score filters
+    binSize: 0, // If 0, auto-calculation mode
   });
   const [bracketVisibility, setBracketVisibility] = useState<Record<string, boolean>>({});
 
-  // This effect now runs ONLY when this component is mounted
+  // 1. Set initial rank range and initialize bracket visibility
   useEffect(() => {
+    const initialMaxRank = tierCounter?.[4] || 20000;
+    setHistFilter((prev) => ({
+      ...prev,
+      rankMin: 1,
+      rankMax: initialMaxRank,
+    }));
+
     const initialVisibility: Record<string, boolean> = {};
     SCORE_BRACKETS.forEach((bracket) => {
-      if (['TTT', 'TTI', 'TII'].includes(bracket.name)) initialVisibility[bracket.name] = true;
-      else initialVisibility[bracket.name] = false;
+      initialVisibility[bracket.name] = ['TTT', 'TTI', 'TII'].includes(bracket.name);
     });
     initialVisibility['Other'] = false;
     setBracketVisibility(initialVisibility);
-  }, []); // Empty dependency array is fine here
+  }, [tierCounter]);
 
-  // --- All histogram calculations are now local to this component ---
+  // 2. Apply bracket (composition) filters and inject rank information
+  const processedPlayers = useMemo(() => {
+    const sorted = [...allPlayers].sort((a, b) => b.totalScore - a.totalScore);
+    const withRank = sorted.map((p, index) => ({ ...p, rank: index + 1 }));
 
-  // 1. Bracket filtering
-  const bracketFilteredPlayers = useMemo(() => {
-    return allPlayers.filter((p) => {
+    return withRank.filter((p) => {
       const bracketName = getBracketFromTotalScore(p.totalScore);
       return bracketVisibility[bracketName] ?? true;
     });
   }, [allPlayers, bracketVisibility]);
 
-  // 2. Binning based on filtered data
-  const histogramData = useMemo(() => {
-    const rangeFiltered = bracketFilteredPlayers.filter((p) => p.totalScore >= histFilter.scoreMin && p.totalScore <= histFilter.scoreMax);
+  // 3. Range filtering based on rank or score
+  const { rangeFilteredPlayers, calculatedScoreMin, calculatedScoreMax } = useMemo(() => {
+    let filtered = processedPlayers;
 
-    const bins = new Map<number, { totalScore: number; count: number }>();
-    const binSize = histFilter.binSize > 0 ? histFilter.binSize : 1;
-    for (const player of rangeFiltered) {
-      const binIndex = Math.floor(player.totalScore / binSize);
-      const binStart = binIndex * binSize;
-      const current = bins.get(binStart) || { totalScore: 0, count: 0 };
+    if (histFilter.useScoreFilter) {
+      filtered = processedPlayers.filter((p) => p.totalScore >= histFilter.scoreMin && p.totalScore <= histFilter.scoreMax);
+    } else {
+      filtered = processedPlayers.filter((p) => p.rank >= histFilter.rankMin && p.rank <= histFilter.rankMax);
+    }
+
+    let sMin = 0;
+    let sMax = 0;
+    if (filtered.length > 0) {
+      sMin = filtered[filtered.length - 1].totalScore; // Ascending (lower rank)
+      sMax = filtered[0].totalScore; // Descending (higher rank)
+    }
+
+    return { rangeFilteredPlayers: filtered, calculatedScoreMin: sMin, calculatedScoreMax: sMax };
+  }, [processedPlayers, histFilter]);
+
+  // 4. Dynamic Bin size calculation
+  const currentBinSize = useMemo(() => {
+    // Use user-specified size as priority if available
+    if (histFilter.binSize > 0) return histFilter.binSize;
+    if (rangeFilteredPlayers.length === 0) return 20000;
+
+    const scoreRange = calculatedScoreMax - calculatedScoreMin;
+    // Aim for approximately 10–30 bars on the screen
+    const targetBinCount = Math.max(10, (window.innerWidth - 50) / 1);
+    let rawBinSize = scoreRange / targetBinCount;
+
+    // Adjust to clean, rounded numbers
+    if (rawBinSize > 100_000) rawBinSize = Math.ceil(rawBinSize / 100_000) * 100_000;
+    else if (rawBinSize > 50_000) rawBinSize = 50_000;
+    else if (rawBinSize > 10_000) rawBinSize = Math.ceil(rawBinSize / 10_000) * 10_000;
+    else rawBinSize = 10_000;
+
+    return Math.max(rawBinSize, 1);
+  }, [histFilter.binSize, calculatedScoreMin, calculatedScoreMax, rangeFilteredPlayers.length]);
+
+  // 5. Aggregate histogram data (Binning)
+  // 5. Aggregate histogram data (Binning)
+  const histogramData = useMemo(() => {
+    if (rangeFilteredPlayers.length === 0) return [];
+
+    // Change: Added fields to track minRank and maxRank when constructing bins
+    const bins = new Map<number, { totalScore: number; count: number; minRank: number; maxRank: number }>();
+    const baseScore = Math.floor(calculatedScoreMin / currentBinSize) * currentBinSize;
+
+    for (const player of rangeFilteredPlayers) {
+      const binIndex = Math.floor((player.totalScore - baseScore) / currentBinSize);
+      const binStart = baseScore + binIndex * currentBinSize;
+      const current = bins.get(binStart) || { totalScore: 0, count: 0, minRank: Infinity, maxRank: -Infinity };
+
       current.totalScore += player.totalScore;
       current.count += 1;
+
+      // Change: Record the highest rank (lowest number) and lowest rank (highest number) of users in this range
+      if (player.rank < current.minRank) current.minRank = player.rank;
+      if (player.rank > current.maxRank) current.maxRank = player.rank;
+
       bins.set(binStart, current);
     }
 
-    const binEntries = Array.from(bins.entries());
-    // const totalBinnedPlayers = binEntries.reduce((sum, [, data]) => sum + data.count, 0);
-    binEntries.sort((a, b) => a[0] - b[0]);
-    let cumulativeRank = 1; //totalBinnedPlayers;
+    // Score ascending (lowest score = highest rank number -> moving right leads to 1st place)
+    const binEntries = Array.from(bins.entries()).sort((a, b) => a[0] - b[0]);
 
-    return Array.from(bins.entries()).map(([binStart, data]) => {
-      const binEnd = binStart + binSize;
+    return binEntries.map(([binStart, data]) => {
+      const binEnd = binStart + currentBinSize;
       const avgScore = data.count > 0 ? data.totalScore / data.count : 0;
       const difficulty = getDifficultyFromScore(avgScore);
-
-      const rankEnd = cumulativeRank;
-      cumulativeRank += data.count;
-      const rankStart = cumulativeRank + 1;
-
-      // return {
-      //     name: `${(binStart / 1_000_000).toFixed(1)}M-${(binEnd / 1_000_000).toFixed(1)}M`,
-      //     count: data.count,
-      //     color: DIFFICULTY_COLORS[difficulty],
-      //     bracket: getBracketFromTotalScore(avgScore),
-      // };
 
       return {
         binStart,
         binEnd,
         count: data.count,
-        color: DIFFICULTY_COLORS[difficulty],
+        color: DIFFICULTY_COLORS[difficulty] || '#8884d8',
         bracket: getBracketFromTotalScore(avgScore),
-        cumulativeRankRange: `${rankEnd.toLocaleString()}-${rankStart.toLocaleString()}`,
+        // Change: Output the actual calculated highest rank to lowest rank of users
+        cumulativeRankRange: data.count > 0 ? `${data.minRank.toLocaleString()} ~ ${data.maxRank.toLocaleString()}` : '-',
       };
-    }); //.sort((a, b) => parseFloat(a.name) - parseFloat(b.name));
-  }, [bracketFilteredPlayers, histFilter]);
-
-  const handleSelectAllBrackets = () => {
-    const newVisibility = { ...bracketVisibility };
-    Object.keys(newVisibility).forEach((key) => {
-      newVisibility[key] = true;
     });
-    setBracketVisibility(newVisibility);
+  }, [rangeFilteredPlayers, calculatedScoreMin, currentBinSize]);
+
+  // --- UI Handlers ---
+  const handleSelectAllBrackets = () => {
+    setBracketVisibility(Object.keys(bracketVisibility).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
   };
 
   const handleDeselectAllBrackets = () => {
-    const newVisibility = { ...bracketVisibility };
-    Object.keys(newVisibility).forEach((key) => {
-      newVisibility[key] = false;
-    });
-    setBracketVisibility(newVisibility);
+    setBracketVisibility(Object.keys(bracketVisibility).reduce((acc, key) => ({ ...acc, [key]: false }), {}));
   };
 
-  // Tooltip component is also moved here
-  // const HistogramTooltip = ({ active, payload }: any) => {
-  //     const { t } = useTranslation("dashboard");
-  //     if (active && payload && payload.length) {
-  //         const data = payload[0].payload;
-  //         return (
-  //             <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3 border rounded-lg shadow-lg text-sm">
-  //                 <p className="font-bold">{t('tooltipScore', { name: data.name })}</p>
-  //                 <p>{t('tooltipPlayers', { count: data.count.toLocaleString() })}</p>
-  //                 {data.bracket && <p className="font-semibold" style={{ color: data.color }}>{t('tooltipAvgBracket', { bracket: data.bracket })}</p>}
-  //             </div>
-  //         );
-  //     }
-  //     return null;
-  // };
   const HistogramTooltip = ({ active, payload }: any) => {
-    const { t } = useTranslation('dashboard');
     if (active && payload && payload.length) {
+      const { t } = useTranslation('dashboard');
       const data = payload[0].payload;
-      // const scoreRange = `${(data.binStart / 1_000_000).toFixed(1)}M-${(data.binEnd / 1_000_000).toFixed(1)}M`;
-      const scoreRange = `${data.binStart.toLocaleString()}-${data.binEnd.toLocaleString()}`;
+      const scoreRange = `${data.binStart.toLocaleString()} ~ ${data.binEnd.toLocaleString()}`;
       return (
-        <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3 border rounded-lg shadow-lg text-sm">
-          <p className="font-bold">{t('tooltipScore', { name: scoreRange })}</p>
-          <p>{t('tooltipPlayers', { count: data.count.toLocaleString() })}</p>
-          <p>
-            {t('tooltipRank', 'rank')}: {data.cumulativeRankRange}
+        <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 border dark:border-neutral-700 rounded-lg shadow-lg text-sm z-50">
+          <p className="font-bold mb-1">{t('tooltipScore', { name: scoreRange })}</p>
+          <p className="text-neutral-600 dark:text-neutral-300">{t('tooltipPlayers', { count: data.count.toLocaleString() })}</p>
+          <p className="text-xs text-neutral-500 mt-1">
+            {/* {t('tooltipRank', { rank: String(data.cumulativeRankRange) })} */}
+            {t('byRank', 'rank')}: {data.cumulativeRankRange}
           </p>
           {data.bracket && (
-            <p className="font-semibold" style={{ color: data.color }}>
-              {t('tooltipAvgBracket', { bracket: data.bracket })}
+            <p className="font-semibold mt-1" style={{ color: data.color }}>
+              {/* {t('tooltipAvgBracket', { bracket: data.bracket })} */}
+              {data.bracket}
             </p>
           )}
         </div>
@@ -148,27 +171,26 @@ function HistogramAnalysis({ allPlayers }: HistogramAnalysisProps) {
     return null;
   };
 
-  // Return the JSX for the histogram section
   return (
-    <>
+    <div className="space-y-4">
       <div className="flex justify-between items-center mb-2">
-        <div className="font-bold"></div>
-        <button onClick={() => setIsSettingsVisible(!isSettingsVisible)} className="text-sm px-3 py-1 rounded-md bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600">
+        <h3 className="font-bold text-lg">{t('scoreDistribution')}</h3>
+        <button
+          onClick={() => setIsSettingsVisible(!isSettingsVisible)}
+          className="text-sm px-3 py-1 rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+        >
           {t('clearTime')} {isSettingsVisible ? t('hideSettings') : t('showSettings')}
         </button>
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={histogramData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          {/* <XAxis dataKey="name" angle={-45} textAnchor="end" height={50} tickFormatter={(value) => value.split('-')[0]}
-                    /> */}
-          <XAxis dataKey="binStart" angle={-45} textAnchor="end" height={50} tickFormatter={(value) => `${(value / 1_000_000).toFixed(1)}M`} />
-          <YAxis />
-          <Tooltip content={<HistogramTooltip />} />
-          <Bar dataKey="count" name={t('playerCount')}>
-            {/* {histogramData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))} */}
-            {histogramData.map((entry, index) => (
+        <BarChart data={histogramData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+          <XAxis dataKey="binStart" angle={-45} textAnchor="end" height={60} tickMargin={10} tickFormatter={(value) => `${(value / 1_000_000).toFixed(1)}M`} style={{ fontSize: '10px' }} />
+          <YAxis allowDecimals={false} width={40} style={{ fontSize: '10px' }} />
+          <Tooltip content={<HistogramTooltip />} cursor={{ fill: 'rgba(150, 150, 150, 0.1)' }} />
+          <Bar dataKey="count" name={t('playerCount')} radius={[2, 2, 0, 0]}>
+            {histogramData.map((entry) => (
               <Cell key={`cell-${entry.binStart}`} fill={entry.color} />
             ))}
           </Bar>
@@ -176,52 +198,92 @@ function HistogramAnalysis({ allPlayers }: HistogramAnalysisProps) {
       </ResponsiveContainer>
 
       {isSettingsVisible && (
-        <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 border dark:border-neutral-700 rounded-lg space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-bold">{t('scoreRangeFilter')}</label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="number"
-                  value={histFilter.scoreMin}
-                  onChange={(e) => setHistFilter((p) => ({ ...p, scoreMin: +e.target.value }))}
-                  className="w-full p-1 text-center bg-transparent border rounded"
-                />
-                <span>~</span>
-                <input
-                  type="number"
-                  value={histFilter.scoreMax}
-                  onChange={(e) => setHistFilter((p) => ({ ...p, scoreMax: +e.target.value }))}
-                  className="w-full p-1 text-center bg-transparent border rounded"
-                />
+        <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 border dark:border-neutral-700 rounded-lg space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Filter settings area */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold">{histFilter.useScoreFilter ? t('scoreRangeFilter') : t('rankRangeSettings')}</label>
+                <button onClick={() => setHistFilter((p) => ({ ...p, useScoreFilter: !p.useScoreFilter }))} className="text-[10px] text-blue-500 hover:underline">
+                  {histFilter.useScoreFilter ? t('switchToRank') : t('switchToScore')}
+                </button>
               </div>
+
+              {histFilter.useScoreFilter ? (
+                <div className="flex items-center gap-2">
+                  <CustomNumberInput
+                    // type="number"
+                    value={histFilter.scoreMin}
+                    onChange={(e) => setHistFilter((p) => ({ ...p, scoreMin: e || 0 }))}
+                    className="w-full p-1.5 text-center bg-white dark:bg-neutral-900 border dark:border-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <span className="text-neutral-500">~</span>
+                  <CustomNumberInput
+                    // type="number"
+                    value={histFilter.scoreMax}
+                    onChange={(e) => setHistFilter((p) => ({ ...p, scoreMax: e || 0 }))}
+                    className="w-full p-1.5 text-center bg-white dark:bg-neutral-900 border dark:border-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CustomNumberInput
+                    // type="number"
+                    value={histFilter.rankMin}
+                    onChange={(e) => setHistFilter((p) => ({ ...p, rankMin: e || 1 }))}
+                    className="w-full p-1.5 text-center bg-white dark:bg-neutral-900 border dark:border-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                    min={1}
+                  />
+                  <span className="text-neutral-500">~</span>
+                  <CustomNumberInput
+                    // type="number"
+                    value={histFilter.rankMax}
+                    onChange={(e) => setHistFilter((p) => ({ ...p, rankMax: e || 1 }))}
+                    className="w-full p-1.5 text-center bg-white dark:bg-neutral-900 border dark:border-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                    min={1}
+                  />
+                </div>
+              )}
             </div>
+
+            {/* Bin size settings */}
             <div>
-              <label className="text-sm font-bold">{t('binSize')}</label>
-              <CustomNumberInput
-                value={histFilter.binSize}
-                onChange={(e) => e && setHistFilter((p) => ({ ...p, binSize: +e }))}
-                step="100000"
-                className="w-full p-1 mt-1 text-center bg-transparent border rounded"
-              />
+              <label className="text-sm font-bold block mb-1">{t('binSize')} </label>
+              <div className="flex items-center gap-2 mt-2">
+                <CustomNumberInput
+                  value={histFilter.binSize === 0 ? currentBinSize : histFilter.binSize}
+                  onChange={(e) => setHistFilter((p) => ({ ...p, binSize: Number(e) || 0 }))}
+                  step={10000}
+                  className="w-full p-1.5 text-center bg-white dark:bg-neutral-900 border dark:border-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => setHistFilter((p) => ({ ...p, binSize: 0 }))}
+                  className="shrink-0 text-[10px] px-2 py-1.5 bg-neutral-200 dark:bg-neutral-700 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                >
+                  {t('auto', 'auto')}
+                </button>
+              </div>
             </div>
           </div>
 
+          <hr className="border-neutral-200 dark:border-neutral-700" />
+
+          {/* Bracket settings */}
           <div>
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-bold">{t('bracketFilter')}</label>
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-sm font-bold">{t('bracketFilter', '조합 필터')}</label>
               <div className="flex gap-2">
-                <button onClick={handleSelectAllBrackets} className="text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600">
+                <button onClick={handleSelectAllBrackets} className="text-[10px] px-2 py-1 rounded bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 font-medium">
                   {t('selectAll')}
                 </button>
-                <button onClick={handleDeselectAllBrackets} className="text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600">
+                <button onClick={handleDeselectAllBrackets} className="text-[10px] px-2 py-1 rounded bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 font-medium">
                   {t('deselectAll')}
                 </button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
               {Object.entries(bracketVisibility).map(([bracketName, isVisible]) => (
-                <label key={bracketName} className="flex items-center cursor-pointer">
+                <label key={bracketName} className="flex items-center cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={isVisible}
@@ -231,17 +293,15 @@ function HistogramAnalysis({ allPlayers }: HistogramAnalysisProps) {
                         [bracketName]: e.target.checked,
                       }))
                     }
-                    className="mr-1.5 h-4 w-4"
+                    className="mr-2 h-3.5 w-3.5 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-700"
                   />
-                  <span className="text-sm">{bracketName}</span>
+                  <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-black dark:group-hover:text-white transition-colors">{bracketName}</span>
                 </label>
               ))}
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
-
-export default HistogramAnalysis;

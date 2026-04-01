@@ -1,5 +1,6 @@
 import BannerPlanner from '~/components/gacha/BannerPlanner'; // Reuse existing components
-import type { BannerPeriod, BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
+import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
+import type { BannerPeriod } from '~/utils/gachaData';
 
 interface Props {
   banners: BannerPeriod[];

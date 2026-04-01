@@ -4,11 +4,11 @@ import type { LastData, TimelineData } from '~/types/livetype';
 import type { Student } from '~/types/data';
 import { isTotalAssault, type PortraitData } from '~/components/dashboard/common';
 import { useDataCacheJson } from '~/utils/useDataCacheJson';
-import { RankScatterChart } from '~/components/live/RankScatterChart';
-import { ScoreTimelineChart } from '~/components/live/ScoreTimelineChart';
-import { TierAnalysisDashboard } from '~/components/live/TierAnalysisDashboard';
-import { Top10Rankings } from '~/components/live/Top10Rankings';
-import { MaxScoreTimelineChart } from '~/components/live/MaxScoreTimelineChart';
+import RankScatterChart from '~/components/live/RankScatterChart';
+import ScoreTimelineChart from '~/components/live/ScoreTimelineChart';
+import TierAnalysisDashboard from '~/components/live/TierAnalysisDashboard';
+import Top10Rankings from '~/components/live/Top10Rankings';
+import MaxScoreTimelineChart from '~/components/live/MaxScoreTimelineChart';
 import { useTranslation } from 'react-i18next';
 import { formatDateToDayString } from '~/components/live/formatDateToDayString';
 import { getLiveRaidInfo } from '~/data/liveRaid';
@@ -22,6 +22,15 @@ import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types';
 import { cdn } from '~/utils/cdn';
 import { env } from 'cloudflare:workers';
+import { YouTubeSearchGenerator } from '~/components/dashboard/YouTubeSearchGenerator';
+import type { AppHandle } from '~/types/link';
+
+const RANKS_TO_PLOT = [
+  1,
+  ...Array(20)
+    .fill(0)
+    .map((_, i) => (1 + i) * 1000),
+];
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const raidInfo = loaderData.raidInfos[0];
@@ -107,6 +116,29 @@ export function links() {
   return [...createLinkHreflang('/live')];
 }
 
+export const handle: AppHandle = {
+  preload: (data) => {
+    // Create a link dynamically using the return value (data) of the root loader
+
+    if (!data?.locale) return [];
+    return [
+      {
+        rel: 'preload',
+        href: cdn(`/w/${getLocaleShortName(data?.locale)}.students.bin`),
+        as: 'fetch',
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'preload',
+        href: cdn('/w/students_portrait.json'),
+        as: 'fetch',
+        crossOrigin: 'anonymous',
+      },
+      ...createLinkHreflang(`/live`),
+    ];
+  },
+};
+
 export default function LiveDashboardPage() {
   const { lastData: lastData, timelineData: timelineData, raidInfos } = useLoaderData<typeof loader>();
   // const [lastData, setLastData] = useState<LastData>(lastData_f as LastData);
@@ -119,15 +151,20 @@ export default function LiveDashboardPage() {
   const { t } = useTranslation('liveDashboard');
   const { t: t_c } = useTranslation('common');
   const locale = i18n.language as Locale;
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    console.log('useeffet');
+    setIsReady(false);
     Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as any)])
       .then(([studentJson, portraitJson]) => {
         setStudentData(studentJson);
         setPortraitData(portraitJson);
+        setIsReady(true);
       })
       .catch((err) => {
         console.error('Failed to load common data:', err);
+        setIsReady(true);
       });
   }, [locale]);
 
@@ -154,6 +191,8 @@ export default function LiveDashboardPage() {
           <span className="inline-block px-3 py-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">
             {getMostDifficultLevel(raidInfos[0])} {/* Lunatic */}
           </span>
+
+          <YouTubeSearchGenerator raidInfo={raidInfos[0]} showType={raidInfos.every((v) => v.Type != undefined) ? (raidInfos.map((v) => v.Type) as any) : false} />
         </div>
 
         <div className="mt-6 text-center">
@@ -177,36 +216,35 @@ export default function LiveDashboardPage() {
 
       {/* Clear Distribution Chart*/}
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">{t('platinum_tier_distribution')}</h2>
-        <RankScatterChart isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} />
-      </section>
+      {isReady && (
+        <>
+          <section>
+            <h2 className="text-2xl font-bold mb-4">{t('platinum_tier_distribution')}</h2>
+            <RankScatterChart isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} />
+          </section>
 
-      <section>
-        <Top10Rankings isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
-      </section>
+          <section>
+            <Top10Rankings isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
+          </section>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">{t('ranking_cutoff_fluctuation')}</h2>
+          <section>
+            <h2 className="text-2xl font-bold mb-4">{t('ranking_cutoff_fluctuation')}</h2>
 
-        <ScoreTimelineChart
-          isRaid={isRaid}
-          timelineData={timelineData}
-          ranksToPlot={[
-            1,
-            ...Array(20)
-              .fill(0)
-              .map((_, i) => (1 + i) * 1000),
-          ]}
-          // ranksToPlot={[1, 5000, 10000, 20000]}
-          raidInfos={raidInfos}
-        />
-      </section>
+            <ScoreTimelineChart
+              isRaid={isRaid}
+              timelineData={timelineData}
+              ranksToPlot={RANKS_TO_PLOT}
+              // ranksToPlot={[1, 5000, 10000, 20000]}
+              raidInfos={raidInfos}
+            />
+          </section>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">{t('highscore_change_by_difficulty')}</h2>
-        <MaxScoreTimelineChart isRaid={isRaid} timelineData={timelineData} raidInfos={raidInfos} server={server} />
-      </section>
+          <section>
+            <h2 className="text-2xl font-bold mb-4">{t('highscore_change_by_difficulty')}</h2>
+            <MaxScoreTimelineChart isRaid={isRaid} timelineData={timelineData} raidInfos={raidInfos} server={server} />
+          </section>
+        </>
+      )}
     </main>
   );
 }

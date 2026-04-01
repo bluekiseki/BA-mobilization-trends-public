@@ -17,7 +17,9 @@
   --color-bluearchive-botton-gray: #e0e0e0;
   --shadow-bluearchive: #111 0px 0px 0px 0.5px;
   --shadow-bluearchive-xl: #ddd 1px 2px 2px 1px;
-  --font-bluearchive: 'GyeonggiTitle', 'Inter', 'Pretendard JP Variable'; /* RoG2サンセリフStdN is non-free */
+  --font-bluearchive:
+    'GyeonggiTitle', 'Inter', 'Pretendard JP Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Hiragino Sans', 'Apple SD Gothic Neo', Meiryo,
+    'Noto Sans JP', 'Noto Sans KR', 'Malgun Gothic', Osaka, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif; /* RoG2サンセリフStdN is non-free */
   --font-pretendard:
     'Pretendard JP Variable', 'Pretendard JP', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Hiragino Sans', 'Apple SD Gothic Neo', Meiryo,
     'Noto Sans JP', 'Noto Sans KR', 'Malgun Gothic', Osaka, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
@@ -27,6 +29,7 @@ html,
 body {
   @apply bg-white dark:bg-gray-950;
 
+  font-family: var(--font-bluearchive);
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }

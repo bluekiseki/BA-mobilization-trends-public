@@ -252,7 +252,31 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                                     : 'bg-slate-50 text-slate-500 dark:bg-gray-600 dark:text-gray-300 dark:border-gray-500'
                               }`}
                               value={config.mode}
-                              onChange={(e) => onUpdateStudentConfig(banner.id, student.id, { mode: e.target.value as any })}
+                              onChange={(e) => {
+                                // onUpdateStudentConfig(banner.id, student.id, { mode: e.target.value as any });
+
+                                // console.log('strategies[banner.id]',strategies[banner.id])
+                                const needMaxSparks = Object.entries(strategies[banner.id].studentConfigs).filter(
+                                  ([id, config]) => (student.id == Number(id) ? e.target.value : config.mode) == 'must',
+                                ).length;
+
+                                if (needMaxSparks > strategies[banner.id].maxSparks) {
+                                  console.log('Invalid. maxPulls must be uploaded.', needMaxSparks, strategies[banner.id].maxSparks);
+                                  onUpdateStrategy(banner.id, {
+                                    ...strategies[banner.id],
+                                    maxSparks: needMaxSparks,
+                                    studentConfigs: {
+                                      ...strategies[banner.id].studentConfigs,
+                                      [student.id]: {
+                                        ...strategies[banner.id].studentConfigs[student.id],
+                                        mode: e.target.value as any,
+                                      },
+                                    },
+                                  });
+                                } else {
+                                  onUpdateStudentConfig(banner.id, student.id, { mode: e.target.value as any });
+                                }
+                              }}
                             >
                               <option value="skip">{t('mode.skip')}</option>
                               <option value="must">{t('mode.must')}</option>

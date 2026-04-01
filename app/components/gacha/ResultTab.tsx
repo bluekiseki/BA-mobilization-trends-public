@@ -16,9 +16,11 @@ interface Props {
   portraitMap: Record<number, string>;
   gachaSimResult: GlobalAggregatedResult | null;
   setGachaSimResult: (next: GlobalAggregatedResult | null) => void;
+  bankruptcyRate: number | null;
+  setBankruptcyRate: (r: number | null) => void;
 }
 
-export default function ResultTab({ config, banners, strategies, allStudents, portraitMap, gachaSimResult, setGachaSimResult }: Props) {
+export default function ResultTab({ config, banners, strategies, allStudents, portraitMap, gachaSimResult, setGachaSimResult, bankruptcyRate, setBankruptcyRate }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result' });
   const [simCount, setSimCount] = useState(10000);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -39,6 +41,7 @@ export default function ResultTab({ config, banners, strategies, allStudents, po
         };
 
         const res = runGlobalSimulation(activeStrategies, bannersMap, allStudents, simConfig);
+        setBankruptcyRate(null);
         setGachaSimResult(res);
       } catch (e) {
         console.error(e);
@@ -94,7 +97,7 @@ export default function ResultTab({ config, banners, strategies, allStudents, po
       </div>
 
       {/* Result view */}
-      {gachaSimResult && <SimulationResultView result={gachaSimResult} initialPyroxenes={config.currentPyroxene} portraitMap={portraitMap} />}
+      {gachaSimResult && <SimulationResultView result={gachaSimResult} initialPyroxenes={config.currentPyroxene} portraitMap={portraitMap} bankruptcyRate={bankruptcyRate} />}
 
       {!gachaSimResult && !isSimulating && (
         <div className="text-center py-20 text-neutral-400 dark:text-neutral-500 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800 transition-colors">
