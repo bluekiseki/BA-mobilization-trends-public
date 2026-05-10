@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, ReferenceLine, Customized, useXAxisScale, useYAxisScale } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { HiArrowsUpDown } from 'react-icons/hi2';
@@ -247,30 +247,44 @@ export const RaidUsageStackChart: React.FC = () => {
     );
   };
 
-  const renderTotalLabel = (props: any) => {
-    const { x, y, width, height, value } = props;
+  const TotalCountLabels = () => {
+    const xScale = useXAxisScale();
+    const yScale = useYAxisScale();
+
+    if (!xScale || !yScale) return null;
 
     return (
-      <text
-        x={x + width + 5}
-        y={y + height / 2}
-        fill={isDark == 'light' ? '#404040' : '#d4d4d4'}
-        textAnchor="start"
-        dominantBaseline="middle"
-        fontSize={11}
-        fontWeight="bold"
-        style={{ pointerEvents: 'none' }}
-      >
-        {value.toLocaleString()}%
-      </text>
+      <>
+        {processedData.map((item) => {
+          const xPos = xScale(item.totalCount);
+          const yPos = yScale(item.displayName, { position: 'middle' });
+          if (xPos == null || yPos == null) return null;
+
+          return (
+            <text
+              key={item.raidId}
+              x={xPos + 5}
+              y={yPos}
+              fill={isDark === 'light' ? '#404040' : '#d4d4d4'}
+              textAnchor="start"
+              dominantBaseline="middle"
+              fontSize={11}
+              fontWeight="bold"
+              style={{ pointerEvents: 'none' }}
+            >
+              {item.totalCount.toLocaleString()}%
+            </text>
+          );
+        })}
+      </>
     );
   };
 
   return (
-    <div data-component-name="RaidUsageStackChart" className="w-full mt-8 animate-fade-in-up">
+    <div data-component-name="RaidUsageStackChart" className="w-full animate-fade-in-up">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-100 flex items-center gap-2">{t('usage_statistics', { defaultValue: 'Usage Statistics' })}</h3>
+          <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-200 flex items-center gap-2">{t('usage_statistics', { defaultValue: 'Usage Statistics' })}</h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
             {t('usage_desc', {
               defaultValue: 'Compare pick rates by star level across raids.',
@@ -301,7 +315,7 @@ export const RaidUsageStackChart: React.FC = () => {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={chartHeight}>
+      <ResponsiveContainer width="100%" height={chartHeight} className="[&>svg]:overflow-visible">
         <BarChart layout="vertical" data={processedData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }} barCategoryGap={8}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={isDark ? '#404040' : '#e5e5e5'} />
 
@@ -317,11 +331,9 @@ export const RaidUsageStackChart: React.FC = () => {
             </Bar>
           ))}
 
-          <Bar key={`bar-anchor-${assistantFilter}`} dataKey="_anchor" stackId="a" fill="transparent" stroke="none" isAnimationActive={false} legendType="none">
-            <LabelList dataKey="totalCount" content={renderTotalLabel} position="right" />
-          </Bar>
-
           <ReferenceLine x={100} stroke={isDark == 'dark' ? 'white' : 'black'} strokeDasharray="3 3" />
+
+          <Customized component={TotalCountLabels} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -2,13 +2,14 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { FiYoutube, FiClipboard, FiCheck, FiX } from 'react-icons/fi';
-import type { RaidInfo } from '~/types/data';
+import type { RaidInfo, Student } from '~/types/data';
 import { getLocaleShortName, SUPORTED_LOCALES, SUPORTED_SHORT_LOCALES, type Locale, type LocaleShortName } from '~/utils/i18n/config';
 import bossData from '~/data/bossdata.json';
 import { useTranslation } from 'react-i18next';
 import { isTotalAssault } from './common';
 import { type_translation } from '../raidToString';
 import { getKstTime } from '~/data/globalRaidDates';
+import { cdn } from '~/utils/cdn';
 
 // --- Props ---
 export type DefenseType = 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
@@ -16,6 +17,8 @@ export type DefenseType = 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmo
 interface YouTubeSearchGeneratorProps {
   raidInfo: RaidInfo;
   showType: boolean | DefenseType[];
+  /** Party member IDs to include in search query. Each inner array is one party. */
+  partyStudentIds?: number[][];
 }
 
 // --- Translation Data (Internal) ---
@@ -59,7 +62,7 @@ function convertLocale(searchString: string, trans: Record<string, Record<Locale
 }
 
 // --- Component ---
-export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGeneratorProps) {
+export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: YouTubeSearchGeneratorProps) {
   const { t, i18n } = useTranslation('dashboard', {
     keyPrefix: 'searchYouTube',
   });
@@ -88,6 +91,25 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
   const [includeAttack, setIncludeAttack] = useState(true);
   const [copied, setCopied] = useState(false);
   const [includeDateRange, setIncludeDateRange] = useState(true);
+  const [includeStudents, setIncludeStudents] = useState(true);
+  const [studentNameMap, setStudentNameMap] = useState<Record<number, string>>({});
+
+  // Fetch localized student names when partyStudentIds provided and language changes
+  useEffect(() => {
+    if (!partyStudentIds || partyStudentIds.length === 0) return;
+    const shortLang = getLocaleShortName(searchLang as Locale);
+    fetch(cdn(`/schaledb.com/${shortLang}.students.min.json`))
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        const map: Record<number, string> = {};
+        for (const [id, student] of Object.entries(data as Record<number, Student>)) {
+          map[Number(id)] = (student as Student).Name;
+        }
+        setStudentNameMap(map);
+      })
+      .catch(() => {});
+  }, [partyStudentIds, searchLang]);
 
   // Reset selectedDefenseType when showType props change
   useEffect(() => {
@@ -163,14 +185,41 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
       parts.push(searchDifficulty);
     }
 
-    // 6. Date Range
+    // 6. Student names
+    if (includeStudents && partyStudentIds && partyStudentIds.length > 0) {
+      for (const party of partyStudentIds) {
+        for (const id of party) {
+          const name = studentNameMap[id];
+          if (name) parts.push(name);
+        }
+      }
+    }
+
+    // 7. Date Range
     if (includeDateRange && dateRangeStrings) {
       parts.push(dateRangeStrings.after);
       parts.push(dateRangeStrings.before);
     }
 
     return parts.filter(Boolean).join(' ');
-  }, [bossNameData, raidInfo, searchLang, searchDifficulty, includeTerrain, includeDefense, includeAttack, isGrandAssault, includeDateRange, showType, dateRangeStrings, locale, selectedDefenseType]);
+  }, [
+    bossNameData,
+    raidInfo,
+    searchLang,
+    searchDifficulty,
+    includeTerrain,
+    includeDefense,
+    includeAttack,
+    isGrandAssault,
+    includeDateRange,
+    showType,
+    dateRangeStrings,
+    locale,
+    selectedDefenseType,
+    includeStudents,
+    partyStudentIds,
+    studentNameMap,
+  ]);
 
   // --- Handlers ---
   const handleCopyToClipboard = () => {
@@ -278,7 +327,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
               {/* Single selection button for defense type arrays */}
               {Array.isArray(showType) && showType.length > 1 && (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold shrink-0 text-neutral-600 dark:text-neutral-400">{t('defenseType') || '방어타입'}:</span>
+                  <span className="text-sm font-semibold shrink-0 text-neutral-600 dark:text-neutral-400">{t('defenseType')}:</span>
                   <div className="flex gap-2 flex-wrap">
                     {showType.map((type) => (
                       <button
@@ -322,6 +371,14 @@ export function YouTubeSearchGenerator({ raidInfo, showType }: YouTubeSearchGene
                         <span>{t('attackType')}</span>
                       </label>
                     </>
+                  )}
+
+                  {/* Student names toggle (only when partyStudentIds provided) */}
+                  {partyStudentIds && partyStudentIds.length > 0 && (
+                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-blue-500 transition-colors">
+                      <input type="checkbox" checked={includeStudents} onChange={() => setIncludeStudents((v) => !v)} className="rounded accent-blue-500 w-4 h-4" />
+                      <span>{t('student_name')}</span>
+                    </label>
                   )}
                 </div>
               </div>

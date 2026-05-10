@@ -105,7 +105,7 @@ export default function LocaleSwitcherSelect({ defaultValue, items, label }: Loc
 
       {isOpen && (
         <div
-          className="origin-top-right absolute right-0 mt-2 w-full rounded-md shadow-lg bg-white dark:bg-neutral-700 ring-1 ring-neutral-300 ring-opacity-5 focus:outline-none z-20"
+          className="origin-top-right absolute right-0 mt-2 w-full rounded-md shadow-lg bg-white dark:bg-neutral-700 ring-1 ring-neutral-300 ring-opacity-5 focus:outline-none z-100"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby="options-menu"

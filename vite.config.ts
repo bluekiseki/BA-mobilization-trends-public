@@ -2,8 +2,9 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import vitePluginObfuscator from './plugin/vite-plugin-obfuscator';
+import { cloudflareDevProxy } from '@react-router/dev/vite/cloudflare';
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
+// import tsconfigPaths from 'vite-tsconfig-paths';
 import { domain, vercelDomain } from './app/data/livedataServer.json';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { execSync } from 'child_process';
@@ -19,13 +20,17 @@ try {
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     cloudflare({ viteEnvironment: { name: 'ssr' } }), // for cloudflare
+    cloudflareDevProxy({
+      configPath: 'wrangler.jsonc', // (If the filename is wrangler.json, please use that)
+    }),
     tailwindcss(),
     reactRouter(),
-    tsconfigPaths(),
+    // tsconfigPaths(),
     // visualizer({
     //   open: true, // When the build is completed, the report automatically appears in the browser.
     //   filename: 'bundle-report.html',
     // }),
+
     !isSsrBuild &&
       vitePluginObfuscator({
         obfuscatorOptions: {
@@ -89,5 +94,8 @@ export default defineConfig(({ isSsrBuild }) => ({
   },
   server: {
     allowedHosts: [domain, vercelDomain],
+  },
+  resolve: {
+    tsconfigPaths: true,
   },
 }));

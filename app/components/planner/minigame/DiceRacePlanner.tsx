@@ -449,7 +449,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate, rem
                         if (node.RewardParcelId && node.RewardParcelId.length > 0) {
                           const type = node.RewardParcelTypeStr![0];
                           const id = node.RewardParcelId![0];
-                          content = <img src={`data:image/webp;base64,${(iconData as any)[type]?.[id]}`} className="w-5 h-5 object-contain" />;
+                          content = <img src={`data:image/webp;base64,${(iconData as any)[type]?.[id]}`} className="w-5 h-5 object-cover" />;
                         }
                         break;
                       default:

@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { StarRating } from '~/components/StarRatingProps';
 import { useSearchMatcher } from '~/utils/useSearchMatcher';
 import type { Locale } from '~/utils/i18n/config';
+import { FiCopy, FiCheck, FiCode, FiDownload, FiX, FiPlus, FiRotateCcw } from 'react-icons/fi';
+import { CustomNumberInput } from '~/components/CustomInput';
+import { useGlobalStore } from '~/store/planner/useGlobalStore';
 
 const StudentDropdownItem: React.FC<{
   studentId: number;
@@ -263,12 +266,53 @@ export const TableFilterPanelComponent: React.FC<{
   studentData: StudentData;
   usageStats: UsageStats;
   portraitData: PortraitData;
-}> = ({ tableFilters, handleTableFilterChange, studentData, usageStats, portraitData }) => {
+  partyCountMin?: number;
+  partyCountMax?: number;
+}> = ({ tableFilters, handleTableFilterChange, studentData, usageStats, portraitData, partyCountMin = 1, partyCountMax = 99 }) => {
   const { t } = useTranslation('dashboard');
+  const { growthPlans } = useGlobalStore();
+  const [viewMode, setViewMode] = useState<'gui' | 'code'>('gui');
+  const [codeText, setCodeText] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const switchToCode = () => {
+    setCodeText(JSON.stringify(tableFilters, null, 2));
+    setCodeError('');
+    setViewMode('code');
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleApplyCode = () => {
+    try {
+      const parsed = JSON.parse(codeText);
+      if (!Array.isArray(parsed.includable) || !Array.isArray(parsed.excludable)) {
+        setCodeError(t('filter_import_error'));
+        return;
+      }
+      const validIncludable: IncludableStudentCondition[] = parsed.includable.filter((c: any) => typeof c.id === 'number' && Array.isArray(c.starValues) && typeof c.mustBeIncluded === 'boolean');
+      const validExcludable: ExcludableStudentCondition[] = parsed.excludable.filter((c: any) => typeof c.id === 'number' && typeof c.isHardExclude === 'boolean');
+      handleTableFilterChange({ includable: validIncludable, excludable: validExcludable });
+      setViewMode('gui');
+    } catch {
+      setCodeError(t('filter_import_error'));
+    }
+  };
 
   const updateFilters = (newFilters: Partial<TableFilters>) => {
     const updated = { ...tableFilters, ...newFilters };
     handleTableFilterChange(updated);
+  };
+
+  const handleNumInput = (setter: (v: number) => void) => (e: number | null) => {
+    const val = Number(e);
+    if (!isNaN(val)) setter(val);
   };
 
   const addCondition = (type: 'includable' | 'excludable', cond: IncludableStudentCondition | ExcludableStudentCondition) => {
@@ -296,6 +340,33 @@ export const TableFilterPanelComponent: React.FC<{
         excludable: tableFilters.excludable.filter((c) => c.id !== id),
       });
     }
+  };
+
+  const addAllMyStudentsAsAssist = () => {
+    const myStudentIds = new Set(growthPlans.filter((plan) => plan.studentId !== null).map((plan) => plan.studentId as number));
+
+    const alreadyAdded = new Set(tableFilters.excludable.map((c) => c.id));
+
+    const allStudentIds = Object.keys(studentData).map((id) => Number(id));
+    const toAdd = allStudentIds.filter((id) => !myStudentIds.has(id) && !alreadyAdded.has(id));
+
+    if (toAdd.length === 0) return;
+
+    const newConditions = toAdd.map((id) => ({
+      id,
+      isHardExclude: false,
+    }));
+
+    updateFilters({
+      excludable: [...tableFilters.excludable, ...newConditions],
+    });
+  };
+
+  const resetFilters = () => {
+    updateFilters({
+      includable: [],
+      excludable: [],
+    });
   };
 
   const ConditionTag: React.FC<{
@@ -332,48 +403,148 @@ export const TableFilterPanelComponent: React.FC<{
             <span className="text-red-600 dark:text-red-400 font-semibold ml-1">{getExcludableTagText(cond as ExcludableStudentCondition)}</span>
           )}
         </span>
-        <button onClick={onRemove} className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold">
-          X
+        <button onClick={onRemove} className="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors">
+          <FiX size={14} />
         </button>
       </div>
     );
   };
 
   return (
-    <div data-component-name="TableFilterPanelComponent" className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-      <div className="space-y-3">
-        <h3 className="font-bold text-lg text-sky-600 dark:text-sky-300">{t('includableStudentTitle')}</h3>
-        <FilterConditionBuilder
-          studentData={studentData}
-          usageStats={usageStats}
-          onAdd={(c) => addCondition('includable', c)}
-          type="includable"
-          placeholderText={t('searchStudentByName')}
-          portraitData={portraitData}
-        />
-        <div className="flex flex-wrap gap-2 pt-2 min-h-[42px]">
-          {tableFilters.includable.map((c) => (
-            <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('includable', c.id)} />
-          ))}
-        </div>
-      </div>
+    <div data-component-name="TableFilterPanelComponent" className="flex flex-col gap-1 pb-4">
+      {/* GUI mode */}
+      {viewMode === 'gui' && (
+        <>
+          {/* Party count filter + code toggle row */}
+          <div className="flex flex-wrap gap-x-2 sm:gap-x-4 gap-y-2 items-center pb-3 border-b border-neutral-200 dark:border-neutral-700 text-sm">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                id="tf-usePartyCount"
+                checked={tableFilters.usePartyCount ?? false}
+                onChange={(e) => updateFilters(e.target.checked ? { usePartyCount: true, minParty: partyCountMin, maxParty: partyCountMax } : { usePartyCount: false })}
+              />
+              <label htmlFor="tf-usePartyCount" className={`cursor-pointer ${tableFilters.usePartyCount ? 'text-neutral-700 dark:text-neutral-200' : 'text-neutral-400'}`}>
+                {t('composition.total_parties')}:
+              </label>
+              <CustomNumberInput
+                className="w-11 px-1 py-0.5 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-center text-xs disabled:opacity-40"
+                disabled={!tableFilters.usePartyCount}
+                value={tableFilters.minParty ?? partyCountMin}
+                min={partyCountMin}
+                max={partyCountMax}
+                onChange={handleNumInput((v) => updateFilters({ minParty: v }))}
+              />
+              <span className="text-neutral-400">~</span>
+              <CustomNumberInput
+                className="w-11 px-1 py-0.5 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-center text-xs disabled:opacity-40"
+                disabled={!tableFilters.usePartyCount}
+                value={tableFilters.maxParty ?? partyCountMax}
+                min={partyCountMin}
+                max={partyCountMax}
+                onChange={handleNumInput((v) => updateFilters({ maxParty: v }))}
+              />
+            </div>
+            <div className="ml-auto flex gap-2">
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-bluearchive-botton-gray text-neutral-600 border-neutral-300 hover:brightness-95"
+              >
+                <FiRotateCcw size={11} />
+                {t('filter_reset')}
+              </button>
+              <label className="flex items-center gap-1.5 px-1 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-bluearchive-botton-gray text-neutral-600 border-neutral-300 hover:brightness-95">
+                <input type="checkbox" onChange={switchToCode} className="hidden" />
+                <FiCode size={11} />
+                {t('filter_view_code')}
+              </label>
+            </div>
+          </div>
 
-      <div className="space-y-3">
-        <h3 className="font-bold text-lg text-red-500 dark:text-red-400">{t('excludableStudentTitle')}</h3>
-        <FilterConditionBuilder
-          studentData={studentData}
-          usageStats={usageStats}
-          onAdd={(c) => addCondition('excludable', c)}
-          type="excludable"
-          placeholderText={t('searchStudentByName')}
-          portraitData={portraitData}
-        />
-        <div className="flex flex-wrap gap-2 pt-2 min-h-[42px]">
-          {tableFilters.excludable.map((c) => (
-            <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('excludable', c.id)} />
-          ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h3 className="font-bold text-lg text-sky-600 dark:text-sky-300">{t('includableStudentTitle')}</h3>
+              <FilterConditionBuilder
+                studentData={studentData}
+                usageStats={usageStats}
+                onAdd={(c) => addCondition('includable', c)}
+                type="includable"
+                placeholderText={t('searchStudentByName')}
+                portraitData={portraitData}
+              />
+              <div className="flex flex-wrap gap-2 pt-2 min-h-[42px]">
+                {tableFilters.includable.map((c) => (
+                  <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('includable', c.id)} />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg text-red-500 dark:text-red-400">{t('excludableStudentTitle')}</h3>
+                {growthPlans.length > 30 && (
+                  <button onClick={addAllMyStudentsAsAssist} className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded transition-colors">
+                    <FiPlus size={12} />
+                    {t('add_my_students')}
+                  </button>
+                )}
+              </div>
+              <FilterConditionBuilder
+                studentData={studentData}
+                usageStats={usageStats}
+                onAdd={(c) => addCondition('excludable', c)}
+                type="excludable"
+                placeholderText={t('searchStudentByName')}
+                portraitData={portraitData}
+              />
+              <div className="flex flex-wrap gap-2 pt-2 min-h-[42px]">
+                {tableFilters.excludable.map((c) => (
+                  <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('excludable', c.id)} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Code mode */}
+      {viewMode === 'code' && (
+        <div className="flex flex-col gap-2">
+          <textarea
+            value={codeText}
+            onChange={(e) => {
+              setCodeText(e.target.value);
+              setCodeError('');
+            }}
+            className="w-full h-48 p-3 text-xs font-mono border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 resize-y focus:outline-none focus:border-sky-400"
+            spellCheck={false}
+          />
+          {codeError && <p className="text-red-500 text-xs">{codeError}</p>}
+          <div className="flex gap-2 items-center">
+            <label
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-bluearchive-botton-blue text-black border-bluearchive-botton-blue`}
+            >
+              <input type="checkbox" checked onChange={() => setViewMode('gui')} className="hidden" />
+              <FiCode size={11} />
+              {t('filter_view_code')}
+            </label>
+            <button
+              onClick={handleCopy}
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold transition-colors shadow-sm text-black ${copied ? 'bg-bluearchive-botton-yellow' : 'bg-bluearchive-botton-blue hover:brightness-110 active:brightness-95'}`}
+            >
+              {copied ? <FiCheck size={13} /> : <FiCopy size={13} />}
+              {copied ? t('filter_copy_done') : t('filter_export')}
+            </button>
+            <button
+              onClick={handleApplyCode}
+              className="flex items-center gap-1.5 bg-bluearchive-botton-gray hover:brightness-95 text-black px-4 py-1.5 text-xs font-bold transition-colors shadow-sm border border-neutral-300"
+            >
+              <FiDownload size={13} />
+              {t('filter_import_apply')}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

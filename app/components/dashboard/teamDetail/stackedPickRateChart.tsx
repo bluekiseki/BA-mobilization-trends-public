@@ -5,6 +5,7 @@ import { getBackgroundRatingColor, getCharacterStarValue, type PortraitData, typ
 import { Bar, BarChart, CartesianGrid, LabelList, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { StarRating } from '~/components/StarRatingProps';
 import { useTranslation } from 'react-i18next';
+import React from 'react';
 
 // --- Constants ---
 const INITIAL_ITEMS = 10;
@@ -15,7 +16,7 @@ export const StackedPickRateChart: React.FC<{
   data: ReportEntry[];
   studentData: StudentData;
   portraitData: PortraitData;
-}> = ({ data, studentData, portraitData }) => {
+}> = React.memo(({ data, studentData, portraitData }) => {
   const currentRank = data.length;
   const { isDark } = useIsDarkState();
   const [visibleCount, setVisibleCount] = useState(INITIAL_ITEMS); // State for load more
@@ -249,4 +250,4 @@ export const StackedPickRateChart: React.FC<{
       </div>
     </div>
   );
-};
+});

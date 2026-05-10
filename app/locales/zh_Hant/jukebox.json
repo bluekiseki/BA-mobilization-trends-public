@@ -26,6 +26,8 @@
     "student_name": "搜尋學生名稱...",
     "no_results": "無結果。必須設定過濾器以防止劇透，然後才會顯示結果。"
   },
+  "studentCount": "{count}名",
+  "itemCount": "{count}個項目",
   "playback": {
     "options": "播放選項",
     "play_random": "隨機播放",
@@ -91,6 +93,9 @@
     "final_ch1": "Final Vol. Ch.1",
     "final_ch2": "Final Vol. Ch.2",
     "final_ch3": "Final Vol. Ch.3",
-    "final_ch4": "Final Vol. Ch.4"
+    "final_ch4": "Final Vol. Ch.4",
+    "part2_prologue": "Part.2 Prologue",
+    "part2_vol0_ch1": "Part.2 Vol.0 Ch.1",
+    "part2_ex_lore_ch1": "Part.2 Ex. Lore Ch.1"
   }
 }

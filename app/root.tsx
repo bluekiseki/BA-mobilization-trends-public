@@ -9,7 +9,7 @@ import { ThemeProvider } from './components/ThemeToggleButton';
 import { CollectedLinks } from './components/CollectedLinks';
 // import { SpeedInsights } from "@vercel/speed-insights/react" // for vercel
 // import { Analytics } from "@vercel/analytics/react" // for vercel
-import { lazy, useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { DEFAULT_LOCALE, type Locale } from './utils/i18n/config';
 import { getLocale, i18nextMiddleware } from './middleware/i18next';
 import { useTranslation } from 'react-i18next';
@@ -36,9 +36,15 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     throw redirect(`${newPath}${url.search}`, 301);
   }
 
+  const publicEnv = {
+    VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY,
+    VITE_PUBLIC_POSTHOG_HOST: env.VITE_PUBLIC_POSTHOG_HOST,
+    VITE_WEB3FORMS_ACCESS_KEY: env.VITE_WEB3FORMS_ACCESS_KEY,
+  };
+
   let locale = getLocale(context) as Locale;
   const reqLocale = getLocaleFromHeaders(request);
-  return data({ context, locale, reqLocale, params, env } /*{ headers: { 'Set-Cookie': await localeCookie.serialize(locale) } }*/);
+  return data({ context, locale, reqLocale, params, env: publicEnv } /*{ headers: { 'Set-Cookie': await localeCookie.serialize(locale) } }*/);
 }
 
 export const middleware = [i18nextMiddleware];
@@ -83,6 +89,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Yuzu Trends" />
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon_180.webp" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/favicon_120.webp" />
 
         {/* for fonts */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -130,7 +137,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
                 <Navigation reqLocale={data?.reqLocale || DEFAULT_LOCALE} />
               </nav>
-              <DynamicBanner />
+              <Suspense fallback={null}>
+                <DynamicBanner />
+              </Suspense>
 
               <main className="max-w-7xl mx-auto" style={{ minHeight: 'calc(100vh - 170px)' }}>
                 {children}
@@ -183,7 +192,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <>
             {/* <SpeedInsights /> */}
             {/* <Analytics /> */}
-            <DynamicDevtoolsdetector />
+            <Suspense fallback={null}>
+              <DynamicDevtoolsdetector />
+            </Suspense>
           </>
         )}
       </body>

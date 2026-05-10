@@ -6,6 +6,7 @@ import type { EventData, IconData, TreasureReward, TreasureRound } from '~/types
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { ChevronIcon } from '~/components/Icon';
 import { useTranslation } from 'react-i18next';
+import { getItemSortPriority } from '~/utils/itemSort';
 
 type Strategy = 'checkerboard' | 'hunt_biggest_wiki' | 'heuristic' | 'custom';
 type Goal = 'clear_all' | 'biggest_only';
@@ -322,10 +323,8 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
     roundData: TreasureRound | null;
   }>({ show: false, roundData: null });
   const [isCollapsed, setIsCollapsed] = useState(false);
-  // const [config, setConfig] = useState({ strategy: 'checkerboard' as Strategy, goal: 'clear_all' as Goal, simRuns: 100 });
+  const [activeTab, setActiveTab] = useState<'info' | 'calculator'>('info');
   const [simResult, setSimResult] = useState<Record<number, number> | null>(null);
-  // const [startRound, setStartRound] = useState(1);
-  // const [finalTotalRounds, setFinalTotalRounds] = useState(0);
 
   const { t } = useTranslation('planner');
 
@@ -480,6 +479,14 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
 
   if (!treasureData || !costPerCell) return null;
 
+  const loopRoundNum = treasureData.info[0].LoopRound;
+  const uniqueRoundsForInfo = [
+    ...treasureData.round.filter((r) => r.TreasureRound < loopRoundNum),
+    ...(treasureData.round.find((r) => r.TreasureRound === loopRoundNum) ? [treasureData.round.find((r) => r.TreasureRound === loopRoundNum)!] : []),
+  ];
+
+  const [costType, costId] = costItemKey.split('_');
+
   return (
     <>
       <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
@@ -488,206 +495,315 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
           <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
         </span>
       </div>
+
       {!isCollapsed && (
         <div className="mt-4 space-y-4">
-          <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg space-y-3">
-            <div>
-              <label className="text-sm font-bold dark:text-gray-300">{t('treasure.selectStrategy')}</label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {strategyOptions.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setConfig((p) => ({ ...p, strategy: s.id as Strategy }))}
-                    className={`${config.strategy === s.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-2 py-1 text-xs`}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {config.strategy !== 'custom' ? (
-              <>
-                <div>
-                  <label className="text-sm font-bold dark:text-gray-300">{t('treasure.selectGoal')}</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {goalOptions.map((g) => (
-                      <button
-                        key={g.id}
-                        onClick={() => setConfig((p) => ({ ...p, goal: g.id as Goal }))}
-                        className={`${config.goal === g.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-2 py-1 text-xs`}
+          {/* Tab Navigation */}
+          <div className="flex border-b border-gray-200 dark:border-neutral-700">
+            {(['info', 'calculator'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-neutral-600'}`}
+              >
+                {t(`treasure.tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`)}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Info Tab ── */}
+          {activeTab === 'info' && (
+            <div className="space-y-2">
+              {uniqueRoundsForInfo.map((r) => {
+                const isLoop = r.TreasureRound === loopRoundNum;
+                const cellReward = treasureData.cell_reward[r.CellRewardId];
+                return (
+                  <div key={r.TreasureRound} className="bg-gray-50 dark:bg-neutral-800/50 rounded-lg p-3">
+                    {/* Round header */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span
+                        className={`font-bold text-xs px-2 py-0.5 rounded ${isLoop ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}
                       >
-                        {g.name}
+                        {t('treasure.roundLabel', { round: r.TreasureRound })}
+                        {isLoop && ' ↻'}
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {r.TreasureRoundSize[0]}×{r.TreasureRoundSize[1]}
+                      </span>
+                      {cellReward && (
+                        <div className="flex items-center gap-1 ml-auto">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500">{t('treasure.cellBaseReward')}</span>
+                          {cellReward.RewardParcelId.map((pid, idx) => (
+                            <ItemIcon
+                              key={idx}
+                              type={cellReward.RewardParcelTypeStr[idx]}
+                              itemId={String(pid)}
+                              amount={cellReward.RewardParcelAmount[idx]}
+                              size={6}
+                              eventData={eventData}
+                              iconData={iconData}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Treasures */}
+                    <div className="flex flex-wrap gap-2">
+                      {r.RewardId.map((rewardId, idx) => {
+                        const treasure = treasureData.reward[rewardId];
+                        if (!treasure) return null;
+                        return (
+                          <div key={`${rewardId}-${idx}`} className="flex items-center gap-1.5 bg-white dark:bg-neutral-700 rounded-lg px-2 py-1.5 border border-gray-100 dark:border-neutral-600">
+                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 shrink-0 tabular-nums">
+                              {treasure.CellUnderImageWidth}×{treasure.CellUnderImageHeight} ×{r.RewardAmount[idx]}
+                            </span>
+                            <div className="flex gap-0.5">
+                              {treasure.RewardParcelId.map((pid, ridx) => (
+                                <ItemIcon
+                                  key={ridx}
+                                  type={treasure.RewardParcelTypeStr[ridx]}
+                                  itemId={String(pid)}
+                                  amount={treasure.RewardParcelAmount[ridx]}
+                                  size={9}
+                                  eventData={eventData}
+                                  iconData={iconData}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Calculator Tab ── */}
+          {activeTab === 'calculator' && (
+            <div className="space-y-4">
+              {/* Simulation Config */}
+              <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg space-y-3">
+                <div>
+                  <label className="text-sm font-bold dark:text-gray-300">{t('treasure.selectStrategy')}</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {strategyOptions.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => setConfig((p) => ({ ...p, strategy: s.id as Strategy }))}
+                        className={`${config.strategy === s.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-2 py-1 text-xs`}
+                      >
+                        {s.name}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm font-bold dark:text-gray-300">{t('treasure.simulationRuns')}</label>
-                  <input
-                    type="number"
-                    value={config.simRuns}
-                    onChange={(e) =>
-                      setConfig((p) => ({
-                        ...p,
-                        simRuns: parseInt(e.target.value) || 100,
-                      }))
-                    }
-                    className="w-full p-2 mt-1 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                  />
-                </div>
-                <button onClick={handleRunSimulation} className="w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 rounded-lg">
-                  {t('treasure.runAvgCalc')}
-                </button>
-              </>
-            ) : (
-              <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{t('treasure.customStrategyDescription')}</p>
-                <div className="grid grid-cols-3 gap-2 mt-1">
-                  {treasureData.round.map((r) => (
-                    <button
-                      key={r.TreasureRound}
-                      onClick={() => setInteractiveSimState({ show: true, roundData: r })}
-                      className="bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white border rounded-md px-2 py-1 text-xs"
-                    >
-                      {t('treasure.recordRound', { round: r.TreasureRound })}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
-            <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('treasure.planSettingsRoundRange')}</h3>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="1"
-                className="w-full p-2 text-lg rounded border text-center dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                value={startRound || ''}
-                onChange={(e) => setStartRound(parseInt(e.target.value) || 1)}
-              />
-              <span className="shrink-0 dark:text-gray-300">{t('treasure.fromRound')}</span>
-              <input
-                type="number"
-                min={startRound}
-                className="w-full p-2 text-lg rounded border text-center dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                value={finalTotalRounds || ''}
-                onChange={(e) => setFinalTotalRounds(parseInt(e.target.value) || 0)}
-              />
-              <span className="shrink-0 dark:text-gray-300">{t('treasure.toRound')}</span>
-              <button
-                onClick={handleSetMaxRounds}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0 disabled:bg-gray-400 dark:disabled:bg-neutral-600"
-                disabled={!simResult}
-                title={!simResult ? t('treasure.runAvgCalcFirst') : t('treasure.setMaxRoundsTooltip')}
-              >
-                {t('treasure.setToMax')}
-              </button>
-            </div>
-          </div>
-
-          {simResult && (
-            <div>
-              <h3 className="font-bold dark:text-gray-200">{t('treasure.cellsNeededPerRound')}</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">{t('treasure.avgOrModifiedValue')}</p>
-              <div className="mt-2 space-y-2 text-sm">
-                {Object.entries(simResult)
-                  .sort(([a], [b]) => Number(a) - Number(b))
-                  .map(([round, avgCost]) => (
-                    <div key={round} className="grid grid-cols-3 items-center gap-2 p-1 bg-gray-100 dark:bg-neutral-700/50 rounded">
-                      <span className="font-semibold dark:text-gray-300">{t('treasure.roundLabel', { round })}</span>
-                      <input
-                        type="number"
-                        value={avgCost % 1 === 0 ? avgCost : avgCost.toFixed(1)}
-                        onChange={(e) => handleResultChange(Number(round), e.target.value)}
-                        className="w-full p-1.5 rounded border text-right dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                      />
-                      <span className="text-xs text-gray-500 dark:text-gray-400 text-right">
-                        {t('treasure.currencyCost', {
-                          cost: Math.ceil(avgCost * costPerCell).toLocaleString(),
-                        })}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-
-              {finalTotalRounds >= startRound &&
-                (() => {
-                  let totalCost = 0;
-                  const totalRewards: Record<string, number> = {};
-                  const repeatingRoundNum = treasureData.info[0].LoopRound;
-                  const repeatingRoundData = treasureData.round.find((r) => r.TreasureRound === repeatingRoundNum)!;
-
-                  for (let i = startRound; i <= finalTotalRounds; i++) {
-                    // Change loop start point to startRound
-                    const roundNum = i < repeatingRoundNum ? i : repeatingRoundNum;
-                    const roundData = roundNum === repeatingRoundNum ? repeatingRoundData : treasureData.round.find((r) => r.TreasureRound === roundNum)!;
-                    const avgCells = simResult[roundNum] || 0;
-
-                    totalCost += avgCells * costPerCell;
-
-                    const cellReward = treasureData.cell_reward[roundData.CellRewardId];
-                    if (cellReward) {
-                      const cellKey = `${cellReward.RewardParcelTypeStr[0]}_${cellReward.RewardParcelId[0]}`;
-                      totalRewards[cellKey] = (totalRewards[cellKey] || 0) + cellReward.RewardParcelAmount[0] * avgCells;
-                    }
-
-                    const treasuresInRound = roundData.RewardId.map((id) => treasureData.reward[id]);
-                    const biggestTreasure = [...treasuresInRound].sort((a, b) => b.CellUnderImageWidth * b.CellUnderImageHeight - a.CellUnderImageWidth * a.CellUnderImageHeight)[0];
-
-                    roundData.RewardId.forEach((tid, index) => {
-                      const treasure = treasureData.reward[tid];
-                      const quantity = roundData.RewardAmount[index];
-
-                      if (config.goal === 'clear_all' || (config.goal === 'biggest_only' && treasure.Id === biggestTreasure.Id)) {
-                        for (let q = 0; q < quantity; q++) {
-                          treasure.RewardParcelId.forEach((id, rIndex) => {
-                            const key = `${treasure.RewardParcelTypeStr[rIndex]}_${id}`;
-                            totalRewards[key] = (totalRewards[key] || 0) + treasure.RewardParcelAmount[rIndex];
-                          });
-                        }
-                      }
-                    });
-                  }
-
-                  return (
-                    <div className="mt-4">
-                      <h3 className="font-bold dark:text-gray-200">
-                        {t('treasure.planResultTitle', {
-                          start: startRound,
-                          end: finalTotalRounds,
-                        })}
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                        <div className="bg-red-50 dark:bg-red-900/40 p-3 rounded-lg">
-                          <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('treasure.totalCost')}</h4>
-                          <div className="space-y-1">
-                            {(() => {
-                              const [type, id] = costItemKey.split('_');
-                              return <ItemIcon type={type} itemId={id} amount={Math.ceil(totalCost)} size={10} eventData={eventData} iconData={iconData} />;
-                            })()}
-                          </div>
-                        </div>
-                        <div className="bg-green-50 dark:bg-green-900/40 p-3 rounded-lg">
-                          <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t('treasure.totalExpectedRewards')}</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {Object.entries(totalRewards)
-                              .sort(([, a], [, b]) => b - a)
-                              .map(([key, amount]) => {
-                                const [type, id] = key.split('_');
-                                return <ItemIcon key={key} type={type} itemId={id} amount={Math.round(amount)} size={10} eventData={eventData} iconData={iconData} />;
-                              })}
-                          </div>
-                        </div>
+                {config.strategy !== 'custom' ? (
+                  <>
+                    <div>
+                      <label className="text-sm font-bold dark:text-gray-300">{t('treasure.selectGoal')}</label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {goalOptions.map((g) => (
+                          <button
+                            key={g.id}
+                            onClick={() => setConfig((p) => ({ ...p, goal: g.id as Goal }))}
+                            className={`${config.goal === g.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-2 py-1 text-xs`}
+                          >
+                            {g.name}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  );
-                })()}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <label className="text-sm font-bold dark:text-gray-300">{t('treasure.simulationRuns')}</label>
+                        <input
+                          type="number"
+                          value={config.simRuns}
+                          onChange={(e) => setConfig((p) => ({ ...p, simRuns: parseInt(e.target.value) || 100 }))}
+                          className="w-full p-2 mt-1 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
+                        />
+                      </div>
+                      <button
+                        onClick={handleRunSimulation}
+                        className="mt-6 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shrink-0"
+                      >
+                        {t('treasure.runAvgCalc')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{t('treasure.customStrategyDescription')}</p>
+                    <div className="grid grid-cols-3 gap-2 mt-1">
+                      {treasureData.round.map((r) => (
+                        <button
+                          key={r.TreasureRound}
+                          onClick={() => setInteractiveSimState({ show: true, roundData: r })}
+                          className="bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white border rounded-md px-2 py-1 text-xs"
+                        >
+                          {t('treasure.recordRound', { round: r.TreasureRound })}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Round Range */}
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
+                <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('treasure.planSettingsRoundRange')}</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full p-2 text-lg rounded border text-center dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
+                    value={startRound || ''}
+                    onChange={(e) => setStartRound(parseInt(e.target.value) || 1)}
+                  />
+                  <span className="shrink-0 dark:text-gray-300">{t('treasure.fromRound')}</span>
+                  <input
+                    type="number"
+                    min={startRound}
+                    className="w-full p-2 text-lg rounded border text-center dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
+                    value={finalTotalRounds || ''}
+                    onChange={(e) => setFinalTotalRounds(parseInt(e.target.value) || 0)}
+                  />
+                  <span className="shrink-0 dark:text-gray-300">{t('treasure.toRound')}</span>
+                  <button
+                    onClick={handleSetMaxRounds}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0 disabled:bg-gray-400 dark:disabled:bg-neutral-600"
+                    disabled={!simResult}
+                    title={!simResult ? t('treasure.runAvgCalcFirst') : t('treasure.setMaxRoundsTooltip')}
+                  >
+                    {t('treasure.setToMax')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Per-round sim results */}
+              {simResult && (
+                <div>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <h3 className="font-bold dark:text-gray-200">{t('treasure.cellsNeededPerRound')}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('treasure.avgOrModifiedValue')}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {Object.entries(simResult)
+                      .sort(([a], [b]) => Number(a) - Number(b))
+                      .map(([round, avgCost]) => (
+                        <div key={round} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800/50 rounded-lg">
+                          <span className="font-semibold text-sm dark:text-gray-300 w-20 shrink-0">{t('treasure.roundLabel', { round })}</span>
+                          <input
+                            type="number"
+                            value={avgCost % 1 === 0 ? avgCost : avgCost.toFixed(1)}
+                            onChange={(e) => handleResultChange(Number(round), e.target.value)}
+                            className="w-20 p-1.5 rounded border text-right text-sm tabular-nums dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200 shrink-0"
+                          />
+                          <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{t('treasure.digCells')}</span>
+                          <div className="ml-auto shrink-0">
+                            <ItemIcon type={costType} itemId={costId} amount={Math.ceil(avgCost * costPerCell)} size={9} eventData={eventData} iconData={iconData} />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Plan Result */}
+                  {finalTotalRounds >= startRound &&
+                    (() => {
+                      let totalCost = 0;
+                      const totalRewards: Record<string, number> = {};
+                      const repeatingRoundData = treasureData.round.find((r) => r.TreasureRound === loopRoundNum)!;
+
+                      for (let i = startRound; i <= finalTotalRounds; i++) {
+                        const roundNum = i < loopRoundNum ? i : loopRoundNum;
+                        const roundData = roundNum === loopRoundNum ? repeatingRoundData : treasureData.round.find((r) => r.TreasureRound === roundNum)!;
+                        const avgCells = simResult[roundNum] || 0;
+                        if (!roundData || avgCells === 0) continue;
+
+                        totalCost += avgCells * costPerCell;
+
+                        const cellReward = treasureData.cell_reward[roundData.CellRewardId];
+                        if (cellReward) {
+                          const cellKey = `${cellReward.RewardParcelTypeStr[0]}_${cellReward.RewardParcelId[0]}`;
+                          totalRewards[cellKey] = (totalRewards[cellKey] || 0) + cellReward.RewardParcelAmount[0] * avgCells;
+                        }
+
+                        const treasuresInRound = roundData.RewardId.map((id) => treasureData.reward[id]);
+                        const biggestTreasure = [...treasuresInRound].sort((a, b) => b.CellUnderImageWidth * b.CellUnderImageHeight - a.CellUnderImageWidth * a.CellUnderImageHeight)[0];
+
+                        roundData.RewardId.forEach((tid, index) => {
+                          const treasure = treasureData.reward[tid];
+                          const quantity = roundData.RewardAmount[index];
+                          if (config.goal === 'clear_all' || (config.goal === 'biggest_only' && treasure.Id === biggestTreasure.Id)) {
+                            for (let q = 0; q < quantity; q++) {
+                              treasure.RewardParcelId.forEach((id, rIndex) => {
+                                const key = `${treasure.RewardParcelTypeStr[rIndex]}_${id}`;
+                                totalRewards[key] = (totalRewards[key] || 0) + treasure.RewardParcelAmount[rIndex];
+                              });
+                            }
+                          }
+                        });
+                      }
+
+                      const sortedRewards = Object.entries(totalRewards).sort(([ka], [kb]) => getItemSortPriority(ka, eventData) - getItemSortPriority(kb, eventData));
+
+                      return (
+                        <div className="mt-4">
+                          <h3 className="font-bold dark:text-gray-200 mb-2">{t('treasure.planResultTitle', { start: startRound, end: finalTotalRounds })}</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Cost */}
+                            <div className="bg-red-50 dark:bg-red-900/40 rounded-lg overflow-hidden">
+                              <div className="px-3 py-2 border-b border-red-100 dark:border-red-800/50">
+                                <h4 className="font-semibold text-red-800 dark:text-red-300 text-sm">{t('treasure.totalCost')}</h4>
+                              </div>
+                              <div className="p-3">
+                                <ItemIcon type={costType} itemId={costId} amount={Math.ceil(totalCost)} size={10} eventData={eventData} iconData={iconData} />
+                              </div>
+                            </div>
+
+                            {/* Rewards table */}
+                            <div className="bg-green-50 dark:bg-green-900/40 rounded-lg overflow-hidden">
+                              <div className="px-3 py-2 border-b border-green-100 dark:border-green-800/50">
+                                <h4 className="font-semibold text-green-800 dark:text-green-300 text-sm">{t('treasure.totalExpectedRewards')}</h4>
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-green-100 dark:border-green-800/50">
+                                      <th className="text-left py-1.5 px-3 font-semibold text-green-700 dark:text-green-400">{t('treasure.rewardItem')}</th>
+                                      <th className="text-right py-1.5 px-3 font-semibold text-green-700 dark:text-green-400">{t('treasure.rewardAmount')}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-green-100/60 dark:divide-green-800/30">
+                                    {sortedRewards.map(([key, amount]) => {
+                                      const [type, id] = key.split('_');
+                                      return (
+                                        <tr key={key} className="hover:bg-green-100/40 dark:hover:bg-green-800/20 transition-colors">
+                                          <td className="py-1.5 px-3">
+                                            <ItemIcon type={type} itemId={id} amount={0} size={9} eventData={eventData} iconData={iconData} />
+                                          </td>
+                                          <td className="py-1.5 px-3 text-right font-semibold tabular-nums dark:text-gray-200">{Math.round(amount).toLocaleString()}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
+
       {interactiveSimState.show && interactiveSimState.roundData && (
         <InteractiveSimulator
           roundData={interactiveSimState.roundData}

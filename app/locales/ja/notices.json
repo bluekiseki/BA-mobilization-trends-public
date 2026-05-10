@@ -1,0 +1,41 @@
+{
+  "title": "お知らせアーカイブ",
+  "subtitle": "全サーバーのアップデートとお知らせを確認できます。",
+  "servers": {
+    "ALL": "全サーバー",
+    "KR": "韓国",
+    "Global": "グローバル",
+    "JP": "日本",
+    "TW": "台湾"
+  },
+  "types": {
+    "ALL": "すべて",
+    "VIDEO": "動画",
+    "ETC": "その他"
+  },
+  "searchPlaceholder": "お知らせタイトルを検索...",
+  "sort": {
+    "new": "新着順",
+    "modified": "更新順"
+  },
+  "noResults": "結果がありません。",
+  "loading": "読み込み中...",
+  "postedAt": "投稿",
+  "modifiedAt": "更新",
+  "prev": "前へ",
+  "next": "次へ",
+  "backToList": "一覧に戻る",
+  "firstCrawled": "初回収集",
+  "apiCreated": "作成日時",
+  "apiModified": "更新日時",
+  "copy": "コピー",
+  "copied": "✓ コピー済み",
+  "noContent": "本文がありません。",
+  "historyTitle": "編集履歴タイムライン",
+  "currentlyViewing": "現在表示中",
+  "latestVersion": "最新版",
+  "versionId": "VERSION ID: {{id}}",
+  "changeRecorded": "データ変更が記録されました。",
+  "notFound": "お知らせが見つかりません。",
+  "viewAll": "すべてのお知らせを見る"
+}

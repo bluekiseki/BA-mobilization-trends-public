@@ -29,6 +29,7 @@ export interface PaginatedStageListProps {
   eventDataForIcon: EventData;
   iconData: IconData;
   iconInfoData: IconInfos;
+  studentFilter?: Set<number>; // Hard exclusive: elephant student ID filter
 }
 
 export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, maxPage, setCurrentPage, chaptersPerPage }) => {
@@ -37,11 +38,11 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentP
   const pageNumbers = Array.from({ length: maxPage }, (_, i) => i + 1);
 
   return (
-    <div className="flex flex-wrap justify-center items-center gap-1 p-2 bg-gray-50 dark:bg-neutral-800/50">
+    <div className="flex flex-wrap justify-center items-center gap-1 py-1">
       <button
         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="px-3 py-1 text-sm font-semibold rounded-md disabled:opacity-50 bg-gray-200 dark:bg-neutral-700"
+        className="px-2 py-0.5 text-sm font-semibold rounded disabled:opacity-50 bg-gray-200 dark:bg-neutral-700"
       >
         &lt;
       </button>
@@ -49,17 +50,15 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentP
         <button
           key={num}
           onClick={() => setCurrentPage(num)}
-          className={`px-3 py-1 text-xs font-semibold rounded-md ${currentPage === num ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600'}`}
+          className={`px-2 py-0.5 text-xs font-semibold rounded ${currentPage === num ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600'}`}
         >
-          {/* Chapter range display (i18n applied) */}
-          {/* {(num - 1) * chaptersPerPage + 1}-{(num) * chaptersPerPage}{t('equipment.paginationUnit')} */}
           {num}
         </button>
       ))}
       <button
         onClick={() => setCurrentPage(Math.min(maxPage, currentPage + 1))}
         disabled={currentPage === maxPage}
-        className="px-3 py-1 text-sm font-semibold rounded-md disabled:opacity-50 bg-gray-200 dark:bg-neutral-700"
+        className="px-2 py-0.5 text-sm font-semibold rounded disabled:opacity-50 bg-gray-200 dark:bg-neutral-700"
       >
         &gt;
       </button>
@@ -82,6 +81,7 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
   eventDataForIcon,
   iconData,
   iconInfoData,
+  studentFilter,
 }) => {
   // Use useTranslation hook
   const { t } = useTranslation('planner');
@@ -101,12 +101,24 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
       stages = stages.filter((stage) => Object.keys(stage.drops).some((dropKey) => itemFilter.has(dropKey)));
     }
 
-    // 3. Sorting
+    // 3. Student Elephant Filter (Hard exclusive)
+    if (studentFilter && studentFilter.size > 0) {
+      stages = stages.filter((stage) =>
+        Object.keys(stage.drops).some((key) => {
+          const [dropType, idStr] = key.split('_');
+          if (dropType !== 'Item') return false;
+          const id = Number(idStr);
+          return id >= 10000 && id <= 29999 && studentFilter.has(id);
+        }),
+      );
+    }
+
+    // 4. Sorting
     if (isSortedDesc) {
       return stages.sort((a, b) => b.id - a.id); // Descending
     }
     return stages.sort((a, b) => a.id - b.id); // Ascending (Default)
-  }, [allStages, type, itemFilter, isSortedDesc]);
+  }, [allStages, type, itemFilter, isSortedDesc, studentFilter]);
 
   // 2. Calculate Max Pages
   const maxPage = useMemo(() => {
@@ -140,47 +152,42 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
     setCurrentPage(1);
   }, [filteredAndSortedStages, isItemFilterActive]); // Go to page 1 if filtered/sorted list changes
 
-  const maxRuns = type === 'Hard' ? farmingDays * 3 : 999;
+  const maxRuns = type === 'Hard' ? farmingDays * 3 : 9999;
 
   return (
-    <div className="mb-6">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold dark:text-gray-200">
-          {title} {type === 'Hard' && `(${t('equipment.farmingDays')}: ${farmingDays} / ${t('common.max', 'Max')} ${farmingDays * 3})`}
+    <div className="mb-4">
+      <div className="flex justify-between items-center mb-1">
+        <h2 className="text-base font-bold dark:text-gray-200">
+          {title} {type === 'Hard' && `(${t('common.max', 'Max')} ×${farmingDays * 3})`}
         </h2>
         <button onClick={onReset} className={resetButtonClass}>
           <FaRedo size={10} /> {t(type === 'Hard' ? 'equipment.resetHard' : 'equipment.resetNormal')}
         </button>
       </div>
 
-      {/* Page Controls (Top) */}
       <PaginationControls currentPage={currentPage} maxPage={maxPage} setCurrentPage={setCurrentPage} chaptersPerPage={chaptersPerPage} />
 
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border dark:border-neutral-700">
-        {/* paginatedAndFilteredStages -> paginatedStages */}
+      <div className="border-t dark:border-neutral-700">
         {paginatedStages.map((stage, index) => (
-          <div key={stage.id} className={`flex flex-row items-center gap-2 p-3 ${index > 0 ? 'border-t dark:border-neutral-700' : ''}`}>
-            <span className="font-bold text-gray-800 dark:text-gray-200 shrink-0 w-10 text-left">
+          <div key={stage.id} className={`flex flex-row items-start gap-2 px-1 py-1.5 ${index > 0 ? 'border-t dark:border-neutral-700' : ''}`}>
+            <span className="font-bold text-gray-800 dark:text-gray-200 shrink-0 w-9 text-sm pt-0.5">
               {stage.chapter}-{stage.stageNum}
             </span>
-            <div className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap scrollbar-thin">
-              <div className="flex gap-1">
-                {Object.keys(stage.drops).map((key) => {
-                  const itemType = key.split('_')[0] as keyof IconInfos;
-                  const itemId = key.split('_')[1];
-                  return <EquipmentItemIcon key={key} type={itemType} itemId={itemId} amount={stage.drops[key]} size={12} eventData={eventDataForIcon} iconData={iconData} />;
-                })}
-              </div>
+            <div className="flex-1 flex flex-wrap gap-1">
+              {Object.keys(stage.drops).map((key) => {
+                const itemType = key.split('_')[0] as keyof IconInfos;
+                const itemId = key.split('_')[1];
+                return <EquipmentItemIcon key={key} type={itemType} itemId={itemId} amount={stage.drops[key]} size={11} eventData={eventDataForIcon} iconData={iconData} />;
+              })}
             </div>
-            <div className="w-24 shrink-0">
+            <div className="w-20 shrink-0">
               <NumberInput value={runCounts[stage.id] || 0} onChange={(val) => onRunCountChange(stage.id, val || 0)} min={0} max={maxRuns} />
             </div>
           </div>
         ))}
-        {paginatedStages.length === 0 && <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">{t('equipment.noStagesFound')}</p>}
+        {paginatedStages.length === 0 && <p className="py-3 text-center text-sm text-gray-500 dark:text-gray-400">{t('equipment.noStagesFound')}</p>}
       </div>
 
-      {/* Page Controls (Bottom) */}
       <PaginationControls currentPage={currentPage} maxPage={maxPage} setCurrentPage={setCurrentPage} chaptersPerPage={chaptersPerPage} />
     </div>
   );

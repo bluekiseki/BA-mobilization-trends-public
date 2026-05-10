@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useHelpStore } from '~/store/helpStore';
 
-export const useHelpKey = (key: string | string[]) => {
+export const useHelpKey = (key: string | string[], enabled = true) => {
   const setHelpKey = useHelpStore((state) => state.setHelpKey);
   const openSidebar = useHelpStore((state) => state.openSidebar);
   const setHighlightedTour = useHelpStore((state) => state.setHighlightedTour);
@@ -11,11 +11,13 @@ export const useHelpKey = (key: string | string[]) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!enabled) return;
     setHelpKey(key);
     return () => setHelpKey(null);
-  }, [key, setHelpKey]);
+  }, [key, setHelpKey, enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     const state = location.state as { tourKey?: string; tourIndex?: number } | null;
     if (state?.tourKey) {
       const isValidKey = Array.isArray(key) ? key.includes(state.tourKey) : key === state.tourKey;
@@ -30,5 +32,5 @@ export const useHelpKey = (key: string | string[]) => {
         }, 150);
       }
     }
-  }, [location.state, location.pathname, navigate, key, setHighlightedTour, openSidebar]);
+  }, [location.state, location.pathname, navigate, key, setHighlightedTour, openSidebar, enabled]);
 };

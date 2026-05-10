@@ -19,6 +19,7 @@ import StudentSearchDropdown from '~/components/StudentSearchDropdown';
 // Types
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
 import type { Route } from './+types/favor';
+import type { AppHandle } from '~/types/link';
 
 const BULLET_TYPE_COLORS: Record<string, string> = {
   Explosion: '#b62915',
@@ -43,12 +44,46 @@ export async function loader({ context }: LoaderFunctionArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/f.webp');
+  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/favorcalc.webp');
 }
 
 export function links() {
-  return [...createLinkHreflang('/planner/favor')];
+  return [
+    {
+      rel: 'preload',
+      href: cdn(`/w/students_portrait.json`),
+      crossOrigin: 'anonymous',
+      as: 'fetch',
+    },
+    {
+      rel: 'preload',
+      href: cdn(`/ew/icon_img.json`),
+      as: 'fetch',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'preload',
+      href: cdn(`/ew/icon_info.json`),
+      as: 'fetch',
+      crossOrigin: 'anonymous',
+    },
+    ...createLinkHreflang('/utils/favor'),
+  ];
 }
+
+export const handle: AppHandle = {
+  preload: (data) => {
+    if (!data?.locale) return [];
+    return [
+      {
+        rel: 'preload',
+        href: cdn(`/schaledb.com/${getLocaleShortName(data?.locale)}.students.min.json`),
+        as: 'fetch',
+        crossOrigin: 'anonymous',
+      },
+    ];
+  },
+};
 
 export const FavorPlannerPage = () => {
   // 1. Data Loading State
@@ -104,8 +139,6 @@ export const FavorPlannerPage = () => {
   }, []);
 
   const handlePlanChange = useCallback((field: string, value: any) => {
-    1;
-    console.log('handlePlanChange', field, value);
     setLocalPlan((prev) => {
       const next = { ...prev };
       if (field.includes('.')) {
@@ -157,8 +190,9 @@ export const FavorPlannerPage = () => {
 
   if (loading)
     return (
-      <div className="flex justify-center py-20">
-        <p className="text-neutral-400">Loading...</p>
+      <div className="flex flex-col justify-center items-center py-32 gap-3">
+        <FaHeart className="text-pink-400 animate-pulse" size={28} />
+        <p className="text-neutral-400 text-sm">Loading...</p>
       </div>
     );
 
@@ -166,62 +200,67 @@ export const FavorPlannerPage = () => {
 
   return (
     <div className="px-4 py-8 md:py-10 w-full mx-auto">
-      {/* Title */}
-      <div className="mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold flex items-center gap-2 text-neutral-800 dark:text-neutral-100">
           <FaHeart className="text-pink-500" />
           <span>{t('page.favorCalculator')}</span>
         </h1>
-        {!isSelected && <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{t('page.description.favorCalculator')}</p>}
+        {isSelected && (
+          <button
+            onClick={handleGoToPlanner}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all font-medium text-sm border border-neutral-200 dark:border-neutral-700"
+          >
+            <span>{t('ui.openInPlanner', 'Open in Planner')}</span>
+            <FaExternalLinkAlt className="text-xs" />
+          </button>
+        )}
       </div>
 
       {/* Search Section */}
-      <section className={`transition-all duration-300 w-full ${isSelected ? 'mb-4' : 'min-h-[40vh] flex flex-col justify-center items-center'}`}>
-        {!isSelected ? (
-          <div className="w-full max-w-lg text-center space-y-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-500">
-              <FaSearch size={32} />
+      {!isSelected ? (
+        <section className="min-h-[45vh] flex flex-col justify-center items-center">
+          <div className="w-full max-w-md text-center space-y-5">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-500">
+              <FaSearch size={24} />
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-neutral-700 dark:text-neutral-200">{t('ui.selectStudentToStart', 'Select a student to start')}</h2>
+            <div>
+              <h2 className="text-lg font-bold text-neutral-700 dark:text-neutral-200">{t('ui.selectStudentToStart', 'Select a student to start')}</h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{t('page.description.favorCalculator')}</p>
+            </div>
             <div className="w-full relative z-10">
               <StudentSearchDropdown students={allStudents as any} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
             </div>
           </div>
-        ) : (
-          <div className="flex items-center gap-3 w-full animate-fadeIn">
+        </section>
+      ) : (
+        <>
+          {/* Selected Student Bar */}
+          <div className="flex items-center gap-3 mb-5 p-2 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 animate-fadeIn">
             <div
-              className="flex items-center justify-center rounded-full shrink-0 shadow-sm"
-              style={{ width: '48px', height: '48px', backgroundColor: BULLET_TYPE_COLORS[allStudents[selectedStudentId!].BulletType] || '#888' }}
+              className="flex items-center justify-center rounded-full shrink-0 shadow"
+              style={{ width: '44px', height: '44px', backgroundColor: BULLET_TYPE_COLORS[allStudents[selectedStudentId!].BulletType] || '#888' }}
             >
-              {studentPortraits[selectedStudentId!] && <img src={`data:image/webp;base64,${studentPortraits[selectedStudentId!]}`} alt="icon" width={40} height={40} className="rounded-full" />}
+              {studentPortraits[selectedStudentId!] && <img src={`data:image/webp;base64,${studentPortraits[selectedStudentId!]}`} alt="icon" width={38} height={38} className="rounded-full" />}
             </div>
             <div className="flex-1 relative z-20">
               <StudentSearchDropdown students={allStudents as any} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
             </div>
           </div>
-        )}
-      </section>
 
-      {/* Calculator Content */}
-      {isSelected && (
-        <div className="animate-fadeIn w-full space-y-6">
-          <AffectionTab
-            plan={localPlan as GrowthPlan} // Type assertion for UI component compatibility
-            giftAffectionList={giftAffectionList}
-            eventData={{ icons: iconInfoData } as EventData}
-            iconData={iconData}
-            handlePlanChange={handlePlanChange}
-          />
-          <div className="flex justify-end">
-            <button
-              onClick={handleGoToPlanner}
-              className="flex items-center gap-2 px-6 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all font-medium text-sm"
-            >
-              <span>{t('ui.openInPlanner', 'Open in Student Growth Planner')}</span>
-              <FaExternalLinkAlt className="text-xs" />
-            </button>
+          {/* Calculator Content */}
+          <div className="animate-fadeIn w-full">
+            <AffectionTab
+              plan={localPlan as GrowthPlan}
+              giftAffectionList={giftAffectionList}
+              eventData={{ icons: iconInfoData } as EventData}
+              iconData={iconData}
+              handlePlanChange={handlePlanChange}
+              allStudents={allStudents}
+              studentPortraits={studentPortraits}
+            />
           </div>
-        </div>
+        </>
       )}
     </div>
   );

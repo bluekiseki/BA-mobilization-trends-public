@@ -20,6 +20,8 @@ export function useSearchMatcher(locale: Locale) {
           module = await import('../utils/matchers/ko');
         } else if (locale === 'ja') {
           module = await import('../utils/matchers/ja');
+        } else if (locale === 'en') {
+          module = await import('../utils/matchers/en');
         } else {
           module = { default: defaultMatch };
         }

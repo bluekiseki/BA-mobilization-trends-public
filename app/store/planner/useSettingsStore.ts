@@ -5,6 +5,7 @@ import type { FarmingTab } from '~/components/planner/FarmingPlanner';
 import type { DiceRaceTab } from '~/components/planner/minigame/DiceRacePlanner';
 import type { AvgPtDisplayMode, DreamMakerResult, DreamMakerSimResult, DreamMakerTab } from '~/components/planner/minigame/dreamMaker/type';
 import type { CardMatchResult, CardMatchTab, CardMatchViewMode } from '~/components/planner/minigame/CardMatchPlanner';
+import type { ClueSearchResult, ClueSearchTab } from '~/components/planner/minigame/ClueSearchPlanner';
 
 interface EventSettings {
   // FarmingPlanner.tsx
@@ -41,6 +42,10 @@ interface EventSettings {
   cardMatchActiveTab: CardMatchTab;
   cardMatchViewMode: CardMatchViewMode;
   cardMatchDisplayResult: CardMatchResult | null;
+
+  // ClueSearchPlanner.tsx
+  clueSearchActiveTab: ClueSearchTab;
+  clueSearchDisplayResult: ClueSearchResult | null;
 }
 
 // Store Status Type
@@ -86,6 +91,9 @@ interface SettingsState {
   setCardMatchActiveTab: (eventId: number, tab: CardMatchTab) => void;
   setCardMatchViewMode: (eventId: number, mode: CardMatchViewMode) => void;
   setCardMatchDisplayResult: (eventId: number, result: CardMatchResult | null) => void;
+
+  setClueSearchActiveTab: (eventId: number, tab: ClueSearchTab) => void;
+  setClueSearchDisplayResult: (eventId: number, result: ClueSearchResult | null) => void;
 }
 
 const initialSettings: EventSettings = {
@@ -108,6 +116,8 @@ const initialSettings: EventSettings = {
   cardMatchActiveTab: 'simulation',
   cardMatchViewMode: 'total',
   cardMatchDisplayResult: null,
+  clueSearchActiveTab: 'info',
+  clueSearchDisplayResult: null,
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -182,6 +192,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setCardMatchActiveTab: (eventId, tab) => get().updateSettings(eventId, { cardMatchActiveTab: tab }),
   setCardMatchViewMode: (eventId, mode) => get().updateSettings(eventId, { cardMatchViewMode: mode }),
   setCardMatchDisplayResult: (eventId, result) => get().updateSettings(eventId, { cardMatchDisplayResult: result }),
+
+  setClueSearchActiveTab: (eventId, tab) => get().updateSettings(eventId, { clueSearchActiveTab: tab }),
+  setClueSearchDisplayResult: (eventId, result) => get().updateSettings(eventId, { clueSearchDisplayResult: result }),
 }));
 
 export const useEventSettings = (eventId: number) => {
@@ -241,6 +254,9 @@ export const useEventSettings = (eventId: number) => {
     setCardMatchActiveTab: (tab: CardMatchTab) => store.setCardMatchActiveTab(eventId, tab),
     setCardMatchViewMode: (mode: CardMatchViewMode) => store.setCardMatchViewMode(eventId, mode),
     setCardMatchDisplayResult: (result: CardMatchResult | null) => store.setCardMatchDisplayResult(eventId, result),
+
+    setClueSearchActiveTab: (tab: ClueSearchTab) => store.setClueSearchActiveTab(eventId, tab),
+    setClueSearchDisplayResult: (result: ClueSearchResult | null) => store.setClueSearchDisplayResult(eventId, result),
   };
 
   return {

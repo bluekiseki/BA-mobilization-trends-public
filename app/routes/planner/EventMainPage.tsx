@@ -1,5 +1,5 @@
 // app/routes/planner/EventMainPage.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { data, Link, type LoaderFunctionArgs } from 'react-router';
 import { getlocaleMethond } from '~/components/planner/common/locale';
@@ -14,19 +14,8 @@ import type { Route } from './+types/EventMainPage';
 import { localeLink } from '~/utils/localeLink';
 import { FaTools, FaUserGraduate, FaGem, FaHeart, FaCalendarAlt, FaHistory } from 'react-icons/fa';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
+import { RemainingTime } from '~/components/RemainingTime';
 // import { SpoilerGuard } from '~/components/common/SpoilerGuard';
-
-const getRemainingTimeStr = (targetDate: Date, now: Date, t: any, isUpcoming = false) => {
-  const diffMs = targetDate.getTime() - now.getTime();
-  if (diffMs <= 0) return '';
-
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-  const key = isUpcoming ? 'ui.startTime' : 'ui.remainingTime';
-
-  return t(key, { day: diffDays, hour: diffHours });
-};
 
 export async function loader({ context, params, request }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
@@ -59,18 +48,6 @@ export const EventMainPage = () => {
   const { i18n } = useTranslation('dashboard');
   const { t } = useTranslation('planner');
   const locale = i18n.language as Locale;
-  const [clientNow, setClientNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setClientNow(new Date());
-
-    const timer = setInterval(() => {
-      setClientNow(new Date());
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   const sortedEvents = useMemo(() => {
     return Object.entries(eventList)
       .filter(([, details]) => {
@@ -85,12 +62,11 @@ export const EventMainPage = () => {
       .sort((a, b) => b.openTime.getTime() - a.openTime.getTime());
   }, [locale]);
 
-  // const now = new Date();
-  const baseTime = clientNow || new Date();
-  // const currentEvent = sortedEvents.find((e) => now >= e.openTime && now <= e.closeTime);
+  const baseTime = new Date();
   const currentEvent = sortedEvents.find((e) => baseTime >= e.openTime && baseTime <= e.closeTime);
 
   const globalEventToShow = useMemo(() => {
+    const now = new Date();
     const processedGlobalEvents = Object.entries(getGlobalEventDates()).map(([idStr, dates]) => {
       const id = Number(idStr);
       const details = eventList[idStr as keyof typeof eventList];
@@ -104,12 +80,12 @@ export const EventMainPage = () => {
       };
     });
 
-    const currentGlobalEvent = processedGlobalEvents.find((e) => baseTime >= e.startTime && baseTime <= e.endTime);
+    const currentGlobalEvent = processedGlobalEvents.find((e) => now >= e.startTime && now <= e.endTime);
     if (currentGlobalEvent) {
       return currentGlobalEvent;
     }
 
-    const upcomingGlobalEvents = processedGlobalEvents.filter((e) => e.startTime > baseTime).sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    const upcomingGlobalEvents = processedGlobalEvents.filter((e) => e.startTime > now).sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
     return upcomingGlobalEvents.length > 0 ? upcomingGlobalEvents[0] : null;
   }, [locale]);
@@ -133,7 +109,7 @@ export const EventMainPage = () => {
                 <span className="text-xs font-bold px-2 py-1 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">JP</span>
                 <div className="flex flex-col items-end">
                   <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('ui.currentEventJP')}</span>
-                  <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 mt-0.5">{getRemainingTimeStr(currentEvent.closeTime, baseTime, t)}</span>
+                  <RemainingTime targetDate={currentEvent.closeTime} className="text-[10px] font-medium text-blue-600 dark:text-blue-400 mt-0.5" />
                 </div>
               </div>
               <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-100 mb-4 line-clamp-1">{currentEvent.name}</h3>
@@ -155,11 +131,11 @@ export const EventMainPage = () => {
                 <span className="text-xs font-bold px-2 py-1 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">GL/KR</span>
                 <div className="flex flex-col items-end">
                   <span className="text-xs text-neutral-500 dark:text-neutral-400">{baseTime >= globalEventToShow.startTime ? t('ui.currentEventGlobal') : t('ui.upcomingEventGlobal')}</span>
-                  <span className="text-[10px] font-medium text-green-600 dark:text-green-400 mt-0.5">
-                    {baseTime >= globalEventToShow.startTime
-                      ? getRemainingTimeStr(globalEventToShow.endTime, baseTime, t)
-                      : `It starts in ${getRemainingTimeStr(globalEventToShow.startTime, baseTime, t)}`}
-                  </span>
+                  {baseTime >= globalEventToShow.startTime ? (
+                    <RemainingTime targetDate={globalEventToShow.endTime} className="text-[10px] font-medium text-green-600 dark:text-green-400 mt-0.5" />
+                  ) : (
+                    <RemainingTime targetDate={globalEventToShow.startTime} isUpcoming className="text-[10px] font-medium text-green-600 dark:text-green-400 mt-0.5" />
+                  )}
                 </div>
               </div>
               <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-100 mb-4 line-clamp-1">{globalEventToShow.name}</h3>
@@ -179,73 +155,59 @@ export const EventMainPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
           {/* Main Tools Column */}
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* 1. Student Growth Planner */}
-            <Link
-              to={localeLink(locale, '/planner/students')}
-              className="group p-5 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
-                  <FaUserGraduate className="text-2xl text-blue-600 dark:text-blue-400" />
+            {[
+              {
+                to: localeLink(locale, '/planner/students'),
+                icon: <FaUserGraduate className="text-2xl text-blue-600 dark:text-blue-400" />,
+                iconBg: 'bg-blue-50 dark:bg-blue-900/20 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40',
+                borderHover: 'hover:border-blue-400 dark:hover:border-blue-500',
+                title: t('page.studentGrowthPlanner'),
+                description: t('page.description.studentGrowthPlanner'),
+                badge: null,
+              },
+              {
+                to: localeLink(locale, '/planner/equipment'),
+                icon: <FaTools className="text-2xl text-teal-600 dark:text-teal-400" />,
+                iconBg: 'bg-teal-50 dark:bg-teal-900/20 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40',
+                borderHover: 'hover:border-teal-400 dark:hover:border-teal-500',
+                title: t('page.equipmentFarmingPlanner'),
+                description: t('page.description.equipmentFarmingPlanner'),
+                badge: 'BETA',
+              },
+              {
+                to: localeLink(locale, '/planner/gacha'),
+                icon: <FaGem className="text-2xl text-indigo-600 dark:text-indigo-400" />,
+                iconBg: 'bg-indigo-50 dark:bg-indigo-900/20 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40',
+                borderHover: 'hover:border-indigo-400 dark:hover:border-indigo-500',
+                title: t('gacha.title', 'Pyroxene Planner'),
+                description: t('gacha.intro.summary', 'Calculate income & Simulate gacha'),
+                badge: 'BETA',
+              },
+              {
+                to: localeLink(locale, '/utils/favor'),
+                icon: <FaHeart className="text-2xl text-pink-500 dark:text-pink-400" />,
+                iconBg: 'bg-pink-50 dark:bg-pink-900/20 group-hover:bg-pink-100 dark:group-hover:bg-pink-900/40',
+                borderHover: 'hover:border-pink-400 dark:hover:border-pink-500',
+                title: t('page.favorCalculator'),
+                description: t('page.description.favorCalculator'),
+                badge: null,
+              },
+            ].map((item) => (
+              <Link
+                key={String(item.to)}
+                to={item.to}
+                className={`group p-5 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md rounded-xl border border-neutral-200 dark:border-neutral-700 ${item.borderHover} hover:shadow-md transition-all duration-200 flex flex-col justify-between`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`p-3 ${item.iconBg} rounded-lg transition-colors`}>{item.icon}</div>
+                  {item.badge && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">{item.badge}</span>}
                 </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">{t('page.studentGrowthPlanner')}</h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{t('page.description.studentGrowthPlanner')}</p>
-              </div>
-            </Link>
-
-            {/* 2. Equipment Farming Planner (BETA) */}
-            <Link
-              to={localeLink(locale, '/planner/equipment')}
-              className="group p-5 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-teal-400 dark:hover:border-teal-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 transition-colors">
-                  <FaTools className="text-2xl text-teal-600 dark:text-teal-400" />
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">{item.title}</h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{item.description}</p>
                 </div>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">BETA</span>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">{t('page.equipmentFarmingPlanner')}</h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{t('page.description.equipmentFarmingPlanner')}</p>
-              </div>
-            </Link>
-
-            {/* 3. Gacha Planner (BETA) */}
-            <Link
-              to={localeLink(locale, '/planner/gacha')}
-              className="group p-5 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40 transition-colors">
-                  <FaGem className="text-2xl text-indigo-600 dark:text-indigo-400" />
-                </div>
-                {/* BETA Badge */}
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">BETA</span>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">{t('gacha.title', 'Pyroxene Planner')}</h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{t('gacha.intro.summary', 'Calculate income & Simulate gacha')}</p>
-              </div>
-            </Link>
-
-            {/* 4. Favor Rank Calculator */}
-            <Link
-              to={localeLink(locale, '/utils/favor')}
-              className="group p-5 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg group-hover:bg-pink-100 dark:group-hover:bg-pink-900/40 transition-colors">
-                  <FaHeart className="text-2xl text-pink-500 dark:text-pink-400" />
-                </div>
-              </div>
-              <div>
-                {/* [Fix] Changed text key */}
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-1">{t('page.favorCalculator')}</h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{t('page.description.favorCalculator')}</p>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </div>
 
           {/* Past Events List (Right Column) */}
@@ -278,7 +240,7 @@ export const EventMainPage = () => {
         </div>
 
         {/* Data Management Panel */}
-        <div className="mt-8">
+        <div className="mt-8 border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
           <ExportImportPanel />
         </div>
       </div>

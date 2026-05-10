@@ -62,5 +62,23 @@
   "Highlander": "ハイランダー鉄道学園",
   "WildHunt": "ワイルドハント芸術学院",
   "ETC": "その他",
-  "Sakugawa": "柵川中学"
+  "Sakugawa": "柵川中学",
+  "short": {
+    "Abydos": "アビドス",
+    "Arius": "アリウス",
+    "Gehenna": "ゲヘナ",
+    "Hyakkiyako": "百鬼夜行",
+    "Millennium": "ミレニアム",
+    "RedWinter": "レッドウィンター",
+    "Shanhaijing": "山海経",
+    "SRT": "SRT",
+    "Trinity": "トリニティ",
+    "Valkyrie": "ヴァルキューレ",
+    "ETC": "その他",
+    "Tokiwadai": "常盤台中学",
+    "Sakugawa": "柵川中学",
+    "Other": "その他",
+    "Highlander": "ハイランダー",
+    "WildHunt": "ワイルドハント"
+  }
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine, Cell } from 'recharts';
-import { FaGem, FaCheckCircle, FaExclamationTriangle, FaChartBar, FaCoins, FaSyncAlt } from 'react-icons/fa';
+import { FaGem, FaCheckCircle, FaChartBar, FaSyncAlt } from 'react-icons/fa';
 import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
 
 interface Props {
@@ -15,14 +15,13 @@ interface Props {
 
 type UnitType = 'pyroxenes' | 'pulls';
 
-export default function SimulationResultView({ result, initialPyroxenes, portraitMap, bankruptcyRate }: Props) {
+export default function SimulationResultView({ result, initialPyroxenes, portraitMap: _portraitMap, bankruptcyRate }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
 
   if (!result) return null;
 
   const [chartType, setChartType] = useState<'PDF' | 'CDF'>('PDF');
   const [unit, setUnit] = useState<UnitType>('pyroxenes');
-  const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
 
   const activeDist = unit === 'pyroxenes' ? result.distCost : result.distPulls;
 
@@ -32,9 +31,26 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
     rangeLabel: unit === 'pyroxenes' ? `${d.binStart.toLocaleString()} ~ ${d.binEnd.toLocaleString()}` : t('chart.range_count', { start: d.binStart, end: d.binEnd }),
   }));
 
-  // const safeZone = result.distCost.find((d) => d.binEnd > initialPyroxenes);
-  // const bankruptcyRate = safeZone ? 100 - safeZone.cdf : 0;
-  const isSafe = bankruptcyRate != null && bankruptcyRate < 10;
+  // Simple budget check computed from distCost — always available even without income plan
+  const simpleBudgetOverrate = (() => {
+    const bin = result.distCost.find((d) => d.binEnd > initialPyroxenes);
+    if (!bin) return 0;
+    return parseFloat((100 - bin.cdf).toFixed(1));
+  })();
+
+  // Income-plan-adjusted rate takes priority if available
+  const effectiveBankruptcyRate = bankruptcyRate ?? simpleBudgetOverrate;
+  const isIncomePlanApplied = bankruptcyRate !== null;
+  const isSafe = effectiveBankruptcyRate < 10;
+
+  // Derive the budget threshold from effectiveBankruptcyRate so the red bar area
+  // always matches the displayed percentage, regardless of income timeline.
+  // (initialPyroxenes alone is wrong because income accumulates over time)
+  const budgetThreshold = (() => {
+    const targetCdf = 100 - effectiveBankruptcyRate;
+    const bin = result.distCost.find((d) => d.cdf >= targetCdf);
+    return bin ? bin.binEnd : Infinity;
+  })();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -62,55 +78,60 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
 
       <div className="text-center text-[11px] text-neutral-400 dark:text-neutral-500 -mt-3">{t('disclaimer')}</div>
 
-      {/* 2. Core summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Success rate */}
-        <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-sm font-bold uppercase">
-            <FaCheckCircle className="text-green-500 dark:text-green-400" /> {t('summary.success_rate.title')}
+      {/* 2. Hero card — budget feasibility (always shown) */}
+      <div
+        className={`p-5 rounded-xl border shadow-sm ${isSafe ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900/50' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'}`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className={`text-xs font-bold uppercase tracking-wide mb-1 ${isSafe ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{t('summary.safety.title')}</div>
+            <div className={`text-4xl font-extrabold ${isSafe ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+              {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
+            </div>
+            <div className={`text-sm mt-1 font-medium ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+              {t('summary.safety.bankruptcy_prob', { rate: effectiveBankruptcyRate.toFixed(1) })}
+            </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className={`text-4xl font-extrabold ${result.successRate > 90 ? 'text-blue-600 dark:text-blue-400' : 'text-amber-500'}`}>{result.successRate.toFixed(1)}</span>
-            <span className="text-lg font-bold text-neutral-400">%</span>
+          <span
+            className={`shrink-0 text-[11px] font-bold px-2 py-1 rounded-full ${isIncomePlanApplied ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400'}`}
+          >
+            {isIncomePlanApplied ? t('summary.safety.income_applied') : t('summary.safety.income_not_applied')}
+          </span>
+        </div>
+      </div>
+
+      {/* 3. Secondary cards — 2-col */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Must students acquisition rate */}
+        <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-neutral-400 dark:text-neutral-500 text-xs font-bold uppercase">
+            <FaCheckCircle className="text-neutral-400 dark:text-neutral-500" /> {t('summary.success_rate.title')}
           </div>
-          <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{t('summary.success_rate.desc')}</div>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-2xl font-extrabold text-neutral-600 dark:text-neutral-300">{result.successRate.toFixed(1)}</span>
+            <span className="text-sm font-bold text-neutral-400">%</span>
+          </div>
+          <div className="text-[11px] text-neutral-400 dark:text-neutral-500">{t('summary.success_rate.desc')}</div>
         </div>
 
         {/* Average consumption */}
-        <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-sm font-bold uppercase">
-            {unit === 'pyroxenes' ? <FaGem className="text-blue-400" /> : <FaSyncAlt className="text-blue-400" />}
+        <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-neutral-400 dark:text-neutral-500 text-xs font-bold uppercase">
+            {unit === 'pyroxenes' ? <FaGem className="text-neutral-400 dark:text-neutral-500" /> : <FaSyncAlt className="text-neutral-400 dark:text-neutral-500" />}
             {unit === 'pyroxenes' ? t('summary.avg_cost.title_pyroxenes') : t('summary.avg_cost.title_pulls')}
           </div>
-          <div className="mt-2">
-            <div className="text-3xl font-extrabold text-neutral-800 dark:text-neutral-100">
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-2xl font-extrabold text-neutral-600 dark:text-neutral-300">
               {unit === 'pyroxenes' ? Math.round(result.avgTotalCost).toLocaleString() : Math.round(result.avgTotalPulls).toLocaleString()}
-            </div>
-            <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              {unit === 'pyroxenes' ? t('summary.avg_cost.approx_pulls', { amount: Math.round(result.avgTotalCost / 120).toLocaleString() }) : t('summary.avg_cost.includes_free')}
-            </div>
+            </span>
+          </div>
+          <div className="text-[11px] text-neutral-400 dark:text-neutral-500">
+            {unit === 'pyroxenes' ? t('summary.avg_cost.approx_pulls', { amount: Math.round(result.avgTotalCost / 120).toLocaleString() }) : t('summary.avg_cost.includes_free')}
           </div>
         </div>
-
-        {/* Stability evaluation */}
-        {bankruptcyRate != null && (
-          <div
-            className={`p-5 rounded-xl border shadow-sm flex flex-col justify-between ${isSafe ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900/50' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'}`}
-          >
-            <div className={`flex items-center gap-2 text-sm font-bold uppercase ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-              <FaExclamationTriangle /> {t('summary.safety.title')}
-            </div>
-            <div className="mt-2">
-              <div className={`text-xl font-bold ${isSafe ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
-                {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
-              </div>
-              <div className="text-xs mt-1 opacity-80 font-medium dark:text-neutral-300">{t('summary.safety.bankruptcy_prob', { rate: bankruptcyRate.toFixed(1) })}</div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* 3. Distribution chart */}
+      {/* 4. Distribution chart */}
       <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-neutral-700 dark:text-neutral-200 flex items-center gap-2">
@@ -132,6 +153,19 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
             </button>
           </div>
         </div>
+
+        {chartType === 'PDF' && unit === 'pyroxenes' && (
+          <div className="flex items-center gap-3 mb-3 text-xs text-neutral-400 dark:text-neutral-500">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
+              {t('chart.legend_within_budget')}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-500 opacity-80" />
+              {t('chart.legend_over_budget')} ({effectiveBankruptcyRate.toFixed(1)}%)
+            </span>
+          </div>
+        )}
 
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -156,7 +190,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
                 />
                 <Bar dataKey="pdf" radius={[4, 4, 0, 0]}>
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={unit === 'pyroxenes' && entry.binEnd > initialPyroxenes ? '#ef4444' : '#3b82f6'} />
+                    <Cell key={`cell-${index}`} fill={entry.binEnd > budgetThreshold ? '#ef4444' : '#3b82f6'} fillOpacity={entry.binEnd > budgetThreshold ? 0.8 : 1} />
                   ))}
                 </Bar>
               </BarChart>
@@ -176,95 +210,6 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
               </AreaChart>
             )}
           </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* 4. Detailed results per student */}
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden transition-colors">
-        <div className="bg-neutral-50 dark:bg-neutral-800/50 px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-          <h3 className="font-bold text-neutral-700 dark:text-neutral-200 flex items-center gap-2">
-            <FaCoins className="text-amber-500" /> {t('student_stats.title')}
-          </h3>
-        </div>
-        <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-[50vh] overflow-y-auto">
-          {Object.values(result.studentStats)
-            .sort((a, b) => b.obtainRate - a.obtainRate)
-            .filter((s) => s.obtainRate > 1)
-            .map((stat) => {
-              const imgSrc = portraitMap[stat.studentId] ? `data:image/webp;base64,${portraitMap[stat.studentId]}` : null;
-              // Calculate status color based on probability
-              const rateColor = stat.obtainRate > 80 ? 'bg-green-500' : stat.obtainRate > 50 ? 'bg-blue-500' : stat.obtainRate > 20 ? 'bg-amber-500' : 'bg-red-500';
-
-              return (
-                <div key={stat.studentId} className="group">
-                  <div
-                    className="px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors"
-                    onClick={() => setExpandedStudentId(expandedStudentId === stat.studentId ? null : stat.studentId)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="relative shrink-0">
-                        {imgSrc ? (
-                          <img src={imgSrc} alt={stat.name} className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800" />
-                        ) : (
-                          <div className="w-11 h-11 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold text-neutral-500">{stat.name.charAt(0)}</div>
-                        )}
-                        <div
-                          className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-neutral-900 ${rateColor}`}
-                          title={`Obtain Rate: ${stat.obtainRate.toFixed(1)}%`}
-                        />
-                      </div>
-
-                      <div>
-                        <div className="font-bold text-neutral-800 dark:text-neutral-100 flex items-center gap-2">
-                          {stat.name}
-                          {stat.isLimited && (
-                            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-1.5 rounded border border-amber-200 dark:border-amber-800">
-                              {t('student_stats.tag_limited')}
-                            </span>
-                          )}
-                          {stat.isFes && (
-                            <span className="text-[10px] bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 px-1.5 rounded border border-purple-200 dark:border-purple-800">
-                              {t('student_stats.tag_fes')}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-neutral-500 dark:text-neutral-400 flex gap-2">
-                          <span>
-                            {t('student_stats.rate_obtain')} <strong className="text-neutral-700 dark:text-neutral-200">{stat.obtainRate.toFixed(3)}%</strong>
-                          </span>
-                          <span className="text-neutral-300 dark:text-neutral-700">|</span>
-                          <span>
-                            {t('student_stats.avg_eleph')} <strong className="text-purple-600 dark:text-purple-400">+{Math.round(stat.avgEleph)}</strong>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-blue-500 dark:group-hover:text-blue-400">
-                      {expandedStudentId === stat.studentId ? t('student_stats.collapse') : t('student_stats.expand')}
-                    </div>
-                  </div>
-
-                  {expandedStudentId === stat.studentId && (
-                    <div className="bg-neutral-50/50 dark:bg-neutral-950/50 p-4 border-t border-neutral-100 dark:border-neutral-800 animate-fade-in">
-                      <div className="h-32 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={stat.elephDistribution}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#888" opacity={0.1} />
-                            <XAxis
-                              dataKey="amount"
-                              tick={{ fontSize: 10, fill: '#888' }}
-                              label={{ value: t('student_stats.chart_x_eleph'), position: 'insideBottom', fontSize: 10, offset: -5, fill: '#888' }}
-                            />
-                            <Tooltip contentStyle={{ backgroundColor: '#171717', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '10px' }} itemStyle={{ color: '#a78bfa' }} />
-                            <Bar dataKey="probability" fill="#8b5cf6" radius={[2, 2, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
         </div>
       </div>
     </div>

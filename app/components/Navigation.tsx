@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { issuesURL } from '~/data/livedataServer.json';
 
-import { HiOutlineQuestionMarkCircle, HiOutlineBars3, HiOutlineXMark, HiOutlineLightBulb, HiOutlineFlag } from 'react-icons/hi2';
+import { HiOutlineQuestionMarkCircle, HiOutlineBars3, HiOutlineXMark, HiOutlineLightBulb, HiOutlineFlag, HiChevronDown } from 'react-icons/hi2';
 
 import { PyroxenesIcon } from './Icon';
 import { localeLink } from '~/utils/localeLink';
@@ -31,14 +31,12 @@ const navLinks = [
   { key: 'dashboard', label: 'dashboard', path: (c: string | null) => `/dashboard/${c || 'jp'}`, regex: /\/dashboard\/(kr|jp)/ },
   { key: 'ranking', label: 'ranking', path: (c: string | null) => `/charts/${c || 'jp'}/ranking`, regex: /\/charts\/(kr|jp)\/ranking$/ },
   { key: 'heatmap', label: 'heatmap', path: (c: string | null) => `/charts/${c || 'jp'}/heatmap`, regex: /\/charts\/(kr|jp)\/heatmap$/ },
-  { key: 'planner', label: 'planner', path: () => `/planner/event`, regex: /\/planner\/event/ },
-  { key: 'bgm', label: 'BGM', path: () => `/utils/jukebox`, regex: /\/utils\/jukebox/ },
 ];
 
 const helpWhitelist = [
   /^(?:\/(?:ko|ja|zh-Hant))?\/dashboard\/(kr|jp)\/\w/,
   /^(?:\/(?:ko|ja|zh-Hant))?\/charts/,
-  /^(?:\/(?:ko|ja|zh-Hant))?\/planner\/event\/\d+/,
+  /^(?:\/(?:ko|ja|zh-Hant))?\/planner\//,
   /^(?:\/(?:ko|ja|zh-Hant))?\/utils\/jukebox/,
   // /^(?:\/(?:ko|ja|zh-Hant))?\/live/,
 ];
@@ -47,6 +45,48 @@ const helpWhitelist = [
 // 2. Integrated components
 // ==========================================
 
+// Wrapper component dedicated to animation
+const LanguageBannerAnimationWrapper = ({ show, onExited, children }: { show: boolean; onExited: () => void; children: React.ReactNode }) => {
+  const [render, setRender] = useState(show);
+  const [animate, setAnimate] = useState(false);
+  // Switch to overflow-visible after animation (to allow dropdowns to extend outside the banner)
+  const [isFullyOpen, setIsFullyOpen] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      // Mount to DOM first
+      setRender(true);
+      // Apply animation class immediately after (delay required to trigger CSS transition)
+      const timer = setTimeout(() => setAnimate(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      // Closing state: Revert overflow to hidden immediately, then play animation in reverse
+      setIsFullyOpen(false);
+      setAnimate(false);
+      // Unmount completely from DOM and execute close callback after animation (1000ms) ends
+      const timer = setTimeout(() => {
+        setRender(false);
+        onExited();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [show, onExited]);
+
+  if (!render) return null;
+
+  return (
+    // Outer: Height animation. overflow-hidden while opening, overflow-visible after fully opened (for dropdowns)
+    <div
+      className={`transition-[max-height,opacity] duration-1000 ease-in-out ${animate ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'} ${isFullyOpen ? 'overflow-visible' : 'overflow-hidden'}`}
+      onTransitionEnd={() => {
+        if (animate) setIsFullyOpen(true);
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
 const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
   const [bannerData, setBannerData] = useState<{
     type: 'mismatch' | 'unsupported';
@@ -54,6 +94,7 @@ const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
     suggestedLocale?: Locale;
     targetPath?: string;
   } | null>(null);
+  const [showBanner, setShowBanner] = useState(false);
 
   const { hasShownLanguageBanner, _hasHydrated, setHasShownLanguageBanner } = useLanguageBannerStore();
   const { pathname, search } = useLocation();
@@ -65,6 +106,7 @@ const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
 
     if (hasShownLanguageBanner) {
       setBannerData(null);
+      setShowBanner(false);
       return;
     }
 
@@ -89,11 +131,13 @@ const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
         suggestedLocale: bestSupportedBrowserLocale,
         targetPath: newPath + search,
       });
+      setShowBanner(true);
     } else if (!bestSupportedBrowserLocale) {
       setBannerData({
         type: 'unsupported',
         displayLocale: bannerDisplayLocale,
       });
+      setShowBanner(true);
     } else {
       if (!bannerData) {
         setHasShownLanguageBanner();
@@ -101,25 +145,36 @@ const LanguageBannerController = ({ reqLocale }: { reqLocale: Locale }) => {
     }
   }, [_hasHydrated, hasShownLanguageBanner, pathname, search, locale, reqLocale]);
 
-  if (!bannerData) return null;
+  if (!bannerData && !showBanner) return null;
 
   // console.log('show LanguageBanner', _hasHydrated, hasShownLanguageBanner);
 
   return (
-    <LanguageBanner
-      bannerData={bannerData}
-      onDismiss={() => {
+    <LanguageBannerAnimationWrapper
+      show={showBanner}
+      onExited={() => {
+        // Cleanup function executed after the animation completely finishes
         setHasShownLanguageBanner();
         setBannerData(null);
       }}
-    />
+    >
+      {/* Actual banner content goes inside the wrapper */}
+      {bannerData && (
+        <LanguageBanner
+          bannerData={bannerData}
+          onDismiss={() => {
+            // Trigger the closing animation instead of closing immediately on button click
+            setShowBanner(false);
+          }}
+        />
+      )}
+    </LanguageBannerAnimationWrapper>
   );
 };
 
-export const HelpDropdown = ({ isHelpAvailable, isMobileText = false }: { isHelpAvailable: boolean; isMobileText?: boolean }) => {
+export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugModal }: { isHelpAvailable: boolean; isMobileText?: boolean; onOpenBugModal: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const [isBugModalOpen, setIsBugModalOpen] = useState(false);
 
   const openSidebar = useHelpStore((state) => state.openSidebar);
 
@@ -144,7 +199,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false }: { isHelp
               <button
                 onClick={() => {
                   openSidebar();
-                  setIsOpen(false); // Close the dropdown menu.
+                  setIsOpen(false);
                 }}
                 className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
               >
@@ -154,7 +209,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false }: { isHelp
 
             <button
               onClick={() => {
-                setIsBugModalOpen(true);
+                onOpenBugModal();
                 setIsOpen(false);
               }}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
@@ -186,9 +241,88 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false }: { isHelp
           </div>
         )}
       </div>
-
-      {isBugModalOpen && <BugReportModal onClose={() => setIsBugModalOpen(false)} issuesURL={issuesURL} />}
     </>
+  );
+};
+
+const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; isActive: boolean; activeLinkStyle: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_p } = useTranslation('planner');
+
+  useOutsideClick(ref, () => setIsOpen(false));
+
+  const plannerItems = [
+    { key: 'event', to: '/planner/event', label: t_p('page.eventPlanner') },
+    { key: 'gacha', to: '/planner/gacha', label: t_p('gacha.title', 'Pyroxene Planner') },
+    { key: 'students', to: '/planner/students', label: t_p('page.studentGrowthPlanner') },
+    { key: 'equipment', to: '/planner/equipment', label: t_p('page.equipmentFarmingPlanner') },
+    { key: 'favor', to: '/utils/favor', label: t_p('page.favorCalculator') },
+  ];
+
+  return (
+    <div className="relative flex items-center" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
+          isActive ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'
+        }`}
+      >
+        {t('planner')}
+        <HiChevronDown className={`text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-52 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
+          {plannerItems.map((item) => (
+            <Link
+              key={item.key}
+              to={localeLink(locale, item.to)}
+              onClick={() => setIsOpen(false)}
+              className="flex items-center px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
+  const { t } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_p } = useTranslation('planner');
+  const isPlannerActive = /\/planner\/|\/utils\/favor/.test(pathname);
+
+  const plannerItems = [
+    { key: 'event', to: '/planner/event', label: t_p('page.eventPlanner') },
+    { key: 'gacha', to: '/planner/gacha', label: t_p('gacha.title', 'Pyroxene Planner') },
+    { key: 'students', to: '/planner/students', label: t_p('page.studentGrowthPlanner') },
+    { key: 'equipment', to: '/planner/equipment', label: t_p('page.equipmentFarmingPlanner') },
+    { key: 'favor', to: '/utils/favor', label: t_p('page.favorCalculator') },
+  ];
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className={`text-base font-bold ${isPlannerActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-neutral-400'}`}>{t('planner')}</span>
+      <div className="flex flex-col gap-3 pl-3 border-l-2 border-slate-100 dark:border-neutral-800">
+        {plannerItems.map((item) => {
+          const isActive = pathname.includes(item.to);
+          return (
+            <Link
+              key={item.key}
+              to={localeLink(locale, item.to)}
+              onClick={onClose}
+              className={`text-sm font-medium transition-colors ${isActive ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
@@ -197,6 +331,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false }: { isHelp
 // ==========================================
 export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isBugModalOpen, setIsBugModalOpen] = useState(false);
   const { t, i18n } = useTranslation('common', { keyPrefix: 'navigation' });
   const { t: t_c } = useTranslation('common');
   const locale = i18n.language as Locale;
@@ -221,15 +356,19 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
   }
 
   const isHelpAvailable = helpWhitelist.some((pattern) => pattern.test(pathname));
+  const isPlannerActive = /\/planner\/|\/utils\/favor/.test(pathname);
   const activeLinkStyle =
     "relative after:content-[''] after:absolute after:left-0 after:bottom-[2px] after:w-full after:h-[4px] after:bg-yellow-500 after:-z-10 dark:after:bg-bluearchive-botton-yellow";
 
   return (
     <>
       {/* Place banner controller at the top of the component */}
-      <LanguageBannerController reqLocale={reqLocale} />
+      {/* z-[200]: Must be higher than header (z-100) so dropdown is not hidden by header */}
+      <div className="relative z-200">
+        <LanguageBannerController reqLocale={reqLocale} />
+      </div>
 
-      <header ref={headerRef} className="sticky top-0 z-40 w-full bg-white/95 dark:bg-neutral-800 backdrop-blur-md">
+      <header ref={headerRef} className="sticky top-0 z-100 w-full bg-white/95 dark:bg-neutral-800 backdrop-blur-md">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-4 lg:px-6 flex justify-between items-center h-14">
           {/* Left: Logo */}
           <Link to={localeLink(locale, '/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -247,17 +386,24 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                   to={localeLink(locale, link.path(country))}
                   className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'}`}
                 >
-                  {link.key === 'bgm' ? link.label : t(link.label as any)}
+                  {t(link.label as any)}
                 </Link>
               );
             })}
+            <PlannerDropdown locale={locale} isActive={isPlannerActive} activeLinkStyle={activeLinkStyle} />
+            <Link
+              to={localeLink(locale, '/utils/jukebox')}
+              className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${/\/utils\/jukebox/.test(pathname) ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'}`}
+            >
+              BGM
+            </Link>
           </nav>
 
           {/* Right: Utilities (Icons common to desktop & mobile) */}
           <div className="flex items-center gap-3 sm:gap-5">
             <ThemeDropdown />
             <LocaleDropdown currentLocale={locale} />
-            <HelpDropdown isHelpAvailable={isHelpAvailable} />
+            <HelpDropdown isHelpAvailable={isHelpAvailable} onOpenBugModal={() => setIsBugModalOpen(true)} />
 
             {/* Show desktop toggle switch only if server selection is available on the current page */}
             {currentServer && (
@@ -286,26 +432,53 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`text-base font-bold transition-colors ${isActive ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
                   >
-                    {link.key === 'bgm' ? link.label : t(link.label as any)}
+                    {t(link.label as any)}
                   </Link>
                 );
               })}
-            </div>
 
-            <div className="h-px bg-slate-100 dark:bg-neutral-800 w-full" />
+              {/* Planner Group */}
+              <MobilePlannerGroup locale={locale} pathname={pathname} onClose={() => setIsMobileMenuOpen(false)} />
+
+              {/* BGM */}
+              <Link
+                to={localeLink(locale, '/utils/jukebox')}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`text-base font-bold transition-colors ${/\/utils\/jukebox/.test(pathname) ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
+              >
+                BGM
+              </Link>
+
+              {/* Bug Report */}
+              <button
+                onClick={() => {
+                  setIsBugModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-base font-bold transition-colors text-slate-500 dark:text-neutral-400 text-left flex items-center gap-2"
+              >
+                {/* <HiOutlineFlag className="text-base" /> */}
+                {t('reportBug')}
+              </button>
+            </div>
 
             {/* Render mobile toggle switch only if server selection is available on the current page */}
             {currentServer && (
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-slate-500 dark:text-neutral-400 mb-1">{t('serverSettings')}</span>
-                <div className="-ml-2">
-                  <ServerToggleSwitch currentServer={currentServer} />
+              <>
+                <div className="h-px bg-slate-100 dark:bg-neutral-800 w-full" />
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-slate-500 dark:text-neutral-400 mb-1">{t('serverSettings')}</span>
+                  <div className="-ml-2">
+                    <ServerToggleSwitch currentServer={currentServer} />
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
       </header>
+
+      {isBugModalOpen && <BugReportModal onClose={() => setIsBugModalOpen(false)} issuesURL={issuesURL} />}
     </>
   );
 };

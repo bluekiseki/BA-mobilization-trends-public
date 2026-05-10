@@ -29,8 +29,9 @@ const CustomScoreTimelineTooltip = ({ active, payload, label, raidInfos, rankCol
   if (active && payload && payload.length && label) {
     const scoreMap = new Map<string, number>();
     payload.forEach((p: any) => {
-      if (p.dataKey && p.dataKey.startsWith('Rank ') && p.value !== null) {
-        scoreMap.set(p.dataKey, p.value);
+      if (p.dataKey && p.dataKey.startsWith('Rank ') && !p.dataKey.endsWith('_raw') && p.value !== null) {
+        const rawValue = p.payload[`${p.dataKey}_raw`] ?? p.value;
+        scoreMap.set(p.dataKey, rawValue as number);
       }
     });
     const sortedEntries = Array.from(scoreMap.entries()).sort(([keyA], [keyB]) => {
@@ -316,6 +317,56 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
       });
 
       return entry;
+    });
+
+    // Difficulty segment normalization:
+    // Detect large upward jumps (difficulty transitions) and shift later segments
+    // to remove the gap, while preserving the exact score scale (no stretch).
+    keys.forEach((key) => {
+      const rawValues = data.map((d) => d[key] as number | null);
+
+      // Collect positive consecutive increases to find the "normal" range
+      const positiveIncreases: number[] = [];
+      for (let i = 1; i < rawValues.length; i++) {
+        const prev = rawValues[i - 1];
+        const curr = rawValues[i];
+        if (prev !== null && curr !== null && curr > prev) {
+          positiveIncreases.push(curr - prev);
+        }
+      }
+
+      if (positiveIncreases.length >= 3) {
+        const sorted = [...positiveIncreases].sort((a, b) => a - b);
+        const q1 = sorted[Math.floor(sorted.length * 0.25)];
+        const q3 = sorted[Math.floor(sorted.length * 0.75)];
+        // IQR is robust to outliers: even if large jumps are included in the array,
+        // q1/q3 stay anchored to the normal distribution of increases.
+        const iqr = Math.max(q3 - q1, 1);
+        const threshold = q3 + iqr * 15;
+
+        let offset = 0;
+        for (let i = 0; i < data.length; i++) {
+          const rawVal = rawValues[i];
+          // Store original score so the tooltip can display it
+          data[i][`${key}_raw`] = rawVal;
+
+          if (i > 0) {
+            const prevRaw = rawValues[i - 1];
+            if (prevRaw !== null && rawVal !== null && rawVal - prevRaw > threshold) {
+              offset += rawVal - prevRaw;
+            }
+          }
+
+          if (rawVal !== null) {
+            data[i][key] = rawVal - offset;
+          }
+        }
+      } else {
+        // Not enough data to detect transitions — just copy raw as-is
+        for (let i = 0; i < data.length; i++) {
+          data[i][`${key}_raw`] = data[i][key];
+        }
+      }
     });
 
     const startTime = data[0].time;

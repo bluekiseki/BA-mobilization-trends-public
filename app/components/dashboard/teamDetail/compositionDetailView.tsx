@@ -2,13 +2,15 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
-import type { GameServer } from '~/types/data';
+import type { GameServer, RaidInfo } from '~/types/data';
 import { getBackgroundRatingColor, getCharacterStarValue, type Character, type PortraitData, type ReportEntryRank, type StudentData } from '../common';
 import { formatTimeToTimestamp } from '~/utils/time';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from 'recharts';
 import { useIsDarkState } from '~/store/isDarkState';
 import { StudentIcon } from '../studentIcon';
 import { StarRating } from '~/components/StarRatingProps';
+import { IoClose } from 'react-icons/io5';
+import { YouTubeSearchGenerator } from '../YouTubeSearchGenerator';
 const CustomBarLabel = (props: any) => {
   const { x, y, width, height, value, total } = props;
 
@@ -116,9 +118,9 @@ export const StarRatingDistributionBarChart: React.FC<{
               isAnimationActive={false}
               content={({ payload, label, active }) => {
                 if (active && payload && payload.length) {
-                  const data = payload.filter((v) => activeIndex == v.dataKey.replace('★', ''))?.[0]; // Data from the current hover bar
+                  const data = payload.filter((v) => String(activeIndex) == String(v.dataKey).replace('★', ''))?.[0]; // Data from the current hover bar
                   if (!data) return null;
-                  const value = data.value; // Number of persons of star lavel
+                  const value = Number(data.value); // Number of persons of star lavel
                   const total = data.payload.total; // Total headcount
 
                   if (!total || value === 0) {
@@ -133,7 +135,7 @@ export const StarRatingDistributionBarChart: React.FC<{
                         <span className="block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.fill }}></span>
 
                         <span>
-                          <StarRating n={Number(data.dataKey.replace('★', ''))} />
+                          <StarRating n={Number(String(data.dataKey).replace('★', ''))} />
                         </span>
                         <span className="font-bold">{`${value.toLocaleString()}`}</span>
                         <span className="text-gray-600 dark:text-gray-400">{`(${percentage}%)`}</span>
@@ -187,12 +189,13 @@ export const CompositionDetailView: React.FC<{
   comp: any;
   entries: ReportEntryRank[];
   studentData: StudentData;
+  raidInfo: RaidInfo;
   boss: string;
   server: GameServer;
   id: string;
   portraitData: PortraitData;
   onClose: () => void;
-}> = ({ comp, entries, studentData, boss, server, id, portraitData, onClose }) => {
+}> = ({ comp, entries, studentData, raidInfo, boss, server, id, portraitData, onClose }) => {
   const { t } = useTranslation('dashboard');
   const [selectedStudentId, setSelectedStudentId] = useState<'all' | number>('all');
   const [dataType, setDataType] = useState<'score' | 'time' | 'rank'>('rank');
@@ -206,12 +209,13 @@ export const CompositionDetailView: React.FC<{
   }, [entries]);
 
   // Best score / Best Calculator
-  const { maxScore, minTime, maxDifficulty } = useMemo(() => {
+  const { maxScore, minTime, maxDifficulty, bestRank } = useMemo(() => {
     const scores = entries.map((e) => e.s);
     const maxScore = Math.max(...scores);
     const minTime = calculateTimeFromScore(maxScore, boss, server, id);
     const maxDifficulty = getDifficultyFromScoreAndBoss(entries[0].s, server, id);
-    return { maxScore, minTime, maxDifficulty };
+    const bestRank = Math.min(...entries.map((e) => e.typeRanking ?? e.r));
+    return { maxScore, minTime, maxDifficulty, bestRank };
   }, [entries, isTimeViewable, boss, server, id]);
 
   // Calculate histogram and star distribution data
@@ -337,7 +341,7 @@ export const CompositionDetailView: React.FC<{
   const studentsToDisplay = selectedStudentId === 'all' ? comp.ids : [selectedStudentId];
   return (
     <div data-component-name="CompositionDetailView" className="w-full mt-2 p-2 sm:p-4 space-y-4">
-      <div className="flex justify-between items-center">
+      {/* <div className="flex justify-between items-center">
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           <div className="text-xs">
             <span className="font-bold">{t('maxScore')}: </span> {maxDifficulty.toUpperCase()} {maxScore.toLocaleString()}
@@ -348,6 +352,17 @@ export const CompositionDetailView: React.FC<{
               {formatTimeToTimestamp(minTime)}
             </div>
           )}
+          <div className="text-xs">
+            <span className="font-bold">{t('bestRank')}: </span> {bestRank.toLocaleString()}
+          </div>
+
+          <div className="mt-3 flex justify-end">
+            <YouTubeSearchGenerator
+              raidInfo={raidInfo}
+              showType={raidInfo.Type ? true : false}
+              partyStudentIds={entries[0].t.map((team) => [...team.m, ...team.s].filter((c): c is NonNullable<typeof c> => !!c?.id).map((c) => c.id))}
+            />
+          </div>
         </div>
         <button
           onClick={(e) => {
@@ -356,7 +371,54 @@ export const CompositionDetailView: React.FC<{
           }}
           className="text-lg font-bold hover:text-red-500 transition-colors"
         >
-          ✕
+          <IoClose />
+        </button>
+      </div> */}
+      <div className="flex justify-between items-start gap-4">
+        {/* Left: Main info and YouTube search (cleanly separated with vertical layout) */}
+        <div className="flex flex-col gap-3">
+          {/* 1. Text information area */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-700 dark:text-gray-300">
+            <div>
+              <span className="font-semibold">{t('maxScore')}: </span>
+              <span className="font-medium text-blue-600 dark:text-blue-400">{maxDifficulty.toUpperCase()}</span> {maxScore.toLocaleString()}
+            </div>
+            {minTime !== undefined && (
+              <div>
+                <span className="font-semibold">{t('minTime')}: </span>
+                {formatTimeToTimestamp(minTime)}
+              </div>
+            )}
+            <div>
+              <span className="font-semibold">{t('bestRank')}: </span> {bestRank.toLocaleString()}
+            </div>
+          </div>
+
+          {/* 2. YouTube Search Generator area (placed on a separate line for stability) */}
+          {/* 2. YouTube Search Generator area */}
+          <div className="flex items-center gap-2">
+            {/* Guide text */}
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{t('searchYouTube.title')}:</span>
+
+            {/* YouTube search component */}
+            <YouTubeSearchGenerator
+              raidInfo={raidInfo}
+              showType={raidInfo.Type ? true : false}
+              partyStudentIds={entries[0].t.map((team) => [...team.m, ...team.s].filter((c): c is NonNullable<typeof c> => !!c?.id).map((c) => c.id))}
+            />
+          </div>
+        </div>
+
+        {/* Top Right: Close button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="text-xl p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-md shrink-0 flex-none"
+          aria-label="Close"
+        >
+          <IoClose />
         </button>
       </div>
 

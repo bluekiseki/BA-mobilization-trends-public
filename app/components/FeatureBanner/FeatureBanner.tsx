@@ -70,7 +70,7 @@ export default function InlinePromoBanner() {
 
   const handleClose = () => {
     if (hideForDay) {
-      const hideUntil = new Date().getTime() + 1 * 24 * 60 * 60 * 1000;
+      const hideUntil = new Date().getTime() + 7 * 24 * 60 * 60 * 1000; // 7 days
       localStorage.setItem(STORAGE_KEY, hideUntil.toString());
     } else {
       sessionStorage.setItem('hideInlinePromoSession', 'true');
@@ -136,7 +136,7 @@ export default function InlinePromoBanner() {
               checked={hideForDay}
               onChange={(e) => setHideForDay(e.target.checked)}
             />
-            <span className="select-none">{t('promoBanner.noMoreToday')}</span>
+            <span className="select-none">{t('promoBanner.noMoreThisWeek')}</span>
           </label>
 
           <button onClick={handleClose} className="hover:text-slate-900 dark:hover:text-white transition-colors" aria-label="close">

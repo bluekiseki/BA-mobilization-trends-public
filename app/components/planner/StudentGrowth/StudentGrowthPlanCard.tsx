@@ -14,10 +14,10 @@ import { EquipmentTab } from './EquipmentTab';
 import { PotentialTab } from './PotentialTab';
 import { AffectionTab } from './FaverTab';
 import StudentSearchDropdown from '~/components/StudentSearchDropdown';
-import { MAX_LEVEL } from './const';
+import { MAX_LEVEL, uwMaxLevelMap } from './const';
 
 // Icons
-import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo } from 'react-icons/fi';
+import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo, FiDollarSign } from 'react-icons/fi';
 import { IoSync } from 'react-icons/io5';
 import { StarRating } from '~/components/StarRatingProps';
 import { getStarValue } from '~/components/dashboard/common';
@@ -40,10 +40,11 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
   const { updatePlan, removePlan, toggleEventInclusion } = useGlobalStore();
   const { t } = useTranslation(['planner', 'common']);
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false });
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false, skills: false, equipment: false, potential: false, affection: false });
   const [activeHelp, setActiveHelp] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showCostHints, setShowCostHints] = useState(true);
 
   const studentInfo = plan.studentId ? allStudents[plan.studentId] : null;
 
@@ -84,6 +85,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       if (rankType === 'star') {
         updatePlan(plan.uuid, `${type}.star`, level);
         updatePlan(plan.uuid, `${type}.uw`, 0);
+        updatePlan(plan.uuid, `${type}.uwLevel`, 1);
       } else {
         updatePlan(plan.uuid, `${type}.star`, 5);
         updatePlan(plan.uuid, `${type}.uw`, level);
@@ -100,7 +102,9 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
         if (section === 'stats') {
           update('target.level', MAX_LEVEL);
           handleRankChange('target', 'uw_4');
-          update('target.affection', 100);
+          update('target.uwLevel', uwMaxLevelMap[4]);
+          update('target.affection', Math.max(plan.target.affection, 50));
+          update('target.gear', 2);
         } else if (section === 'skills') {
           update('target.ex', 5);
           update('target.normal', 10);
@@ -111,7 +115,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
         } else if (section === 'potential') {
           update('target.potential', { hp: 25, atk: 25, heal: 25 });
         } else if (section === 'affection') {
-          update('target.affection', 100);
+          update('target.affection', Math.max(plan.target.affection, 50));
         }
       },
       onResetTarget: () => {
@@ -119,7 +123,9 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
           update('target.level', plan.current.level);
           update('target.star', plan.current.star);
           update('target.uw', plan.current.uw);
+          update('target.uwLevel', plan.current.uwLevel);
           update('target.affection', plan.current.affection);
+          update('target.gear', plan.current.gear ?? 0);
         } else if (section === 'skills') {
           update('target.ex', plan.current.ex);
           update('target.normal', plan.current.normal);
@@ -135,11 +141,13 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       },
       onFullMax: () => {
         if (section === 'stats') {
-          ['current', 'target'].forEach((t) => {
+          (['current', 'target'] as const).forEach((t) => {
             update(`${t}.level`, MAX_LEVEL);
             update(`${t}.star`, 5);
             update(`${t}.uw`, 4);
-            update(`${t}.affection`, 100);
+            update(`${t}.uwLevel`, uwMaxLevelMap[4]);
+            update(`${t}.affection`, Math.max(plan[t].affection, 50));
+            update(`${t}.gear`, 2);
           });
         } else if (section === 'skills') {
           ['current', 'target'].forEach((t) => {
@@ -153,7 +161,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
         } else if (section === 'potential') {
           ['current', 'target'].forEach((t) => update(`${t}.potential`, { hp: 25, atk: 25, heal: 25 }));
         } else if (section === 'affection') {
-          ['current', 'target'].forEach((t) => update(`${t}.affection`, 100));
+          (['current', 'target'] as const).forEach((t) => update(`${t}.affection`, Math.max(plan[t].affection, 50)));
         }
       },
       onFullReset: () => {
@@ -162,7 +170,9 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
             update(`${t}.level`, 1);
             update(`${t}.star`, studentInfo?.StarGrade || 1);
             update(`${t}.uw`, 0);
+            update(`${t}.uwLevel`, 1);
             update(`${t}.affection`, 1);
+            update(`${t}.gear`, 0);
           });
         } else if (section === 'skills') {
           ['current', 'target'].forEach((t) => {
@@ -320,8 +330,19 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
             </button>
           </div>
 
-          {/* Right: Status Badge or Student ID */}
-          {plan.studentId && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200/50 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400">ID: {plan.studentId}</div>}
+          {/* Right: Cost Hint Toggle + Student ID */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowCostHints((v) => !v)}
+              title={showCostHints ? t('growthCard.hideCostHints', 'Hide cost hints') : t('growthCard.showCostHints', 'Show cost hints')}
+              className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                showCostHints ? 'bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-400 dark:bg-neutral-700 dark:text-neutral-500'
+              }`}
+            >
+              <FiDollarSign size={11} />
+            </button>
+            {plan.studentId && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200/50 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400">ID: {plan.studentId}</div>}
+          </div>
         </div>
       </div>
 
@@ -341,7 +362,19 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
 
           {/* Student Search Dropdown: Secure maximum horizontal width */}
           <div className="flex-1 min-w-0 text-xs">
-            <StudentSearchDropdown students={allStudents} selectedStudentId={plan.studentId} setSelectedStudentId={(id) => handlePlanChange('studentId', Number(id))} hideLavel={true} />
+            <StudentSearchDropdown
+              students={allStudents}
+              selectedStudentId={plan.studentId}
+              setSelectedStudentId={(id) => {
+                updatePlan(plan.uuid, 'studentId', Number(id));
+                const newStudent = allStudents[id];
+                if (newStudent && !('Name' in (newStudent.Gear ?? {}))) {
+                  updatePlan(plan.uuid, 'current.gear', 0);
+                  updatePlan(plan.uuid, 'target.gear', 0);
+                }
+              }}
+              hideLavel={true}
+            />
           </div>
         </div>
 
@@ -446,6 +479,8 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                 handleRankChange={handleRankChange}
                 rankOptions={rankOptions}
                 handleBatchUpdate={handleBatchUpdate}
+                iconData={showCostHints ? iconData : undefined}
+                eventData={showCostHints ? eventData : undefined}
               />
             </GrowthAccordion>
             <GrowthAccordion
@@ -456,7 +491,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               targetSummary={summaries.skills.tar}
               {...generateActions('skills')}
             >
-              <SkillsTab plan={plan} studentInfo={studentInfo} handlePlanChange={handlePlanChange} />
+              <SkillsTab plan={plan} studentInfo={studentInfo} handlePlanChange={handlePlanChange} iconData={showCostHints ? iconData : undefined} eventData={showCostHints ? eventData : undefined} />
             </GrowthAccordion>
 
             <GrowthAccordion
@@ -469,7 +504,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               isWarning={warnings.equipment}
               warningText={t('equipmentTab.levelLockWarning')}
             >
-              <EquipmentTab plan={plan} studentInfo={studentInfo} handleBatchUpdate={handleBatchUpdate} iconData={iconData} eventData={eventData} />
+              <EquipmentTab plan={plan} studentInfo={studentInfo} handleBatchUpdate={handleBatchUpdate} iconData={iconData} eventData={showCostHints ? eventData : undefined} />
             </GrowthAccordion>
 
             <GrowthAccordion
@@ -482,7 +517,13 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               isWarning={warnings.potential}
               warningText={t('potentialTab.unlockCondition')}
             >
-              <PotentialTab plan={plan} handleBatchUpdate={handleBatchUpdate} iconData={iconData} />
+              <PotentialTab
+                plan={plan}
+                handleBatchUpdate={handleBatchUpdate}
+                iconData={showCostHints ? iconData : undefined}
+                eventData={showCostHints ? eventData : undefined}
+                studentInfo={studentInfo}
+              />
             </GrowthAccordion>
 
             <GrowthAccordion
@@ -494,7 +535,15 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               {...generateActions('affection')}
             >
               {eventData?.icons.Item && iconData ? (
-                <AffectionTab plan={plan} giftAffectionList={giftAffectionList} eventData={eventData} iconData={iconData} handlePlanChange={handlePlanChange} />
+                <AffectionTab
+                  plan={plan}
+                  giftAffectionList={giftAffectionList}
+                  eventData={eventData}
+                  iconData={iconData}
+                  handlePlanChange={handlePlanChange}
+                  allStudents={allStudents}
+                  studentPortraits={studentPortraits}
+                />
               ) : (
                 <div className="p-6 text-center text-xs text-gray-400">Loading Affection Data...</div>
               )}

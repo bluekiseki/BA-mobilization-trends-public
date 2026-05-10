@@ -106,4 +106,7 @@ export interface ExcludableStudentCondition {
 export interface TableFilters {
   includable: IncludableStudentCondition[];
   excludable: ExcludableStudentCondition[];
+  usePartyCount?: boolean;
+  minParty?: number;
+  maxParty?: number;
 }

@@ -26,6 +26,8 @@
     "student_name": "Search student name...",
     "no_results": "No results. Filters must be set to prevent spoilers before the results are displayed."
   },
+  "studentCount": "{count} students",
+  "itemCount": "{count} items",
   "playback": {
     "options": "Playback Options",
     "play_random": "Play Random",
@@ -82,15 +84,18 @@
     "vol4_ch2": "Vol.4 Ch.2 We Were RABBITs!",
     "vol5_ch1": "Vol.5 Ch.1 Like the Flower That Wishes to Bloom",
     "vol5_ch2": "Vol.5 Ch.2 To You, Who's Trying to Bloom Alone",
-    "vol6_ch1": "Vol.6 Ch.1",
-    "vol6_ch2": "Vol.6 Ch.2",
-    "vol6_ch3": "Vol.6 Ch.3",
+    "vol6_ch1": "Vol.6 Ch.1 Sights Beyond the Boundary",
+    "vol6_ch2": "Vol.6 Ch.2 Saying Goodbye to Yesterday",
+    "vol6_ch3": "Vol.6 Ch.3 Ecclesia for the Future Left Behind",
     "ex_deca_ch0": "Ex. Decagrammaton Ch.1 Snake of Wisdom",
     "ex_deca_ch1": "Ex. Decagrammaton Ch.2 Flaming Sword",
     "ex_deca_ch2": "Ex. Decagrammaton Ch.3",
     "final_ch1": "Final Vol. Ch.1 Operation Recapture Schale",
     "final_ch2": "Final Vol. Ch.2 Operational Plan: Nisir's Summit",
     "final_ch3": "Final Vol. Ch.3 The Ark of Atrahasis Conquest",
-    "final_ch4": "Final Vol. Ch.4 Phrenapates Showdown"
+    "final_ch4": "Final Vol. Ch.4 Phrenapates Showdown",
+    "part2_prologue": "Part.2 Prologue",
+    "part2_vol0_ch1": "Part.2 Vol.0 Ch.1",
+    "part2_ex_lore_ch1": "Part.2 Ex. Lore Ch.1"
   }
 }

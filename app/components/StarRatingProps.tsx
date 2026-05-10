@@ -1,3 +1,4 @@
+import React from 'react';
 import StarIcon from './StarIcon';
 
 interface StarRatingProps {
@@ -9,7 +10,7 @@ const styles = {
   cyan: { color: 'cyan' },
 };
 
-export function StarRating({ n }: StarRatingProps) {
+export const StarRating: React.FC<StarRatingProps> = React.memo(({ n }: StarRatingProps) => {
   const isassist = n <= 0;
   const assistStr = isassist ? (
     <span
@@ -55,4 +56,4 @@ export function StarRating({ n }: StarRatingProps) {
       {assistStr}
     </span>
   );
-}
+});

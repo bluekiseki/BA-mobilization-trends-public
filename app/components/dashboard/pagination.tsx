@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CustomNumberInput } from '../CustomInput';
 
 export const Pagination: React.FC<{
   currentPage: number;
@@ -69,10 +70,10 @@ export const Pagination: React.FC<{
 
         <div className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 px-2">
           <form onSubmit={handleFormSubmit}>
-            <input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+            <CustomNumberInput
+              // type="number"
+              value={Number(inputValue)}
+              onChange={(e) => setInputValue(Number(e))}
               onBlur={handlePageSubmit}
               className="w-18 h-9 rounded-md border border-neutral-300 bg-white dark:bg-neutral-800 text-center text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:border-neutral-700 transition"
             />

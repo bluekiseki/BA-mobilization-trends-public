@@ -6,6 +6,7 @@ import type { GameServer, RaidInfo } from '~/types/data';
 import { StudentIcon } from '../studentIcon';
 import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
 import { Pagination } from '../pagination';
+import React from 'react';
 
 export const RankCard: React.FC<{
   entry: ReportEntryRank;
@@ -86,59 +87,61 @@ export const RankingsTableComponent: React.FC<{
   handleItemsPerPageChange: (size: number) => void;
   handleLoadMore: () => void;
   handleScrollToTop: () => void;
-}> = ({
-  detailedFilteredData,
-  currentPage,
-  itemsPerPage,
-  studentData,
-  portraitData,
-  paginatedData,
-  showRank,
-  activeRange,
-  raidInfo,
-  server,
-  handlePageChange,
-  handleItemsPerPageChange,
-  handleLoadMore,
-  handleScrollToTop,
-}) => (
-  <>
-    <Pagination
-      currentPage={currentPage}
-      totalItems={detailedFilteredData.length}
-      itemsPerPage={itemsPerPage}
-      showmoreBtn={false}
-      onPageChange={handlePageChange}
-      onItemsPerPageChange={handleItemsPerPageChange}
-      onLoadMore={handleLoadMore}
-      onScrollToTop={handleScrollToTop}
-    />
-    <div className="grid grid-cols-1 gap-4">
-      {paginatedData.length > 0 ? (
-        paginatedData.map((entry, i) => (
-          <RankCard
-            key={entry.r}
-            entry={entry}
-            studentData={studentData}
-            portraitData={portraitData}
-            // rank = { i+1 + (currentPage-1)*itemsPerPage+ activeRange.min - 1}
-            raid={raidInfo}
-            server={server}
-          />
-        ))
-      ) : (
-        <p className="text-center text-gray-500 pt-10">No data</p>
-      )}
-    </div>
-    <Pagination
-      currentPage={currentPage}
-      totalItems={detailedFilteredData.length}
-      itemsPerPage={itemsPerPage}
-      showmoreBtn={true}
-      onPageChange={handlePageChange}
-      onItemsPerPageChange={handleItemsPerPageChange}
-      onLoadMore={handleLoadMore}
-      onScrollToTop={handleScrollToTop}
-    />
-  </>
+}> = React.memo(
+  ({
+    detailedFilteredData,
+    currentPage,
+    itemsPerPage,
+    studentData,
+    portraitData,
+    paginatedData,
+    showRank,
+    activeRange,
+    raidInfo,
+    server,
+    handlePageChange,
+    handleItemsPerPageChange,
+    handleLoadMore,
+    handleScrollToTop,
+  }) => (
+    <>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={detailedFilteredData.length}
+        itemsPerPage={itemsPerPage}
+        showmoreBtn={false}
+        onPageChange={handlePageChange}
+        onItemsPerPageChange={handleItemsPerPageChange}
+        onLoadMore={handleLoadMore}
+        onScrollToTop={handleScrollToTop}
+      />
+      <div className="grid grid-cols-1 gap-4">
+        {paginatedData.length > 0 ? (
+          paginatedData.map((entry, i) => (
+            <RankCard
+              key={entry.r}
+              entry={entry}
+              studentData={studentData}
+              portraitData={portraitData}
+              // rank = { i+1 + (currentPage-1)*itemsPerPage+ activeRange.min - 1}
+              raid={raidInfo}
+              server={server}
+            />
+          ))
+        ) : (
+          <p className="text-center text-gray-500 pt-10">No data</p>
+        )}
+      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={detailedFilteredData.length}
+        itemsPerPage={itemsPerPage}
+        showmoreBtn={true}
+        onPageChange={handlePageChange}
+        onItemsPerPageChange={handleItemsPerPageChange}
+        onLoadMore={handleLoadMore}
+        onScrollToTop={handleScrollToTop}
+      />
+    </>
+  ),
 );

@@ -71,7 +71,7 @@ export const RankUsageChart: React.FC<{
   data: ReportEntryRank[];
   studentData: StudentData;
   portraitData: PortraitData;
-}> = ({ data, studentData, portraitData }) => {
+}> = React.memo(({ data, studentData, portraitData }) => {
   const [selectedCharId, setSelectedCharId] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState<number | null | string>(null);
   const { isDark } = useIsDarkState();
@@ -79,7 +79,7 @@ export const RankUsageChart: React.FC<{
   const { t } = useTranslation('dashboard');
   const { t: t_c } = useTranslation('common');
 
-  console.log('[RankUsageChart] data', data);
+  // console.log('[RankUsageChart] data', data);
 
   // --- Data Processing ---
   const defaultChartData = useMemo(() => {
@@ -246,9 +246,9 @@ export const RankUsageChart: React.FC<{
                           <div className="space-y-0.5">
                             {payload
                               .filter((a) => a.name !== t('etc', 'etc'))
-                              .sort((a, b) => b.value - a.value)
+                              .sort((a, b) => Number(b.value) - Number(a.value))
                               .map((entry, i) => {
-                                const color = getColorForString(entry.name, entry.name === t('etc', 'etc'));
+                                const color = getColorForString(String(entry.name), entry.name === t('etc', 'etc'));
 
                                 return (
                                   <div
@@ -260,7 +260,7 @@ export const RankUsageChart: React.FC<{
                                   >
                                     <div className="mt-1 flex items-center justify-between text-xs">
                                       <span className="font-medium text-neutral-600 dark:text-neutral-300">{entry.name}</span>
-                                      <span className="font-bold text-neutral-800 dark:text-neutral-100">{entry.value.toFixed(2)}%</span>
+                                      <span className="font-bold text-neutral-800 dark:text-neutral-100">{Number(entry.value).toFixed(2)}%</span>
                                     </div>
                                     <div className="h-0.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
                                       <div
@@ -323,7 +323,7 @@ export const RankUsageChart: React.FC<{
                           {payload
                             .filter((entry, i) => entry.value)
                             .map((entry, i) => {
-                              const starNumber = Number(entry.name.replace('★ ', ''));
+                              const starNumber = Number(String(entry.name).replace('★ ', ''));
 
                               return (
                                 <div key={i} className="w-full min-w-[150px] space-y-0.5 ">
@@ -331,7 +331,7 @@ export const RankUsageChart: React.FC<{
                                     <span className="text-neutral-500 dark:text-neutral-400">
                                       <StarRating n={starNumber} />
                                     </span>
-                                    <span className="font-bold text-neutral-800 dark:text-neutral-200">{entry.value.toFixed(2)}%</span>
+                                    <span className="font-bold text-neutral-800 dark:text-neutral-200">{Number(entry.value).toFixed(2)}%</span>
                                   </div>
 
                                   <div className="h-1 w-full rounded bg-neutral-200 dark:bg-neutral-600">
@@ -390,4 +390,4 @@ export const RankUsageChart: React.FC<{
       </div>
     </>
   );
-};
+});

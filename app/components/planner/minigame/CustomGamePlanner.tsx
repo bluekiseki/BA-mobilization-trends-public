@@ -55,7 +55,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
 
   const farmingItemsForCost = useMemo(() => {
     const farmingItemIds = new Set<number>();
-    const allEventStages = eventData.stage.stage || [];
+    const allEventStages = eventData?.stage?.stage || [];
 
     for (const stage of allEventStages) {
       for (const r of stage.EventContentStageReward) {

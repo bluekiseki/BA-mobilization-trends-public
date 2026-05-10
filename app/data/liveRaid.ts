@@ -1,11 +1,16 @@
 import type { RaidInfo } from '~/types/data';
 import type { Locale } from '~/utils/i18n/config';
 import bossData from '~/data/bossdata.json';
+// live is a beta service and is not always updated. The metadata of this file is updated only when the live data is updated.
 
 export const LIVE_RAID_DURATION = 7;
 
 export const LiveRaidInfos = [
-  { Id: 'R87', Boss: 'Goz', Location: 'Outdoor', Date: '2026-03-25 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+  { Id: 'R88', Boss: 'Kaitenger_Street', Location: 'Outdoor', Date: '2026-04-29 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+  // { Id: 'E32', Boss: 'Perorozilla_Outdoor', Location: 'Outdoor', Type: 'HeavyArmor', Date: '2026-04-08 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E32', Boss: 'Perorozilla_Outdoor', Location: 'Outdoor', Type: 'Unarmed', Date: '2026-04-08 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E32', Boss: 'Perorozilla_Outdoor', Location: 'Outdoor', Type: 'ElasticArmor', Date: '2026-04-08 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },
+  // { Id: 'R87', Boss: 'Goz', Location: 'Outdoor', Date: '2026-03-25 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
   // { Id: 'E31', Boss: 'Hieronymus_Street', Location: 'Street', Type: 'HeavyArmor', Date: '2026-03-04 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
   // { Id: 'E31', Boss: 'Hieronymus_Street', Location: 'Street', Type: 'Unarmed', Date: '2026-03-04 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
   // { Id: 'E31', Boss: 'Hieronymus_Street', Location: 'Street', Type: 'LightArmor', Date: '2026-03-04 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },

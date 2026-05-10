@@ -24,7 +24,7 @@ interface HelpGuide {
 
 const getVisibleElement = (selector: string): HTMLElement | string => {
   const elements = document.querySelectorAll(selector);
-  for (const el of elements) {
+  for (const el of [...elements]) {
     // Elements set to display: none via CSS have an offsetWidth of 0.
     if ((el as HTMLElement).offsetWidth > 0) {
       return el as HTMLElement;

@@ -59,8 +59,8 @@
       "dashboard": "Board",
       "planner": "Planner",
       "help": "Help",
-      "viewDescription": "View Description",
-      "reportBug": "Send Feedback",
+      "viewDescription": "Guide",
+      "reportBug": "Report / Feedback",
       "email": "email",
       "viewCode": "View Code",
       "theme": "Theme",
@@ -76,7 +76,6 @@
       "ja": "Japanese",
       "label": "label"
     },
-
     "language_banner": {
       "message": "It looks like you speak {{language}}. Would you like to switch?",
       "switch_button": "Switch to {{language}}",
@@ -97,7 +96,8 @@
       }
     },
     "promoBanner": {
-      "noMoreToday": "Hide for today"
+      "noMoreToday": "Hide for today",
+      "noMoreThisWeek": "Hide for a week"
     },
     "bugReport": {
       "title": "Send Feedback",
@@ -114,6 +114,34 @@
       "errorMsg": "Failed to send. Please try again.",
       "githubIssue": "Report via GitHub Issues",
       "poweredBy": "This request is sent via Web3Forms."
+    },
+    "yesterday": "Yesterday",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "remainingTime": "{{day}}d {{hour}}h left",
+    "remainingDays": "{{day}}d left",
+    "remainingHours": "{{hour}}h left",
+    "startsIn": "in {{day}}d {{hour}}h",
+    "startsInDays": "in {{day}}d",
+    "startsInHours": "in {{hour}}h",
+    "remainingMinutes": "{{min}}m left",
+    "startsInMinutes": "in {{min}}m",
+    "status": {
+      "live": "LIVE",
+      "recent": "Recent",
+      "upcoming": "Upcoming"
+    },
+    "home": {
+      "currentStatus": "Current Status",
+      "schedule": "Schedule",
+      "notices": "Notices",
+      "tools": "Tools",
+      "analytics": "Analytics",
+      "plannersAndTools": "Planners & Tools",
+      "birthdaySoon": "Happy Birthday!",
+      "jpStats": "JP stats",
+      "kivotosPeace": "Kivotos is at peace.",
+      "noEvent": "No event scheduled."
     }
   },
   "charts": {
@@ -228,6 +256,7 @@
     "StudentGrowthByRankTitle": "Student Star Level Status by Rank",
     "StudentGrowthByRank": "Student Star Level Status by Rank",
     "popularFormations": "Popular Formations (Total: {x})",
+
     "rankingsAndTeams": "Rankings & Teams (Total: {x})",
     "includeStudent": "Include Student",
     "excludeStudent": "Exclude Student",
@@ -237,6 +266,15 @@
     "searchStudentByName": "Search student by name or alias...",
     "noResults": "No search results.",
     "selectStar": "Select Star Level",
+    "filter_view_code": "Edit as code",
+    "filter_export": "Export filters (copy)",
+    "filter_copy_done": "Copied!",
+    "filter_import": "Import from clipboard",
+    "filter_import_placeholder": "Paste filter JSON here...",
+    "filter_import_error": "Invalid format.",
+    "filter_import_apply": "Apply",
+    "filter_reset": "Reset",
+    "add_my_students": "Add unrecruited students",
     "includableStudentTitle": "Available Students",
     "excludableStudentTitle": "Students Difficult to Mobilize",
     "tagMustInclude": "Required",
@@ -311,6 +349,7 @@
     "closeDetails": "Close Details",
     "maxScore": "Max Score",
     "minTime": "Min Time",
+    "bestRank": "Highest Rank",
     "timeViewUnavailable": "Time view is only available when all party members are on the same difficulty.",
     "viewByStudent": "View by Student",
     "viewAllStudents": "All",
@@ -351,6 +390,7 @@
       "terrain": "Terrain",
       "defenseType": "Defense Type",
       "attackType": "Attack Type",
+      "student_name": "Student Name",
       "copy": "Copy",
       "copied": "Copied!",
       "dateRange": "Date Range"
@@ -358,8 +398,10 @@
     "composition": {
       "mode_team": "Team",
       "mode_report": "Report",
-      "total_parties": "Total Parties",
+      "total_parties": "Units Deployed",
       "full_party_only": "Full(6) Only",
+      "table_filter_reflect": "Apply include/exclude filter",
+      "only_with_video": "With Video Only",
       "specific_team": "Specific Team",
       "from_start": "From Start",
       "from_end": "From End",
@@ -367,6 +409,9 @@
       "click_to_collapse": "Click to collapse",
       "click_for_details": "Click for details",
       "load_more": "Load More",
+      "sort_count": "Most popular",
+      "sort_bestRank": "Best score",
+      "ignore_position": "Ignore placement order",
       "placement_variants": "Placement Order Variants",
       "mulligan_variants": "Starting Hand Variants"
     }
@@ -375,7 +420,9 @@
     "title": "Dashboard List",
     "description": "Statistical dashboards for past Total Assaults and Grand Assaults",
     "pinnedGlobalTitle": "Current Global Server Raids",
-    "liveBetaTitle": "Live Dashboard (Beta)"
+    "liveBetaTitle": "Live Dashboard (Beta)",
+    "searchPlaceholder": "Search by boss name or ID...",
+    "filterAll": "All"
   },
   "liveDashboard": {
     "description": "Real-time statistics of Total Assaults and Grand Assaults",

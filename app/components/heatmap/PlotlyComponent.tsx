@@ -8,4 +8,4 @@ import bar from 'plotly.js/lib/bar';
 
 Plotly.register([heatmap, bar]);
 
-export default createPlotlyComponent(Plotly);
+export default ((createPlotlyComponent as any).default || createPlotlyComponent)(Plotly);

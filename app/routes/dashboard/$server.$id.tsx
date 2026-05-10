@@ -1,6 +1,6 @@
 // app/routes/dashboard.$server.$id.tsx
 
-import { useLoaderData, type LoaderFunctionArgs, data, useLocation, useSearchParams } from 'react-router';
+import { useLoaderData, type LoaderFunctionArgs, data, useLocation, useSearchParams, redirect } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GAMESERVER_LIST, type FullData, type GameServer, type Student } from '~/types/data';
@@ -103,11 +103,29 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  // const locale = getLocaleFromHeaders(request);
   let i18n = getInstance(context);
   const locale = i18n.language as Locale;
-  const raidInfos = loadRaidInfosById(server as GameServer, locale, id);
+
+  // 1. Query data using the current id (lowercase, etc.).
+  let raidInfos = loadRaidInfosById(server as GameServer, locale, id);
+
+  // 2. If data is not found, convert to uppercase and recheck.
   if (!raidInfos || raidInfos.length === 0) {
+    const upperId = id.toUpperCase();
+
+    // Execute re-search logic only when the original id and uppercase id differ.
+    if (id !== upperId) {
+      const upperRaidInfos = loadRaidInfosById(server as GameServer, locale, upperId);
+
+      // If data exists when converted to uppercase, redirect to the uppercase URL.
+      if (upperRaidInfos && upperRaidInfos.length > 0) {
+        // Use URL object to maintain existing query parameters (e.g., ?view=detail&tab=All).
+        const url = new URL(request.url);
+        return redirect(`/dashboard/${server}/${upperId}${url.search}`);
+      }
+    }
+
+    // If data is still not found in uppercase, return 404.
     throw new Response('Raid Info Not Found', { status: 404 });
   }
 

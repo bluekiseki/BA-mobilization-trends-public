@@ -1,0 +1,41 @@
+{
+  "title": "Notice Archive",
+  "subtitle": "Check updates and notices from all servers.",
+  "servers": {
+    "ALL": "All",
+    "KR": "Korea",
+    "Global": "Global",
+    "JP": "Japan",
+    "TW": "Taiwan"
+  },
+  "types": {
+    "ALL": "All",
+    "VIDEO": "Video",
+    "ETC": "Other"
+  },
+  "searchPlaceholder": "Search notice title...",
+  "sort": {
+    "new": "Newest First",
+    "modified": "Recently Modified"
+  },
+  "noResults": "No results.",
+  "loading": "Loading data...",
+  "postedAt": "Posted",
+  "modifiedAt": "Modified",
+  "prev": "Previous",
+  "next": "Next",
+  "backToList": "Back to all notices",
+  "firstCrawled": "First collected",
+  "apiCreated": "Created",
+  "apiModified": "Modified",
+  "copy": "Copy",
+  "copied": "✓ Copied",
+  "noContent": "No content available.",
+  "historyTitle": "Edit History Timeline",
+  "currentlyViewing": "Currently Viewing",
+  "latestVersion": "Latest Version",
+  "versionId": "VERSION ID: {{id}}",
+  "changeRecorded": "Data change recorded.",
+  "notFound": "Notice not found.",
+  "viewAll": "View all notices"
+}

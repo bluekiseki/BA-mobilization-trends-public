@@ -62,5 +62,23 @@
   "Highlander": "하이랜더",
   "WildHunt": "와일드헌트",
   "ETC": "기타",
-  "Sakugawa": "사쿠가와 중학교"
+  "Sakugawa": "사쿠가와 중학교",
+  "short": {
+    "Abydos": "아비도스",
+    "Arius": "아리우스",
+    "Gehenna": "게헨나",
+    "Hyakkiyako": "백귀야행",
+    "Millennium": "밀레니엄",
+    "RedWinter": "붉은겨울",
+    "Shanhaijing": "산해경",
+    "SRT": "SRT",
+    "Trinity": "트리니티",
+    "Valkyrie": "발키리",
+    "ETC": "그 외",
+    "Tokiwadai": "토키와다이 중학교",
+    "Sakugawa": "사쿠가와 중학교",
+    "Other": "그 외",
+    "Highlander": "하이랜더",
+    "WildHunt": "와일드헌트"
+  }
 }

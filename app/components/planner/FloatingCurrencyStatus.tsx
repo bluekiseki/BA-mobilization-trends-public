@@ -6,8 +6,8 @@ import { getFreeStudentID } from './getFreeStudentId';
 import { CurrencyStatus } from './CurrencyStatus';
 import { FinalResultsDisplay } from './FinalResultsDisplay';
 import { IoMdClose } from 'react-icons/io';
-import { BsArrowsFullscreen } from 'react-icons/bs';
 import { useTranslation } from 'react-i18next';
+import { FiSearch } from 'react-icons/fi';
 
 interface FloatingCurrencyStatusProps {
   eventId: number;
@@ -84,7 +84,8 @@ export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurr
               className="absolute -top-3 -left-3 z-10 p-2 bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold rounded-full shadow-md transition-all hover:scale-110 active:scale-95"
               aria-label="View more"
             >
-              <BsArrowsFullscreen size={14} />
+              {/* <BsArrowsFullscreen size={14} /> */}
+              <FiSearch size={14} />
             </button>
 
             <div className="p-3 pt-4">

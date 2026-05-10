@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import emblemDataList from 'app/data/jp/emblem_counter/list.json';
+import emblemDataList from '~/data/jp/emblem_counter/list.json';
 import type { PortraitData } from '../dashboard/common';
 // import Group_Name_Translation from '~/locales/club.json';
 // const s_locale = Group_Name_Translation as any;

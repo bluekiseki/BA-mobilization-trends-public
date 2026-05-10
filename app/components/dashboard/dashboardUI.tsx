@@ -1,6 +1,6 @@
 // export default DashboardUI;
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '~/components/dashboard/card';
 import {
@@ -101,59 +101,170 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
     setCurrentPage(1);
   };
 
+  // const detailedFilteredData = useMemo(() => {
+  //   if (tableFilters.includable.length === 0 && tableFilters.excludable.length === 0) {
+  //     return rankFilteredData;
+  //   }
+
+  //   return rankFilteredData.filter((entry) => {
+  //     let assist_brrowed_id = null;
+
+  //     const teamChars = entry.t.flatMap((team) => [...team.m, ...team.s]).filter(Boolean);
+  //     const assist = teamChars.filter((c) => teamChars.filter((cc) => cc.id == c.id).length > 1);
+
+  //     for (const cond of tableFilters.excludable) {
+  //       const count = teamChars.filter((c) => c.id === cond.id).length;
+
+  //       if (cond.isHardExclude) {
+  //         if (count > 0) return false;
+  //       } else {
+  //         if (count > 1) return false;
+  //         if (count == 1 && assist.length && assist[0].id != cond.id) return false;
+  //         if (count == 1 && assist_brrowed_id != null) return false;
+  //         if (count == 1) assist_brrowed_id = cond.id;
+  //       }
+  //     }
+
+  //     for (const cond of tableFilters.includable) {
+  //       const count = teamChars.filter((c) => c.id === cond.id && cond.starValues.includes(Math.abs(getCharacterStarValue(c)))).length;
+
+  //       const student_count = teamChars.filter((c) => c.id === cond.id).length;
+  //       let isConditionMet = true;
+
+  //       if (cond.mustBeIncluded) {
+  //         if (cond.usage === InclusionUsage.Twice) {
+  //           if (count !== 2) return false;
+  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+  //           else assist_brrowed_id = cond.id;
+  //         } else if (cond.usage === InclusionUsage.Any && count === 0) return false;
+  //         else if (cond.usage === InclusionUsage.Assist) {
+  //           if (count === 0) return false;
+  //           if (student_count == 2) return false;
+  //           if (assist.length && !assist.map((v) => v.id).includes(cond.id)) return false;
+  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+  //           assist_brrowed_id = cond.id;
+  //         }
+  //       } else if (student_count) {
+  //         if (student_count > count) return false;
+
+  //         if (cond.usage === InclusionUsage.Twice) {
+  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+  //           if (count === 2) assist_brrowed_id = cond.id;
+  //         } else if (cond.usage === InclusionUsage.Assist) {
+  //           if (student_count == 2) return false;
+  //           if (assist.length && !assist.map((v) => v.id).includes(cond.id)) return false;
+  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+  //           assist_brrowed_id = cond.id;
+  //         }
+  //       }
+  //       if (!isConditionMet) return false;
+  //     }
+  //     return true;
+  //   });
+  // }, [rankFilteredData, tableFilters]);
+
+  const { partyCountMin, partyCountMax } = useMemo(() => {
+    if (!rankFilteredData.length) return { partyCountMin: 1, partyCountMax: 1 };
+    let min = 99;
+    let max = 0;
+    for (const entry of rankFilteredData) {
+      const len = entry.t.length;
+      if (len < min) min = len;
+      if (len > max) max = len;
+    }
+    return { partyCountMin: min, partyCountMax: max };
+  }, [rankFilteredData]);
+
   const detailedFilteredData = useMemo(() => {
-    if (tableFilters.includable.length === 0 && tableFilters.excludable.length === 0) {
+    const hasStudentFilters = tableFilters.includable.length > 0 || tableFilters.excludable.length > 0;
+    const hasPartyCountFilter = tableFilters.usePartyCount === true;
+
+    if (!hasStudentFilters && !hasPartyCountFilter) {
       return rankFilteredData;
     }
 
     return rankFilteredData.filter((entry) => {
-      let assist_brrowed_id = null;
+      if (hasPartyCountFilter) {
+        const min = tableFilters.minParty ?? partyCountMin;
+        const max = tableFilters.maxParty ?? partyCountMax;
+        if (entry.t.length < min || entry.t.length > max) return false;
+      }
 
-      const teamChars = entry.t.flatMap((team) => [...team.m, ...team.s]).filter(Boolean);
-      const assist = teamChars.filter((c) => teamChars.filter((cc) => cc.id == c.id).length > 1);
+      if (!hasStudentFilters) return true;
+      let assist_brrowed_id: number | null = null;
 
+      // 1. O(N) Optimization: Calculate student counts and assists only once using a Map
+      const charCountMap = new Map<number, number>();
+      const charStarsMap = new Map<number, number[]>();
+      const assistSet = new Set<number>();
+
+      // Minimize memory allocation by iterating directly without the spread operator (...)
+      for (let i = 0; i < entry.t.length; i++) {
+        const team = entry.t[i];
+
+        const processChar = (c: Character | undefined) => {
+          if (!c) return;
+          const count = (charCountMap.get(c.id) || 0) + 1;
+          charCountMap.set(c.id, count);
+
+          const stars = charStarsMap.get(c.id) || [];
+          stars.push(Math.abs(getCharacterStarValue(c)));
+          charStarsMap.set(c.id, stars);
+
+          // Identify as an assist if appearing more than once
+          if (count > 1) assistSet.add(c.id);
+        };
+
+        for (let j = 0; j < team.m.length; j++) processChar(team.m[j]);
+        for (let j = 0; j < team.s.length; j++) processChar(team.s[j]);
+      }
+
+      // 2. Excludable logic optimization
       for (const cond of tableFilters.excludable) {
-        const count = teamChars.filter((c) => c.id === cond.id).length;
+        const count = charCountMap.get(cond.id) || 0;
 
         if (cond.isHardExclude) {
           if (count > 0) return false;
         } else {
           if (count > 1) return false;
-          if (count == 1 && assist.length && assist[0].id != cond.id) return false;
-          if (count == 1 && assist_brrowed_id != null) return false;
-          if (count == 1) assist_brrowed_id = cond.id;
+          if (count === 1 && assistSet.size > 0 && !assistSet.has(cond.id)) return false;
+          if (count === 1 && assist_brrowed_id != null) return false;
+          if (count === 1) assist_brrowed_id = cond.id;
         }
       }
 
+      // 3. Includable logic optimization
       for (const cond of tableFilters.includable) {
-        const count = teamChars.filter((c) => c.id === cond.id && cond.starValues.includes(Math.abs(getCharacterStarValue(c)))).length;
+        const student_count = charCountMap.get(cond.id) || 0;
+        const stars = charStarsMap.get(cond.id) || [];
+        const count = stars.filter((star) => cond.starValues.includes(star)).length;
 
-        const student_count = teamChars.filter((c) => c.id === cond.id).length;
         let isConditionMet = true;
 
         if (cond.mustBeIncluded) {
           if (cond.usage === InclusionUsage.Twice) {
             if (count !== 2) return false;
-            if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
-            else assist_brrowed_id = cond.id;
-          } else if (cond.usage === InclusionUsage.Any && count === 0) return false;
-          else if (cond.usage === InclusionUsage.Assist) {
+            if (assist_brrowed_id && assist_brrowed_id !== cond.id) return false;
+            assist_brrowed_id = cond.id;
+          } else if (cond.usage === InclusionUsage.Any && count === 0) {
+            return false;
+          } else if (cond.usage === InclusionUsage.Assist) {
             if (count === 0) return false;
-            if (student_count == 2) return false;
-            if (assist.length && !assist.map((v) => v.id).includes(cond.id)) return false;
-            if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+            if (student_count === 2) return false;
+            if (assistSet.size > 0 && !assistSet.has(cond.id)) return false;
+            if (assist_brrowed_id && assist_brrowed_id !== cond.id) return false;
             assist_brrowed_id = cond.id;
           }
         } else if (student_count) {
           if (student_count > count) return false;
 
           if (cond.usage === InclusionUsage.Twice) {
-            if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+            if (assist_brrowed_id && assist_brrowed_id !== cond.id) return false;
             if (count === 2) assist_brrowed_id = cond.id;
           } else if (cond.usage === InclusionUsage.Assist) {
-            if (student_count == 2) return false;
-            if (assist.length && !assist.map((v) => v.id).includes(cond.id)) return false;
-            if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
+            if (student_count === 2) return false;
+            if (assistSet.size > 0 && !assistSet.has(cond.id)) return false;
+            if (assist_brrowed_id && assist_brrowed_id !== cond.id) return false;
             assist_brrowed_id = cond.id;
           }
         }
@@ -181,15 +292,20 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
   };
 
   useEffect(() => {
+    console.log('usereffice test');
     setCurrentPage(1);
     const firstPageData = detailedFilteredData.slice(0, itemsPerPage);
     setDisplayData(firstPageData);
   }, [detailedFilteredData, itemsPerPage]);
 
   const handleTableFilterChange = (filters: TableFilters) => {
-    setTableFilters(filters);
-    setCurrentPage(1);
+    // Prevents screen stuttering by lowering rendering priority.
+    startTransition(() => {
+      setTableFilters(filters);
+      setCurrentPage(1);
+    });
   };
+
   const handlePageChange = (page: number) => {
     const totalPages = Math.ceil(detailedFilteredData.length / itemsPerPage);
     if (page > 0 && page <= totalPages) {
@@ -286,6 +402,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
   };
 
   const [activeSection, setActiveSection] = useState<string>(sections[0].id);
+  const [useDetailed, setUseDetailed] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(false);
 
   useEffect(() => {
@@ -401,19 +518,53 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
       </div>
 
       <div id={sections[5].id} className="grid grid-cols-1 xl:grid-cols-1 gap-8 mb-6 sm:mb-14 scroll-mt-15" ref={compositionRef}>
-        <Card title={t('popularFormations').replace('{x}', detailedFilteredData.length.toLocaleString())} defaultExpanded={true} icon={<HiOutlineUserGroup className="w-4 h-4" />}>
-          <CompositionChart data={rankFilteredData} studentData={studentData} portraitData={portraitData} raidInfo={raidInfo} server={server} />
+        <Card
+          title={t('popularFormations').replace(
+            '{x}',
+            useDetailed
+              ? detailedFilteredData.length === rankFilteredData.length
+                ? detailedFilteredData.length.toLocaleString()
+                : `${detailedFilteredData.length.toLocaleString()} / ${rankFilteredData.length.toLocaleString()}`
+              : rankFilteredData.length.toLocaleString(),
+          )}
+          defaultExpanded={true}
+          icon={<HiOutlineUserGroup className="w-4 h-4" />}
+        >
+          <CompositionChart
+            data={rankFilteredData}
+            detailedData={detailedFilteredData}
+            studentData={studentData}
+            portraitData={portraitData}
+            raidInfo={raidInfo}
+            server={server}
+            onScrollToFilter={handleScrollToTableArea}
+            useDetailed={useDetailed}
+            onUseDetailedChange={setUseDetailed}
+          />
         </Card>
       </div>
 
       <div id={sections[6].id} className="grid grid-cols-1 xl:grid-cols-1 gap-8 mb-6 sm:mb-14 scroll-mt-15" ref={tableRef}>
         <Card
-          title={t('rankingsAndTeams').replace('{x}', detailedFilteredData.length.toLocaleString())}
+          title={t('rankingsAndTeams').replace(
+            '{x}',
+            detailedFilteredData.length == rankFilteredData.length
+              ? detailedFilteredData.length.toLocaleString()
+              : `${detailedFilteredData.length.toLocaleString()} / ${rankFilteredData.length.toLocaleString()}`,
+          )}
           className="block!"
           icon={<HiOutlineTableCells className="w-4 h-4" />}
           headerActions={<DownloadButton data={detailedFilteredData} filename="TeamDataDetail.csv" />}
         >
-          <TableFilterPanelComponent tableFilters={tableFilters} handleTableFilterChange={handleTableFilterChange} usageStats={usageStats} studentData={studentData} portraitData={portraitData} />
+          <TableFilterPanelComponent
+            tableFilters={tableFilters}
+            handleTableFilterChange={handleTableFilterChange}
+            usageStats={usageStats}
+            studentData={studentData}
+            portraitData={portraitData}
+            partyCountMin={partyCountMin}
+            partyCountMax={partyCountMax}
+          />
 
           <RankingsTableComponent
             detailedFilteredData={detailedFilteredData}

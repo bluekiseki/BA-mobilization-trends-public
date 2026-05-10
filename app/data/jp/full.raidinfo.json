@@ -1598,5 +1598,63 @@
     "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 64392 },
     "Platinum": 107651361,
     "TotalParticipants": 304392
+  },
+  {
+    "Id": "R87",
+    "Boss": "Goz",
+    "Location": "Outdoor",
+    "Date": "2026-03-25",
+    "MaxLv": 90,
+    "Cnt": { "All": 325009, "Lunatic": 8291, "Torment": 37025, "Insane": 53591, "Extreme": 104954, "Hardcore": 81381, "Veryhard": 17846, "Hard": 15971, "Normal": 5950 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 85009 },
+    "Platinum": 40077200,
+    "TotalParticipants": 325009
+  },
+  {
+    "Id": "E32",
+    "Boss": "Perorozilla",
+    "Location": "Outdoor",
+    "Type": "HeavyArmor",
+    "Date": "2026-04-08",
+    "MaxLv": 90,
+    "Cnt": { "All": 269195, "Torment": 28388, "Insane": 48946, "Extreme": 94844, "Hardcore": 64287, "Veryhard": 9583, "Normal": 5513, "Hard": 4801 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 29195 },
+    "Platinum": 107649007,
+    "TotalParticipants": 269195
+  },
+  {
+    "Id": "E32",
+    "Boss": "Perorozilla",
+    "Location": "Outdoor",
+    "Type": "Unarmed",
+    "Date": "2026-04-08",
+    "MaxLv": 90,
+    "Cnt": { "All": 269195, "Torment": 40252, "Insane": 54088, "Extreme": 89448, "Hardcore": 58582, "Veryhard": 8721, "Normal": 4996, "Hard": 4305 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 29195 },
+    "Platinum": 107649007,
+    "TotalParticipants": 269195
+  },
+  {
+    "Id": "E32",
+    "Boss": "Perorozilla",
+    "Location": "Outdoor",
+    "Type": "ElasticArmor",
+    "Date": "2026-04-08",
+    "MaxLv": 90,
+    "Cnt": { "All": 269195, "Insane": 86741, "Extreme": 89578, "Hardcore": 61097, "Veryhard": 9780, "Normal": 5496, "Hard": 4760 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 29195 },
+    "Platinum": 107649007,
+    "TotalParticipants": 269195
+  },
+  {
+    "Id": "R88",
+    "Boss": "Kaitenger",
+    "Location": "Street",
+    "Date": "2026-04-29",
+    "MaxLv": 90,
+    "Cnt": { "All": 339836, "Lunatic": 1440, "Torment": 29954, "Insane": 93309, "Extreme": 87470, "Hardcore": 92540, "Veryhard": 16262, "Hard": 13701, "Normal": 5160 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 99836 },
+    "Platinum": 39311120,
+    "TotalParticipants": 339836
   }
 ]

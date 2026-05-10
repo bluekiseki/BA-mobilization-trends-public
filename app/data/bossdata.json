@@ -96,6 +96,16 @@
       "ja": "カイテン",
       "zh_Hant": "凱坦澤"
     },
+    "teran": "Outdoor",
+    "armorType": "LightArmor"
+  },
+  "Kaitenger_Street": {
+    "name": {
+      "en": "KAITEN",
+      "ko": "카이텐",
+      "ja": "カイテン",
+      "zh_Hant": "凱坦澤"
+    },
     "teran": "Street",
     "armorType": "LightArmor"
   },

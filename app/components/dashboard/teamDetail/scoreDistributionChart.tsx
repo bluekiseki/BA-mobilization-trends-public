@@ -35,7 +35,7 @@ export const ScoreDistributionChart: React.FC<{
   data: ReportEntry[];
   raid: RaidInfo;
   server: GameServer;
-}> = ({ data, raid, server }) => {
+}> = React.memo(({ data, raid, server }) => {
   const chartData = useMemo(() => {
     if (data.length === 0) return [];
 
@@ -114,4 +114,4 @@ export const ScoreDistributionChart: React.FC<{
       </ResponsiveContainer>
     </div>
   );
-};
+});

@@ -47,6 +47,8 @@ export function eventTagTranslation(tag: string, t: any) {
   else if (tag == 'MiniGameCCG') return `${t('ui.minigame')} - ${t('minigame.minigame_ccg')}`;
   else if (tag == 'MiniGameDefense') return `${t('ui.minigame')} - ${t('minigame.minigame_defense')}`;
   else if (tag == 'MinigameDreamMaker') return `${t('ui.minigame')} - ${t('minigame.minigame_dream')}`;
+  else if (tag == 'MinigameDreamMaker') return `${t('ui.minigame')} - ${t('minigame.minigame_dream')}`;
+  else if (tag == 'ClueSearch') return `${t('ui.minigame')} - ${t('minigame.clue_search')}`;
   return tag;
 }
 
@@ -96,7 +98,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
   const currentEvent = useMemo(() => {
     const event = sortedEvents.find((e) => e.id === eventId);
     const eventName = event?.name || name || 'No event information';
-    const isRerun = eventId > 10000;
+    const isRerun = eventId > 10000 && eventId < 60000;
     const glData = getGlobalEventDates()[eventId];
 
     return {
@@ -189,7 +191,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
         </div>
       </div>
 
-      {isPickerOpen && <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={() => setIsPickerOpen(false)}></div>}
+      {isPickerOpen && <div className="fixed inset-0 z-31 bg-black/30 backdrop-blur-sm transition-opacity" aria-hidden="true" onClick={() => setIsPickerOpen(false)}></div>}
 
       <div
         className={`

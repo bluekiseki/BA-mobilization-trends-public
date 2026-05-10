@@ -1,174 +1,184 @@
-// // PotentialTab.tsx
+// PotentialTab.tsx
 
-// import React from 'react';
+// import Slider from 'rc-slider';
+// import 'rc-slider/assets/index.css';
 // import { useTranslation } from 'react-i18next';
-// import type { GrowthPlan } from '~/store/planner/useGlobalStore';
-// import type { Student } from '~/types/plannerData';
-
-// interface PotentialTabProps {
-
-//     plan: GrowthPlan;
-//     handlePotentialChange: (type: 'current' | 'target', stat: 'hp' | 'atk' | 'heal', value: number) => void;
-//     canEnablePotentialCurrent: boolean;
-//     canEnablePotentialTarget: boolean;
-// }
-
-// export const PotentialTab = ({ plan, handlePotentialChange, canEnablePotentialCurrent, canEnablePotentialTarget }: PotentialTabProps) => {
-//     const potentialStats = [
-//         { key: 'hp', labelKey: 'common.hp' },
-//         { key: 'atk', labelKey: 'common.atk' },
-//         { key: 'heal', labelKey: 'common.heal' }
-//     ];
-//     const { t, i18n } = useTranslation("planner");
-
-//     return (
-//         <div className="space-y-3">
-//             <h4 className={`font-semibold text-sm text-center ${!canEnablePotentialTarget ? 'text-gray-400 dark:text-gray-500' : ''}`}>
-//                 {t('potentialTab.title')} {!canEnablePotentialTarget && t('potentialTab.unlockCondition')}
-//             </h4>
-
-//             <div className="space-y-2 text-sm">
-//                 {/* Header */}
-//                 <div className="flex items-center gap-2 mb-2 text-center font-semibold">
-//                     <span className="w-16 shrink-0"></span>
-//                     <h3 className="flex-1 text-gray-700 dark:text-gray-300">{t('common.current')}</h3>
-//                     <span className="w-8 shrink-0"></span>
-//                     <h3 className="flex-1 text-blue-600 dark:text-blue-300">{t('common.target')}</h3>
-//                 </div>
-
-//                 {potentialStats.map(stat => (
-//                     <div key={`potential-row-${stat.key}`} className="flex items-center gap-2">
-//                         <label className="w-16 shrink-0 font-semibold">{t(stat.labelKey)}:</label>
-
-//                         {/* Enter current status */}
-//                         <div className={`flex-1 ${!canEnablePotentialCurrent ? 'opacity-50' : ''}`}>
-//                             <select
-//                                 disabled={!canEnablePotentialCurrent}
-//                                 value={plan.current.potential[stat.key as 'hp']}
-//                                 onChange={e => handlePotentialChange('current', stat.key as 'hp', Number(e.target.value))}
-//                                 className="w-full p-1 border rounded disabled:bg-gray-200 dark:disabled:bg-neutral-600 bg-white dark:bg-neutral-700 dark:border-neutral-600"
-//                             >
-//                                 {Array.from({ length: 26 }, (_, i) => i).map(level => (
-//                                     <option key={level} value={level}>
-//                                         {level === 0 ? '-' : t('common.levelPrefix', { level })}
-//                                     </option>
-//                                 ))}
-//                             </select>
-//                         </div>
-
-//                         <span className="w-8 text-center text-gray-400 font-bold text-lg shrink-0">→</span>
-
-//                         {/* Target Status */}
-//                         <div className={`flex-1 ${!canEnablePotentialTarget ? 'opacity-50' : ''}`}>
-//                             <select
-//                                 disabled={!canEnablePotentialTarget}
-//                                 value={plan.target.potential[stat.key as 'hp']}
-//                                 onChange={e => handlePotentialChange('target', stat.key as 'hp', Number(e.target.value))}
-//                                 className="w-full p-1 border rounded disabled:bg-gray-200 dark:disabled:bg-neutral-600 bg-white dark:bg-neutral-700 dark:border-neutral-600"
-//                             >
-//                                 {Array.from({ length: 26 }, (_, i) => i).map(level => {
-//                                     if (level < plan.current.potential[stat.key as 'hp']) {
-//                                         return null;
-//                                     }
-//                                     return (
-//                                         <option key={level} value={level}>
-//                                             {level === 0 ? '-' : t('common.levelPrefix', { level })}
-//                                         </option>
-//                                     );
-//                                 })}
-//                             </select>
-//                         </div>
-//                     </div>
-//                 ))}
-//             </div>
-//         </div>
-//     );
-// };
-
-// // app/components/planner/StudentGrowth/PotentialTab.tsx
-
-// import { useTranslation } from 'react-i18next';
-// import type { GrowthPlan } from '~/store/planner/useGlobalStore';
-// import { CustomNumberInput } from '~/components/CustomInput';
-// import { MinMaxControls } from './MinMaxControls';
 // import { FiAlertCircle } from 'react-icons/fi';
+// import type { GrowthPlan } from '~/store/planner/useGlobalStore';
+// import type { IconData } from '~/types/plannerData';
 
+// // --- Constants ---
+// export const WB_HP_ID = 2000;
+// export const WB_ATK_ID = 2001;
+// export const WB_HEAL_ID = 2002;
+
+// const MAX_POTENTIAL = 25;
+// const UNLOCK_LEVEL = 90;
+
+// // --- Component ---
 // interface PotentialTabProps {
 //   plan: GrowthPlan;
 //   handleBatchUpdate: (field: string, value: any) => void;
-//   isWarning?: boolean;
+//   iconData?: IconData;
 // }
 
-// export const PotentialTab = ({ plan, handleBatchUpdate, isWarning }: PotentialTabProps) => {
+// export const PotentialTab = ({ plan, handleBatchUpdate, iconData }: PotentialTabProps) => {
 //   const { t } = useTranslation('planner');
 
 //   const stats = ['hp', 'atk', 'heal'] as const;
-//   const MAX_POTENTIAL = 25;
+//   const wbIds = { hp: WB_HP_ID, atk: WB_ATK_ID, heal: WB_HEAL_ID };
 
-//   const updatePotential = (type: 'current' | 'target', stat: (typeof stats)[number], value: number) => {
-//     const newPotential = { ...plan[type].potential, [stat]: value };
-//     handleBatchUpdate(`${type}.potential`, newPotential);
+//   // Fetch state information
+//   const currentLevel = plan.current.level ?? 1;
+//   const currentUw = plan.current.uw ?? 0;
+//   const targetLevel = plan.target.level ?? 1;
+//   const targetUw = plan.target.uw ?? 0;
+
+//   const handleSliderChange = (stat: (typeof stats)[number], value: number | number[]) => {
+//     if (Array.isArray(value)) {
+//       const [v1, v2] = value;
+//       const newCurrent = Math.min(v1, v2);
+//       const newTarget = Math.max(v1, v2);
+
+//       if (plan.current.potential[stat] !== newCurrent) {
+//         const newPotential = { ...plan.current.potential, [stat]: newCurrent };
+//         handleBatchUpdate('current.potential', newPotential);
+//       }
+
+//       if (plan.target.potential[stat] !== newTarget) {
+//         const newPotential = { ...plan.target.potential, [stat]: newTarget };
+//         handleBatchUpdate('target.potential', newPotential);
+//       }
+//     }
 //   };
 
 //   const statLabels = {
-//     hp: t('common.hp'),
-//     atk: t('common.atk'),
-//     heal: t('common.heal'),
+//     hp: t('common.hp', 'HP'),
+//     atk: t('common.atk', 'ATK'),
+//     heal: t('common.heal', 'HEAL'),
 //   };
 
-//   const currentInputClass =
-//     'w-full p-1.5 text-sm border border-gray-200 rounded bg-gray-50 dark:bg-neutral-800 dark:border-neutral-600 text-center font-medium outline-none focus:ring-1 focus:ring-gray-300 transition-all';
-//   const targetInputClass =
-//     'w-full p-1.5 text-sm border border-blue-200 rounded bg-white text-blue-600 font-bold dark:bg-neutral-900 dark:border-blue-900/50 dark:text-blue-400 text-center outline-none focus:ring-1 focus:ring-blue-300 transition-all';
+//   // Unlock condition check function (Lv.90 or above OR unique weapon owned)
+//   const checkUnlocked = (level: number, uw: number) => level >= UNLOCK_LEVEL && uw > 0;
 
 //   return (
-//     <div className="flex flex-col">
-//       <div className="divide-y divide-gray-100 dark:divide-neutral-800">
-//         {stats.map((stat) => (
-//           <div key={stat} className="py-4 first:pt-0 last:pb-0 grid grid-cols-[70px_1fr_1fr] gap-3 items-center group">
-//             {/* 1. Label Column (Simple Text) */}
-//             <div className="flex justify-center">
-//               <span className="text-xs font-bold text-gray-500 dark:text-neutral-400 tracking-wide uppercase">{statLabels[stat]}</span>
+//     <div className="flex flex-col gap-6 py-2 px-1">
+//       {stats.map((stat) => {
+//         const currentVal = plan.current.potential[stat];
+//         const targetVal = plan.target.potential[stat];
+//         const iconId = wbIds[stat];
+
+//         const isCurrentInvalid = currentVal > 0 && !checkUnlocked(currentLevel, currentUw);
+//         const isTargetInvalid = targetVal > 0 && !checkUnlocked(targetLevel, targetUw);
+//         const hasWarning = isCurrentInvalid || isTargetInvalid;
+
+//         const trackColor = hasWarning ? '#f43f5e' : '#9ca3af';
+//         const currentHandleBorder = isCurrentInvalid ? '#f43f5e' : 'var(--handle-border)';
+
+//         const targetHandleColor = isTargetInvalid ? '#f43f5e' : '#2563eb';
+
+//         return (
+//           <div
+//             key={stat}
+//             className={`
+//               flex flex-col gap-1
+//               [--rail-bg:#e5e7eb] dark:[--rail-bg:#374151]
+//               [--handle-bg:#ffffff] dark:[--handle-bg:#262626]
+//               [--handle-border:#9ca3af] dark:[--handle-border:#4b5563]
+//             `}
+//           >
+//             {/* Top Row: Label & Status */}
+//             <div className="flex items-center justify-between text-sm">
+//               <div className="flex items-center gap-2">
+//                 {/* Icon */}
+//                 {iconData?.Item?.[iconId] && <img src={`data:image/webp;base64,${iconData.Item[iconId]}`} alt={stat} className="w-8 h-8 object-contain" />}
+//                 {/* Text Label */}
+//                 <span className="font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">{statLabels[stat]}</span>
+//               </div>
+
+//               {/* Value Display Box */}
+//               <div
+//                 className={`flex items-center gap-2 px-2 py-0.5 rounded transition-colors ${
+//                   hasWarning ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30' : 'bg-gray-50 dark:bg-neutral-800/50'
+//                 }`}
+//               >
+//                 <span className={`font-mono text-xs font-bold ${isCurrentInvalid ? 'text-rose-500' : 'text-gray-600 dark:text-gray-400'}`}>{currentVal}</span>
+
+//                 <span className={`text-[10px] ${hasWarning ? 'text-rose-300' : 'text-gray-300'}`}>➜</span>
+
+//                 <span className={`font-mono text-xs font-bold ${isTargetInvalid ? 'text-rose-500' : 'text-blue-600 dark:text-blue-400'}`}>{targetVal}</span>
+//               </div>
 //             </div>
 
-//             {/* 2. Current Column */}
-//             <div>
-//               <MinMaxControls onMin={() => updatePotential('current', stat, 0)} onMax={() => updatePotential('current', stat, MAX_POTENTIAL)} />
-//               <CustomNumberInput min={0} max={MAX_POTENTIAL} value={plan.current.potential[stat]} onChange={(val) => updatePotential('current', stat, Number(val))} className={currentInputClass} />
-//             </div>
-
-//             {/* 3. Target Column */}
-//             <div>
-//               <MinMaxControls isTarget onMin={() => updatePotential('target', stat, plan.current.potential[stat])} onMax={() => updatePotential('target', stat, MAX_POTENTIAL)} />
-//               <CustomNumberInput
-//                 min={plan.current.potential[stat]}
+//             {/* Slider */}
+//             <div className="pt-1 px-0.5">
+//               <Slider
+//                 range
+//                 min={0}
 //                 max={MAX_POTENTIAL}
-//                 value={plan.target.potential[stat]}
-//                 onChange={(val) => updatePotential('target', stat, Number(val))}
-//                 className={targetInputClass}
+//                 step={1}
+//                 allowCross={true}
+//                 pushable={false}
+//                 value={[currentVal, targetVal]}
+//                 onChange={(val) => handleSliderChange(stat, val)}
+//                 // Styles: Apply CSS variables
+//                 styles={{
+//                   track: { backgroundColor: trackColor, height: 4 },
+//                   rail: { backgroundColor: 'var(--rail-bg)', height: 4 },
+//                 }}
+//                 handleStyle={[
+//                   {
+//                     borderColor: currentHandleBorder,
+//                     backgroundColor: 'var(--handle-bg)', // Dark mode background color
+//                     opacity: 1,
+//                     height: 18,
+//                     width: 18,
+//                     marginTop: -7,
+//                     boxShadow: 'none',
+//                     borderWidth: 2,
+//                     zIndex: 10,
+//                   },
+//                   {
+//                     borderColor: targetHandleColor,
+//                     backgroundColor: targetHandleColor,
+//                     opacity: 1,
+//                     height: 18,
+//                     width: 18,
+//                     marginTop: -7,
+//                     boxShadow: 'none',
+//                     borderWidth: 2,
+//                     zIndex: 11,
+//                   },
+//                 ]}
 //               />
 //             </div>
-//           </div>
-//         ))}
-//       </div>
 
-//       {}
-//       {isWarning && (
-//         <div className="mt-4 flex items-center justify-center gap-2 p-3 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 text-amber-600 dark:text-amber-500">
-//           <FiAlertCircle className="shrink-0" />
-//           <span className="text-xs font-medium">{t('potentialTab.lockedMessage')}</span>
-//         </div>
-//       )}
+//             {/* Warning Message */}
+//             {hasWarning && (
+//               <div className="flex items-center gap-1 mt-1 text-rose-500 text-[10px] font-medium animate-fadeIn">
+//                 <FiAlertCircle className="w-3 h-3" />
+//                 <span>{t(isCurrentInvalid ? 'potentialTab.reqCurrent' : 'potentialTab.reqTarget')}</span>
+//               </div>
+//             )}
+//           </div>
+//         );
+//       })}
 //     </div>
 //   );
 // };
 
+// app/components/planner/StudentGrowth/PotentialTab.tsx
+
+import React, { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { useTranslation } from 'react-i18next';
-import { FiAlertCircle } from 'react-icons/fi';
+import { FiAlertCircle, FiEdit3 } from 'react-icons/fi';
+import { CustomNumberInput } from '~/components/CustomInput';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { IconData } from '~/types/plannerData';
+import type { EventData, IconData, Student } from '~/types/plannerData';
+import { calcPotentialStatNeeds } from '~/utils/calculatedGrowthNeeds';
+import { InlineCostHint } from './InlineCostHint';
 
 // --- Constants ---
 export const WB_HP_ID = 2000;
@@ -178,24 +188,99 @@ export const WB_HEAL_ID = 2002;
 const MAX_POTENTIAL = 25;
 const UNLOCK_LEVEL = 90;
 
+// --- Sub-components ---
+const EditableLevelDisplay = ({
+  value,
+  max,
+  min = 0,
+  onChange,
+  prefix = '',
+  textClassName = '',
+}: {
+  value: number;
+  max: number;
+  min?: number;
+  onChange: (val: number) => void;
+  prefix?: string;
+  textClassName?: string;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localVal, setLocalVal] = useState(value);
+
+  useEffect(() => {
+    if (!isEditing) setLocalVal(value);
+  }, [value, isEditing]);
+
+  const handleCommit = () => {
+    setIsEditing(false);
+    onChange(localVal);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleCommit();
+  };
+
+  if (isEditing) {
+    return (
+      <CustomNumberInput
+        autoFocus
+        value={localVal}
+        min={min}
+        max={max}
+        onChange={(val) => setLocalVal(Number(val))}
+        onBlur={handleCommit}
+        onKeyDown={handleKeyDown}
+        className="w-10 h-6 text-sm text-center border-2 border-blue-500 rounded p-0 bg-white dark:bg-neutral-800 font-bold font-mono shadow-sm"
+      />
+    );
+  }
+
+  return (
+    <div
+      onClick={() => setIsEditing(true)}
+      className={`group flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer select-none transition-all hover:bg-black/5 dark:hover:bg-white/10 ${textClassName}`}
+      title="Click to edit value"
+    >
+      <span className="border-b border-dashed border-gray-400/50 group-hover:border-transparent transition-colors font-bold">
+        {prefix}
+        {value}
+      </span>
+      <FiEdit3 className="text-[10px] opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0 transition-all duration-200" />
+    </div>
+  );
+};
+
 // --- Component ---
 interface PotentialTabProps {
   plan: GrowthPlan;
   handleBatchUpdate: (field: string, value: any) => void;
   iconData?: IconData;
+  eventData?: EventData;
+  studentInfo?: Student;
 }
 
-export const PotentialTab = ({ plan, handleBatchUpdate, iconData }: PotentialTabProps) => {
+export const PotentialTab = ({ plan, handleBatchUpdate, iconData, eventData, studentInfo }: PotentialTabProps) => {
   const { t } = useTranslation('planner');
 
   const stats = ['hp', 'atk', 'heal'] as const;
   const wbIds = { hp: WB_HP_ID, atk: WB_ATK_ID, heal: WB_HEAL_ID };
 
-  // Fetch state information
   const currentLevel = plan.current.level ?? 1;
   const currentUw = plan.current.uw ?? 0;
   const targetLevel = plan.target.level ?? 1;
   const targetUw = plan.target.uw ?? 0;
+
+  // Unlock condition: Lv.90+ AND UW 1+
+  const checkUnlocked = (level: number, uw: number) => level >= UNLOCK_LEVEL && uw > 0;
+
+  const isCurrentUnlocked = checkUnlocked(currentLevel, currentUw);
+  const isTargetUnlocked = checkUnlocked(targetLevel, targetUw);
+
+  const statLabels = {
+    hp: t('common.hp', 'HP'),
+    atk: t('common.atk', 'ATK'),
+    heal: t('common.heal', 'HEAL'),
+  };
 
   const handleSliderChange = (stat: (typeof stats)[number], value: number | number[]) => {
     if (Array.isArray(value)) {
@@ -204,77 +289,58 @@ export const PotentialTab = ({ plan, handleBatchUpdate, iconData }: PotentialTab
       const newTarget = Math.max(v1, v2);
 
       if (plan.current.potential[stat] !== newCurrent) {
-        const newPotential = { ...plan.current.potential, [stat]: newCurrent };
-        handleBatchUpdate('current.potential', newPotential);
+        handleBatchUpdate('current.potential', { ...plan.current.potential, [stat]: newCurrent });
       }
-
       if (plan.target.potential[stat] !== newTarget) {
-        const newPotential = { ...plan.target.potential, [stat]: newTarget };
-        handleBatchUpdate('target.potential', newPotential);
+        handleBatchUpdate('target.potential', { ...plan.target.potential, [stat]: newTarget });
       }
     }
   };
 
-  const statLabels = {
-    hp: t('common.hp', 'HP'),
-    atk: t('common.atk', 'ATK'),
-    heal: t('common.heal', 'HEAL'),
-  };
-
-  // Unlock condition check function (Lv.90 or above OR unique weapon owned)
-  const checkUnlocked = (level: number, uw: number) => level >= UNLOCK_LEVEL && uw > 0;
-
   return (
-    <div className="flex flex-col gap-6 py-2 px-1">
+    // 3-column layout on desktop (lg:grid-cols-3), with spacing (gap-x-10 gap-y-8)
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8 font-sans text-gray-700 dark:text-gray-200 py-4 px-2 w-full">
       {stats.map((stat) => {
         const currentVal = plan.current.potential[stat];
         const targetVal = plan.target.potential[stat];
         const iconId = wbIds[stat];
 
-        const isCurrentInvalid = currentVal > 0 && !checkUnlocked(currentLevel, currentUw);
-        const isTargetInvalid = targetVal > 0 && !checkUnlocked(targetLevel, targetUw);
+        const isCurrentInvalid = currentVal > 0 && !isCurrentUnlocked;
+        const isTargetInvalid = targetVal > 0 && !isTargetUnlocked;
         const hasWarning = isCurrentInvalid || isTargetInvalid;
 
-        const trackColor = hasWarning ? '#f43f5e' : '#9ca3af';
-        const currentHandleBorder = isCurrentInvalid ? '#f43f5e' : 'var(--handle-border)';
-
-        const targetHandleColor = isTargetInvalid ? '#f43f5e' : '#2563eb';
-
         return (
-          <div
-            key={stat}
-            className={`
-              flex flex-col gap-1
-              [--rail-bg:#e5e7eb] dark:[--rail-bg:#374151]
-              [--handle-bg:#ffffff] dark:[--handle-bg:#262626]
-              [--handle-border:#9ca3af] dark:[--handle-border:#4b5563]
-            `}
-          >
-            {/* Top Row: Label & Status */}
-            <div className="flex items-center justify-between text-sm">
+          <div key={stat} className="flex flex-col gap-2">
+            {/* Header: Label & Value Display */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {/* Icon */}
-                {iconData?.Item?.[iconId] && <img src={`data:image/webp;base64,${iconData.Item[iconId]}`} alt={stat} className="w-8 h-8 object-contain" />}
-                {/* Text Label */}
-                <span className="font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">{statLabels[stat]}</span>
+                {iconData?.Item?.[iconId] && <img src={`data:image/webp;base64,${iconData.Item[iconId]}`} alt={stat} className="w-8 h-8 object-cover" />}
+                <span className="font-bold text-sm text-gray-800 dark:text-gray-100 tracking-wide uppercase">{statLabels[stat]}</span>
               </div>
 
-              {/* Value Display Box */}
-              <div
-                className={`flex items-center gap-2 px-2 py-0.5 rounded transition-colors ${
-                  hasWarning ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30' : 'bg-gray-50 dark:bg-neutral-800/50'
-                }`}
-              >
-                <span className={`font-mono text-xs font-bold ${isCurrentInvalid ? 'text-rose-500' : 'text-gray-600 dark:text-gray-400'}`}>{currentVal}</span>
+              <div className="flex items-center gap-1">
+                <EditableLevelDisplay
+                  value={currentVal}
+                  max={MAX_POTENTIAL}
+                  min={0}
+                  onChange={(val) => handleSliderChange(stat, [val, targetVal])}
+                  textClassName={`font-mono text-sm ${isCurrentInvalid ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400'}`}
+                />
 
-                <span className={`text-[10px] ${hasWarning ? 'text-rose-300' : 'text-gray-300'}`}>➜</span>
+                <span className={`text-[10px] px-1 ${hasWarning ? 'text-rose-300' : 'text-gray-400 dark:text-neutral-500'}`}>➜</span>
 
-                <span className={`font-mono text-xs font-bold ${isTargetInvalid ? 'text-rose-500' : 'text-blue-600 dark:text-blue-400'}`}>{targetVal}</span>
+                <EditableLevelDisplay
+                  value={targetVal}
+                  max={MAX_POTENTIAL}
+                  min={0}
+                  onChange={(val) => handleSliderChange(stat, [currentVal, val])}
+                  textClassName={`font-mono text-sm ${isTargetInvalid ? 'text-rose-500' : 'text-blue-600 dark:text-blue-400'}`}
+                />
               </div>
             </div>
 
             {/* Slider */}
-            <div className="pt-1 px-0.5">
+            <div className="px-1 mt-1">
               <Slider
                 range
                 min={0}
@@ -284,45 +350,52 @@ export const PotentialTab = ({ plan, handleBatchUpdate, iconData }: PotentialTab
                 pushable={false}
                 value={[currentVal, targetVal]}
                 onChange={(val) => handleSliderChange(stat, val)}
-                // Styles: Apply CSS variables
                 styles={{
-                  track: { backgroundColor: trackColor, height: 4 },
-                  rail: { backgroundColor: 'var(--rail-bg)', height: 4 },
+                  track: {
+                    backgroundColor: hasWarning ? '#f43f5e' : '#3b82f6',
+                    height: 5,
+                  },
+                  rail: {
+                    backgroundColor: 'var(--tw-colors-gray-200, #e5e7eb)',
+                    height: 5,
+                  },
                 }}
                 handleStyle={[
                   {
-                    borderColor: currentHandleBorder,
-                    backgroundColor: 'var(--handle-bg)', // Dark mode background color
+                    borderColor: isCurrentInvalid ? '#f43f5e' : '#9ca3af',
+                    backgroundColor: '#ffffff',
                     opacity: 1,
                     height: 18,
                     width: 18,
-                    marginTop: -7,
-                    boxShadow: 'none',
+                    marginTop: -6.5,
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
                     borderWidth: 2,
                     zIndex: 10,
                   },
                   {
-                    borderColor: targetHandleColor,
-                    backgroundColor: targetHandleColor,
+                    borderColor: isTargetInvalid ? '#f43f5e' : '#3b82f6',
+                    backgroundColor: isTargetInvalid ? '#f43f5e' : '#3b82f6',
                     opacity: 1,
                     height: 18,
                     width: 18,
-                    marginTop: -7,
-                    boxShadow: 'none',
+                    marginTop: -6.5,
+                    boxShadow: '0 1px 3px rgba(37,99,235,0.3)',
                     borderWidth: 2,
                     zIndex: 11,
                   },
                 ]}
+                className="dark:[&_.rc-slider-rail]:bg-neutral-700! dark:[&_.rc-slider-handle-1]:bg-neutral-800!"
               />
             </div>
 
             {/* Warning Message */}
             {hasWarning && (
-              <div className="flex items-center gap-1 mt-1 text-rose-500 text-[10px] font-medium animate-fadeIn">
-                <FiAlertCircle className="w-3 h-3" />
-                <span>{t(isCurrentInvalid ? 'potentialTab.reqCurrent' : 'potentialTab.reqTarget')}</span>
+              <div className="flex items-center gap-1 mt-1 text-rose-500 text-[11px] font-medium">
+                <FiAlertCircle className="w-3 h-3 shrink-0" />
+                <span className="leading-tight">{t(isCurrentInvalid ? 'potentialTab.reqCurrent' : 'potentialTab.reqTarget')}</span>
               </div>
             )}
+            {studentInfo && <InlineCostHint needs={calcPotentialStatNeeds(stat, currentVal, targetVal, studentInfo.PotentialMaterial)} iconData={iconData} eventData={eventData} />}
           </div>
         );
       })}

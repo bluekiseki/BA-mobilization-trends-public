@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { RaidInfo } from '~/types/data';
 import { difficultyInfo } from '~/components/Difficulty';
+import { CustomNumberInput } from '~/components/CustomInput';
 
 export interface RankRange {
   id: string;
@@ -159,18 +160,18 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
       {/* Row 3: Inputs & Confirm */}
       <div className="flex items-center gap-3 mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
         <div className="flex items-center bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 overflow-hidden focus-within:ring-2 focus-within:ring-blue-400 transition-shadow shadow-sm">
-          <input
-            type="number"
+          <CustomNumberInput
+            // type="number"
             value={minRankInput}
-            onChange={(e) => setMinRankInput(Number(e.target.value))}
+            onChange={(e) => setMinRankInput(Number(e))}
             className="w-24 p-2 text-center bg-transparent outline-none text-neutral-900 dark:text-white placeholder-neutral-400 text-sm"
             placeholder="Min"
           />
           <div className="w-px h-5 bg-neutral-300 dark:bg-neutral-600"></div>
-          <input
-            type="number"
+          <CustomNumberInput
+            // type="number"
             value={maxRankInput}
-            onChange={(e) => setMaxRankInput(Number(e.target.value))}
+            onChange={(e) => setMaxRankInput(Number(e))}
             className="w-24 p-2 text-center bg-transparent outline-none text-neutral-900 dark:text-white placeholder-neutral-400 text-sm"
             placeholder="Max"
           />

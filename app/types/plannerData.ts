@@ -26,6 +26,16 @@ export interface Student extends StudentBase {
   StreetBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
   OutdoorBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
   IndoorBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
+  Gear:
+    | {}
+    | {
+        Name: string;
+        Desc: string;
+        TierUpMaterial: number[][];
+        TierUpMaterialAmount: number[][];
+      };
+  WeaponType: 'AR' | 'FT' | 'GL' | 'HG' | 'MG' | 'MT' | 'RG' | 'RL' | 'SG' | 'SMG' | 'SR';
+  StyleId?: number;
 }
 
 export type ImageMap = Record<string, string>;
@@ -89,6 +99,7 @@ export interface EventData {
   minigame_ccg?: MinigameCCG;
   concentration?: MinigameConcentration;
   minigame_defense?: MinigameDefense;
+  clue?: ClueSearchData;
 }
 
 export interface IconInfos {
@@ -547,6 +558,68 @@ export interface MinigameDefenseStage {
 export interface MinigameDefense {
   info: MinigameDefenseInfo[];
   stage: MinigameDefenseStage[];
+}
+
+// ClueSearch Types
+export interface ClueSearchHintlocalize {
+  DescriptionJp: string;
+  DescriptionKr: string;
+  DescriptionEn?: string | null;
+  DescriptionTw?: string | null;
+  Key: number;
+  NameJp: string;
+  NameKr: string;
+  NameEn?: string | null;
+  NameTw?: string | null;
+}
+
+export interface ClueSearchClue {
+  ClueId: number;
+  ClueImagePath: string;
+  HintUse: boolean;
+  Hintlocalizeid: number;
+  RewardParcelAmount: number[];
+  RewardParcelId: number[];
+  RewardParcelType: number[];
+  RewardParcelTypeStr: string[];
+  SlotClueImagePath: string;
+  Hintlocalize: ClueSearchHintlocalize;
+  LocalizeEtc: ClueSearchHintlocalize & { Key: number };
+}
+
+export interface ClueSearchRoundReward {
+  Id: number;
+  RewardParcelAmount: number[];
+  RewardParcelId: number[];
+  RewardParcelType: number[];
+  RewardParcelTypeStr: string[];
+}
+
+export interface ClueSearchRound {
+  ClearPageImagePath: string;
+  ClearlocalizeId: number;
+  ClueCostAmount: number[];
+  ClueId: number[];
+  ClueSlotNumber: number[];
+  HintlocalizeId: number;
+  IsLoop: boolean;
+  Localizeld: number;
+  RewardId: number;
+  Round: number;
+  TargetImagePath: string;
+  Reward: ClueSearchRoundReward;
+}
+
+export interface ClueSearchInfo {
+  ClueBgimagePath: string;
+  TitleLocalize: number;
+  UsePrefabName: string;
+}
+
+export interface ClueSearchData {
+  clue: ClueSearchClue[];
+  info: ClueSearchInfo[];
+  round: ClueSearchRound[];
 }
 
 export type TransactionEntry = {

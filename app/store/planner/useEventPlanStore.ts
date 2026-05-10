@@ -11,6 +11,7 @@ import { DefaultTreasureSimConfig, type TreasureSimConfig } from '~/components/p
 import { getDefaultApConfig, type ApCalculatorConfig } from '~/components/planner/ApCalculatorConfig';
 import { defaultDreamMakerConfig, type DreamMakerSimConfig, type DreamMakerSimResult } from '~/components/planner/minigame/dreamMaker/type';
 import { defaultCardMatchSimConfig, type CardMatchSimConifg } from '~/components/planner/minigame/CardMatchPlanner';
+import { defaultClueSearchConfig, type ClueSearchConfig } from '~/components/planner/minigame/ClueSearchPlanner';
 import type { CcgRunInput } from '~/components/planner/minigame/MinigameCCGPlanner';
 
 type StagePrio = 'include' | 'exclude' | 'priority';
@@ -76,6 +77,9 @@ export interface EventPlan {
 
   cardMatchSimConfig: CardMatchSimConifg | null;
 
+  // ClueSearchPlanner
+  clueSearchConfig: ClueSearchConfig;
+
   // TotalRewardPlanner
   totalRewardCurrentAmount: number;
   totalRewardTargetAmount: number;
@@ -121,6 +125,7 @@ interface EventPlanStoreState {
   setMinigameCCGConfig: (eventId: number, config: CcgRunInput[]) => void;
   setMinigameMissionStatus: (eventId: number, status: Record<number, boolean>) => void;
   setCardMatchSimConfig: (eventId: number, result: CardMatchSimConifg | null) => void;
+  setClueSearchConfig: (eventId: number, config: ClueSearchConfig) => void;
 
   setTotalRewardCurrentAmount: (eventId: number, amount: number) => void;
   setTotalRewardTargetAmount: (eventId: number, amount: number) => void;
@@ -184,6 +189,7 @@ const defaultPlan: EventPlan = {
   minigameMissionStatus: {},
 
   cardMatchSimConfig: defaultCardMatchSimConfig,
+  clueSearchConfig: defaultClueSearchConfig,
 
   // totalRewardPlanner
   totalRewardCurrentAmount: 0,
@@ -245,6 +251,7 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setDreamMakerClaimedMissions: (eventId, missions) => updatePlanForEvent(eventId, { dreamMakerClaimedMissions: missions }),
         setDreamMakerInteractiveResult: (eventId, result) => updatePlanForEvent(eventId, { dreamMakerInteractiveResult: result }),
         setCardMatchSimConfig: (eventId, result) => updatePlanForEvent(eventId, { cardMatchSimConfig: result }),
+        setClueSearchConfig: (eventId, config) => updatePlanForEvent(eventId, { clueSearchConfig: config }),
         setTotalRewardCurrentAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardCurrentAmount: amount }),
         setTotalRewardTargetAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardTargetAmount: amount }),
         setMinigameCCGConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameCCGConfig: config }),
@@ -332,6 +339,9 @@ export const usePlanForEvent = (eventId: number) => {
     },
     setCardMatchSimConfig: (result: CardMatchSimConifg | null) => {
       if (eventId) actions.setCardMatchSimConfig(eventId, result);
+    },
+    setClueSearchConfig: (config: ClueSearchConfig) => {
+      if (eventId) actions.setClueSearchConfig(eventId, config);
     },
     setTotalRewardCurrentAmount: (amount: number) => eventId && actions.setTotalRewardCurrentAmount(eventId, amount),
     setTotalRewardTargetAmount: (amount: number) => eventId && actions.setTotalRewardTargetAmount(eventId, amount),

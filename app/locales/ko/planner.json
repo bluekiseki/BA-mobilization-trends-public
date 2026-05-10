@@ -57,7 +57,14 @@
     "normal": "기본",
     "passive": "강화",
     "sub": "서브",
-    "ue": "고유"
+    "ue": "고유",
+    "uniqueWeapon": "고유무기",
+    "gear": "애용품",
+    "cost": "비용",
+    "rank": "랭크",
+    "source": "출처",
+    "schaledb": "SchaleDB",
+    "viewOnSchaledb": "SchaleDB에서 보기"
   },
   "error": {
     "studentDataLoadFailed": "학생 데이터를 불러오는 데 실패했습니다",
@@ -65,7 +72,10 @@
     "errorDataInitializationFailed": "오류: 데이터 초기화에 실패했습니다.",
     "confirmResetPlanData": "정말로 모든 계획 데이터를 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.",
     "errorCannotReadFile": "오류: 파일을 읽을 수 없습니다",
-    "errorFileFormatOrParsingFailed": "오류: 파일 형식 오류 또는 파싱 실패"
+    "errorFileFormatOrParsingFailed": "오류: 파일 형식 오류 또는 파싱 실패",
+    "invalidCsv": "CSV 파일이 유효하지 않습니다.",
+    "missingRequiredColumn": "필수 컬럼 \"{{column}}\"이(가) 없습니다.",
+    "cannotParseInput": "JSON 또는 Base64 형식으로 파싱할 수 없습니다."
   },
   "page": {
     "eventPlanner": "이벤트 재화 플래너",
@@ -103,6 +113,8 @@
     "targetSettings": "목표 설정",
     "minigame": "미니게임",
     "apSupply": "AP 수급",
+    "apAndCurrencySupply": "AP/재화 수급",
+    "currencyInitialInput": "재화 초기량 입력",
     "farmingRun": "파밍 실행",
     "stageFarming": "스테이지 주회",
     "totalAp": "총 보유 AP",
@@ -118,7 +130,9 @@
     "hardFarming": "하드 파밍",
     "scrimmageCount": "교류회 횟수",
     "scrimmageCost": "교류회 비용 (AP)",
-    "otherDailyApConsumption": "기타 일일 소모 AP",
+    "otherDailyApConsumption": "기타 일일 소모/획득 AP",
+    "consumed": "소모",
+    "gained": "획득",
     "prefarmedAp": "미리 모아놓은 AP",
     "aronaAttendanceStartDate": "아로나의 출석부! 기준일",
     "aronaAttendanceDay": "기준일의 출석일차",
@@ -138,6 +152,20 @@
     "noCurrentEvent": "진행중인 이벤트가 없습니다",
     "loadingData": "데이터를 불러오는 중...",
     "noStudentPlanInEvent": "이 이벤트에 포함된 학생 계획이 없습니다",
+    "ownedInput": "보유량",
+    "expandView": "펼치기",
+    "inventoryFilterAll": "전체 아이템",
+    "inventoryFilterNeeded": "필요한 것만",
+    "sortedByDeficit": "부족한 순으로 정렬 (필요량 우선)",
+    "sortLabel": "정렬:",
+    "sortByRarity": "희귀도",
+    "sortById": "ID",
+    "inventorySearch": "아이템 검색...",
+    "inventorySearchEmpty": "검색 결과가 없습니다.",
+    "inventoryReset": "전체 초기화",
+    "inventoryResetConfirm": "정말로 모든 보유량을 초기화하시겠습니까?",
+    "inventoryResetCancel": "취소",
+    "inventoryResetOk": "초기화",
     "noStudentGrowthPlan": "생성된 학생 성장 계획이 없습니다",
     "startByAddingNewPlan": "\"새 학생 계획 추가\" 버튼을 눌러 시작하세요",
     "selectStudentForDetails": "왼쪽 목록에서 학생을 선택하여 상세 정보를 확인하세요.",
@@ -149,14 +177,21 @@
     "defaultNotice": "오파츠 등 스테이지 주회의 다른 획득 재화는 무시한 결과입니다.",
     "reportNoticeTitle": "[거점 방어] 폐허의 군수공장 N 기준, 특별의뢰 2배 이벤트 시 보라 보고서 1개의 가치는 18.9843 AP",
     "reportNoticeFormula": "계산식: 40AP÷((10000 × 0.35 + 2×2000 + 6.07×500)×2÷10000 보라보고서)",
+    "reportNoticeUpcomingTitle": "※ 2부 메인스토리 프롤로그 업데이트 이후 최상급 보고서 1개의 가치: 13.0293 AP",
+    "reportNoticeUpcomingFormula": "계산식: 40AP÷((10000 × 1 + 2000 × 1 + 500 × 6.7 )×2÷10000 보라보고서)",
     "enhancementStoneNoticeTitle": "[물건 회수] 슬럼피아 광장 N 기준, 2배 이벤트 시 크레딧으로 일반 상점에서 구매하는 최상급 강화석 가치는 개당 16.0195 AP",
     "enhancementStoneNoticeFormula": "계산식: 128000크레딧÷(((50.09×0.1 + 33.76×0.5 + 25.18×0.4)×5×1e3×2 크레딧)÷40AP)",
+    "enhancementStoneNoticeUpcomingTitle": "※ 2부 메인스토리 프롤로그 업데이트 이후 최상급 강화석 가치: 9.754 AP",
+    "enhancementStoneNoticeUpcomingFormula": "계산식: 128000 크레딧÷(((80.91×0.1 + 55.2×0.5 + 42×0.4)×5×1e3×2 크레딧)÷40AP)",
     "currentEventGlobal": "현재 글로벌 서버 이벤트",
     "upcomingEventGlobal": "다가오는 글로벌 서버 이벤트",
     "continueTo": "다음 단계: {{tabName}}",
     "currencyStatusTitle": "재화 현황 및 최종 결과",
     "viewSummary": "총합 보기",
     "viewDetails": "상세 내역 보기",
+    "sortByPriority": "우선순위",
+    "carryUp": "상위 변환",
+    "carryUpTooltip": "하위 등급 아이템을 상위 등급으로 통합합니다. (예: 상급 보고서 5개 → 최상급 보고서 1개)",
     "totalNeededTitle": "총 필요 재화",
     "backToPlanner": "목록으로",
     "searchStudentPlaceholder": "학생 검색...",
@@ -168,6 +203,8 @@
     "confirmImport": "기존 데이터를 모두 지우고 CSV 데이터를 가져오시겠습니까?",
     "exportCsv": "CSV 내보내기",
     "importCsv": "CSV 가져오기",
+    "exportJson": "Json 내보내기",
+    "importJson": "Json 가져오기",
     "selectAll": "전체",
     "deselectAll": "해제",
     "selectAllTooltip": "모든 학생 선택",
@@ -177,7 +214,8 @@
     "openInPlanner": "학생 성장 플래너에서 열기",
     "selectStudentToStart": "시작하려면 학생을 선택해주세요.",
     "remainingTime": "{{day}}일 {{hour}}시간 남음",
-    "startTime": "{{day}}일 {{hour}}시간 후 시작"
+    "startTime": "{{day}}일 {{hour}}시간 후 시작",
+    "initialOwned": "초기 보유 {{value}}"
   },
   "button": {
     "runAutoFarmCalc": "자동 주회 계산 실행",
@@ -202,6 +240,8 @@
     "resetCurrentTab": "현재 탭 리셋",
     "selectAll": "모두 선택",
     "deselectAll": "모두 해제",
+    "selectFromMyPool": "내 학생 명단에서 불러오기",
+    "splitView": "분리 보기",
     "confirmInput": "입력 완료",
     "goToPlanner": "플래너 바로가기",
     "hideDetails": "상세 내역 숨기기",
@@ -235,9 +275,32 @@
     "totalAcquisition": "총 획득",
     "cumulativeRewards": "누적 보상",
     "materialsForCurrentEvent": "현재 이벤트에 필요한 재화",
+    "credits": "크레딧",
+    "eligma": "엘리그마",
+    "xpReports": "보고서",
+    "equipEnh": "강화석",
+    "uwEnh": "고유무기 강화재료",
+    "opart": "오파츠",
+    "tacticalBD": "전술 교육 BD",
+    "techNote": "기술 노트",
+    "potential": "숙련 증서",
+    "equipment": "장비",
+    "skill": "스킬 재화",
+    "other": "기타",
     "totalMaterialsForAllPlans": "모든 계획의 총 필요 재화",
     "exchangeCount": "교환 횟수",
-    "dailyPyroRefills": "일일 청휘석 충전 횟수"
+    "dailyPyroRefills": "일일 청휘석 충전 횟수",
+    "global_server_data_pending": "데이터가 글로벌 서버에 아직 업데이트되지 않았습니다.",
+    "favorGifts": "선물",
+    "skillInfo": "스킬 정보",
+    "relationshipStories": "인연 스토리",
+    "story_rank_only": "랭크",
+    "story_rank_title": "랭크+제목",
+    "story_summary_hide": "−요약",
+    "story_summary_show": "+요약",
+    "story_global_show": "글로벌 표시",
+    "story_global_soon": "글로벌 미출시",
+    "story_memorial": "메모리얼"
   },
   "item": {
     "reports": "보고서",
@@ -253,25 +316,26 @@
     "minigame_dream": "Like no Tomorrow",
     "card_match": "짝 맞추기",
     "minigame_ccg": "정의실현부의 끝나지 않은 여름방학",
-    "minigame_defense": "Hi-Lo Ha-Lo"
+    "minigame_defense": "Hi-Lo Ha-Lo",
+    "clue_search": "단서찾기"
   },
   "gameTerm": {
     "tacticalChallenge": "전술대항전"
   },
   "apBreakdown": {
-    "hardMode": "하드 소모:",
-    "scrimmage": "교류회 소모:",
-    "naturalRegen": "자연회복:",
-    "dailyQuests": "일퀘:",
-    "weeklyQuests": "주퀘:",
-    "cafe": "카페:",
-    "otherConsumption": "기타 소모:"
+    "hardMode": "하드 소모",
+    "scrimmage": "교류회 소모",
+    "naturalRegen": "자연회복",
+    "dailyQuests": "일퀘",
+    "weeklyQuests": "주퀘",
+    "cafe": "카페",
+    "otherConsumption": "기타 소모"
   },
   "apSource": {
-    "pyroxene": "청휘석:",
-    "apPackage": "AP 패키지:",
-    "weeklyQuests": "주퀘:",
-    "attendance": "출석:"
+    "pyroxene": "청휘석",
+    "apPackage": "AP 패키지",
+    "weeklyQuests": "주퀘",
+    "attendance": "출석"
   },
   "mission": {
     "clearWithinSeconds": "{seconds}초 이내 클리어",
@@ -341,7 +405,16 @@
     "foundTreasures": "찾은 보물",
     "cancel": "취소",
     "saveResult": "결과 저장 ({{count}}칸)",
-    "goalFindAll": "모든 보물 찾기"
+    "goalFindAll": "모든 보물 찾기",
+    "cellBaseReward": "셀당:",
+    "tabInfo": "정보",
+    "tabCalculator": "계산기",
+    "boardSize": "보드",
+    "treasureContents": "보물",
+    "rewardItem": "아이템",
+    "rewardAmount": "수량",
+    "digCells": "채굴 수",
+    "planResult": "계획 결과"
   },
   "fortune_gacha": {
     "title": "오미쿠지 뽑기",
@@ -353,7 +426,14 @@
     "totalPullsPlaceholder": "총 뽑기 횟수 입력",
     "setToMax": "최대로",
     "runAvgCalcFirst": "먼저 평균 보상 계산을 실행하세요",
-    "setMaxPullsTooltip": "부족한 재화를 모두 채우는 횟수 계산"
+    "setMaxPullsTooltip": "부족한 재화를 모두 채우는 횟수 계산",
+    "probTable": "확률 테이블",
+    "name": "이름",
+    "baseProb": "기본 확률",
+    "maxProb": "최대 확률 (상한)",
+    "pityNote": "* {{start}}회 연속으로 최고 등급을 못 얻으면, 확률이 증가하여 최대 확률에 도달합니다. (획득 시 초기화)",
+    "pityDetail": "{{start}}회부터 변동 시작, {{steps}}회 후 상한 도달 (총 ~{{total}}회)",
+    "rewards": "보상"
   },
   "box_gacha": {
     "title": "룰렛",
@@ -364,7 +444,12 @@
     "setMaxBoxesTooltip": "부족한 재화를 모두 채우기 위한 목표 회차를 설정합니다.",
     "planResultTitle": "계획 결과 ({{start}} ~ {{end}}회차 진행)",
     "totalCost": "총 소모 재화",
-    "totalRewards": "총 획득 아이템"
+    "roundCost": "회차별 소모 재화",
+    "totalRewards": "총 획득 아이템",
+    "roundBreakdown": "회차별 보상",
+    "roundHeader": "회차",
+    "roundLabel": "{{round}}회차",
+    "roundLoopLabel": "{{round}}회차~ (반복)"
   },
   "dice_race": {
     "title": "주사위 달리기",
@@ -398,6 +483,91 @@
     "rollsUnit": "회",
     "avgCost": "평균 소모",
     "avgRewards": "평균 보상"
+  },
+  "spreadsheet": {
+    "starOptions": {
+      "star1": "1★",
+      "star2": "2★",
+      "star3": "3★",
+      "star4": "4★",
+      "star5": "5★",
+      "ue1": "고유 1★",
+      "ue2": "고유 2★",
+      "ue3": "고유 3★",
+      "ue4": "고유 4★"
+    },
+    "headerGroup": {
+      "basicStatsCurrent": "기본 스탯 (현재)",
+      "basicStatsTarget": "기본 스탯 (목표)",
+      "skillsCurrent": "스킬 (현재)",
+      "skillsTarget": "스킬 (목표)",
+      "equipmentCurrent": "장비 (현재)",
+      "equipmentTarget": "장비 (목표)",
+      "other": "기타"
+    },
+    "headerField": {
+      "add": "추가",
+      "select": "선택",
+      "name": "이름",
+      "school": "학원",
+      "level": "레벨",
+      "rank": "성급",
+      "ueLevel": "전무 Lv",
+      "affection": "인연",
+      "experience": "경험치",
+      "equipment1": "장비 1",
+      "equipment2": "장비 2",
+      "equipment3": "장비 3",
+      "bondGear": "애용품",
+      "acquiredDate": "획득일",
+      "useEligma": "엘리그마 사용",
+      "eligmaPrice": "엘리그마 가격",
+      "eligmaStock": "엘리그마 재고"
+    },
+    "messages": {
+      "deleteConfirm": "이 계획을 삭제하시겠습니까?",
+      "mobileWarning": "테이블 뷰는 PC 환경에 최적화되어 있습니다. 모바일에서는 가로 스크롤을 이용해 주세요.",
+      "keyboardShortcutsTitle": "일부 엑셀 단축키 지원",
+      "shortcutCopyAbove": "위 셀의 값 복사",
+      "shortcutNextRow": "다음 행으로 이동",
+      "shortcutNextCell": "다음 셀로 이동",
+      "shortcutPrevCell": "이전 셀로 이동",
+      "shortcutSetMax": "현재 셀을 최댓값으로 설정",
+      "shortcutUndo": "실행 취소",
+      "shortcutRedo": "다시 실행",
+      "shortcutSave": "변경사항 저장",
+      "sortLabel": "정렬:",
+      "resetSort": "초기화",
+      "unsavedChanges": "저장되지 않은 변경 사항이 있습니다.",
+      "save": "저장",
+      "cancel": "취소",
+      "addPlanHint": "추가 버튼을 눌러 계획을 추가하세요",
+      "recruitedStudents": "모집한 학생 수"
+    },
+    "sortLabels": {
+      "hasPlan": "계획 있음",
+      "isSelected": "선택됨",
+      "school": "학원",
+      "name": "이름",
+      "currentLevel": "현재 레벨",
+      "currentRank": "현재 성급",
+      "currentUeLevel": "현재 전무 Lv",
+      "currentAffection": "현재 인연",
+      "currentExperience": "현재 인연 경험치",
+      "targetLevel": "목표 레벨",
+      "targetRank": "목표 성급",
+      "targetUeLevel": "목표 전무 Lv",
+      "targetAffection": "목표 인연",
+      "currentEquipment1": "현재 장비 1",
+      "currentEquipment2": "현재 장비 2",
+      "currentEquipment3": "현재 장비 3",
+      "currentBondGear": "현재 애용품",
+      "targetEquipment1": "목표 장비 1",
+      "targetEquipment2": "목표 장비 2",
+      "targetEquipment3": "목표 장비 3",
+      "targetBondGear": "목표 애용품",
+      "acquiredDate": "획득일"
+    }
   },
   "growthCard": {
     "stats": "기본 정보",
@@ -443,7 +613,8 @@
       "cafe": "카페 터치",
       "schedule": "스케줄",
       "craftingNeeded": "필요 제조 횟수",
-      "lowTierConversion": "하위 재료 변환"
+      "lowTierConversion": "하위 재료 변환",
+      "toFillDeficit": "부족분을 채우려면"
     },
     "labels": {
       "current": "현재 레벨",
@@ -451,6 +622,7 @@
       "choiceBox": "일반 선물 선택권"
     },
     "actions": {
+      "reset": "모든 선물 초기화",
       "craftingFill": "선호 선물로 변환",
       "showPreferredOnly": "선호 선물만 보기"
     },
@@ -460,10 +632,20 @@
     "units": {
       "taps": "회",
       "runs": "회",
-      "times": "회"
+      "times": "회",
+      "students": "명"
     },
     "messages": {
       "noItems": "표시할 아이템이 없습니다."
+    },
+    "views": {
+      "inventory": "내 인벤토리",
+      "giftIndex": "선물 인덱스"
+    },
+    "giftIndex": {
+      "studentsWhoLike": "이 선물을 좋아하는 학생",
+      "noStudents": "이 선물을 좋아하는 학생이 없습니다.",
+      "selectGift": "선물을 선택하면 학생 목록이 표시됩니다."
     }
   },
   "potentialTab": {
@@ -473,6 +655,11 @@
     "reqCurrent": "현재: 학생 Lv.90 및 고유무기 장착 필요",
     "reqTarget": "목표: 학생 Lv.90 및 고유무기 장착 필요"
   },
+  "skillsTab": {
+    "gearNormalHint": "애용품 T2 + 호감도 랭크 20이 이 스킬을 강화합니다.",
+    "setGearGoal": "목표로 설정"
+  },
+
   "basicStatsTab": {
     "level": "레벨:",
     "rank": "랭크:",
@@ -482,7 +669,12 @@
     "currentElephPrice": "현재 엘레프 가격:",
     "purchasableEleph": "구매 가능 엘레프:",
     "ownedEleph": "보유 엘레프",
-    "affectionWarning": "현재 성급의 인연 랭크 최대치는 {{limit}}입니다."
+    "affectionWarning": "현재 성급의 인연 랭크 최대치는 {{limit}}입니다.",
+
+    "uwLevel": "고유무기 레벨",
+    "bondGear": "애용품",
+    "gearNone": "없음",
+    "gearReqAffection": "호감도 랭크 {{rank}}+ 필요"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -574,6 +766,50 @@
     "maxButton": "MAX",
     "requiredAmountSuffix": "{{amount}}개 누적 시"
   },
+  "dataExchange": {
+    "title": "데이터 내보내기/가져오기",
+    "formatOwn": "현재 사이트 형식",
+    "formatUnknown": "알 수 없는 형식",
+    "formatInvalid": "유효하지 않은 JSON",
+    "textareaPlaceholder": "여기에 JSON 데이터를 붙여넣으세요.\n지원 형식:\n  • 본 사이트 내보내기 데이터\n  • Justin163 플래너 내보내기 (JSON)\n  • SchaleDB 컬렉션 내보내기 (Base64)",
+    "strategyAll": "전체 업데이트",
+    "strategyStudentsOnly": "학생 데이터만",
+    "loadFile": "파일 불러오기",
+    "saveToFile": "파일로 저장",
+    "applyData": "데이터 적용",
+    "export": "내보내기",
+    "extractMyData": "내 데이터 추출",
+    "extractMyDataDesc": "현재 계획을 JSON으로 내보냅니다.",
+    "convertToJustin163": "Justin163 리소스 플래너 형식으로 내보내기",
+    "convertToJustin163Desc": "현재 계획을 Justin163 사이트에서 불러올 수 있는 JSON 형식으로 변환합니다.",
+    "copyAiPrompt": "AI 프롬프트 복사",
+    "aiPromptCopied": "복사 완료!",
+    "copyClipboard": "클립보드로 복사",
+    "clipboardCopied": "복사 완료!",
+    "justin163Warning": "Justin163 플래너 형식으로 변환 시, 해당 사이트에서 지원하지 않는 일부 데이터(인연 경험치, 상세 파밍 설정 등)는 제외됩니다.",
+    "msgExtracted": "데이터가 추출되었습니다.",
+    "msgConverted": "Justin163 리소스 플래너 형식으로 변환되었습니다.",
+    "msgAppliedOwn": "{{count}}명의 학생 데이터가 적용되었습니다.",
+    "msgAppliedExternal": "{{label}} 데이터가 적용되었습니다.",
+    "msgError": "오류: {{message}}",
+    "msgClipboardFailed": "클립보드 복사에 실패했습니다.",
+    "csvExport": "CSV 내보내기",
+    "csvImport": "CSV 가져오기",
+    "csvExportTooltip": "스프레드시트를 엑셀에서 편집할 수 있도록 CSV 형식으로 내보냅니다.",
+    "csvImportTooltip": "CSV 파일에서 데이터를 가져옵니다.",
+    "csvExportSuccess": "CSV 내보내기 성공",
+    "csvExportFailed": "CSV 내보내기 실패",
+    "csvImportSuccess": "CSV 가져오기 성공",
+    "csvImportSuccessWithCount": "CSV 가져오기 성공 (학생 {{count}}명 업데이트됨)",
+    "csvImportFailed": "CSV 가져오기 실패",
+    "csvFileReadError": "파일을 읽을 수 없습니다.",
+    "csvMetadataTitle": "학생 성장 플래너 CSV 데이터",
+    "csvMetadataGenerated": "생성 일시: {{date}}",
+    "csvMetadataVersion": "버전: 1.0",
+    "csvMetadataWarning": "경고: 파일의 처음 6줄(메타데이터 및 헤더)을 삭제하거나 수정하지 마세요.",
+    "csvMetadataNotes": "참고: 첫 번째 헤더 행은 필드 ID(시스템용)이며, 두 번째 헤더 행은 표시용 레이블(번역됨)입니다.",
+    "csvTip": "CSV 파일을 다운로드하여 엑셀 등에서 편집한 후, 다시 파일을 가져오기 할 수 있습니다."
+  },
   "source": {
     "shopCost": "상점 (소모)",
     "shopReward": "상점 (획득)",
@@ -599,7 +835,9 @@
     "cardMatchReward": "짝 맞추기 (획득)",
     "cardMatchCost": "짝 맞추기 (소모)",
     "minigameCCGCost": "미니게임 (획득)",
-    "minigameCCGReward": "미니게임 (소모)"
+    "minigameCCGReward": "미니게임 (소모)",
+    "clueSearchCost": "증거찾기 (획득)",
+    "clueSearchReward": "증거찾기 (소모)"
   },
   "equipment": {
     "farmingDays": "파밍 일수 (Hard 제한)",
@@ -644,7 +882,62 @@
     "noStagesFound": "표시할 스테이지가 없습니다. (필터 또는 페이지 확인)",
     "paginationUnit": "장",
     "inventoryModalTitle": "보유 장비 입력",
-    "goToPlanner": "장비 파밍 플래너"
+    "goToPlanner": "장비 파밍 플래너",
+    "tabInput": "입력",
+    "tabStages": "스테이지",
+    "tabResults": "결과",
+    "settings": "설정",
+    "source": "소스",
+    "sourceLabelNormal": "Normal ×",
+    "sourceLabelHard": "Hard ×",
+    "studentPlanTitle": "학생 플랜",
+    "studentPlanSelectAll": "전체",
+    "studentPlanDeselectAll": "해제",
+    "studentSearchPlaceholder": "이름 검색...",
+    "studentFilterSelected": "선택만",
+    "studentSearchEmpty": "검색 결과 없음",
+    "ownedEquipment": "보유 장비",
+    "universalBlueprint": "만능 설계도",
+    "elephStudents": "엘레프:",
+    "hardModeTitle": "Hard 모드",
+    "hardModeAggressive": "전부 × 3",
+    "hardModeOptimized": "효율 최적화",
+    "hardModeManual": "수동",
+    "hardModeAggressiveDesc": "Hard 전부 ×3",
+    "hardModeOptimizedDesc": "LP 최적화",
+    "hardModeManualDesc": "직접 설정",
+    "hardModeAggressiveDetail": "필요한 아이템이 나오는 모든 Hard 스테이지를 최대 횟수(일 ×3)로 실행합니다. 장비 수집량을 최대화하지만 불필요한 아이템에 AP를 낭비할 수 있습니다.",
+    "hardModeOptimizedDetail": "필요한 재화에 맞춰 가장 효율적인 Hard 스테이지를 계산하여 실행합니다. 낭비되는 AP를 최소화하고 정말 필요한 재료만 수집합니다.",
+    "hardModeManualDetail": "각 Hard 스테이지의 실행 횟수를 직접 설정합니다. 어떤 스테이지를 몇 번 실행할지 완벽하게 제어할 수 있습니다.",
+    "stageArea": "지역",
+    "optimize": "최적화하기",
+    "summaryTabTotal": "필요량",
+    "summaryTabFarmed": "주회결과",
+    "summaryTabRemaining": "부족량",
+    "summaryTabSurplus": "여유량",
+    "summaryTabBlueprint": "만능 설계도 소모량",
+    "blueprintUsageDetail": "설계도 사용 내역",
+    "blueprintTotalUsed": "총 {{count}}개 사용",
+    "blueprintSheets": "({{count}}장)",
+    "statTotalAP": "총 AP",
+    "statStages": "스테이지",
+    "statRemainingEquipment": "남은 장비",
+    "statStudents": "학생",
+    "sortByTierOrder": "티어순",
+    "sortByIDOrder": "ID순",
+    "sortByAmountOrder": "수량순",
+    "farmingPlanTitle": "파밍 계획",
+    "stageTypeNormal": "Normal",
+    "stageTypeHard": "Hard",
+    "sourceKR": "KR",
+    "sourceJPNew": "JP (New)",
+    "inventoryLoadingData": "데이터 로딩 중...",
+    "inventoryClear": "초기화",
+    "inventoryDeficient": "부족",
+    "inventorySufficient": "충족",
+    "inventoryNotFarmable": "파밍 불가",
+    "students": "학생",
+    "selectedStudentsFormat": "{selected}/{total} 학생"
   },
   "cardmatch": {
     "page": {
@@ -692,6 +985,24 @@
       "clearRewardDesc": "해당 라운드의 보드를 완성하면 획득"
     }
   },
+  "clue_search": {
+    "title": "증거찾기",
+    "tabInfo": "정보",
+    "tabCalculator": "계산기",
+    "roundLabel": "{{round}}회차",
+    "roundLoop": "{{round}}회차~ (반복)",
+    "totalFragments": "조각 합계: {{count}}개",
+    "rangeTitle": "회차 범위 설정",
+    "startRound": "시작 회차",
+    "endRound": "종료 회차",
+    "shortcutMaxOneTime": "1회성 보상 최대화",
+    "shortcutMaxOneTimeDesc": "1 ~ {{round}}회차로 설정 (반복 구간 제외)",
+    "resultTitle": "계산 결과",
+    "cost": "필요 재화",
+    "rewards": "획득 보상",
+    "autoBuy": "단서 자동구매",
+    "autoBuyTooltip": "선택한 라운드 범위에 필요한 단서 아이템을 상점에서 자동으로 구매 수량에 반영합니다."
+  },
   "minigame_ccg": {
     "title": "정의실현부의 끝나지 않은 여름방학",
     "overview": "개요",
@@ -711,14 +1022,14 @@
     "add_row": "행 추가"
   },
   "gacha": {
-    "title": "청휘석 및 가챠 플래너",
+    "title": "청휘석 및 모집/가챠 플래너",
     "intro": {
       "title": "플래너 사용 가이드",
-      "summary": "미래시 일정을 기반으로 예상 청휘석 수급량을 계산하고, 원하는 학생의 픽업 전략을 세워 가챠 성공 확률을 시뮬레이션합니다.",
+      "summary": "미래시 일정을 기반으로 예상 청휘석 수급량을 계산하고, 원하는 학생의 픽업 전략을 세워 모집/가챠 성공 확률을 시뮬레이션합니다.",
       "feat1_title": "수급량 계산",
       "feat1_desc": "보유한 재화와 월정액, 총력전·대결전 등 미래시 일정을 반영하여 가용 청휘석을 예측합니다.",
       "feat2_title": "픽업 전략",
-      "feat2_desc": "목표 학생을 설정하고, 고의 천장이나 조건부 가챠 등 상세한 전략을 수립합니다.",
+      "feat2_desc": "목표 학생을 설정하고, 고의 천장이나 조건부 모집/가챠 등 상세한 전략을 수립합니다.",
       "feat3_title": "결과 예측",
       "feat3_desc": "설정한 전략을 바탕으로 시뮬레이션을 돌려 성공 확률과 파산 위험을 분석합니다.",
       "notes": {
@@ -731,8 +1042,8 @@
         "note5": "총력전 및 대결전의 청휘석 획득은 해당 기간의 마지막 날에 이루어진다고 가정합니다.",
         "note6": "수급 데이터가 있는 이벤트는 1회당 수급량(스프레드시트 수동 추출)이 반영되어 있으며, 데이터가 없는 이벤트는 1,800개를 기본값으로 반영합니다.",
         "note7": "아로나의 출석부는 오늘을 1일차로 시작한다고 가정합니다.",
-        "note8": "가챠 전략 탭에서 한 배너에서 여러 캐릭터를 뽑으려 할 경우, 반드시 '최대 예산(최대 천장 횟수)'을 알맞게 변경해 주시기 바랍니다.",
-        "note9": "모든 10연차 및 단일 가챠 티켓은 동등한 가치의 청휘석(1연차 = 120 청휘석)으로 변환되어 계산됩니다."
+        "note8": "모집/가챠 전략 탭에서 한 배너에서 여러 캐릭터를 뽑으려 할 경우, 반드시 '최대 예산(최대 천장 횟수)'을 알맞게 변경해 주시기 바랍니다.",
+        "note9": "모든 10연차 및 단일 모집/가챠 티켓은 동등한 가치의 청휘석(1연차 = 120 청휘석)으로 변환되어 계산됩니다."
       }
     },
     "server": {
@@ -741,7 +1052,7 @@
     },
     "tabs": {
       "income": "수급 & 미래시",
-      "strategy": "가챠 계획 수립",
+      "strategy": "모집할 학생 선택",
       "result": "시뮬레이션 실행"
     },
     "errors": {
@@ -750,7 +1061,7 @@
     },
     "income": {
       "timeline": {
-        "title": "일정 & AP 설정",
+        "title": "일정 & AP 충전 설정",
         "total_count": "총 {{count}}건",
         "headers": {
           "start": "START",
@@ -773,7 +1084,7 @@
         "survival_rate": "생존 확률",
         "total_income": "총 수입",
         "total_ap_expense": "총 AP 지출",
-        "gacha_expense_avg": "가챠 지출 (평균)",
+        "gacha_expense_avg": "모집/가챠 지출 (평균)",
         "final_balance_avg": "최종 잔액 (평균)",
         "category": {
           "regular": "정기 수급",
@@ -788,15 +1099,18 @@
           "raid_elim": "총력전/대결전",
           "multifloor": "제약해제결전",
           "jfd": "종합전술시험",
-          "event_etc": "이벤트/스토리/점검",
+          "mainstory": "메인스토리",
+          "event": "이벤트",
+          "ministory": "미니스토리",
+          "maintenance": "점검 보상",
           "manual": "추가 입력",
           "ap_refresh": "AP 충전",
-          "gacha": "가챠"
+          "gacha": "모집/가챠"
         }
       },
       "settings": {
         "title": "시뮬레이션 설정",
-        "include_gacha": "가챠 반영",
+        "include_gacha": "모집/가챠 반영",
         "current_resources": "현재 자원",
         "monthly_income": "월간 수급",
         "monthly_card": "월정액",
@@ -814,16 +1128,16 @@
         "event_period": "이벤트 기간",
         "normal_period": "평상시 (없을 때)",
         "refresh_count": "{{count}}충",
-
         "custom_income_title": "특정 일자 청휘석 추가/지출 내역",
         "custom_income_desc": "내용 (예: 사료, 한정팩)",
         "custom_income_amount": "청휘석량"
       },
       "chart": {
         "survival_rate": "생존 확률",
-        "lucky": "상위 10% (Lucky)",
-        "unlucky": "하위 10% (Unlucky)",
-        "worst": "하위 100% (Worst)",
+        "lucky": "상위 10%",
+        "unlucky": "하위 10%",
+        "worst": "하위 100%",
+        "upper_x": "상위 {{x}}%",
         "avg_balance": "평균 잔액",
         "avg": "평균",
         "upper_10": "상위 10%",
@@ -835,7 +1149,10 @@
         "table_delta": "변동량",
         "table_balance": "잔여량 (평균)",
         "start_balance": "시작 자산",
-        "daily_calc": "일일/이벤트 정산"
+        "daily_calc": "일일/이벤트 정산",
+        "percentile_placeholder": "예: 25",
+        "add_btn_title": "확률선 추가",
+        "remove_line": "삭제"
       },
       "log": {
         "fixed_daily_sunday": "일일/주간/월정액 등 고정 수급",
@@ -859,7 +1176,9 @@
         "btn_running": "계산 중...",
         "btn_start": "시뮬레이션 시작"
       },
-      "empty_state": "상단의 버튼을 눌러 시뮬레이션을 시작하세요."
+      "empty_state": "상단의 버튼을 눌러 시뮬레이션을 시작하세요.",
+      "income_nudge": "수급 계획을 설정하면 타임라인 기반의 더 정밀한 예산 분석이 가능합니다",
+      "income_nudge_btn": "수급 탭으로 이동"
     },
     "result_view": {
       "unit_toggle": {
@@ -869,8 +1188,8 @@
       "disclaimer": "* 무료연차는 우선 소모되며, 청휘석 소모량에는 포함되지 않습니다.",
       "summary": {
         "success_rate": {
-          "title": "목표 달성률",
-          "desc": "Must 학생 전체 획득 확률"
+          "title": "'필수' 전원 획득률",
+          "desc": "'필수' 학생을 모두 획득한 시뮬레이션 비율"
         },
         "avg_cost": {
           "title_pyroxenes": "평균 소모 청휘석",
@@ -879,10 +1198,12 @@
           "includes_free": "(무료연차 포함)"
         },
         "safety": {
-          "title": "자원 안정성",
+          "title": "청휘석 충족 가능성",
           "safe": "안전함",
           "unsafe": "부족 위험",
-          "bankruptcy_prob": "보유 청휘석 초과 확률: {{rate}}%"
+          "bankruptcy_prob": "보유 청휘석 초과 확률: {{rate}}%",
+          "income_applied": "수급 계획 반영",
+          "income_not_applied": "현재 보유량 기준"
         }
       },
       "chart": {
@@ -894,7 +1215,9 @@
         "range_count": "{{start}} ~ {{end}}회",
         "tooltip_prob": "확률: {{rate}}%",
         "cdf_label_pyroxenes": "{{amount}} 청휘석 이내",
-        "cdf_label_pulls": "{{amount}}회 이내"
+        "cdf_label_pulls": "{{amount}}회 이내",
+        "legend_within_budget": "이내",
+        "legend_over_budget": "초과 구간"
       },
       "student_stats": {
         "title": "학생별 획득 및 엘레프 예측",
@@ -928,7 +1251,7 @@
         "max_budget": "최대 예산",
         "spark_option": "{{spark}}천장 ({{pulls}}연)",
         "max_budget_suffix": "까지 허용",
-        "min_pulls": "최소 보장",
+        "min_pulls": "무조건 수행할 최소 횟수",
         "min_pulls_suffix": "연차 진행"
       },
       "mode": {
@@ -940,6 +1263,10 @@
         "label": "조건",
         "remains_le": "천장 잔여 ≤",
         "try_pulls": "연이면 시도"
+      },
+      "priority": {
+        "label": "순위",
+        "tooltip": "뽑기 우선순위 (낮을수록 먼저)"
       },
       "intentional_spark": {
         "label": "고의 천장",

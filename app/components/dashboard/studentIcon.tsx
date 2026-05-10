@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import type { Student } from '~/types/data';
 import { getCharacterStarValue, Transparent_Image, type Character, type PortraitData } from './common';
 import { StarRating } from '../StarRatingProps';
+import React from 'react';
 
 export const StudentIcon: React.FC<{
   character?: Character;
   student?: Student;
   portraitData: PortraitData;
-}> = ({ character, student, portraitData }) => {
+}> = React.memo(({ character, student, portraitData }) => {
   const imageUrl = character ? (portraitData[character?.id] ? `data:image/webp;base64,${portraitData[character?.id]}` : null) : null;
 
   const [showTooltip, setShowTooltip] = useState(false);
@@ -94,4 +95,4 @@ export const StudentIcon: React.FC<{
       )}
     </div>
   );
-};
+});

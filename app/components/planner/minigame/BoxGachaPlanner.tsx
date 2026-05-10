@@ -61,6 +61,14 @@ export const BoxGachaPlanner = ({ eventId, eventData, iconData, onCalculate, rem
     return contents;
   }, [boxGachaData]);
 
+  const allSameCost = useMemo(() => {
+    if (!boxContents) return false;
+    const rounds = Object.values(boxContents);
+    if (rounds.length <= 1) return true;
+    const first = rounds[0].cost;
+    return rounds.every((r) => r.cost === first);
+  }, [boxContents]);
+
   const handleSetMaxBoxes = useCallback(() => {
     if (!boxGachaData || !boxContents) return;
 
@@ -155,6 +163,65 @@ export const BoxGachaPlanner = ({ eventId, eventData, iconData, onCalculate, rem
               </button>
             </div>
           </div>
+
+          {boxContents &&
+            (() => {
+              const costInfo = boxGachaData.manage[0].Goods;
+              const costItemKey = `${costInfo.ConsumeParcelTypeStr[0]}_${costInfo.ConsumeParcelId[0]}`;
+              const commonCost = allSameCost ? Object.values(boxContents)[0].cost : null;
+
+              return (
+                <div className="mt-4">
+                  <h3 className="font-bold dark:text-gray-200 mb-2">{t('roundBreakdown')}</h3>
+
+                  {commonCost !== null && (
+                    <div className="flex items-center gap-2 mb-3 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg md:hidden">
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0">{t('roundCost')}</span>
+                      <ItemIcon type={costItemKey.split('_')[0]} itemId={costItemKey.split('_')[1]} amount={commonCost} size={8} eventData={eventData} iconData={iconData} />
+                    </div>
+                  )}
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="bg-neutral-100 dark:bg-neutral-700">
+                          <th className="text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-gray-200 whitespace-nowrap">{t('roundHeader')}</th>
+                          <th className="hidden md:table-cell text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-gray-200 whitespace-nowrap">{t('totalCost')}</th>
+                          <th className="text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-gray-200">{t('totalRewards')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {boxGachaData.manage.map((roundInfo) => {
+                          const roundNum = roundInfo.Round;
+                          const box = boxContents[roundNum];
+                          if (!box) return null;
+                          return (
+                            <tr key={roundNum} className="border-b border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                              <td className="p-2 border border-neutral-300 dark:border-neutral-600 dark:text-gray-300 font-medium whitespace-nowrap">
+                                {roundInfo.IsLoop ? t('roundLoopLabel', { round: roundNum }) : t('roundLabel', { round: roundNum })}
+                              </td>
+                              <td className="hidden md:table-cell p-2 border border-neutral-300 dark:border-neutral-600">
+                                <ItemIcon type={costItemKey.split('_')[0]} itemId={costItemKey.split('_')[1]} amount={box.cost} size={8} eventData={eventData} iconData={iconData} />
+                              </td>
+                              <td className="p-2 border border-neutral-300 dark:border-neutral-600">
+                                <div className="flex flex-wrap gap-1">
+                                  {Object.entries(box.rewards)
+                                    .sort(([, a], [, b]) => b - a)
+                                    .map(([key, amount]) => {
+                                      const [type, id] = key.split('_');
+                                      return <ItemIcon key={key} type={type} itemId={id} amount={amount} size={8} eventData={eventData} iconData={iconData} />;
+                                    })}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
 
           {finalTotalBoxes >= startBox &&
             (() => {

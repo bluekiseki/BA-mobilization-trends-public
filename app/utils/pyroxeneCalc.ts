@@ -32,7 +32,7 @@ export interface PlannerSchedule {
   name: string;
   start: string;
   end: string;
-  type: 'Event' | 'Raid' | 'Elimination' | 'Multifloor' | 'Campaign' | 'JointFiringDrill' | 'MainStory';
+  type: 'Event' | 'Raid' | 'Elimination' | 'Multifloor' | 'Campaign' | 'JointFiringDrill' | 'MainStory' | 'MiniStory' | 'Maintenance';
   amount?: number;
 }
 
@@ -78,6 +78,8 @@ export interface SimulationStats {
     multifloor: number;
     jfd: number;
     event: number;
+    miniStory: number;
+    maintenance: number;
     extra: number;
     mainstory: number;
   };
@@ -229,6 +231,8 @@ export function calculatePyroxeneTimeline(
       multifloor: 0,
       jfd: 0,
       event: 0,
+      miniStory: 0,
+      maintenance: 0,
       extra: 0,
       mainstory: 0,
     },
@@ -345,6 +349,16 @@ export function calculatePyroxeneTimeline(
         case 'Event':
           reward = Number(sch.amount || 0);
           stats.income.event += reward;
+          logKey = 'log.event';
+          break;
+        case 'MiniStory':
+          reward = Number(sch.amount || 200);
+          stats.income.miniStory += reward;
+          logKey = 'log.mainstory';
+          break;
+        case 'Maintenance':
+          reward = Number(sch.amount || 300);
+          stats.income.maintenance += reward;
           logKey = 'log.event';
           break;
         case 'Multifloor':

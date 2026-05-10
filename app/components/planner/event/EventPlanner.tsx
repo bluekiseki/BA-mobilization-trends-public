@@ -4,6 +4,7 @@ import type { EventData, IconData, StudentData, StudentPortraitData, Transaction
 import { ApCalculator } from '~/components/planner/ApCalculator';
 import { BonusSelector, type TotalBonusMap } from '~/components/planner/BonusSelector';
 import { FloatingCurrencyStatus } from '~/components/planner/FloatingCurrencyStatus';
+import { CurrencyStatus } from '~/components/planner/CurrencyStatus';
 import ExportImportPanel from '~/components/planner/ExportImportPanel';
 import { FarmingPlanner, type FarmingResult } from '~/components/planner/FarmingPlanner';
 import { BoxGachaPlanner, type BoxGachaResult } from '~/components/planner/minigame/BoxGachaPlanner';
@@ -23,6 +24,7 @@ import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { CardMatchPlanner, type CardMatchResult } from '~/components/planner/minigame/CardMatchPlanner';
 import { MinigameCCGPlanner, type MinigameCCGResult } from '../minigame/MinigameCCGPlanner';
 import { MinigameDefensePlanner, type MinigameDefenseResult } from '../minigame/MinigameDefensePlanner';
+import { ClueSearchPlanner, type ClueSearchResult } from '../minigame/ClueSearchPlanner';
 
 // --- Type definitions ---
 type MainTabId = 'bonus' | 'goals' | 'minigame' | 'farming' | 'ap';
@@ -41,7 +43,10 @@ type SubTabId =
   | 'minigame_dream'
   | 'minigame_ccg'
   | 'card_match'
-  | 'minigame_defence';
+  | 'minigame_defence'
+  | 'clue_search'
+  | 'ap_calc'
+  | 'currency_input';
 
 // Desktop: Adjust left/right padding since there is a right sidebar
 const mainContentClasses = 'flex-1 min-w-0 px-4 sm:px-6 pb-32 pt-6 space-y-8 w-full';
@@ -100,6 +105,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
   const [diceRaceResult, setDiceRaceResult] = useState<DiceRaceResult | null>(null);
 
   const [cardMatchResult, setCardMatchResult] = useState<CardMatchResult | null>(null);
+  const [clueSearchResult, setClueSearchResult] = useState<ClueSearchResult | null>(null);
 
   const [boxGachaResult, setBoxGachaResult] = useState<BoxGachaResult | null>(null);
   const [customGameResult, setCustomGameResult] = useState<CustomGameResult | null>(null);
@@ -140,11 +146,30 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       id: 'goals',
       name: `2. ${t('ui.targetSettings')}`,
       subTabs: [
-        { id: 'shop', name: t('common.shop') },
-        { id: 'growth', name: t('page.studentGrowth') },
-        { id: 'mission', name: t('page.missionList') },
+        // { id: 'shop', name: t('common.shop') },
+        // { id: 'growth', name: t('page.studentGrowth') },
+        // { id: 'mission', name: t('page.missionList') },
       ],
     });
+
+    if (eventData.shop) {
+      allTabs[allTabs.length - 1].subTabs?.push({
+        id: 'shop',
+        name: t('common.shop'),
+      });
+    }
+
+    allTabs[allTabs.length - 1].subTabs?.push({
+      id: 'growth',
+      name: t('page.studentGrowth'),
+    });
+
+    if (eventData.mission) {
+      allTabs[allTabs.length - 1].subTabs?.push({
+        id: 'mission',
+        name: t('page.missionList'),
+      });
+    }
 
     if (eventData.total_reward) {
       allTabs[allTabs.length - 1].subTabs?.push({
@@ -197,6 +222,12 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
         name: t('minigame.minigame_defense'),
       });
     }
+    if (eventData.clue) {
+      minigameSubTabs.push({
+        id: 'clue_search',
+        name: t('minigame.clue_search'),
+      });
+    }
     minigameSubTabs.push({
       id: 'custom',
       name: t('placeholder.customExchange'),
@@ -210,7 +241,14 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       });
     }
 
-    allTabs.push({ id: 'ap', name: `4. ${t('ui.apSupply')}` });
+    allTabs.push({
+      id: 'ap',
+      name: `4. ${t('ui.apAndCurrencySupply')}`,
+      subTabs: [
+        { id: 'ap_calc', name: t('ui.apSupply') },
+        { id: 'currency_input', name: t('ui.currencyInitialInput') },
+      ],
+    });
 
     if (eventData?.stage?.stage) {
       allTabs.push({
@@ -229,7 +267,8 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
   );
   // const [activeSubTab, setActiveSubTab] = useState<SubTabId | null>(null);
   const [activeSubTabs, setActiveSubTabs] = useState<Partial<Record<MainTabId, SubTabId | null>>>({
-    goals: 'shop',
+    goals: eventData.shop ? 'shop' : 'growth',
+    ap: 'ap_calc',
     minigame: null,
     farming: 'stages',
   });
@@ -680,6 +719,40 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       }
     }
 
+    // 14. clueSearch
+    if (clueSearchResult) {
+      // console.log('clueSearchResult', clueSearchResult);
+      // Costs (Total cost calculated in Planner, passed as positive value)
+      const costItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+      Object.entries(clueSearchResult.cost).forEach(([key, amount]) => {
+        // Convert to negative (-) since it is consumption, then save
+        const signedAmount = -amount;
+        costItems[key] = { amount: signedAmount, isBonusApplied: false };
+
+        totalItems[key] = {
+          amount: (totalItems[key]?.amount || 0) + signedAmount,
+          isBonusApplied: false,
+        };
+      });
+      if (Object.keys(costItems).length > 0) {
+        transactions.push({ source: 'clueSearch_cost', items: costItems });
+      }
+
+      // Rewards (Total rewards calculated in Planner)
+      const rewardItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+      Object.entries(clueSearchResult.rewards).forEach(([key, amount]) => {
+        rewardItems[key] = { amount, isBonusApplied: false };
+
+        totalItems[key] = {
+          amount: (totalItems[key]?.amount || 0) + amount,
+          isBonusApplied: false,
+        };
+      });
+      if (Object.keys(rewardItems).length > 0) {
+        transactions.push({ source: 'clueSearch_reward', items: rewardItems });
+      }
+    }
+
     // 13. Student Growth Needs
     if (studentGrowthNeeds) {
       const costItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
@@ -753,6 +826,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     cardMatchResult,
     minigameDefenseResult,
     studentGrowthNeeds,
+    clueSearchResult,
   ]);
 
   const finalCurrencyBalance = useMemo(() => {
@@ -898,6 +972,9 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 {activeSubTab === 'card_match' && eventData?.concentration && (
                   <CardMatchPlanner eventId={eventId} eventData={eventData} iconData={iconData!} onCalculate={setCardMatchResult} remainingCurrency={finalCurrencyBalance} />
                 )}
+                {activeSubTab === 'clue_search' && eventData?.clue && (
+                  <ClueSearchPlanner eventId={eventId} eventData={eventData} iconData={iconData!} onCalculate={setClueSearchResult} remainingCurrency={finalCurrencyBalance} />
+                )}
                 {activeSubTab === 'custom' && (
                   <CustomGamePlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setCustomGameResult} remainingCurrency={finalCurrencyBalance} />
                 )}
@@ -905,13 +982,23 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
             )}
 
             {/* AP TAB */}
-            {activeMainTab === 'ap' && (
+            {activeMainTab === 'ap' && activeSubTab === 'ap_calc' && (
               <ApCalculator
                 eventId={eventId}
                 startTime={eventData.season.EventContentOpenTime}
                 endTime={eventData.season.EventContentCloseTime || eventData.season.ExtensionTime}
                 onCalculate={setAvailableAp}
                 iconData={iconData}
+              />
+            )}
+            {activeMainTab === 'ap' && activeSubTab === 'currency_input' && (
+              <CurrencyStatus
+                eventData={eventData}
+                iconData={iconData!}
+                ownedCurrency={ownedCurrency}
+                setOwnedCurrency={setOwnedCurrency}
+                remainingCurrency={finalCurrencyBalance}
+                defaultEditing={true}
               />
             )}
 
@@ -952,7 +1039,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
             )}
 
             {/* Export/Import */}
-            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
+            <div className="mt-8 border-t border-gray-200">
               <ExportImportPanel />
             </div>
           </div>

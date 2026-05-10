@@ -3,7 +3,8 @@ import Slider from 'rc-slider';
 import type { TooltipRef } from 'rc-tooltip';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
-import raf from 'rc-util/lib/raf';
+// import raf from 'rc-util/lib/raf';
+import raf from 'rc-util/es/raf';
 import * as React from 'react';
 
 interface HandleTooltipProps {
@@ -20,7 +21,7 @@ const HandleTooltip: React.FC<HandleTooltipProps> = (props) => {
   const rafRef = React.useRef<number | null>(null);
 
   function cancelKeepAlign() {
-    raf.cancel(rafRef.current!);
+    raf && raf.cancel && raf.cancel(rafRef.current!);
   }
 
   function keepAlign() {

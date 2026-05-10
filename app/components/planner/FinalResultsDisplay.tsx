@@ -1,9 +1,10 @@
 // app/components/planner/FinalResultsDisplay.tsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ItemIcon } from './common/Icon';
 import { useTranslation } from 'react-i18next';
 import type { EventData, IconData, TransactionEntry } from '~/types/plannerData';
 import { getItemSortPriority } from '~/utils/itemSort';
+import { FUNGIBLE_POOLS, compactSubPool } from '~/utils/groupMaterialNeeds';
 import type { TFunction } from 'i18next';
 
 interface FinalResultsDisplayProps {
@@ -14,6 +15,9 @@ interface FinalResultsDisplayProps {
   eventData: EventData;
   iconData: IconData;
 }
+
+type SortMode = 'priority' | 'id';
+type ItemEntry = [string, { amount: number; isBonusApplied: boolean }];
 
 const getTransactionSourceName = (source: string, t: TFunction<'planner', undefined>) => {
   const keyMap: Record<string, string> = {
@@ -42,40 +46,73 @@ const getTransactionSourceName = (source: string, t: TFunction<'planner', undefi
     cardMatch_cost: 'source.cardMatchCost',
     minigame_ccg_cost: 'source.minigameCCGCost',
     minigame_ccg_reward: 'source.minigameCCGReward',
+    clueSearch_cost: 'source.clueSearchCost',
+    clueSearch_reward: 'source.clueSearchReward',
   };
   return t(keyMap[source] || (source as any));
 };
+
+// Carry-up: re-compact fungible items using greedy allocation; non-fungible pass through.
+function applyCarryUp(items: ItemEntry[]): ItemEntry[] {
+  const itemMap = new Map(items);
+  const result: ItemEntry[] = [];
+  const processed = new Set<string>();
+
+  for (const subPools of Object.values(FUNGIBLE_POOLS)) {
+    for (const subPool of subPools) {
+      const keys = subPool.keys as readonly string[];
+      const spItems = keys.filter((k) => itemMap.has(k)).map((k) => ({ key: k, amount: Math.abs(itemMap.get(k)!.amount) }));
+      if (spItems.length === 0) continue;
+
+      const compacted = compactSubPool(subPool, spItems);
+      for (const { key: ck, amount: ca } of compacted) {
+        const orig = itemMap.get(ck);
+        const sign = orig && orig.amount < 0 ? -1 : 1;
+        result.push([ck, { amount: ca * sign, isBonusApplied: orig?.isBonusApplied ?? false }]);
+      }
+      keys.forEach((k) => processed.add(k));
+    }
+  }
+
+  for (const [key, data] of items) {
+    if (!processed.has(key)) result.push([key, data]);
+  }
+  return result;
+}
+
+function sortEntries(items: ItemEntry[], mode: SortMode, eventData: EventData, descending = true): ItemEntry[] {
+  return [...items].sort(([keyA, dataA], [keyB, dataB]) => {
+    if (mode === 'id') {
+      const idA = parseInt(keyA.split('_')[1] ?? '0', 10);
+      const idB = parseInt(keyB.split('_')[1] ?? '0', 10);
+      return idA - idB;
+    }
+    const pd = getItemSortPriority(keyA, eventData) - getItemSortPriority(keyB, eventData);
+    if (pd !== 0) return pd;
+    return descending ? dataB.amount - dataA.amount : dataA.amount - dataB.amount;
+  });
+}
 
 export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }: FinalResultsDisplayProps) => {
   const { t } = useTranslation('planner');
   const { t: t_c } = useTranslation('common');
 
   const [showDetails, setShowDetails] = useState(false);
-
   const [isExpanded, setIsExpanded] = useState({ gained: false, spent: false });
+  const [sortMode, setSortMode] = useState<SortMode>('priority');
+  const [carryUp, setCarryUp] = useState(false);
 
   const { transactions, totalItems } = acquiredItemsResult;
 
-  const gainedItems: [string, { amount: number; isBonusApplied: boolean }][] = [];
-  const spentItems: [string, { amount: number; isBonusApplied: boolean }][] = [];
+  const gainedItems = useMemo(() => {
+    const raw = Object.entries(totalItems).filter(([, d]) => d.amount > 0) as ItemEntry[];
+    return sortEntries(carryUp ? applyCarryUp(raw) : raw, sortMode, eventData, true);
+  }, [totalItems, carryUp, sortMode, eventData]);
 
-  Object.entries(totalItems).forEach(([key, data]) => {
-    if (data.amount > 0) gainedItems.push([key, data]);
-    else if (data.amount < 0) spentItems.push([key, data]);
-  });
-
-  gainedItems.sort(([keyA, dataA], [keyB, dataB]) => {
-    const prioA = getItemSortPriority(keyA, eventData);
-    const prioB = getItemSortPriority(keyB, eventData);
-    if (prioA !== prioB) return prioA - prioB;
-    return dataB.amount - dataA.amount; // Second place: descending order of quantity
-  });
-  spentItems.sort(([keyA, dataA], [keyB, dataB]) => {
-    const prioA = getItemSortPriority(keyA, eventData);
-    const prioB = getItemSortPriority(keyB, eventData);
-    if (prioA !== prioB) return prioA - prioB;
-    return dataA.amount - dataB.amount; // 2nd place: In ascending order by negative
-  });
+  const spentItems = useMemo(() => {
+    const raw = Object.entries(totalItems).filter(([, d]) => d.amount < 0) as ItemEntry[];
+    return sortEntries(carryUp ? applyCarryUp(raw) : raw, sortMode, eventData, false);
+  }, [totalItems, carryUp, sortMode, eventData]);
 
   if (Object.keys(totalItems).length === 0 && transactions.length === 0) {
     return (
@@ -92,7 +129,8 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
 
   return (
     <>
-      <div className="flex justify-between items-center mb-3">
+      {/* Header row */}
+      <div className="flex justify-between items-center mb-2">
         <h2 className="text-xl font-bold">{t('ui.finalResultPreview')}</h2>
         {transactions.length > 0 && (
           <button onClick={() => setShowDetails(!showDetails)} className="text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
@@ -101,8 +139,37 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
         )}
       </div>
 
+      {/* Controls */}
+      <div className="flex items-center gap-2 mb-3">
+        {/* Sort toggle */}
+        <div className="flex items-center rounded-lg overflow-hidden border border-gray-200 dark:border-neutral-700 text-[11px]">
+          {(['priority', 'id'] as SortMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setSortMode(mode)}
+              className={`px-2 py-1 transition-colors ${sortMode === mode ? 'bg-blue-500 text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-700'}`}
+            >
+              {mode === 'priority' ? t('ui.sortByPriority', 'Priority') : 'ID'}
+            </button>
+          ))}
+        </div>
+
+        {/* Carry-up toggle */}
+        <button
+          onClick={() => setCarryUp((v) => !v)}
+          className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] transition-colors ${
+            carryUp
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold'
+              : 'border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-gray-400 hover:border-gray-400'
+          }`}
+          title={t('ui.carryUpTooltip', 'Carry up: consolidate lower-tier items into higher-tier equivalents')}
+        >
+          ↑ {t('ui.carryUp', 'Carry-up')}
+        </button>
+      </div>
+
       {!showDetails ? (
-        <div className={'space-y-4 h-45'}>
+        <div className="space-y-4 h-45">
           {gainedItems.length > 0 && (
             <div>
               <div className="flex justify-between items-center mb-2">
@@ -111,8 +178,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
                   {isExpanded.gained ? t_c('close') : t_c('open')}
                 </button>
               </div>
-
-              <div className={`flex gap-2 border-t border-gray-200 dark:border-neutral-700 pt-2 ${isExpanded.gained ? 'flex-wrap  bg-white dark:bg-neutral-800' : 'overflow-x-auto pb-2'}`}>
+              <div className={`flex gap-2 border-t border-gray-200 dark:border-neutral-700 pt-2 ${isExpanded.gained ? 'flex-wrap bg-white dark:bg-neutral-800' : 'overflow-x-auto pb-2'}`}>
                 {gainedItems.map(([key, data]) => {
                   const [type, id] = key.split('_');
                   return (
@@ -132,6 +198,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
               </div>
             </div>
           )}
+
           {spentItems.length > 0 && (
             <div>
               <div className="flex justify-between items-center mb-2">
@@ -156,16 +223,16 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
       ) : (
         <div className="space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2">
           {transactions.map((transaction, index) => {
-            const gainedTxItems: [string, { amount: number; isBonusApplied: boolean }][] = [];
-            const spentTxItems: [string, { amount: number; isBonusApplied: boolean }][] = [];
+            const rawGained: ItemEntry[] = [];
+            const rawSpent: ItemEntry[] = [];
 
             Object.entries(transaction.items).forEach(([key, data]) => {
-              if (data.amount > 0) gainedTxItems.push([key, data]);
-              else if (data.amount < 0) spentTxItems.push([key, data]);
+              if (data.amount > 0) rawGained.push([key, data]);
+              else if (data.amount < 0) rawSpent.push([key, data]);
             });
 
-            gainedTxItems.sort(([keyA], [keyB]) => getItemSortPriority(keyA, eventData) - getItemSortPriority(keyB, eventData));
-            spentTxItems.sort(([keyA], [keyB]) => getItemSortPriority(keyA, eventData) - getItemSortPriority(keyB, eventData));
+            const gainedTxItems = sortEntries(carryUp ? applyCarryUp(rawGained) : rawGained, sortMode, eventData, true);
+            const spentTxItems = sortEntries(carryUp ? applyCarryUp(rawSpent) : rawSpent, sortMode, eventData, false);
 
             if (gainedTxItems.length === 0 && spentTxItems.length === 0) return null;
 

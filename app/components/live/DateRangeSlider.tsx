@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useTransition } from 'react';
 import Slider from 'rc-slider';
 import { useTierDashboardStore } from '~/store/tierDashboardStore';
 import { FiCalendar, FiRefreshCcw } from 'react-icons/fi';
@@ -15,6 +15,9 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
   const { t: t_c } = useTranslation('common');
 
   const [isMounted, setIsMounted] = useState(false);
+  // Local state for immediate UI response
+  const [localIndex, setLocalIndex] = useState<[number, number]>([dateRangeIndex[0], dateRangeIndex[1]]);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     setIsMounted(true);
@@ -60,16 +63,29 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
 
   const maxIndex = distinctDays.length - 1;
 
-  // Range check
-  const currentIndex: [number, number] = [Math.min(dateRangeIndex[0], maxIndex), Math.min(dateRangeIndex[1], maxIndex)];
+  // Range check (clamp to valid range)
+  const currentIndex: [number, number] = [Math.min(localIndex[0], maxIndex), Math.min(localIndex[1], maxIndex)];
 
   const handleChange = (value: number | number[]) => {
+    if (Array.isArray(value)) {
+      // High priority: slider thumb moves immediately
+      setLocalIndex([value[0], value[1]]);
+      // Low priority: chart recalculation deferred, won't block UI
+      startTransition(() => {
+        setDateRangeIndex([value[0], value[1]]);
+      });
+    }
+  };
+
+  // Ensure final value is always committed
+  const handleChangeComplete = (value: number | number[]) => {
     if (Array.isArray(value)) {
       setDateRangeIndex([value[0], value[1]]);
     }
   };
 
   const handleReset = () => {
+    setLocalIndex([0, maxIndex]);
     setDateRangeIndex([0, maxIndex]);
   };
 
@@ -101,6 +117,7 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
             step={1}
             value={currentIndex}
             onChange={handleChange}
+            onChangeComplete={handleChangeComplete}
             marks={marks}
             dots={false}
             trackStyle={[{ backgroundColor: '#3b82f6', height: 4 }]}

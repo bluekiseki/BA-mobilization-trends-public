@@ -1,5 +1,184 @@
 [
   {
+    "date": "2026-05-07",
+    "changes": {
+      "en": [
+        "Live Dashboard Total Assault S88 (KAITEN FX Mk.0) ended",
+        "Added Favor Rank Status",
+        "Added JP Total Assault S88 top-ranking team data (from Plana Stats)",
+        "Added JP Total Assault S88 overall score data",
+        "Improved Gear Planner functionality and added 'Universal Design' support"
+      ],
+      "ko": [
+        "라이브 대시보드 총력전 S88 (카이텐져) 종료",
+        "인연 칭호 설정 현황 추가",
+        "JP 총력전 S88 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 총력전 S88 전체 분포 데이터 추가",
+        "장비 플래너 미작동 오류 개선 및 '만능 설계도' 반영"
+      ],
+      "ja": [
+        "リアルタイムダッシュボード 総力戦S88 (カイテンジャー) 終了",
+        "絆ランク称号の状況追加",
+        "JP 総力戦S88 上位編成データをの追加 (from Plana Stats)",
+        "JP 総力戦S88 全体スコア分布データをの追加",
+        "装備プランナーの不具合改善および「万能設計図」の反映"
+      ]
+    },
+    "to": [null, "/charts/favor", "/dashboard/jp/R88?view=detail", "/dashboard/jp/R88", "/planner/equipment"]
+  },
+  {
+    "date": "2026-05-05",
+    "changes": {
+      "en": [
+        "Fixed a page error message caused by rc-slider tooltip issues",
+        "Reflected changes to Bounty drop rates following the JP server update",
+        "Added party count filtering to the Assault Dashboard",
+        "Fixed an issue where switching between different events was unavailable in the Event Planner",
+        "Improved Student Planner to display required materials directly below each item",
+        "Added search functionality to the Raid Dashboard list",
+        "Added automatic upgrade feature for EXP reports and Enhancement Stones",
+        "Added current inventory input feature to the Student Planner",
+        "Added data import/export compatibility with justin163 planner (BETA)"
+      ],
+      "ko": [
+        "rc-slider의 툴팁 문제로 인해 페이지에 에러 메시지가 표시되던 오류 수정",
+        "일본 서버 업데이트에 따른 현장수배 드랍률 변경 사항 반영",
+        "총력전 대시보드 내 파티 수 필터링 기능 추가",
+        "이벤트 플래너에서 다른 이벤트로 변경되지 않던 문제 수정",
+        "학생 성장 플래너에서 필요한 재화를 항목 바로 밑에 표시하도록 개선",
+        "총력전 대시보드 목록에 검색 기능 추가",
+        "보고서, 강화석 등을 상위 등급으로 자동 변환하는 기능 추가",
+        "학생 성장 플래너에 현재 보유 중인 재화 입력 기능 추가",
+        "justin163 플래너 데이터 가져오기 및 내보내기 기능 추가 (BETA)"
+      ],
+      "ja": [
+        "rc-sliderのツールチップ問題により、ページにエラーメッセージが表示される不具合を修正",
+        "日本サーバーのアップデートに伴う指名手配ドロップ率の変更を反映",
+        "総力戦ダッシュボードにパーティ数フィルタリング機能を追加",
+        "イベントプランナーで他のイベントに切り替えられない問題を修正",
+        "生徒成長プランナーで必要素材を項目の直下に表示するよう改善",
+        "総力戦ダッシュボードの一覧に検索機能を追加",
+        "レポートや強化石などを上位ランクへ自動変換する機能を追加",
+        "生徒成長プランナーに現在の所持素材を入力できる機能を追加",
+        "justin163プランナーとのデータ入出力機能を追加 (BETA)"
+      ]
+    },
+    "to": ["/charts/jp/ranking", "/planner/event", "/dashboard/jp", "/planner/event", "/planner/students", "/dashboard/jp", "/planner/students", "/planner/students", "/planner/event"]
+  },
+  {
+    "date": "2026-04-22",
+    "changes": {
+      "en": [
+        "Added Lore Tracking and Event Planner",
+        "Improved event cumulative reward UI",
+        "Improved event bonus student selection by grouping students by role",
+        "Added related video analysis information (BETA) for recent major assaults with YouTube thumbnails and descriptions",
+        "Improved Gacha Planner success rate explanation and UX",
+        "Optimized Student Planner layout for wider screens",
+        "Enhanced BGM Player UI to reduce clicks"
+      ],
+      "ko": [
+        "로어추적 및 총결산 이벤트 플래너 추가",
+        "이벤트 누적 보상 UI 개선",
+        "이벤트 보너스 학생 선택을 역할군별로 분류하여 개선",
+        "최신 총력전에 대해 유튜브 썸네일 및 영상 설명을 활용한 관련 영상 분석 정보(BETA) 추가",
+        "가차 플래너의 성공 확률 설명 및 UX 개선",
+        "학생 플래너를 넓은 화면에 최적화하여 개선",
+        "BGM 플레이어 UI 개선으로 클릭 횟수 감소"
+      ],
+      "ja": [
+        "ロアトラッキングと総力戦イベントプランナーを追加",
+        "イベント累積報酬UIを改善",
+        "イベントボーナス生徒選択をロール別に分類して改善",
+        "最新の総力戦に対してYouTubeサムネイルと動画説明を活用した関連動画分析情報(BETA)を追加",
+        "ガチャプランナーの成功確率説明およびUXを改善",
+        "学生プランナーをワイド画面に最適化して改善",
+        "BGMプレイヤーのUI改善でクリック数削減"
+      ]
+    },
+    "to": ["/planner/event", "/planner/event", "/planner/event", "/dashboard/jp", "/planner/gacha", "/planner/students", "/utils/jukebox"]
+  },
+  {
+    "date": "2026-04-16",
+    "changes": {
+      "en": [
+        "Added an option to analyze data based on filtered inclusion/exclusion teams in Total/Grand Assault Dashboards",
+        "Improved the Main Page with quick access links for ongoing Total Assaults, Grand Assaults, and Events",
+        "Added a display for students celebrating their birthdays on the Main Page",
+        "Added Favor Rank Status",
+        "Live Dashboard Grand Assault E32 Perorodzilla (BETA) ended",
+        "Added JP Grand Assault E32 Perorodzilla top-ranking team data (from Plana Stats)",
+        "Added JP Grand Assault E32 Perorodzilla overall score data"
+      ],
+      "ko": [
+        "총력전/대결전 대시보드 내 '많이 출전한 편성'에서 포함/제외 필터링된 데이터로만 분석하는 옵션 추가",
+        "메인 페이지 개선: 진행 중인 총력전/대결전/이벤트 바로가기 링크 추가",
+        "메인 페이지 내 오늘 생일인 학생 표시 기능 추가",
+        "인연 칭호 설정 현황 추가",
+        "라이브 대시보드 대결전 E32 페로로지라 (BETA) 종료",
+        "JP 대결전 E32 페로로지라 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 대결전 E32 페로로지라 전체 분포 데이터 추가"
+      ],
+      "ja": [
+        "総力戦/大決戦ダッシュボードの「採用率の高い編成」に、編成の含める/除外フィルターを適用したデータのみで分析するオプションを追加",
+        "メインページの改善：開催中の総力戦/大決戦/イベントへのショートカットリンクを追加",
+        "メインページに当日誕生日の生徒を表示する機能を追加",
+        "絆ランク称号の状況追加",
+        "リアルタイムダッシュボード 大決戦E32 ペロロジラ (BETA) 終了",
+        "JP 大決戦E32 ペロロジラ 上位編成データを追加 (from Plana Stats)",
+        "JP 大決戦E32 ペロロジラ 全体スコア分布データを追加"
+      ]
+    },
+    "to": ["/dashboard/total-assault", "/", "/", "/charts/favor", null, "/dashboard/jp/E32?view=detail", "/dashboard/jp/E32"]
+  },
+  {
+    "date": "2026-04-10",
+    "changes": {
+      "en": [
+        "Fixed an issue where some stories were missing in the BGM player and added missing data",
+        "Added a feature to check bond story unlock levels and brief story info for each student",
+        "Added a feature to track changes in notices",
+        "Improved access links to various planners in the navigation bar"
+      ],
+      "ko": [
+        "일부 스토리가 BGM 플레이어 조회에서 나오지 않던 오류 수정 및 누락된 데이터 추가",
+        "각 학생별 인연스토리 해금 레벨 및 간략한 스토리 정보 확인 기능 추가",
+        "공지사항 변경 내역 추적 기능 추가",
+        "네비게이션 바의 각종 플래너 접근 링크 개선"
+      ],
+      "ja": [
+        "BGMプレイヤーで一部のストーリーが表示されない不具合を修正および欠落データを追加",
+        "各生徒の絆ストーリー解放レベルと簡単なストーリー情報を確認できる機能を追加",
+        "お知らせの変更履歴を追跡する機能を追加",
+        "ナビゲーションバーの各種プランナーへのアクセスリンクを改善"
+      ]
+    },
+    "to": ["/utils/jukebox", "/charts/jp/heatmap", "/notices", null]
+  },
+  {
+    "date": "2026-04-08",
+    "changes": {
+      "en": ["Added regional notices & YouTube aggregator", "Improved Favor Rank Calculator & added gift preferences"],
+      "ko": ["지역별 공지 및 유튜브 모아보기 추가", "인연 랭크 계산기 개편 및 선물별 선호도 추가"],
+      "ja": ["地域別お知らせ＆YouTubeまとめ機能を追加", "絆ランク計算機リニューアル＆贈り物別好み一覧を追加"]
+    },
+    "to": ["/notices", "/utils/favor"]
+  },
+  {
+    "date": "2026-04-02",
+    "changes": {
+      "en": [
+        "Live Dashboard Total Assault S87 (BETA) ended",
+        "Added Favor Rank Status",
+        "Added JP Total Assault S87 top-ranking team data (from Plana Stats)",
+        "Added JP Total Assault S87 overall score data"
+      ],
+      "ko": ["라이브 대시보드 총력전 S87 (BETA) 종료", "인연 칭호 설정 현황 추가", "JP 총력전 S87 상위권 편성 데이터 추가 (from Plana Stats)", "JP 총력전 S87 전체 분포 데이터 추가"],
+      "ja": ["リアルタイムダッシュボード 総力戦S87 (BETA) 終了", "絆ランク称号の状況追加", "JP 総力戦S87 上位編成データをの追加 (from Plana Stats)", "JP 総力戦S87 全体スコア分布データをの追加"]
+    },
+    "to": [null, "/charts/favor", "/dashboard/jp/R87?view=detail", "/dashboard/jp/R87"]
+  },
+  {
     "date": "2026-03-12",
     "changes": {
       "en": [
@@ -99,7 +278,6 @@
     },
     "to": ["/planner/gacha", "/planner/gacha", "/planner/gacha", "/planner/gacha", "/planner/gacha"]
   },
-
   {
     "date": "2026-02-15",
     "changes": {

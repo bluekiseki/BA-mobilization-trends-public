@@ -100,41 +100,44 @@ export const XREF_PREFIXES: Record<string, string> = {
 
 // https://bluearchive.wikiru.jp/?%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC
 export const mainStoryChapters: Record<string, { key: string; date: string }> = {
-  '1부 1장': { key: 'vol1_ch1', date: '2021/02/04' },
-  '1부 2장': { key: 'vol1_ch2', date: '2021/03/11' },
-  '1부 3장': { key: 'vol1_ch3', date: '2024/2/7' },
-  '2부 1장': { key: 'vol2_ch1', date: '2021/03/25' },
-  '2부 2장': { key: 'vol2_ch2', date: '2022/11/23' },
-  '3부 1장': { key: 'vol3_ch1', date: '2021/05/27' },
-  '3부 2장': { key: 'vol3_ch2', date: '2021/10/27' },
-  '3부 3장': { key: 'vol3_ch3', date: '2021/12/15' },
-  '3부 4장': { key: 'vol3_ch4', date: '2022/5/24' },
-  '4부 1장': { key: 'vol4_ch1', date: '2022/03/23' },
-  '4부 2장': { key: 'vol4_ch2', date: '2023/06/07' },
-  '5부 1장': { key: 'vol5_ch1', date: '2023/11/08' },
-  '5부 2장': { key: 'vol5_ch2', date: '2025/05/21' },
-  '6부 1장': { key: 'vol6_ch1', date: '2025/09/17' },
-  '6부 2장': { key: 'vol6_ch2', date: '2025/10/08' },
-  '6부 3장': { key: 'vol6_ch3', date: '2025/11/12' },
-  'Ex. 데카그라마톤 편 0장': { key: 'ex_deca_ch0', date: '2021/11/09' },
-  'Ex. 데카그라마톤 편 1장': { key: 'ex_deca_ch1', date: '2024/11/6' },
-  'Ex. 데카그라마톤 편 2장': { key: 'ex_deca_ch2', date: '2026/01/18' },
-  'Final. 그리고 모든 기적이 시작되는 곳 편 1장': {
+  '1부 Vol.1 1장': { key: 'vol1_ch1', date: '2021/02/04' },
+  '1부 Vol.1 2장': { key: 'vol1_ch2', date: '2021/03/11' },
+  '1부 Vol.1 3장': { key: 'vol1_ch3', date: '2024/2/7' },
+  '1부 Vol.2 1장': { key: 'vol2_ch1', date: '2021/03/25' },
+  '1부 Vol.2 2장': { key: 'vol2_ch2', date: '2022/11/23' },
+  '1부 Vol.3 1장': { key: 'vol3_ch1', date: '2021/05/27' },
+  '1부 Vol.3 2장': { key: 'vol3_ch2', date: '2021/10/27' },
+  '1부 Vol.3 3장': { key: 'vol3_ch3', date: '2021/12/15' },
+  '1부 Vol.3 4장': { key: 'vol3_ch4', date: '2022/5/24' },
+  '1부 Vol.4 1장': { key: 'vol4_ch1', date: '2022/03/23' },
+  '1부 Vol.4 2장': { key: 'vol4_ch2', date: '2023/06/07' },
+  '1부 Vol.5 1장': { key: 'vol5_ch1', date: '2023/11/08' },
+  '1부 Vol.5 2장': { key: 'vol5_ch2', date: '2025/05/21' },
+  '1부 Vol.6 1장': { key: 'vol6_ch1', date: '2025/09/17' },
+  '1부 Vol.6 2장': { key: 'vol6_ch2', date: '2025/10/08' },
+  '1부 Vol.6 3장': { key: 'vol6_ch3', date: '2025/11/12' },
+  '1부 Ex. 데카그라마톤 편 1장': { key: 'ex_deca_ch0', date: '2021/11/09' },
+  '1부 Ex. 데카그라마톤 편 2장': { key: 'ex_deca_ch1', date: '2024/11/6' },
+  '1부 Ex. 데카그라마톤 편 3장': { key: 'ex_deca_ch2', date: '2026/01/18' },
+  '1부 Final. 그리고 모든 기적이 시작되는 곳 편 1장': {
     key: 'final_ch1',
     date: '2023/01/22',
   },
-  'Final. 그리고 모든 기적이 시작되는 곳 편 2장': {
+  '1부 Final. 그리고 모든 기적이 시작되는 곳 편 2장': {
     key: 'final_ch2',
     date: '2023/01/24',
   },
-  'Final. 그리고 모든 기적이 시작되는 곳 편 3장': {
+  '1부 Final. 그리고 모든 기적이 시작되는 곳 편 3장': {
     key: 'final_ch3',
     date: '2023/02/22',
   },
-  'Final. 그리고 모든 기적이 시작되는 곳 편 4장': {
+  '1부 Final. 그리고 모든 기적이 시작되는 곳 편 4장': {
     key: 'final_ch4',
     date: '2023/03/08',
   },
+  '2부 프롤로그': { key: 'part2_prologue', date: '2026/04/22' },
+  '2부 Vol.0 1장': { key: 'part2_vol0_ch1', date: '2026/04/22' },
+  '2부 Ex. 로어추적 편 1장': { key: 'part2_ex_lore_ch1', date: '2026/04/22' },
 };
 
 export const otherStoryTitles = {
@@ -189,3 +192,46 @@ export const FilterIcon = () => (
     />
   </svg>
 );
+
+export const PlayIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+  </svg>
+);
+
+export const SoundWaveIcon = () => (
+  <div className="flex items-center justify-center w-8 h-8 space-x-1">
+    <span className="w-1 h-3 bg-current animate-[wave_1s_ease-in-out_infinite] delay-[-0.4s]"></span>
+    <span className="w-1 h-5 bg-current animate-[wave_1s_ease-in-out_infinite] delay-[-0.2s]"></span>
+    <span className="w-1 h-2 bg-current animate-[wave_1s_ease-in-out_infinite]"></span>
+  </div>
+);
+
+export const VolumeIcon = ({ volume }: { volume: number }) => {
+  if (volume === 0)
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+      </svg>
+    );
+  if (volume < 50)
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15.536 8.464a5 5 0 010 7.072M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+        />
+      </svg>
+    );
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+      />
+    </svg>
+  );
+};

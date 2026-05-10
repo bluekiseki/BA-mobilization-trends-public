@@ -1,0 +1,41 @@
+{
+  "title": "공지사항 아카이브",
+  "subtitle": "모든 서버의 업데이트 및 공지 내역을 확인하세요.",
+  "servers": {
+    "ALL": "전체 서버",
+    "KR": "한국",
+    "Global": "글로벌",
+    "JP": "일본",
+    "TW": "대만"
+  },
+  "types": {
+    "ALL": "전체",
+    "VIDEO": "비디오",
+    "ETC": "기타"
+  },
+  "searchPlaceholder": "공지 제목 검색...",
+  "sort": {
+    "new": "최근 생성순",
+    "modified": "최근 수정순"
+  },
+  "noResults": "결과가 없습니다.",
+  "loading": "데이터를 불러오는 중...",
+  "postedAt": "등록됨",
+  "modifiedAt": "수정됨",
+  "prev": "이전",
+  "next": "다음",
+  "backToList": "전체 목록으로 돌아가기",
+  "firstCrawled": "최초 수집",
+  "apiCreated": "최종 생성",
+  "apiModified": "최종 수정",
+  "copy": "복사",
+  "copied": "✓ 복사됨",
+  "noContent": "본문 내용이 없습니다.",
+  "historyTitle": "수정 이력 타임라인",
+  "currentlyViewing": "현재 화면",
+  "latestVersion": "최신 버전",
+  "versionId": "VERSION ID: {{id}}",
+  "changeRecorded": "데이터 변경사항 기록됨.",
+  "notFound": "공지사항을 찾을 수 없습니다.",
+  "viewAll": "전체 공지사항 보기"
+}

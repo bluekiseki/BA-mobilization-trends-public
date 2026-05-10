@@ -248,7 +248,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
           {item.label && (
             <div
               className={`
-                absolute -top-[14px] left-0 h-[14px] px-2 flex items-center justify-center
+                absolute top-[-14px] left-0 h-[14px] px-2 flex items-center justify-center
                 text-[9px] font-black uppercase tracking-wider
                 rounded-t-[3px] border-b-0 shadow-sm z-50 pointer-events-none
                 ${bgClass} ${textColorClass} 

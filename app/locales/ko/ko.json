@@ -96,7 +96,8 @@
       }
     },
     "promoBanner": {
-      "noMoreToday": "하루동안 안 보기"
+      "noMoreToday": "하루동안 안 보기",
+      "noMoreThisWeek": "7일간 보지 않기"
     },
     "bugReport": {
       "title": "의견 보내기",
@@ -113,6 +114,34 @@
       "errorMsg": "전송에 실패했습니다. 다시 시도해주세요.",
       "githubIssue": "GitHub 이슈에서 제보하기",
       "poweredBy": "이 요청은 Web3Forms를 통해 전송됩니다."
+    },
+    "yesterday": "어제",
+    "today": "오늘",
+    "tomorrow": "내일",
+    "remainingTime": "{{day}}일 {{hour}}시간 남음",
+    "remainingDays": "{{day}}일 남음",
+    "remainingHours": "{{hour}}시간 남음",
+    "startsIn": "{{day}}일 {{hour}}시간 후 시작",
+    "startsInDays": "{{day}}일 후 시작",
+    "startsInHours": "{{hour}}시간 후 시작",
+    "remainingMinutes": "{{min}}분 남음",
+    "startsInMinutes": "{{min}}분 후 시작",
+    "status": {
+      "live": "LIVE",
+      "recent": "최근",
+      "upcoming": "예정"
+    },
+    "home": {
+      "currentStatus": "현재 상태",
+      "schedule": "일정",
+      "notices": "공지",
+      "tools": "도구",
+      "analytics": "분석",
+      "plannersAndTools": "플래너 & 도구",
+      "birthdaySoon": "생일 축하합니다!",
+      "jpStats": "JP 통계",
+      "kivotosPeace": "키보토스는 평화로운 상태입니다.",
+      "noEvent": "진행 중인 이벤트가 없습니다."
     }
   },
   "charts": {
@@ -223,6 +252,7 @@
     "StudentGrowthByRankTitle": "등수별 학생 성급 상태",
     "StudentGrowthByRank": "등수별 학생 성급 상태",
     "popularFormations": "많이 출전한 편성 (총 {x}건)",
+
     "rankingsAndTeams": "랭킹 & 팀 (총 {x}건)",
     "includeStudent": "포함시킬 학생",
     "excludeStudent": "제외할 학생",
@@ -232,6 +262,15 @@
     "searchStudentByName": "이름 또는 별명으로 학생 검색...",
     "noResults": "검색 결과가 없습니다.",
     "selectStar": "성급 선택",
+    "filter_view_code": "코드로 편집",
+    "filter_export": "필터 내보내기 (복사)",
+    "filter_copy_done": "복사됨!",
+    "filter_import": "붙여넣기로 불러오기",
+    "filter_import_placeholder": "필터 JSON을 붙여넣으세요...",
+    "filter_import_error": "올바른 형식이 아닙니다.",
+    "filter_import_apply": "적용",
+    "filter_reset": "초기화",
+    "add_my_students": "미모집 학생 추가",
     "includableStudentTitle": "출전이 가능한 학생",
     "excludableStudentTitle": "출전이 어려운 학생",
     "tagMustInclude": "필수",
@@ -306,6 +345,7 @@
     "closeDetails": "상세 정보 닫기",
     "maxScore": "최고 점수",
     "minTime": "최단 시간",
+    "bestRank": "최고등수",
     "timeViewUnavailable": "시간별 분석은 모든 파티원이 동일 난이도일 때만 가능합니다.",
     "viewByStudent": "학생별 보기",
     "viewAllStudents": "전체",
@@ -346,15 +386,18 @@
       "terrain": "지형",
       "defenseType": "방어타입",
       "attackType": "공격타입",
+      "student_name": "학생 이름",
       "copy": "복사",
       "copied": "복사됨!",
       "dateRange": "기간"
     },
     "composition": {
-      "mode_team": "파티",
+      "mode_team": "파티별",
       "mode_report": "전체",
       "total_parties": "부대 투입 수",
       "full_party_only": "모든 자리에 편성된 팀만",
+      "table_filter_reflect": "포함·제외 필터 조건 반영",
+      "only_with_video": "클리어 영상 있는 팀만",
       "specific_team": "특정 순서의 팀",
       "from_start": "앞에서부터",
       "from_end": "뒤에서부터",
@@ -362,6 +405,9 @@
       "click_to_collapse": "접기",
       "click_for_details": "상세 정보",
       "load_more": "더 보기",
+      "sort_count": "출전 많은 순",
+      "sort_bestRank": "최고 점수 순",
+      "ignore_position": "배치 순서 무시",
       "placement_variants": "배치 순서 통계",
       "mulligan_variants": "첫 패(손패) 통계"
     }
@@ -370,7 +416,9 @@
     "title": "대시보드 목록",
     "description": "진행되었던 총력전 및 대결전의 통계 대시보드 목록",
     "pinnedGlobalTitle": "현재 진행중인 글로벌 서버 총력전·대결전",
-    "liveBetaTitle": "실시간 대시보드 (베타)"
+    "liveBetaTitle": "실시간 대시보드 (베타)",
+    "searchPlaceholder": "보스 이름 또는 ID로 검색...",
+    "filterAll": "전체"
   },
   "liveDashboard": {
     "description": "현재 진행중인 총력전 및 대결전의 실시간 통계",

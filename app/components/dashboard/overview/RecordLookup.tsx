@@ -286,7 +286,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
   }, [searchTerm, scores, activeFilters, availableDifficultyOrder, isTotalChart, raidInfo, server, t]);
 };
 
-export const RecordLookup: React.FC<RecordLookupProps> = ({ scores, raidInfo, server, isTotalChart }) => {
+export const RecordLookup: React.FC<RecordLookupProps> = React.memo(({ scores, raidInfo, server, isTotalChart }) => {
   const { t } = useTranslation('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
@@ -397,4 +397,4 @@ export const RecordLookup: React.FC<RecordLookupProps> = ({ scores, raidInfo, se
       </div>
     </>
   );
-};
+});

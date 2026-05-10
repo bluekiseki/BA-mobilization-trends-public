@@ -6,12 +6,12 @@ All copyright of <a href='https://bluearchive.jp/' target="_blank" rel="noopener
 
 ## Notice
 
-- For the avoidance of copyright issues and efficient version management, some data from /public and /app/data/ was not included in the project.
+- For the avoidance of copyright issues and efficient version management, some data from `/public` and `/app/data/` was not included in the project.
 - The code is updated manually and may differ from the actual live service
 
 ## Requirements
 
-- Vite 7 + React Router v7.13 (Remix renamed since v7 in November 2024) + \*.tsx + Tailwind CSS. Deploying in a Cloudflare Pages environment
+- Vite 7 + React Router v7.15 (Remix renamed since v7 in November 2024) + \*.tsx + Tailwind CSS. Deploying in a Cloudflare Pages environment
 
 ## Q&A
 

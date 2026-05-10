@@ -366,12 +366,12 @@ export const GrowthAccordion = ({
         <div className="bg-white dark:bg-neutral-900 animate-in slide-in-from-top-1 duration-200">
           <div className="px-6 py-4 mb-8 border-t border-gray-100 dark:border-neutral-800">
             {/* Warning Banner (Compact & Flat) */}
-            {isWarning && warningText && (
+            {/* {isWarning && warningText && (
               <div className="mb-4 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded">
                 <FiAlertTriangle className="shrink-0" size={12} />
                 <span>{warningText}</span>
               </div>
-            )}
+            )} */}
 
             {/* Child Content */}
             {children}

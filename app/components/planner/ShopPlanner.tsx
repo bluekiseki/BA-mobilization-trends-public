@@ -11,7 +11,7 @@ import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from './common/locale';
 import { CustomCheckbox } from '../CustomCheckbox';
 
-type ItemType = 'Furniture' | 'Credit' | 'ExpGrowth' | 'Material' | 'Favor' | 'Coin' | 'SecretStone' | 'Gem' | 'Equipment';
+type ItemType = 'Furniture' | 'Credit' | 'ExpGrowth' | 'Material' | 'Favor' | 'Coin' | 'SecretStone' | 'Gem' | 'Equipment' | 'Opart' | 'TacticalBD' | 'TechNote';
 
 export type ShopResult = {
   costs: Record<string, number>;
@@ -34,6 +34,9 @@ const getShopItemType = (rewardType: string, rewardId: number, itemInfo: { ItemC
       case 2:
         return 'SecretStone';
       case 3:
+        if (rewardId >= 100 && rewardId <= 299) return 'Opart';
+        if (rewardId >= 3000 && rewardId <= 3999) return 'TacticalBD';
+        if (rewardId >= 4000 && rewardId <= 4999) return 'TechNote';
         return 'Material';
       case 6:
         return 'Favor';
@@ -61,7 +64,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
   const locale = i18n.language as Locale;
 
   useEffect(() => {
-    if (!activeTab) {
+    if (!activeTab && eventData.shop) {
       const categories = Object.keys(eventData.shop);
       setActiveTab(categories[0]);
     }
@@ -242,6 +245,10 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
 
   const itemTypeButtons = [
     { label: t('item.reports'), type: 'ExpGrowth' as const },
+    { label: t('item.equipment'), type: 'Equipment' as const },
+    { label: t('label.tacticalBD'), type: 'TacticalBD' as const },
+    { label: t('label.techNote'), type: 'TechNote' as const },
+    { label: t('label.opart'), type: 'Opart' as const },
     { label: t('label.material'), type: 'Material' as const },
     { label: t('item.gifts'), type: 'Favor' as const },
     { label: t('label.furniture'), type: 'Furniture' as const },
@@ -249,7 +256,6 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
     { label: t('label.coin'), type: 'Coin' as const },
     { label: t('item.eleph'), type: 'SecretStone' as const },
     { label: t('common.pyroxene'), type: 'Gem' as const },
-    { label: t('item.equipment'), type: 'Equipment' as const },
   ];
 
   const categorySelectionStates = useMemo(() => {
@@ -294,7 +300,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
     return states;
   }, [activeTab, eventData.shop, purchaseCounts, alreadyPurchasedCounts, itemTypeButtons]);
 
-  const shopCategories = useMemo(() => Object.entries(eventData.shop), [eventData.shop]);
+  const shopCategories = eventData.shop ? useMemo(() => Object.entries(eventData.shop), [eventData.shop]) : [];
 
   const apConversionNotice = useMemo(() => {
     if (displayUnit !== 'ap' || !activeTab) return null;
@@ -324,22 +330,52 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('ui.defaultNotice')}</p>
 
         {/* 2. Statement related to the report  */}
-        {hasReports && (
+        {/* {hasReports && (
           <div className="text-xs text-orange-700 dark:text-orange-400 border-t border-orange-200 dark:border-orange-800 pt-2 mt-2">
             <p>
               <strong>{t('ui.reportNoticeTitle')}</strong>
             </p>
             <p className="font-mono text-[10px] opacity-80">{t('ui.reportNoticeFormula')}</p>
           </div>
+        )} */}
+        {hasReports && (
+          <div className="text-xs text-orange-700 dark:text-orange-400 border-t border-orange-200 dark:border-orange-800 pt-2 mt-2 space-y-2">
+            {/* Current standard */}
+            <div className="line-through opacity-70">
+              <p>
+                <strong>{t('ui.reportNoticeTitle')}</strong>
+              </p>
+              <p className="font-mono text-[10px] opacity-80">{t('ui.reportNoticeFormula')}</p>
+            </div>
+
+            {/* Standard after update (Main Story Part 2 Prologue) */}
+            <div>
+              <p>
+                <strong>{t('ui.reportNoticeUpcomingTitle')}</strong>
+              </p>
+              <p className="font-mono text-[10px] opacity-80">{t('ui.reportNoticeUpcomingFormula')}</p>
+            </div>
+          </div>
         )}
 
         {/* 3. a phrase related to EnhancementStones */}
         {hasEnhancementStones && (
-          <div className="text-xs text-orange-700 dark:text-orange-400 border-t border-orange-200 dark:border-orange-800 pt-2 mt-2">
-            <p>
-              <strong>{t('ui.enhancementStoneNoticeTitle')}</strong>
-            </p>
-            <p className="font-mono text-[10px] opacity-80">{t('ui.enhancementStoneNoticeFormula')}</p>
+          <div className="text-xs text-orange-700 dark:text-orange-400 border-t border-orange-200 dark:border-orange-800 pt-2 mt-2 space-y-2">
+            {/* Current standard (strikethrough applied) */}
+            <div className="line-through opacity-70">
+              <p>
+                <strong>{t('ui.enhancementStoneNoticeTitle')}</strong>
+              </p>
+              <p className="font-mono text-[10px] opacity-80">{t('ui.enhancementStoneNoticeFormula')}</p>
+            </div>
+
+            {/* Standard after update (Main Story Part 2 Prologue) */}
+            <div>
+              <p>
+                <strong>{t('ui.enhancementStoneNoticeUpcomingTitle')}</strong>
+              </p>
+              <p className="font-mono text-[10px] opacity-80">{t('ui.enhancementStoneNoticeUpcomingFormula')}</p>
+            </div>
           </div>
         )}
       </div>
@@ -373,7 +409,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
       <div className="flex flex-wrap border-b-2 border-gray-200 dark:border-neutral-700 mb-4 pb-4">
         {shopCategories.map(([categoryId]) => {
           const shopInfo = eventData.shop_info?.find((info) => info.CategoryType.toString() === categoryId);
-          const currencyId = shopInfo?.CostParcelId[0];
+          const currencyId = shopInfo?.CostParcelId?.[0];
 
           const currencyName = currencyId
             ? getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, locale) ||
@@ -496,78 +532,92 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                 </div>
               </div>
 
-              <div data-component-name="ShopPlanner_goodsStand" className="flex flex-wrap gap-2 justify-center">
-                {items.map((item) => {
-                  if (!item.Goods?.length) return null;
-                  const goodsInfo = item.Goods[0];
-                  const rewardId = goodsInfo.ParcelId[0];
-                  const rewardType = goodsInfo.ParcelTypeStr[0] as keyof IconData;
-                  // const cost = goodsInfo.ConsumeParcelAmount[0];
-                  const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
-                  const currentPurchase = purchaseCounts?.[item.Id] || 0;
-                  const isInfinite = item.PurchaseCountLimit === 0;
-                  const remainingLimit = isInfinite ? Infinity : item.PurchaseCountLimit - alreadyPurchased;
-                  const displayLimit = isInfinite ? '∞' : item.PurchaseCountLimit - alreadyPurchased;
+              <div data-component-name="ShopPlanner_goodsStand" className="flex flex-wrap gap-4 justify-center">
+                {(() => {
+                  const chunkSize = 4;
+                  const chunks: (typeof items)[] = [];
+                  for (let i = 0; i < items.length; i += chunkSize) {
+                    chunks.push(items.slice(i, i + chunkSize));
+                  }
+                  return chunks.map((chunk, chunkIndex) => (
+                    <div key={chunkIndex} className="flex gap-2 min-w-0">
+                      {chunk.map((item) => {
+                        if (!item.Goods?.length) return null;
+                        const goodsInfo = item.Goods[0];
+                        const rewardId = goodsInfo.ParcelId[0];
+                        const rewardType = goodsInfo.ParcelTypeStr[0] as keyof IconData;
+                        // const cost = goodsInfo.ConsumeParcelAmount[0];
+                        const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
+                        const currentPurchase = purchaseCounts?.[item.Id] || 0;
+                        const isInfinite = item.PurchaseCountLimit === 0;
+                        const remainingLimit = isInfinite ? Infinity : item.PurchaseCountLimit - alreadyPurchased;
+                        const displayLimit = isInfinite ? '∞' : item.PurchaseCountLimit - alreadyPurchased;
 
-                  const costAmount = goodsInfo.ConsumeParcelAmount[0];
-                  const costCurrencyId = goodsInfo.ConsumeParcelId[0];
-                  const apCostPerItem = currencyApCostMap[costCurrencyId] || null;
-                  const totalApCost = apCostPerItem ? costAmount * apCostPerItem : null;
+                        const costAmount = goodsInfo.ConsumeParcelAmount[0];
+                        const costCurrencyId = goodsInfo.ConsumeParcelId[0];
+                        const apCostPerItem = currencyApCostMap[costCurrencyId] || null;
+                        const totalApCost = apCostPerItem ? costAmount * apCostPerItem : null;
 
-                  return (
-                    <div key={item.Id} className="w-[calc(25%-6px)] sm:w-24 bg-gray-100 dark:bg-neutral-700/60 p-1 rounded-sm shadow-sm flex flex-col justify-between">
-                      <div className="flex justify-center">
-                        <ItemIcon type={rewardType} itemId={rewardId.toString()} amount={goodsInfo.ParcelAmount[0]} size={12} eventData={eventData} iconData={iconData} />
-                      </div>
-                      <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center justify-center mt-0.5">
-                        <span
-                          className="inline-flex items-center
+                        return (
+                          <div
+                            key={item.Id}
+                            className={`w-[calc(25%-3px)] sm:w-24 bg-gray-100 dark:bg-neutral-700/60 p-1 rounded-sm shadow-sm flex flex-col justify-between ${item.PurchaseCountLimit && alreadyPurchased === item.PurchaseCountLimit ? 'opacity-30' : ''}`}
+                          >
+                            <div className="flex justify-center">
+                              <ItemIcon type={rewardType} itemId={rewardId.toString()} amount={goodsInfo.ParcelAmount[0]} size={12} eventData={eventData} iconData={iconData} />
+                            </div>
+                            <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center justify-center mt-0.5">
+                              <span
+                                className="inline-flex items-center
                           bg-no-repeat bg-bottom
                           bg-[linear-gradient(to_top,currentColor_1px,transparent_1px)]
                           bg-size-[100%_1px]"
-                        >
-                          {displayUnit === 'ap' ? (
-                            <>
-                              <span className="font-bold text-teal-600 dark:text-teal-400">{totalApCost ? totalApCost.toPrecision(3) : 'NA'}</span>
-                              <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
-                              {/* <span className="ml-0.5">AP</span> */}
-                            </>
-                          ) : (
-                            <>
-                              <span>{costAmount.toLocaleString()}</span>
-                              <img src={`data:image/webp;base64,${iconData.Item?.[costCurrencyId.toString()]}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
-                            </>
-                          )}
-                        </span>
-                        {/* <span className="hidden sm:block mx-1">|</span> */}
-                        {/* <span>{t('ui.stock')} {displayLimit}</span> */}
-                        <span>&times; {displayLimit}</span>
-                      </div>
-                      <div className="mt-2 space-y-1 text-xs">
-                        <div>
-                          <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.alreadyPurchased')}</label>
-                          <NumberInput
-                            value={alreadyPurchased}
-                            onChange={(val) => handleAlreadyPurchasedChange(item.Id, val, item.PurchaseCountLimit)}
-                            min={0}
-                            max={isInfinite ? Infinity : item.PurchaseCountLimit}
-                            disabled={isInfinite}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.purchase')}</label>
-                          <NumberInput
-                            value={currentPurchase}
-                            onChange={(val) => handlePurchaseChange(item.Id, val, remainingLimit)}
-                            min={0}
-                            max={isInfinite ? Infinity : remainingLimit}
-                            disabled={remainingLimit <= 0 && !isInfinite}
-                          />
-                        </div>
-                      </div>
+                              >
+                                {displayUnit === 'ap' ? (
+                                  <>
+                                    <span className="font-bold text-teal-600 dark:text-teal-400">{totalApCost ? totalApCost.toPrecision(3) : 'NA'}</span>
+                                    <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
+                                    {/* <span className="ml-0.5">AP</span> */}
+                                  </>
+                                ) : (
+                                  <>
+                                    <span>{costAmount.toLocaleString()}</span>
+                                    <img src={`data:image/webp;base64,${iconData.Item?.[costCurrencyId.toString()]}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
+                                  </>
+                                )}
+                              </span>
+                              {/* <span className="hidden sm:block mx-1">|</span> */}
+                              {/* <span>{t('ui.stock')} {displayLimit}</span> */}
+                              <span>&times; {displayLimit}</span>
+                            </div>
+                            <div className="mt-2 space-y-1 text-xs">
+                              <div>
+                                <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.alreadyPurchased')}</label>
+                                <NumberInput
+                                  value={alreadyPurchased}
+                                  onChange={(val) => handleAlreadyPurchasedChange(item.Id, val, item.PurchaseCountLimit)}
+                                  min={0}
+                                  max={isInfinite ? Infinity : item.PurchaseCountLimit}
+                                  disabled={isInfinite}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.purchase')}</label>
+                                <NumberInput
+                                  value={currentPurchase}
+                                  onChange={(val) => handlePurchaseChange(item.Id, val, remainingLimit)}
+                                  min={0}
+                                  max={isInfinite ? Infinity : remainingLimit}
+                                  disabled={remainingLimit <= 0 && !isInfinite}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  ));
+                })()}
               </div>
             </div>
           );

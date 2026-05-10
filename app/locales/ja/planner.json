@@ -57,7 +57,14 @@
     "normal": "ノーマル",
     "passive": "パッシブ",
     "sub": "サブ",
-    "ue": "固有"
+    "ue": "固有",
+    "uniqueWeapon": "固有武器",
+    "gear": "愛用品",
+    "cost": "コスト",
+    "rank": "ランク",
+    "source": "ソース",
+    "schaledb": "SchaleDB",
+    "viewOnSchaledb": "SchaleDBで表示"
   },
   "error": {
     "studentDataLoadFailed": "生徒データの読み込みに失敗しました",
@@ -65,7 +72,10 @@
     "errorDataInitializationFailed": "エラー: データ初期化に失敗しました。",
     "confirmResetPlanData": "本当にすべての計画データを初期化しますか？\nこの操作は元に戻せません。",
     "errorCannotReadFile": "エラー: ファイルを読み取れません",
-    "errorFileFormatOrParsingFailed": "エラー: ファイル形式エラーまたは解析失敗"
+    "errorFileFormatOrParsingFailed": "エラー: ファイル形式エラーまたは解析失敗",
+    "invalidCsv": "CSVファイルが無効です。",
+    "missingRequiredColumn": "必須列 \"{{column}}\" がありません。",
+    "cannotParseInput": "入力を解析できません。形式を確認してください (JSONまたはBase64)。"
   },
   "page": {
     "eventPlanner": "イベント周回プランナー",
@@ -103,6 +113,8 @@
     "targetSettings": "目標設定",
     "minigame": "ミニゲーム",
     "apSupply": "AP供給",
+    "apAndCurrencySupply": "AP/アイテム収支",
+    "currencyInitialInput": "アイテム初期量入力",
     "farmingRun": "周回実行",
     "stageFarming": "ステージ周回",
     "totalAp": "総保有AP",
@@ -118,7 +130,9 @@
     "hardFarming": "ハード周回",
     "scrimmageCount": "交流会回数",
     "scrimmageCost": "交流会コスト (AP)",
-    "otherDailyApConsumption": "その他のデイリー消費AP",
+    "otherDailyApConsumption": "その他のデイリー消費/獲得AP",
+    "consumed": "使用",
+    "gained": "獲得",
     "prefarmedAp": "事前に貯めたAP",
     "aronaAttendanceStartDate": "アロナの出席簿！の基準日",
     "aronaAttendanceDay": "基準日の出席日数",
@@ -138,6 +152,20 @@
     "noCurrentEvent": "開催中のイベントはありません。",
     "loadingData": "データを読み込み中...",
     "noStudentPlanInEvent": "このイベントに含まれる生徒の計画がありません。",
+    "ownedInput": "所持数",
+    "expandView": "展開",
+    "inventoryFilterAll": "全アイテム",
+    "inventoryFilterNeeded": "必要分のみ",
+    "sortedByDeficit": "不足分が多い順 (必要数優先)",
+    "sortLabel": "ソート:",
+    "sortByRarity": "レアリティ",
+    "sortById": "ID",
+    "inventorySearch": "アイテムを検索...",
+    "inventorySearchEmpty": "該当するアイテムがありません。",
+    "inventoryReset": "全リセット",
+    "inventoryResetConfirm": "すべての所持数をリセットしますか？",
+    "inventoryResetCancel": "キャンセル",
+    "inventoryResetOk": "リセット",
     "noStudentGrowthPlan": "作成された生徒の育成計画がありません。",
     "startByAddingNewPlan": "「新しい生徒計画を追加」ボタンを押して開始してください。",
     "selectStudentForDetails": "左のリストから生徒を選択して詳細情報を確認してください。",
@@ -147,16 +175,23 @@
     "addNewPlan": "+ 新しい生徒計画を追加",
     "displayCostInAP": "コストをAPで表示",
     "defaultNotice": "オーパーツなど、ステージ周回の他の獲得財貨は無視した結果です。",
-    "reportNoticeFormula": "計算式: 40AP÷((10000 * 0.35 + 2*2000 + 6.07*500)*2÷10000 紫レポート)",
-    "enhancementStoneNoticeFormula": "計算式: 128000クレジット÷(((50.09*0.1 + 33.76*0.5 + 25.18*0.4)*5*1e3*2 クレジット)÷40AP)",
     "reportNoticeTitle": "[拠点防衛] 軍需工場の廃墟N基準、特別依頼2倍イベント時、紫レポート1個の価値は18.9843 APです",
+    "reportNoticeFormula": "計算式: 40AP÷((10000 * 0.35 + 2*2000 + 6.07*500)*2÷10000 紫レポート)",
+    "reportNoticeUpcomingTitle": "※ 第2部メインストーリープロローグアップデート以降の紫レポート1個の価値: 13.0293 AP",
+    "reportNoticeUpcomingFormula": "計算式: 40AP÷((10000 × 1 + 2000 × 1 + 500 × 6.7 )×2÷10000 紫レポート)",
+    "enhancementStoneNoticeFormula": "計算式: 128000クレジット÷(((50.09*0.1 + 33.76*0.5 + 25.18*0.4)*5*1e3*2 クレジット)÷40AP)",
     "enhancementStoneNoticeTitle": "[物品回収] スランピア広場N基準、2倍イベント時、一般商店でクレジットで購入する最上級強化珠の価値は1個あたり16.0195 APです",
+    "enhancementStoneNoticeUpcomingTitle": "※ 第2部メインストーリープロローグアップデート以降の最上級強化珠の価値: 9.754 AP",
+    "enhancementStoneNoticeUpcomingFormula": "計算式: 128000クレジット÷(((80.91×0.1 + 55.2×0.5 + 42×0.4)×5×1e3×2 クレジット)÷40AP)",
     "currentEventGlobal": "現在のグローバル版イベント",
     "upcomingEventGlobal": "開催予定のグローバル版イベント",
     "continueTo": "次のステップ: {{tabName}}",
     "currencyStatusTitle": "財貨状況と最終結果",
     "viewSummary": "合計表示",
     "viewDetails": "詳細表示",
+    "sortByPriority": "優先度",
+    "carryUp": "上位変換",
+    "carryUpTooltip": "下位アイテムを上位アイテムにまとめます。(例: 上級レポート×5 → 最上級レポート×1)",
     "totalNeededTitle": "総必要素材",
     "backToPlanner": "一覧に戻る",
     "searchStudentPlaceholder": "生徒検索...",
@@ -165,9 +200,11 @@
     "sortByLevel": "目標レベル順",
     "sortByStar": "星数順",
     "noMaterialsNeeded": "現在の目標に必要な素材はありません。",
-    "confirmImport": "기존 데이터를 모두 지우고 CSV 데이터를 가져오시겠습니까?",
-    "exportCsv": "CSV 내보내기",
-    "importCsv": "CSV 가져오기",
+    "confirmImport": "既存のデータをすべて削除し、CSVデータをインポートしますか？",
+    "exportCsv": "CSVエクスポート",
+    "importCsv": "CSVインポート",
+    "exportJson": "JSONエクスポート",
+    "importJson": "JSONインポート",
     "selectAll": "全選択",
     "deselectAll": "解除",
     "selectAllTooltip": "すべての生徒を選択",
@@ -177,7 +214,8 @@
     "openInPlanner": "生徒成長プランナーで開く",
     "selectStudentToStart": "開始するには生徒を選択してください。",
     "remainingTime": "残り{{day}}日{{hour}}時間",
-    "startTime": "{{day}}日{{hour}}時間後に開始"
+    "startTime": "{{day}}日{{hour}}時間後に開始",
+    "initialOwned": "初期保有 {{value}}"
   },
   "button": {
     "runAutoFarmCalc": "自動周回計算を実行",
@@ -202,6 +240,8 @@
     "resetCurrentTab": "現在のタブをリセット",
     "selectAll": "すべて選択",
     "deselectAll": "すべて解除",
+    "selectFromMyPool": "所持生徒から選択",
+    "splitView": "分割表示",
     "confirmInput": "入力完了",
     "goToPlanner": "プランナーへ",
     "hideDetails": "詳細を隠す",
@@ -235,9 +275,32 @@
     "totalAcquisition": "総獲得",
     "cumulativeRewards": "累積報酬",
     "materialsForCurrentEvent": "現在のイベントで必要な財貨",
+    "credits": "クレジット",
+    "eligma": "神名のカケラ",
+    "xpReports": "レポート",
+    "equipEnh": "強化石",
+    "uwEnh": "強化剤",
+    "opart": "オーパーツ",
+    "tacticalBD": "戦術教育BD",
+    "techNote": "技術ノート",
+    "potential": "熟達証書",
+    "equipment": "装備",
+    "skill": "スキル素材",
+    "other": "その他",
     "totalMaterialsForAllPlans": "全ての計画で必要な総財貨",
     "exchangeCount": "交換回数",
-    "dailyPyroRefills": "デイリー青輝石でのAP回復回数"
+    "dailyPyroRefills": "デイリー青輝石でのAP回復回数",
+    "global_server_data_pending": "データがまだグローバルサーバーに反映されていません。",
+    "favorGifts": "ギフト",
+    "skillInfo": "スキル情報",
+    "relationshipStories": "絆ストーリー",
+    "story_rank_only": "ランク",
+    "story_rank_title": "ランク+タイトル",
+    "story_summary_hide": "−概要",
+    "story_summary_show": "+概要",
+    "story_global_show": "GLを表示",
+    "story_global_soon": "GL近日配信",
+    "story_memorial": "メモリアル"
   },
   "item": {
     "reports": "レポート",
@@ -253,25 +316,26 @@
     "minigame_dream": "Like no Tomorrow",
     "card_match": "カードマッチ",
     "minigame_ccg": "正義実現委員会の終わらない夏休み",
-    "minigame_defense": "Hi-Lo Ha-Lo"
+    "minigame_defense": "Hi-Lo Ha-Lo",
+    "clue_search": "痕跡収集"
   },
   "gameTerm": {
     "tacticalChallenge": "戦術対抗戦"
   },
   "apBreakdown": {
-    "hardMode": "ハード消費:",
-    "scrimmage": "交流会消費:",
-    "naturalRegen": "自然回復:",
-    "dailyQuests": "デイリー:",
-    "weeklyQuests": "ウィークリー:",
-    "cafe": "カフェ:",
-    "otherConsumption": "その他消費:"
+    "hardMode": "ハード消費",
+    "scrimmage": "交流会消費",
+    "naturalRegen": "自然回復",
+    "dailyQuests": "デイリー",
+    "weeklyQuests": "ウィークリー",
+    "cafe": "カフェ",
+    "otherConsumption": "その他消費"
   },
   "apSource": {
-    "pyroxene": "青輝石:",
-    "apPackage": "APパッケージ:",
-    "weeklyQuests": "ウィークリー:",
-    "attendance": "出席:"
+    "pyroxene": "青輝石",
+    "apPackage": "APパッケージ",
+    "weeklyQuests": "ウィークリー",
+    "attendance": "出席"
   },
   "mission": {
     "clearWithinSeconds": "{seconds}秒以内にクリア",
@@ -341,7 +405,16 @@
     "foundTreasures": "見つけた宝物",
     "cancel": "キャンセル",
     "saveResult": "結果を保存（{{count}}マス）",
-    "goalFindAll": "全ての宝物を見つける"
+    "goalFindAll": "全ての宝物を見つける",
+    "cellBaseReward": "セルごと:",
+    "tabInfo": "情報",
+    "tabCalculator": "計算機",
+    "boardSize": "ボード",
+    "treasureContents": "宝物",
+    "rewardItem": "アイテム",
+    "rewardAmount": "数量",
+    "digCells": "発掘数",
+    "planResult": "プラン結果"
   },
   "fortune_gacha": {
     "title": "おみくじ引き",
@@ -353,7 +426,14 @@
     "totalPullsPlaceholder": "総引き回数を入力",
     "setToMax": "最大に設定",
     "runAvgCalcFirst": "まず平均報酬計算を実行してください。",
-    "setMaxPullsTooltip": "不足しているアイテムを全て満たす回数を計算"
+    "setMaxPullsTooltip": "不足しているアイテムを全て満たす回数を計算",
+    "probTable": "確率テーブル",
+    "name": "名前",
+    "baseProb": "基本確率",
+    "maxProb": "最大確率 (上限)",
+    "pityNote": "* {{start}}回連続で最高レアリティを得られないと、確率が段階的に増加し最大確率に到達します。(出現時にリセット)",
+    "pityDetail": "{{start}}回から変動開始、{{steps}}回後に上限到達 (合計~{{total}}回)",
+    "rewards": "報酬"
   },
   "box_gacha": {
     "title": "ルーレット",
@@ -364,7 +444,12 @@
     "setMaxBoxesTooltip": "不足しているアイテムを全て満たす目標周回を設定します。",
     "planResultTitle": "計画結果（{{start}}〜{{end}}周目周回進行）",
     "totalCost": "総消費財貨",
-    "totalRewards": "総獲得アイテム"
+    "roundCost": "周回別消費アイテム",
+    "totalRewards": "総獲得アイテム",
+    "roundBreakdown": "周回別報酬",
+    "roundHeader": "周回",
+    "roundLabel": "{{round}}周回",
+    "roundLoopLabel": "{{round}}周回~ (繰り返し)"
   },
   "dice_race": {
     "title": "すごろく",
@@ -399,6 +484,91 @@
     "avgCost": "平均消費",
     "avgRewards": "平均報酬"
   },
+  "spreadsheet": {
+    "starOptions": {
+      "star1": "1★",
+      "star2": "2★",
+      "star3": "3★",
+      "star4": "4★",
+      "star5": "5★",
+      "ue1": "固有 1★",
+      "ue2": "固有 2★",
+      "ue3": "固有 3★",
+      "ue4": "固有 4★"
+    },
+    "headerGroup": {
+      "basicStatsCurrent": "基本ステータス (現在)",
+      "basicStatsTarget": "基本ステータス (目標)",
+      "skillsCurrent": "スキル (現在)",
+      "skillsTarget": "スキル (目標)",
+      "equipmentCurrent": "装備 (現在)",
+      "equipmentTarget": "装備 (目標)",
+      "other": "その他"
+    },
+    "headerField": {
+      "add": "追加",
+      "select": "選択",
+      "name": "名前",
+      "school": "学園",
+      "level": "レベル",
+      "rank": "星",
+      "ueLevel": "固有武器Lv",
+      "affection": "絆",
+      "experience": "経験値",
+      "equipment1": "装備 1",
+      "equipment2": "装備 2",
+      "equipment3": "装備 3",
+      "bondGear": "愛用品",
+      "acquiredDate": "獲得日",
+      "useEligma": "カケラ使用",
+      "eligmaPrice": "カケラ価格",
+      "eligmaStock": "カケラ在庫"
+    },
+    "messages": {
+      "deleteConfirm": "この計画を削除しますか？",
+      "mobileWarning": "テーブルビューはPC向けに最適化されています。横スクロールをご利用ください。",
+      "keyboardShortcutsTitle": "Excel風キーボードショートカット",
+      "shortcutCopyAbove": "上のセルの値をコピー",
+      "shortcutNextRow": "次の行へ移動",
+      "shortcutNextCell": "次のセルへ移動",
+      "shortcutPrevCell": "前のセルへ移動",
+      "shortcutSetMax": "現在のセルを最大値に設定",
+      "shortcutUndo": "元に戻す",
+      "shortcutRedo": "やり直し",
+      "shortcutSave": "変更を保存",
+      "sortLabel": "ソート:",
+      "resetSort": "リセット",
+      "unsavedChanges": "保存されていない変更があります。",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "addPlanHint": "追加ボタンを押して計画を追加してください",
+      "recruitedStudents": "受入済みの生徒数"
+    },
+    "sortLabels": {
+      "hasPlan": "計画あり",
+      "isSelected": "選択中",
+      "school": "学園",
+      "name": "名前",
+      "currentLevel": "現在のレベル",
+      "currentRank": "現在の星",
+      "currentUeLevel": "現在の固有武器Lv",
+      "currentAffection": "現在の絆",
+      "currentExperience": "現在絆の経験値",
+      "targetLevel": "目標レベル",
+      "targetRank": "目標の星",
+      "targetUeLevel": "目標固有武器Lv",
+      "targetAffection": "目標の絆",
+      "currentEquipment1": "現在の装備 1",
+      "currentEquipment2": "現在の装備 2",
+      "currentEquipment3": "現在の装備 3",
+      "currentBondGear": "現在の愛用品",
+      "targetEquipment1": "目標装備 1",
+      "targetEquipment2": "目標装備 2",
+      "targetEquipment3": "目標装備 3",
+      "targetBondGear": "目標愛用品",
+      "acquiredDate": "獲得日"
+    }
+  },
   "growthCard": {
     "stats": "基本情報",
     "skills": "スキル",
@@ -413,7 +583,6 @@
     "btnResetTargets": "目標リセット",
     "btnMaxTargets": "目標最大",
     "btnMaxAll": "最大成長",
-
     "tooltipMinAll": "現在および目標ステータスを初期値に戻します。",
     "tooltipResetTargets": "目標を現在のステータスと同じに設定します。",
     "tooltipMaxTargets": "目標ステータスのみ最大値に設定します。",
@@ -424,7 +593,6 @@
     "btnReset": "リセット",
     "btnTargetMax": "目標最大",
     "btnFullMax": "最大成長",
-
     "tooltipMin": "この項目の現在および目標を初期化します。",
     "tooltipReset": "目標を現在のステータスと同じにします。",
     "tooltipTargetMax": "目標のみ最大値に設定します。",
@@ -445,7 +613,8 @@
       "cafe": "カフェ",
       "schedule": "スケジュール",
       "craftingNeeded": "製造回数",
-      "lowTierConversion": "下位素材変換"
+      "lowTierConversion": "下位素材変換",
+      "toFillDeficit": "不足分を補うには"
     },
     "labels": {
       "current": "現在",
@@ -453,6 +622,7 @@
       "choiceBox": "選択ボックス"
     },
     "actions": {
+      "reset": "すべての贈り物をリセット",
       "craftingFill": "好みの贈り物に変換",
       "showPreferredOnly": "好みのみ表示"
     },
@@ -462,10 +632,20 @@
     "units": {
       "taps": "回",
       "runs": "回",
-      "times": "回"
+      "times": "回",
+      "students": "名"
     },
     "messages": {
       "noItems": "アイテムが見つかりません。"
+    },
+    "views": {
+      "inventory": "インベントリ",
+      "giftIndex": "ギフト一覧"
+    },
+    "giftIndex": {
+      "studentsWhoLike": "このギフトを好む生徒",
+      "noStudents": "このギフトを好む生徒はいません。",
+      "selectGift": "ギフトを選択すると生徒一覧が表示されます。"
     }
   },
   "potentialTab": {
@@ -474,6 +654,10 @@
     "lockedMessage": "能力解放はレベル90到達および固有武器装備後に利用可能です。",
     "reqCurrent": "現在: 生徒Lv.90と固有武器の装備が必要",
     "reqTarget": "目標: 生徒Lv.90と固有武器の装備が必要"
+  },
+  "skillsTab": {
+    "gearNormalHint": "愛用品 T2 + 好感度ランク20でこのスキルが強化されます。",
+    "setGearGoal": "目標として設定"
   },
   "basicStatsTab": {
     "level": "レベル:",
@@ -484,7 +668,11 @@
     "currentElephPrice": "現在の神名文字の価格:",
     "purchasableEleph": "購入可能な神名文字:",
     "ownedEleph": "所持神名文字",
-    "affectionWarning": "現在のレアリティでは絆ランク{{limit}}が上限です。"
+    "affectionWarning": "現在のレアリティでは絆ランク{{limit}}が上限です。",
+    "uwLevel": "固有武器レベル",
+    "bondGear": "愛用品",
+    "gearNone": "なし",
+    "gearReqAffection": "好感度ランク{{rank}}+が必要"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -576,6 +764,50 @@
     "maxButton": "MAX",
     "requiredAmountSuffix": "累計{{amount}}個"
   },
+  "dataExchange": {
+    "title": "データ出力・取込",
+    "formatOwn": "当サイト形式",
+    "formatUnknown": "不明な形式",
+    "formatInvalid": "無効なJSON",
+    "textareaPlaceholder": "ここにJSONデータを貼り付けてください。\n対応形式:\n  • 当サイトの出力データ\n  • Justin163プランナーの出力 (JSON)\n  • SchaleDBコレクションの出力 (Base64)",
+    "strategyAll": "全データを更新",
+    "strategyStudentsOnly": "生徒データのみ",
+    "loadFile": "ファイル読み込み",
+    "saveToFile": "ファイルに保存",
+    "applyData": "データを適用",
+    "export": "エクスポート",
+    "extractMyData": "データの抽出",
+    "extractMyDataDesc": "現在の計画をJSONで出力します。",
+    "convertToJustin163": "Justin163リソースプランナー形式で書き出し",
+    "convertToJustin163Desc": "現在の計画をJustin163のサイトで読み込めるJSON形式に変換します。",
+    "copyAiPrompt": "AIプロンプトをコピー",
+    "aiPromptCopied": "コピーしました！",
+    "copyClipboard": "クリップボードにコピー",
+    "clipboardCopied": "コピーしました！",
+    "justin163Warning": "Justin163形式への変換では、一部のデータ（絆経験値、詳細な周回設定など）が保持されない場合があります。",
+    "msgExtracted": "データを抽出しました。",
+    "msgConverted": "Justin163リソースプランナー形式に変換されました。",
+    "msgAppliedOwn": "{{count}}人の生徒データが適用されました。",
+    "msgAppliedExternal": "{{label}}データを適用しました。",
+    "msgError": "エラー: {{message}}",
+    "msgClipboardFailed": "クリップボードへのコピーに失敗しました。",
+    "csvExport": "CSVエクスポート",
+    "csvImport": "CSVインポート",
+    "csvExportTooltip": "Excelで編集できるよう、スプレッドシートをCSV形式で出力します。",
+    "csvImportTooltip": "CSVファイルからデータを読み込みます。",
+    "csvExportSuccess": "CSVのエクスポートに成功しました",
+    "csvExportFailed": "CSVのエクスポートに失敗しました",
+    "csvImportSuccess": "CSVのインポートに成功しました",
+    "csvImportSuccessWithCount": "CSVのインポートに成功しました (生徒{{count}}人のデータを更新)",
+    "csvImportFailed": "CSVのインポートに失敗しました",
+    "csvFileReadError": "ファイルを読み込めません。",
+    "csvMetadataTitle": "生徒成長プランナー CSVデータ",
+    "csvMetadataGenerated": "生成日時: {{date}}",
+    "csvMetadataVersion": "バージョン: 1.0",
+    "csvMetadataWarning": "警告: 最初の6行（メタデータとヘッダー）は削除・変更しないでください。",
+    "csvMetadataNotes": "備考: 1行目のヘッダーはフィールドID（システム解析用）、2行目は表示用ラベル（翻訳済）です。",
+    "csvTip": "CSVファイルをダウンロードしてExcel等で編集した後、再度ファイルをインポートして反映できます。"
+  },
   "source": {
     "shopCost": "ショップ (消費)",
     "shopReward": "ショップ (獲得)",
@@ -646,7 +878,62 @@
     "noStagesFound": "表示するステージがありません。(フィルターまたはページを確認)",
     "paginationUnit": "章",
     "inventoryModalTitle": "所持数を入力",
-    "goToPlanner": "機器プランナー"
+    "goToPlanner": "機器プランナー",
+    "tabInput": "入力",
+    "tabStages": "ステージ",
+    "tabResults": "結果",
+    "settings": "設定",
+    "source": "ソース",
+    "sourceLabelNormal": "Normal ×",
+    "sourceLabelHard": "Hard ×",
+    "studentPlanTitle": "学生プラン",
+    "studentPlanSelectAll": "すべて",
+    "studentPlanDeselectAll": "クリア",
+    "studentSearchPlaceholder": "名前で検索...",
+    "studentFilterSelected": "選択のみ",
+    "studentSearchEmpty": "検索結果なし",
+    "ownedEquipment": "所持装備",
+    "universalBlueprint": "万能設計図",
+    "elephStudents": "象:",
+    "hardModeTitle": "ハードモード",
+    "hardModeAggressive": "すべて × 3",
+    "hardModeOptimized": "効率最適化",
+    "hardModeManual": "手動",
+    "hardModeAggressiveDesc": "Hard すべて ×3",
+    "hardModeOptimizedDesc": "効率最適化",
+    "hardModeManualDesc": "手動設定",
+    "hardModeAggressiveDetail": "必要なアイテムが出現するすべてのハードステージを最大回数（日×3）で実行します。装備の収集量を最大化しますが、不要なアイテムにAPを無駄にする可能性があります。",
+    "hardModeOptimizedDetail": "必要な素材に基づいて最も効率的なハードステージを計算して実行します。無駄なAPを最小化し、実際に必要な素材のみを収集します。",
+    "hardModeManualDetail": "各ハードステージの実行回数を手動で設定します。どのステージをどのくらい実行するかを完全に制御できます。",
+    "stageArea": "エリア",
+    "optimize": "最適化",
+    "summaryTabTotal": "必要量",
+    "summaryTabFarmed": "周回結果",
+    "summaryTabRemaining": "不足量",
+    "summaryTabSurplus": "余裕",
+    "summaryTabBlueprint": "万能設計図消費量",
+    "blueprintUsageDetail": "設計図使用内訳",
+    "blueprintTotalUsed": "合計 {{count}}個使用",
+    "blueprintSheets": "({{count}}枚)",
+    "statTotalAP": "合計AP",
+    "statStages": "ステージ",
+    "statRemainingEquipment": "残り装備",
+    "statStudents": "学生",
+    "sortByTierOrder": "ティア順",
+    "sortByIDOrder": "ID順",
+    "sortByAmountOrder": "数量順",
+    "farmingPlanTitle": "ファーミング計画",
+    "stageTypeNormal": "Normal",
+    "stageTypeHard": "Hard",
+    "sourceKR": "KR",
+    "sourceJPNew": "JP (New)",
+    "inventoryLoadingData": "データを読み込み中...",
+    "inventoryClear": "クリア",
+    "inventoryDeficient": "不足",
+    "inventorySufficient": "十分",
+    "inventoryNotFarmable": "ファーミング不可",
+    "students": "生徒",
+    "selectedStudentsFormat": "{selected}/{total}生徒"
   },
   "cardmatch": {
     "page": {
@@ -693,6 +980,24 @@
       "clearRewardDesc": "ボードをクリアすると獲得"
     }
   },
+  "clue_search": {
+    "title": "手がかり探し",
+    "tabInfo": "情報",
+    "tabCalculator": "計算機",
+    "roundLabel": "{{round}}周目",
+    "roundLoop": "{{round}}周目~ (ループ)",
+    "totalFragments": "かけら合計: {{count}}個",
+    "rangeTitle": "周回範囲の設定",
+    "startRound": "開始周",
+    "endRound": "終了周",
+    "shortcutMaxOneTime": "1回限定報酬の最大化",
+    "shortcutMaxOneTimeDesc": "1 ~ {{round}}周目に設定 (ループ区間を除く)",
+    "resultTitle": "計算結果",
+    "cost": "必要アイテム",
+    "rewards": "獲得報酬",
+    "autoBuy": "手がかり自動購入",
+    "autoBuyTooltip": "選択したラウンド範囲に必要な手がかりアイテムを、ショップの購入数に自動で反映します。"
+  },
   "minigame_ccg": {
     "title": "正義実現委員会の終わらない夏休み",
     "overview": "概要",
@@ -729,7 +1034,7 @@
     },
     "tabs": {
       "income": "需給 & 未来視",
-      "strategy": "ガチャ計画",
+      "strategy": "募集する生徒を選択",
       "result": "シミュレーション実行"
     },
     "errors": {
@@ -738,7 +1043,7 @@
     },
     "income": {
       "timeline": {
-        "title": "日程 & AP設定",
+        "title": "日程 & APチャージ設定",
         "total_count": "全 {{count}}件",
         "headers": {
           "start": "開始",
@@ -776,7 +1081,10 @@
           "raid_elim": "総力戦 / 大決戦",
           "multifloor": "制約解除決戦",
           "jfd": "合同火力演習",
-          "event_etc": "イベント/メンテ他",
+          "mainstory": "メインストーリー",
+          "event": "イベント",
+          "ministory": "ミニストーリー",
+          "maintenance": "メンテ補償",
           "manual": "追加入力",
           "ap_refresh": "AP回復",
           "gacha": "ガチャ"
@@ -808,9 +1116,10 @@
       },
       "chart": {
         "survival_rate": "生存確率",
-        "lucky": "上位 10% (豪運)",
-        "unlucky": "下位 10% (不運)",
-        "worst": "下位 100% (天井)",
+        "lucky": "上位 10%",
+        "unlucky": "下位 10%",
+        "worst": "下位 100%",
+        "upper_x": "上位 {{x}}%",
         "avg_balance": "平均残高",
         "avg": "平均",
         "upper_10": "上位 10%",
@@ -822,7 +1131,10 @@
         "table_delta": "変動量",
         "table_balance": "残高 (平均)",
         "start_balance": "初期資産",
-        "daily_calc": "日次・イベント精算"
+        "daily_calc": "日次・イベント精算",
+        "percentile_placeholder": "例: 25",
+        "add_btn_title": "確率線を追加",
+        "remove_line": "削除"
       },
       "log": {
         "fixed_daily_sunday": "日次/週次/マンスリー等の固定収入",
@@ -846,7 +1158,9 @@
         "btn_running": "計算中...",
         "btn_start": "シミュレーション開始"
       },
-      "empty_state": "上のボタンを押してシミュレーションを開始してください。"
+      "empty_state": "上のボタンを押してシミュレーションを開始してください。",
+      "income_nudge": "収入計画を設定すると、タイムライン基準のより精密な予算分析が可能です",
+      "income_nudge_btn": "収入タブへ"
     },
     "result_view": {
       "unit_toggle": {
@@ -856,8 +1170,8 @@
       "disclaimer": "* 無料ガチャは優先的に消費され、青輝石の消費量には含まれません。",
       "summary": {
         "success_rate": {
-          "title": "目標達成率",
-          "desc": "Must生徒全員獲得確率"
+          "title": "Must生徒全員獲得率",
+          "desc": "Must生徒を全員獲得できたシミュレーションの割合"
         },
         "avg_cost": {
           "title_pyroxenes": "平均消費青輝石",
@@ -866,10 +1180,12 @@
           "includes_free": "(無料ガチャ含む)"
         },
         "safety": {
-          "title": "リソース安全性",
+          "title": "予算充足度",
           "safe": "安全",
           "unsafe": "不足危険",
-          "bankruptcy_prob": "破産確率: {{rate}}%"
+          "bankruptcy_prob": "予算超過確率: {{rate}}%",
+          "income_applied": "収入計画反映済み",
+          "income_not_applied": "現在の所持量のみ"
         }
       },
       "chart": {
@@ -881,7 +1197,9 @@
         "range_count": "{{start}} ~ {{end}}回",
         "tooltip_prob": "確率: {{rate}}%",
         "cdf_label_pyroxenes": "{{amount}} 青輝石以内",
-        "cdf_label_pulls": "{{amount}}回以内"
+        "cdf_label_pulls": "{{amount}}回以内",
+        "legend_within_budget": "以内",
+        "legend_over_budget": "超過区間"
       },
       "student_stats": {
         "title": "生徒別獲得・神名文字予測",
@@ -915,7 +1233,7 @@
         "max_budget": "予算上限",
         "spark_option": "{{spark}}天井 ({{pulls}}連)",
         "max_budget_suffix": "まで許容",
-        "min_pulls": "最低保証",
+        "min_pulls": "最低実行回数",
         "min_pulls_suffix": "連回す"
       },
       "mode": {
@@ -927,6 +1245,10 @@
         "label": "条件",
         "remains_le": "天井まで残り ≤",
         "try_pulls": "連なら続行"
+      },
+      "priority": {
+        "label": "順位",
+        "tooltip": "ガチャ優先順位（低いほど優先）"
       },
       "intentional_spark": {
         "label": "天井狙い",

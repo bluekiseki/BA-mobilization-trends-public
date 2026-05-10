@@ -494,3 +494,14 @@ studentId,name,startTime,endTime,rerun,limited,fast,bannerType,prediction
 10110,Seia,2026-04-01 11:00,2026-04-15 10:59,true,true,false
 10112,Asuna (School Uniform),2026-04-01 11:00,2026-04-15 10:59,true,true,false
 10067,Toki (Bunny Girl),2026-04-01 11:00,2026-04-15 10:59,true,false,false
+10084,Kotama (Camping),2026-04-15 10:59,2026-04-21 10:59,true,false,false
+10085,Hare (Camping),2026-04-15 10:59,2026-04-21 10:59,true,false,false
+20042,Maki (Camping),2026-04-15 10:59,2026-04-21 10:59,true,false,false
+10041,Misaki,2026-04-15 10:59,2026-04-21 10:59,true,false,false
+10139,Niko,2026-04-21 10:59,2026-05-06 10:59,false,true,false
+10140,Kurumi,2026-04-21 10:59,2026-05-06 10:59,false,true,false
+20044,Sumire (Part-Timer),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
+10115,Rei,2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
+20034,Akari (New Year),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
+20043,Izumi (New Year),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
+20025,Haruka (New Year),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false

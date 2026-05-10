@@ -55,8 +55,11 @@ export function meta({ loaderData, params }: Route.MetaArgs) {
   const eventId = Number(eventIdStr);
   const locale_key = getlocaleMethond('', 'Jp', loaderData.locale) as 'Jp' | 'Kr' | 'En';
   const format_name =
-    (eventId > 10000 ? `[${loaderData.rerun}] ` : '') +
-    (eventList[String(eventId % 10000) as keyof typeof eventList][locale_key] || eventList[String(eventId % 10000) as keyof typeof eventList]['Jp'] || name || 'No event information');
+    (eventId > 10000 && eventId < 60000 ? `[${loaderData.rerun}] ` : '') +
+    (eventList[String(eventId < 60000 ? eventId % 10000 : eventId) as keyof typeof eventList][locale_key] ||
+      eventList[String(eventId % 10000) as keyof typeof eventList]['Jp'] ||
+      name ||
+      'No event information');
 
   return createMetaDescriptor(format_name + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp');
 }
@@ -106,7 +109,7 @@ export const EventPage = () => {
   // const { t: t_c } = useTranslation("common");
   const locale = i18n.language as Locale;
 
-  if (![854].includes(eventId)) useHelpKey('planner.event');
+  useHelpKey('planner.event', !([854].includes(eventId) || parseInt(String(eventId / 10000)) == 6));
 
   //  dynamic loading useEffect
   useEffect(() => {

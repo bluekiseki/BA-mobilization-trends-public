@@ -271,7 +271,7 @@ export default function HistogramAnalysis({ allPlayers, tierCounter }: Histogram
           {/* Bracket settings */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <label className="text-sm font-bold">{t('bracketFilter', '조합 필터')}</label>
+              <label className="text-sm font-bold">{t('bracketFilter')}</label>
               <div className="flex gap-2">
                 <button onClick={handleSelectAllBrackets} className="text-[10px] px-2 py-1 rounded bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 font-medium">
                   {t('selectAll')}

@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiCheck, FiFilter, FiTrendingUp, FiTarget, FiBox, FiRepeat, FiCoffee, FiCalendar, FiEdit3 } from 'react-icons/fi';
+import { FiFilter, FiBox, FiRepeat, FiCoffee, FiCalendar, FiEdit3, FiRotateCcw } from 'react-icons/fi';
+import { RiHeartLine } from 'react-icons/ri';
 
 import { affectionExpToNextLevel } from '~/data/growthData';
 import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { EventData, IconData } from '~/types/plannerData';
+import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import { getGiftAffectionList } from './giftAffectionList';
+import { GiftStudentSheet, getPreferenceIcon, type GiftEntry, type GiftStudentEntry } from './GiftStudentSheet';
 
-// Shared Components
 import { ItemIcon } from '../common/Icon';
 import { CustomNumberInput } from '~/components/CustomInput';
 import { NumberInput } from '../common/NumberInput';
@@ -20,7 +22,6 @@ const SELECTION_BOX_ID = 100008;
 const CAFE_TOUCH_EXP = 15;
 const SCHEDULE_EXP = 25;
 
-// Pre-calculate cumulative EXP
 const cumulativeAffectionExp: Record<number, number> = {};
 let cumulativeExp = 0;
 Object.keys(affectionExpToNextLevel)
@@ -31,29 +32,16 @@ Object.keys(affectionExpToNextLevel)
     cumulativeAffectionExp[level] = cumulativeExp;
   });
 
-const getPreferenceIcon = (preferenceLevel: number, rarity: number): string => {
-  let levelForIcon = preferenceLevel;
-  if (rarity === 3 && levelForIcon === 1) levelForIcon = 2;
-  if (levelForIcon >= 4) return '/img/Cafe_Interaction_Gift_04.webp';
-  if (levelForIcon === 3) return '/img/Cafe_Interaction_Gift_03.webp';
-  if (levelForIcon === 2) return '/img/Cafe_Interaction_Gift_02.webp';
-  return '/img/Cafe_Interaction_Gift_01.webp';
-};
-
 // --- Types ---
 
 interface AffectionTabProps {
   plan: GrowthPlan;
-  giftAffectionList: {
-    id: string;
-    type: string;
-    rarity: number;
-    affectionPoints: number;
-    preferenceLevel: number;
-  }[];
+  giftAffectionList: GiftEntry[];
   eventData: EventData;
   iconData: IconData;
   handlePlanChange: (field: string, value: number | string | boolean, isNumeric?: boolean) => void;
+  allStudents?: StudentData;
+  studentPortraits?: StudentPortraitData;
 }
 
 interface CalculationResult {
@@ -69,7 +57,6 @@ interface CalculationResult {
 
 // --- Sub-components ---
 
-// 1. New Helper Component for Click-to-Edit Logic
 const EditableLevelDisplay = ({
   value,
   max,
@@ -101,7 +88,6 @@ const EditableLevelDisplay = ({
     if (e.key === 'Enter') handleCommit();
   };
 
-  // Edit mode (Input)
   if (isEditing) {
     return (
       <CustomNumberInput
@@ -117,26 +103,22 @@ const EditableLevelDisplay = ({
     );
   }
 
-  // View mode (Display)
   return (
     <div
       onClick={() => setIsEditing(true)}
-      className={`
-        group flex items-center gap-1.5 px-2 py-0.5 rounded cursor-pointer select-none transition-all
-        hover:bg-black/5 dark:hover:bg-white/10
-        ${textClassName}
-      `}
+      className={`group flex items-center gap-1.5 px-2 py-0.5 rounded cursor-pointer select-none transition-all hover:bg-black/5 dark:hover:bg-white/10 ${textClassName}`}
       title="Click to edit value"
     >
       <span className="border-b border-dashed border-gray-400/50 group-hover:border-transparent transition-colors">
         {prefix}
         {value}
       </span>
-
       <FiEdit3 className="text-[10px] opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0 transition-all duration-200" />
     </div>
   );
 };
+
+// --- Inventory GiftItem ---
 
 const GiftItem = React.memo(
   ({
@@ -146,39 +128,50 @@ const GiftItem = React.memo(
     eventData,
     iconData,
     onUpdate,
+    onSelect,
+    isSelected,
   }: {
-    gift: AffectionTabProps['giftAffectionList'][0];
+    gift: GiftEntry;
     ownedCount: number;
     deficitExp: number;
     eventData: EventData;
     iconData: IconData;
     onUpdate: (id: string, val: number) => void;
+    onSelect?: () => void;
+    isSelected?: boolean;
   }) => {
     const { t } = useTranslation('planner');
     const prefIcon = useMemo(() => getPreferenceIcon(gift.preferenceLevel, gift.rarity), [gift.preferenceLevel, gift.rarity]);
-
     const neededCount = deficitExp > 0 ? Math.ceil(deficitExp / gift.affectionPoints) : 0;
 
     return (
-      <div className="group flex flex-col p-1.5 w-full max-w-[80px] mx-auto bg-white dark:bg-neutral-800 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
-        {/* Image Area */}
-        <div className="relative w-full aspect-square bg-gray-50 dark:bg-neutral-900 rounded-sm flex items-center justify-center mb-1 overflow-hidden">
+      <div
+        className={`group flex flex-col p-1.5 w-full max-w-[110px] mx-auto bg-white dark:bg-neutral-800 rounded-md transition-colors ${isSelected ? 'ring-2 ring-pink-400 dark:ring-pink-500' : 'hover:bg-gray-50 dark:hover:bg-neutral-700/50'}`}
+      >
+        <button
+          onClick={onSelect}
+          className="relative w-full aspect-square bg-gray-50 dark:bg-neutral-900 rounded-sm flex items-center justify-center mb-1 overflow-hidden cursor-pointer"
+          tabIndex={onSelect ? 0 : -1}
+          type="button"
+        >
           <div className="transform transition-transform group-hover:scale-105">
             <ItemIcon type="Item" itemId={gift.id} amount={0} size={13} eventData={eventData} iconData={iconData} />
           </div>
-
           <div className="absolute top-0 left-0 bg-black/70 text-white px-1 py-px rounded-br-sm text-xs font-mono backdrop-blur-[1px] leading-none">+{gift.affectionPoints}</div>
           <div className="absolute bottom-0 right-0 p-0.5">
-            <img src={prefIcon} alt="Pref" className="w-6 h-6 object-contain" />
+            <img src={prefIcon} alt="Pref" className="w-6 h-6 object-cover" />
           </div>
-        </div>
+          {onSelect && (
+            <div className={`absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 dark:group-hover:bg-white/5 transition-colors`}>
+              <RiHeartLine className="opacity-0 group-hover:opacity-60 text-white drop-shadow text-lg transition-opacity" />
+            </div>
+          )}
+        </button>
 
-        {/* Input Area */}
         <div className="mt-auto w-full">
           <div className="flex justify-end h-3.5 mb-0.5">
             {neededCount > 0 && <span className="text-[10px] text-red-500 flex items-center gap-1 truncate">{t('affectionTab.item.need', { counts: neededCount })}</span>}
           </div>
-
           <div className={`relative flex items-center bg-gray-50 dark:bg-neutral-900 rounded-sm overflow-hidden ${neededCount > 0 ? 'ring-1 ring-red-100 dark:ring-red-900/50' : ''}`}>
             <NumberInput
               value={ownedCount}
@@ -194,24 +187,21 @@ const GiftItem = React.memo(
       </div>
     );
   },
-  (prev, next) => prev.ownedCount === next.ownedCount && prev.gift.id === next.gift.id && prev.deficitExp === next.deficitExp,
+  (prev, next) => prev.ownedCount === next.ownedCount && prev.gift.id === next.gift.id && prev.deficitExp === next.deficitExp && prev.isSelected === next.isSelected,
 );
-
 GiftItem.displayName = 'GiftItem';
 
 // --- Main Component ---
 
-export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, handlePlanChange }: AffectionTabProps) => {
+export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, handlePlanChange, allStudents, studentPortraits }: AffectionTabProps) => {
   const { t } = useTranslation('planner');
   const { ownedGifts, updateOwnedGifts } = useGlobalStore();
 
-  // UI States
   const [simulateCrafting, setSimulateCrafting] = useState(false);
   const [hideNonPreferred, setHideNonPreferred] = useState(true);
   const [selectionBoxCount, setSelectionBoxCount] = useState(0);
-
-  // Logic States
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
 
   useEffect(() => {
     if (ownedGifts[SELECTION_BOX_ID] !== undefined) {
@@ -219,17 +209,51 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
     }
   }, [ownedGifts]);
 
-  const handleUpdateGift = useCallback(
-    (id: string, val: number) => {
-      updateOwnedGifts(id, val);
-    },
-    [updateOwnedGifts],
-  );
+  const handleUpdateGift = useCallback((id: string, val: number) => updateOwnedGifts(id, val), [updateOwnedGifts]);
 
   const handleUpdateSelectionBox = (val: number) => {
     setSelectionBoxCount(val);
     updateOwnedGifts(String(SELECTION_BOX_ID), val);
   };
+
+  // Gift reset function
+  const handleResetGifts = useCallback(() => {
+    // 1. Reset selection options
+    setSelectionBoxCount(0);
+    updateOwnedGifts(String(SELECTION_BOX_ID), 0);
+
+    // 2. Initialize all potentially displayable gifts to 0
+    giftAffectionList.forEach((gift) => {
+      if (ownedGifts[gift.id]) {
+        updateOwnedGifts(gift.id, 0);
+      }
+    });
+  }, [giftAffectionList, ownedGifts, updateOwnedGifts]);
+
+  // --- Gift → Students map (for Gift Index view) ---
+  const giftToStudentsMap = useMemo<Record<string, GiftStudentEntry[]>>(() => {
+    if (!allStudents || !eventData) return {};
+    const map: Record<string, GiftStudentEntry[]> = {};
+
+    Object.entries(allStudents).forEach(([studentId, student]) => {
+      const gifts = getGiftAffectionList(student, eventData);
+      gifts.forEach((gift) => {
+        if (gift.affectionPoints <= 20) return; // skip non-preferred (base level)
+        if (!map[gift.id]) map[gift.id] = [];
+        map[gift.id].push({
+          id: studentId,
+          name: student.Name,
+          preferenceLevel: gift.preferenceLevel,
+          affectionPoints: gift.affectionPoints,
+          rarity: gift.rarity,
+        });
+      });
+    });
+
+    Object.values(map).forEach((students) => students.sort((a, b) => b.affectionPoints - a.affectionPoints || a.name.localeCompare(b.name)));
+
+    return map;
+  }, [allStudents, eventData]);
 
   // --- Core Calculation ---
   useEffect(() => {
@@ -263,7 +287,6 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
 
     if (simulateCrafting && currentExp < expNeededTotal) {
       const fodderCandidates = giftAffectionList.filter((g) => g.affectionPoints * 2 < targetUnitValue).sort((a, b) => a.affectionPoints - b.affectionPoints);
-
       for (const item of fodderCandidates) {
         let count = inventory[item.id] || 0;
         while (currentExp < expNeededTotal && count >= 2) {
@@ -286,25 +309,18 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
     let achievableLevel = 1;
     const sortedLevels = Object.keys(cumulativeAffectionExp).map(Number);
     for (const level of sortedLevels) {
-      if (achievableTotalExp >= cumulativeAffectionExp[level]) {
-        achievableLevel = level + 1;
-      } else {
-        break;
-      }
+      if (achievableTotalExp >= cumulativeAffectionExp[level]) achievableLevel = level + 1;
+      else break;
     }
     if (achievableLevel > 100) achievableLevel = 100;
 
     const totalRange = totalExpToTargetLevelStart - totalExpToCurrentLevelStart;
     let overallPercentage = 0;
     if (totalRange > 0) {
-      const progress = achievableTotalExp - totalExpToCurrentLevelStart;
-      overallPercentage = Math.min(100, Math.max(0, (progress / totalRange) * 100));
+      overallPercentage = Math.min(100, Math.max(0, ((achievableTotalExp - totalExpToCurrentLevelStart) / totalRange) * 100));
     } else if (achievableTotalExp >= totalExpToTargetLevelStart) {
       overallPercentage = 100;
     }
-
-    const cafeTouchCount = Math.ceil(finalDeficit / CAFE_TOUCH_EXP);
-    const scheduleCount = Math.ceil(finalDeficit / SCHEDULE_EXP);
 
     setResult({
       status: isSuccess ? 'success' : 'deficit',
@@ -312,8 +328,8 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
       percentage: overallPercentage,
       deficitExp: finalDeficit,
       surplusExp: isSuccess ? surplus : 0,
-      cafeTouchCount,
-      scheduleCount,
+      cafeTouchCount: Math.ceil(finalDeficit / CAFE_TOUCH_EXP),
+      scheduleCount: Math.ceil(finalDeficit / SCHEDULE_EXP),
       craftingRequiredCount: craftingCount,
     });
   }, [plan, ownedGifts, giftAffectionList, selectionBoxCount, simulateCrafting]);
@@ -329,90 +345,80 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
   }, [giftAffectionList, hideNonPreferred]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-full font-sans text-gray-700 dark:text-gray-200">
-      {/* --- LEFT: Dashboard --- */}
-      <div className="w-full lg:w-72 shrink-0 flex flex-col gap-6">
+    <div className="flex flex-col lg:flex-row gap-4 font-sans text-gray-700 dark:text-gray-200">
+      {/* --- LEFT: Result + Level Controls --- */}
+      <div className="w-full lg:w-64 shrink-0 flex flex-col gap-3">
         {/* Result Card */}
         {result && (
-          <div className="bg-gray-50 dark:bg-neutral-800 rounded-md p-5 flex flex-col gap-4">
-            <div className="flex items-center justify-between text-xs text-gray-400 font-bold uppercase tracking-wider">
-              <span className="flex items-center gap-1.5">
-                <FiTrendingUp /> {t('affectionTab.result.title')}
-              </span>
-              {result.status === 'success' ? (
-                <span className="text-green-500 flex items-center gap-1">
-                  {simulateCrafting && result.craftingRequiredCount > 0 && <FiRepeat className="animate-spin-slow" />}
-                  <FiCheck /> {t('affectionTab.result.success')}
-                </span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1">
-                  <FiTarget /> {t('affectionTab.result.missing')}
-                </span>
-              )}
-            </div>
-
+          <div className="bg-gray-50 dark:bg-neutral-800 rounded-lg p-3.5 flex flex-col gap-3">
+            {/* Achievable level + Progress bar */}
             <div>
-              <div className="text-3xl font-black text-gray-800 dark:text-gray-100 leading-none mb-2">
-                Lv.{result.achievableLevel}
-                <span className="text-sm font-medium text-gray-400 ml-1">/ {plan.target.affection}</span>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="text-3xl font-black tabular-nums leading-none text-gray-800 dark:text-gray-100">{result.achievableLevel}</span>
+                <span className="text-sm text-gray-400 leading-none mb-0.5">/ {plan.target.affection}</span>
+                <span className={`text-[11px] font-bold tabular-nums ml-auto leading-none mb-0.5 ${result.status === 'success' ? 'text-green-500' : 'text-red-400'}`}>
+                  {result.status === 'success' ? `+${result.surplusExp.toLocaleString()}` : `−${result.deficitExp.toLocaleString()}`} EXP
+                </span>
               </div>
-              <div className="h-1 w-full bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                <div className={`h-full transition-all duration-700 ease-out ${result.status === 'success' ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${result.percentage}%` }} />
+              <div className="relative h-2 w-full bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-700 ${result.status === 'success' ? 'bg-green-400' : 'bg-red-400'}`} style={{ width: `${result.percentage}%` }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                <span>Lv.{plan.current.affection}</span>
+                <span>Lv.{plan.target.affection}</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5 mt-1">
-              <div className="col-span-2 bg-white dark:bg-neutral-700/30 p-2.5 rounded-sm flex justify-between items-center shadow-sm dark:shadow-none">
-                <span className="text-[10px] text-gray-400 font-bold uppercase">{t('affectionTab.result.expGap')}</span>
-                {result.status === 'deficit' ? (
-                  <span className="text-sm font-bold text-red-500">-{result.deficitExp.toLocaleString()}</span>
-                ) : (
-                  <span className="text-sm font-bold text-green-500">+{result.surplusExp.toLocaleString()}</span>
-                )}
-              </div>
-
-              <div className={`bg-white dark:bg-neutral-700/30 p-2 rounded-sm shadow-sm dark:shadow-none ${result.status === 'success' ? 'opacity-40 grayscale' : ''}`}>
-                <p className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1 mb-0.5">
-                  <FiCoffee /> {t('affectionTab.result.cafe')} +15
-                </p>
-                <p className="text-sm font-bold">
-                  {result.cafeTouchCount.toLocaleString()} <span className="text-[9px] font-normal text-gray-400">{t('affectionTab.units.taps')}</span>
-                </p>
-              </div>
-
-              <div className={`bg-white dark:bg-neutral-700/30 p-2 rounded-sm shadow-sm dark:shadow-none ${result.status === 'success' ? 'opacity-40 grayscale' : ''}`}>
-                <p className="text-[10px] text-gray-400 font-bold uppercase flex items-center gap-1 mb-0.5">
-                  <FiCalendar /> {t('affectionTab.result.schedule')} +25
-                </p>
-                <p className="text-sm font-bold">
-                  {result.scheduleCount.toLocaleString()} <span className="text-[9px] font-normal text-gray-400">{t('affectionTab.units.runs')}</span>
-                </p>
-              </div>
-
-              {simulateCrafting && result.craftingRequiredCount > 0 && (
-                <div className="col-span-2 mt-1 bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-sm flex justify-between items-center border-l-2 border-amber-400 dark:border-amber-600">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase flex items-center gap-1">
-                      <FiRepeat /> {t('affectionTab.result.craftingNeeded')}
-                    </span>
-                    <span className="text-[9px] text-amber-500/80">{t('affectionTab.result.lowTierConversion')}</span>
-                  </div>
-                  <span className="text-base font-bold text-amber-700 dark:text-amber-300">
-                    {result.craftingRequiredCount.toLocaleString()} <span className="text-xs font-normal">{t('affectionTab.units.times')}</span>
+            {/* Means to supplement deficit (only when deficit exists) */}
+            {result.status === 'deficit' && (
+              <div className="flex flex-col gap-1.5 border-t border-gray-200 dark:border-neutral-700 pt-2.5">
+                <p className="text-[10px] text-gray-400">{t('affectionTab.result.toFillDeficit')}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <FiCoffee size={11} />
+                    {t('affectionTab.result.cafe')}
+                    <span className="text-gray-300 dark:text-neutral-600">+15</span>
+                  </span>
+                  <span className="text-sm font-bold tabular-nums">
+                    {result.cafeTouchCount.toLocaleString()}
+                    <span className="text-[10px] font-normal text-gray-400 ml-0.5">{t('affectionTab.units.taps')}</span>
                   </span>
                 </div>
-              )}
-            </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <FiCalendar size={11} />
+                    {t('affectionTab.result.schedule')}
+                    <span className="text-gray-300 dark:text-neutral-600">+25</span>
+                  </span>
+                  <span className="text-sm font-bold tabular-nums">
+                    {result.scheduleCount.toLocaleString()}
+                    <span className="text-[10px] font-normal text-gray-400 ml-0.5">{t('affectionTab.units.runs')}</span>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Crafting information (Optional) */}
+            {simulateCrafting && result.craftingRequiredCount > 0 && (
+              <div className="flex items-center gap-2 border-t border-amber-200 dark:border-amber-800/40 pt-2">
+                <FiRepeat size={11} className="text-amber-500 shrink-0" />
+                <span className="text-[11px] text-amber-600 dark:text-amber-400 flex-1">{t('affectionTab.result.craftingNeeded')}</span>
+                <span className="text-sm font-bold text-amber-700 dark:text-amber-300 tabular-nums">
+                  {result.craftingRequiredCount.toLocaleString()}
+                  <span className="text-[10px] font-normal ml-0.5">{t('affectionTab.units.times')}</span>
+                </span>
+              </div>
+            )}
           </div>
         )}
 
         {/* Level Controls */}
-        <div className="space-y-6 px-1">
-          {/* Current Level Control */}
-          <div>
-            <div className="flex justify-between items-center text-xs font-bold text-gray-500 mb-1.5 min-h-[24px]">
-              <span>{t('affectionTab.labels.current')}</span>
-              {/* Editable Current Level */}
+        <div className="flex flex-col gap-3 px-1">
+          {/* Current / Target 2-column layout */}
+          <div className="flex gap-3">
+            {/* Current */}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-gray-500 mb-1">{t('affectionTab.labels.current')}</p>
               <EditableLevelDisplay
                 value={plan.current.affection}
                 max={100}
@@ -421,47 +427,18 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
                 onChange={(val) => handlePlanChange('current.affection', val, true)}
                 textClassName="text-gray-800 dark:text-white"
               />
-            </div>
-
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value={plan.current.affection}
-              onChange={(e) => handlePlanChange('current.affection', Number(e.target.value), true)}
-              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700 accent-gray-600"
-            />
-
-            {/* EXP Control */}
-            <div className="flex items-center gap-2 mt-2 opacity-70 hover:opacity-100 transition-opacity">
-              <div className="flex items-center justify-end text-[10px] font-bold text-gray-400 min-w-[60px] whitespace-nowrap gap-1">
-                {/* Editable Current EXP */}
-                <EditableLevelDisplay
-                  value={plan.current.affectionExp}
-                  max={affectionExpToNextLevel[plan.current.affection] || 0}
-                  min={0}
-                  onChange={(val) => handlePlanChange('current.affectionExp', val, true)}
-                  textClassName="text-gray-500 dark:text-gray-300"
-                />
-                <span>/ {affectionExpToNextLevel[plan.current.affection] || 0}</span>
-              </div>
-
               <input
                 type="range"
-                min="0"
-                max={affectionExpToNextLevel[plan.current.affection] || 100}
-                value={plan.current.affectionExp}
-                onChange={(e) => handlePlanChange('current.affectionExp', Number(e.target.value), true)}
-                className="flex-1 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer dark:bg-neutral-800 accent-gray-400"
+                min="1"
+                max="100"
+                value={plan.current.affection}
+                onChange={(e) => handlePlanChange('current.affection', Number(e.target.value), true)}
+                className="w-full h-1 mt-1 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700 accent-gray-600"
               />
             </div>
-          </div>
-
-          {/* Target Level Control */}
-          <div>
-            <div className="flex justify-between items-center text-xs font-bold text-gray-500 mb-1.5 min-h-[24px]">
-              <span className="text-blue-500">{t('affectionTab.labels.target')}</span>
-              {/* Editable Target Level */}
+            {/* Target */}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-blue-500 mb-1">{t('affectionTab.labels.target')}</p>
               <EditableLevelDisplay
                 value={plan.target.affection}
                 max={100}
@@ -470,80 +447,136 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
                 onChange={(val) => handlePlanChange('target.affection', val, true)}
                 textClassName="text-blue-600 dark:text-blue-400"
               />
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={plan.target.affection}
+                onChange={(e) => handlePlanChange('target.affection', Number(e.target.value), true)}
+                className="w-full h-1 mt-1 bg-blue-100 rounded-lg appearance-none cursor-pointer dark:bg-blue-900/30 accent-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Current EXP */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center text-[10px] font-bold text-gray-400 whitespace-nowrap gap-1">
+              <EditableLevelDisplay
+                value={plan.current.affectionExp}
+                max={affectionExpToNextLevel[plan.current.affection] || 0}
+                min={0}
+                onChange={(val) => handlePlanChange('current.affectionExp', val, true)}
+                textClassName="text-gray-500 dark:text-gray-300"
+              />
+              <span>/ {affectionExpToNextLevel[plan.current.affection] || 0}</span>
             </div>
             <input
               type="range"
-              min="1"
-              max="100"
-              value={plan.target.affection}
-              onChange={(e) => handlePlanChange('target.affection', Number(e.target.value), true)}
-              className="w-full h-1 bg-blue-100 rounded-lg appearance-none cursor-pointer dark:bg-blue-900/30 accent-blue-500"
+              min="0"
+              max={affectionExpToNextLevel[plan.current.affection] || 100}
+              value={plan.current.affectionExp}
+              onChange={(e) => handlePlanChange('current.affectionExp', Number(e.target.value), true)}
+              className="flex-1 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer dark:bg-neutral-800 accent-gray-400"
             />
           </div>
         </div>
       </div>
 
       {/* --- RIGHT: Inventory --- */}
-      <div className="flex-1 flex flex-col gap-4 min-h-0">
-        <div className="bg-white dark:bg-neutral-800 rounded-md p-3 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex items-center gap-3 flex-1 min-w-[160px]">
-            <div className="w-8 h-8 bg-amber-50 dark:bg-amber-900/20 rounded-sm flex items-center justify-center text-amber-500">
-              <FiBox size={16} />
+      <div className="flex-1 flex flex-col gap-3">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Selection box */}
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 bg-amber-50 dark:bg-amber-900/20 rounded-sm flex items-center justify-center text-amber-500 shrink-0">
+              <FiBox size={13} />
             </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{t('affectionTab.labels.choiceBox')}</span>
-            </div>
+            <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{t('affectionTab.labels.choiceBox')}</span>
             <CustomNumberInput
               value={selectionBoxCount}
               onChange={(val) => handleUpdateSelectionBox(Number(val))}
               min={0}
-              max={999}
-              className="w-14 h-8 bg-gray-50 dark:bg-neutral-900 border-none rounded-sm text-center font-bold text-sm focus:ring-1 focus:ring-amber-400"
+              max={9999}
+              className="w-14 h-7 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-600 rounded text-center font-bold text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex gap-1 ml-auto">
+            {/* Reset button */}
+            <button
+              onClick={handleResetGifts}
+              className="px-2.5 py-1 rounded-sm text-xs font-bold transition-all flex items-center gap-1 bg-white text-gray-500 ring-1 ring-gray-100 hover:bg-gray-50 hover:text-red-500 dark:bg-neutral-800 dark:text-gray-400 dark:ring-neutral-700 dark:hover:text-red-400"
+              title={t('affectionTab.actions.reset')}
+            >
+              <FiRotateCcw size={11} />
+            </button>
             <button
               onClick={() => setSimulateCrafting(!simulateCrafting)}
-              className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded-sm text-xs font-bold transition-all flex items-center gap-1 ${
                 simulateCrafting
                   ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800'
                   : 'bg-white text-gray-500 ring-1 ring-gray-100 hover:bg-gray-50 dark:bg-neutral-800 dark:text-gray-400 dark:ring-neutral-700'
               }`}
             >
-              <FiRepeat /> {t('affectionTab.actions.craftingFill')}
+              <FiRepeat size={11} />
+              {t('affectionTab.actions.craftingFill')}
             </button>
-
             <button
               onClick={() => setHideNonPreferred(!hideNonPreferred)}
-              className={`px-3 py-1.5 rounded-sm text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded-sm text-xs font-bold transition-all flex items-center gap-1 ${
                 hideNonPreferred
                   ? 'bg-gray-800 text-white dark:bg-white dark:text-black'
                   : 'bg-white text-gray-500 ring-1 ring-gray-100 hover:bg-gray-50 dark:bg-neutral-800 dark:text-gray-400 dark:ring-neutral-700'
               }`}
             >
-              <FiFilter />
+              <FiFilter size={11} />
               {t('affectionTab.actions.showPreferredOnly')}
             </button>
           </div>
         </div>
 
-        {/* Grid Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 pb-2">
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2">
+        {/* Gift grid */}
+        <div className="pr-1 pb-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
             {displayedGifts.map((gift) => (
-              <GiftItem key={gift.id} gift={gift} ownedCount={ownedGifts[gift.id] || 0} deficitExp={result?.deficitExp || 0} eventData={eventData} iconData={iconData} onUpdate={handleUpdateGift} />
+              <GiftItem
+                key={gift.id}
+                gift={gift}
+                ownedCount={ownedGifts[gift.id] || 0}
+                deficitExp={result?.deficitExp || 0}
+                eventData={eventData}
+                iconData={iconData}
+                onUpdate={handleUpdateGift}
+                onSelect={allStudents ? () => setSelectedGiftId(selectedGiftId === gift.id ? null : gift.id) : undefined}
+                isSelected={selectedGiftId === gift.id}
+              />
             ))}
           </div>
-
           {displayedGifts.length === 0 && (
-            <div className="h-64 flex flex-col items-center justify-center text-gray-300 dark:text-neutral-600">
-              <FiFilter size={40} className="mb-2 opacity-20" />
+            <div className="h-48 flex flex-col items-center justify-center text-gray-300 dark:text-neutral-600">
+              <FiFilter size={32} className="mb-2 opacity-20" />
               <p className="text-sm font-medium">{t('affectionTab.messages.noItems')}</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* --- STUDENT LIST SHEET (shared) --- */}
+      {selectedGiftId &&
+        (() => {
+          const gift = giftAffectionList.find((g) => g.id === selectedGiftId);
+          if (!gift) return null;
+          return (
+            <GiftStudentSheet
+              gift={gift}
+              students={giftToStudentsMap[selectedGiftId] ?? []}
+              studentPortraits={studentPortraits}
+              eventData={eventData}
+              iconData={iconData}
+              onClose={() => setSelectedGiftId(null)}
+            />
+          );
+        })()}
     </div>
   );
 };

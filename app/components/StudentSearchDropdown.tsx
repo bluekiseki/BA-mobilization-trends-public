@@ -26,6 +26,11 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
 
+  const squadTypeColors: Record<string, string> = {
+    Main: '#cc1a25',
+    Support: '#006bff',
+  };
+
   useEffect(() => {
     if (selectedStudent) {
       setSearchTerm(selectedStudent.Name);
@@ -34,19 +39,74 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
     }
   }, [selectedStudent]);
 
-  const filteredStudents = Object.entries(students).filter(([, student]) => {
-    const searchText = searchTerm.toLowerCase();
-    const nameMatch = matcher(student.Name, searchText);
-    const tagsMatch = student.SearchTags.some((tag) => matcher(tag, searchText));
-    const schoolMatch = matcher(t_club(student.School, student.School), t_club(searchText, searchText));
-    const familyNameMatch = matcher(student.FamilyName || '', searchText);
-    const roleString = String(t_student(`tactic_role_${student.TacticRole}` as any));
-    const roleMatch = matcher(roleString, searchText);
-    const squadTypeString = String(t_student(`squad_type_${student.SquadType.toLowerCase()}` as any));
-    const squadTypeMatch = matcher(squadTypeString, searchText);
+  const filteredStudents = Object.entries(students)
+    .map(([id, student]) => {
+      const searchText = searchTerm.toLowerCase().trim();
 
-    return nameMatch || tagsMatch || schoolMatch || roleMatch || squadTypeMatch || familyNameMatch;
-  });
+      // Display all when there is no search term (Score 0)
+      if (!searchText) {
+        return { id, student, isMatch: true, score: 0 };
+      }
+
+      const nameMatch = matcher(student.Name, searchText);
+      const tagsMatch = student.SearchTags.some((tag) => matcher(tag, searchText));
+      const familyNameMatch = matcher(student.FamilyName || '', searchText);
+      const schoolMatch = matcher(t_club(student.School, student.School), t_club(searchText, searchText));
+      const roleString = String(t_student(`tactic_role_${student.TacticRole}` as any));
+      const roleMatch = matcher(roleString, searchText);
+      const squadTypeString = String(t_student(`squad_type_${student.SquadType.toLowerCase()}` as any));
+      const squadTypeMatch = matcher(squadTypeString, searchText);
+
+      const isMatch = nameMatch || tagsMatch || familyNameMatch || schoolMatch || roleMatch || squadTypeMatch;
+
+      let score = 0;
+      if (isMatch) {
+        // 1st Priority: Name (Highest priority)
+        if (nameMatch) {
+          score += 1000;
+          // Additional bonus points if the name matches exactly or starts with the search term
+          if (student.Name.toLowerCase() === searchText) score += 500;
+          else if (student.Name.toLowerCase().startsWith(searchText)) score += 200;
+        }
+
+        // 2nd Priority: Nicknames and Tags
+        else if (tagsMatch) {
+          score += 100;
+        }
+
+        // 3rd Priority: Surname (e.g., 'Mikamo' Neru)
+        else if (familyNameMatch) {
+          score += 50;
+        }
+
+        // 4th Priority: Other attributes
+        else if (schoolMatch || roleMatch || squadTypeMatch) {
+          score += 10;
+        }
+      }
+      // score &&
+      //   console.log(
+      //     ' { id, student, isMatch, score }',
+      //     score,
+      //     student.Name,
+      //     searchText,
+      //     student.Name.toLowerCase() == searchText.toLowerCase(),
+      //     student.Name.toLowerCase() === searchText.toLowerCase(),
+      //     student.Name.toLowerCase().startsWith(searchText),
+      //   );
+      // score && console.log(`[${student.Name.toLowerCase()}]`, `[${searchText.toLowerCase()}]`);
+      return { id, student, isMatch, score };
+    })
+    .filter((item) => item.isMatch)
+    .sort((a, b) => {
+      // 1. Sort in descending order by score
+      if (a.score !== b.score) {
+        return b.score - a.score;
+      }
+      // 2. If scores are equal, sort alphabetically by name
+      return a.student.Name.localeCompare(b.student.Name);
+    })
+    .map(({ id, student }) => [id, student] as [string, Student]); // Return in the same array format as before
 
   const handleSelectStudent = (id: number) => {
     setSelectedStudentId(id);
@@ -123,10 +183,7 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-neutral-800 dark:text-white truncate transition-colors duration-300">{student.Name}</span>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`text-xs font-semibold rounded-full px-2 py-0.5 ${student.SquadType === 'Main' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}
-                      >
-                        {/* {student.SquadType} */}
+                      <span className="text-xs font-semibold rounded-full px-2 py-0.5 text-white" style={{ backgroundColor: squadTypeColors[student.SquadType] || '#666' }}>
                         {t_student(`squad_type_${student.SquadType.toLowerCase()}` as any) as any}
                       </span>
                       <span className="text-sm text-neutral-600 dark:text-neutral-400 font-medium transition-colors duration-300">

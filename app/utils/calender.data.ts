@@ -33,6 +33,8 @@ import krMinistoryCsvRaw from '~/data/kr/schedule/miniStory.csv?raw';
 import krPatchCsvRaw from '~/data/kr/schedule/patch.csv?raw';
 import type { GameServer } from '~/types/data';
 import { loadRaidInfosById } from './loadRaidInfo';
+import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
+import { getKstTime } from '~/data/globalRaidDates';
 
 const armorTypeTranslation = type_translation;
 
@@ -250,12 +252,19 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endMs = new Date(parseKST(item.endTime)).getTime();
 
+        const isLiveRunning = (() => {
+          const liveRaids = getLiveRaidInfo(locale);
+          const startDate = getKstTime(liveRaids[0].Date);
+          const endDate = new Date(startDate + LIVE_RAID_DURATION * 24 * 60 * 60 * 1000 - (11 - 4) * 60 * 60 * 1000);
+          return endDate.getTime() > nowMs;
+        })();
+
         let link: string | undefined = undefined;
         if (server == 'jp' && item.season < JP_RAID_SEASON_EXIST_START) {
           // nothing
         } else if (server == 'kr' && item.season < KR_RAID_SEASON_EXIST_START) {
           // nothing
-        } else if (nowMs >= startMs && nowMs <= endMs && server == 'jp') {
+        } else if (nowMs >= startMs && nowMs <= endMs && server == 'jp' && isLiveRunning) {
           link = '/live';
         } else if (server == 'kr' && item.season > KR_RAID_SEASON_EXIST_END) {
           const id = 'R' + (item.season + 3);
@@ -456,7 +465,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
           type: 'mainstory',
           startTime: item.startTime,
           endTime: endTimeISO, // ISO string for 1 hour later
-          title: `Vol.${item.volume} Ch.${item.chapter} ${item.part ? `Pt.${item.part}` : ''}`,
+          title: item.volume != null ? `Vol.${item.volume} Ch.${item.chapter} ${item.part ? `Pt.${item.part}` : ''}` : item[convTitleLnag(locale)] || item[convTitleLnag('ja')],
           details: { isPointEvent: true, prediction: !!item.prediction },
         });
       }

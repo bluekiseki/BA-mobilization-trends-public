@@ -24,9 +24,24 @@ interface SkillDisplayProps {
   skillData: Skill | undefined;
   currentRank: number; // Affection Rank
   targetRank: number; // Affection Rank
+  currentGear?: number;
+  targetGear?: number;
 }
 
-export const SkillDisplay = ({ studentInfo, skillKey, skillLabel, currentLevel, targetLevel, currentUW, targetUW, skillData, currentRank, targetRank }: SkillDisplayProps) => {
+export const SkillDisplay = ({
+  studentInfo,
+  skillKey,
+  skillLabel,
+  currentLevel,
+  targetLevel,
+  currentUW,
+  targetUW,
+  skillData,
+  currentRank,
+  targetRank,
+  currentGear = 0,
+  targetGear = 0,
+}: SkillDisplayProps) => {
   const { t } = useTranslation(['planner', 'stat']);
 
   // --- Logic: Determine Effective Skill Data (Weapon/Gear upgrades) ---
@@ -48,15 +63,17 @@ export const SkillDisplay = ({ studentInfo, skillKey, skillLabel, currentLevel, 
     }
   }
 
-  // 2. Bond Gear Normal Skill Upgrade (Bond 20, T2 Gear)
-  // Note: Assuming logic based on Affection Rank >= 20 for simplicity as per snippet
+  // 2. Bond Gear Normal Skill Upgrade (Bond rank >= 20 AND T2 gear equipped)
   if (skillKey === 'Public') {
     const hasGearPublic = !!studentInfo.Skills.GearPublic;
     if (hasGearPublic) {
-      if (currentRank >= 20) currentSkillData = studentInfo.Skills.GearPublic;
-      if (targetRank >= 20) targetSkillData = studentInfo.Skills.GearPublic;
+      const currentMeetsGear = currentRank >= 20 && currentGear >= 2;
+      const targetMeetsGear = targetRank >= 20 && targetGear >= 2;
 
-      if (currentRank >= 20 !== targetRank >= 20) {
+      if (currentMeetsGear) currentSkillData = studentInfo.Skills.GearPublic;
+      if (targetMeetsGear) targetSkillData = studentInfo.Skills.GearPublic;
+
+      if (currentMeetsGear !== targetMeetsGear) {
         isDescriptionChanged = true;
       }
     }

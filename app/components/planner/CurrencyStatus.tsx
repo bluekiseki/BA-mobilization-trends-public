@@ -6,6 +6,7 @@ import type { EventData, IconData } from '~/types/plannerData';
 import { getLocalizeEtcName } from './common/locale';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
+import { CustomNumberInput } from '../CustomInput';
 
 interface CurrencyStatusProps {
   eventData: EventData;
@@ -13,6 +14,7 @@ interface CurrencyStatusProps {
   ownedCurrency: Record<number, number>;
   setOwnedCurrency: React.Dispatch<React.SetStateAction<Record<number, number>>>;
   remainingCurrency: Record<number, number>;
+  defaultEditing?: boolean;
   // ref: RefObject<HTMLDivElement | null>  ;
 }
 
@@ -22,9 +24,10 @@ export const CurrencyStatus = ({
   ownedCurrency,
   setOwnedCurrency,
   remainingCurrency,
+  defaultEditing = false,
   // ref
 }: CurrencyStatusProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(defaultEditing);
 
   const handleOwnedChange = (itemId: number, value: string) => {
     const amount = parseInt(value) || 0;
@@ -65,14 +68,16 @@ export const CurrencyStatus = ({
                     <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1 truncate" style={{ maxWidth: '80px' }}>
                       {getLocalizeEtcName(eventData.icons.Item?.[itemId]?.LocalizeEtc, locale)}
                     </p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">{t('ui.initialOwned', { value: (ownedCurrency[itemId] || 0).toLocaleString() })}</p>
                   </div>
                 </div>
                 {isEditing && (
                   <div className="mt-1">
-                    <input
-                      type="number"
-                      value={ownedCurrency[itemId] || ''}
-                      onChange={(e) => handleOwnedChange(itemId, e.target.value)}
+                    <CustomNumberInput
+                      // type="number"
+                      value={ownedCurrency[itemId] || null}
+                      onChange={(e) => handleOwnedChange(itemId, String(e))}
+                      placeholder={t('ui.currencyInitialInput')}
                       className="w-full p-1 text-xs rounded border dark:border-neutral-600 text-right bg-transparent dark:text-gray-200"
                     />
                   </div>

@@ -54,7 +54,7 @@ const CustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, 
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
-    <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="white">
+    <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="white" pointerEvents="none">
       <tspan x={x} dy="-0.1em" fontSize="12px" fontWeight="bold">
         {name}
       </tspan>
@@ -85,6 +85,7 @@ const TooltipContent = ({ data }: { data: ChartData }) => {
 
 export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, tierCounter, server, id }: GrandAssaultTotalScoreAnalysisProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation('dashboard');
   const [_isPending, startTransition] = useTransition();
   const [allPlayers, setAllPlayers] = useState<PlayerAnalysisData[]>([]);
@@ -216,6 +217,33 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
     }
   };
 
+  const handleTouchStart = (data: ChartData, event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    const tooltipNode = tooltipRef.current;
+    const containerNode = containerRef.current;
+    if (!touch || !tooltipNode || !containerNode) return;
+
+    const rect = containerNode.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    const htmlContent = ReactDOMServer.renderToStaticMarkup(<TooltipContent data={data} />);
+    tooltipNode.innerHTML = htmlContent;
+    tooltipNode.style.opacity = '1';
+    tooltipNode.style.transform = `translate(${x + 10}px, ${y + 10}px)`;
+  };
+
+  // Hide tooltip when tapping outside the chart
+  useEffect(() => {
+    const handleOutsidePointer = (e: PointerEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        if (tooltipRef.current) tooltipRef.current.style.opacity = '0';
+      }
+    };
+    document.addEventListener('pointerdown', handleOutsidePointer);
+    return () => document.removeEventListener('pointerdown', handleOutsidePointer);
+  }, []);
+
   return (
     <div className="p-0 bg-neutral-50 dark:bg-neutral-900 space-y-8" onMouseLeave={handleMouseLeave}>
       <Card title={t('donutChartTitle')} className="space-y-4">
@@ -240,7 +268,7 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
           )}
         </div>
 
-        <div className="relative" style={{ width: '100%', height: 'min(600px, 100vw)' }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+        <div ref={containerRef} className="relative" style={{ width: '100%', height: 'min(600px, 100vw)' }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
           <ResponsiveContainer>
             <PieChart>
               <Pie
@@ -272,12 +300,20 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
                                     `}
                     onMouseEnter={(e) => handleMouseEnter(entry, e)}
                     onMouseLeave={handleMouseLeave}
+                    onTouchStart={(e) => handleTouchStart(entry, e)}
                   />
                 ))}
               </Pie>
               <Pie data={donutData.group} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="90%" innerRadius="61%" labelLine={false} label={<CustomizedLabel />}>
                 {donutData.group.map((entry) => (
-                  <Cell key={`cell-group-${entry.name}`} fill={entry.color} className="cursor-pointer" onMouseEnter={(e) => handleMouseEnter(entry, e)} onMouseLeave={handleMouseLeave} />
+                  <Cell
+                    key={`cell-group-${entry.name}`}
+                    fill={entry.color}
+                    className="cursor-pointer"
+                    onMouseEnter={(e) => handleMouseEnter(entry, e)}
+                    onMouseLeave={handleMouseLeave}
+                    onTouchStart={(e) => handleTouchStart(entry, e)}
+                  />
                 ))}
               </Pie>
             </PieChart>

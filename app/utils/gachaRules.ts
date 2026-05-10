@@ -3,8 +3,8 @@
 export const FES_EXCLUSIONS_BY_PICKUP_ID: Record<number, number[]> = {
   // Example data (Actual IDs need verification)
   // Pickup Student ID : [List of FES student IDs to exclude]
-  10134: [10059, 10045, 10033], // On Alice (Maid) pickup -> Mika, S.Hoshino, Wakamo excluded
-  10135: [10059, 10045, 10033], // On Kei (Maid) pickup -> Same as above
+  10134: [10059, 10045, 10033], // On Aris pickup -> Mika, S.Hoshino, Wakamo excluded
+  10135: [10059, 10045, 10033], // On Kei pickup -> Same as above
 };
 
 export const FES_EXCLUSIONS = FES_EXCLUSIONS_BY_PICKUP_ID;

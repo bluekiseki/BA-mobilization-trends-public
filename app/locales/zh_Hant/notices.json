@@ -1,0 +1,41 @@
+{
+  "title": "公告存檔",
+  "subtitle": "查看所有伺服器的更新及公告紀錄。",
+  "servers": {
+    "ALL": "全部伺服器",
+    "KR": "韓國",
+    "Global": "全球",
+    "JP": "日本",
+    "TW": "台灣"
+  },
+  "types": {
+    "ALL": "全部",
+    "VIDEO": "影片",
+    "ETC": "其他"
+  },
+  "searchPlaceholder": "搜尋公告標題...",
+  "sort": {
+    "new": "最新發布",
+    "modified": "最近更新"
+  },
+  "noResults": "無搜尋結果。",
+  "loading": "資料載入中...",
+  "postedAt": "發布",
+  "modifiedAt": "更新",
+  "prev": "上一頁",
+  "next": "下一頁",
+  "backToList": "返回全部列表",
+  "firstCrawled": "首次收錄",
+  "apiCreated": "建立時間",
+  "apiModified": "修改時間",
+  "copy": "複製",
+  "copied": "✓ 已複製",
+  "noContent": "無正文內容。",
+  "historyTitle": "修改歷程時間軸",
+  "currentlyViewing": "目前檢視中",
+  "latestVersion": "最新版本",
+  "versionId": "VERSION ID: {{id}}",
+  "changeRecorded": "已記錄資料變更。",
+  "notFound": "找不到公告。",
+  "viewAll": "查看所有公告"
+}

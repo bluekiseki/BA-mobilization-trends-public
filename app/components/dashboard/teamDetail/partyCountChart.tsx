@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { ReportEntry } from '../common';
 import { Bar, BarChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import React from 'react';
 
 const BAR_COLORS = ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2', '#59a14f', '#edc949', '#af7aa1'];
 
@@ -32,7 +33,7 @@ const CustomBarLabel = (props: any) => {
   );
 };
 
-export const PartyCountChart: React.FC<{ data: ReportEntry[] }> = ({ data }) => {
+export const PartyCountChart: React.FC<{ data: ReportEntry[] }> = React.memo(({ data }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const handleMouseEnter = (index: number) => {
@@ -90,16 +91,16 @@ export const PartyCountChart: React.FC<{ data: ReportEntry[] }> = ({ data }) => 
                   <div className="rounded border bg-white p-2 text-sm text-neutral-700 shadow-md dark:border-neutral-600 dark:bg-neutral-800 dark:text-white">
                     <div> {label}</div>
                     {payload
-                      .filter((v) => v.value > 0.01 || Number(v.dataKey.replace('PT', '')) < maxPT)
+                      .filter((v) => Number(v.value) > 0.01 || Number(String(v.dataKey).replace('PT', '')) < maxPT)
                       .map((entry, i) => (
-                        <div key={i} className={'flex justify-between gap-x-2 ' + (Number(entry.name.replace('PT', '')) == activeIndex ? 'font-bold' : '')}>
+                        <div key={i} className={'flex justify-between gap-x-2 ' + (Number(String(entry.name).replace('PT', '')) == activeIndex ? 'font-bold' : '')}>
                           <span className="text-left">{entry.name}:</span>
-                          <span className="text-right tabular-nums">{rawCounts.get(Number(entry.name.replace('PT', '')))}</span>
-                          <span className="text-right tabular-nums">{entry.value.toFixed(2)}% </span>
+                          <span className="text-right tabular-nums">{rawCounts.get(Number(String(entry.name).replace('PT', '')))}</span>
+                          <span className="text-right tabular-nums">{Number(entry.value).toFixed(2)}% </span>
                         </div>
                       ))}
 
-                    {payload.filter((v) => v.value > 0.01).length != payload.length ? <div>...</div> : <></>}
+                    {payload.filter((v) => Number(v.value) > 0.01).length != payload.length ? <div>...</div> : <></>}
                   </div>
                 );
               }
@@ -126,4 +127,4 @@ export const PartyCountChart: React.FC<{ data: ReportEntry[] }> = ({ data }) => 
       </ResponsiveContainer>
     </div>
   );
-};
+});

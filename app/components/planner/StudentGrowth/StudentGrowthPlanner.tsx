@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ItemIcon } from '../common/Icon';
+import { MaterialNeedsSection } from './MaterialNeedsSection';
 import { StudentGrowthPlanCard } from './StudentGrowthPlanCard';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
 import type { EventData, IconData, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
@@ -97,18 +97,7 @@ export const StudentGrowthPlanner = ({ eventId, eventData, iconData, allStudents
           <button onClick={() => addPlan(eventId)} className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-bold py-2 rounded-lg mt-2">
             {t('ui.addNewPlan')}
           </button>
-          {Object.keys(calculatedNeeds).length > 0 && (
-            <div className="mt-4">
-              <h3 className="font-bold dark:text-gray-200">{t('label.materialsForCurrentEvent')}</h3>
-              <div className="flex flex-wrap gap-2 mt-2 p-3 bg-gray-100 dark:bg-neutral-800/50 rounded-lg">
-                {Object.entries(calculatedNeeds).map(([key, amount]) => {
-                  if (amount <= 0) return null;
-                  const [type, id] = key.split('_');
-                  return <ItemIcon key={key} type={type} itemId={id} amount={amount} size={12} eventData={eventData} iconData={iconData} />;
-                })}
-              </div>
-            </div>
-          )}
+          {Object.keys(calculatedNeeds).length > 0 && <MaterialNeedsSection calculatedNeeds={calculatedNeeds} eventData={eventData} iconData={iconData} />}
         </div>
       )}
     </>

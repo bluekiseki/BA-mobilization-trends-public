@@ -44,7 +44,7 @@ const getBracketFromTotalScore = (score: number, brackets: { name: string; minSc
 };
 
 export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, raidInfos, server }) => {
-  console.log('[RankScatterChart]', { isRaid, lastData, raidInfos, server });
+  // console.log('[RankScatterChart]', { isRaid, lastData, raidInfos, server });
   const [activeTab, setActiveTab] = useState<ChartTab>('total');
   const [axisType, setAxisType] = useState<'score' | 'time'>('score');
   const [visibleDifficulties, setVisibleDifficulties] = useState<Set<string>>(new Set());

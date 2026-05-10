@@ -97,7 +97,8 @@
       }
     },
     "promoBanner": {
-      "noMoreToday": "本日表示しない"
+      "noMoreToday": "本日表示しない",
+      "noMoreThisWeek": "1週間表示しない"
     },
     "bugReport": {
       "title": "フィードバックを送信",
@@ -114,6 +115,34 @@
       "errorMsg": "送信に失敗しました。もう一度お試しください。",
       "githubIssue": "GitHub Issuesで報告する",
       "poweredBy": "このリクエストは Web3Forms を通じて送信されます。"
+    },
+    "yesterday": "昨日",
+    "today": "今日",
+    "tomorrow": "明日",
+    "remainingTime": "残り{{day}}日{{hour}}時間",
+    "remainingDays": "残り{{day}}日",
+    "remainingHours": "残り{{hour}}時間",
+    "startsIn": "{{day}}日{{hour}}時間後に開始",
+    "startsInDays": "{{day}}日後に開始",
+    "startsInHours": "{{hour}}時間後に開始",
+    "remainingMinutes": "残り{{min}}分",
+    "startsInMinutes": "{{min}}分後に開始",
+    "status": {
+      "live": "LIVE",
+      "recent": "最近",
+      "upcoming": "予定"
+    },
+    "home": {
+      "currentStatus": "現在の状況",
+      "schedule": "スケジュール",
+      "notices": "お知らせ",
+      "tools": "ツール",
+      "analytics": "分析",
+      "plannersAndTools": "プランナー & ツール",
+      "birthdaySoon": "お誕生日おめでとう！",
+      "jpStats": "JP 統計",
+      "kivotosPeace": "キヴォトスは現在平和な状態です",
+      "noEvent": "現在イベントはありません。"
     }
   },
   "charts": {
@@ -167,7 +196,6 @@
       "description2": "最大レベルを基準として、生徒のレベルに応じて出撃回数が補正されます。（例：最大レベルが90の時にLv. 45の生徒を出撃させた場合、45/90 = 0.5回として計算）",
       "processingMessage": "データの読み込み、解凍、処理中です...",
       "noDataMessage": "表示するデータがありません。フィルターでレアリティを1つ以上選択してください。",
-
       "usage_statistics": "採用率統計",
       "usage_desc": "総力戦・大決戦レイドごとの星数別採用率を比較します。",
       "control": {
@@ -228,7 +256,8 @@
     "teamUsageCount": "部隊投入数",
     "StudentGrowthByRankTitle": "順位別生徒の星の数の状況",
     "StudentGrowthByRank": "順位別生徒の星の数の状況",
-    "popularFormations": "よく使われた編成（合計 {x}件）",
+    "popularFormations": "人気の編成（合計 {x}件）",
+
     "rankingsAndTeams": "ランキング＆チーム（合計 {x}件）",
     "includeStudent": "含める生徒",
     "excludeStudent": "除外する生徒",
@@ -238,6 +267,15 @@
     "searchStudentByName": "名前または略称で生徒検索···",
     "noResults": "検索結果がありません。",
     "selectStar": "星の数を選択",
+    "filter_view_code": "コードで編集",
+    "filter_export": "フィルターをエクスポート（コピー）",
+    "filter_copy_done": "コピーしました！",
+    "filter_import": "クリップボードからインポート",
+    "filter_import_placeholder": "フィルターJSONを貼り付け...",
+    "filter_import_error": "フォーマットが正しくありません。",
+    "filter_import_apply": "適用",
+    "filter_reset": "リセット",
+    "add_my_students": "未編成生徒を追加",
     "includableStudentTitle": "出撃可能な生徒",
     "excludableStudentTitle": "出撃が難しい生徒",
     "tagMustInclude": "必須",
@@ -312,6 +350,7 @@
     "closeDetails": "詳細情報を閉じる",
     "maxScore": "最高スコア",
     "minTime": "最短時間",
+    "bestRank": "最高順位",
     "timeViewUnavailable": "時間別分析は全てのパーティーメンバーが同一難易度である場合のみ可能です。",
     "viewByStudent": "生徒別表示",
     "viewAllStudents": "全体",
@@ -352,6 +391,7 @@
       "terrain": "地形",
       "defenseType": "防御タイプ",
       "attackType": "攻撃タイプ",
+      "student_name": "生徒名",
       "copy": "コピー",
       "copied": "コピーしました！",
       "dateRange": "期間"
@@ -359,8 +399,10 @@
     "composition": {
       "mode_team": "部隊",
       "mode_report": "レポート",
-      "total_parties": "総部隊数",
+      "total_parties": "部隊投入数",
       "full_party_only": "すべて編成されたチームのみ",
+      "table_filter_reflect": "包含・除外フィルター条件を反映",
+      "only_with_video": "クリア動画ありのみ",
       "specific_team": "特定の部隊",
       "from_start": "先頭から",
       "from_end": "末尾から",
@@ -368,6 +410,9 @@
       "click_to_collapse": "閉じる",
       "click_for_details": "詳細を表示",
       "load_more": "もっと見る",
+      "sort_count": "出撃数順",
+      "sort_bestRank": "最高スコア順",
+      "ignore_position": "配置を無視",
       "placement_variants": "配置パターン",
       "mulligan_variants": "初手(スキル)パターン"
     }
@@ -376,7 +421,9 @@
     "title": "ダッシュボード一覧",
     "description": "過去に開催された総力戦・大決戦の統計ダッシュボード一覧",
     "pinnedGlobalTitle": "現在進行中のグローバルサーバー総力戦・大決戦",
-    "liveBetaTitle": "リアルタイムダッシュボード (ベータ)"
+    "liveBetaTitle": "リアルタイムダッシュボード (ベータ)",
+    "searchPlaceholder": "ボス名またはIDで検索...",
+    "filterAll": "すべて"
   },
   "liveDashboard": {
     "description": "現在開催中の総力戦・大決戦のリアルタイムボーダー",

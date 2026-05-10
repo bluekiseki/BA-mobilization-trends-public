@@ -1,10 +1,13 @@
-// // SkillsTab.tsx
+// SkillsTab.tsx
 
 import { useTranslation } from 'react-i18next';
+import { FiInfo } from 'react-icons/fi';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { EXSkill, Student } from '~/types/plannerData';
+import type { EventData, EXSkill, IconData, Student } from '~/types/plannerData';
+import { calcSkillCostNeeds } from '~/utils/calculatedGrowthNeeds';
 import { SkillDisplay } from './SkillDisplay';
 import { MinMaxControls } from './MinMaxControls';
+import { InlineCostHint } from './InlineCostHint';
 
 export const SKILL_CONFIG = [
   { id: 'ex', labelKey: 'common.ex', skillKey: 'Ex', maxLevel: 5 },
@@ -22,9 +25,11 @@ interface SkillsTabProps {
   plan: GrowthPlan;
   studentInfo: Student | null;
   handlePlanChange: (field: string, value: any, isNumeric?: boolean) => void;
+  iconData?: IconData;
+  eventData?: EventData;
 }
 
-export const SkillsTab = ({ plan, studentInfo, handlePlanChange }: SkillsTabProps) => {
+export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, eventData }: SkillsTabProps) => {
   const { t } = useTranslation('planner');
 
   if (!studentInfo) return <div className="text-center p-4 text-xs text-gray-400">Please select a student.</div>;
@@ -36,6 +41,18 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange }: SkillsTabProp
         const mainSkillData = studentInfo.Skills[skillKey];
 
         const skillRenderList = skillKey === 'Ex' && (mainSkillData as EXSkill)?.ExtraSkills ? (mainSkillData as EXSkill).ExtraSkills : [mainSkillData];
+
+        // Bond Gear hint: normal skill upgrades when affection >= 20 AND gear T2
+        const hasGearNormalUpgrade = id === 'normal' && !!(studentInfo.Skills as any).GearPublic;
+        const hasGear = !!(studentInfo.Gear && 'TierUpMaterial' in studentInfo.Gear);
+        const targetMeetsGearCondition = plan.target.affection >= 20 && (plan.target.gear ?? 0) >= 2;
+        const showGearHint = hasGearNormalUpgrade && hasGear && !targetMeetsGearCondition;
+
+        const currentLevel = plan.current[id as keyof typeof plan.current] as number;
+        const targetLevel = plan.target[id as keyof typeof plan.target] as number;
+        const skillMat = id === 'ex' ? studentInfo.SkillExMaterial : studentInfo.SkillMaterial;
+        const skillMatAmt = id === 'ex' ? studentInfo.SkillExMaterialAmount : studentInfo.SkillMaterialAmount;
+        const skillNeeds = calcSkillCostNeeds(currentLevel, targetLevel, skillMat, skillMatAmt, id === 'ex' ? 'EX' : 'Normal');
 
         return (
           <div key={id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-start gap-4">
@@ -55,9 +72,26 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange }: SkillsTabProp
                       skillData={s}
                       currentRank={plan.current.affection}
                       targetRank={plan.target.affection}
+                      currentGear={plan.current.gear ?? 0}
+                      targetGear={plan.target.gear ?? 0}
                     />
                   </div>
                 ))}
+              {showGearHint && (
+                <div className="mt-2 flex items-center gap-2 px-2 py-1.5 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-400">
+                  <FiInfo className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[11px] flex-1">{t('skillsTab.gearNormalHint', 'Bond Gear T2 + affection 20 upgrades this skill.')}</span>
+                  <button
+                    onClick={() => {
+                      handlePlanChange('target.affection', Math.max(plan.target.affection, 20), true);
+                      handlePlanChange('target.gear', 2, true);
+                    }}
+                    className="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-500 text-white hover:bg-amber-600 transition-colors shrink-0"
+                  >
+                    {t('skillsTab.setGearGoal', 'Set as goal')}
+                  </button>
+                </div>
+              )}
             </div>
 
             {}
@@ -95,6 +129,7 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange }: SkillsTabProp
                   </select>
                 </div>
               </div>
+              <InlineCostHint needs={skillNeeds} iconData={iconData} eventData={eventData} />
             </div>
           </div>
         );

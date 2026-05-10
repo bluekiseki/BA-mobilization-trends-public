@@ -234,5 +234,19 @@
     "Cnt": { "All": 33419, "Torment": 31628, "Insane": 1791 }
   },
   { "Id": "E31", "Boss": "Hieronymus", "Location": "Street", "Type": "Unarmed", "Date": "2026-03-04", "Alias": "S.Hieronymus", "MaxLv": 90, "Cnt": { "All": 33403, "Torment": 31515, "Insane": 1888 } },
-  { "Id": "E31", "Boss": "Hieronymus", "Location": "Street", "Type": "LightArmor", "Date": "2026-03-04", "Alias": "S.Hieronymus", "MaxLv": 90, "Cnt": { "All": 33441, "Insane": 33441 } }
+  { "Id": "E31", "Boss": "Hieronymus", "Location": "Street", "Type": "LightArmor", "Date": "2026-03-04", "Alias": "S.Hieronymus", "MaxLv": 90, "Cnt": { "All": 33441, "Insane": 33441 } },
+  { "Id": "R87", "Boss": "Goz", "Location": "Outdoor", "Date": "2026-03-25", "Alias": "O.Goz", "MaxLv": 90, "Cnt": { "All": 45316, "Lunatic": 8291, "Torment": 37025 } },
+  {
+    "Id": "E32",
+    "Boss": "Perorozilla",
+    "Location": "Outdoor",
+    "Type": "HeavyArmor",
+    "Date": "2026-04-08",
+    "Alias": "O.Peroro.",
+    "MaxLv": 90,
+    "Cnt": { "All": 39187, "Torment": 28388, "Insane": 10799 }
+  },
+  { "Id": "E32", "Boss": "Perorozilla", "Location": "Outdoor", "Type": "Unarmed", "Date": "2026-04-08", "Alias": "O.Peroro.", "MaxLv": 90, "Cnt": { "All": 40366, "Torment": 40252, "Insane": 114 } },
+  { "Id": "E32", "Boss": "Perorozilla", "Location": "Outdoor", "Type": "ElasticArmor", "Date": "2026-04-08", "Alias": "O.Peroro.", "MaxLv": 90, "Cnt": { "All": 40120, "Insane": 40120 } },
+  { "Id": "R88", "Boss": "KAITEN", "Location": "Street", "Date": "2026-04-29", "Alias": "S.KAITEN", "MaxLv": 90, "Cnt": { "All": 31394, "Lunatic": 1440, "Torment": 29954 } }
 ]

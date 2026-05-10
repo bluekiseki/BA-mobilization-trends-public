@@ -443,60 +443,71 @@ studentId,name,startTime,endTime,rerun,limited,fast,bannerType,prediction
 20028,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,true,false,
 10068,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,false,false,
 10058,,2026-03-31 11:00:00,2026-04-07 10:59:00,true,false,false,
-10131,,2026-04-07 11:00:00,2026-04-21 10:59:00,false,false,false,,true
-20052,,2026-04-07 11:00:00,2026-04-21 10:59:00,false,false,false,,true
-10105,Mari (Idol),2026-04-21 11:00:00,2026-05-05 10:59:00,true,true,false,,true
-10106,Sakurako (Idol),2026-04-21 11:00:00,2026-05-05 10:59:00,true,true,false,,true
-10049,Kazusa,2026-04-21 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-10065,Kaho,2026-04-21 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-13013,Momiji,2026-04-28 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-10075,Meru,2026-04-28 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-20026,Minori,2026-04-28 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-20031,Shigure (Hot Spring),2026-04-28 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-20036,Serika (Swimsuit),2026-04-28 11:00:00,2026-05-05 10:59:00,true,false,false,,true
-10132,Tsukuyo (Dress),2026-05-05 11:00:00,2026-05-19 10:59:00,false,false,false,,true
-20053,Machiru (Dress),2026-05-05 11:00:00,2026-05-19 10:59:00,false,false,false,,true
-10033,Wakamo,2026-05-12 11:00:00,2026-05-19 10:59:00,true,true,false,recall,true
-10045,Hoshino (Swimsuit),2026-05-12 11:00:00,2026-05-19 10:59:00,true,true,false,recall,true
-10059,Mika,2026-05-12 11:00:00,2026-05-19 10:59:00,true,true,false,recall,true
-20039,Kisaki,2026-05-19 11:00:00,2026-06-01 10:59:00,false,false,false,,true
-10104,Reijo,2026-05-19 11:00:00,2026-06-01 10:59:00,false,false,false,,true
-10053,Yuuka (Sportswear),2026-05-19 11:00:00,2026-06-01 10:59:00,true,true,false,,true
-10054,Mari (Sportswear),2026-05-19 11:00:00,2026-06-01 10:59:00,true,true,false,,true
-10133,Rio (Battle),2026-06-01 11:00:00,2026-06-10 10:59:00,false,true,false,,true
-20054,Himari (Battle),2026-06-01 11:00:00,2026-06-10 10:59:00,false,true,false,,true
-10134,Aris (Battle),2026-06-10 11:00:00,2026-06-17 10:59:00,false,true,true,,true
-10135,Kei (Battle),2026-06-10 11:00:00,2026-06-17 10:59:00,false,true,true,,true
-10098,Hoshino (Battle),2026-06-10 11:00:00,2026-06-17 10:59:00,true,true,true,,true
-10100,Shiroko＊Terror,2026-06-10 11:00:00,2026-06-17 10:59:00,true,true,true,,true
-10077,Ichika,2026-06-17 11:00:00,2026-06-24 10:59:00,true,false,false,,true
-10078,Kasumi,2026-06-17 11:00:00,2026-06-24 10:59:00,true,false,false,,true
-10061,Sakurako,2026-06-17 11:00:00,2026-06-24 10:59:00,true,false,false,,true
-20032,Eimi (Swimsuit),2026-06-17 11:00:00,2026-06-24 10:59:00,true,false,false,,true
-20055,Yuzu (Battle),2026-06-24 11:00:00,2026-07-07 10:59:00,false,false,false,,true
-10136,Eimi (Battle),2026-06-24 11:00:00,2026-07-07 10:59:00,false,false,false,,true
-10094,Momoi (Maid),2026-07-07 11:00:00,2026-07-14 10:59:00,true,false,false,,true
-10095,Midori (Maid),2026-07-07 11:00:00,2026-07-14 10:59:00,true,false,false,,true
-10066,Arisu (Maid),2026-07-07 11:00:00,2026-07-14 10:59:00,true,false,false,,true
-10064,Kayoko (New Year),2026-07-07 11:00:00,2026-07-14 10:59:00,true,false,false,,true
-10021,Azusa (Swimsuit),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-20004,Mashiro (Swimsuit),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10022,Hina (Swimsuit),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10023,Iori (Swimsuit),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10027,Karin (Bunny Girl),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10026,Neru (Bunny Girl),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10032,Mutsuki (New Year),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10031,Aru (New Year),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10047,Chise (Swimsuit),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-10046,Izuna (Swimsuit),2026-07-07 11:00:00,2026-07-14 10:59:00,true,true,false,encore,true
-20056,Koyuki (Pajama),2026-07-14 11:00:00,2026-07-28 10:59:00,false,false,false,,true
-10108,Yuuka (Pajama),2026-07-14 11:00:00,2026-07-28 10:59:00,true,false,false,,true
-10109,Noa (Pajama),2026-07-14 11:00:00,2026-07-28 10:59:00,true,false,false,,true
-10057,Haruna (New Year),2026-07-14 11:00:00,2026-07-28 10:59:00,true,true,false,,true
-20022,Fuuka (New Year),2026-07-14 11:00:00,2026-07-28 10:59:00,true,true,false,,true
-10137,Konoka,2026-07-28 11:00:00,2026-08-11 10:59:00,false,false,false,,true
-10138,Rena,2026-07-28 11:00:00,2026-08-11 10:59:00,false,false,false,,true
-20057,Akane (School Uniform),2026-08-11 11:00:00,2026-08-25 10:59:00,false,false,false,,true
-10110,Seia,2026-08-11 11:00:00,2026-08-25 10:59:00,true,true,false,,true
-10112,Asuna (School Uniform),2026-08-11 11:00:00,2026-08-25 10:59:00,true,true,false,,true
-10067,Toki (Bunny Girl),2026-08-11 11:00:00,2026-08-25 10:59:00,true,false,false,,true
+10131,,2026-04-07 11:00:00,2026-04-21 10:59:00,false,false,false,
+20052,,2026-04-07 11:00:00,2026-04-21 10:59:00,false,false,false,
+10075,Meru,2026-04-07 11:00:00,2026-04-21 10:59:00,true,false,false,
+13013,Momiji,2026-04-07 11:00:00,2026-04-21 10:59:00,true,false,false,
+20026,Minori,2026-04-07 11:00:00,2026-04-21 10:59:00,true,false,false,
+20031,Shigure (Hot Spring),2026-04-07 11:00:00,2026-04-21 10:59:00,true,false,false,
+20036,Serika (Swimsuit),2026-04-07 11:00:00,2026-04-21 10:59:00,true,false,false,
+10105,Mari (Idol),2026-04-21 11:00:00,2026-04-28 10:59:00,true,true,false,
+10106,Sakurako (Idol),2026-04-21 11:00:00,2026-04-28 10:59:00,true,true,false,
+10049,Kazusa,2026-04-21 11:00:00,2026-04-28 10:59:00,true,false,false,
+10065,Kaho,2026-04-21 11:00:00,2026-04-28 10:59:00,true,false,false,
+10132,Tsukuyo (Dress),2026-04-28 11:00:00,2026-05-12 10:59:00,false,false,false,
+20053,Machiru (Dress),2026-04-28 11:00:00,2026-05-12 10:59:00,false,false,false,
+10033,Wakamo,2026-05-05 11:00:00,2026-05-12 10:59:00,true,true,false,recall
+10045,Hoshino (Swimsuit),2026-05-05 11:00:00,2026-05-12 10:59:00,true,true,false,recall
+10059,Mika,2026-05-05 11:00:00,2026-05-12 10:59:00,true,true,false,recall
+20039,Kisaki,2026-05-12 11:00:00,2026-05-26 10:59:00,false,false,false,,true
+10104,Reijo,2026-05-12 11:00:00,2026-05-26 10:59:00,false,false,false,,true
+10053,Yuuka (Sportswear),2026-05-12 11:00:00,2026-05-26 10:59:00,true,true,false,,true
+10054,Mari (Sportswear),2026-05-12 11:00:00,2026-05-26 10:59:00,true,true,false,,true
+10133,Rio (Battle),2026-05-26 11:00:00,2026-06-04 10:59:00,false,true,false,,true
+20054,Himari (Battle),2026-05-26 11:00:00,2026-06-04 10:59:00,false,true,false,,true
+10134,Aris (Battle),2026-06-04 11:00:00,2026-06-11 10:59:00,false,true,true,,true
+10135,Kei (Battle),2026-06-04 11:00:00,2026-06-11 10:59:00,false,true,true,,true
+10098,Hoshino (Battle),2026-06-04 11:00:00,2026-06-11 10:59:00,true,true,true,,true
+10100,Shiroko＊Terror,2026-06-04 11:00:00,2026-06-11 10:59:00,true,true,true,,true
+10077,Ichika,2026-06-11 11:00:00,2026-06-17 10:59:00,true,false,false,,true
+10078,Kasumi,2026-06-11 11:00:00,2026-06-17 10:59:00,true,false,false,,true
+10061,Sakurako,2026-06-11 11:00:00,2026-06-17 10:59:00,true,false,false,,true
+20032,Eimi (Swimsuit),2026-06-11 11:00:00,2026-06-17 10:59:00,true,false,false,,true
+20055,Yuzu (Battle),2026-06-17 11:00:00,2026-06-30 10:59:00,false,false,false,,true
+10136,Eimi (Battle),2026-06-17 11:00:00,2026-06-30 10:59:00,false,false,false,,true
+10094,Momoi (Maid),2026-06-30 11:00:00,2026-07-07 10:59:00,true,false,false,,true
+10095,Midori (Maid),2026-06-30 11:00:00,2026-07-07 10:59:00,true,false,false,,true
+10066,Arisu (Maid),2026-06-30 11:00:00,2026-07-07 10:59:00,true,false,false,,true
+10064,Kayoko (New Year),2026-06-30 11:00:00,2026-07-07 10:59:00,true,false,false,,true
+10021,Azusa (Swimsuit),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+20004,Mashiro (Swimsuit),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10022,Hina (Swimsuit),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10023,Iori (Swimsuit),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10027,Karin (Bunny Girl),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10026,Neru (Bunny Girl),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10032,Mutsuki (New Year),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10031,Aru (New Year),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10047,Chise (Swimsuit),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+10046,Izuna (Swimsuit),2026-06-30 11:00:00,2026-07-07 10:59,true,true,false,encore,true
+20056,Koyuki (Pajama),2026-07-07 11:00:00,2026-07-21 10:59:00,false,false,false,,true
+10108,Yuuka (Pajama),2026-07-07 11:00:00,2026-07-21 10:59:00,true,false,false,,true
+10109,Noa (Pajama),2026-07-07 11:00:00,2026-07-21 10:59:00,true,false,false,,true
+10057,Haruna (New Year),2026-07-07 11:00:00,2026-07-21 10:59:00,true,true,false,,true
+20022,Fuuka (New Year),2026-07-07 11:00:00,2026-07-21 10:59:00,true,true,false,,true
+10137,Konoka,2026-07-21 11:00:00,2026-08-04 10:59:00,false,false,false,,true
+10138,Rena,2026-07-21 11:00:00,2026-08-04 10:59:00,false,false,false,,true
+20057,Akane (School Uniform),2026-08-04 11:00:00,2026-08-18 10:59:00,false,false,false,,true
+10110,Seia,2026-08-04 11:00:00,2026-08-18 10:59:00,true,true,false,,true
+10112,Asuna (School Uniform),2026-08-04 11:00:00,2026-08-18 10:59:00,true,true,false,,true
+10067,Toki (Bunny Girl),2026-08-04 11:00:00,2026-08-18 10:59:00,true,false,false,,true
+10084,Kotama (Camping),2026-08-18 10:59:00,2026-08-24 10:59:00,true,false,false,,true
+10085,Hare (Camping),2026-08-18 10:59:00,2026-08-24 10:59:00,true,false,false,,true
+20042,Maki (Camping),2026-08-18 10:59:00,2026-08-24 10:59:00,true,false,false,,true
+10041,Misaki,2026-08-18 10:59:00,2026-08-24 10:59:00,true,false,false,,true
+10139,Niko,2026-08-24 10:59:00,2026-09-08 10:59:00,false,true,false,,true
+10140,Kurumi,2026-08-24 10:59:00,2026-09-08 10:59:00,false,true,false,,true
+20044,Sumire (Part-Timer),2026-09-08 11:00:00,2026-09-22 10:59:59,true,false,false,,true
+10115,Rei,2026-09-08 11:00:00,2026-09-22 10:59:59,true,false,false,,true
+20034,Akari (New Year),2026-09-08 11:00:00,2026-09-22 10:59:59,true,false,false,,true
+20043,Izumi (New Year),2026-09-08 11:00:00,2026-09-22 10:59:59,true,false,false,,true
+20025,Haruka (New Year),2026-09-08 11:00:00,2026-09-22 10:59:59,true,false,false,,true

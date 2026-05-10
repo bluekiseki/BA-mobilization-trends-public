@@ -57,7 +57,14 @@
     "normal": "Normal",
     "passive": "Passive",
     "sub": "Sub",
-    "ue": "UE"
+    "ue": "UE",
+    "uniqueWeapon": "Unique Weapon",
+    "gear": "Gear",
+    "cost": "Cost",
+    "rank": "Rank",
+    "source": "Source",
+    "schaledb": "SchaleDB",
+    "viewOnSchaledb": "View on SchaleDB"
   },
   "error": {
     "studentDataLoadFailed": "Failed to load student data",
@@ -65,7 +72,10 @@
     "errorDataInitializationFailed": "Error: Data initialization failed.",
     "confirmResetPlanData": "Are you sure you want to reset all plan data?\nThis action cannot be undone.",
     "errorCannotReadFile": "Error: Cannot read file",
-    "errorFileFormatOrParsingFailed": "Error: File format error or parsing failed"
+    "errorFileFormatOrParsingFailed": "Error: File format error or parsing failed",
+    "invalidCsv": "The CSV file is invalid.",
+    "missingRequiredColumn": "Required column \"{{column}}\" is missing.",
+    "cannotParseInput": "Cannot parse the input. Please check the format (JSON or Base64)."
   },
   "page": {
     "eventPlanner": "Event Farming Planner",
@@ -103,6 +113,8 @@
     "targetSettings": "Set Targets",
     "minigame": "Minigame",
     "apSupply": "AP Supply",
+    "apAndCurrencySupply": "AP/Currency Supply",
+    "currencyInitialInput": "Initial Currency Input",
     "farmingRun": "Run Farm",
     "stageFarming": "Stage Farming",
     "totalAp": "Total AP",
@@ -118,7 +130,9 @@
     "hardFarming": "Hard Farming",
     "scrimmageCount": "Scrimmage Count",
     "scrimmageCost": "Scrimmage Enter Cost (AP)",
-    "otherDailyApConsumption": "Other Daily AP Used",
+    "otherDailyApConsumption": "Other Daily AP",
+    "consumed": "Used",
+    "gained": "Gained",
     "prefarmedAp": "Prefarmed AP",
     "aronaAttendanceStartDate": "Date of Arona's Attendance",
     "aronaAttendanceDay": "Attendance Count",
@@ -138,6 +152,20 @@
     "noCurrentEvent": "There are no ongoing events.",
     "loadingData": "Loading data...",
     "noStudentPlanInEvent": "No student plans included in this event.",
+    "ownedInput": "Owned",
+    "expandView": "Expand",
+    "inventoryFilterAll": "All Items",
+    "inventoryFilterNeeded": "Needed Only",
+    "sortedByDeficit": "Sorted by shortage (most needed first)",
+    "sortLabel": "Sort:",
+    "sortByRarity": "Rarity",
+    "sortById": "ID",
+    "inventorySearch": "Search items...",
+    "inventorySearchEmpty": "No items found.",
+    "inventoryReset": "Reset All",
+    "inventoryResetConfirm": "Reset all?",
+    "inventoryResetCancel": "Cancel",
+    "inventoryResetOk": "Reset",
     "noStudentGrowthPlan": "No student growth plans have been created.",
     "startByAddingNewPlan": "Press the \"Add New Student Plan\" button to start.",
     "selectStudentForDetails": "Select a student from the list on the left to see details.",
@@ -147,16 +175,23 @@
     "addNewPlan": "+ Add New Student Plan",
     "displayCostInAP": "Display Cost in AP",
     "defaultNotice": "Results ignore other rewards from stages, such as Ooparts.",
-    "reportNoticeFormula": "Formula: 40AP÷((10000 × 0.35 + 2*2000 + 6.07*500)×2÷10000 purple reports)",
-    "enhancementStoneNoticeFormula": "Formula: 128000 credits÷(((50.09×0.1 + 33.76×0.5 + 25.18×0.4)×5×1e3×2 credits)÷40AP)",
     "reportNoticeTitle": "[Base Defense] Based on Ruined Munitions Factory N during a 2x Commission event, the value of one purple report is 18.9843 AP",
+    "reportNoticeFormula": "Formula: 40AP÷((10000 × 0.35 + 2*2000 + 6.07*500)×2÷10000 purple reports)",
+    "reportNoticeUpcomingTitle": "※ Value of one purple report after Main Story Part 2 Prologue update: 13.0293 AP",
+    "reportNoticeUpcomingFormula": "Formula: 40AP÷((10000 × 1 + 2000 × 1 + 500 × 6.7 )×2÷10000 purple reports)",
     "enhancementStoneNoticeTitle": "[Item Retrieval] Based on Slumpia Square N during a 2x event, the value of a top-tier enhancement stone purchased from the general store with credits is 16.0195 AP each",
+    "enhancementStoneNoticeFormula": "Formula: 128000 credits÷(((50.09×0.1 + 33.76×0.5 + 25.18×0.4)×5×1e3×2 credits)÷40AP)",
+    "enhancementStoneNoticeUpcomingTitle": "※ Top-tier enhancement stone value after Main Story Part 2 Prologue update: 9.754 AP",
+    "enhancementStoneNoticeUpcomingFormula": "Formula: 128000 credits÷(((80.91×0.1 + 55.2×0.5 + 42×0.4)×5×1e3×2 credits)÷40AP)",
     "currentEventGlobal": "Current Global Server Event",
     "upcomingEventGlobal": "Upcoming Global Server Event",
     "continueTo": "Next Step: {{tabName}}",
     "currencyStatusTitle": "Currency Status & Final Results",
     "viewSummary": "View Summary",
     "viewDetails": "View Details",
+    "sortByPriority": "Priority",
+    "carryUp": "Carry-up",
+    "carryUpTooltip": "Consolidate lower-tier items into higher-tier equivalents (e.g. 5 advanced reports → 1 superior)",
     "totalNeededTitle": "Total Materials Needed",
     "backToPlanner": "Back to List",
     "searchStudentPlaceholder": "Search students...",
@@ -168,6 +203,8 @@
     "confirmImport": "Do you want to clear all existing data and import from CSV?",
     "exportCsv": "Export CSV",
     "importCsv": "Import CSV",
+    "exportJson": "Export Json",
+    "importJson": "Import Json",
     "selectAll": "ALL",
     "deselectAll": "NONE",
     "selectAllTooltip": "Select All",
@@ -177,7 +214,9 @@
     "openInPlanner": "Open in Student Growth Planner",
     "selectStudentToStart": "Please select a student to start.",
     "remainingTime": "{{day}}d {{hour}}h left",
-    "startTime": "Starts in {{day}}d {{hour}}h"
+    "startTime": "Starts in {{day}}d {{hour}}h",
+
+    "initialOwned": "Initially Owned {{value}}"
   },
   "button": {
     "runAutoFarmCalc": "Run Auto-Farm Calculation",
@@ -202,6 +241,8 @@
     "resetCurrentTab": "Reset Tab",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
+    "selectFromMyPool": "Select From My Pool",
+    "splitView": "Split View",
     "confirmInput": "Confirm",
     "goToPlanner": "Go to Planner",
     "hideDetails": "Hide Details",
@@ -235,9 +276,33 @@
     "totalAcquisition": "Total Acquired",
     "cumulativeRewards": "Cumulative Rewards",
     "materialsForCurrentEvent": "Materials needed for current event",
+    "credits": "Credits",
+    "eligma": "Eligma",
+    "xpReports": "Activity Reports",
+    "equipEnh": "Enhancement Stones",
+    "uwEnh": "UE Materials",
+    "poolXpTotal": "Pool",
+    "opart": "Oparts",
+    "tacticalBD": "Tactical BD",
+    "techNote": "Tech Notes",
+    "potential": "Potential Blueprints",
+    "equipment": "Equipment",
+    "skill": "Skill Materials",
+    "other": "Other",
     "totalMaterialsForAllPlans": "Total materials required for all plans",
     "exchangeCount": "Exchanges",
-    "dailyPyroRefills": "Daily Pyroxene Refills"
+    "dailyPyroRefills": "Daily Pyroxene Refills",
+    "global_server_data_pending": "Data has not been updated on the global server yet.",
+    "favorGifts": "Gifts",
+    "skillInfo": "Skill Information",
+    "relationshipStories": "Relationship Stories",
+    "story_rank_only": "Rank",
+    "story_rank_title": "Rank+Title",
+    "story_summary_hide": "−Summary",
+    "story_summary_show": "+Summary",
+    "story_global_show": "Show GL",
+    "story_global_soon": "GL Soon",
+    "story_memorial": "Memorial"
   },
   "item": {
     "reports": "Reports",
@@ -253,25 +318,26 @@
     "minigame_dream": "Like no Tomorrow",
     "card_match": "Card Match",
     "minigame_ccg": "Endless Summer Vacation",
-    "minigame_defense": "Hi-Lo Ha-Lo"
+    "minigame_defense": "Hi-Lo Ha-Lo",
+    "clue_search": "Clue Search"
   },
   "gameTerm": {
     "tacticalChallenge": "Tactical Challenge"
   },
   "apBreakdown": {
-    "hardMode": "Hard Mode:",
-    "scrimmage": "Scrimmage:",
-    "naturalRegen": "Natural Regen:",
-    "dailyQuests": "Dailies:",
-    "weeklyQuests": "Weeklies:",
-    "cafe": "Cafe:",
-    "otherConsumption": "Other:"
+    "hardMode": "Hard Mode",
+    "scrimmage": "Scrimmage",
+    "naturalRegen": "Natural Regen",
+    "dailyQuests": "Dailies",
+    "weeklyQuests": "Weeklies",
+    "cafe": "Cafe",
+    "otherConsumption": "Other"
   },
   "apSource": {
-    "pyroxene": "Pyroxene:",
-    "apPackage": "AP Pack:",
-    "weeklyQuests": "Weeklies:",
-    "attendance": "Attendance:"
+    "pyroxene": "Pyroxene",
+    "apPackage": "AP Pack",
+    "weeklyQuests": "Weeklies",
+    "attendance": "Attendance"
   },
   "mission": {
     "clearWithinSeconds": "Clear within {seconds} sec",
@@ -341,7 +407,16 @@
     "foundTreasures": "Found Treasures",
     "cancel": "Cancel",
     "saveResult": "Save Result ({{count}} cells)",
-    "goalFindAll": "Find all treasures"
+    "goalFindAll": "Find all treasures",
+    "cellBaseReward": "Per cell:",
+    "tabInfo": "Info",
+    "tabCalculator": "Calculator",
+    "boardSize": "Board",
+    "treasureContents": "Treasures",
+    "rewardItem": "Item",
+    "rewardAmount": "Amount",
+    "digCells": "Digs",
+    "planResult": "Plan Result"
   },
   "fortune_gacha": {
     "title": "Fortune Gacha",
@@ -353,7 +428,14 @@
     "totalPullsPlaceholder": "Enter total pulls",
     "setToMax": "Set to Max",
     "runAvgCalcFirst": "Please run the average reward calculation first.",
-    "setMaxPullsTooltip": "Calculate pulls to get all needed items"
+    "setMaxPullsTooltip": "Calculate pulls to get all needed items",
+    "probTable": "Probability Table",
+    "name": "Name",
+    "baseProb": "Base Rate",
+    "maxProb": "Max Rate (cap)",
+    "pityNote": "* If you don't get the highest rarity for {{start}} consecutive pulls, probability increases gradually up to the Max Rate. (Resets when obtained)",
+    "pityDetail": "Pity starts at pull {{start}}, reaches cap after {{steps}} more pulls (total ~{{total}})",
+    "rewards": "Rewards"
   },
   "box_gacha": {
     "title": "Roulette",
@@ -364,7 +446,12 @@
     "setMaxBoxesTooltip": "Sets the target Round number to acquire all needed items.",
     "planResultTitle": "Plan Result (Rounds {{start}} ~ {{end}})",
     "totalCost": "Total Cost",
-    "totalRewards": "Total Rewards"
+    "roundCost": "Currency Used by Round",
+    "totalRewards": "Total Rewards",
+    "roundBreakdown": "Rewards by Round",
+    "roundHeader": "Round",
+    "roundLabel": "Round {{round}}",
+    "roundLoopLabel": "Round {{round}}~ (Loop)"
   },
   "dice_race": {
     "title": "Dice Race",
@@ -398,6 +485,91 @@
     "rollsUnit": "Rolls",
     "avgCost": "Average Cost",
     "avgRewards": "Average Rewards"
+  },
+  "spreadsheet": {
+    "starOptions": {
+      "star1": "1★",
+      "star2": "2★",
+      "star3": "3★",
+      "star4": "4★",
+      "star5": "5★",
+      "ue1": "UE 1★",
+      "ue2": "UE 2★",
+      "ue3": "UE 3★",
+      "ue4": "UE 4★"
+    },
+    "headerGroup": {
+      "basicStatsCurrent": "Basic Stats (Current)",
+      "basicStatsTarget": "Basic Stats (Target)",
+      "skillsCurrent": "Skills (Current)",
+      "skillsTarget": "Skills (Target)",
+      "equipmentCurrent": "Equipment (Current)",
+      "equipmentTarget": "Equipment (Target)",
+      "other": "Other"
+    },
+    "headerField": {
+      "add": "Add",
+      "select": "Select",
+      "name": "Name",
+      "school": "School",
+      "level": "Level",
+      "rank": "Rank",
+      "ueLevel": "UE Lv",
+      "affection": "Bond Lv",
+      "experience": "Bond exp",
+      "equipment1": "Eq. 1",
+      "equipment2": "Eq. 2",
+      "equipment3": "Eq. 3",
+      "bondGear": "Bond Gear",
+      "acquiredDate": "Acquired Date",
+      "useEligma": "Use Eligma",
+      "eligmaPrice": "Eligma Price",
+      "eligmaStock": "Eligma Stock"
+    },
+    "messages": {
+      "deleteConfirm": "Delete this plan?",
+      "mobileWarning": "Table view is optimized for PC. Please use horizontal scrolling.",
+      "keyboardShortcutsTitle": "Excel-like keyboard shortcuts",
+      "shortcutCopyAbove": "Copy value from above",
+      "shortcutNextRow": "Move to next row",
+      "shortcutNextCell": "Move to next cell",
+      "shortcutPrevCell": "Move to previous cell",
+      "shortcutSetMax": "Set current cell to max",
+      "shortcutUndo": "Undo",
+      "shortcutRedo": "Redo",
+      "shortcutSave": "Save changes",
+      "sortLabel": "Sort:",
+      "resetSort": "Reset",
+      "unsavedChanges": "You have unsaved changes.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "recruitedStudents": "Total Recruited Students",
+      "addPlanHint": "Click the add button to add a plan"
+    },
+    "sortLabels": {
+      "hasPlan": "Has Plan",
+      "isSelected": "Selected",
+      "school": "School",
+      "name": "Name",
+      "currentLevel": "Current Level",
+      "currentRank": "Current Rank",
+      "currentUeLevel": "Current UE Lv",
+      "currentAffection": "Current Bond Lv",
+      "currentExperience": "Current Bond exp",
+      "targetLevel": "Target Level",
+      "targetRank": "Target Rank",
+      "targetUeLevel": "Target UE Lv",
+      "targetAffection": "Target Bond Lv",
+      "currentEquipment1": "Current Equip. 1",
+      "currentEquipment2": "Current Equip. 2",
+      "currentEquipment3": "Current Equip. 3",
+      "currentBondGear": "Current Bond Gear",
+      "targetEquipment1": "Target Equip. 1",
+      "targetEquipment2": "Target Equip. 2",
+      "targetEquipment3": "Target Equip. 3",
+      "targetBondGear": "Target Bond Gear",
+      "acquiredDate": "Acquired Date"
+    }
   },
   "growthCard": {
     "stats": "Basic Stats",
@@ -443,7 +615,8 @@
       "cafe": "Cafe",
       "schedule": "Schedule",
       "craftingNeeded": "Crafting Needed",
-      "lowTierConversion": "Low-Tier Conversion"
+      "lowTierConversion": "Low-Tier Conversion",
+      "toFillDeficit": "To fill the deficit"
     },
     "labels": {
       "current": "Current",
@@ -451,6 +624,7 @@
       "choiceBox": "Choice Box"
     },
     "actions": {
+      "reset": "Reset All Gifts",
       "craftingFill": "Convert to Favorite Gifts",
       "showPreferredOnly": "Preferred Only"
     },
@@ -460,10 +634,20 @@
     "units": {
       "taps": "taps",
       "runs": "runs",
-      "times": "times"
+      "times": "times",
+      "students": " students"
     },
     "messages": {
       "noItems": "No items found."
+    },
+    "views": {
+      "inventory": "My Inventory",
+      "giftIndex": "Gift Index"
+    },
+    "giftIndex": {
+      "studentsWhoLike": "Students who like this gift",
+      "noStudents": "No students prefer this gift.",
+      "selectGift": "Select a gift to see which students like it."
     }
   },
   "potentialTab": {
@@ -472,6 +656,10 @@
     "lockedMessage": "Potential unlock requires Level 90 and a Unique Weapon.",
     "reqCurrent": "Current: Requires Student Lv.90 & Unique Weapon",
     "reqTarget": "Target: Requires Student Lv.90 & Unique Weapon"
+  },
+  "skillsTab": {
+    "gearNormalHint": "Bond Gear T2 + affection rank 20 upgrades this skill.",
+    "setGearGoal": "Set as goal"
   },
   "basicStatsTab": {
     "level": "Level:",
@@ -482,7 +670,11 @@
     "currentElephPrice": "Current Eleph Price:",
     "purchasableEleph": "Purchasable Eleph:",
     "ownedEleph": "Owned Eleph",
-    "affectionWarning": "Current Star Rank limits Max Bond to {{limit}}."
+    "affectionWarning": "Current Star Rank limits Max Bond to {{limit}}.",
+    "uwLevel": "UW Level",
+    "bondGear": "Bond Gear",
+    "gearNone": "None",
+    "gearReqAffection": "Requires affection rank {{rank}}+"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
@@ -574,6 +766,50 @@
     "maxButton": "MAX",
     "requiredAmountSuffix": "Required: {{amount}}"
   },
+  "dataExchange": {
+    "title": "Data Export/Import",
+    "formatOwn": "My Site Data",
+    "formatUnknown": "Unknown Format",
+    "formatInvalid": "Invalid JSON",
+    "textareaPlaceholder": "Paste JSON data here.\nSupported formats:\n  • This site's export data\n  • Justin163's Resource Planner export (JSON)\n  • SchaleDB Collection export (Base64)",
+    "strategyAll": "Full Update",
+    "strategyStudentsOnly": "Students Only",
+    "loadFile": "Load File",
+    "saveToFile": "Save to File",
+    "applyData": "Apply Data",
+    "export": "Export",
+    "extractMyData": "Extract My Data",
+    "extractMyDataDesc": "Export current plans to JSON",
+    "convertToJustin163": "Export as Justin163's Planner format",
+    "convertToJustin163Desc": "Convert current plans to Justin163's Resource Planner format",
+    "copyAiPrompt": "Copy AI Prompt",
+    "aiPromptCopied": "Copied!",
+    "copyClipboard": "Copy to Clipboard",
+    "clipboardCopied": "Copied!",
+    "justin163Warning": "Converting to Justin163's Resource Planner format may lose some data (affection EXP, farming settings, etc.).",
+    "msgExtracted": "Data extracted.",
+    "msgConverted": "Converted to Justin163's Resource Planner format.",
+    "msgAppliedOwn": "{{count}} student data applied successfully.",
+    "msgAppliedExternal": "{{label}} data applied.",
+    "msgError": "Error: {{message}}",
+    "msgClipboardFailed": "Clipboard copy failed.",
+    "csvExport": "Export CSV",
+    "csvImport": "Import CSV",
+    "csvExportTooltip": "Export spreadsheet as CSV for Excel editing",
+    "csvImportTooltip": "Import data from CSV file",
+    "csvExportSuccess": "CSV exported successfully",
+    "csvExportFailed": "CSV export failed",
+    "csvImportSuccess": "CSV imported successfully",
+    "csvImportSuccessWithCount": "CSV imported successfully ({{count}} students updated)",
+    "csvImportFailed": "CSV import failed",
+    "csvFileReadError": "Unable to read file",
+    "csvMetadataTitle": "Student Planner CSV Export",
+    "csvMetadataGenerated": "Generated: {{date}}",
+    "csvMetadataVersion": "Version: 1.0",
+    "csvMetadataWarning": "WARNING: Do not delete or modify the first 6 lines (metadata and headers)",
+    "csvMetadataNotes": "Notes: First header row contains field IDs (for parsing), second contains display labels (translated)",
+    "csvTip": "Download as CSV to edit in your spreadsheet application, then import the file back."
+  },
   "source": {
     "shopCost": "Shop (Cost)",
     "shopReward": "Shop (Reward)",
@@ -644,7 +880,62 @@
     "noStagesFound": "No stages to display. (Check filters or page)",
     "paginationUnit": "",
     "inventoryModalTitle": "Enter Inventory",
-    "goToPlanner": "Equipment Planner"
+    "goToPlanner": "Equipment Planner",
+    "tabInput": "Input",
+    "tabStages": "Stages",
+    "tabResults": "Results",
+    "settings": "Settings",
+    "source": "Source",
+    "sourceLabelNormal": "Normal ×",
+    "sourceLabelHard": "Hard ×",
+    "studentPlanTitle": "Student Plans",
+    "studentPlanSelectAll": "All",
+    "studentPlanDeselectAll": "Deselect",
+    "studentSearchPlaceholder": "Search by name...",
+    "studentFilterSelected": "Selected Only",
+    "studentSearchEmpty": "No search results",
+    "ownedEquipment": "Owned Equipment",
+    "universalBlueprint": "Universal Blueprints",
+    "elephStudents": "Eleph:",
+    "hardModeTitle": "Hard Mode",
+    "hardModeAggressive": "Aggressive",
+    "hardModeOptimized": "Optimized",
+    "hardModeManual": "Manual",
+    "hardModeAggressiveDesc": "All Hard ×3",
+    "hardModeOptimizedDesc": "LP Optimized",
+    "hardModeManualDesc": "Manual Setup",
+    "hardModeAggressiveDetail": "Run all Hard stages that contain required items with maximum runs (×3 per day) for the full duration. This maximizes equipment collection but may waste AP on unwanted items.",
+    "hardModeOptimizedDetail": "Calculate the most efficient Hard stages to run based on your needs, minimizing wasted AP. Only runs stages that help acquire materials you actually need.",
+    "hardModeManualDetail": "Manually set the number of runs for each Hard stage. Gives you complete control over which stages to farm and how many times.",
+    "stageArea": "Area",
+    "optimize": "Optimize",
+    "summaryTabTotal": "Required",
+    "summaryTabFarmed": "Farmed",
+    "summaryTabRemaining": "Shortage",
+    "summaryTabSurplus": "Surplus",
+    "summaryTabBlueprint": "Blueprint Used",
+    "blueprintUsageDetail": "Blueprint Usage Details",
+    "blueprintTotalUsed": "Total {{count}} used",
+    "blueprintSheets": "({{count}} sheets)",
+    "statTotalAP": "Total AP",
+    "statStages": "Stages",
+    "statRemainingEquipment": "Remaining Equipment",
+    "statStudents": "Students",
+    "sortByTierOrder": "Sort by Tier",
+    "sortByIDOrder": "Sort by ID",
+    "sortByAmountOrder": "Sort by Amount",
+    "farmingPlanTitle": "Farming Plan",
+    "stageTypeNormal": "Normal",
+    "stageTypeHard": "Hard",
+    "sourceKR": "KR",
+    "sourceJPNew": "JP (New)",
+    "inventoryLoadingData": "Loading data...",
+    "inventoryClear": "Clear",
+    "inventoryDeficient": "Insufficient",
+    "inventorySufficient": "Sufficient",
+    "inventoryNotFarmable": "Not Farmable",
+    "students": "students",
+    "selectedStudentsFormat": "{selected}/{total} students"
   },
   "cardmatch": {
     "page": {
@@ -690,6 +981,24 @@
       "clearRewardTitle": "Round Clear Rewards",
       "clearRewardDesc": "Obtained upon clearing the board"
     }
+  },
+  "clue_search": {
+    "title": "Clue Search",
+    "tabInfo": "Info",
+    "tabCalculator": "Calculator",
+    "roundLabel": "Round {{round}}",
+    "roundLoop": "Round {{round}}~ (Loop)",
+    "totalFragments": "Total Fragments: {{count}}",
+    "rangeTitle": "Set Round Range",
+    "startRound": "Start Round",
+    "endRound": "End Round",
+    "shortcutMaxOneTime": "Maximize One-Time Rewards",
+    "shortcutMaxOneTimeDesc": "Set to Round 1 ~ {{round}} (Excludes loop)",
+    "resultTitle": "Calculation Result",
+    "cost": "Required Currency",
+    "rewards": "Obtained Rewards",
+    "autoBuy": "Auto-buy Clues",
+    "autoBuyTooltip": "Automatically set purchase quantities for clue items in the shop based on the selected round range."
   },
   "minigame_ccg": {
     "title": "The Justice Task Force's Endless Summer Vacation",
@@ -740,7 +1049,7 @@
     },
     "tabs": {
       "income": "Income & Future Sight",
-      "strategy": "Gacha Strategy",
+      "strategy": "Select Students to Recruit",
       "result": "Run Simulation"
     },
     "errors": {
@@ -749,7 +1058,7 @@
     },
     "income": {
       "timeline": {
-        "title": "Schedule & AP",
+        "title": "Schedule & AP top-up",
         "total_count": "Total {{count}}",
         "headers": {
           "start": "START",
@@ -787,7 +1096,10 @@
           "raid_elim": "Raid / G.Assault",
           "multifloor": "Setlik (Tower)",
           "jfd": "JFD (Drills)",
-          "event_etc": "Event/Story/Maint.",
+          "mainstory": "Main Story",
+          "event": "Event",
+          "ministory": "Mini Story",
+          "maintenance": "Maintenance",
           "manual": "Manual Input",
           "ap_refresh": "AP Refresh",
           "gacha": "Gacha"
@@ -819,9 +1131,10 @@
       },
       "chart": {
         "survival_rate": "Survival Rate",
-        "lucky": "Top 10% (Lucky)",
-        "unlucky": "Bottom 10% (Unlucky)",
-        "worst": "Bottom 100% (Worst)",
+        "lucky": "Top 10%",
+        "unlucky": "Bottom 10%",
+        "worst": "Bottom 100%",
+        "upper_x": "Top {{x}}%",
         "avg_balance": "Avg Balance",
         "avg": "Average",
         "upper_10": "Top 10%",
@@ -833,7 +1146,10 @@
         "table_delta": "Change",
         "table_balance": "Balance (Avg.)",
         "start_balance": "Starting Balance",
-        "daily_calc": "Daily/Event Calculation"
+        "daily_calc": "Daily/Event Calculation",
+        "percentile_placeholder": "e.g. 25",
+        "add_btn_title": "Add Probability Line",
+        "remove_line": "Remove"
       },
       "log": {
         "fixed_daily_sunday": "Daily/Weekly/Monthly Fixed Income",
@@ -857,7 +1173,9 @@
         "btn_running": "Calculating...",
         "btn_start": "Start Simulation"
       },
-      "empty_state": "Press the button above to start the simulation."
+      "empty_state": "Press the button above to start the simulation.",
+      "income_nudge": "Set up an income plan for a more precise timeline-based budget analysis",
+      "income_nudge_btn": "Go to Income Tab"
     },
     "result_view": {
       "unit_toggle": {
@@ -867,8 +1185,8 @@
       "disclaimer": "* Free pulls are used first and not included in Pyroxene cost.",
       "summary": {
         "success_rate": {
-          "title": "Success Rate",
-          "desc": "Prob. to get all 'Must' students"
+          "title": "Must Students (All) Rate",
+          "desc": "% of simulations where all 'Must' students were obtained"
         },
         "avg_cost": {
           "title_pyroxenes": "Avg. Pyroxenes",
@@ -877,10 +1195,12 @@
           "includes_free": "(Includes free pulls)"
         },
         "safety": {
-          "title": "Resource Safety",
+          "title": "Budget Feasibility",
           "safe": "Safe",
           "unsafe": "Risky",
-          "bankruptcy_prob": "Bankruptcy Prob: {{rate}}%"
+          "bankruptcy_prob": "Exceeds budget: {{rate}}%",
+          "income_applied": "Income plan applied",
+          "income_not_applied": "Current balance only"
         }
       },
       "chart": {
@@ -892,7 +1212,9 @@
         "range_count": "{{start}} ~ {{end}}",
         "tooltip_prob": "Prob: {{rate}}%",
         "cdf_label_pyroxenes": "Within {{amount}} Pyroxenes",
-        "cdf_label_pulls": "Within {{amount}} Pulls"
+        "cdf_label_pulls": "Within {{amount}} Pulls",
+        "legend_within_budget": "or less",
+        "legend_over_budget": "over budget"
       },
       "student_stats": {
         "title": "Acquisition & Eleph Forecast",
@@ -926,7 +1248,7 @@
         "max_budget": "Max Budget",
         "spark_option": "{{spark}}× Pity ({{pulls}} Pulls)",
         "max_budget_suffix": "Allowed",
-        "min_pulls": "Min Guarantee",
+        "min_pulls": "Min. pulls regardless of outcome",
         "min_pulls_suffix": "Pulls"
       },
       "mode": {
@@ -938,6 +1260,10 @@
         "label": "Cond",
         "remains_le": "Until Pity ≤",
         "try_pulls": "pulls left"
+      },
+      "priority": {
+        "label": "Order",
+        "tooltip": "Pull priority (lower = first)"
       },
       "intentional_spark": {
         "label": "Forced Pity",

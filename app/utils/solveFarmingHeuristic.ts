@@ -9,20 +9,21 @@ interface SolveOptimalRunsParams {
   neededAmounts: number[];
   /** [stages] array: Whether stage(i) is a priority */
   priorities: boolean[];
+  log?: boolean;
 }
 /**
  * Calculates the minimum AP consumption plan to acquire all necessary items under given conditions.
  * @returns An array containing the number of runs to execute for each stage.
  */
-export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, priorities }: SolveOptimalRunsParams): number[] => {
+export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, priorities, log = false }: SolveOptimalRunsParams): number[] => {
   const numStages = apCosts.length;
   const numItems = neededAmounts.length;
 
-  console.log('dropMatrix');
-  console.log(dropMatrix.map((v) => v.join('\t')).join('\n'));
-  console.log('apCosts', apCosts);
-  console.log('neededAmounts', neededAmounts);
-  console.log('priorities', priorities);
+  log && console.log('dropMatrix');
+  log && console.log(dropMatrix.map((v) => v.join('\t')).join('\n'));
+  log && console.log('apCosts', apCosts);
+  log && console.log('neededAmounts', neededAmounts);
+  log && console.log('priorities', priorities);
   let remainingNeeded = [...neededAmounts];
   const totalRuns = Array(numStages).fill(0);
   /**
@@ -32,10 +33,10 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
    * @param needed - Array of required item amounts
    * @returns An array of calculated runs per stage for this step
    */
-  const solvePhase = (stageIndices: number[], needed: number[]): number[] => {
+  const solvePhase = (stageIndices: number[], needed: number[], log: boolean = false): number[] => {
     // 1. Filter valid variables and constraints
-    console.log('solvePhase', 'stageIndices', stageIndices);
-    console.log('solvePhase', 'needed', needed);
+    log && console.log('solvePhase', 'stageIndices', stageIndices);
+    log && console.log('solvePhase', 'needed', needed);
     const decisionVarsIndices = stageIndices.filter((i) => apCosts[i] > 0);
     const constraints: { matrixRow: number[]; rhs: number }[] = [];
     needed.forEach((amount, itemIndex) => {
@@ -46,7 +47,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
         });
       }
     });
-    console.log('constraints', constraints);
+    log && console.log('constraints', constraints);
     if (decisionVarsIndices.length === 0 || constraints.length === 0) {
       return Array(numStages).fill(0);
     }
@@ -57,7 +58,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
     const rhsVector = constraints.map((c) => c.rhs);
     // 3. Run simplex solver
     const solution = simplexSolver(objectiveCoeffs, constraintMatrix, rhsVector);
-    console.log('simplexSolver', objectiveCoeffs, constraintMatrix, rhsVector, solution);
+    log && console.log('simplexSolver', objectiveCoeffs, constraintMatrix, rhsVector, solution);
     // 4. Process results
     const phaseRuns = Array(numStages).fill(0);
     if (solution.status === 'optimal') {
@@ -66,7 +67,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
         phaseRuns[originalStageIndex] = Math.ceil(solution.result[i]);
       });
     } else {
-      console.warn(`[solvePhase] No optimal solution found. Status: ${solution.status}`);
+      log && console.warn(`[solvePhase] No optimal solution found. Status: ${solution.status}`);
     }
     return phaseRuns;
   };
@@ -74,7 +75,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
   const priorityIndices = priorities.map((p, i) => (p ? i : -1)).filter((i) => i !== -1);
   if (priorityIndices.length > 0) {
     const priorityRuns = solvePhase(priorityIndices, remainingNeeded);
-    console.log('priorityRuns', priorityRuns);
+    log && console.log('priorityRuns', priorityRuns);
     for (let i = 0; i < numStages; i++) {
       if (priorityRuns[i] > 0) {
         totalRuns[i] += priorityRuns[i];
@@ -90,7 +91,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
   if (remainingNeeded.some((v) => v > 0)) {
     const allIndices = Array.from({ length: numStages }, (_, i) => i);
     const remainingRuns = solvePhase(allIndices, remainingNeeded);
-    console.log('remainingRuns', remainingRuns);
+    log && console.log('remainingRuns', remainingRuns);
     for (let i = 0; i < numStages; i++) {
       totalRuns[i] += remainingRuns[i];
     }
@@ -112,7 +113,7 @@ const TOLERANCE = 1e-9;
  * @param A - Constraint matrix (Ax >= b)
  * @param b - Right-hand side of constraints (b >= 0)
  */
-function simplexSolver(c: number[], A: number[][], b: number[]): SimplexSolution {
+function simplexSolver(c: number[], A: number[][], b: number[], log: boolean = false): SimplexSolution {
   const m = A.length; // Number of constraints
   const n = c.length; // Number of variables
 
@@ -134,7 +135,7 @@ function simplexSolver(c: number[], A: number[][], b: number[]): SimplexSolution
   // console.log("Constraints RHS: b =", b);
 
   // --- Phase 1: Find initial feasible solution ---
-  console.log('\n--- Phase 1: Finding an initial feasible solution ---');
+  log && console.log('\n--- Phase 1: Finding an initial feasible solution ---');
 
   // Phase 1 Tableau setup
   // Columns: x_vars(n) + surplus_vars(m) + artificial_vars(m) + RHS(1)
@@ -186,13 +187,13 @@ function simplexSolver(c: number[], A: number[][], b: number[]): SimplexSolution
   // Check Phase 1 optimum: If objective value &gt; 0, solution is infeasible
   const num_vars_p1_rhs_idx = num_vars_p1;
   if (tableau_p1[m][num_vars_p1_rhs_idx] > TOLERANCE) {
-    console.log(`Phase 1 Result: Infeasible. Final objective value is ${tableau_p1[m][num_vars_p1_rhs_idx].toFixed(3)}, which is > 0.`);
+    log && console.log(`Phase 1 Result: Infeasible. Final objective value is ${tableau_p1[m][num_vars_p1_rhs_idx].toFixed(3)}, which is > 0.`);
     return { status: 'infeasible', result: [] };
   }
-  console.log('Phase 1 Result: Feasible solution found.');
+  log && console.log('Phase 1 Result: Feasible solution found.');
 
   // --- Phase 2: Find optimal solution ---
-  console.log('\n--- Phase 2: Finding the optimal solution ---');
+  log && console.log('\n--- Phase 2: Finding the optimal solution ---');
 
   const num_vars_p2 = n + m;
   const tableau_p2 = Array(m + 1)
@@ -240,7 +241,7 @@ function simplexSolver(c: number[], A: number[][], b: number[]): SimplexSolution
   printTableau(tableau_p2, basis, n, m, 'Final Phase 2 Tableau');
 
   if (!phase2_status) {
-    console.log('Phase 2 Result: Unbounded solution.');
+    log && console.log('Phase 2 Result: Unbounded solution.');
     return { status: 'unbounded', result: [] };
   }
 
@@ -252,14 +253,15 @@ function simplexSolver(c: number[], A: number[][], b: number[]): SimplexSolution
     }
   }
 
-  console.log('\n--- Algorithm Finished ---');
-  console.log('Final Status: optimal');
-  console.log(
-    'Optimal Solution (x):',
-    result.map((v) => parseFloat(v.toFixed(3))),
-  );
+  log && console.log('\n--- Algorithm Finished ---');
+  log && console.log('Final Status: optimal');
+  log &&
+    console.log(
+      'Optimal Solution (x):',
+      result.map((v) => parseFloat(v.toFixed(3))),
+    );
   const final_obj_val = -tableau_p2[m][rhs_col_p2]; // Revert sign
-  console.log('Optimal Objective Value (z):', parseFloat(final_obj_val.toFixed(3)));
+  log && console.log('Optimal Objective Value (z):', parseFloat(final_obj_val.toFixed(3)));
 
   return {
     status: 'optimal',
@@ -274,7 +276,7 @@ function simplexSolver(c: number[], A: number[][], b: number[]): SimplexSolution
  * @param basis Basis variable array
  * @returns true if not Unbounded, false if Unbounded
  */
-function solvePhase(tableau: number[][], basis: number[], n: number, m: number, phase: number): boolean {
+function solvePhase(tableau: number[][], basis: number[], n: number, m: number, phase: number, log: boolean = false): boolean {
   const m_rows = tableau.length - 1;
   const num_vars = tableau[0].length - 1;
   let iteration = 0;
@@ -294,13 +296,13 @@ function solvePhase(tableau: number[][], basis: number[], n: number, m: number, 
 
     // Optimal solution reached (no more positive coefficients)
     if (pivot_col === -1) {
-      console.log(`\n--- Phase ${phase}, Iteration ${iteration}: Optimal condition met for this phase. ---`);
+      log && console.log(`\n--- Phase ${phase}, Iteration ${iteration}: Optimal condition met for this phase. ---`);
       return true; // Optimal for this phase
     }
 
     iteration++;
-    console.log(`\n--- Phase ${phase}, Iteration ${iteration} ---`);
-    console.log(`Selected Pivot Column (Entering Variable): ${getVariableName(pivot_col, n, m)} (index: ${pivot_col})`);
+    log && console.log(`\n--- Phase ${phase}, Iteration ${iteration} ---`);
+    log && console.log(`Selected Pivot Column (Entering Variable): ${getVariableName(pivot_col, n, m)} (index: ${pivot_col})`);
 
     // 2. Select leaving variable (Pivot Row) (Minimum ratio test)
     let pivot_row = -1;
@@ -318,11 +320,11 @@ function solvePhase(tableau: number[][], basis: number[], n: number, m: number, 
 
     // Unbounded Solution Check
     if (pivot_row === -1) {
-      console.log('Unbounded solution detected. All coefficients in pivot column are non-positive.');
+      log && console.log('Unbounded solution detected. All coefficients in pivot column are non-positive.');
       return false;
     }
 
-    console.log(`Selected Pivot Row (Leaving Variable): ${getVariableName(basis[pivot_row], n, m)} (row index: ${pivot_row})`);
+    log && console.log(`Selected Pivot Row (Leaving Variable): ${getVariableName(basis[pivot_row], n, m)} (row index: ${pivot_row})`);
 
     // 3. Pivot operation (Gauss-Jordan elimination)
     const pivot_val = tableau[pivot_row][pivot_col];
@@ -372,8 +374,8 @@ function getVariableName(index: number, n: number, m: number): string {
  * @param m Number of constraints
  * @param title Title of the table to print
  */
-function printTableau(tableau: number[][], basis: number[], n: number, m: number, title: string) {
-  console.log(`\n--- ${title} ---`);
+function printTableau(tableau: number[][], basis: number[], n: number, m: number, title: string, log: boolean = false) {
+  log && console.log(`\n--- ${title} ---`);
   const m_rows = tableau.length - 1;
   const n_cols = tableau[0].length - 1;
 

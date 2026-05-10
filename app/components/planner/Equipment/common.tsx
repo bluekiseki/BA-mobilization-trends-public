@@ -1,5 +1,6 @@
 import type { GachaGroupInfo, IconInfo, IconInfos } from '~/types/plannerData';
 import { ItemIcon, type ItemIconProps } from '../common/Icon';
+import { blueprintIdToType } from '~/utils/blueprintUtils';
 
 export const blueprintToEqipIcon = (bluePrintId: number) => {
   return bluePrintId % 10000;
@@ -14,14 +15,45 @@ export const getEquipmentTierLabel = (itemInfo: IconInfo | undefined): string | 
   return null;
 };
 
-export const EquipmentItemIcon = ({ type, itemId, amount, size, eventData, iconData, label, labelColor = 'bg-gray-700' }: ItemIconProps) => {
+export const EquipmentItemIcon = ({ type, itemId, amount, size = 16, eventData, iconData, label, labelColor = 'bg-gray-700', imageOnly = false }: ItemIconProps & { imageOnly?: boolean }) => {
+  if (!eventData) return null;
+
   if (type == 'Equipment') {
-    const itemInfo = eventData.icons[type][itemId];
+    const numId = Number(itemId);
+    // Universal blueprint (501000-509000): item itself, displayed without conversion
+    if (numId in blueprintIdToType) {
+      return <ItemIcon type="Equipment" itemId={itemId} amount={amount} size={size} eventData={eventData} iconData={iconData} label={label} labelColor={labelColor} />;
+    }
+    const eqipitemId = String(blueprintToEqipIcon(numId));
+    const itemInfo = eventData.icons[type][eqipitemId];
     const tierLabel = getEquipmentTierLabel(itemInfo);
-    const eqipitemId = String(blueprintToEqipIcon(Number(itemId)));
+
+    if (imageOnly) {
+      // console.log('itemInfo', {numId, eqipitemId, itemInfo}, Object.keys(iconData.Equipment))
+      return (
+        <img
+          src={`data:image/webp;base64,${iconData.Equipment[eqipitemId]}`}
+          alt=""
+          className={`shrink-0 object-cover ${size === 12 ? 'w-3 h-3' : size === 16 ? 'w-4 h-4' : `w-${size / 4} h-${size / 4}`}`}
+          loading="lazy"
+        />
+      );
+    }
+
     return <ItemIcon type="Equipment" itemId={eqipitemId} amount={amount} size={size} eventData={eventData} iconData={iconData} label={tierLabel} labelColor="bg-teal-700 dark:bg-teal-800" />;
   }
 
+  if (imageOnly) {
+    const numId = Number(itemId);
+    return (
+      <img
+        src={`data:image/webp;base64,${iconData.Item[numId]}`}
+        alt=""
+        className={`shrink-0 object-cover ${size === 12 ? 'w-3 h-3' : size === 16 ? 'w-4 h-4' : `w-${size / 4} h-${size / 4}`}`}
+        loading="lazy"
+      />
+    );
+  }
   return <ItemIcon type={type} itemId={itemId} amount={amount} size={size} eventData={eventData} iconData={iconData} label={label} labelColor={labelColor} />;
 };
 
@@ -56,7 +88,7 @@ export const resolveGachaGroup = (gachaId: number, iconInfoData: IconInfos, visi
     const type = element.ParcelTypeStr;
     const id = element.ParcelId;
     const key = `${type}_${id}`;
-    if (type === 'Equipment') {
+    if (type === 'Equipment' || type === 'Item') {
       drops[key] = (drops[key] || 0) + relativeProb * amount;
     } else if (type === 'GachaGroup') {
       const nestedDrops = resolveGachaGroup(id, iconInfoData, new Set(visited));

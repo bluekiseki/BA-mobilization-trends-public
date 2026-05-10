@@ -5,7 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 /**
  * return true when a>b
  */
-const isLarger = (a: any, b: any) => {
+export const isLarger = (a: any, b: any) => {
   // 1. Number vs Number comparison
   if (typeof a === 'number' && typeof b === 'number') {
     return a > b;
@@ -57,6 +57,7 @@ export interface GrowthPlan {
     affection: number;
     affectionExp: number;
     equipment: [number, number, number];
+    gear: number;
     potential: { hp: number; atk: number; heal: number };
   };
   target: {
@@ -70,6 +71,7 @@ export interface GrowthPlan {
     sub: number;
     affection: number;
     equipment: [number, number, number];
+    gear: number;
     potential: { hp: number; atk: number; heal: number };
   };
   includedInEvents: number[];
@@ -78,8 +80,8 @@ export interface GrowthPlan {
     price: number;
     stock: number;
   };
-  ownedGifts: Record<string, number>;
   isSelected: boolean;
+  acquiredDate?: string;
 }
 
 interface GlobalState {
@@ -94,6 +96,9 @@ interface GlobalState {
   resetOwnedGifts: () => void;
   togglePlanSelection: (uuid: string) => void;
   selectAllPlans: (selected: boolean) => void;
+  materialInventory: Record<string, number>;
+  updateMaterialInventory: (key: string, amount: number) => void;
+  resetMaterialInventory: () => void;
 }
 
 export const useGlobalStore = create<GlobalState>()(
@@ -130,6 +135,7 @@ export const useGlobalStore = create<GlobalState>()(
             affection: 1,
             affectionExp: 0,
             equipment: [0, 0, 0],
+            gear: 0,
             potential: { hp: 0, atk: 0, heal: 0 },
           },
           target: {
@@ -143,6 +149,7 @@ export const useGlobalStore = create<GlobalState>()(
             sub: 1,
             affection: 1,
             equipment: [0, 0, 0],
+            gear: 0,
             potential: { hp: 0, atk: 0, heal: 0 },
           },
           includedInEvents: eventId ? [eventId] : [],
@@ -151,7 +158,6 @@ export const useGlobalStore = create<GlobalState>()(
             price: 1,
             stock: 20,
           },
-          ownedGifts: {},
           isSelected: true,
         };
         set({ growthPlans: [...get().growthPlans, newPlan] });
@@ -161,9 +167,8 @@ export const useGlobalStore = create<GlobalState>()(
         set({ growthPlans: get().growthPlans.filter((p) => p.uuid !== uuid) });
       },
       updatePlan: (uuid, field, value) => {
-        // console.log(`updatePlan: (uuid:${uuid}, field:${field}, value:${value}) => {`, value)
-        set((state) => ({
-          growthPlans: state.growthPlans.map((p) => {
+        set((state) => {
+          const newGrowthPlans = state.growthPlans.map((p) => {
             if (p.uuid === uuid) {
               const newPlan = JSON.parse(JSON.stringify(p));
 
@@ -172,13 +177,23 @@ export const useGlobalStore = create<GlobalState>()(
                 (newPlan as any)[main][sub] = value;
               } else {
                 (newPlan as any)[field] = value;
-              }
-              if (main === 'current' && sub) {
-                if (isLarger(newPlan.current[sub], newPlan.target[sub])) {
-                  newPlan.target[sub] = newPlan.current[sub];
-                } else if (typeof newPlan.current[sub] == 'object' && isLarger(Object.values(newPlan.current[sub]), Object.values(newPlan.target[sub]))) {
-                  newPlan.target[sub] = newPlan.current[sub];
+                // Reset gear when student changes — new student may not have gear
+                if (field === 'studentId') {
+                  newPlan.current.gear = 0;
+                  newPlan.target.gear = 0;
                 }
+              }
+              // Ensure target >= current
+              if (sub) {
+                const currentVal = newPlan.current[sub];
+                const targetVal = newPlan.target[sub];
+
+                if (isLarger(currentVal, targetVal)) {
+                  newPlan.target[sub] = currentVal;
+                } else if (typeof currentVal === 'object' && typeof targetVal === 'object' && isLarger(Object.values(currentVal), Object.values(targetVal))) {
+                  newPlan.target[sub] = currentVal;
+                }
+
                 // ★ rank
                 if (sub === 'star' || sub === 'uw') {
                   const currentRank = newPlan.current.uw > 0 ? 5 + newPlan.current.uw : newPlan.current.star;
@@ -193,8 +208,10 @@ export const useGlobalStore = create<GlobalState>()(
               return newPlan;
             }
             return p;
-          }),
-        }));
+          });
+
+          return { growthPlans: newGrowthPlans };
+        });
       },
       toggleEventInclusion: (uuid, eventId) => {
         set((state) => ({
@@ -222,6 +239,16 @@ export const useGlobalStore = create<GlobalState>()(
           return { ownedGifts: newOwnedGifts };
         }),
       resetOwnedGifts: () => set({ ownedGifts: {} }),
+
+      materialInventory: {},
+      updateMaterialInventory: (key, amount) =>
+        set((state) => {
+          const next = { ...state.materialInventory };
+          if (amount > 0) next[key] = amount;
+          else delete next[key];
+          return { materialInventory: next };
+        }),
+      resetMaterialInventory: () => set({ materialInventory: {} }),
 
       togglePlanSelection: (uuid) =>
         set((state) => ({

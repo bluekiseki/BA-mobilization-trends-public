@@ -1,3 +1,4 @@
+// app/components/LanguageMismatchBanner.tsx
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';

@@ -3,14 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
+import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
-
-// interface BonusData {
-//   [studentId: string]: {
-//     EventContentItemType: string[];
-//     BonusPercentage: number[];
-//   };
-// }
 
 export type TotalBonusMap = { [itemUniqueId: number]: number };
 
@@ -20,24 +14,26 @@ interface BonusSelectorProps {
   iconData: IconData;
   allStudents: StudentData;
   studentPortraits: StudentPortraitData;
-  // selectedStudents: string[];
-  // onSelectStudent: (studentId: string) => void;
   onBonusCalculate: (bonusMap: TotalBonusMap) => void;
 }
 
-export const BonusSelector = ({
-  eventId,
-  eventData,
-  iconData,
-  allStudents,
-  studentPortraits,
-  // selectedStudents,
-  // onSelectStudent,
-  onBonusCalculate,
-}: BonusSelectorProps) => {
+type BonusStudent = {
+  id: string;
+  name: string;
+  portrait: string;
+  totalBonusValue: number;
+};
+
+export const BonusSelector = ({ eventId, eventData, iconData, allStudents, studentPortraits, onBonusCalculate }: BonusSelectorProps) => {
   const bonusData = eventData.bonus;
   const { plan, setSelectedStudents } = usePlanForEvent(eventId);
   const { selectedStudents } = plan;
+  const growthPlans = useGlobalStore((state) => state.growthPlans);
+
+  const myStudentPool = useMemo(() => {
+    return new Set(growthPlans.filter((plan) => plan.studentId !== null).map((plan) => String(plan.studentId)));
+  }, [growthPlans]);
+
   const onSelectStudent = useCallback(
     (studentId: string) => {
       if (selectedStudents) {
@@ -71,6 +67,11 @@ export const BonusSelector = ({
     setSelectedStudents(bonusStudents.map((s) => s.id));
   }, [bonusStudents, selectedStudents, onSelectStudent]);
 
+  const handleSelectFromMyPool = useCallback(() => {
+    const myPoolBonusStudents = bonusStudents.filter((s) => myStudentPool.has(s.id));
+    setSelectedStudents(myPoolBonusStudents.map((s) => s.id));
+  }, [bonusStudents, myStudentPool, selectedStudents, onSelectStudent]);
+
   const handleDeselectAll = useCallback(() => {
     setSelectedStudents([]);
   }, [selectedStudents, onSelectStudent]);
@@ -91,7 +92,7 @@ export const BonusSelector = ({
           if (typeIndex === -1) return null;
           return {
             id,
-            squadType: studentInfo?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support'), // Reflect cases where students are not yet updated
+            squadType: studentInfo?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support'),
             bonusValue: bonusInfo.BonusPercentage[typeIndex],
           };
         })
@@ -130,12 +131,13 @@ export const BonusSelector = ({
       }));
   }, [eventData.currency, iconData.Item]);
 
-  // 2. State for active filters, default to all active
-  const [activeItemFilters, setActiveItemFilters] = useState<Set<number>>(
-    () => new Set(eventCurrencies.map((c) => c.itemType)), // Use number
-  );
+  // 2. State for active item filters, default to all active
+  const [activeItemFilters, setActiveItemFilters] = useState<Set<number>>(() => new Set(eventCurrencies.map((c) => c.itemType)));
 
-  // 3. Handle toggling a filter
+  // 3. Split view toggle
+  const [isSplitView, setIsSplitView] = useState(true);
+
+  // 4. Handle toggling an item filter
   const handleToggleFilter = useCallback((itemType: number) => {
     setActiveItemFilters((prev) => {
       const next = new Set(prev);
@@ -148,28 +150,74 @@ export const BonusSelector = ({
     });
   }, []);
 
-  // 4. Filter the students based on active filters
+  // 5. Filter students by active item filters
   const filteredBonusStudents = useMemo(() => {
-    // If all filters are active, return the full list
-    if (activeItemFilters.size === eventCurrencies.length) {
-      return bonusStudents;
-    }
-    // If no filters are active, return an empty list
-    if (activeItemFilters.size === 0) {
-      return [];
-    }
+    if (activeItemFilters.size === eventCurrencies.length) return bonusStudents;
+    if (activeItemFilters.size === 0) return [];
 
     return bonusStudents.filter((student) => {
       const bonusInfo = bonusData[student.id];
       if (!bonusInfo) return false;
-      // Show student if they have a bonus for AT LEAST ONE active filter
       return bonusInfo.EventContentItemType.some((type) => activeItemFilters.has(type));
     });
   }, [bonusStudents, activeItemFilters, eventCurrencies.length, bonusData]);
 
+  // 6. Split into strikers (id starts with '1') and specials (id starts with '2')
+  const { strikerStudents, specialStudents } = useMemo(() => {
+    return {
+      strikerStudents: filteredBonusStudents.filter((s) => s.id.charAt(0) === '1'),
+      specialStudents: filteredBonusStudents.filter((s) => s.id.charAt(0) === '2'),
+    };
+  }, [filteredBonusStudents]);
+
   useEffect(() => {
     onBonusCalculate(totalBonus);
   }, [totalBonus, onBonusCalculate]);
+
+  const renderStudentCard = (student: BonusStudent) => {
+    const isSelected = selectedStudents.includes(student.id);
+    const bonusInfo = bonusData[student.id];
+
+    return (
+      <div
+        key={student.id}
+        onClick={() => onSelectStudent(student.id)}
+        title={student.name}
+        className={`w-14 cursor-pointer relative rounded-sm overflow-hidden transition-all duration-200 flex flex-col group
+          ${isSelected ? 'ring-2 dark:ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm shadow-blue-500/50' : 'ring-1 ring-gray-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800 opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
+      >
+        {isSelected && (
+          <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800">
+            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+        )}
+        <img src={`data:image/webp;base64,${student.portrait}`} alt={student.name} className="w-full h-auto object-cover aspect-square" loading="lazy" />
+        <div
+          className={`p-0.5 text-center grow flex flex-col justify-center
+            ${isSelected ? 'bg-white dark:bg-neutral-800' : ''}`}
+        >
+          <div className={`mt-0.5 text-[10px] leading-tight flex flex-col items-center gap-0.5 ${isSelected ? 'dark:text-blue-100' : 'text-gray-600 dark:text-gray-400'}`}>
+            {bonusInfo.EventContentItemType.map((type, index) => {
+              const item = eventData.currency.find((c) => c.EventContentItemType === type);
+              if (!item) return null;
+
+              const itemID = item.ItemUniqueId.toString();
+              const percentage = bonusInfo.BonusPercentage[index] / 100;
+
+              return (
+                <div key={type} className="flex items-center justify-center gap-1">
+                  <img src={`data:image/webp;base64,${iconData.Item?.[itemID]}`} className="w-4 h-4 object-contain" />
+                  <span className="font-semibold">+{percentage}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -180,7 +228,7 @@ export const BonusSelector = ({
 
         {/* Wrapper for all controls, aligned to the right */}
         <div className="flex flex-wrap justify-end items-center gap-2">
-          {/* 2. Item Filter Toggles (MOVED HERE) */}
+          {/* 2. Item Filter Toggles */}
           {eventCurrencies.map((currency) => {
             const isActive = activeItemFilters.has(currency.itemType);
             return (
@@ -188,15 +236,11 @@ export const BonusSelector = ({
                 key={currency.itemType}
                 onClick={() => handleToggleFilter(currency.itemType)}
                 title={String(currency.itemUniqueId)}
-                // Styling: Smaller, simpler states to match action buttons
                 className={`relative w-9 h-9 p-1 rounded-md transition-all transform hover:scale-110 ${
-                  isActive
-                    ? 'bg-white dark:bg-neutral-700 ring-2 dark:ring-1 ring-blue-500' // Active: Ring
-                    : 'bg-gray-200 dark:bg-neutral-800 opacity-60 hover:opacity-100' // Inactive: Grayed out
+                  isActive ? 'bg-white dark:bg-neutral-700 ring-2 dark:ring-1 ring-blue-500' : 'bg-gray-200 dark:bg-neutral-800 opacity-60 hover:opacity-100'
                 }`}
               >
                 <img src={`data:image/webp;base64,${currency.icon}`} className="w-full h-full object-contain" alt={String(currency.itemUniqueId)} />
-                {/* Checkmark: Smaller, no extra border */}
                 {isActive && (
                   <div className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
                     <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,17 +255,41 @@ export const BonusSelector = ({
           {/* Visual Separator */}
           <div className="border-l border-gray-300 dark:border-neutral-600 h-9 mx-1"></div>
 
-          {/* 3. Action Buttons */}
+          {/* 3. Split View Toggle */}
+          <button
+            onClick={() => setIsSplitView((v) => !v)}
+            className={`font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9 ${
+              isSplitView
+                ? 'bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white'
+                : 'bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            {t('button.splitView')}
+          </button>
+
+          {/* Visual Separator */}
+          <div className="border-l border-gray-300 dark:border-neutral-600 h-9 mx-1"></div>
+
+          {/* 4. Action Buttons */}
           <button
             onClick={handleSelectAll}
-            // Set fixed height to match toggles
             className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9"
           >
             {t('button.selectAll')}
           </button>
           <button
+            onClick={handleSelectFromMyPool}
+            disabled={!growthPlans.length}
+            className={`font-bold text-xs py-1 px-3 rounded-md transition-all h-9 ${
+              growthPlans.length
+                ? 'bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white hover:scale-105 active:scale-95'
+                : 'bg-gray-300 dark:bg-neutral-600 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50'
+            }`}
+          >
+            {t('button.selectFromMyPool')}
+          </button>
+          <button
             onClick={handleDeselectAll}
-            // Set fixed height to match toggles
             className="bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9"
           >
             {t('button.deselectAll')}
@@ -230,52 +298,35 @@ export const BonusSelector = ({
       </div>
 
       <div data-component-name="BonusSelector_body" className="mt-4">
-        <div className="flex flex-wrap gap-3 justify-center">
-          {filteredBonusStudents.map((student) => {
-            const isSelected = selectedStudents.includes(student.id);
-            const bonusInfo = bonusData[student.id];
-
-            return (
-              <div
-                key={student.id}
-                onClick={() => onSelectStudent(student.id)}
-                title={student.name}
-                className={`w-14 cursor-pointer relative rounded-sm overflow-hidden transition-all duration-200 flex flex-col group
-            ${isSelected ? 'ring-2 dark:ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm shadow-blue-500/50' : 'ring-1 ring-gray-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800 opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
-              >
-                {isSelected && (
-                  <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                )}
-                <img src={`data:image/webp;base64,${student.portrait}`} alt={student.name} className="w-full h-auto object-cover aspect-square" loading="lazy" />
-                <div
-                  className={`p-0.5 text-center grow flex flex-col justify-center
-            ${isSelected ? 'bg-white dark:bg-neutral-800' : ''}`}
-                >
-                  <div className={`mt-0.5 text-[10px] leading-tight flex flex-col items-center gap-0.5 ${isSelected ? 'dark:text-blue-100' : 'text-gray-600 dark:text-gray-400'}`}>
-                    {bonusInfo.EventContentItemType.map((type, index) => {
-                      const item = eventData.currency.find((c) => c.EventContentItemType === type);
-                      if (!item) return null;
-
-                      const itemID = item.ItemUniqueId.toString();
-                      const percentage = bonusInfo.BonusPercentage[index] / 100;
-
-                      return (
-                        <div key={type} className="flex items-center justify-center gap-1">
-                          <img src={`data:image/webp;base64,${iconData.Item?.[itemID]}`} className="w-4 h-4 object-contain" />
-                          <span className="font-semibold">+{percentage}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+        {isSplitView ? (
+          <div className="flex flex-col gap-4">
+            {/* Striker Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#cc1a25' }}>
+                  Striker
+                </span>
+                <div className="flex-1 border-t" style={{ borderColor: '#cc1a2540' }}></div>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{strikerStudents.length}</span>
               </div>
-            );
-          })}
-        </div>
+              <div className="flex flex-wrap gap-3 justify-center">{strikerStudents.map(renderStudentCard)}</div>
+            </div>
+
+            {/* Special Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#006bff' }}>
+                  Special
+                </span>
+                <div className="flex-1 border-t" style={{ borderColor: '#006bff40' }}></div>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{specialStudents.length}</span>
+              </div>
+              <div className="flex flex-wrap gap-3 justify-center">{specialStudents.map(renderStudentCard)}</div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-3 justify-center">{filteredBonusStudents.map(renderStudentCard)}</div>
+        )}
       </div>
     </>
   );

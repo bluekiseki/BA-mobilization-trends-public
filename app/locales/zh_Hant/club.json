@@ -47,5 +47,23 @@
   "OccultClub": "神祕學研究會",
   "FreeTradeCartel": "特殊交易部",
   "NicomediasTroop": "尼科米底亞連隊",
-  "PublishingDepartment": "出版部"
+  "PublishingDepartment": "出版部",
+  "short": {
+    "Abydos": "阿拜多斯",
+    "Arius": "奧利斯",
+    "Gehenna": "格黑娜",
+    "Hyakkiyako": "百鬼夜行",
+    "Millennium": "千年",
+    "RedWinter": "赤冬",
+    "Shanhaijing": "山海經",
+    "SRT": "SRT",
+    "Trinity": "三一",
+    "Valkyrie": "女武神",
+    "ETC": "其他",
+    "Tokiwadai": "常盤台中學",
+    "Sakugawa": "柵川中學",
+    "Other": "其他",
+    "Highlander": "高地人",
+    "WildHunt": "狂獵"
+  }
 }

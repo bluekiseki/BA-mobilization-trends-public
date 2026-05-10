@@ -7,6 +7,7 @@ import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import type { IconData } from '~/types/plannerData';
 import { getGlobalEventDates } from '~/data/globalEventDates';
 import { CustomNumberInput } from '../CustomInput';
+import { IoIosClose } from 'react-icons/io';
 
 // AP generation per hour by cafe rank
 const CAFE_AP_PER_HOUR = [0, 0, 0, 0, 0, 0, 19.49, 22.32, 25.15, 27.97, 30.8]; // Ranks 0 to 10
@@ -243,111 +244,73 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
 
   const globalDates = getGlobalEventDates()[eventId];
 
+  const inputClass = 'w-full p-1.5 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200';
+  const labelClass = 'text-xs font-semibold dark:text-gray-300';
+  const shortcutBtnClass = 'bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md text-xs';
+
   return (
     <>
-      <div className="flex justify-between items-center group" /*onClick={() => setIsCollapsed(!isCollapsed)}*/>
+      <div className="flex justify-between items-center group">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          {/* ⚡ */}
           <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="inline w-8 h-8 ml-0.5 object-cover rounded-full" />
           {t('page.apCalculator')}
         </h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">{/* <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} /> */}</span>
       </div>
 
-      {/* {!isCollapsed && ( */}
       <div data-component-name="ApCalculator" className="mt-4 space-y-4">
         <h3 className="font-bold text-center text-lg dark:text-gray-200">
           {t('ui.calculationResult')} {t('ui.total')} <span className="text-blue-600 dark:text-blue-400">{result ? result.total.toLocaleString() : '?'}</span> AP
         </h3>
-
-        <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg space-y-4">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-bold dark:text-gray-300">{t('placeholder.startTime')}</label>
-              <div className="flex items-center gap-2 text-xs flex-wrap">
-                <button
-                  onClick={() =>
-                    setConfig({
-                      ...config,
-                      startDate: formatDateTimeForInput(new Date()),
-                    })
-                  }
-                  className="bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md"
-                >
+            <div className="space-y-1.5">
+              <label className={labelClass}>{t('placeholder.startTime')}</label>
+              <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                <button onClick={() => setConfig({ ...config, startDate: formatDateTimeForInput(new Date()) })} className={shortcutBtnClass}>
                   {t('placeholder.currentTime')}
                 </button>
-                <button
-                  onClick={() =>
-                    setConfig({
-                      ...config,
-                      startDate: startTime.slice(0, 16),
-                    })
-                  }
-                  className="bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md"
-                >
+                <button onClick={() => setConfig({ ...config, startDate: startTime.slice(0, 16) })} className={shortcutBtnClass}>
                   {t('placeholder.eventStart')}
                 </button>
                 {globalDates && (
-                  <button
-                    onClick={() => globalDates && setConfig({ ...config, startDate: globalDates.start })}
-                    className="bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button onClick={() => globalDates && setConfig({ ...config, startDate: globalDates.start })} className={shortcutBtnClass}>
                     {t('placeholder.globalStart')}
                   </button>
                 )}
               </div>
-              <input
-                type="datetime-local"
-                value={config.startDate}
-                onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
-                className="w-full p-2 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-              />
+              <input type="datetime-local" value={config.startDate} onChange={(e) => setConfig({ ...config, startDate: e.target.value })} className={inputClass} />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold dark:text-gray-300"> {t('placeholder.endTime')}</label>
-              <div className="flex items-center gap-2 text-xs">
-                <button
-                  onClick={() => setConfig({ ...config, endDate: endTime.slice(0, 16) })}
-                  className="bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md"
-                >
+            <div className="space-y-1.5">
+              <label className={labelClass}>{t('placeholder.endTime')}</label>
+              <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                <button onClick={() => setConfig({ ...config, endDate: endTime.slice(0, 16) })} className={shortcutBtnClass}>
                   {t('placeholder.eventEnd')}
                 </button>
-
                 {globalDates && (
-                  <button
-                    onClick={() => globalDates && setConfig({ ...config, endDate: globalDates.end })}
-                    className="bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button onClick={() => globalDates && setConfig({ ...config, endDate: globalDates.end })} className={shortcutBtnClass}>
                     {t('placeholder.globalEnd')}
                   </button>
                 )}
               </div>
-              <input
-                type="datetime-local"
-                value={config.endDate}
-                onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
-                className="w-full p-2 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-              />
+              <input type="datetime-local" value={config.endDate} onChange={(e) => setConfig({ ...config, endDate: e.target.value })} className={inputClass} />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold dark:text-gray-300">
-                {t('ui.cafeRank')} (Lv.{config.cafeRank})
+            <div className="space-y-1">
+              <label className={labelClass}>
+                {t('ui.cafeRank')} (Lv.<span className="text-blue-600 dark:text-blue-400">{config.cafeRank}</span>)
               </label>
               <input type="range" min="6" max="10" value={config.cafeRank} onChange={(e) => setNumericConfig('cafeRank', e.target.value)} className="w-full" />
+              <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 px-0.5">
+                {[6, 7, 8, 9, 10].map((n) => (
+                  <span key={n}>{n}</span>
+                ))}
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-bold dark:text-gray-300">{t('label.dailyPyroRefills')}</label>
-              <CustomNumberInput
-                min={0}
-                max={20}
-                value={config.gemRefills}
-                onChange={(e) => setNumericConfig('gemRefills', String(e || 0), 20)}
-                className="w-full p-2 text-base scale-[0.875] rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-              />
+            <div className="space-y-1">
+              <label className={labelClass}>{t('label.dailyPyroRefills')}</label>
+              <CustomNumberInput min={0} max={20} value={config.gemRefills} onChange={(e) => e != null && setNumericConfig('gemRefills', String(e), 20)} className={inputClass} />
             </div>
           </div>
 
-          {/* Detailed settings */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               {
@@ -361,13 +324,13 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                 label: t('ui.hardFarming') + ' (x-20 AP)',
                 type: 'number',
                 value: config.hardStages,
-                onChange: (e: any /*number | null */) => setNumericConfig('hardStages', String(e || 0)),
+                onChange: (e: any) => setNumericConfig('hardStages', String(e || 0)),
               },
               {
                 label: t('ui.scrimmageCount'),
                 type: 'number',
                 value: config.exchangeRuns,
-                onChange: (e: any /*number | null */) => setNumericConfig('exchangeRuns', String(e || 0)),
+                onChange: (e: any) => setNumericConfig('exchangeRuns', String(e || 0)),
               },
               {
                 label: t('ui.scrimmageCost'),
@@ -377,10 +340,10 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                 options: [0, 5, 10, 15],
               },
             ].map((item, index) => (
-              <div key={index}>
-                <label className="text-xs font-semibold dark:text-gray-300">{item.label}</label>
+              <div key={index} className="space-y-1">
+                <label className={labelClass}>{item.label}</label>
                 {item.type === 'select' ? (
-                  <select value={item.value} onChange={item.onChange} className="w-full p-1 text-sm mt-1 rounded border bg-white dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200">
+                  <select value={item.value} onChange={item.onChange} className={inputClass + ' bg-white dark:bg-neutral-700'}>
                     {item.options?.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
@@ -388,53 +351,53 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                     ))}
                   </select>
                 ) : (
-                  <CustomNumberInput
-                    value={item.value}
-                    onChange={item.onChange}
-                    className="w-full p-1 text-base scale-[0.875] mt-1 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                  />
+                  <CustomNumberInput value={item.value} onChange={(e) => e != null && item.onChange(e)} className={inputClass} />
                 )}
               </div>
             ))}
           </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div>
-              <label className="text-xs font-semibold dark:text-gray-300">{t('ui.otherDailyApConsumption')}</label>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className={labelClass}>{t('ui.otherDailyApConsumption')}</label>
+                <div className="flex rounded overflow-hidden text-[10px] border dark:border-neutral-600">
+                  <button
+                    onClick={() => setConfig({ ...config, miscDailySpend: Math.abs(config.miscDailySpend) })}
+                    className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend >= 0 ? 'bg-red-500 text-white' : 'text-gray-400 dark:text-gray-500 dark:bg-neutral-700'}`}
+                  >
+                    {t('ui.consumed')}
+                  </button>
+                  <button
+                    onClick={() => setConfig({ ...config, miscDailySpend: -Math.abs(config.miscDailySpend) })}
+                    className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend < 0 ? 'bg-green-500 text-white' : 'text-gray-400 dark:text-gray-500 dark:bg-neutral-700'}`}
+                  >
+                    {t('ui.gained')}
+                  </button>
+                </div>
+              </div>
               <CustomNumberInput
-                value={config.miscDailySpend}
-                onChange={(e) => setNumericConfig('miscDailySpend', String(e || 0))}
-                className="w-full p-1 text-base scale-[0.875] mt-1 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
+                // type="number"
+                min={0}
+                value={Math.abs(config.miscDailySpend)}
+                onChange={(e) => {
+                  const abs = Math.max(0, e || 0);
+                  setConfig({ ...config, miscDailySpend: config.miscDailySpend < 0 ? -abs : abs });
+                }}
+                className={inputClass}
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold dark:text-gray-300">{t('ui.prefarmedAp')}</label>
-              <CustomNumberInput
-                value={config.bonusAp}
-                onChange={(e) => setNumericConfig('bonusAp', String(e || 0))}
-                className="w-full p-1 text-base scale-[0.875] mt-1 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-              />
+            <div className="space-y-1">
+              <label className={labelClass}>{t('ui.prefarmedAp')}</label>
+              <CustomNumberInput value={config.bonusAp} onChange={(e) => e != null && setNumericConfig('bonusAp', String(e))} className={inputClass} />
             </div>
-            <div>
-              <label className="text-xs font-semibold dark:text-gray-300">{t('ui.aronaAttendanceStartDate')}</label>
-              <input
-                type="date"
-                value={config.attendanceStartDate}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    attendanceStartDate: e.target.value,
-                  })
-                }
-                className="w-full p-1 text-sm mt-1 rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-              />
+            <div className="space-y-1">
+              <label className={labelClass}>{t('ui.aronaAttendanceStartDate')}</label>
+              <input type="date" value={config.attendanceStartDate} onChange={(e) => setConfig({ ...config, attendanceStartDate: e.target.value })} className={inputClass} />
             </div>
-            <div>
-              <label className="text-xs font-semibold dark:text-gray-300">{t('ui.aronaAttendanceDay')}</label>
-              <select
-                value={config.attendanceStartDay}
-                onChange={(e) => setNumericConfig('attendanceStartDay', e.target.value)}
-                className="w-full p-1 text-sm mt-1 rounded border bg-white dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-              >
+            <div className="space-y-1">
+              <label className={labelClass}>{t('ui.aronaAttendanceDay')}</label>
+              <select value={config.attendanceStartDay} onChange={(e) => setNumericConfig('attendanceStartDay', e.target.value)} className={inputClass + ' bg-white dark:bg-neutral-700'}>
                 <option value={1}>
                   1{t('common.day')} (20k {t('common.credits')})
                 </option>
@@ -467,122 +430,131 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
         </div>
 
         <div>
-          <label className="text-sm font-bold dark:text-gray-300">{t('label.twoWeekApPackage')} (x150 AP)</label>
+          <label className={labelClass}>{t('label.twoWeekApPackage')} (x150 AP)</label>
           <div className="space-y-2 mt-1">
             {config.apPackageDates.map((date, index) => (
               <div key={index} className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => handlePackageDateChange(index, e.target.value)}
-                  className="w-full p-1 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                />
-                <button onClick={() => handleRemovePackageDate(index)} className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white font-bold px-2 py-1 rounded-md text-xs">
-                  Del
+                <input type="date" value={date} onChange={(e) => handlePackageDateChange(index, e.target.value)} className={inputClass} />
+                <button
+                  onClick={() => handleRemovePackageDate(index)}
+                  aria-label="Delete"
+                  className="w-7 h-7 flex items-center justify-center shrink-0 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded text-base leading-none"
+                >
+                  <IoIosClose />
                 </button>
               </div>
             ))}
-            <button onClick={handleAddPackageDate} className="w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-semibold py-1 rounded-md text-sm">
+            <button
+              onClick={handleAddPackageDate}
+              className="w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-semibold py-1 rounded-md text-sm transition-colors"
+            >
               + {t('button.addPackageStartDate')}
             </button>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ui.packageSubscriptionNotice')}</p>
         </div>
-        <button onClick={handleCalculate} className="w-full bg-blue-500 text-white font-bold py-2 rounded-lg">
+
+        <button onClick={handleCalculate} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg transition-colors">
           {t('button.runCalculation')}
         </button>
 
         {result && (
-          <div className="mt-4">
-            <h3 className="font-bold text-center text-lg dark:text-gray-200">
-              {t('ui.calculationResult')} {t('ui.total')} <span className="text-blue-600 dark:text-blue-400">{result.total.toLocaleString()}</span> AP
-            </h3>
-            <div className="mt-2 bg-gray-100 dark:bg-neutral-900/50 rounded-lg max-h-60 overflow-y-auto space-y-2 text-sm">
+          <div className="mt-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg dark:text-gray-200">
+                {t('ui.calculationResult')} {t('ui.total')} <span className="text-blue-600 dark:text-blue-400">{result.total.toLocaleString()}</span> AP
+              </h3>
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 dark:text-gray-300 transition-colors"
+              >
+                {showDetails ? t('button.hideDetails') : t('button.viewDailyDetails')}
+              </button>
+            </div>
+            <div className="mt-2 rounded-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-700 text-sm">
               {Object.entries(result.daily).map(([date, daily]) => {
                 const d = new Date(date);
                 const dayOfWeek = t(('common.' + DAYS[d.getUTCDay()]) as any);
 
                 return (
-                  <div key={date} className="bg-white dark:bg-neutral-800/70 p-2 rounded">
+                  <div key={date} className="py-2 first:pt-0">
                     <div className="flex justify-between items-center">
                       <span className="font-bold dark:text-gray-200">
-                        {date} ({dayOfWeek})
+                        {date.slice(5).replace('-', '/')} ({dayOfWeek})
                       </span>
-                      <span className="font-bold text-blue-700 dark:text-blue-400">
-                        {t('ui.total')} {Math.round(daily.total).toLocaleString()} AP
-                      </span>
+                      <span className="font-bold text-blue-700 dark:text-blue-400">{Math.round(daily.total).toLocaleString()} AP</span>
                     </div>
-                    {/* Detailed breakdown */}
                     {showDetails && (
-                      <div className="mt-2 pt-2 border-t dark:border-neutral-700 text-xs">
-                        <div className="grid grid-cols-2 gap-x-2">
-                          <span className="text-green-600 dark:text-green-400">
-                            {t('apBreakdown.naturalRegen')} +{Math.round(daily.natural)}
+                      <div className="mt-1.5 pt-1.5 border-t dark:border-neutral-700 text-xs space-y-0.5">
+                        <div className="flex flex-wrap gap-x-3 text-green-600 dark:text-green-400">
+                          <span>
+                            +{Math.round(daily.natural)} {t('apBreakdown.naturalRegen')}
                           </span>
-                          {daily.spendHard ? (
-                            <span className="text-red-600 dark:text-red-400">
-                              {t('apBreakdown.hardMode')} -{daily.spendHard}
+                          <span>
+                            +{daily.dailyQuests} {t('apBreakdown.dailyQuests')}
+                          </span>
+                          <span>
+                            +{Math.round(daily.cafe)} {t('apBreakdown.cafe')}
+                          </span>
+                          {daily.gem > 0 && (
+                            <span>
+                              +{daily.gem} {t('apSource.pyroxene')}
                             </span>
-                          ) : (
-                            ''
                           )}
-                          <span className="text-green-600 dark:text-green-400">
-                            {t('apBreakdown.dailyQuests')}: +{daily.dailyQuests}
-                          </span>
-                          {daily.spendExchange ? (
-                            <span className="text-red-600 dark:text-red-400">
-                              {t('apBreakdown.scrimmage')} -{daily.spendExchange}
+                          {daily.pvp > 0 && (
+                            <span>
+                              +{daily.pvp} {t('gameTerm.tacticalChallenge')}
                             </span>
-                          ) : (
-                            ''
                           )}
-                          <span className="text-green-600 dark:text-green-400">
-                            {t('apBreakdown.cafe')} +{Math.round(daily.cafe)}
-                          </span>
-                          {daily.spendMisc ? (
-                            <span className="text-red-600 dark:text-red-400">
-                              {t('apBreakdown.otherConsumption')} -{daily.spendMisc}
-                            </span>
-                          ) : (
-                            ''
-                          )}
-                          <span className="text-green-600 dark:text-green-400">
-                            {t('apSource.pyroxene')} +{daily.gem}
-                          </span>
-                          <span className="text-green-600 dark:text-green-400">
-                            {t('gameTerm.tacticalChallenge')}: +{daily.pvp}
-                          </span>
                           {daily.apPackage > 0 && (
-                            <span className="text-green-600 dark:text-green-400 font-semibold">
-                              {t('apSource.apPackage')} +{daily.apPackage}
+                            <span>
+                              +{daily.apPackage} {t('apSource.apPackage')}
                             </span>
                           )}
                           {daily.weekly > 0 && (
-                            <span className="text-green-600 dark:text-green-400 font-semibold">
-                              {t('apSource.weeklyQuests')} +{daily.weekly}
+                            <span>
+                              +{daily.weekly} {t('apSource.weeklyQuests')}
                             </span>
                           )}
                           {daily.attendance > 0 && (
-                            <span className="text-green-600 dark:text-green-400 font-semibold">
-                              {t('apSource.attendance')} +{daily.attendance}
+                            <span>
+                              +{daily.attendance} {t('apSource.attendance')}
+                            </span>
+                          )}
+                          {daily.spendMisc < 0 && (
+                            <span>
+                              +{-daily.spendMisc} {t('apBreakdown.otherConsumption')}
                             </span>
                           )}
                         </div>
+                        {(daily.spendHard > 0 || daily.spendExchange > 0 || daily.spendMisc > 0) && (
+                          <div className="flex flex-wrap gap-x-3 text-red-600 dark:text-red-400">
+                            {daily.spendHard > 0 && (
+                              <span>
+                                -{daily.spendHard} {t('apBreakdown.hardMode')}
+                              </span>
+                            )}
+                            {daily.spendExchange > 0 && (
+                              <span>
+                                -{daily.spendExchange} {t('apBreakdown.scrimmage')}
+                              </span>
+                            )}
+                            {daily.spendMisc > 0 && (
+                              <span>
+                                -{daily.spendMisc} {t('apBreakdown.otherConsumption')}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
-            <div className="text-center mt-2">
-              <button onClick={() => setShowDetails(!showDetails)} className="text-sm text-blue-500 hover:underline dark:text-blue-400">
-                {showDetails ? t('button.hideDetails') : t('button.viewDailyDetails')}
-              </button>
-            </div>
           </div>
         )}
       </div>
-      {/* )} */}
     </>
   );
 };

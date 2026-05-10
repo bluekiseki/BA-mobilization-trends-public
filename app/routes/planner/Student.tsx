@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaCompressArrowsAlt, FaExpandArrowsAlt, FaSearch, FaPlus, FaArrowLeft, FaSortAmountDown } from 'react-icons/fa';
+import { FaCompressArrowsAlt, FaExpandArrowsAlt, FaSearch, FaPlus, FaArrowLeft, FaSortAmountDown, FaTable, FaTh } from 'react-icons/fa';
 import { data, Link, type LoaderFunctionArgs } from 'react-router';
 
 // Utils & Stores
@@ -13,17 +13,20 @@ import { getInstance } from '~/middleware/i18next';
 import { getCharacterStarValue, type Character } from '~/components/dashboard/common';
 
 // Components
-import { ItemIcon } from '~/components/planner/common/Icon';
+import { MaterialNeedsSection } from '~/components/planner/StudentGrowth/MaterialNeedsSection';
 import { StudentGrowthPlanCard } from '~/components/planner/StudentGrowth/StudentGrowthPlanCard';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 import { StudentGridCard } from '~/components/StudentGridCard';
-import { getItemSortPriority } from '~/utils/itemSort';
 import { FaCopy, FaRegSquareCheck } from 'react-icons/fa6';
 
 // Types
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
 import type { Route } from './+types/Student';
 import { PlannerJsonExchange } from '~/components/planner/StudentGrowth/PlannerJsonExchange';
+import { StudentSpreadsheetView } from '~/components/planner/StudentGrowth/Spreadsheet/StudentSpreadsheetView';
+import { SpreadsheetCsvTools } from '~/components/planner/StudentGrowth/Spreadsheet/SpreadsheetCsvTools';
+import ExportImportPanel from '~/components/planner/ExportImportPanel';
+import { useSearchMatcher } from '~/utils/useSearchMatcher';
 
 export async function loader({ context }: LoaderFunctionArgs) {
   let i18n = getInstance(context);
@@ -35,7 +38,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp');
+  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/equipment.webp');
 }
 
 export function links() {
@@ -54,13 +57,15 @@ export const StudentPlannerPage = () => {
   const [selectedPlanUuid, setSelectedPlanUuid] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [sortOrder, setSortOrder] = useState<'name' | 'level' | 'date' | 'star'>('date');
+  const [sortOrder, setSortOrder] = useState<'name' | 'level' | 'date' | 'star' | 'id'>('date');
   const [showOnlySelected, setShowOnlySelected] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
   const { t, i18n } = useTranslation('planner');
   const { t: t_c } = useTranslation('common');
   const locale = i18n.language as Locale;
-  const { growthPlans, addPlan, updatePlan, selectAllPlans } = useGlobalStore();
+  const { growthPlans, addPlan, updatePlan, selectAllPlans, setGrowthPlans } = useGlobalStore();
+  const matcher = useSearchMatcher(locale);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,11 +128,15 @@ export const StudentPlannerPage = () => {
     }
 
     // Filter: Search Term
-    if (searchTerm) {
-      const lowerTerm = searchTerm.toLowerCase();
+    if (searchTerm.trim()) {
+      const lowerTerm = searchTerm.trim().toLowerCase();
       result = result.filter((p) => {
         const student = p.studentId ? allStudents[p.studentId] : null;
-        return student ? student.Name.toLowerCase().includes(lowerTerm) : false;
+        if (student) return matcher(student.Name, lowerTerm) || matcher(student.PathName, lowerTerm) || student.SearchTags.some((v) => matcher(v, searchTerm));
+
+        return false;
+        //  : false;// || matcher(s.FamilyName ?? '', studentSearchQuery);
+        // return student ? student.Name.toLowerCase().includes(lowerTerm) : false;
       });
     }
 
@@ -151,6 +160,10 @@ export const StudentPlannerPage = () => {
           weaponStar: b.target.uw,
         } as Character);
         return starB - starA;
+      } else if (sortOrder === 'id') {
+        if (!studentA) return 1;
+        if (!studentB) return -1;
+        return studentA?.Id - studentB.Id;
       }
       return 0;
     });
@@ -190,167 +203,154 @@ export const StudentPlannerPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-neutral-900 min-h-screen pb-20">
-      {}
-      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 shadow-sm sticky top-0 z-30">
+    <div className="min-h-screen pb-20">
+      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 shadow-sm top-14">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 md:gap-0">
-            {/* Title & Description */}
-            <div className="flex-1 pr-0 md:pr-4">
-              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">{t('page.studentGrowthPlanner')}</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-keep">{t('page.description.studentGrowthPlanner')}</p>
+          <div className="flex flex-col gap-2">
+            <div>
+              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t('page.studentGrowthPlanner')}</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 break-keep">{t('page.description.studentGrowthPlanner')}</p>
             </div>
 
-            {}
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 md:gap-1 w-full md:w-auto border-t md:border-t-0 border-gray-100 dark:border-neutral-700 pt-3 md:pt-0 mt-1 md:mt-0">
-              <div className="flex items-center gap-2">
-                <PlannerJsonExchange />
-                <button
-                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-3 py-1.5 rounded transition-colors whitespace-nowrap h-[32px]"
-                >
-                  {isSummaryExpanded ? <FaCompressArrowsAlt /> : <FaExpandArrowsAlt />}
-                  {isSummaryExpanded ? t_c('close') : `${t('ui.totalNeededTitle')} (${selectedPlansCount})`}
-                </button>
-              </div>
-
-              <Link to={localeLink(locale, '/planner/equipment')} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 whitespace-nowrap">
-                <FaCopy />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <PlannerJsonExchange />
+              <button
+                onClick={() => setViewMode((v) => (v === 'card' ? 'table' : 'card'))}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
+              >
+                {viewMode === 'card' ? <FaTable size={13} /> : <FaTh size={13} />}
+                {viewMode === 'card' ? t('ui.tableView', 'Table') : t('ui.cardView', 'Cards')}
+              </button>
+              <button
+                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
+              >
+                {isSummaryExpanded ? <FaCompressArrowsAlt size={13} /> : <FaExpandArrowsAlt size={13} />}
+                {isSummaryExpanded ? t_c('close') : `${t('ui.totalNeededTitle')} (${selectedPlansCount})`}
+              </button>
+              <Link
+                to={localeLink(locale, '/planner/equipment')}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
+              >
+                <FaCopy size={13} />
                 {t('equipment.goToPlanner')}
               </Link>
             </div>
           </div>
 
-          {}
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSummaryExpanded ? 'max-h-[60vh] opacity-100 mt-4 pb-2' : 'max-h-0 opacity-0'}`}>
+          <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isSummaryExpanded ? 'max-h-[60vh] opacity-100 mt-4 pb-2' : 'max-h-0 opacity-0'}`}>
             {isSummaryExpanded && (
-              <div className="mb-2 px-1 text-xs font-bold text-blue-600 dark:text-blue-400">
-                <FaRegSquareCheck className="inline-block mr-1.5 mb-0.5" />
-                {t('ui.summaryForSelected', {
-                  count: selectedPlansCount,
-                  defaultValue: `Materials needed for ${selectedPlansCount} selected students`,
-                })}
-              </div>
-            )}
-
-            {Object.keys(totalNeeds).length > 0 ? (
-              <div className="flex flex-wrap gap-2 p-1 rounded-lg overflow-y-auto max-h-[50vh] scrollbar-thin">
-                {Object.entries(totalNeeds)
-                  .sort(([a], [b]) =>
-                    getItemSortPriority(a, {
-                      icons: iconInfoData,
-                    } as EventData) > getItemSortPriority(b, { icons: iconInfoData } as EventData)
-                      ? 1
-                      : 0,
-                  )
-                  .map(([key, amount]) => {
-                    if (amount <= 0) return null;
-                    const [type, id] = key.split('_');
-                    return <ItemIcon key={key} type={type} itemId={id} amount={amount as number} size={12} eventData={{ icons: iconInfoData } as EventData} iconData={iconData} />;
-                  })}
-              </div>
-            ) : (
-              <div className="text-center text-sm text-gray-400 py-4 italic bg-gray-50 dark:bg-neutral-900/50 rounded-lg">
-                {selectedPlansCount === 0 ? t('ui.noStudentSelected', 'No students selected.') : t('ui.noMaterialsNeeded')}
-              </div>
+              <>
+                <div className="mb-2 px-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                  <FaRegSquareCheck className="inline-block mr-1.5 mb-0.5" />
+                  {t('ui.summaryForSelected', { count: selectedPlansCount, defaultValue: `Materials needed for ${selectedPlansCount} selected students` })}
+                </div>
+                {Object.keys(totalNeeds).length > 0 ? (
+                  <MaterialNeedsSection calculatedNeeds={totalNeeds} eventData={{ icons: iconInfoData } as EventData} iconData={iconData} title={t('ui.totalNeededTitle')} />
+                ) : (
+                  <div className="text-center text-sm text-gray-400 py-4 italic bg-gray-50 dark:bg-neutral-900/50 rounded-lg">
+                    {selectedPlansCount === 0 ? t('ui.noStudentSelected', 'No students selected.') : t('ui.noMaterialsNeeded')}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {}
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {}
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          {}
-          <div className="relative w-full lg:w-96">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+      <div className="px-4 py-3 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative w-full sm:flex-1 sm:min-w-0">
+            <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
             <input
               type="text"
               placeholder={t('ui.searchStudentPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-white dark:bg-neutral-800 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white dark:bg-neutral-800 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
-          {}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
-            {/* Bulk Selection (ALL / NONE) */}
-            <div className="flex items-center bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg px-2 h-[38px]">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg px-1">
               <button
                 onClick={() => selectAllPlans(true)}
-                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1.5 rounded transition-colors"
+                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors"
                 title={t('ui.selectAllTooltip', 'Select All Students')}
               >
                 {t('ui.selectAll', 'ALL')}
               </button>
-              <div className="w-px h-3 bg-gray-300 dark:bg-neutral-600 mx-1"></div>
+              <div className="w-px h-3 bg-gray-300 dark:bg-neutral-600 mx-0.5" />
               <button
                 onClick={() => selectAllPlans(false)}
-                className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-700 px-2 py-1.5 rounded transition-colors"
+                className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-700 px-2 py-1 rounded transition-colors"
                 title={t('ui.deselectAllTooltip', 'Deselect All Students')}
               >
                 {t('ui.deselectAll', 'NONE')}
               </button>
             </div>
 
-            {/* Sort & Filter Group */}
-            <div className="flex items-center gap-0 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg h-[38px] overflow-hidden divide-x divide-gray-200 dark:divide-neutral-700">
-              {/* Checkbox Filter */}
-              <label className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors h-full">
+            <div className="flex items-center bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg overflow-hidden divide-x divide-gray-200 dark:divide-neutral-700">
+              <label className="flex items-center gap-1.5 px-2 py-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
                 <input
                   type="checkbox"
                   checked={showOnlySelected}
                   onChange={(e) => setShowOnlySelected(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  className="rounded text-blue-600 focus:ring-blue-500 w-3 h-3 cursor-pointer"
                 />
                 <span className="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">{t('ui.showSelectedOnly', 'Selected')}</span>
               </label>
-
-              {/* Sort Dropdown */}
-              <div className="flex items-center px-2 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors h-full">
-                <FaSortAmountDown className="text-gray-400 mr-2 text-xs" />
+              <div className="flex items-center px-2 py-1 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+                <FaSortAmountDown className="text-gray-400 mr-1.5 text-xs shrink-0" />
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as any)}
-                  className="text-xs font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-gray-700 dark:text-gray-200 py-1 pr-6 pl-0"
+                  className="text-xs font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-gray-700 dark:text-gray-200 pr-5 pl-0"
                 >
                   <option value="date">{t('ui.sortByDate')}</option>
                   <option value="name">{t('ui.sortByName')}</option>
                   <option value="level">{t('ui.sortByLevel')}</option>
                   <option value="star">{t('ui.sortByStar', 'By Star')}</option>
+                  <option value="id">{t('ui.sortById', 'By Id')}</option>
                 </select>
               </div>
             </div>
           </div>
         </div>
 
-        {}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {filteredAndSortedPlans.map((plan) => (
-            <div key={plan.uuid} className="h-44">
-              <StudentGridCard
-                plan={plan}
-                studentInfo={plan.studentId ? allStudents[plan.studentId] : null}
-                portraitBase64={plan.studentId ? studentPortraits[plan.studentId] : undefined}
-                onClick={() => setSelectedPlanUuid(plan.uuid)}
-                onDuplicate={(e) => handleDuplicatePlan(e, plan)}
-              />
-            </div>
-          ))}
+        {viewMode === 'table' ? (
+          <div className="space-y-3">
+            <SpreadsheetCsvTools growthPlans={growthPlans} allStudents={allStudents} setGrowthPlans={setGrowthPlans} />
+            <StudentSpreadsheetView allStudents={allStudents} studentPortraits={studentPortraits} searchTerm={searchTerm.trim()} showOnlySelected={showOnlySelected} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3">
+            {filteredAndSortedPlans.map((plan) => (
+              <div key={plan.uuid} className="h-44">
+                <StudentGridCard
+                  plan={plan}
+                  studentInfo={plan.studentId ? allStudents[plan.studentId] : null}
+                  portraitBase64={plan.studentId ? studentPortraits[plan.studentId] : undefined}
+                  onClick={() => setSelectedPlanUuid(plan.uuid)}
+                  onDuplicate={(e) => handleDuplicatePlan(e, plan)}
+                />
+              </div>
+            ))}
 
-          <button
-            onClick={() => addPlan(null)}
-            className="h-44 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-neutral-800 dark:hover:border-blue-500 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-              <FaPlus className="text-gray-400 group-hover:text-white" />
-            </div>
-            <span className="text-xs font-bold text-gray-500 group-hover:text-blue-600 dark:text-gray-400">{t('ui.addNewPlan')}</span>
-          </button>
-        </div>
+            <button
+              onClick={() => addPlan(null)}
+              className="h-44 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-neutral-800 dark:hover:border-blue-500 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                <FaPlus className="text-gray-400 group-hover:text-white" />
+              </div>
+              <span className="text-xs font-bold text-gray-500 group-hover:text-blue-600 dark:text-gray-400">{t('ui.addNewPlan')}</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      <ExportImportPanel />
     </div>
   );
 };

@@ -22,6 +22,24 @@ export const links: Route.LinksFunction = () => {
       crossOrigin: 'anonymous',
       as: 'fetch',
     },
+    {
+      rel: 'preload',
+      href: cdn(`/ew/icon_img.json`),
+      as: 'fetch',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'preload',
+      href: cdn(`/ew/icon_info.json`),
+      as: 'fetch',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'preload',
+      href: cdn(`/schaledb.com/student_favor_stories_parsed.json`),
+      as: 'fetch',
+      crossOrigin: 'anonymous',
+    },
   ];
 };
 
@@ -67,7 +85,12 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
-
+      {
+        rel: 'preload',
+        href: cdn(`/schaledb.com/${getLocaleShortName(data?.locale)}.students.min.json`),
+        as: 'fetch',
+        crossOrigin: 'anonymous',
+      },
       ...createLinkHreflang(`/charts/${server}/heatmap`),
     ];
   },

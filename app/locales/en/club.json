@@ -62,5 +62,23 @@
   "Highlander": "Highlander Railroad Academy",
   "WildHunt": "Wildhunt Art Academy",
   "ETC": "ETC",
-  "Sakugawa": "Sakugawa Middle School"
+  "Sakugawa": "Sakugawa Middle School",
+  "short": {
+    "Abydos": "Abydos",
+    "Arius": "Arius",
+    "Gehenna": "Gehenna",
+    "Hyakkiyako": "Hyakkiyako",
+    "Millennium": "Millennium",
+    "RedWinter": "Red Winter",
+    "Shanhaijing": "Shanhaijing",
+    "SRT": "SRT",
+    "Trinity": "Trinity",
+    "Valkyrie": "Valkyrie",
+    "ETC": "Etc.",
+    "Tokiwadai": "Tokiwadai",
+    "Sakugawa": "Sakugawa",
+    "Other": "Other",
+    "Highlander": "Highlander",
+    "WildHunt": "Wildhunt"
+  }
 }

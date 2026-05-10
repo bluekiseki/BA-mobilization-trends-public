@@ -7,7 +7,7 @@ interface StarIconProps {
   color?: string;
 }
 
-const StarIcon: React.FC<StarIconProps> = ({ number, height = 24, color = '#77e0ff' }) => {
+const StarIcon: React.FC<StarIconProps> = React.memo(({ number, height = 24, color = '#77e0ff' }) => {
   const fontSize = height * (2 / 3);
   const shadowSize = height / 12;
 
@@ -48,6 +48,6 @@ const StarIcon: React.FC<StarIconProps> = ({ number, height = 24, color = '#77e0
       </span>
     </div>
   );
-};
+});
 
 export default StarIcon;

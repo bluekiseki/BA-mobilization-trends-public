@@ -4,6 +4,9 @@ import type { EventData, IconData } from '~/types/plannerData';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { ChevronIcon } from '~/components/Icon';
 import { useTranslation } from 'react-i18next';
+import { useIsDarkState } from '~/store/isDarkState';
+import { getLocalizeEtcName } from '../common/locale';
+import type { Locale } from '~/utils/i18n/config';
 
 // --- Type definitions ---
 export type FortuneGachaResult = {
@@ -98,7 +101,9 @@ const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): 
 export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: FortuneGachaPlannerProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const { t } = useTranslation('planner', { keyPrefix: 'fortune_gacha' });
+  const { t, i18n } = useTranslation('planner', { keyPrefix: 'fortune_gacha' });
+  const locale = i18n.language as Locale;
+  const { isDark } = useIsDarkState();
   const { plan, setFortuneGachaSimRuns: setSimRuns, setFortuneGachaFinalPulls: setFinalPulls, setFortuneGachaAvgRates: setAvgRates } = usePlanForEvent(eventId);
 
   const { fortuneGachaSimRuns: simRuns, fortuneGachaFinalPulls: finalPulls, fortuneGachaAvgRates: avgRates } = plan;
@@ -175,8 +180,8 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
         </span>
       </div>
       {!isCollapsed && (
-        <div className="mt-4 space-y-4">
-          <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg space-y-2">
+        <div className="mt-3 divide-y divide-gray-200 dark:divide-neutral-700">
+          <div className="py-3 space-y-2">
             <h3 className="font-bold text-sm dark:text-gray-200">{t('calcAvgRewards')}</h3>
             <div className="flex items-center gap-2">
               <input
@@ -189,9 +194,8 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
                 {t('run')}
               </button>
             </div>
-
             {avgRates && (
-              <div className="mt-2 space-y-3">
+              <div className="space-y-2 pt-1">
                 <div>
                   <p className="text-xs font-semibold text-green-700 dark:text-green-400">{t('avgRewardsPerPull')}</p>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -203,7 +207,6 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
                       })}
                   </div>
                 </div>
-
                 <div>
                   <p className="text-xs font-semibold text-red-700 dark:text-red-400">{t('avgCostPerPull')}</p>
                   <div className="flex flex-wrap gap-2 mt-1">
@@ -214,8 +217,8 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
             )}
           </div>
 
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
-            <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('planTotalPulls')}</h3>
+          <div className="py-3 space-y-2">
+            <h3 className="font-bold text-sm dark:text-gray-200">{t('planTotalPulls')}</h3>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -234,6 +237,90 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
               </button>
             </div>
           </div>
+
+          {/* Probability Table */}
+          {(() => {
+            const totalBaseProb = gachaData.shop.reduce((sum, item) => sum + item.Prob, 0);
+            const pityInfo = gachaData.modify[0];
+            const rarityColors: Record<'light' | 'dark', Record<number, string>> = {
+              light: { 0: '#bdc5d0', 1: '#90baec', 2: '#d6ad81', 3: '#a88aec', 4: '#ebc355' },
+              dark: { 0: '#8c939e', 1: '#658dbf', 2: '#a87d51', 3: '#7a5bbe', 4: '#c9a227' },
+            };
+            const theme = isDark === 'dark' ? 'dark' : 'light';
+
+            // Group items by reward signature + max probability + name
+            const rewardSignatureMap = new Map<string, (typeof gachaData.shop)[0][]>();
+            gachaData.shop.forEach((item) => {
+              const rewardSig = item.RewardParcelId.map((id, idx) => `${item.RewardParcelTypeStr[idx]}_${id}_${item.RewardParcelAmount[idx]}`)
+                .sort()
+                .join('|');
+              const name = getLocalizeEtcName(item.FortuneGachaGroup.LocalizeEtc, locale);
+              const signature = `${rewardSig}|${item.ProbModifyLimit}|${name}`;
+              if (!rewardSignatureMap.has(signature)) {
+                rewardSignatureMap.set(signature, []);
+              }
+              rewardSignatureMap.get(signature)!.push(item);
+            });
+
+            const groupedItems = Array.from(rewardSignatureMap.values());
+
+            return (
+              <div className="py-3">
+                <h3 className="font-bold text-sm mb-2 dark:text-gray-200">3. {t('probTable')}</h3>
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-neutral-600">
+                      <th className="text-left py-1 pr-2 font-semibold text-gray-600 dark:text-gray-400">{t('name')}</th>
+                      <th className="text-right py-1 pr-2 font-semibold text-gray-600 dark:text-gray-400">{t('baseProb')}</th>
+                      <th className="text-right py-1 pr-2 font-semibold text-gray-600 dark:text-gray-400">{t('maxProb')}</th>
+                      <th className="text-left py-1 font-semibold text-gray-600 dark:text-gray-400">{t('rewards')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupedItems.map((items) => {
+                      const groupProb = items.reduce((sum, item) => sum + item.Prob, 0);
+                      const basePct = ((groupProb / totalBaseProb) * 100).toFixed(2);
+                      const firstItem = items[0];
+                      const hasPityChange = items.some((item) => item.ProbModifyValue !== 0);
+
+                      // For pity, use the first item's modification pattern (or aggregate if needed)
+                      const groupModifyProb = items.reduce((sum, item) => sum + item.ProbModifyLimit, 0);
+                      const limitPct = ((groupModifyProb / totalBaseProb) * 100).toFixed(2);
+                      const stepsToLimit = hasPityChange ? Math.ceil(Math.abs(groupModifyProb - groupProb) / Math.abs(firstItem.ProbModifyValue)) : 0;
+                      const name = getLocalizeEtcName(firstItem.FortuneGachaGroup.LocalizeEtc, locale);
+                      const rowBg = rarityColors[theme][firstItem.Grade - 1] + '18';
+
+                      return (
+                        <tr key={items.map((item) => item.Id).join('_')} className="border-b border-gray-100 dark:border-neutral-800" style={{ backgroundColor: rowBg }}>
+                          <td className="py-1.5 pr-2 dark:text-gray-200">{name}</td>
+                          <td className="py-1.5 pr-2 text-right tabular-nums dark:text-gray-300">{basePct}%</td>
+                          <td
+                            className={`py-1.5 pr-2 text-right tabular-nums ${hasPityChange ? (firstItem.ProbModifyValue > 0 ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-red-500 dark:text-red-400 font-semibold') : 'text-gray-400 dark:text-gray-500'}`}
+                          >
+                            {hasPityChange ? (
+                              <span title={t('pityDetail', { start: pityInfo.ProbModifyStartCount, steps: stepsToLimit, total: pityInfo.ProbModifyStartCount + stepsToLimit })}>{limitPct}%</span>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                          <td className="py-1.5">
+                            <div className="flex flex-wrap gap-1">
+                              {firstItem.RewardParcelId.map((id, idx) => {
+                                const type = firstItem.RewardParcelTypeStr[idx];
+                                const key = `${type}_${id}`;
+                                return <ItemIcon key={key} type={type} itemId={String(id)} amount={firstItem.RewardParcelAmount[idx]} size={10} eventData={eventData} iconData={iconData} />;
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{t('pityNote', { start: pityInfo.ProbModifyStartCount })}</p>
+              </div>
+            );
+          })()}
         </div>
       )}
     </>

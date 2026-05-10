@@ -39,7 +39,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Vacation!",
+    "En": "Head Prefect Hina's Summer Break!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2021-07-29 12:30:00",
     "CloseTime": "2021-08-12 12:00:00"
@@ -84,7 +84,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♡ Valentine Patrol",
+    "En": "Schale's Happy ♥ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2022-01-26 12:30:00",
     "CloseTime": "2022-02-09 12:00:00"
@@ -263,7 +263,7 @@
   "832": {
     "Name": "Event_Name_832",
     "Kr": "전뇌신춘행진곡",
-    "Jp": "電脳新春行進曲",
+    "Jp": "（電脳）新春行進曲",
     "En": "Cyber New Year March",
     "Tw": "電腦新春行進曲",
     "OpenTime": "2023-12-27 11:00:00",
@@ -389,7 +389,7 @@
   "846": {
     "Name": "Event_Name_846",
     "Kr": "하이랜더 철도 폭주 사건 ~그리고 기차는 없었다~",
-    "Jp": "ハイランダー鉄道爆走事件〜そして列車はなくなった〜",
+    "Jp": "ハイランダー鉄道爆走事件 〜そして列車はなくなった〜",
     "En": "Highlander Railroad Runaway Incident: And the Train Disappeared",
     "Tw": "高地人鐵道暴走事件～於是列車消失了～",
     "OpenTime": "2025-04-22 11:00:00",
@@ -444,17 +444,17 @@
     "Name": "Event_Name_852",
     "Kr": "겨울 하늘의 르네상스 ~문화 및 교류에 관한 실천적 테제~",
     "Jp": "冬空の文芸復興～健全なる文化の交流について～",
-    "En": null,
-    "Tw": null,
+    "En": "Winter Sky's Renaissance: Thesis on Cultural Exchange",
+    "Tw": "冬日天空的文藝復興～關於文化交流的實踐綱領～",
     "OpenTime": "2025-11-19 11:00:00",
     "CloseTime": "2025-12-03 10:59:59"
   },
   "853": {
     "Name": "Event_Name_853",
     "Kr": "불인의 길 ~패션쇼 경호 임무!의 서~",
-    "Jp": "不忍ノ道～ファッションショー警護任務！の巻～",
-    "En": null,
-    "Tw": null,
+    "Jp": "不忍ノ道 ～ファッションショー警護任務！の巻～",
+    "En": "An Unconcealed Path - Episode: Fashion Show Security Duty!",
+    "Tw": "不忍之道～時裝秀警備任務！之卷～",
     "OpenTime": "2025-12-24 11:00:00",
     "CloseTime": "2026-01-07 10:59:59"
   },
@@ -484,6 +484,15 @@
     "Tw": null,
     "OpenTime": "2026-03-18 11:00:00",
     "CloseTime": "2026-04-01 10:59:59"
+  },
+  "857": {
+    "Name": "Event_Name_857",
+    "Kr": "특수작전: 로어추적 편",
+    "Jp": "特殊作戦：ロア追跡編",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-04-21 11:00:00",
+    "CloseTime": "2026-05-06 10:59:59"
   },
   "10801": {
     "Name": "Event_Name_801",
@@ -516,7 +525,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Vacation!",
+    "En": "Head Prefect Hina's Summer Break!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2022-09-07 11:00:00",
     "CloseTime": "2022-09-14 10:59:59"
@@ -561,7 +570,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♡ Valentine Patrol",
+    "En": "Schale's Happy ♥ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2023-01-11 11:00:00",
     "CloseTime": "2023-01-24 10:59:59"
@@ -713,7 +722,7 @@
   "10832": {
     "Name": "Event_Name_832",
     "Kr": "전뇌신춘행진곡",
-    "Jp": "電脳新春行進曲",
+    "Jp": "（電脳）新春行進曲",
     "En": "Cyber New Year March",
     "Tw": "電腦新春行進曲",
     "OpenTime": "2025-02-12 11:00:00",
@@ -816,8 +825,180 @@
     "En": "Code: BOX - The Shadow Approaching MillenniumOne Question, Two Answers",
     "Tw": "Code:BOX 逼近千年的黑影～一個問題與兩個回答～",
     "OpenTime": "2026-04-01 11:00:00",
-    "CloseTime": "2026-04-15 10:59:59",
+    "CloseTime": "2026-04-15 10:59:59"
+  },
+  "10845": {
+    "Name": "Event_Name_845",
+    "Kr": "Pray-Ball! ~노려라! 만루 홈런~",
+    "Jp": "プレイボール！ ～目指せ！満塁ホームラン～",
+    "En": "Pray-Ball! Swing for the Grand Slam!",
+    "Tw": "Pray-Ball！～瞄準滿壘全壘打！～",
+    "OpenTime": "2026-05-06 11:00:00",
+    "CloseTime": "2026-05-20 10:59:59",
     "Planable": true
+  },
+  "60001": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (1차)",
+    "Jp": "[S1] シャーレの総決算with連邦生徒会",
+    "En": "[S1] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S1] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2023-06-07 11:00:00",
+    "CloseTime": "2023-06-21 10:59:59"
+  },
+  "60002": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (2차)",
+    "Jp": "[S2] シャーレの総決算with連邦生徒会",
+    "En": "[S2] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S2] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2023-07-05 11:00:00",
+    "CloseTime": "2023-07-17 10:59:59"
+  },
+  "60003": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (3차)",
+    "Jp": "[S3] シャーレの総決算with連邦生徒会",
+    "En": "[S3] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S3] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2023-10-11 11:00:00",
+    "CloseTime": "2023-10-24 10:59:59"
+  },
+  "60004": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (4차)",
+    "Jp": "[S4] シャーレの総決算with連邦生徒会",
+    "En": "[S4] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S4] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2023-11-08 11:00:00",
+    "CloseTime": "2023-11-22 10:59:59"
+  },
+  "60005": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (5차)",
+    "Jp": "[S5] シャーレの総決算with連邦生徒会",
+    "En": "[S5] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S5] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2023-11-22 11:00:00",
+    "CloseTime": "2023-12-06 10:59:59"
+  },
+  "60006": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (6차)",
+    "Jp": "[S6] シャーレの総決算with連邦生徒会",
+    "En": "[S6] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S6] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2024-01-10 11:00:00",
+    "CloseTime": "2024-01-24 10:59:59"
+  },
+  "60007": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (7차)",
+    "Jp": "[S7] シャーレの総決算with連邦生徒会",
+    "En": "[S7] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S7] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2024-04-11 11:00:00",
+    "CloseTime": "2024-04-24 10:59:59"
+  },
+  "60008": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (8차)",
+    "Jp": "[S8] シャーレの総決算with連邦生徒会",
+    "En": "[S8] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S8] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2024-06-05 11:00:00",
+    "CloseTime": "2024-06-19 10:59:59"
+  },
+  "60009": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (9차)",
+    "Jp": "[S9] シャーレの総決算with連邦生徒会",
+    "En": "[S9] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S9] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2024-10-10 11:00:00",
+    "CloseTime": "2024-10-23 10:59:59"
+  },
+  "60010": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (10차)",
+    "Jp": "[S10] シャーレの総決算with連邦生徒会",
+    "En": "[S10] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S10] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2024-12-11 11:00:00",
+    "CloseTime": "2024-12-24 10:59:59"
+  },
+  "60011": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (11차)",
+    "Jp": "[S11] シャーレの総決算with連邦生徒会",
+    "En": "[S11] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S11] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2025-01-08 11:00:00",
+    "CloseTime": "2025-01-20 10:59:59"
+  },
+  "60012": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (12차)",
+    "Jp": "[S12] シャーレの総決算with連邦生徒会",
+    "En": "[S12] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S12] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2025-03-12 11:00:00",
+    "CloseTime": "2025-03-26 10:59:59"
+  },
+  "60013": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (13차)",
+    "Jp": "[S13] シャーレの総決算with連邦生徒会",
+    "En": "[S13] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S13] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2025-05-21 11:00:00",
+    "CloseTime": "2025-06-04 10:59:59"
+  },
+  "60014": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (14차)",
+    "Jp": "[S14] シャーレの総決算with連邦生徒会",
+    "En": "[S14] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S14] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2025-07-09 11:00:00",
+    "CloseTime": "2025-07-22 10:59:59"
+  },
+  "60015": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (15차)",
+    "Jp": "[S15] シャーレの総決算with連邦生徒会",
+    "En": "[S15] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S15] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2025-10-15 11:00:00",
+    "CloseTime": "2025-10-22 10:59:59"
+  },
+  "60016": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (16차)",
+    "Jp": "[S16] シャーレの総決算with連邦生徒会",
+    "En": "[S16] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S16] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2025-12-17 11:00:00",
+    "CloseTime": "2025-12-24 10:59:59"
+  },
+  "60017": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (17차)",
+    "Jp": "[S17] シャーレの総決算with連邦生徒会",
+    "En": "[S17] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S17] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2026-04-15 11:00:00",
+    "CloseTime": "2026-04-21 10:59:59"
+  },
+  "60018": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (18차)",
+    "Jp": "[S18] シャーレの総決算with連邦生徒会",
+    "En": "[S18] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S18] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2026-05-20 11:00:00",
+    "CloseTime": "2026-05-27 10:59:59",
+    "Planable": false
   },
   "100854": {
     "Name": "Event_Name_854",

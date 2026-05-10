@@ -26,6 +26,8 @@
     "student_name": "학생 이름 검색...",
     "no_results": "결과가 없습니다. 스포일러 방지를 위해 필터를 설정해야 결과가 표시됩니다."
   },
+  "studentCount": "{count}명",
+  "itemCount": "{count}개의 항목",
   "playback": {
     "options": "재생 옵션",
     "play_random": "랜덤 재생",
@@ -91,6 +93,9 @@
     "final_ch1": "Final. 1장 샬레 탈환 작전",
     "final_ch2": "Final. 2장 거짓된 성소 공략전",
     "final_ch3": "Final. 3장 아트라하시스의 방주 점령전",
-    "final_ch4": "Final. 4장 프레나파테스 결전"
+    "final_ch4": "Final. 4장 프레나파테스 결전",
+    "part2_prologue": "2부 프롤로그",
+    "part2_vol0_ch1": "2부 Vol.0 1장",
+    "part2_ex_lore_ch1": "Ex. 로어추적 편 1장"
   }
 }

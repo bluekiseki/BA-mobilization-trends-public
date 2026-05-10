@@ -6,6 +6,7 @@ import stat from './stat.json';
 import planner from './planner.json';
 import jukebox from './jukebox.json';
 import help from './help.json';
+import notices from './notices.json';
 
 export default {
   // translation: {},
@@ -23,4 +24,5 @@ export default {
   stat,
   jukebox,
   help,
+  notices,
 } satisfies ResourceLanguage;

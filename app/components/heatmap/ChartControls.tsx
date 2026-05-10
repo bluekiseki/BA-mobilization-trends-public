@@ -23,6 +23,7 @@ import type { Student } from '~/types/data';
 import { useTranslation } from 'react-i18next';
 import { difficultyInfo, type DifficultySelect } from '../Difficulty';
 import type { Locale } from '~/utils/i18n/config';
+import { CustomNumberInput } from '../CustomInput';
 import StudentProfileCard from '../common/StudentProfileCard';
 
 interface ChartControlsProps {
@@ -139,18 +140,18 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
   return (
     <div data-component-name="ChartControls">
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
-      {/* Student Search - Full Width */}
+      {/* Student Search + Profile Card */}
       <div className="mb-2">
         <StudentSearchDropdown students={students} selectedStudentId={selectedStudentId} setSelectedStudentId={setSelectedStudentId} />
       </div>
-      <StudentProfileCard portraitData={portraitData} />
+      {selectedStudentId && <StudentProfileCard portraitData={portraitData} />}
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
 
       {/* Main Controls Grid */}
       <div data-component-name="ChartControls_Main">
         <div>
           {/* Section 1: Display Options */}
-          <h3 className="font-semibold text-neutral-800 dark:text-white transition-colors duration-300">{t('displayOptions.title')}</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 mb-2">{t('displayOptions.title')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <ToggleButtonGroup
               label={t('displayOptions.heatmap')}
@@ -173,11 +174,11 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400 transition-colors duration-300">{t('displayOptions.rankWidth')}</label>
               <div className="flex items-center">
-                <input
-                  type="number"
+                <CustomNumberInput
+                  // type="number"
                   min={1}
                   value={tempRankWidth}
-                  onChange={(e) => Number(e.target.value) && setTempRankWidth(Number(e.target.value))}
+                  onChange={(e) => Number(e) && setTempRankWidth(Number(e))}
                   className="w-16 px-1 py-0.5 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white border rounded-l-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-colors duration-300"
                 />
                 <button
@@ -191,11 +192,11 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400 transition-colors duration-300">{t('displayOptions.X-Threshold')}</label>
               <div className="flex items-center">
-                <input
-                  type="number"
-                  min={1}
+                <CustomNumberInput
+                  // type="number"
+                  min={0}
                   value={hideXThreshold}
-                  onChange={(e) => setHideXThreshold(Number(e.target.value))}
+                  onChange={(e) => setHideXThreshold(Number(e))}
                   className="w-16 px-1 py-0.5 text-sm border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white border rounded-l-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-colors duration-300"
                 />
                 <button
@@ -229,7 +230,7 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
 
         <div>
           <hr className="border-neutral-300 dark:border-neutral-700 my-2 transition-colors duration-300" />
-          <h3 className="font-semibold text-neutral-800 dark:text-white mb-1 transition-colors duration-300">{t('filterByStars.title')}</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 mb-2">{t('filterByStars.title')}</h3>
           <div className="flex gap-1 mb-2">
             <button
               onClick={handleSelectAllZValues}
@@ -278,7 +279,7 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
         </div>
 
         <div>
-          <h3 className="font-semibold text-neutral-800 dark:text-white mb-2 transition-colors duration-300">{t('raidRange.title')}</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 mb-2">{t('raidRange.title')}</h3>
           <div className="w-full text-center text-sm text-neutral-700 dark:text-neutral-400 mb-2 transition-colors duration-300 flex flex-col sm:flex-row justify-center">
             <span>
               <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}</span>

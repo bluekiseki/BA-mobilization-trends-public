@@ -101,7 +101,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>((pr
   }
 
   return ReactDOM.createPortal(
-    <div ref={ref} style={style} className={`fixed w-max max-w-xs ${bgColor} backdrop-blur-sm text-white text-xs rounded-md shadow-lg p-2 z-1000 pointer-events-none animate-fade-in-up`}>
+    <div ref={ref} style={style} className={`fixed w-max max-w-xs ${bgColor} backdrop-blur-sm text-white text-xs rounded-md shadow-lg p-2 z-1000 pointer-events-none transition-opacity duration-150`}>
       {/* Main Item/Group Title */}
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-bold text-sm truncate">
@@ -389,7 +389,7 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
           {/* Label (if provided) */}
           {label && <span className={`absolute top-0 left-0 ${labelColor} text-white text-[10px] font-bold px-1 py-0.5 rounded-br-md rounded-tl-md leading-none z-10`}>{label}</span>}
 
-          {/* Amount (Number of Gacha Boxes) */}
+          {/* Amount: Expected value of child item if 1 child, otherwise group count */}
           {amount != 0 && (
             <span
               className="absolute bottom-0.5 right-1 text-black text-xs font-bold leading-none z-10"
@@ -397,7 +397,11 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
                 textShadow: '1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 1px 0 #fff, 0 -1px 0 #fff',
               }}
             >
-              {typeof amount == 'number' && amount > 0 ? `×${formatAmount(amount)}` : amount}
+              {representativeElements.length === 1 && gachaContents.length > 0
+                ? `×${formatAmount(gachaContents[0].expectedAmount)}`
+                : typeof amount == 'number' && amount > 0
+                  ? `×${formatAmount(amount)}`
+                  : amount}
             </span>
           )}
         </div>

@@ -5,7 +5,7 @@ import { type FC, useMemo, useState } from 'react';
 import type { TierData, TimelineData } from '~/types/livetype';
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
 import type { RaidInfo } from '~/types/data';
-import { type_translation } from '../raidToString';
+import { type_translation, type_translation_sorted, typecolor } from '../raidToString';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { formatDateToDayString } from './formatDateToDayString';
@@ -29,7 +29,8 @@ type TierTab = 'boss1' | 'boss2' | 'boss3' | 'total' | 'change' | 'total_change'
 // };
 
 const CustomTotalClearTooltip = ({ active, payload, label }: any) => {
-  const { t } = useTranslation('common'); // Or appropriate namespace
+  const { t, i18n } = useTranslation('common'); // Or appropriate namespace
+  const locale = i18n.language as Locale;
 
   if (active && payload && payload.length) {
     // Find the original data entry for this boss/total
@@ -42,8 +43,12 @@ const CustomTotalClearTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="p-2 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-sm rounded-md border border-gray-300 dark:border-neutral-600 shadow-lg text-xs">
         {/* Boss Name (or Total for Raid) */}
-        <p className="font-bold mb-1 text-neutral-800 dark:text-neutral-200">{bossData.name === 'total' ? t('total') : t(bossData.name, { ns: 'term', defaultValue: bossData.name })}</p>
+        {/* <p className="font-bold mb-1 text-neutral-800 dark:text-neutral-200">{bossData.name === 'total' ? t('total') : t(bossData.name, { ns: 'term', defaultValue: bossData.name })}</p> */}
+        <p className="font-bold mb-1 text-neutral-800 dark:text-neutral-200">
+          {bossData.name === 'total' ? t('total') : type_translation[String(bossData.name) as keyof typeof type_translation][getLocaleShortName(locale)]}
+        </p>
         {/* Difficulty Breakdown - Sort payload by difficulty order */}
+        {/* as keyof typeof type_translation */}
         {validPayload
           .sort((a: any, b: any) => {
             const order = ['Lunatic', 'Torment', 'Insane', 'Extreme', 'Hardcore', 'Veryhard', 'Hard', 'Normal'];
@@ -87,6 +92,15 @@ const CustomSortedLegend: React.FC = ({ payload }: any) => {
       ))}
     </div>
   );
+};
+
+const DIFFICULTY_ORDER = ['Lunatic', 'Torment', 'Insane', 'Extreme', 'Hardcore', 'Veryhard', 'Hard', 'Normal'];
+
+const getHighestDifficulty = (boss: any): { diff: string; count: number } | null => {
+  for (const diff of DIFFICULTY_ORDER) {
+    if ((boss[diff] || 0) > 0) return { diff, count: boss[diff] };
+  }
+  return null;
 };
 
 const CustomAreaChartTooltip = ({ active, payload, label, raidInfos }: { active?: boolean; payload?: any[]; label?: number; raidInfos: RaidInfo[] }) => {
@@ -261,7 +275,15 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
       };
     });
 
-    const latestTierData = filteredTimelineData[filteredTimelineData.length - 1].data.tier;
+    const latestPoint = filteredTimelineData[filteredTimelineData.length - 1];
+    const latestTierData = latestPoint.data.tier;
+    const latestData = latestPoint.data as any;
+
+    const findRankScore = (entries: { r: number; s: number }[] | undefined, rank: number): number | null => {
+      if (!Array.isArray(entries)) return null;
+      return entries.find((e) => e.r === rank)?.s ?? null;
+    };
+
     const bossNameMap = isRaid
       ? {}
       : {
@@ -276,6 +298,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
             name: 'total',
             ...latestTierData,
             total: Object.values(latestTierData).reduce((s: number, c: any) => s + c, 0),
+            rank20000Score: findRankScore(latestData.boss?.d, 20000),
           },
         ]
       : Object.entries(latestTierData).map(([bossId, tiers]) => {
@@ -283,7 +306,8 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
           return {
             name: bossNameMap[bossId as keyof typeof bossNameMap],
             ...tiers,
-            total: total,
+            total,
+            rank20000Score: findRankScore(latestData[bossId]?.d, 20000),
           };
         });
 
@@ -385,17 +409,55 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-col gap-4">
-              {analysisData.latestClearsByBoss.map((boss) => (
-                <div key={boss.name} className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-neutral-800/50 rounded-lg text-center h-full">
-                  {!isRaid && (
-                    <h3 className="font-semibold text-lg mb-1">
-                      {type_translation[boss.name as keyof typeof type_translation]?.[getLocaleShortName(locale)]} {t_c('clear', 'Clear')}
-                    </h3>
-                  )}
-                  <p className="text-4xl font-bold text-sky-500">{boss.total.toLocaleString()}</p>
-                </div>
-              ))}
+            {/* Cards */}
+            <div className={`flex flex-col pt-4 gap-2 md:gap-6 ${isRaid ? 'md:h-[200px]' : 'md:h-[430px]'}`}>
+              {analysisData.latestClearsByBoss.map((boss) => {
+                const highestDiff = getHighestDifficulty(boss);
+                const accentColor = isRaid ? (highestDiff ? DIFFICULTY_COLORS[highestDiff.diff] : '#6b7280') : (typecolor[boss.name as keyof typeof typecolor] ?? '#6b7280');
+                return (
+                  <div
+                    key={boss.name}
+                    className="md:flex-1 relative flex items-center md:flex-col md:items-stretch md:justify-between gap-3 md:gap-0 pl-4 pr-3 py-2.5 md:p-3 md:pl-4 bg-white dark:bg-neutral-800/60 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden"
+                  >
+                    {/* Left accent bar */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg" style={{ backgroundColor: accentColor }} />
+
+                    {/* Boss name */}
+                    {!isRaid && (
+                      <p className="shrink-0 w-16 md:w-auto md:mb-1.5 text-xs font-semibold text-gray-500 dark:text-neutral-400 tracking-wide truncate">
+                        {type_translation_sorted[boss.name as keyof typeof type_translation_sorted]?.[getLocaleShortName(locale)]}
+                      </p>
+                    )}
+
+                    {/* Total + Platinum cut */}
+                    <div className="flex flex-1 md:flex-none flex-row items-center md:items-end justify-between gap-2">
+                      <div>
+                        <p className="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">{t_c('total')}</p>
+                        <p className="text-xl font-bold text-sky-500 leading-none tabular-nums">{boss.total.toLocaleString()}</p>
+                      </div>
+                      {boss.rank20000Score != null && (
+                        <div className="text-right">
+                          <p className="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">{t('platinum_cut', 'Cut')}</p>
+                          <p className="text-sm font-bold text-amber-400 leading-none tabular-nums">{boss.rank20000Score.toLocaleString()}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Highest difficulty — styled badge */}
+                    {highestDiff && (
+                      <div className="shrink-0 md:mt-2 md:pt-2 md:border-t dark:border-neutral-700">
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                          style={{ color: DIFFICULTY_COLORS[highestDiff.diff], backgroundColor: DIFFICULTY_COLORS[highestDiff.diff] + '22' }}
+                        >
+                          {highestDiff.diff}
+                          <span className="font-normal opacity-70">({highestDiff.count.toLocaleString()})</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -408,7 +470,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
                 <Label value={t('changePerHourLabel')} angle={-90} position="insideLeft" style={{ textAnchor: 'middle', fill: '#888' }} />
               </YAxis>
               <Tooltip
-                labelFormatter={(label: number) => formatDateToDayString(new Date(label), raidInfos[0])}
+                // labelFormatter={(label: number) => formatDateToDayString(new Date(label), raidInfos[0])}
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;

@@ -31,12 +31,14 @@ export const useDataCacheJson = <T>() => {
     console.log(`[Cache MISS]: ${url}`);
 
     const promise = new Promise<T>((resolve, reject) => {
+      console.log('worker start');
       const worker = new JsonProcessorWorker();
       //  return new Promise(() => {}); // A Promise that never resolves/rejects
 
       // 2. Receive message from worker
       worker.onmessage = (event: MessageEvent<{ status: string; data?: T; error?: string }>) => {
         const { status, data, error } = event.data;
+        console.log('worker end');
 
         if (status === 'success' && data) {
           resolve(data as T);

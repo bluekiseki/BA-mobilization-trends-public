@@ -15,10 +15,7 @@ interface ChartDataContainerProps {
 
 const DynamicHeatmapChart = lazy(() => import('./HeatmapChart'));
 
-const ChartDataContainer = ({
-  // xLabels
-  server,
-}: ChartDataContainerProps) => {
+const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
   const { t, i18n } = useTranslation('charts', { keyPrefix: 'heatmap.draw' });
   const locale = i18n.language as Locale;
 
@@ -164,7 +161,11 @@ const ChartDataContainer = ({
       </div>
       {chartComponent}
 
-      {!isLoading && processingParams.selectedStudentId && <RaidUsageStackChart />}
+      {!isLoading && processingParams.selectedStudentId && (
+        <div className="mt-10 pt-8 border-t border-neutral-200 dark:border-neutral-700">
+          <RaidUsageStackChart />
+        </div>
+      )}
     </div>
   );
 };

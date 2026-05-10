@@ -77,7 +77,6 @@
       "zh-Hant-TW": "繁體中文",
       "label": "label"
     },
-
     "language_banner": {
       "message": "看起來您使用的是 {{language}}。是否要切換？",
       "switch_button": "切換到 {{language}}",
@@ -98,7 +97,8 @@
       }
     },
     "promoBanner": {
-      "noMoreToday": "今天不再顯示"
+      "noMoreToday": "今天不再顯示",
+      "noMoreThisWeek": "一週內不再顯示"
     },
     "bugReport": {
       "title": "傳送意見",
@@ -115,6 +115,34 @@
       "errorMsg": "傳送失敗，請重試。",
       "githubIssue": "透過 GitHub Issues 回報",
       "poweredBy": "此請求透過 Web3Forms 傳送。"
+    },
+    "yesterday": "昨天",
+    "today": "今天",
+    "tomorrow": "明天",
+    "remainingTime": "剩餘{{day}}日{{hour}}時",
+    "remainingDays": "剩{{day}}天",
+    "remainingHours": "剩{{hour}}時",
+    "startsIn": "{{day}}日{{hour}}時後開始",
+    "startsInDays": "{{day}}天後開始",
+    "startsInHours": "{{hour}}時後開始",
+    "remainingMinutes": "剩{{min}}分",
+    "startsInMinutes": "{{min}}分後開始",
+    "status": {
+      "live": "LIVE",
+      "recent": "最近",
+      "upcoming": "即將"
+    },
+    "home": {
+      "currentStatus": "目前狀態",
+      "schedule": "行事曆",
+      "notices": "公告",
+      "tools": "工具",
+      "analytics": "分析",
+      "plannersAndTools": "規劃器 & 工具",
+      "birthdaySoon": "生日快樂！",
+      "jpStats": "JP 統計",
+      "kivotosPeace": "奇普托斯目前處於和平狀態。",
+      "noEvent": "目前沒有進行中的活動。"
     }
   },
   "charts": {
@@ -227,6 +255,7 @@
     "StudentGrowthByRankTitle": "按排名的學生星級狀態",
     "StudentGrowthByRank": "按排名的學生星級狀態",
     "popularFormations": "熱門隊形（總計：{x}）",
+
     "rankingsAndTeams": "排名與隊伍（總計：{x}）",
     "includeStudent": "包含學生",
     "excludeStudent": "排除學生",
@@ -236,6 +265,15 @@
     "searchStudentByName": "依學生名稱或別名搜尋...",
     "noResults": "無搜尋結果。",
     "selectStar": "選擇星級",
+    "filter_view_code": "以程式碼編輯",
+    "filter_export": "匯出篩選條件（複製）",
+    "filter_copy_done": "已複製！",
+    "filter_import": "從剪貼簿匯入",
+    "filter_import_placeholder": "貼上篩選條件JSON...",
+    "filter_import_error": "格式不正確。",
+    "filter_import_apply": "套用",
+    "filter_reset": "重置",
+    "add_my_students": "新增未模集的學生",
     "includableStudentTitle": "可用學生",
     "excludableStudentTitle": "難以出擊的學生",
     "tagMustInclude": "必須包含",
@@ -310,6 +348,7 @@
     "closeDetails": "關閉詳細資訊",
     "maxScore": "最高分數",
     "minTime": "最短時間",
+    "bestRank": "最高名次",
     "timeViewUnavailable": "時間視圖僅在所有隊伍成員處於相同難度時可用。",
     "viewByStudent": "按學生查看",
     "viewAllStudents": "全部學生",
@@ -350,6 +389,7 @@
       "terrain": "地形",
       "defenseType": "防禦類型",
       "attackType": "攻擊類型",
+      "student_name": "學生名稱",
       "copy": "複製",
       "copied": "已複製",
       "dateRange": "日期範圍"
@@ -357,8 +397,10 @@
     "composition": {
       "mode_team": "Team",
       "mode_report": "Report",
-      "total_parties": "Total Parties",
+      "total_parties": "部隊投入数",
       "full_party_only": "Full(6) Only",
+      "table_filter_reflect": "套用包含·排除篩選條件",
+      "only_with_video": "僅限有通關影片",
       "specific_team": "Specific Team",
       "from_start": "From Start",
       "from_end": "From End",
@@ -366,6 +408,9 @@
       "click_to_collapse": "Click to collapse",
       "click_for_details": "Click for details",
       "load_more": "Load More",
+      "sort_count": "出擊次數排序",
+      "sort_bestRank": "最高分數排序",
+      "ignore_position": "忽略配置",
       "placement_variants": "Placement Order Variants",
       "mulligan_variants": "Starting Hand Variants"
     }
@@ -374,7 +419,9 @@
     "title": "儀表板列表",
     "description": "過去總力戰和大決戰的統計儀表板",
     "pinnedGlobalTitle": "當前國際服伺服器總力戰或大決戰",
-    "liveBetaTitle": "實時儀表板（測試版）"
+    "liveBetaTitle": "實時儀表板（測試版）",
+    "searchPlaceholder": "搜尋 Boss 名稱或 ID...",
+    "filterAll": "全部"
   },
   "liveDashboard": {
     "description": "實時統計總力戰和大決戰",

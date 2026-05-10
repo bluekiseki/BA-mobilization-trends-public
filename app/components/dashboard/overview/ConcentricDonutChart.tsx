@@ -1,6 +1,6 @@
 // app/components/dashboard/ConcentricDonutChart.tsx
 
-import { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
@@ -78,7 +78,7 @@ const CustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, 
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" pointerEvents="none">
       <tspan x={x} dy="-0.1em" fontSize="12px" fontWeight="bold">
         {name}
       </tspan>
@@ -134,6 +134,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
   const [filter, setFilter] = useState<FilterState | null>(null);
   const { t } = useTranslation('dashboard');
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const allPlayers = useMemo(() => {
     if (!scores || !tierCounter) return [];
@@ -228,8 +229,33 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
     tooltipNode.style.opacity = '0';
   };
 
+  const handleTouchStart = (data: ChartData, event: React.TouchEvent, fill: string) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+
+    const tooltipNode = tooltipRef.current;
+    if (!tooltipNode) return;
+
+    const htmlContent = ReactDOMServer.renderToStaticMarkup(<TooltipContent data={data} fill={fill} />);
+    tooltipNode.innerHTML = htmlContent;
+    tooltipNode.style.opacity = '1';
+    tooltipNode.style.transform = `translate(${touch.clientX + 10}px, ${touch.clientY + 10}px)`;
+  };
+
+  // Hide tooltip when tapping outside the chart
+  useEffect(() => {
+    const handleOutsidePointer = (e: PointerEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        const tooltipNode = tooltipRef.current;
+        if (tooltipNode) tooltipNode.style.opacity = '0';
+      }
+    };
+    document.addEventListener('pointerdown', handleOutsidePointer);
+    return () => document.removeEventListener('pointerdown', handleOutsidePointer);
+  }, []);
+
   return (
-    <>
+    <div ref={containerRef}>
       <div className="py-4" style={{ width: '100%', height: 'min(600px, 100vw)' }} onMouseMove={handleMouseMove}>
         <ResponsiveContainer>
           <PieChart>
@@ -257,6 +283,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
                   className={`cursor-pointer transition-opacity ${filter && filter.type === 'tier' && filter.value !== entry.name ? 'opacity-30' : 'opacity-100'}`}
                   onMouseEnter={(e) => handleMouseEnter(entry, e, tierColors[entry.name])}
                   onMouseLeave={handleMouseLeave}
+                  onTouchStart={(e) => handleTouchStart(entry, e, tierColors[entry.name])}
                 />
               ))}
             </Pie>
@@ -280,6 +307,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
                   className={`cursor-pointer transition-opacity ${filter && filter.type === 'difficulty' && filter.value !== entry.name ? 'opacity-30' : 'opacity-100'}`}
                   onMouseEnter={(e) => handleMouseEnter(entry, e, difficultyColors[entry.name])}
                   onMouseLeave={handleMouseLeave}
+                  onTouchStart={(e) => handleTouchStart(entry, e, difficultyColors[entry.name])}
                 />
               ))}
             </Pie>
@@ -293,7 +321,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
               outerRadius="100%"
               innerRadius="71%"
               labelLine={false}
-              label={({ name, percent, ...props }) => <CustomizedLabel {...props} percent={percent} name={props.timeBinName} />}
+              label={({ name, percent, ...props }) => <CustomizedLabel {...props} percent={percent} name={(props as any).timeBinName} />}
             >
               {displayData.timeBin.map((entry, index) => (
                 <Cell
@@ -302,6 +330,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
                   className=""
                   onMouseEnter={(e) => handleMouseEnter(entry, e, difficultyColors[entry.difficultyName as keyof typeof difficultyColors])}
                   onMouseLeave={handleMouseLeave}
+                  onTouchStart={(e) => handleTouchStart(entry, e, difficultyColors[entry.difficultyName as keyof typeof difficultyColors])}
                 />
               ))}
             </Pie>
@@ -348,11 +377,11 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
           zIndex: 999,
         }}
       />
-    </>
+    </div>
   );
 }
 
-export default function ConcentricDonutChart({ boss, server, id, scores, tierCounter }: ConcentricDonutChartProps) {
+const ConcentricDonutChart: React.FC<ConcentricDonutChartProps> = React.memo(({ boss, server, id, scores, tierCounter }: ConcentricDonutChartProps) => {
   const [timeBinMinutes, setTimeBinMinutes] = useState<number>(getTimeoutFromBoss(boss));
   const { t } = useTranslation('dashboard');
 
@@ -389,4 +418,6 @@ export default function ConcentricDonutChart({ boss, server, id, scores, tierCou
       </div>
     </>
   );
-}
+});
+
+export default ConcentricDonutChart;

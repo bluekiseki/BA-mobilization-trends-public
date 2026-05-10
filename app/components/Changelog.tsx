@@ -56,26 +56,36 @@ export function Changelog({ changelogData }: ChangelogProps) {
               <p className="font-semibold text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                 <time dateTime={entry.date}>{entry.date}</time>
               </p>
-              <ul className="list-disc list-inside space-y-1.5 text-sm text-neutral-700 dark:text-neutral-300 pl-1">
+              {/* Remove default list-disc, maintain spacing using space-y only */}
+              <ul className="space-y-1.5 text-sm text-neutral-700 dark:text-neutral-300">
                 {currentChanges ? (
                   currentChanges.map((change, idx) => {
                     const linkUrl = entry.to?.[idx];
 
                     return (
-                      <li key={idx} className="leading-snug">
-                        {linkUrl ? (
-                          <Link to={localeLink(locale, linkUrl)} className="inline-flex items-center gap-1.5 hover:underline hover:text-neutral-900 dark:hover:text-white transition-colors">
+                      /* Use flex to clearly separate bullets from text */
+                      <li key={idx} className="flex items-start gap-2">
+                        {/* Custom bullet (Adjust mt to center with first line of text, fix size with shrink-0) */}
+                        <span className="w-1.5 h-1.5 mt-[6px] shrink-0 rounded-full bg-neutral-400 dark:bg-neutral-500" />
+
+                        <div className="leading-snug break-keep">
+                          {linkUrl ? (
+                            <Link to={localeLink(locale, linkUrl)} className="hover:underline hover:text-neutral-900 dark:hover:text-white transition-colors">
+                              <span>{change}</span>
+                              <FaExternalLinkAlt className="inline-block ml-1.5 text-[10px] opacity-70 -translate-y-px" />
+                            </Link>
+                          ) : (
                             <span>{change}</span>
-                            <FaExternalLinkAlt className="text-[10px] opacity-70" />
-                          </Link>
-                        ) : (
-                          <span>{change}</span>
-                        )}
+                          )}
+                        </div>
                       </li>
                     );
                   })
                 ) : (
-                  <li>{t('changelog.noTranslation')}</li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 mt-[6px] shrink-0 rounded-full bg-neutral-400 dark:bg-neutral-500" />
+                    <div className="leading-snug">{t('changelog.noTranslation')}</div>
+                  </li>
                 )}
               </ul>
             </div>
