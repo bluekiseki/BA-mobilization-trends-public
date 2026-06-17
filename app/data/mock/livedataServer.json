@@ -1,0 +1,13 @@
+{
+  "cdn": "cdn.yuzutrends.app",
+  "email": "contact@example.com",
+  "authEmail": "auth@noreply.example.com",
+  "domain": "example.com",
+  "productionUrl": "https://example.com",
+  "localDomain": "localhost:5173",
+  "localUrl": "http://localhost:5173",
+  "localAuthUrl": "http://localhost:8787",
+  "lastdataURL": "https://your-r2-bucket.r2.dev/lastdata.json",
+  "timelineURL": "https://your-r2-bucket.r2.dev/timeline.json",
+  "issuesURL": "https://github.com/your-org/your-repo/issues"
+}

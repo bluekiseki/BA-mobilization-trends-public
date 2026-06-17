@@ -12,13 +12,13 @@ interface MinMaxControlsProps {
 export const MinMaxControls = ({ label, onMin, onMax, className = '', isTarget = false }: MinMaxControlsProps) => {
   const btnClass = `
     flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold transition-all
-    ${isTarget ? 'text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-neutral-700'}
+    ${isTarget ? 'text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30' : 'text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700'}
   `;
 
   return (
     <div className={`flex justify-between items-end mb-0.5 ${className}`}>
       {/* Label */}
-      <span className={`text-[11px] font-bold tracking-tight ${isTarget ? 'text-blue-500/80 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>{label}</span>
+      <span className={`text-[11px] font-bold tracking-tight ${isTarget ? 'text-blue-500/80 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'}`}>{label}</span>
 
       {/* Controls */}
       <div className="flex items-center gap-0.5">
@@ -34,7 +34,7 @@ export const MinMaxControls = ({ label, onMin, onMax, className = '', isTarget =
           <FiChevronsDown size={10} />
           <span></span>
         </button>
-        {/* <span className="text-[10px] text-gray-300 dark:text-neutral-700">/</span> */}
+        {/* <span className="text-[10px] text-neutral-300 dark:text-neutral-700">/</span> */}
         <button
           onClick={(e) => {
             e.preventDefault();

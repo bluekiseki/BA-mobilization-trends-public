@@ -34,7 +34,7 @@ export function useSearchMatcher(locale: Locale) {
       }
     };
 
-    loadMatcher();
+    void loadMatcher();
 
     return () => {
       isMounted = false;

@@ -11,7 +11,7 @@ import EmblemTreemap from './EmblemTreemap';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 
-const emblemDataModules = import.meta.glob('/app/data/jp/emblem_counter/*.json');
+const emblemDataModules = import.meta.glob(['/app/data/jp/emblem_counter/*.json', '!/app/data/jp/emblem_counter/list.json']);
 
 export type EmblemCountEntry = [number, number, number, number];
 export type EmblemCountData = EmblemCountEntry[];
@@ -56,7 +56,7 @@ const processEmblemData = (
   tierFilter: number,
   bondLevelFilter: number,
   aggregationType: AggregationType,
-  t: TFunction<'emblemCounter', undefined>,
+  t: TFunction<'emblemCounter'>,
 ): Map<string, { count: number; topStudentId: number | null; maxCount: number }> => {
   const aggregationMap = new Map<string, { count: number; topStudentId: number | null; maxCount: number }>();
   if (!emblemData || emblemData.length === 0) {
@@ -76,7 +76,7 @@ const processEmblemData = (
 
   // 2. Aggregate data
   filteredEntries.forEach((entry) => {
-    const studentId = Number(entry[2]);
+    const studentId = entry[2];
     const student = studentData[String(studentId)];
     const count = entry[3];
     let key: string | null = null;
@@ -192,25 +192,19 @@ export function EmblemCounter({}) {
   useEffect(() => {
     setIsLoading(true);
     Promise.all([
-      fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)).then((res) => res.json() as any),
-      fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as any),
+      fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)).then((v) => v.json()) as unknown,
+      fetch(cdn('/w/students_portrait.json')).then((v) => v.json()) as unknown,
     ])
       .then(([studentJson, portraitJson]) => {
-        // studentJson[10131] = {
-        //   Id: 10131,
-        //   Name: 'Takane',
-        //   Club: 'PublicationDepartment',
-        //   School: 'RedWinter'
-        // }
-        setStudentData(studentJson);
-        setPortraitData(portraitJson);
+        setStudentData(studentJson as StudentCollection);
+        setPortraitData(portraitJson as PortraitData);
         setError(null);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('Error loading static data:', err);
         setError(t('errorLoadingData', 'Error loading static data'));
       })
-      .finally(() => setIsLoading(false)); // This only stops the *initial* load
+      .finally(() => setIsLoading(false));
   }, [locale, t]);
 
   // Effect 2: Load emblem data when selectedDate changes
@@ -259,7 +253,7 @@ export function EmblemCounter({}) {
         setEmblemData(currentJson);
         setPrevEmblemData(prevJson);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('Error loading emblem data module:', err);
         setError(t('errorLoadingData', 'Error loading emblem data module'));
       })
@@ -274,6 +268,7 @@ export function EmblemCounter({}) {
   } => {
     // Wait for all data to be ready
     if (isLoading || !studentData || Object.keys(studentData).length === 0 || Object.keys(portraitData).length === 0) {
+      console.log('displayData: [],', { isLoading, studentData, portraitData });
       return {
         displayData: [],
         totalCount: 0,
@@ -390,7 +385,7 @@ export function EmblemCounter({}) {
     // 3. Aggregate counts based on Student ID (studentId) (Resolve duplication issue) [!!!]
     const studentCountMap = new Map<number, number>(); // <StudentId, total count>
     filteredEntries.forEach((entry) => {
-      const studentId = Number(entry[2]);
+      const studentId = entry[2];
       const count = entry[3];
       // Accumulate to existing count
       studentCountMap.set(studentId, (studentCountMap.get(studentId) || 0) + count);
@@ -420,11 +415,10 @@ export function EmblemCounter({}) {
   const totalPlayers = tierFilter === 4 ? 20000 : tierFilter === 3 ? 120000 : tierFilter === 2 ? 240000 : totalRaidPlayers;
   const possessionRate = totalCount <= totalPlayers && totalCount > 0 ? ((totalCount / totalPlayers) * 100).toFixed(2) : totalCount > totalPlayers ? '???' : '0.00';
 
+  console.log('isLoading , isLoadingData , error , displayData', isLoading, isLoadingData, error, displayData);
+
   return (
     <div data-component-name="EmblemCounter" className=" border-neutral-200 dark:border-neutral-700 p-6 px-3 sm:px-6">
-      <h2 className="text-xl font-bold mb-4 text-neutral-800 dark:text-white">{t('title')} (JP)</h2>
-      <h2 className="text-sm font-light mb-4 text-neutral-600 dark:text-neutral-400">{t('description')}</h2>
-
       {/* --- Filter Options --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-sm">
         {/* Date Selection Dropdown */}
@@ -514,7 +508,7 @@ export function EmblemCounter({}) {
           <div className="overflow-x-auto">
             {/* Added table-fixed for mobile layout */}
             <table className="w-full text-sm text-left text-neutral-700 dark:text-neutral-300 table-fixed">
-              <thead className="text-xs text-neutral-500 dark:text-neutral-400 uppercase bg-gray-50 dark:bg-neutral-700/50">
+              <thead className="text-xs text-neutral-500 dark:text-neutral-400 uppercase bg-neutral-50 dark:bg-neutral-700/50">
                 <tr>
                   <th scope="col" className="py-2 px-0 w-10 text-center">
                     #
@@ -547,27 +541,25 @@ export function EmblemCounter({}) {
                 </tr>
               </thead>
               <tbody>
-                {displayData.map((item, index) => {
+                {displayData.map((item, _index) => {
                   const r = sortKey == 'count' ? displayData.findIndex((v) => v.count === item.count) : displayData.findIndex((v) => v.diff === item.diff); // Find first rank with this count
                   return (
-                    <tr key={item.name} className=" dark:bg-neutral-800 border-b dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-700/30">
+                    <tr key={item.name} className=" dark:bg-neutral-800 border-b dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/30">
                       <td className="px-2 py-2 font-medium align-middle text-center">{r + 1}</td>
                       {/* Image cell with flex-shrink-0 */}
                       <td className="py-1 px-0.5 align-middle">
                         {item.iconId && portraitData[item.iconId] ? (
                           <img src={`data:image/webp;base64,${portraitData[item.iconId]}`} alt="" className="w-10 h-10 rounded-full object-cover block" loading="lazy" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-neutral-700 inline-block"></div>
+                          <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 inline-block"></div>
                         )}
                       </td>
                       {/* Name cell with truncate */}
                       <td className="px-2 py-1 font-medium align-middle truncate">
-                        {t_s(
-                          t(item.name, {
-                            ns: 'term',
-                            defaultValue: item.name,
-                          } as any),
-                        )}
+                        {aggregationType === 'club' || aggregationType === 'school'
+                          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+                            t_s(item.name as any)
+                          : item.name}
                       </td>
                       <td className="px-2 py-1 align-middle text-right">
                         {/* Responsive container: */}

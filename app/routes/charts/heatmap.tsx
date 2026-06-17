@@ -1,16 +1,17 @@
 // app/page.tsx
 import { useTranslation } from 'react-i18next';
 import ClientHeatmapLoader from '~/components/heatmap/ClientHeatmapLoader';
+import { PageHeader } from '~/components/common/PageHeader';
 
 import type { Route } from './+types/heatmap';
-import { useLocation, useParams, type LoaderFunctionArgs } from 'react-router'; // useRouteLoaderData, type LoaderFunctionArgs,
+import { useParams, type LoaderFunctionArgs } from 'react-router'; // useRouteLoaderData, type LoaderFunctionArgs,
 import type { AppHandle } from '~/types/link';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 
 import { GAMESERVER_LIST, type GameServer, type GameServerParams } from '~/types/data';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
-import { getLocaleShortName } from '~/utils/i18n/config';
+import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { useHelpKey } from '~/utils/usePageHelp';
 
@@ -43,13 +44,13 @@ export const links: Route.LinksFunction = () => {
   ];
 };
 
-export async function loader({ context, params, request }: LoaderFunctionArgs) {
+export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
   if (!server || !GAMESERVER_LIST.includes(server as GameServer)) {
     throw new Response('Not Found', { status: 404 });
   }
   const g_server = server as GameServer;
-  let i18n = getInstance(context);
+  const i18n = getInstance(context);
 
   return {
     siteTitle: i18n.t('common:title'),
@@ -64,30 +65,35 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export const handle: AppHandle = {
-  preload: (data) => {
+  preload: (data: unknown, routeMatch) => {
     // Create a link dynamically using the return value (data) of the root loader
-    const pathname = useLocation().pathname;
+    // const pathname = useLocation().pathname;
+    const pathname = routeMatch?.pathname || '';
     const match = pathname.match(/\/charts\/([a-zA-Z]{2})\//);
     if (!match || !GAMESERVER_LIST.includes(match[1] as GameServer)) return [];
     const server = match[1] as GameServer;
-    if (!data?.locale) return [];
+
+    type DataType = { locale?: Locale };
+    const typedData = data as DataType;
+    const locale = typedData.locale;
+    if (!locale) return [];
 
     return [
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(data?.locale)}.students.bin`),
+        href: cdn(`/w/${getLocaleShortName(locale)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${server}/${getLocaleShortName(data?.locale)}.raid_info.bin`),
+        href: cdn(`/w/${server}/${getLocaleShortName(locale)}.raid_info.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
       {
         rel: 'preload',
-        href: cdn(`/schaledb.com/${getLocaleShortName(data?.locale)}.students.min.json`),
+        href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -96,7 +102,7 @@ export const handle: AppHandle = {
   },
 };
 
-export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+export function headers({}: Route.HeadersArgs) {
   if (process.env.NODE_ENV === 'production')
     return {
       'Cache-Control': CACHE_CONTROL_CONFIG,
@@ -115,14 +121,7 @@ export default function Home() {
 
   return (
     <div className="px-4 mx-auto py-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">
-        {t('title')} ({server.toUpperCase()})
-      </h1>
-      <p className="text-sm text-neutral-600 mt-1">{t('description1')}</p>
-      {/* <p className="text-sm text-neutral-600 mt-1">
-        {t('description2')}
-      </p> */}
-
+      <PageHeader title={`${t('title')} (${server.toUpperCase()})`} description={t('description1')} />
       {/* <Suspense fallback={<p className="text-center text-neutral-600">Loading...</p>}> */}
       <ClientHeatmapLoader server={server} />
       {/* </Suspense> */}

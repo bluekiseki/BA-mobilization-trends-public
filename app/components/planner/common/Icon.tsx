@@ -2,11 +2,12 @@
 import React, { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import type { EventData, GachaElement, GachaGroupInfo, IconData } from '~/types/plannerData';
+import type { EventData, GachaElement, GachaGroupInfo, IconData, IconInfo, StudentData, StudentPortraitData } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 import { getlocaleMethond, getLocalizeEtcName } from './locale';
 import { useIsDarkState } from '~/store/isDarkState';
 import { calculateExpectedContents } from './gachaIcon';
+import { GiftStudentSheet, type GiftEntry, buildGiftToStudentsMap } from '../StudentGrowth/GiftStudentSheet';
 
 const rarityColors: Record<'dark' | 'light', Record<number, string>> = {
   light: {
@@ -32,6 +33,10 @@ export interface ItemIconProps {
   iconData: IconData;
   label?: string | null;
   labelColor?: string; //Label Background Color (Tailwind CSS Class)
+  allStudents?: StudentData;
+  studentPortraits?: StudentPortraitData;
+  forceDecimal?: boolean;
+  decimalPlaces?: number;
 }
 
 function roundTo(n: number, digits = 0) {
@@ -40,7 +45,7 @@ function roundTo(n: number, digits = 0) {
 }
 
 // numeric abbreviation helper
-const formatAmount = (amount: number): string => {
+const formatAmount = (amount: number, forceDecimal: boolean = false, decimalPlaces?: number): string => {
   if (amount >= 10_000_000) {
     return (amount / 1_000_000).toFixed(0).replace(/\.0$/, '') + 'M';
   }
@@ -50,10 +55,14 @@ const formatAmount = (amount: number): string => {
 
   if (amount >= 1_000) return amount.toFixed(0);
   if (amount >= 1_00) return amount.toFixed(0);
-  if (amount >= 1_0) return roundTo(amount, 1) + '';
-  if (amount >= 1) return roundTo(amount, 2) + '';
+  if (amount >= 1_0) return `${roundTo(amount, 1)}`;
+  if (amount >= 1) return `${roundTo(amount, 2)}`;
 
-  if (amount < 1 && amount > 0.01) return roundTo(amount * 100, 1) + '%';
+  if (amount < 1 && forceDecimal) {
+    return roundTo(amount, decimalPlaces ?? 2).toString();
+  }
+
+  if (amount < 1 && amount > 0.01) return `${roundTo(amount * 100, 1)}%`;
   return amount.toLocaleString();
 };
 
@@ -65,17 +74,19 @@ interface GachaContentItem {
 }
 
 interface TooltipContentProps {
-  itemInfo: any;
+  itemInfo: IconInfo | GachaGroupInfo;
   amount: number | string;
   style: CSSProperties;
   locale: Locale;
   gachaContents?: GachaContentItem[];
+  forceDecimal?: boolean;
+  decimalPlaces?: number;
 }
 
 // Use the props type in forwardRef and the function signature
 const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>((props, ref) => {
   // Destructure props inside the function body
-  const { itemInfo, amount, style, locale, gachaContents } = props;
+  const { itemInfo, amount, style, locale, gachaContents, forceDecimal = false, decimalPlaces } = props;
 
   const { isDark } = useIsDarkState();
 
@@ -94,7 +105,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>((pr
     },
     dark: { 0: '#8c939e', 1: '#658dbf', 2: '#a87d51', 3: '#7a5bbe' },
   };
-  const bgColor = isDark === 'dark' ? 'bg-neutral-900/90' : 'bg-gray-800/90';
+  const bgColor = isDark === 'dark' ? 'bg-neutral-900/90' : 'bg-neutral-800/90';
 
   if (!isClient) {
     return null;
@@ -104,16 +115,14 @@ const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>((pr
     <div ref={ref} style={style} className={`fixed w-max max-w-xs ${bgColor} backdrop-blur-sm text-white text-xs rounded-md shadow-lg p-2 z-1000 pointer-events-none transition-opacity duration-150`}>
       {/* Main Item/Group Title */}
       <div className="flex items-baseline justify-between gap-3">
-        <p className="font-bold text-sm truncate">
-          {getLocalizeEtcName(itemInfo.LocalizeEtc, locale) || (itemInfo.Name ? getLocalizeEtcName(itemInfo.Name, locale) : null) || `Group #${itemInfo.Id}` || '???'}
-        </p>
+        <p className="font-bold text-sm truncate">{getLocalizeEtcName((itemInfo as IconInfo).LocalizeEtc, locale) || `Group #${(itemInfo as GachaGroupInfo).Id}` || '???'}</p>
         <p className="text-amber-300 font-semibold whitespace-nowrap">x {amount?.toLocaleString()}</p>
       </div>
 
       {/* Conditional rendering for Gacha Contents */}
       {gachaContents && gachaContents.length > 0 ? (
-        <div className="mt-1 border-t border-gray-600 dark:border-neutral-700 pt-1 space-y-1">
-          {/* <p className="font-semibold text-gray-300 text-[11px] mb-1">Expected Contents:</p> */}
+        <div className="mt-1 border-t border-neutral-600 dark:border-neutral-700 pt-1 space-y-1">
+          {/* <p className="font-semibold text-neutral-300 text-[11px] mb-1">Expected Contents:</p> */}
           {gachaContents.map((item, index) => (
             <div key={index} className="flex items-center gap-1.5">
               {item.iconSrc ? (
@@ -127,16 +136,18 @@ const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>((pr
                   <img src={`data:image/webp;base64,${item.iconSrc}`} alt={item.name} className="relative w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-5 h-5 bg-gray-500 rounded flex items-center justify-center text-[10px] shrink-0">?</div>
+                <div className="w-5 h-5 bg-neutral-500 rounded flex items-center justify-center text-[10px] shrink-0">?</div>
               )}
-              <span className="grow truncate text-gray-100">{item.name}</span>
-              <span className="text-amber-300 font-medium whitespace-nowrap">x {formatAmount(item.expectedAmount)}</span>
+              <span className="grow truncate text-neutral-100">{item.name}</span>
+              <span className="text-amber-300 font-medium whitespace-nowrap">x {formatAmount(item.expectedAmount, forceDecimal, decimalPlaces)}</span>
             </div>
           ))}
         </div>
       ) : // Original Description display
-      itemInfo.LocalizeEtc?.[getlocaleMethond('Description', 'Jp', locale)] || itemInfo.LocalizeEtc?.DescriptionJp ? (
-        <p className="mt-1 border-t border-gray-600 dark:border-neutral-700 pt-1">{itemInfo.LocalizeEtc?.[getlocaleMethond('Description', 'Jp', locale)] || itemInfo.LocalizeEtc?.DescriptionJp}</p>
+      ((itemInfo as IconInfo).LocalizeEtc as Record<string, string> | undefined)?.[getlocaleMethond('Description', 'Jp', locale)] || (itemInfo as IconInfo).LocalizeEtc?.DescriptionJp ? (
+        <p className="mt-1 border-t border-neutral-600 dark:border-neutral-700 pt-1">
+          {((itemInfo as IconInfo).LocalizeEtc as Record<string, string> | undefined)?.[getlocaleMethond('Description', 'Jp', locale)] || (itemInfo as IconInfo).LocalizeEtc?.DescriptionJp}
+        </p>
       ) : null}
     </div>,
     document.body,
@@ -144,23 +155,40 @@ const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>((pr
 });
 TooltipContent.displayName = 'TooltipContent';
 
-export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, label, labelColor = 'bg-gray-700' }: ItemIconProps) => {
+export const ItemIcon = ({
+  type,
+  itemId,
+  amount,
+  size,
+  eventData,
+  iconData,
+  label,
+  labelColor = 'bg-neutral-700',
+  allStudents,
+  studentPortraits,
+  forceDecimal = false,
+  decimalPlaces,
+}: ItemIconProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const [mousePosition, setMousePosition] = useState<{
     x: number;
     y: number;
   } | null>(null);
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({ opacity: 0 });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [currentGachaIndex, setCurrentGachaIndex] = useState(0); // State for alternating display index
   const intervalRef = useRef<NodeJS.Timeout | null>(null); // Ref to store interval ID
+  const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
 
-  const itemInfo = (eventData.icons as any)[type]?.[itemId];
-  const iconSrc = (iconData as any)[type]?.[itemId];
+  const itemInfo = (eventData.icons[type as keyof typeof eventData.icons] as Record<string, IconInfo | GachaGroupInfo> | undefined)?.[itemId];
+  const iconSrc = (iconData as Record<string, Record<string, string>>)[type]?.[itemId];
 
   const { i18n } = useTranslation('dashboard');
   const locale = i18n.language as Locale;
   const { isDark } = useIsDarkState();
+
+  const isGift = (itemInfo as IconInfo)?.ItemCategory === 6 && type === 'Item';
+  const giftToStudentsMap = useMemo(() => buildGiftToStudentsMap(allStudents, eventData), [allStudents, eventData]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isHovering) setIsHovering(true);
@@ -215,8 +243,8 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
     }
 
     const numericAmount = Number(amount) || 0;
-    const elements: GachaElement[] = gachaInfo.GachaElement || gachaInfo.GachaElementRecursive || [];
-    // const isRecursive = gachaInfo.IsRecursive;
+    const elements: GachaElement[] = (gachaInfo as GachaGroupInfo).GachaElement || (gachaInfo as GachaGroupInfo).GachaElementRecursive || [];
+    // const isRecursive = (gachaInfo as GachaGroupInfo).IsRecursive;
 
     // Effect for alternating display
     useEffect(() => {
@@ -246,7 +274,7 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
     if (currentElement) {
       let itemToDisplayType = currentElement.ParcelTypeStr;
       let itemToDisplayId = currentElement.ParcelId.toString();
-      let itemToDisplayInfo: any = (eventData.icons as any)[itemToDisplayType]?.[itemToDisplayId]; // Can be IconInfo or GachaGroupInfo
+      let itemToDisplayInfo = (eventData.icons[itemToDisplayType as keyof typeof eventData.icons] as Record<string, IconInfo | GachaGroupInfo> | undefined)?.[itemToDisplayId]; // Can be IconInfo or GachaGroupInfo
 
       // Recursive check (one level deep)
       if (itemToDisplayType === 'GachaGroup' && itemToDisplayInfo) {
@@ -258,7 +286,7 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
           // Found a representative item inside the nested group
           itemToDisplayType = firstNestedElement.ParcelTypeStr;
           itemToDisplayId = firstNestedElement.ParcelId.toString();
-          itemToDisplayInfo = (eventData.icons as any)[itemToDisplayType]?.[itemToDisplayId];
+          itemToDisplayInfo = (eventData.icons[itemToDisplayType as keyof typeof eventData.icons] as Record<string, IconInfo | GachaGroupInfo> | undefined)?.[itemToDisplayId];
         } else {
           // Nested group is empty or invalid, force fallback
           itemToDisplayType = 'GachaGroup'; // Reset type
@@ -275,12 +303,12 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
         // currentItemAltName = getLocalizeEtcName(itemToDisplayInfo.LocalizeEtc, locale) || `Group ${itemToDisplayId}`;
       } else {
         // This is a final item
-        const finalItemInfo = itemToDisplayInfo; // Cast
-        // currentItemIconSrc = (iconData as any)[itemToDisplayType]?.[itemToDisplayId];
-        currentItemRarity = finalItemInfo?.Rarity ?? 0;
+        const finalItemInfo = itemToDisplayInfo as IconInfo | undefined; // Cast
+        // currentItemIconSrc = (iconData as Record<string, Record<string, string>>)[itemToDisplayType]?.[itemToDisplayId];
+        currentItemRarity = (finalItemInfo as IconInfo)?.Rarity ?? 0;
         // currentItemAltName = getLocalizeEtcName(finalItemInfo?.LocalizeEtc, locale) || `${itemToDisplayType} ${itemToDisplayId}`;
 
-        if (itemToDisplayType === 'Currency' || finalItemInfo?.ItemCategory === 2 || [`Item-23`].includes(`${itemToDisplayType}-${itemToDisplayId}`)) {
+        if (itemToDisplayType === 'Currency' || (finalItemInfo as IconInfo)?.ItemCategory === 2 || [`Item-23`].includes(`${itemToDisplayType}-${itemToDisplayId}`)) {
           currentItemIsCurrencyOrSpecial = true;
         }
       }
@@ -301,7 +329,7 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
       return Object.values(finalExpectedMap)
         .map((content) => ({
           iconSrc: content.iconSrc,
-          name: getLocalizeEtcName(content.itemInfo?.LocalizeEtc, locale) || `${content.type} ${content.id}`,
+          name: getLocalizeEtcName((content.itemInfo as IconInfo)?.LocalizeEtc, locale) || `${content.type} ${content.id}`,
           expectedAmount: content.expectedAmount,
           rarity: content.rarity,
         }))
@@ -319,7 +347,7 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
       layoutClass = 'grid grid-cols-2 p-0.5 gap-0.5';
     }
 
-    let backgroundColor = currentItemIsCurrencyOrSpecial ? (isDark === 'dark' ? '#00000000' : '#eee') : rarityColors[isDark || 'light'][currentItemRarity] || rarityColors[isDark || 'light'][0];
+    const backgroundColor = currentItemIsCurrencyOrSpecial ? (isDark === 'dark' ? '#00000000' : '#eee') : rarityColors[isDark || 'light'][currentItemRarity] || rarityColors[isDark || 'light'][0];
 
     // --- Render Placeholder and Tooltip for GachaGroup ---
     return (
@@ -332,8 +360,8 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
             {representativeElements.map((el, index) => {
               let elItemId = el.ParcelId.toString();
               let elItemType = el.ParcelTypeStr;
-              let elIconSrc = (iconData as any)[elItemType]?.[elItemId];
-              let elItemInfo = (eventData.icons as any)[elItemType]?.[elItemId];
+              let elIconSrc: string | undefined = (iconData as Record<string, Record<string, string>>)[elItemType]?.[elItemId];
+              let elItemInfo = (eventData.icons[elItemType as keyof typeof eventData.icons] as Record<string, IconInfo | GachaGroupInfo> | undefined)?.[elItemId];
               let isNestedBox = false; // Flag to indicate if we should render 'BOX'
 
               // Handle nested GachaGroup for display icon
@@ -345,8 +373,8 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
                   // Use the first item from the nested group for display
                   elItemId = firstNestedElement.ParcelId.toString();
                   elItemType = firstNestedElement.ParcelTypeStr;
-                  elIconSrc = (iconData as any)[elItemType]?.[elItemId];
-                  elItemInfo = (eventData.icons as any)[elItemType]?.[elItemId];
+                  elIconSrc = (iconData as Record<string, Record<string, string>>)[elItemType]?.[elItemId];
+                  elItemInfo = (eventData.icons[elItemType as keyof typeof eventData.icons] as Record<string, IconInfo | GachaGroupInfo> | undefined)?.[elItemId];
                 } else {
                   // Cannot find a representative item in the nested group, render 'BOX'
                   isNestedBox = true;
@@ -357,16 +385,16 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
               if (isNestedBox) {
                 // Render 'BOX' text for unresolvable nested groups
                 return (
-                  <div key={index} className="w-full h-full flex items-center justify-center text-neutral-500 text-[9px] font-bold bg-gray-300 dark:bg-neutral-600 rounded-sm">
+                  <div key={index} className="w-full h-full flex items-center justify-center text-neutral-500 text-[9px] font-bold bg-neutral-300 dark:bg-neutral-600 rounded-sm">
                     BOX
                   </div>
                 );
               } else if (elIconSrc) {
                 // Render the found icon (either direct or from nested group)
-                const elRarity = elItemInfo?.Rarity ?? 0;
+                const elRarity = (elItemInfo as IconInfo)?.Rarity ?? 0;
                 // Determine background: No special background for Currency or Category 2 items within the grid
                 const elBG =
-                  elItemType !== 'Currency' && elItemInfo?.ItemCategory !== 2 && ![`Item-23`].includes(`${elItemType}-${elItemId}`)
+                  elItemType !== 'Currency' && (elItemInfo as IconInfo)?.ItemCategory !== 2 && ![`Item-23`].includes(`${elItemType}-${elItemId}`)
                     ? rarityColors[isDark || 'light'][elRarity] || rarityColors[isDark || 'light'][0]
                     : 'transparent'; // Use transparent for Currency/Special within grid
 
@@ -382,7 +410,7 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
                 );
               }
               // Fallback for empty cell if something unexpected happens
-              return <div key={index} className="w-full h-full bg-gray-100 dark:bg-neutral-700 rounded-sm" />;
+              return <div key={index} className="w-full h-full bg-neutral-100 dark:bg-neutral-700 rounded-sm" />;
             })}
           </div>
 
@@ -398,35 +426,32 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
               }}
             >
               {representativeElements.length === 1 && gachaContents.length > 0
-                ? `×${formatAmount(gachaContents[0].expectedAmount)}`
+                ? `×${formatAmount(gachaContents[0].expectedAmount, forceDecimal, decimalPlaces)}`
                 : typeof amount == 'number' && amount > 0
-                  ? `×${formatAmount(amount)}`
+                  ? `×${formatAmount(amount, forceDecimal, decimalPlaces)}`
                   : amount}
             </span>
           )}
         </div>
         {/* Tooltip with Gacha Content */}
-        <TooltipContent
-          ref={tooltipRef}
-          style={tooltipStyle}
-          itemInfo={itemInfo}
-          amount={amount}
-          locale={locale}
-          gachaContents={gachaContents} // Pass calculated expected contents
-        />
+        {isHovering && <TooltipContent ref={tooltipRef} style={tooltipStyle} itemInfo={itemInfo} amount={amount} locale={locale} gachaContents={gachaContents} />}
       </>
     );
   }
 
   if (!itemInfo || !iconSrc) {
     return (
-      <div title={`${type}-${itemId}`} style={{ width: `${size * 0.25}rem`, height: `${size * 0.25}rem` }} className="bg-gray-200 rounded-md flex items-center justify-center text-xs text-gray-500">
+      <div
+        title={`${type}-${itemId}`}
+        style={{ width: `${size * 0.25}rem`, height: `${size * 0.25}rem` }}
+        className="bg-neutral-200 rounded-md flex items-center justify-center text-xs text-neutral-500"
+      >
         ?
       </div>
     );
   }
 
-  let rarity = itemInfo.Rarity || 0;
+  let rarity = (itemInfo as IconInfo).Rarity || 0;
 
   const key = `${type}-${itemId}`;
   if (type == 'Emblem') rarity = 3;
@@ -436,18 +461,25 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
   const nonRarityColors = isDark == 'light' ? '#eee' : '#00000000';
   if (type == 'Currency') backgroundColor = nonRarityColors;
   // if (type == 'Equipment') backgroundColor = nonRarityColors;
-  else if (itemInfo?.ItemCategory == 2) backgroundColor = nonRarityColors;
+  else if ((itemInfo as IconInfo)?.ItemCategory == 2) backgroundColor = nonRarityColors;
   else if (['Item-23'].includes(key))
     backgroundColor = nonRarityColors; // Eligma
-  else if (itemInfo.ExpiryChangeParcelTypeStr == 'Currency') backgroundColor = nonRarityColors;
+  else if ((itemInfo as IconInfo & { ExpiryChangeParcelTypeStr?: string })?.ExpiryChangeParcelTypeStr == 'Currency') backgroundColor = nonRarityColors;
 
   return (
     <>
-      <div className="relative" style={{ width: `${size * 0.25}rem`, height: `${size * 0.25}rem` }} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} title={key}>
+      <div
+        className={`relative ${isGift && allStudents ? 'cursor-pointer' : ''}`}
+        style={{ width: `${size * 0.25}rem`, height: `${size * 0.25}rem` }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onClick={() => isGift && allStudents && setSelectedGiftId(itemId)}
+        title={key}
+      >
         <div className="absolute inset-0 rounded-md" style={{ backgroundColor }} />
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <img src={iconSrc.startsWith('blob:') ? iconSrc : `data:image/webp;base64,${iconSrc}`} alt={itemInfo.LocalizeEtc?.['NameKr']} className="max-w-full max-h-full object-cover" />
+          <img src={iconSrc.startsWith('blob:') ? iconSrc : `data:image/webp;base64,${iconSrc}`} alt={(itemInfo as IconInfo).LocalizeEtc?.['NameKr']} className="max-w-full max-h-full object-cover" />
         </div>
 
         {label && <span className={`absolute top-0 left-0 ${labelColor} text-white text-[10px] font-bold px-1 py-0.5 rounded-br-md rounded-tl-md leading-none z-10`}>{label}</span>}
@@ -459,11 +491,26 @@ export const ItemIcon = ({ type, itemId, amount, size, eventData, iconData, labe
               textShadow: '1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 1px 0 #fff, 0 -1px 0 #fff',
             }}
           >
-            {typeof amount == 'number' && amount > 0 ? `×${formatAmount(amount)}` : amount}
+            {typeof amount == 'number' && amount > 0 ? `×${formatAmount(amount, forceDecimal, decimalPlaces)}` : amount}
           </span>
         )}
       </div>
-      <TooltipContent ref={tooltipRef} style={tooltipStyle} itemInfo={itemInfo} amount={amount} locale={locale} />
+      {isHovering && <TooltipContent ref={tooltipRef} style={tooltipStyle} itemInfo={itemInfo} amount={amount} locale={locale} />}
+
+      {isGift &&
+        selectedGiftId === itemId &&
+        allStudents &&
+        (() => {
+          const gift: GiftEntry = {
+            id: itemId,
+            type: 'Item',
+            rarity: (itemInfo as IconInfo)?.Rarity || 0,
+            affectionPoints: (itemInfo as IconInfo & { AffectionExp?: number })?.AffectionExp || 0,
+            preferenceLevel: 0,
+          };
+          const students = giftToStudentsMap[itemId] ?? [];
+          return <GiftStudentSheet gift={gift} students={students} studentPortraits={studentPortraits} eventData={eventData} iconData={iconData} onClose={() => setSelectedGiftId(null)} />;
+        })()}
     </>
   );
 };

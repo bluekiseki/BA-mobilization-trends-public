@@ -1,8 +1,8 @@
 // app/utils/chartDataProcessor.ts
 
-import { raidToString } from '../components/raidToString';
-import { difficultyInfo } from '../components/Difficulty';
-import type { DifficultySelect } from '../components/Difficulty';
+import { raidToString } from '../components/raid/raidToString';
+import { difficultyInfo } from '../components/raid/Difficulty';
+import type { DifficultySelect } from '../components/raid/Difficulty';
 import type { BinnedDataRow, ChartData, GameServer, RaidInfoFiltered, RawDataRow } from '~/types/data';
 import { tsvParseRows } from 'd3-dsv';
 import type { fetchCacheProcessor } from './cache';
@@ -30,7 +30,7 @@ export interface ProcessChartDataResult {
 function getAllCountOfHistogramclass(raindInfo: RaidInfoFiltered, difficulty: DifficultySelect, rankStart: number, rankEnd: number, rankWidth: number) {
   if (!raindInfo) {
     console.error('raindInfo is none', raindInfo);
-    throw 'raindInfo is none';
+    throw new Error('raindInfo is none');
   }
   if (difficulty == 'All') {
     if (rankEnd > raindInfo.Cnt.All) {
@@ -45,7 +45,7 @@ function getAllCountOfHistogramclass(raindInfo: RaidInfoFiltered, difficulty: Di
   if (!raindInfo.Cnt[difficulty]) {
     return rankWidth;
   }
-  if (rankStart > rankEnd) throw 'rankStart > rankEnd';
+  if (rankStart > rankEnd) throw new Error('rankStart > rankEnd');
   let cnt = 0;
 
   for (const { name } of difficultyInfo) {
@@ -94,7 +94,7 @@ export const getRawTsvData = async (server: GameServer, selectedStudentId: numbe
 /**
  * Calculate chart data
  */
-export const processChartData = async ({
+export const processChartData = ({
   rankWidth,
   hideXThreshold,
   xRange,
@@ -104,7 +104,7 @@ export const processChartData = async ({
   xLabels,
   rawTsvData,
   locale,
-}: ProcessChartDataParams): Promise<ProcessChartDataResult> => {
+}: ProcessChartDataParams): ProcessChartDataResult => {
   const newXlabelIndexMap = xLabels.map((v) => v.index);
 
   const rawData = rawTsvData;

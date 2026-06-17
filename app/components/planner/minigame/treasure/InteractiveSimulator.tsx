@@ -11,9 +11,7 @@ interface InteractiveSimulatorProps {
 
 export const placeTreasures = (roundData: TreasureRound, rewards: Record<string, TreasureReward>) => {
   const [width, height] = roundData.TreasureRoundSize;
-  const board: (number | null)[][] = Array(height)
-    .fill(null)
-    .map(() => Array(width).fill(null));
+  const board: (number | null)[][] = Array.from({ length: height }, () => Array<number | null>(width).fill(null));
   const treasuresToPlace: TreasureReward[] = [];
 
   roundData.RewardId.forEach((id, index) => {
@@ -139,15 +137,15 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-neutral-800 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-4xl flex flex-col md:flex-row gap-6 max-h-[90vh]">
+      <div className="bg-white dark:bg-neutral-800 p-4 sm:p-6 rounded-lg shadow-xl w-full flex flex-col md:flex-row gap-6 max-h-[90vh]">
         {/* Left: Game Board */}
         <div className="grow">
-          <h3 className="text-lg font-bold mb-2 dark:text-gray-100">{t('playRound', { round: roundData.TreasureRound })}</h3>
-          <p className="text-sm mb-2 dark:text-gray-300">
+          <h3 className="text-lg font-bold mb-2 dark:text-neutral-100">{t('playRound', { round: roundData.TreasureRound })}</h3>
+          <p className="text-sm mb-2 dark:text-neutral-300">
             {t('openedCells')} <span className="font-bold">{openedCells.size}</span>
           </p>
 
-          <div className="relative bg-gray-800 dark:bg-neutral-900 p-1 rounded-md border-4 border-gray-600 dark:border-neutral-700">
+          <div className="relative bg-neutral-800 dark:bg-neutral-900 p-1 rounded-md border-4 border-neutral-600 dark:border-neutral-700">
             {/* 1. Background: Treasure location layer (hint) */}
             <div
               className="absolute inset-0"
@@ -192,7 +190,7 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
                     <div
                       key={`${x}-${y}`}
                       onClick={() => handleCellClick(x, y)}
-                      className={`aspect-square border border-gray-500 dark:border-neutral-600 transition-opacity duration-300 ${isOpen ? 'opacity-0 pointer-events-none' : 'bg-slate-200 dark:bg-slate-700 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-600'}`}
+                      className={`aspect-square border border-neutral-500 dark:border-neutral-600 transition-opacity duration-300 ${isOpen ? 'opacity-0 pointer-events-none' : 'bg-neutral-200 dark:bg-neutral-700 cursor-pointer hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
                     ></div>
                   );
                 }),
@@ -204,27 +202,27 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
         {/* Right Info & Controls Panel */}
         <div className="w-full md:w-72 shrink-0 flex flex-col">
           <div>
-            <h4 className="font-bold mb-2 dark:text-gray-200">{t('remainingTreasures')}</h4>
+            <h4 className="font-bold mb-2 dark:text-neutral-200">{t('remainingTreasures')}</h4>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-2 text-xs">
               {uniqueTreasuresInRound.map(({ treasureId, total }) => {
                 const foundCount = foundTreasureCounts[treasureId] || 0;
                 if (foundCount === total) return null;
                 const treasureInfo = treasureRewards[treasureId];
                 return (
-                  <div key={treasureId} className="flex items-center p-1.5 bg-gray-100 dark:bg-neutral-700/50 rounded">
+                  <div key={treasureId} className="flex items-center p-1.5 bg-neutral-100 dark:bg-neutral-700/50 rounded">
                     <div
                       style={{
                         backgroundColor: treasureColors[treasureId % treasureColors.length],
                       }}
                       className="w-4 h-4 rounded-sm mr-2 shrink-0"
                     />
-                    <div className="grow truncate dark:text-gray-300" title={treasureInfo.LocalizeCodeId}>
+                    <div className="grow truncate dark:text-neutral-300" title={treasureInfo.LocalizeCodeId}>
                       {treasureInfo.LocalizeCodeId}
                     </div>
-                    <div className="text-gray-500 dark:text-gray-400 ml-2">
+                    <div className="text-neutral-500 dark:text-neutral-400 ml-2">
                       {treasureInfo.CellUnderImageWidth}x{treasureInfo.CellUnderImageHeight}
                     </div>
-                    <div className="font-bold ml-2 dark:text-gray-200">
+                    <div className="font-bold ml-2 dark:text-neutral-200">
                       {foundCount} / {total}
                     </div>
                   </div>
@@ -234,7 +232,7 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
           </div>
 
           <div className="mt-4">
-            <h4 className="font-bold mb-2 dark:text-gray-200">{t('foundTreasures')}</h4>
+            <h4 className="font-bold mb-2 dark:text-neutral-200">{t('foundTreasures')}</h4>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-2 text-xs">
               {uniqueTreasuresInRound.map(({ treasureId, total }) => {
                 const foundCount = foundTreasureCounts[treasureId] || 0;
@@ -249,13 +247,13 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
                       }}
                       className="w-4 h-4 rounded-sm mr-2 shrink-0"
                     />
-                    <div className={`grow truncate ${isCompleted ? 'line-through dark:text-gray-500' : 'dark:text-gray-300'}`} title={treasureInfo.LocalizeCodeId}>
+                    <div className={`grow truncate ${isCompleted ? 'line-through dark:text-neutral-500' : 'dark:text-neutral-300'}`} title={treasureInfo.LocalizeCodeId}>
                       {treasureInfo.LocalizeCodeId}
                     </div>
-                    <div className="text-gray-500 dark:text-gray-400 ml-2">
+                    <div className="text-neutral-500 dark:text-neutral-400 ml-2">
                       {treasureInfo.CellUnderImageWidth}x{treasureInfo.CellUnderImageHeight}
                     </div>
-                    <div className="font-bold ml-2 dark:text-gray-200">
+                    <div className="font-bold ml-2 dark:text-neutral-200">
                       {foundCount} / {total}
                     </div>
                   </div>
@@ -265,13 +263,13 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
           </div>
 
           <div className="mt-auto pt-4">
-            <button onClick={onClose} className="w-full bg-gray-300 dark:bg-neutral-600 dark:hover:bg-neutral-700 px-4 py-2 rounded-md text-sm mb-2">
+            <button onClick={onClose} className="w-full bg-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-700 px-4 py-2 rounded-md text-sm mb-2">
               {t('cancel')}
             </button>
             <button
               onClick={() => onComplete(openedCells.size)}
               disabled={!isGoalMet}
-              className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm disabled:bg-gray-400 dark:disabled:bg-neutral-500"
+              className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm disabled:bg-neutral-400 dark:disabled:bg-neutral-500"
             >
               {isGoalMet ? t('saveResult', { count: openedCells.size }) : t('goalFindAll')}
             </button>

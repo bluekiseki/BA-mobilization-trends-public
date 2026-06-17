@@ -4,8 +4,8 @@ import type { Route } from './+types/licence';
 import ContactButton from '~/components/ContactButton';
 import { issuesURL } from '~/data/livedataServer.json';
 
-export async function loader({ context }: LoaderFunctionArgs) {
-  let i18n = getInstance(context);
+export function loader({ context }: LoaderFunctionArgs) {
+  const i18n = getInstance(context);
   return data({
     title: i18n.t('common:title'),
   });
@@ -18,7 +18,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 const LicencePage = () => {
   return (
-    <div className="m-auto max-w-4xl px-4 py-4 sm:py-8 font-pretendard">
+    <div className="ont-pretendard">
       {/* Simple and clean page title */}
       <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 dark:text-white mb-8 border-b border-neutral-300 dark:border-neutral-600 pb-4">License & Data Sources</h1>
 
@@ -262,6 +262,9 @@ const LicencePage = () => {
       {/* Section: References */}
       <section>
         <h2 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">References During Development</h2>
+        <p className="text-neutral-600 dark:text-neutral-400 mb-4 text-sm">
+          The following sites were referenced for UI/UX patterns and feature direction during development. No data is extracted from these sources.
+        </p>
         <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 mt-4 pl-2">
           <li>
             <a href="https://bluearchive-torment.netlify.app/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
@@ -382,6 +385,23 @@ const LicencePage = () => {
             or{' '}
             <a className="text-blue-500 hover:underline">
               <ContactButton>Email</ContactButton>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      {/* Legal Pages Footer */}
+      <section className="mt-12 pt-6 border-t border-neutral-300 dark:border-neutral-600">
+        <h2 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">Legal</h2>
+        <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
+          <li>
+            <a href="/privacy" className="text-blue-500 hover:underline">
+              Privacy Policy
+            </a>
+          </li>
+          <li>
+            <a href="/terms" className="text-blue-500 hover:underline">
+              Terms of Service
             </a>
           </li>
         </ul>

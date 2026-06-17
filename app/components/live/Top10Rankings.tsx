@@ -4,7 +4,7 @@ import type { GameServer, RaidInfo } from '~/types/data';
 import type { PortraitData, ReportEntry, StudentData } from '~/components/dashboard/common';
 import { TotalRankingList } from '~/components/live/TotalRankingList';
 import { RankingList } from '~/components/live/RankingList';
-import { type_translation } from '../raidToString';
+import { type_translation } from '../raid/raidToString';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import React from 'react';
@@ -109,14 +109,14 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
 
   return (
     <>
-      <div className="flex flex-wrap justify-between items-center pb-3 mb-4 border-b border-gray-200 dark:border-neutral-700">
+      <div className="flex flex-wrap justify-between items-center pb-3 mb-4 border-b border-neutral-200 dark:border-neutral-700">
         <h2 className="text-2xl font-bold">TOP 10</h2>
-        <nav className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-neutral-700 pb-3 mb-4">
+        <nav className="flex flex-wrap gap-2 border-b border-neutral-200 dark:border-neutral-700 pb-3 mb-4">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600'}`}
+              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'}`}
             >
               {tab.name}
             </button>
@@ -133,7 +133,7 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
             isRaid || activeTab === 'total' ? (lastData.data as LastRaidData).boss.d.slice(0, 10).map((v) => ({ ...v, typeRanking: v.r })) : (lastData.data as LastERaidData)[activeTab].d.slice(0, 10)
           }
           // raidInfo={raidInfos.find(r => r.Id.toString().endsWith(activeTab.slice(-1)))!}
-          raidInfo={isRaid ? raidInfos[0] : raidInfos[Number(activeTab.slice(-1)) - 1]!}
+          raidInfo={isRaid ? raidInfos[0] : raidInfos[Number(activeTab.slice(-1)) - 1]}
           server={server}
           studentData={studentData}
           portraitData={portraitData}

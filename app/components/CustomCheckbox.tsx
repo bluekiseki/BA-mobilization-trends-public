@@ -20,7 +20,7 @@ export const CustomCheckbox = ({
     <input
       ref={ref}
       type="checkbox"
-      className="h-3.5 w-3.5 rounded-sm border-gray-300 dark:border-neutral-600 text-teal-600 focus:ring-teal-500"
+      className="h-3.5 w-3.5 rounded-sm border-neutral-300 dark:border-neutral-600 text-teal-600 focus:ring-teal-500"
       // checked={true} only when in 'checked' state
       // checked={false} when 'indicatorminate' or 'unchecked' state
       checked={state === 'checked'}

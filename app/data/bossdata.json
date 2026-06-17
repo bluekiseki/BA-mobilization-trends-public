@@ -234,7 +234,7 @@
       "ko": "말쿠트",
       "ja": "マルクト",
       "en": "Malkuth",
-      "zh_Hant": "Malkuth"
+      "zh_Hant": "馬爾庫特"
     },
     "teran": "Street",
     "armorType": "Normal"
@@ -245,6 +245,16 @@
       "ja": "デカグラマトン",
       "en": "Decagrammaton",
       "zh_Hant": "Decagrammaton"
+    },
+    "teran": "Street",
+    "armorType": "Normal"
+  },
+  "EN0022": {
+    "name": {
+      "ko": "드럼통 게",
+      "ja": "ドラム缶ガニ",
+      "en": "Drumbarka",
+      "zh_Hant": "Drumbarka"
     },
     "teran": "Street",
     "armorType": "Normal"

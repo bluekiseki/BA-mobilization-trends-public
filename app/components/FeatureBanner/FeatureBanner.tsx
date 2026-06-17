@@ -79,7 +79,7 @@ export default function InlinePromoBanner() {
   };
 
   return (
-    <div className="relative w-full px-2 py-1 bg-slate-50/50 dark:bg-neutral-800/30 border border-slate-200 dark:border-neutral-700/50 rounded text-xs text-slate-500 dark:text-neutral-400 overflow-hidden">
+    <div className="relative w-full px-2 py-1 bg-neutral-50/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50 rounded text-xs text-neutral-500 dark:text-neutral-400 overflow-hidden">
       <style>{`
         @keyframes slideUpFade {
           0% { transform: translateY(15px); opacity: 0; }
@@ -104,12 +104,12 @@ export default function InlinePromoBanner() {
             state={
               promo.type === 'tour'
                 ? {
-                    tourKey: promo.tourCategory + (promo.tourKey ? `.${promo.tourKey}` : ''),
+                    tourKey: String(promo.tourCategory) + (promo.tourKey ? `.${promo.tourKey}` : ''),
                     tourIndex: promo.tourIndex,
                   }
                 : undefined
             }
-            className="animate-slide-up whitespace-nowrap flex items-center hover:text-slate-800 dark:hover:text-neutral-200 transition-colors"
+            className="animate-slide-up whitespace-nowrap flex items-center hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
             style={
               overflowAmount > 0
                 ? ({
@@ -128,18 +128,18 @@ export default function InlinePromoBanner() {
         </div>
 
         {/* Right: Checkbox and close button */}
-        <div className="flex items-center gap-3 ml-0 md:ml-3 shrink-0 bg-slate-50 dark:bg-neutral-800/0 relative z-10 pl-2">
-          <label className="hidden md:flex items-center gap-1 cursor-pointer hover:text-slate-700 dark:hover:text-neutral-300 transition-colors">
+        <div className="flex items-center gap-3 ml-0 md:ml-3 shrink-0 bg-neutral-50 dark:bg-neutral-800/0 relative z-10 pl-2">
+          <label className="hidden md:flex items-center gap-1 cursor-pointer hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
             <input
               type="checkbox"
-              className="w-3 h-3 rounded border-slate-300 text-slate-600 focus:ring-slate-500 dark:border-neutral-600 dark:bg-neutral-600"
+              className="w-3 h-3 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-500 dark:border-neutral-600 dark:bg-neutral-600"
               checked={hideForDay}
               onChange={(e) => setHideForDay(e.target.checked)}
             />
             <span className="select-none">{t('promoBanner.noMoreThisWeek')}</span>
           </label>
 
-          <button onClick={handleClose} className="hover:text-slate-900 dark:hover:text-white transition-colors" aria-label="close">
+          <button onClick={handleClose} className="hover:text-neutral-900 dark:hover:text-white transition-colors" aria-label="close">
             <HiOutlineXMark className="w-3.5 h-3.5" />
           </button>
         </div>

@@ -1,5 +1,6 @@
 // app/components/planner/OnetimeTab.tsx
 import { useTranslation } from 'react-i18next';
+import { FaTrophy, FaLightbulb } from 'react-icons/fa';
 import type { Locale } from '~/utils/i18n/config';
 import type { EventData, IconData, Mission, Stage } from '~/types/plannerData';
 import Tooltip from 'rc-tooltip';
@@ -44,9 +45,9 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                 <div className="flex flex-row justify-between items-center sm:contents sm:flex-1">
                   <div className="grow sm:shrink-0 min-w-0">
                     <h4 className="font-bold text-base text-indigo-600 dark:text-indigo-400 truncate">
-                      {(s.type === 'story' ? t('common.story') + ' ' : t('common.challenge') + ' ') + s.Name.split('_').pop()?.replace('Stage', ' ')}
+                      {(s.type === 'story' ? t('common.story') + ' ' : t('common.challenge') + ' ') + String(s.Name.split('_').pop()?.replace('Stage', ' '))}
                     </h4>
-                    <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                       <span>{s.StageEnterCostAmount}AP</span>
                       <span>Lv.{s.RecommandLevel}</span>
                       <span>
@@ -65,7 +66,9 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                             </div>
                           }
                         >
-                          <span className="font-bold text-yellow-600 dark:text-yellow-500 cursor-help shrink-0">🏆 {t('common.mission')}</span>
+                          <span className="font-bold text-yellow-600 dark:text-yellow-500 cursor-help shrink-0">
+                            <FaTrophy className="inline mr-1" /> {t('common.mission')}
+                          </span>
                         </Tooltip>
                       )}
                       {s.StageHintStr && (
@@ -75,7 +78,9 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                           styles={{ root: { maxWidth: '20rem' } }}
                           overlay={<span>{locale === 'ko' ? s.StageHintStr.DescriptionKr : s.StageHintStr.DescriptionJp}</span>}
                         >
-                          <span className="font-bold text-blue-500 dark:text-blue-400 cursor-help shrink-0">💡 {t('common.hint')}</span>
+                          <span className="font-bold text-blue-500 dark:text-blue-400 cursor-help shrink-0">
+                            <FaLightbulb className="inline mr-1" /> {t('common.hint')}
+                          </span>
                         </Tooltip>
                       )}
                     </div>
@@ -86,7 +91,7 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                       max={1}
                       value={runCounts[s.Id] || 0}
                       onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                      className="w-12 px-0 text-base scale-[0.75] p-1 text-center rounded bg-gray-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-gray-200"
+                      className="w-12 px-0 text-base scale-[0.75] p-1 text-center rounded bg-neutral-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-neutral-200"
                     />
                   </div>
                 </div>
@@ -99,7 +104,7 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                         {s.EventContentStageReward.map((r, i) => {
                           const amount = (r.RewardAmount * r.RewardProb) / 10000;
                           let label: string | null = null;
-                          let labelColor = 'bg-gray-700';
+                          let labelColor = 'bg-neutral-700';
                           switch (r.RewardTagStr) {
                             case 'Rare':
                               label = 'Rare';
@@ -134,13 +139,13 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                 </div>
 
                 <div className="hidden sm:flex items-center gap-2 shrink-0 w-full sm:w-24 justify-end">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('common.count')}</label>
+                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('common.count')}</label>
                   <CustomNumberInput
                     min={0}
                     max={1}
                     value={runCounts[s.Id] || 0}
                     onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                    className="w-12 px-0 text-base scale-[0.75] p-1 text-center rounded bg-gray-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-gray-200"
+                    className="w-12 px-0 text-base scale-[0.75] p-1 text-center rounded bg-neutral-100 dark:bg-neutral-700 border dark:border-neutral-600 dark:text-neutral-200"
                   />
                 </div>
               </div>

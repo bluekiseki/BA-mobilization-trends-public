@@ -41,7 +41,7 @@ const calculateDistribution = (rankData: ReportEntry[]): { score: number; densit
 
 import { AreaChart, Area, XAxis, YAxis, Label, Tooltip, ResponsiveContainer } from 'recharts';
 import { type FC, useMemo, useState } from 'react';
-import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
+import { getDifficultyFromScoreAndBoss } from '~/components/raid/Difficulty';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { formatTimeToTimestamp } from '~/utils/time';
 import type { GameServer, RaidInfo } from '~/types/data';
@@ -106,13 +106,13 @@ export const DistributionChart: FC<DistributionChartProps> = ({ title, rankData,
       const validData = axisType === 'time' ? data.filter((p) => p.time !== undefined) : data;
       if (validData.length < 2) continue;
 
-      const values = validData.map((p) => (axisType === 'score' ? p.score : p.time!));
+      const values = validData.map((p) => (axisType === 'score' ? p.score : (p.time ?? 0)));
       const minVal = Math.min(...values);
       const maxVal = Math.max(...values);
       const range = maxVal - minVal;
 
       for (const point of validData) {
-        const value = axisType === 'score' ? point.score : point.time!;
+        const value = axisType === 'score' ? point.score : (point.time ?? 0);
         const normalized = range > 0 ? (value - minVal) / range : 0;
         const displayValue = normalized * PANEL_WIDTH + currentOffset;
 
@@ -158,7 +158,7 @@ export const DistributionChart: FC<DistributionChartProps> = ({ title, rankData,
     <div className="p-4 bg-white dark:bg-neutral-800 rounded-xl shadow-lg">
       <div className="flex justify-between items-center">
         <h3 className="font-semibold text-lg">{title}</h3>
-        <div className="flex gap-1 rounded-lg bg-gray-200 dark:bg-neutral-700 p-1 text-xs font-semibold">
+        <div className="flex gap-1 rounded-lg bg-neutral-200 dark:bg-neutral-700 p-1 text-xs font-semibold">
           <button onClick={() => setAxisType('score')} className={`px-3 py-1 rounded-md transition-colors ${axisType === 'score' ? 'bg-white dark:bg-neutral-900 shadow-sm' : ''}`}>
             Score
           </button>
@@ -183,23 +183,33 @@ export const DistributionChart: FC<DistributionChartProps> = ({ title, rankData,
             dataKey="displayValue"
             domain={['dataMin', 'dataMax']}
             ticks={customTicks.map((t) => t.value)}
-            tickFormatter={(value, index) => customTicks[index]?.label || ''}
+            tickFormatter={(_value: number, index: number) => customTicks[index]?.label || ''}
             fontSize={10}
           />
-          <YAxis width={80} tickFormatter={(d) => d.toExponential(1)}>
+          <YAxis width={80} tickFormatter={(d: number) => d.toExponential(1)}>
             <Label value="Density" angle={-90} position="insideLeft" style={{ textAnchor: 'middle', fill: '#888' }} />
           </YAxis>
           <Tooltip
-            labelFormatter={(label, payload) => {
-              const point = payload?.[0]?.payload;
+            labelFormatter={(_label: unknown, payload) => {
+              const point = payload?.[0]?.payload as RemappedDataPoint | undefined;
               if (!point) return '';
-              return axisType === 'score' ? `Score: ${point.originalScore.toLocaleString()}` : `Time: ${formatTimeToTimestamp(point.originalTime)}`;
+              return axisType === 'score' ? `Score: ${point.originalScore.toLocaleString()}` : `Time: ${formatTimeToTimestamp(point.originalTime ?? 0)}`;
             }}
-            formatter={(value: number) => value.toExponential(4)}
+            formatter={(value: unknown) => {
+              const numValue = Number(value ?? 0);
+              return numValue ? numValue.toExponential(4) : '';
+            }}
           />
 
           {Object.keys(DIFFICULTY_COLORS).map((diff) => (
-            <Area key={diff} type="linear" dataKey={(entry) => (entry.difficulty === diff ? entry.density : null)} stroke={DIFFICULTY_COLORS[diff]} fill={`url(#grad-${diff})`} connectNulls={false} />
+            <Area
+              key={diff}
+              type="linear"
+              dataKey={(entry: RemappedDataPoint) => (entry.difficulty === diff ? entry.density : null)}
+              stroke={DIFFICULTY_COLORS[diff]}
+              fill={`url(#grad-${diff})`}
+              connectNulls={false}
+            />
           ))}
         </AreaChart>
       </ResponsiveContainer>

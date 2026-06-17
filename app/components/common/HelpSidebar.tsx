@@ -74,9 +74,7 @@ export const HelpSidebar = () => {
     (tourSteps: TourStep[]) => {
       closeSidebar();
 
-      let driverObj: any = null;
-
-      driverObj = driver({
+      const driverObj = driver({
         showProgress: true,
         animate: true,
         allowClose: true,
@@ -88,24 +86,30 @@ export const HelpSidebar = () => {
           popover: { title: step.popover.title, description: stringToElement(step.popover.description) },
         })),
 
-        onNextClick: async (element, step, options) => {
-          const currentIdx = driverObj.getActiveIndex();
+        onNextClick: (_element, _step, _options) => {
+          const currentIdx = driverObj.getActiveIndex() as number;
           const originalStep = tourSteps[currentIdx];
+
+          if (!originalStep) return;
 
           if (originalStep.actionOnNext === 'click') {
             const targetEl = document.querySelector(originalStep.element) as HTMLElement;
             if (targetEl) targetEl.click();
 
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            void (async () => {
+              await new Promise((resolve) => setTimeout(resolve, 500));
 
-            const nextStep = tourSteps[currentIdx + 1];
-            if (nextStep && nextStep.element) {
-              await waitForElement(nextStep.element);
-            } else {
-              await new Promise((resolve) => setTimeout(resolve, originalStep.delay || 300));
-            }
+              const nextIdx = currentIdx + 1;
+              const nextStep = nextIdx < tourSteps.length ? tourSteps[nextIdx] : undefined;
+              if (nextStep && nextStep.element) {
+                await waitForElement(nextStep.element);
+              } else {
+                const delay = originalStep.delay ?? 300;
+                await new Promise((resolve) => setTimeout(resolve, delay));
+              }
 
-            driverObj.moveNext();
+              driverObj.moveNext();
+            })();
           } else {
             driverObj.moveNext();
           }
@@ -116,12 +120,13 @@ export const HelpSidebar = () => {
         driverObj.drive();
       }, 150);
     },
-    [closeSidebar, t],
+    [closeSidebar, t_c],
   );
 
   const keys = Array.isArray(activeHelpKey) ? activeHelpKey : activeHelpKey ? [activeHelpKey] : [];
+  const t_dynamic = t as (key: string, options?: Record<string, unknown>) => HelpGuide[];
   const guidesWithMeta = keys.flatMap((key) => {
-    const guideData = t(key, { returnObjects: true, defaultValue: [] } as any) as HelpGuide[];
+    const guideData = t_dynamic(key, { returnObjects: true, defaultValue: [] });
     return guideData.map((guide, idx) => ({ ...guide, parentKey: key, originalIndex: idx }));
   });
   const hasGuides = guidesWithMeta.length > 0;
@@ -151,14 +156,14 @@ export const HelpSidebar = () => {
   return (
     <>
       {/* Background overlay (cleaner transparency) */}
-      <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 z-40 transition-opacity backdrop-blur-[1px]" onClick={closeSidebar} />
+      <div className="fixed inset-0 bg-neutral-900/20 dark:bg-black/40 z-40 transition-opacity backdrop-blur-[1px]" onClick={closeSidebar} />
 
       {/* Right sidebar panel (remove rounded shadow, express depth with thin left border) */}
-      <div className="fixed inset-y-0 right-0 w-[320px] bg-white dark:bg-neutral-900 shadow-xl border-l border-slate-200 dark:border-neutral-800 z-50 flex flex-col transition-transform">
+      <div className="fixed inset-y-0 right-0 w-[320px] bg-white dark:bg-neutral-900 shadow-xl border-l border-neutral-200 dark:border-neutral-800 z-50 flex flex-col transition-transform">
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-200 dark:border-neutral-800 shrink-0">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t_c('title')} (BETA)</h2>
-          <button onClick={closeSidebar} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+          <h2 className="text-base font-semibold text-neutral-900 dark:text-white">{t_c('title')} (BETA)</h2>
+          <button onClick={closeSidebar} className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
             <HiOutlineXMark className="text-xl" />
           </button>
         </div>
@@ -166,22 +171,22 @@ export const HelpSidebar = () => {
         {/* Body */}
         <div className="p-5 overflow-y-auto flex-1 flex flex-col gap-6">
           {!hasGuides ? (
-            <div className="text-center text-slate-500 dark:text-neutral-500 mt-10 text-sm">{t_c('noGuide')}</div>
+            <div className="text-center text-neutral-500 dark:text-neutral-500 mt-10 text-sm">{t_c('noGuide')}</div>
           ) : (
             guidesWithMeta.map((guide, idx) => (
               <div
                 id={`guide-${guide.parentKey}-${guide.originalIndex}`}
                 key={idx}
-                className="flex flex-col gap-2 p-4 rounded-sm border border-transparent bg-slate-50 dark:bg-neutral-800/50 transition-colors duration-500"
+                className="flex flex-col gap-2 p-4 rounded-sm border border-transparent bg-neutral-50 dark:bg-neutral-800/50 transition-colors duration-500"
               >
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-neutral-100">{guide.title}</h3>
+                <h3 className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">{guide.title}</h3>
 
-                {guide.description && <p className="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">{guide.description}</p>}
+                {guide.description && <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">{guide.description}</p>}
 
                 {guide.tour && guide.tour.length > 0 && (
                   <button
-                    onClick={() => startTour(guide.tour!)}
-                    className="mt-3 flex items-center justify-center gap-2 w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-medium rounded-sm transition-colors"
+                    onClick={() => startTour(guide.tour as TourStep[])}
+                    className="mt-3 flex items-center justify-center gap-2 w-full py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-neutral-900 text-xs font-medium rounded-sm transition-colors"
                   >
                     <HiPlay className="text-sm" /> {t_c('startGuide')}
                   </button>

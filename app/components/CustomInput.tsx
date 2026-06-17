@@ -45,7 +45,7 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({ value, onC
   };
 
   const handleInternalBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    let num = parseInt(displayValue, 10);
+    const num = parseInt(displayValue, 10);
 
     // Revert if not a number
     if (isNaN(num)) {

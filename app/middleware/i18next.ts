@@ -3,7 +3,7 @@ import { createCookie } from 'react-router';
 import { createI18nextMiddleware } from 'remix-i18next/middleware';
 import resources from '~/locales'; // Import your locales
 import 'i18next';
-import { DEFAULT_LOCALE, SUPORTED_LOCALES } from '~/utils/i18n/config';
+import { DEFAULT_LOCALE, SUPORTED_LOCALES, type Locale } from '~/utils/i18n/config';
 
 // This cookie will be used to store the user locale preference
 export const localeCookie = createCookie('lng', {
@@ -17,16 +17,21 @@ export const [i18nextMiddleware, getLocale, getInstance] = createI18nextMiddlewa
   detection: {
     supportedLanguages: SUPORTED_LOCALES, // Your supported languages, the fallback should be last
     fallbackLanguage: DEFAULT_LOCALE, // Your fallback language
+    // eslint-disable-next-line @typescript-eslint/require-await
     async findLocale(request) {
       const url = new URL(request.url);
       let locale = url.searchParams.get('lang') || url.pathname.split('/').at(1);
+      locale = locale?.replace(/\.data$/, '');
 
       if (!locale) return DEFAULT_LOCALE;
-      return SUPORTED_LOCALES.includes(locale as any) ? locale : DEFAULT_LOCALE;
+      if (SUPORTED_LOCALES.includes(locale as Locale)) {
+        return locale;
+      }
+      return DEFAULT_LOCALE;
     },
     cookie: localeCookie, // The cookie to store the user preference
   },
-  i18next: { resources, showSupportNotice: false }, // Your locales
+  i18next: { resources }, // Your locales
   plugins: [initReactI18next], // Plugins you may need, like react-i18next
 });
 

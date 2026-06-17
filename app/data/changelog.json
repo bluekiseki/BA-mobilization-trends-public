@@ -1,5 +1,239 @@
 [
   {
+    "date": "2026-06-16",
+    "changes": {
+      "en": [
+        "Improved party auto-detection accuracy from video — success rate up 5–10 pp depending on the Assault, with augmented training data and dual-method matching (ArcFace + NCC)",
+        "Fixed justin163 planner export — equipment blueprints above T1 were missing from owned_materials due to an ID mapping error"
+      ],
+      "ko": [
+        "영상 파티 자동 인식 정확도 향상 — 총력전에 따라 성공률 5~10%p 개선; 학습 데이터 증강 및 ArcFace + NCC 이중 검증 방식 도입",
+        "justin163 플래너 내보내기 오류 수정 — ID 매핑 오류로 T2 이상 장비 설계도가 owned_materials에 누락되던 문제 수정"
+      ],
+      "ja": [
+        "動画からのパーティ自動認識精度が向上 — 総力戦によって成功率が5〜10%p改善；学習データを増強し、ArcFace・NCCの二重照合方式を導入",
+        "justin163プランナーへのエクスポート不具合を修正 — IDマッピングのエラーにより、T2以上の装備設計図がowned_materialsに含まれなかった問題を修正"
+      ]
+    },
+    "to": ["/dashboard/jp/videos", "/planner/event"]
+  },
+  {
+    "date": "2026-06-14",
+    "changes": {
+      "en": [
+        "Added filter to 'by team' tab under 'Popular Formations' on Total Assault Dashboard — support for finding mop-up parties",
+        "Improved loading speed for 'Popular Formations' detailed statistics",
+        "Added statistics for 'Popular Formations' — number of deployed teams and deployment order",
+        "Visualized deployment team count distribution — displayed by rank",
+        "Fixed 'Full(6) Only' filter in Popular Formations — incomplete parties no longer appear mixed in display, starting hand stats corrected",
+        "Fixed detail view showing empty results when 'Full(6) Only' filter is active",
+        "Equipment Planner: added 'Hard Minimize' option — calculates Hard and Normal together, Hard preferred when equal drop rates; reduces AP loss from running Hard stages independently first",
+        "Equipment Planner: renamed and rewrote all Hard mode option labels and descriptions (Aggressive → Hard Greedy, Optimized → Hard First)"
+      ],
+      "ko": [
+        "총력전 대시보드 '많이 출전한 편성'의 '파티별' 탭에 필터 추가 — 설거지 파티 검색 지원",
+        "'많이 출전한 편성' 상세 통계 로딩 속도 개선",
+        "'많이 출전한 편성' 통계 추가 — 투입 파티 수 및 투입 순서",
+        "투입 파티 수 분포 시각화 — 등수별 분포 표시",
+        "'많이 출전한 편성'에서 '모든 자리에 편성된 팀만' 필터 오류 수정 — 불완전 파티가 표시에 섞이지 않도록, 손패 통계 인덱스 오류 수정",
+        "'모든 자리에 편성된 팀만' 필터 활성화 시 상세보기에 기록이 표시되지 않던 오류 수정",
+        "장비 플레너: '하드 최소화' 최적화 옵션 추가 — 하드+노말을 같이 계산하되 같은 확률이면 하드를 우선시. 하드 단독으로 먼저 돌 때 생기던 AP 손해를 줄임",
+        "장비 플레너: 하드 모드 옵션 이름 및 설명 전면 개편 — 전부×3 → 하드 탐욕적, 효율 최적화 → 하드 우선"
+      ],
+      "ja": [
+        "総力戦ダッシュボード「人気の編成」の「部隊」タブにフィルターを追加 — 残処理パーティの検索に対応",
+        "「人気の編成」の詳細統計の読み込み速度を改善",
+        "「人気の編成」の統計追加 — 投入編成数および投入順",
+        "投入編成数分布の可視化 — ランク別分布を表示",
+        "「人気の編成」の「6枠フルのみ」フィルターの不具合を修正 — 不完全パーティが表示に混入しないよう修正、手札統計のインデックスずれを修正",
+        "「6枠フルのみ」フィルター有効時に詳細ビューに記録が表示されない不具合を修正",
+        "装備プランナー:「ハード最小化」オプションを追加 — ハード+ノーマルを同時計算し、確率が同じならハードを優先。ハード単独で先に回したときに生じていたAPのロスを軽減",
+        "装備プランナー: ハードモードの選択肢の名称・説明を全面改訂 — すべて×3→ハード貪欲、効率最適化→ハード優先"
+      ]
+    },
+    "to": ["/dashboard/jp", "/dashboard/jp", "/dashboard/jp", "/dashboard/jp", "/dashboard/jp", "/dashboard/jp", "/planner/equipment", "/planner/equipment"]
+  },
+  {
+    "date": "2026-06-13",
+    "changes": {
+      "en": [
+        "Redesigned Events page — banner information now shown alongside events",
+        "Improved translation wording across the site",
+        "Adjusted pyroxene acquisition values in Pyroxene & Gacha Planner (Final Restriction Release, Mini Story)",
+        "Student search dropdown box and dashboard filter now support keyboard navigation (arrow keys + Enter)",
+        "BGM Player search improvements — multi-keyword search (space-separated)"
+      ],
+      "ko": [
+        "이벤트 메인 페이지 개편 — 이벤트 목록에 모집 정보 추가",
+        "일부 번역 표현 자연스럽게 수정",
+        "청휘석 및 가챠 플래너에서 청휘석 획득 수치 조정 (제약해제결전, 미니스토리)",
+        "학생 검색창(드롭다운 메뉴)과 대시보드 필터에서 방향키·엔터로 항목 선택 가능",
+        "BGM 플레이어 검색 개선 — 초성 검색 지원"
+      ],
+      "ja": [
+        "イベントページをリデザイン — イベント一覧にピックアップ情報を追加",
+        "一部の翻訳表現を自然な表現に修正",
+        "石・ガチャプランナーの石獲得数値を調整（制約解除決戦、ミニストーリー）",
+        "学生検索欄（ドロップダウン）とダッシュボードフィルターで矢印キー・Enterによる項目選択に対応",
+        "BGMプレイヤーの検索機能改善 — かな・英語読みでの検索に対応"
+      ]
+    },
+    "to": ["/planner/event", null, "/planner/gacha", null, "/jukebox"]
+  },
+  {
+    "date": "2026-06-11",
+    "changes": {
+      "en": [
+        "Live Dashboard Total Assault S89 (BETA) ended",
+        "Added Favor Rank Status",
+        "Added JP Total Assault S89 Drumbarka top-ranking team data (from Plana Stats)",
+        "Added JP Total Assault S89 Drumbarka overall score data"
+      ],
+      "ko": [
+        "라이브 대시보드 총력전 S89 (BETA) 종료",
+        "인연 칭호 설정 현황 추가",
+        "JP 총력전 S89 드럼통 게 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 총력전 S89 드럼통 게 전체 분포 데이터 추가"
+      ],
+      "ja": [
+        "リアルタイムダッシュボード 総力戦S89 (BETA) 終了",
+        "絆ランク称号の状況追加",
+        "JP 総力戦S89 ドラム缶ガニ 上位編成データをの追加 (from Plana Stats)",
+        "JP 総力戦S89 ドラム缶ガニ 全体スコア分布データをの追加"
+      ]
+    },
+    "to": [null, "/charts/favor", "/dashboard/jp/R89?view=detail", "/dashboard/jp/R89"]
+  },
+  {
+    "date": "2026-06-09",
+    "changes": {
+      "en": [
+        "Fixed Equipment Planner 404 error (missing files on CDN)",
+        "Fixed Live Dashboard Ranking Cutoff Fluctuation chart Y-axis display error",
+        "Improved Gacha Planner simulation chart — distribution ranges now use bin start values for pyroxene requirement reading",
+        "Added one-click button to deactivate all expired banners in Gacha Planner"
+      ],
+      "ko": [
+        "장비 플래너 404 에러 해결 (CDN에서 파일 누락)",
+        "라이브 대시보드 등수 커트라인 변화 차트 Y축 표시 오류 수정",
+        "가차 플래너 시뮬레이션 차트 개선 — 청휘석 필요량 분포 구간을 시작값 기준으로 표시",
+        "가차 플래너에서 기간이 지난 모집을 한 번에 비활성화하는 버튼 추가"
+      ],
+      "ja": [
+        "装備プランナーの404エラーを修正（CDN上のファイル不足）",
+        "ライブダッシュボード ランキングカットラインの変動 チャートのY軸表示エラーを修正",
+        "ガチャプランナーのシミュレーションチャートを改善 — 分布範囲のビン開始値を表示",
+        "ガチャプランナーに期限切れバナーを一括で非活性化するボタンを追加"
+      ]
+    },
+    "to": ["/planner/equipment", "/live", "/planner/gacha", "/planner/gacha"]
+  },
+  {
+    "date": "2026-06-08",
+    "changes": {
+      "en": ["Fixed Equipment Planner optimizer not selecting hard stages (T2+ equipment blueprint ID mismatch)", "Added Normal/Hard AP breakdown display to Total AP stat card"],
+      "ko": ["장비 플래너 최적화에서 하드 스테이지가 선택되지 않는 버그 수정 (T2 이상 설계도면 ID 불일치)", "총 AP 카드에 노멀/하드 AP 분리 표시 추가"],
+      "ja": ["装備プランナーの最適化でハードステージが選択されないバグを修正（T2以上の設計図IDの不一致）", "合計APカードにノーマル/ハードAP内訳表示を追加"]
+    },
+    "to": ["/planner/equipment", "/planner/equipment"]
+  },
+  {
+    "date": "2026-06-07",
+    "changes": {
+      "en": [
+        "Improved Gacha Planner performance with WASM multi-threading (80% speed increase)",
+        "Fixed Gacha Planner Fes student probability calculation error",
+        "Improved Gacha Simulator UI",
+        "Improved site-wide design consistency (colors, header, etc.)",
+        "Fixed performance issues in certain pages with slow load times"
+      ],
+      "ko": [
+        "가차 플래너 성능 개선 - WASM 멀티스레딩 적용 (80% 속도 증가)",
+        "가차 플래너 페스 학생 확률 계산 오류 수정",
+        "가차 시뮬레이터 UI 개선",
+        "디자인 일관성 개선 (색상, 헤더 등)",
+        "일부 페이지의 느린 로딩 성능 문제 개선"
+      ],
+      "ja": [
+        "ガチャプランナーのパフォーマンスを改善 - WASMマルチスレッド対応（８０％速度向上）",
+        "ガチャプランナーのフェス生徒確率計算エラーを修正",
+        "ガチャシミュレーターUIを改善",
+        "サイト全体のデザイン統一性を改善（カラー、ヘッダーなど）",
+        "一部ページの読み込み性能の問題を改善"
+      ]
+    },
+    "to": ["/planner/gacha", "/planner/gacha", "/planner/gacha", null, null]
+  },
+  {
+    "date": "2026-06-03",
+    "changes": {
+      "en": [
+        "Added Rail Puzzle Planner with map solver",
+        "Added optimization utility for Opart priority calculation",
+        "Added missing story rewards for Allied Operation Planner",
+        "Improved Treasure Planner simulation accuracy to match actual treasure hunting costs (average 1 fewer attempt per round)",
+        "Added Vitest testing framework and utilities"
+      ],
+      "ko": [
+        "레일 퍼즐 플래너 및 맵 솔버 추가",
+        "오파츠 우선순위 계산 최적화 유틸리티 추가",
+        "연합작전 플래너 누락된 스토리 보상 추가",
+        "보물찾기 플래너 시뮬레이션과 실제 보물찾기 게임의 소모 재화 격차 개선 (라운드당 평균 1회 향상)",
+        "Vitest 테스트 프레임워크 및 유틸 테스트 추가"
+      ],
+      "ja": [
+        "レールパズルプランナーと地図ソルバーを追加",
+        "オパーツ優先順位計算の最適化ユーティリティを追加",
+        "連合作戦プランナーの欠落ストーリー報酬を追加",
+        "トレジャープランナーのシミュレーション精度を実際の宝物探索コストと一致させるよう改善（ラウンドあたり平均1回の短縮）",
+        "Vitest テストフレームワークおよびユーティリティテストを追加"
+      ]
+    },
+    "to": ["/planner/event/846", "/planner/event", "/planner/event/854", "/planner/event", null]
+  },
+  {
+    "date": "2026-06-01",
+    "changes": {
+      "en": ["Added Allied Operation Planner", "Added tiered pricing system for event shops with quantity-based price variation", "Added arrow key cell movement to Equipment inventory"],
+      "ko": ["연합 작전 플래너 추가", "일부 이벤트 상점에서 구매량에 따른 가격 변동 시스템 추가", "장비 보유 현황에서 화살표 키로 셀 이동 기능 추가"],
+      "ja": ["連合作戦プランナー追加", "一部のイベントショップで購入量に応じた価格変動システムを追加", "装備の保有現況で矢印キーセル移動機能を追加"]
+    },
+    "to": ["/planner/event/854", "/planner/event/854", "/planner/equipment"]
+  },
+  {
+    "date": "2026-05-25",
+    "changes": {
+      "en": ["Added Item Scanner (BETA)"],
+      "ko": ["아이템 스캐너 (BETA) 기능 추가"],
+      "ja": ["アイテムスキャナー (BETA) 機能の追加"]
+    },
+    "to": ["/planner/item-scanner"]
+  },
+  {
+    "date": "2026-05-21",
+    "changes": {
+      "en": [
+        "Live Dashboard Grand Assault E33 Kurokage (BETA) ended",
+        "Added Favor Rank Status",
+        "Added JP Grand Assault E33 Kurokage top-ranking team data (from Plana Stats)",
+        "Added JP Grand Assault E33 Kurokage overall score data"
+      ],
+      "ko": [
+        "라이브 대시보드 대결전 E33 쿠로카게 (BETA) 종료",
+        "인연 칭호 설정 현황 추가",
+        "JP 대결전 E33 쿠로카게 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 대결전 E33 쿠로카게 전체 분포 데이터 추가"
+      ],
+      "ja": [
+        "リアルタイムダッシュボード 大決戦E33 クロカゲ (BETA) 終了",
+        "絆ランク称号の状況追加",
+        "JP 大決戦E33 クロカゲ 上位編成データをの追加 (from Plana Stats)",
+        "JP 大決戦E33 クロカゲ 全体スコア分布データをの追加"
+      ]
+    },
+    "to": [null, "/charts/favor", "/dashboard/jp/E33?view=detail", "/dashboard/jp/E33"]
+  },
+  {
     "date": "2026-05-07",
     "changes": {
       "en": [
@@ -262,11 +496,11 @@
         "Fixed an issue where multiple banners with the same start date were not applied properly"
       ],
       "ko": [
-        "가챠 라인업에서 노노미가 등장하던 현상 수정",
+        "모집 라인업에서 노노미가 등장하던 현상 수정",
         "10연차 시 마지막 10번째 결과에 2성 이상 확정 적용",
         "리콜렉트/앙코르 모집의 초회 픽업 엘레프 100개 보상이 1회만 적용되도록 수정",
         "천장(모집 포인트) 교환 시 초회 엘레프 보상이 미적용되던 오류 수정",
-        "시작 날짜가 같은 배너가 동시에 적용되지 않던 현상 수정"
+        "시작 날짜가 같은 모집이 동시에 적용되지 않던 현상 수정"
       ],
       "ja": [
         "ガチャのラインナップにノノミが出現する不具合を修正",

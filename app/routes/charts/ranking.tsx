@@ -2,22 +2,23 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import 'rc-slider/assets/index.css';
-import type { GameServer, GameServerParams, RaidInfo, Student } from '~/types/data';
+import type { GameServer, RaidInfo, Student } from '~/types/data';
 import { GAMESERVER_LIST } from '~/types/data';
-import { difficultyInfo, type DifficultySelect } from '~/components/Difficulty';
+import { difficultyInfo, type DifficultySelect } from '~/components/raid/Difficulty';
 import { useTranslation } from 'react-i18next';
-import { ToggleButtonGroup } from '~/components/ToggleButtonGroupProps';
+import { ToggleButtonGroup } from '~/components/ToggleButtonGroup';
 import TooltipSlider from '~/components/HandleTooltip';
-import { raidToString, raidToStringTsx } from '~/components/raidToString';
+import { raidToString, raidToStringTsx } from '~/components/raid/raidToString';
 import { useDataCache } from '~/utils/cache';
 import type { Route } from './+types/ranking';
-import { useLocation, useParams, type LoaderFunctionArgs } from 'react-router';
+import { useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import type { AppHandle } from '~/types/link';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 
 import { RankingChart } from '~/components/ranking/chart';
 import { PlayIcon, StopIcon } from '~/components/Icon';
+import { PageHeader } from '~/components/common/PageHeader';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
@@ -41,13 +42,13 @@ export interface RatingData {
   };
 }
 
-export async function loader({ context, params, request }: LoaderFunctionArgs) {
+export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
   if (!server || !GAMESERVER_LIST.includes(server as GameServer)) {
     throw new Response('Not Found', { status: 404 });
   }
   const g_server = server as GameServer;
-  let i18n = getInstance(context);
+  const i18n = getInstance(context);
   return {
     siteTitle: i18n.t('common:title'),
     title: i18n.t('common:navigation.ranking'),
@@ -72,13 +73,16 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export const handle: AppHandle = {
-  preload: (data) => {
+  preload: (data, routeMatch) => {
+    const dataObj = data as Record<string, unknown>;
     // Create a link dynamically using the return value (data) of the root loader
-    const pathname = useLocation().pathname;
+    const pathname = routeMatch?.pathname || '';
     const match = pathname.match(/\/charts\/([a-zA-Z]{2})\//);
     if (!match || !GAMESERVER_LIST.includes(match[1] as GameServer)) return [];
     const server = match[1] as GameServer;
-    if (!data?.locale) return [];
+    const locale = dataObj?.locale;
+    if (!locale || typeof locale !== 'string') return [];
+    const localeTyped = locale as Locale;
 
     return [
       {
@@ -89,13 +93,13 @@ export const handle: AppHandle = {
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(data?.locale)}.students.bin`),
+        href: cdn(`/w/${getLocaleShortName(localeTyped)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${server}/${getLocaleShortName(data?.locale)}.raid_info.bin`),
+        href: cdn(`/w/${server}/${getLocaleShortName(localeTyped)}.raid_info.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -104,7 +108,7 @@ export const handle: AppHandle = {
   },
 };
 
-export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+export function headers({}: Route.HeadersArgs) {
   if (process.env.NODE_ENV === 'production')
     return {
       'Cache-Control': CACHE_CONTROL_CONFIG,
@@ -127,7 +131,7 @@ export default function RankingChartPage() {
 
   const glFutureIndex = useMemo(() => {
     const r = getCurrentGlobalraid()[0];
-    console.log('r', r);
+    // console.log('r', r);
     const s = r.startsWith('R') ? Number(r.substring(1)) * 4 - 211 : Number(r.substring(1)) * 4 + 10;
     return s;
   }, []);
@@ -139,10 +143,9 @@ export default function RankingChartPage() {
   const { t: t_raids } = useTranslation('raidInfo');
   const locale = i18n.language as Locale;
 
-  const { server } = useParams<GameServerParams>();
+  const { server } = useLoaderData<typeof loader>();
 
   useHelpKey('chart.ranking');
-  if (!server) return <></>;
 
   // Create a ref for the SVG container
   const containerRef = useRef<HTMLDivElement>(null);
@@ -178,17 +181,15 @@ export default function RankingChartPage() {
     const fetchDataAndStudents = async () => {
       try {
         const [ratings, students, raids] = await Promise.all([
-          fetchData(cdn(`/w/${server}/play_rate_rank.bin`), (res) => res.json() as Promise<RawRatingData>),
-          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as Promise<Record<string, Student>>),
-          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as Promise<RaidInfo[]>),
+          fetchData(cdn(`/w/${server}/play_rate_rank.bin`), (res) => res.json() as unknown as Promise<RawRatingData>),
+          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as unknown as Promise<Record<string, Student>>),
+          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as unknown as Promise<RaidInfo[]>),
         ]);
 
         setAllStudents(students);
 
         await (async () => {
-          const students_portrait = (await fetch(cdn('/w/students_portrait.json')).then((res) => res.json())) as {
-            [key: number]: string;
-          };
+          const students_portrait: Record<string, string> = await fetch(cdn('/w/students_portrait.json')).then((res) => res.json());
           Object.entries(students).map(([studentId, student]) => {
             student.Portrait = students_portrait[parseInt(studentId)];
           });
@@ -213,8 +214,8 @@ export default function RankingChartPage() {
         setLoading(false);
       }
     };
-    fetchDataAndStudents();
-  }, [fetchData, fetchStudents, fetchRaids, currentLocale, server]);
+    void fetchDataAndStudents();
+  }, [fetchData, fetchStudents, fetchRaids, currentLocale, server, locale, glFutureIndex]);
 
   const processedData = useMemo(() => {
     if (Object.keys(rawRatingData).length === 0 || Object.keys(allStudents).length === 0) return [];
@@ -313,7 +314,7 @@ export default function RankingChartPage() {
         });
       return { ...item, processedRatings };
     });
-  }, [rawRatingData, isRelativeMode, studentMap, svgWidth, allStudents, selectedSquadType, selectedTacticRole, selectedRaidIds, selectedStudentType, displayMode, selectedDifficulty]);
+  }, [rawRatingData, allStudents, selectedRaidIds, displayMode, selectedSquadType, selectedTacticRole, selectedDifficulty, raidInfo, selectedStudentType, studentMap, isRelativeMode, svgWidth]);
 
   // Create marks for the slider
   // const raidIds = Object.keys(raidInfo).map(Number).filter(id => !isNaN(id));
@@ -333,21 +334,15 @@ export default function RankingChartPage() {
     return filteredRaidInfoByDifficulty.length - 1;
   };
 
-  const labelMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce(
-    (map, raid, index) => {
-      map[raid.index] = raidToString(raid, locale, true);
-      return map;
-    },
-    {} as Record<number, React.ReactNode>,
-  );
+  const labelMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce<Record<number, React.ReactNode>>((map, raid) => {
+    map[raid.index] = raidToString(raid, locale, true);
+    return map;
+  }, {});
 
-  const markMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce(
-    (map, raid, index) => {
-      map[raid.index] = ' ';
-      return map;
-    },
-    {} as Record<number, React.ReactNode>,
-  );
+  const markMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce<Record<number, React.ReactNode>>((map, raid) => {
+    map[raid.index] = ' ';
+    return map;
+  }, {});
 
   // animation
   useEffect(() => {
@@ -375,15 +370,7 @@ export default function RankingChartPage() {
   return (
     <div data-component-name="RankingChartPage" className="flex flex-col items-center justify-center py-6">
       <div className="w-full mx-auto p-4 sm:p-6 pt-0 sm:pt-0 bg-neutral-50 dark:bg-neutral-900  transition-colors duration-300">
-        {/* header */}
-        <div className="mb-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">
-            {t('title')} ({server.toUpperCase()})
-          </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">{t('description1')}</p>
-        </div>
-
-        <hr className="my-3 border-neutral-200 dark:border-neutral-700" />
+        <PageHeader title={`${t('title')} (${server.toUpperCase()})`} description={t('description1')} />
 
         {/* Control groups: Configure reactive layouts using grids */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">

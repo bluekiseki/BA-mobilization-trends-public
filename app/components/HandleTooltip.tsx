@@ -21,7 +21,12 @@ const HandleTooltip: React.FC<HandleTooltipProps> = (props) => {
   const rafRef = React.useRef<number | null>(null);
 
   function cancelKeepAlign() {
-    raf && raf.cancel && raf.cancel(rafRef.current!);
+    const currentId = rafRef.current;
+
+    // Execute only when raf.cancel and currentId exist
+    if (raf?.cancel && currentId) {
+      raf.cancel(currentId);
+    }
   }
 
   function keepAlign() {
@@ -41,7 +46,7 @@ const HandleTooltip: React.FC<HandleTooltipProps> = (props) => {
   }, [value, visible]);
 
   return (
-    <Tooltip placement="top" overlay={tipFormatter(value)} overlayInnerStyle={{ minHeight: 'auto' }} ref={tooltipRef} visible={visible} {...restProps}>
+    <Tooltip placement="top" overlay={tipFormatter(value)} styles={{ body: { minHeight: 'auto' } }} ref={tooltipRef} visible={visible} {...restProps}>
       {children}
     </Tooltip>
   );

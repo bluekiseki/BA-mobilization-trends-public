@@ -72,7 +72,7 @@ export const NoScript = () => {
   const { t } = useTranslation('common');
   return (
     <noscript>
-      <div className="fixed inset-0 z-9999 flex items-center justify-center bg-gray-100 bg-opacity-90 text-gray-800 p-5 box-border">
+      <div className="fixed inset-0 z-9999 flex items-center justify-center bg-neutral-100 bg-opacity-90 text-neutral-800 p-5 box-border">
         <div className="text-center max-w-lg">
           <h2 className="text-3xl font-bold mb-4">{t('js-disable')} ⚠️</h2>
           <p className="text-lg mb-3">{t('js-disable-description')}</p>

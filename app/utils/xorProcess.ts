@@ -71,7 +71,7 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
       }
     },
     cancel() {
-      reader.cancel();
+      void reader.cancel();
     },
   });
 }

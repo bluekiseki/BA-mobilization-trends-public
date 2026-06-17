@@ -22,16 +22,16 @@ export function getGlobalEventDates() {
     name: string;
     rerun: string;
     studentId: string;
-    prediction?: boolean;
+    prediction?: string | boolean | number;
   }>(krEventCsvRaw);
 
   cachedGlobalEventDates = Object.fromEntries(
     globalEventDatesRaw.map((v) => [
-      Number(v.id),
+      v.id,
       {
         start: v.openTime,
         end: v.closeTime,
-        prediction: v.prediction === true || String(v.prediction).toLowerCase() === 'true' || v.prediction === (1 as any),
+        prediction: v.prediction === true || (typeof v.prediction === 'string' && v.prediction.toLowerCase() === 'true') || v.prediction === 1,
       },
     ]),
   );

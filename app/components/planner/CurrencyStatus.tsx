@@ -7,9 +7,10 @@ import { getLocalizeEtcName } from './common/locale';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
 import { CustomNumberInput } from '../CustomInput';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
 
 interface CurrencyStatusProps {
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency'>;
   iconData: IconData;
   ownedCurrency: Record<number, number>;
   setOwnedCurrency: React.Dispatch<React.SetStateAction<Record<number, number>>>;
@@ -43,10 +44,10 @@ export const CurrencyStatus = ({
         className="flex justify-between items-center mb-3"
         //  ref={ref}
       >
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('ui.remainingCurrency')}</h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('ui.remainingCurrency')}</h2>
         <button
           onClick={() => setIsEditing(!isEditing)}
-          className="text-xs font-semibold bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-3 py-1 rounded-md transition-colors"
+          className="text-xs font-semibold bg-neutral-200 hover:bg-neutral-300 text-neutral-700 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-300 px-3 py-1 rounded-md transition-colors"
         >
           {isEditing ? t('button.confirmInput') : t('ui.initialAmount')}
         </button>
@@ -64,11 +65,11 @@ export const CurrencyStatus = ({
                 <div className="flex items-center gap-2">
                   <ItemIcon type="Item" itemId={String(itemId)} amount={finalAmount > 0 ? finalAmount : -finalAmount} size={10} eventData={eventData} iconData={iconData} />
                   <div>
-                    <p className={`text-lg font-bold leading-tight ${finalAmount < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-gray-200'}`}>{finalAmount.toLocaleString()}</p>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-1 truncate" style={{ maxWidth: '80px' }}>
+                    <p className={`text-lg font-bold leading-tight ${finalAmount < 0 ? 'text-red-500 dark:text-red-400' : 'text-neutral-800 dark:text-neutral-200'}`}>{finalAmount.toLocaleString()}</p>
+                    <p className="text-[10px] text-neutral-500 dark:text-neutral-400 -mt-1 truncate" style={{ maxWidth: '80px' }}>
                       {getLocalizeEtcName(eventData.icons.Item?.[itemId]?.LocalizeEtc, locale)}
                     </p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500">{t('ui.initialOwned', { value: (ownedCurrency[itemId] || 0).toLocaleString() })}</p>
+                    <p className="text-[10px] text-neutral-400 dark:text-neutral-500">{t('ui.initialOwned', { value: (ownedCurrency[itemId] || 0).toLocaleString() })}</p>
                   </div>
                 </div>
                 {isEditing && (
@@ -78,7 +79,7 @@ export const CurrencyStatus = ({
                       value={ownedCurrency[itemId] || null}
                       onChange={(e) => handleOwnedChange(itemId, String(e))}
                       placeholder={t('ui.currencyInitialInput')}
-                      className="w-full p-1 text-xs rounded border dark:border-neutral-600 text-right bg-transparent dark:text-gray-200"
+                      className="w-full p-1 text-xs rounded border dark:border-neutral-600 text-right bg-transparent dark:text-neutral-200"
                     />
                   </div>
                 )}

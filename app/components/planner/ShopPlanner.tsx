@@ -1,15 +1,15 @@
 // src/components/ShopPlanner.tsx
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { ItemIcon } from './common/Icon';
 import { NumberInput } from './common/NumberInput';
-import { useCallback } from 'react';
-import type { EventData, IconData, Stage } from '~/types/plannerData';
+import type { EventData, GachaGroupInfo, IconData, IconInfo, Stage, StudentData, StudentPortraitData } from '~/types/plannerData';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from './common/locale';
 import { CustomCheckbox } from '../CustomCheckbox';
+import { getCurrentTierPrice } from './common/shopTieredCost';
 
 type ItemType = 'Furniture' | 'Credit' | 'ExpGrowth' | 'Material' | 'Favor' | 'Coin' | 'SecretStone' | 'Gem' | 'Equipment' | 'Opart' | 'TacticalBD' | 'TechNote';
 
@@ -18,7 +18,9 @@ export type ShopResult = {
   rewards: Record<string, number>;
 };
 
-const getShopItemType = (rewardType: string, rewardId: number, itemInfo: { ItemCategory?: number } | undefined): ItemType | null => {
+const getShopItemType = (rewardType: string, rewardId: number, itemInfo?: IconInfo | GachaGroupInfo): ItemType | null => {
+  if (itemInfo && !('ItemCategory' in itemInfo)) return 'Equipment'; // Temporary
+
   if (rewardType === 'Furniture') return 'Furniture';
   if (rewardType === 'Equipment') return 'Equipment';
   if (rewardType === 'Currency') {
@@ -48,13 +50,15 @@ const getShopItemType = (rewardType: string, rewardId: number, itemInfo: { ItemC
 interface ShopPlannerProps {
   eventId: number;
   eventData: EventData;
+  shop: NonNullable<EventData['shop']>;
   iconData: IconData;
   allStages: (Stage & { type: 'stage' | 'story' | 'challenge' })[]; // Receiving stage data from FarmingPlanner
   totalBonus: Record<number, number>; // Receive bonus data from BonusSelector
-  onCalculate: (result: ShopResult | null) => void;
+  allStudents?: StudentData;
+  studentPortraits?: StudentPortraitData;
 }
 
-export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonus, onCalculate }: ShopPlannerProps) => {
+export const ShopPlanner = ({ eventId, shop, eventData, iconData, allStages, totalBonus, allStudents, studentPortraits }: ShopPlannerProps) => {
   const { shopActiveTab: activeTab, setShopActiveTab: setActiveTab, shopDisplayUnit: displayUnit, setShopDisplayUnit: setDisplayUnit } = useEventSettings(eventId);
 
   const { plan, setPurchaseCounts, setAlreadyPurchasedCounts } = usePlanForEvent(eventId);
@@ -64,18 +68,16 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
   const locale = i18n.language as Locale;
 
   useEffect(() => {
-    if (!activeTab && eventData.shop) {
-      const categories = Object.keys(eventData.shop);
+    if (!activeTab) {
+      const categories = Object.keys(shop);
       setActiveTab(categories[0]);
     }
-  }, [eventData.shop]);
+  }, [shop]);
 
   // 2. Highest efficiency AP cost calculation by event goods
   const currencyApCostMap = useMemo(() => {
-    if (!allStages || !eventData) return {};
-
     const apMap: Record<number, number> = {};
-    const eventCurrencyIds = new Set(eventData.currency.map((c) => c.ItemUniqueId));
+    const eventCurrencyIds = new Set(eventData.currency?.map((c) => c.ItemUniqueId));
 
     eventCurrencyIds.forEach((currencyId) => {
       let bestApPerItem = Infinity;
@@ -85,9 +87,9 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
 
       for (const stage of stagesThatDropThis) {
         const totalRewardSum = stage.EventContentStageReward.filter((r) => r.RewardTagStr == 'Event')
-          .map((v) => v?.RewardAmount)
+          .map((v) => v.RewardAmount)
           .reduce((a, b) => a + b);
-        const rewardInfo = stage.EventContentStageReward.find((r) => r.RewardId === currencyId && r.RewardTagStr == 'Event')!;
+        const rewardInfo = stage.EventContentStageReward.find((r) => r.RewardId === currencyId && r.RewardTagStr == 'Event');
         if (!rewardInfo) continue;
         const baseDropAmount = (rewardInfo.RewardAmount * rewardInfo.RewardProb) / 10000;
         const bonusPercent = totalBonus[currencyId] || 0;
@@ -107,7 +109,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
 
   const handlePurchaseAllItems = () => {
     const newCounts: Record<number, number> = {};
-    const allItems = Object.values(eventData.shop).flat();
+    const allItems = Object.values(shop).flat();
 
     allItems.forEach((item) => {
       const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
@@ -156,7 +158,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
 
   const handleSelectAllInCategory = (categoryId: string) => {
     const newCounts: Record<number, number> = {};
-    const itemsInCategory = eventData.shop[categoryId];
+    const itemsInCategory = shop[categoryId];
 
     itemsInCategory.forEach((item) => {
       const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
@@ -170,20 +172,22 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
   };
 
   const handleResetCategory = (categoryId: string) => {
-    const newCounts = { ...purchaseCounts };
-    const itemsInCategory = eventData.shop[categoryId];
-    itemsInCategory.forEach((item) => {
-      if (newCounts[item.Id]) {
-        delete newCounts[item.Id];
+    const itemsInCategory = shop[categoryId];
+    const itemIdsToRemove = new Set(itemsInCategory.map((item) => item.Id));
+    const currentCounts = purchaseCounts ?? {};
+    const newCounts: Record<number, number> = {};
+    Object.entries(currentCounts).forEach(([key, value]) => {
+      if (!itemIdsToRemove.has(Number(key))) {
+        newCounts[Number(key)] = value;
       }
     });
-    setPurchaseCounts((prev) => ({ ...newCounts }));
+    setPurchaseCounts(() => newCounts);
   };
 
   /*
     const handleSelectAllByTypeInCategory = (type: ItemType, categoryId: string) => {
       const newCounts = { ...purchaseCounts };
-      const itemsInCategory = eventData.shop[categoryId];
+      const itemsInCategory = shop[categoryId];
   
       itemsInCategory.forEach(item => {
         if (!item.Goods?.length) return;
@@ -211,7 +215,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
     const isFullyChecked = currentState === 'checked';
 
     const newCounts = { ...purchaseCounts };
-    const itemsInCategory = eventData.shop[categoryId];
+    const itemsInCategory = shop[categoryId];
 
     itemsInCategory.forEach((item) => {
       if (!item.Goods?.length) return;
@@ -219,7 +223,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
       const goodsInfo = item.Goods[0];
       const rewardId = goodsInfo.ParcelId[0];
       const rewardType = goodsInfo.ParcelTypeStr[0];
-      const itemInfo = (eventData.icons as any)[rewardType]?.[rewardId.toString()];
+      const itemInfo = eventData.icons[rewardType]?.[rewardId.toString()];
       const currentItemType = getShopItemType(rewardType, rewardId, itemInfo);
 
       if (currentItemType === type) {
@@ -243,25 +247,28 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
     setPurchaseCounts(() => newCounts);
   };
 
-  const itemTypeButtons = [
-    { label: t('item.reports'), type: 'ExpGrowth' as const },
-    { label: t('item.equipment'), type: 'Equipment' as const },
-    { label: t('label.tacticalBD'), type: 'TacticalBD' as const },
-    { label: t('label.techNote'), type: 'TechNote' as const },
-    { label: t('label.opart'), type: 'Opart' as const },
-    { label: t('label.material'), type: 'Material' as const },
-    { label: t('item.gifts'), type: 'Favor' as const },
-    { label: t('label.furniture'), type: 'Furniture' as const },
-    { label: t('common.credits'), type: 'Credit' as const },
-    { label: t('label.coin'), type: 'Coin' as const },
-    { label: t('item.eleph'), type: 'SecretStone' as const },
-    { label: t('common.pyroxene'), type: 'Gem' as const },
-  ];
+  const itemTypeButtons = useMemo(
+    () => [
+      { label: t('item.reports'), type: 'ExpGrowth' as const },
+      { label: t('item.equipment'), type: 'Equipment' as const },
+      { label: t('label.tacticalBD'), type: 'TacticalBD' as const },
+      { label: t('label.techNote'), type: 'TechNote' as const },
+      { label: t('label.opart'), type: 'Opart' as const },
+      { label: t('label.material'), type: 'Material' as const },
+      { label: t('item.gifts'), type: 'Favor' as const },
+      { label: t('label.furniture'), type: 'Furniture' as const },
+      { label: t('common.credits'), type: 'Credit' as const },
+      { label: t('label.coin'), type: 'Coin' as const },
+      { label: t('item.eleph'), type: 'SecretStone' as const },
+      { label: t('common.pyroxene'), type: 'Gem' as const },
+    ],
+    [t],
+  );
 
   const categorySelectionStates = useMemo(() => {
     if (!activeTab) return {};
 
-    const itemsInCategory = eventData.shop[activeTab] || [];
+    const itemsInCategory = shop[activeTab];
     // { ExpGrowth: { totalEligible: 5, totalSelected: 2 }, ... }
     const states: Record<string, { totalEligible: number; totalSelected: number }> = {};
 
@@ -277,11 +284,11 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
       const goodsInfo = item.Goods[0];
       const rewardId = goodsInfo.ParcelId[0];
       const rewardType = goodsInfo.ParcelTypeStr[0];
-      const itemInfo = (eventData.icons as any)[rewardType]?.[rewardId.toString()];
+      const itemInfo = eventData.icons[rewardType]?.[rewardId.toString()];
       const itemType = getShopItemType(rewardType, rewardId, itemInfo);
 
       // Count only purchasable items that are not infinite purchase
-      if (itemType && states[itemType]) {
+      if (itemType) {
         const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
         const isInfinite = item.PurchaseCountLimit === 0;
         const remainingLimit = isInfinite ? Infinity : item.PurchaseCountLimit - alreadyPurchased;
@@ -298,14 +305,14 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
       }
     }
     return states;
-  }, [activeTab, eventData.shop, purchaseCounts, alreadyPurchasedCounts, itemTypeButtons]);
+  }, [activeTab, shop, purchaseCounts, alreadyPurchasedCounts, itemTypeButtons]);
 
-  const shopCategories = eventData.shop ? useMemo(() => Object.entries(eventData.shop), [eventData.shop]) : [];
+  const shopCategories = useMemo(() => Object.entries(shop), [shop]);
 
   const apConversionNotice = useMemo(() => {
     if (displayUnit !== 'ap' || !activeTab) return null;
 
-    const itemsInCurrentCategory = eventData.shop[activeTab] || [];
+    const itemsInCurrentCategory = shop[activeTab];
 
     let hasReports = false;
     let hasEnhancementStones = false;
@@ -315,7 +322,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
         const goodsInfo = item.Goods[0];
         const rewardId = goodsInfo.ParcelId[0];
         const rewardType = goodsInfo.ParcelTypeStr[0];
-        const itemInfo = (eventData.icons as any)[rewardType]?.[rewardId.toString()];
+        const itemInfo = eventData.icons[rewardType]?.[rewardId.toString()];
 
         // Simplify logic by calling helper function
         const currentItemType = getShopItemType(rewardType, rewardId, itemInfo);
@@ -327,7 +334,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
     return (
       <div className="space-y-2">
         {/* 1. Basic informational text (always displayed) */}
-        <p className="text-xs text-gray-500 dark:text-gray-400">{t('ui.defaultNotice')}</p>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('ui.defaultNotice')}</p>
 
         {/* 2. Statement related to the report  */}
         {/* {hasReports && (
@@ -386,10 +393,10 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
     <>
       <div data-component-name="ShopPlanner" className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         {/* Title */}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">{t('page.eventShop')}</h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 shrink-0">{t('page.eventShop')}</h2>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <label className="flex items-center gap-1.5 cursor-pointer text-sm font-semibold text-gray-600 dark:text-gray-300">
+          <label className="flex items-center gap-1.5 cursor-pointer text-sm font-semibold text-neutral-600 dark:text-neutral-300">
             <input type="checkbox" className="h-4 w-4 rounded" checked={displayUnit === 'ap'} onChange={(e) => setDisplayUnit(e.target.checked ? 'ap' : 'currency')} />
             {t('ui.displayCostInAP')}
           </label>
@@ -406,7 +413,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
       </div>
 
       {/*Tab navigation UI */}
-      <div className="flex flex-wrap border-b-2 border-gray-200 dark:border-neutral-700 mb-4 pb-4">
+      <div className="flex flex-wrap border-b-2 border-neutral-200 dark:border-neutral-700 mb-4 pb-4">
         {shopCategories.map(([categoryId]) => {
           const shopInfo = eventData.shop_info?.find((info) => info.CategoryType.toString() === categoryId);
           const currencyId = shopInfo?.CostParcelId?.[0];
@@ -414,7 +421,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
           const currencyName = currencyId
             ? getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, locale) ||
               getLocalizeEtcName(eventData.icons.Item[currencyId]?.LocalizeEtc, 'ja') ||
-              getLocalizeEtcName(eventData.icons.Currency[currencyId]?.LocalizeEtc, locale)
+              getLocalizeEtcName(eventData.icons.Currency[currencyId].LocalizeEtc, locale)
             : `Shop ${categoryId}`;
           return (
             <button
@@ -423,12 +430,12 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
               className={`flex items-center space-x-2 px-3 pt-4 text-sm font-semibold border-b-2 -mb-0.5 ${
                 activeTab === categoryId
                   ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
               }`}
             >
               <span>
                 <img
-                  src={`data:image/webp;base64,${iconData.Item?.[currencyId?.toString() ?? ''] || iconData.Currency?.[currencyId?.toString() ?? '']}`}
+                  src={`data:image/webp;base64,${iconData.Item[currencyId?.toString() ?? ''] || iconData.Currency[currencyId?.toString() ?? '']}`}
                   alt={currencyName || undefined}
                   className="w-6 h-6 object-cover rounded-full"
                 />
@@ -447,11 +454,11 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
 
       <div className="space-y-6">
         {shopCategories.map(([categoryId, items]) => {
-          console.log('shop - activeTab', activeTab);
+          // console.log('shop - activeTab', activeTab);
           if (activeTab !== categoryId) return null; // Render only the active tab
 
           // Find shop name using shop_info
-          // const shopInfo = eventData.shop_info?.find(info => info.CategoryType.toString() === categoryId);
+          // const shopInfo = shop_info?.find(info => info.CategoryType.toString() === categoryId);
           // const currencyId = shopInfo?.CostParcelId[0];
           // const currencyName = currencyId ? eventData.icons.Item[currencyId]?.LocalizeEtc?.NameKr : `Shop ${categoryId}`;
 
@@ -461,7 +468,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
             const goodsInfo = item.Goods[0];
             const rewardId = goodsInfo.ParcelId[0];
             const rewardType = goodsInfo.ParcelTypeStr[0];
-            const itemInfo = (eventData.icons as any)[rewardType]?.[rewardId.toString()];
+            const itemInfo = eventData.icons[rewardType]?.[rewardId.toString()];
 
             const itemType = getShopItemType(rewardType, rewardId, itemInfo);
             if (itemType) {
@@ -479,8 +486,6 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                     .filter((btn) => categorySelectionStates[btn.type].totalEligible)
                     .map((btn) => {
                       const stateInfo = categorySelectionStates[btn.type];
-                      if (!stateInfo) return null;
-
                       const { totalEligible, totalSelected } = stateInfo;
                       const isDisabled = totalEligible === 0;
 
@@ -496,7 +501,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                         <label
                           key={btn.type}
                           className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors
-                          ${isDisabled ? 'bg-gray-200 dark:bg-neutral-800 text-gray-400 dark:text-neutral-600 cursor-not-allowed' : 'bg-teal-500/10 dark:bg-teal-600/20 text-teal-700 dark:text-teal-300 hover:bg-teal-500/20 dark:hover:bg-teal-600/30 cursor-pointer'}`}
+                          ${isDisabled ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-600 cursor-not-allowed' : 'bg-teal-500/10 dark:bg-teal-600/20 text-teal-700 dark:text-teal-300 hover:bg-teal-500/20 dark:hover:bg-teal-600/30 cursor-pointer'}`}
                         >
                           <CustomCheckbox
                             state={state}
@@ -525,7 +530,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                   </button>
                   <button
                     onClick={() => handleResetCategory(categoryId)}
-                    className="bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-2 rounded-md"
+                    className="bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-2 rounded-md"
                   >
                     {t('button.resetCurrentTab')}
                   </button>
@@ -545,7 +550,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                         if (!item.Goods?.length) return null;
                         const goodsInfo = item.Goods[0];
                         const rewardId = goodsInfo.ParcelId[0];
-                        const rewardType = goodsInfo.ParcelTypeStr[0] as keyof IconData;
+                        const rewardType = goodsInfo.ParcelTypeStr[0];
                         // const cost = goodsInfo.ConsumeParcelAmount[0];
                         const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
                         const currentPurchase = purchaseCounts?.[item.Id] || 0;
@@ -553,20 +558,33 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                         const remainingLimit = isInfinite ? Infinity : item.PurchaseCountLimit - alreadyPurchased;
                         const displayLimit = isInfinite ? '∞' : item.PurchaseCountLimit - alreadyPurchased;
 
-                        const costAmount = goodsInfo.ConsumeParcelAmount[0];
                         const costCurrencyId = goodsInfo.ConsumeParcelId[0];
+                        const extraStep = goodsInfo.ConsumeExtraStep ?? [];
+                        const extraAmount = goodsInfo.ConsumeExtraAmount ?? [];
+                        const baseAmount = goodsInfo.ConsumeParcelAmount[0];
+                        // For tiered items: price of the next item after alreadyPurchased + currentPurchase
+                        const costAmount = getCurrentTierPrice(alreadyPurchased + currentPurchase, extraStep, extraAmount, baseAmount);
                         const apCostPerItem = currencyApCostMap[costCurrencyId] || null;
                         const totalApCost = apCostPerItem ? costAmount * apCostPerItem : null;
 
                         return (
                           <div
                             key={item.Id}
-                            className={`w-[calc(25%-3px)] sm:w-24 bg-gray-100 dark:bg-neutral-700/60 p-1 rounded-sm shadow-sm flex flex-col justify-between ${item.PurchaseCountLimit && alreadyPurchased === item.PurchaseCountLimit ? 'opacity-30' : ''}`}
+                            className={`w-[calc(25%-3px)] sm:w-24 bg-neutral-100 dark:bg-neutral-700/60 p-1 rounded-sm shadow-sm flex flex-col justify-between ${item.PurchaseCountLimit && alreadyPurchased === item.PurchaseCountLimit ? 'opacity-30' : ''}`}
                           >
                             <div className="flex justify-center">
-                              <ItemIcon type={rewardType} itemId={rewardId.toString()} amount={goodsInfo.ParcelAmount[0]} size={12} eventData={eventData} iconData={iconData} />
+                              <ItemIcon
+                                type={rewardType}
+                                itemId={rewardId.toString()}
+                                amount={goodsInfo.ParcelAmount[0]}
+                                size={12}
+                                eventData={eventData}
+                                iconData={iconData}
+                                allStudents={allStudents}
+                                studentPortraits={studentPortraits}
+                              />
                             </div>
-                            <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center justify-center mt-0.5">
+                            <div className="text-[10px] text-neutral-500 dark:text-neutral-400 flex items-center justify-center mt-0.5">
                               <span
                                 className="inline-flex items-center
                           bg-no-repeat bg-bottom
@@ -576,13 +594,16 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                                 {displayUnit === 'ap' ? (
                                   <>
                                     <span className="font-bold text-teal-600 dark:text-teal-400">{totalApCost ? totalApCost.toPrecision(3) : 'NA'}</span>
-                                    <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
+                                    <img src={`data:image/webp;base64,${iconData.Currency['5']}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
                                     {/* <span className="ml-0.5">AP</span> */}
                                   </>
                                 ) : (
                                   <>
                                     <span>{costAmount.toLocaleString()}</span>
-                                    <img src={`data:image/webp;base64,${iconData.Item?.[costCurrencyId.toString()]}`} className="w-3 h-3 ml-0.5 object-cover rounded-full" />
+                                    <img
+                                      src={`data:image/webp;base64,${iconData.Item[costCurrencyId.toString()] || iconData.Currency[costCurrencyId]}`}
+                                      className="w-3 h-3 ml-0.5 object-cover rounded-full"
+                                    />
                                   </>
                                 )}
                               </span>
@@ -592,7 +613,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                             </div>
                             <div className="mt-2 space-y-1 text-xs">
                               <div>
-                                <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.alreadyPurchased')}</label>
+                                <label className="text-[10px] text-neutral-500 dark:text-neutral-400 font-semibold">{t('ui.alreadyPurchased')}</label>
                                 <NumberInput
                                   value={alreadyPurchased}
                                   onChange={(val) => handleAlreadyPurchasedChange(item.Id, val, item.PurchaseCountLimit)}
@@ -602,7 +623,7 @@ export const ShopPlanner = ({ eventId, eventData, iconData, allStages, totalBonu
                                 />
                               </div>
                               <div>
-                                <label className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">{t('ui.purchase')}</label>
+                                <label className="text-[10px] text-neutral-500 dark:text-neutral-400 font-semibold">{t('ui.purchase')}</label>
                                 <NumberInput
                                   value={currentPurchase}
                                   onChange={(val) => handlePurchaseChange(item.Id, val, remainingLimit)}

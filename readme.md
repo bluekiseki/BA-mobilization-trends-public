@@ -6,14 +6,30 @@ All copyright of <a href='https://bluearchive.jp/' target="_blank" rel="noopener
 
 ## Notice
 
-- For the avoidance of copyright issues and efficient version management, some data from `/public` and `/app/data/` was not included in the project.
+- Some data from `/public` and `/app/data/` was not included in the repository.
 - The code is updated manually and may differ from the actual live service
 
 ## Requirements
 
-- Vite 7 + React Router v7.15 (Remix renamed since v7 in November 2024) + \*.tsx + Tailwind CSS. Deploying in a Cloudflare Pages environment
+- Vite 7 + React Router v7 (Remix renamed since v7 in November 2024) + \*.tsx + Tailwind CSS. Deploying in a Cloudflare Workers environment
+
+## Setup
+
+### Local Development
+
+```bash
+# First time after cloning
+chmod +x ./scripts/setup-mock-data.sh
+./scripts/setup-mock-data.sh
+
+pnpm install
+pnpm react-router typegen
+pnpx wrangler types
+
+pnpm dev:cdn
+```
 
 ## Q&A
 
 - Q. Why was obfuscation used?
-- A. Since it is operated by free hosting, it is to reduce debugging and server costs.
+- A. Since it is operated by free hosting, it is to reduce debugging and server costs. If you want to debug, clone this repository and run it locally using the setup instructions above.

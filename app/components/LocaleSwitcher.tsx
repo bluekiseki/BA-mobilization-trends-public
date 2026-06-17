@@ -62,23 +62,23 @@ export const LocaleDropdown = ({ currentLocale, isMobileText = false }: { curren
     setIsOpen(false);
     if (val === currentLocale) return;
     document.documentElement.lang = val;
-    navigate(changePathLanguage(currentLocale, val, pathname) + search);
+    void navigate(changePathLanguage(currentLocale, val, pathname) + search);
   };
 
   return (
     <div className="relative flex items-center" ref={ref}>
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors">
         <HiOutlineLanguage className="text-xl" strokeWidth={1.5} />
         <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('language')}</span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
+        <div className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
           {LOCALES.map((loc) => (
             <button
               key={loc.value}
               onClick={() => handleSelect(loc.value)}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${currentLocale === loc.value ? 'font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-neutral-800/50' : 'text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800'}`}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${currentLocale === loc.value ? 'font-bold text-neutral-900 dark:text-white bg-neutral-50 dark:bg-neutral-800/50' : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
             >
               {loc.label}
             </button>
@@ -88,14 +88,3 @@ export const LocaleDropdown = ({ currentLocale, isMobileText = false }: { curren
     </div>
   );
 };
-
-// export function changePathLanguage(currentLocale: string, newLocale: string, pathname: string) {
-//   let basePath = pathname;
-//   if (currentLocale && pathname.startsWith(`/${currentLocale}`)) {
-//     basePath = pathname.replace(`/${currentLocale}`, '');
-//   }
-//   if (basePath === '') basePath = '/';
-
-//   if (['/source'].some((path) => basePath.startsWith(path)) || newLocale === DEFAULT_LOCALE) return basePath;
-//   return basePath === '/' ? `/${newLocale}` : `/${newLocale}${basePath}`;
-// }

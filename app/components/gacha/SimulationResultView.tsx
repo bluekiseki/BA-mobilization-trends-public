@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
 import { FaGem, FaCheckCircle, FaChartBar, FaSyncAlt } from 'react-icons/fa';
 import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
+
+interface CustomBarProps {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  index: number;
+  radius: number | number[];
+}
 
 interface Props {
   result: GlobalAggregatedResult | null;
@@ -31,6 +40,15 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
     rangeLabel: unit === 'pyroxenes' ? `${d.binStart.toLocaleString()} ~ ${d.binEnd.toLocaleString()}` : t('chart.range_count', { start: d.binStart, end: d.binEnd }),
   }));
 
+  const renderCustomBar = (props: CustomBarProps) => {
+    const barIndex = props.index;
+    const entry = chartData[barIndex];
+    const fill = entry?.binEnd > budgetThreshold ? '#ef4444' : '#3b82f6';
+    const fillOpacity = entry?.binEnd > budgetThreshold ? 0.8 : 1;
+    const rArray = Array.isArray(props.radius) ? props.radius : [props.radius];
+    return <rect x={props.x} y={props.y} width={props.width} height={props.height} fill={fill} fillOpacity={fillOpacity} rx={rArray[0] || 0} ry={rArray[0] || 0} />;
+  };
+
   // Simple budget check computed from distCost — always available even without income plan
   const simpleBudgetOverrate = (() => {
     const bin = result.distCost.find((d) => d.binEnd > initialPyroxenes);
@@ -40,7 +58,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
 
   // Income-plan-adjusted rate takes priority if available
   const effectiveBankruptcyRate = bankruptcyRate ?? simpleBudgetOverrate;
-  const isIncomePlanApplied = bankruptcyRate !== null;
+  // const isIncomePlanApplied = bankruptcyRate !== null;
   const isSafe = effectiveBankruptcyRate < 10;
 
   // Derive the budget threshold from effectiveBankruptcyRate so the red bar area
@@ -78,31 +96,28 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
 
       <div className="text-center text-[11px] text-neutral-400 dark:text-neutral-500 -mt-3">{t('disclaimer')}</div>
 
-      {/* 2. Hero card — budget feasibility (always shown) */}
-      <div
-        className={`p-5 rounded-xl border shadow-sm ${isSafe ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900/50' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'}`}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className={`text-xs font-bold uppercase tracking-wide mb-1 ${isSafe ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{t('summary.safety.title')}</div>
-            <div className={`text-4xl font-extrabold ${isSafe ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
-              {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
-            </div>
-            <div className={`text-sm mt-1 font-medium ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-              {t('summary.safety.bankruptcy_prob', { rate: effectiveBankruptcyRate.toFixed(1) })}
-            </div>
+      {/* 2-3. Three-card grid: Safety, Success Rate, Average Consumption */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Hero card — budget feasibility */}
+        <div
+          className={`p-6 rounded-2xl border transition-colors ${
+            isSafe ? 'bg-green-50/50 border-green-100 dark:bg-green-950/20 dark:border-green-900/40' : 'bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/40'
+          }`}
+        >
+          <div className="text-[11px] font-bold opacity-60 uppercase tracking-tight mb-1">{t('summary.safety.title')}</div>
+          <div className="flex items-baseline gap-1">
+            <span className={`text-5xl font-black tabular-nums ${isSafe ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{(100 - effectiveBankruptcyRate).toFixed(1)}</span>
+            <span className="text-xl font-bold opacity-40">%</span>
           </div>
-          <span
-            className={`shrink-0 text-[11px] font-bold px-2 py-1 rounded-full ${isIncomePlanApplied ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400'}`}
-          >
-            {isIncomePlanApplied ? t('summary.safety.income_applied') : t('summary.safety.income_not_applied')}
-          </span>
+          <div className="mt-4 flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${isSafe ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className={`text-xs font-bold ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+              {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* 3. Secondary cards — 2-col */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Must students acquisition rate */}
+        {/* Success Rate card */}
         <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 flex flex-col gap-1">
           <div className="flex items-center gap-1.5 text-neutral-400 dark:text-neutral-500 text-xs font-bold uppercase">
             <FaCheckCircle className="text-neutral-400 dark:text-neutral-500" /> {t('summary.success_rate.title')}
@@ -114,7 +129,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
           <div className="text-[11px] text-neutral-400 dark:text-neutral-500">{t('summary.success_rate.desc')}</div>
         </div>
 
-        {/* Average consumption */}
+        {/* Average consumption card */}
         <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 flex flex-col gap-1">
           <div className="flex items-center gap-1.5 text-neutral-400 dark:text-neutral-500 text-xs font-bold uppercase">
             {unit === 'pyroxenes' ? <FaGem className="text-neutral-400 dark:text-neutral-500" /> : <FaSyncAlt className="text-neutral-400 dark:text-neutral-500" />}
@@ -158,7 +173,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
           <div className="flex items-center gap-3 mb-3 text-xs text-neutral-400 dark:text-neutral-500">
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
-              {t('chart.legend_within_budget')}
+              {t('chart.legend_within_budget')} ({(100 - effectiveBankruptcyRate).toFixed(1)}%)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-500 opacity-80" />
@@ -175,9 +190,10 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
                 <XAxis dataKey="binEnd" tick={{ fontSize: 11, fill: '#888' }} tickFormatter={(val) => (unit === 'pyroxenes' ? `${(val / 1000).toFixed(0)}k` : `${val}`)} />
                 <Tooltip
                   cursor={{ fill: 'currentColor', className: 'text-neutral-100 dark:text-neutral-800' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const d = payload[0].payload;
+                  content={({ active, payload }: Record<string, unknown>) => {
+                    if (active && payload && Array.isArray(payload) && payload.length) {
+                      const item = payload[0] as { payload: Record<string, unknown> };
+                      const d = item.payload as { rangeLabel: string; pdf: number };
                       return (
                         <div className="bg-neutral-800 dark:bg-neutral-950 text-white text-xs p-2 rounded shadow-lg border border-neutral-700">
                           <p className="font-bold mb-1">{d.rangeLabel}</p>
@@ -188,11 +204,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
                     return null;
                   }}
                 />
-                <Bar dataKey="pdf" radius={[4, 4, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.binEnd > budgetThreshold ? '#ef4444' : '#3b82f6'} fillOpacity={entry.binEnd > budgetThreshold ? 0.8 : 1} />
-                  ))}
-                </Bar>
+                <Bar dataKey="pdf" radius={[4, 4, 0, 0]} shape={renderCustomBar as never} isAnimationActive={false} />
               </BarChart>
             ) : (
               <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
@@ -204,7 +216,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
                   itemStyle={{ color: '#60a5fa' }}
                   labelFormatter={(label) => (unit === 'pyroxenes' ? t('chart.cdf_label_pyroxenes', { amount: label }) : t('chart.cdf_label_pulls', { amount: label }))}
                 />
-                <Area type="monotone" dataKey="cdf" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
+                <Area type="monotone" dataKey="cdf" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} isAnimationActive={false} />
                 <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="3 3" label={{ value: '50%', fontSize: 10, fill: '#f59e0b', position: 'right' }} />
                 <ReferenceLine y={90} stroke="#ef4444" strokeDasharray="3 3" label={{ value: '90%', fontSize: 10, fill: '#ef4444', position: 'right' }} />
               </AreaChart>

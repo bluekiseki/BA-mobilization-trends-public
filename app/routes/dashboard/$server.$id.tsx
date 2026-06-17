@@ -1,17 +1,17 @@
 // app/routes/dashboard.$server.$id.tsx
 
-import { useLoaderData, type LoaderFunctionArgs, data, useLocation, useSearchParams, redirect } from 'react-router';
+import { useLoaderData, type LoaderFunctionArgs, data, useSearchParams, redirect } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GAMESERVER_LIST, type FullData, type GameServer, type Student } from '~/types/data';
 import { loadRaidInfosById } from '~/utils/loadRaidInfo';
 import { isTotalAssault, type PortraitData, type ReportEntry, type ReportEntryRank, type StudentData } from '~/components/dashboard/common';
-import type { loader as rootLorder } from '~/root';
+// import type { loader as rootLorder } from '~/root';
 import { HiOutlineChartPie, HiOutlineUsers } from 'react-icons/hi2'; // Icon example
 
 // Import UI components
 import RaidHeader from '~/components/dashboard/RaidHeader';
-import { getMostDifficultLevel, type_translation, typecolor } from '~/components/raidToString';
+import { getMostDifficultLevel, type_translation, typecolor } from '~/components/raid/raidToString';
 import DashboardUI from '~/components/dashboard/dashboardUI';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
@@ -43,18 +43,22 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export const handle: AppHandle = {
-  preload: (data) => {
+  preload: (data: unknown, routeMatch) => {
     // Create a link dynamically using the return value (data) of the root loader
 
-    const { id } = useLoaderData<typeof rootLorder>().params;
+    type DataType = { locale?: Locale };
+    const typedData = data as DataType;
+    const locale = typedData?.locale;
 
-    const pathname = useLocation().pathname;
-    const match = pathname.match(/\/dashboard\/([a-zA-Z]{2})\//);
+    const id = routeMatch?.params?.id;
 
-    if (!match || !GAMESERVER_LIST.includes(match[1] as GameServer)) return [];
-    const server = match[1] as GameServer;
-    if (!data?.locale) return [];
-    const raidInfos = loadRaidInfosById(server, data?.locale, id || '');
+    const pathname = routeMatch?.pathname || '';
+    const pathmatch = pathname.match(/\/dashboard\/([a-zA-Z]{2})\//);
+
+    if (!pathmatch || !GAMESERVER_LIST.includes(pathmatch[1] as GameServer)) return [];
+    const server = pathmatch[1] as GameServer;
+    if (!locale) return [];
+    const raidInfos = loadRaidInfosById(server, locale, id || '');
 
     if (!raidInfos || !id || !raidInfos.length) return [];
     const isRaid = isTotalAssault(raidInfos[0]);
@@ -69,7 +73,7 @@ export const handle: AppHandle = {
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(data?.locale)}.students.bin`),
+        href: cdn(`/w/${getLocaleShortName(locale)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -97,17 +101,17 @@ export function restoreFromDifferenceArray(diffArray: Int32Array): Int32Array {
   return original;
 }
 
-export async function loader({ context, params, request }: LoaderFunctionArgs) {
+export function loader({ context, params, request }: LoaderFunctionArgs) {
   const { server, id } = params;
   if (!server || !id || !GAMESERVER_LIST.includes(server as GameServer)) {
     throw new Response('Not Found', { status: 404 });
   }
 
-  let i18n = getInstance(context);
+  const i18n = getInstance(context);
   const locale = i18n.language as Locale;
 
   // 1. Query data using the current id (lowercase, etc.).
-  let raidInfos = loadRaidInfosById(server as GameServer, locale, id);
+  const raidInfos = loadRaidInfosById(server as GameServer, locale, id);
 
   // 2. If data is not found, convert to uppercase and recheck.
   if (!raidInfos || raidInfos.length === 0) {
@@ -144,7 +148,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
   });
 }
 
-export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+export function headers({}: Route.HeadersArgs) {
   if (process.env.NODE_ENV === 'production')
     return {
       // Browser: 5m, Cloudflare Edge: 7d (604800s), SWR: 30d
@@ -157,7 +161,11 @@ export default function RaidDetailsPage() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const mainView = searchParams.get('view') === 'detail' ? 'detail' : 'overview'; // Default value 'overview'
-  const grandAssaultTabs = useMemo(() => (isGrandAssault ? ['All', ...raidInfos.map((r) => r.Type!)] : []), [isGrandAssault, raidInfos]);
+  const grandAssaultTabs = useMemo(() => {
+    if (!isGrandAssault) return [];
+    const types = raidInfos.map((r) => r.Type).filter((type): type is 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor' => type !== undefined);
+    return ['All', ...types];
+  }, [isGrandAssault, raidInfos]);
 
   const isRaid = isTotalAssault(raidInfos[0]);
   const helpKeys = useMemo(() => {
@@ -212,13 +220,13 @@ export default function RaidDetailsPage() {
   // Loading common data (student info, etc.)
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as any)])
+    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as unknown)])
       .then(([studentJson, portraitJson]) => {
         setStudentData(studentJson);
-        setPortraitData(portraitJson);
+        setPortraitData(portraitJson as PortraitData);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('Failed to load common data:', err);
         setLoading(false);
       });
@@ -246,7 +254,7 @@ export default function RaidDetailsPage() {
         if (data.tier_counter) newdata.tier_counter = structuredClone(data.tier_counter);
         setFullData(newdata);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error('Failed to load common data:', err);
         setFullData(null);
       })
@@ -291,7 +299,7 @@ export default function RaidDetailsPage() {
         setCachedData((prev) => ({ ...prev, [typeKey]: reportRankJson }));
         setDashboardLoading(false);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error(`Failed to load data for ${typeKey}:`, err);
         setDashboardLoading(false);
       });
@@ -373,14 +381,14 @@ export default function RaidDetailsPage() {
       </div>
 
       {/* --- Step 1: Main View Selector (Always displayed) --- */}
-      <div className="border-b border-gray-200 dark:border-neutral-700 mb-4 px-4">
+      <div className="border-b border-neutral-200 dark:border-neutral-700 mb-4 px-4">
         <nav className="-mb-px flex justify-center space-x-4 sm:space-x-8" aria-label="Tabs">
           <button
             onClick={() => setMainView('overview')}
             className={`flex items-center justify-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm sm:text-base transition-all ${
               mainView === 'overview'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-neutral-400 hover:border-gray-300 dark:hover:border-neutral-600 hover:text-gray-700 dark:hover:text-neutral-300'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-300'
             }`}
           >
             <HiOutlineChartPie className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -391,7 +399,7 @@ export default function RaidDetailsPage() {
             className={`flex items-center justify-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-sm sm:text-base transition-all ${
               mainView === 'detail'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-neutral-400 hover:border-gray-300 dark:hover:border-neutral-600 hover:text-gray-700 dark:hover:text-neutral-300'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-300'
             }`}
           >
             <HiOutlineUsers className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -411,9 +419,9 @@ export default function RaidDetailsPage() {
             return (
               <button
                 key={tab}
-                onClick={() => !isDisabled && setActiveTab(tab)}
+                onClick={() => !isDisabled && tab && setActiveTab(tab)}
                 disabled={isDisabled}
-                className={`sm:px-5 px-3.5 sm:py-2.5 py-1.5 text-sm font-semibold rounded-lg transition-all ${activeTab === tab ? 'text-white shadow-lg' : 'text-gray-600 dark:text-neutral-300 bg-gray-200 dark:bg-neutral-800'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'}`}
+                className={`sm:px-5 px-3.5 sm:py-2.5 py-1.5 text-sm font-semibold rounded-lg transition-all ${activeTab === tab ? 'text-white shadow-lg' : 'text-neutral-600 dark:text-neutral-300 bg-neutral-200 dark:bg-neutral-800'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80'}`}
                 style={{
                   backgroundColor: activeTab === tab ? typecolor[tab as keyof typeof typecolor] || '#0ea5e9' : undefined,
                 }}

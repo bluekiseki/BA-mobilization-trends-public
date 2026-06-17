@@ -2,13 +2,17 @@
 
 import { useState } from 'react';
 import { ItemIcon } from '../common/Icon';
+import { SimRunButton } from '../common/SimRunButton';
 import type { CardShopItem, EventData, IconData } from '~/types/plannerData';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
 import { useTranslation } from 'react-i18next';
-import { ChevronIcon } from '~/components/Icon';
 
-type CardShopStrategy = 'sr-reset' | 'all-open' | 'one-open';
+import { type CardShopConfig, type CardShopStrategy } from '~/types/minigame/cardShop';
+import { runAsync } from '~/utils/runAsync';
+
+export type { CardShopConfig };
+
 export type SimulationResult = {
   costs: Record<string, number>;
   rewards: Record<string, number>;
@@ -20,11 +24,6 @@ export type CardShopRates = {
   avgRewards: Record<string, number>;
   avgFlips: number;
 };
-
-export interface CardShopConfig {
-  rounds: number;
-  strategy: CardShopStrategy;
-}
 
 interface CardShopPlannerProps {
   eventId: number;
@@ -97,7 +96,6 @@ const runCardShopSimulation = (cardData: CardShopItem[], numRounds: number, stra
 };
 
 export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculated, rates, remainingCurrency, finalCardFlips, setFinalCardFlips }: CardShopPlannerProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   // const [config, setConfig] = useState({
   //   rounds: 5000,
   //   strategy: 'sr-reset' as CardShopStrategy,
@@ -105,6 +103,7 @@ export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculate
 
   const { cardShopConfig: config, setCardShopConfig: setConfig } = usePlanForEvent(eventId);
   const { t } = useTranslation('planner');
+  const [isRunning, setIsRunning] = useState(false);
 
   // const [result, setResult] = useState<SimulationResult | null>(null);
   // const [simulationTotalResult, setSimulationTotalResult] = useState<SimulationResult | null>(null);
@@ -122,17 +121,19 @@ export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculate
     const cardPool = cardShopData || [];
     if (cardPool.length === 0 || config.rounds === 0) return;
 
-    const simResult = runCardShopSimulation(cardPool, config.rounds, config.strategy);
-    setSimulationTotalResult(simResult);
+    setIsRunning(true);
+    void runAsync(() => {
+      const simResult = runCardShopSimulation(cardPool, config.rounds, config.strategy);
+      setSimulationTotalResult(simResult);
 
-    // CHANGED: Calculate 'average value' after simulation and pass to parent
-    const avgCosts: Record<string, number> = {};
-    const avgRewards: Record<string, number> = {};
-    Object.entries(simResult.costs).forEach(([key, total]) => (avgCosts[key] = total / config.rounds));
-    Object.entries(simResult.rewards).forEach(([key, total]) => (avgRewards[key] = total / config.rounds));
-    const avgFlips = simResult.totalFlips / config.rounds;
+      const avgCosts: Record<string, number> = {};
+      const avgRewards: Record<string, number> = {};
+      Object.entries(simResult.costs).forEach(([key, total]) => (avgCosts[key] = total / config.rounds));
+      Object.entries(simResult.rewards).forEach(([key, total]) => (avgRewards[key] = total / config.rounds));
+      const avgFlips = simResult.totalFlips / config.rounds;
 
-    onRatesCalculated({ avgCosts, avgRewards, avgFlips });
+      onRatesCalculated({ avgCosts, avgRewards, avgFlips });
+    }).finally(() => setIsRunning(false));
   };
   const handleSetMaxRounds = () => {
     if (!rates || !remainingCurrency || rates.avgFlips <= 0) return;
@@ -169,104 +170,97 @@ export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculate
 
   return (
     <>
-      <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">🃏 {t('page.cardShopSimulator')}</h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
-          <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
-        </span>
-      </div>
-      {!isCollapsed && (
-        <div className="mt-4 space-y-4">
-          {/* Settings UI */}
-          <div>
-            <label className="text-sm font-bold dark:text-gray-300">{t('cardShop.simulationStrategy')}</label>
-            <div className="flex gap-2 mt-1">
-              {strategies.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setConfig(((p) => ({ ...p, strategy: s.id as CardShopStrategy }))(config))}
-                  className={`${config.strategy === s.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:text-gray-300 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-3 py-1 text-sm transition-colors`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-bold">{t('ui.simulationCount')}</label>
-            <input type="number" value={config.rounds} onChange={(e) => setConfig(((p) => ({ ...p, rounds: parseInt(e.target.value) || 0 }))(config))} className="w-full p-2 mt-1 rounded border" />
-          </div>
-          <button onClick={handleRun} className="w-full bg-green-500 text-white font-bold py-2 rounded-lg">
-            {t('button.runSimulation')}{' '}
-          </button>
-
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
-            <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('cardShop.planSettingsFlipCount')}</h3>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder={t('cardShop.flipCountPlaceholder')}
-                className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                value={finalCardFlips || ''}
-                onChange={(e) => setFinalCardFlips(parseInt(e.target.value) || 0)}
-              />
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('page.cardShopSimulator')}</h2>
+      <div className="mt-4 space-y-4">
+        {/* Settings UI */}
+        <div>
+          <label className="text-sm font-bold dark:text-neutral-300">{t('cardShop.simulationStrategy')}</label>
+          <div className="flex gap-2 mt-1">
+            {strategies.map((s) => (
               <button
-                onClick={handleSetMaxRounds}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0 disabled:bg-gray-400 dark:disabled:bg-neutral-600"
-                disabled={!rates}
-                title={!rates ? t('cardShop.runEfficiencyCalcFirst') : t('cardShop.calcFlipsForNeededItems')}
+                key={s.id}
+                onClick={() => setConfig(((p) => ({ ...p, strategy: s.id as CardShopStrategy }))(config))}
+                className={`${config.strategy === s.id ? 'bg-blue-500 text-white' : 'bg-white dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600 dark:hover:bg-neutral-600'} border rounded-md px-3 py-1 text-sm transition-colors`}
               >
-                {t('button.setToMax')}
+                {s.label}
               </button>
-            </div>
+            ))}
           </div>
+        </div>
+        <div>
+          <label className="text-sm font-bold">{t('ui.simulationCount')}</label>
+          <input type="number" value={config.rounds} onChange={(e) => setConfig(((p) => ({ ...p, rounds: parseInt(e.target.value) || 0 }))(config))} className="w-full p-2 mt-1 rounded border" />
+        </div>
+        <SimRunButton isRunning={isRunning} onClick={handleRun} className="w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 rounded-lg">
+          {t('button.runSimulation')}
+        </SimRunButton>
 
-          {/* Result UI */}
-          {simulationTotalResult && rates && (
-            <div>
-              <h3 className="font-bold dark:text-gray-200">{t('cardShop.simulationStats').replace('{rounds}', config.rounds.toLocaleString())}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                <div className="bg-red-50 dark:bg-red-900/40 p-3 rounded-lg">
-                  <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('cardShop.avgCostPerFlip')}</h4>
+        <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
+          <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('cardShop.planSettingsFlipCount')}</h3>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder={t('cardShop.flipCountPlaceholder')}
+              className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
+              value={finalCardFlips || ''}
+              onChange={(e) => setFinalCardFlips(parseInt(e.target.value) || 0)}
+            />
+            <button
+              onClick={handleSetMaxRounds}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0 disabled:bg-neutral-400 dark:disabled:bg-neutral-600"
+              disabled={!rates}
+              title={!rates ? t('cardShop.runEfficiencyCalcFirst') : t('cardShop.calcFlipsForNeededItems')}
+            >
+              {t('button.setToMax')}
+            </button>
+          </div>
+        </div>
+
+        {/* Result UI */}
+        {simulationTotalResult && rates && (
+          <div>
+            <h3 className="font-bold dark:text-neutral-200">{t('cardShop.simulationStats').replace('{rounds}', config.rounds.toLocaleString())}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div className="bg-red-50 dark:bg-red-900/40 p-3 rounded-lg">
+                <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('cardShop.avgCostPerFlip')}</h4>
+                <div className="flex flex-wrap gap-2">
+                  {/* Apply flex-wrap to display icons only */}
                   <div className="flex flex-wrap gap-2">
-                    {/* Apply flex-wrap to display icons only */}
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(simulationTotalResult.costs).map(([key, totalAmount]) => {
-                        const avgAmountPerFlip = totalAmount / simulationTotalResult.totalFlips;
-                        return <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={avgAmountPerFlip} size={11} eventData={eventData} iconData={iconData} />;
-                      })}
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/40 p-3 rounded-lg">
-                  <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t('cardShop.avgRewardPerFlip')}</h4>
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2">
-                    {Object.entries(simulationTotalResult.rewards)
-                      .sort(([, a], [, b]) => b - a)
-                      .map(([key, totalAmount]) => {
-                        const avgAmount = totalAmount / simulationTotalResult.totalFlips;
-                        if (avgAmount < 0.001) return null;
-                        const [type, id] = key.split('_');
-
-                        return (
-                          <ItemIcon
-                            key={key}
-                            type={type}
-                            itemId={id}
-                            amount={avgAmount} // Pass the exact average value to the tooltip
-                            size={11} // Adjust icon size
-                            eventData={eventData}
-                            iconData={iconData}
-                          />
-                        );
-                      })}
+                    {Object.entries(simulationTotalResult.costs).map(([key, totalAmount]) => {
+                      const avgAmountPerFlip = totalAmount / simulationTotalResult.totalFlips;
+                      return <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={avgAmountPerFlip} size={11} eventData={eventData} iconData={iconData} />;
+                    })}
                   </div>
                 </div>
               </div>
+              <div className="bg-green-50 dark:bg-green-900/40 p-3 rounded-lg">
+                <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t('cardShop.avgRewardPerFlip')}</h4>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2">
+                  {Object.entries(simulationTotalResult.rewards)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([key, totalAmount]) => {
+                      const avgAmount = totalAmount / simulationTotalResult.totalFlips;
+                      if (avgAmount < 0.001) return null;
+                      const [type, id] = key.split('_');
+
+                      return (
+                        <ItemIcon
+                          key={key}
+                          type={type}
+                          itemId={id}
+                          amount={avgAmount} // Pass the exact average value to the tooltip
+                          size={11} // Adjust icon size
+                          eventData={eventData}
+                          iconData={iconData}
+                        />
+                      );
+                    })}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </>
   );
 };

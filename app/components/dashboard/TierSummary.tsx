@@ -1,5 +1,5 @@
 import { TIER_COLORS, TIER_ORDER } from '~/data/raidInfo';
-import { getBracketFromTotalScore, getDifficultyFromScoreAndBoss } from '../Difficulty';
+import { getBracketFromTotalScore, getDifficultyFromScoreAndBoss } from '../raid/Difficulty';
 import { useEffect, useMemo, useState } from 'react';
 import type { FullData, GameServer, RaidInfo } from '~/types/data';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
@@ -8,34 +8,34 @@ import { formatTimeToTimestamp } from '~/utils/time';
 const TierSummarySkeleton = () => (
   <div className="w-full px-2 sm:px-4 mt-8 mb-8 cursor-progress">
     <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {[...Array(4)].map((_, i) => (
+      {[...Array<number>(4)].map((_, i) => (
         <div key={i} className="p-4 bg-white dark:bg-neutral-800 rounded-xl animate-pulse">
           <div className="flex justify-between items-center">
-            <div className="h-6 w-20 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+            <div className="h-6 w-20 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
             <div className="space-y-1 text-right">
-              <div className="h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded"></div>
-              <div className="h-3 w-16 bg-gray-200 dark:bg-neutral-700 rounded ml-auto"></div>
+              <div className="h-4 w-24 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+              <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-700 rounded ml-auto"></div>
             </div>
           </div>
-          <div className="mt-3 h-2.5 bg-gray-200 dark:bg-neutral-700 rounded-full"></div>
+          <div className="mt-3 h-2.5 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
           <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-            <div className="h-3 w-full bg-gray-200 dark:bg-neutral-700 rounded"></div>
+            <div className="h-3 w-full bg-neutral-200 dark:bg-neutral-700 rounded"></div>
           </div>
         </div>
       ))}
     </div>
     <div className="md:hidden p-4 bg-white dark:bg-neutral-800 rounded-xl animate-pulse">
       <div className="flex justify-between items-center">
-        <div className="h-6 w-20 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+        <div className="h-6 w-20 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
         <div className="space-y-1 text-right">
-          <div className="h-4 w-24 bg-gray-200 dark:bg-neutral-700 rounded"></div>
-          <div className="h-3 w-16 bg-gray-200 dark:bg-neutral-700 rounded ml-auto"></div>
+          <div className="h-4 w-24 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+          <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-700 rounded ml-auto"></div>
         </div>
       </div>
-      <div className="mt-3 h-2.5 bg-gray-200 dark:bg-neutral-700 rounded-full"></div>
+      <div className="mt-3 h-2.5 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
       <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-        <div className="h-3 w-full bg-gray-200 dark:bg-neutral-700 rounded"></div>
-        <div className="h-3 w-full mt-3 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+        <div className="h-3 w-full bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+        <div className="h-3 w-full mt-3 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
       </div>
     </div>
 
@@ -44,20 +44,6 @@ const TierSummarySkeleton = () => (
 );
 
 interface TierSummaryProp {
-  // tierSummaryData?: {
-  //     name: string;
-  //     count: number;
-  //     lowestRank: number;
-  //     highestRank: number;
-  //     highestScore: number;
-  //     lowestScore: number;
-  //     difficultyTop: DifficultyName | null;
-  //     difficultyCut: DifficultyName | null;
-  //     timeTop: string | null;
-  //     timeCut: string | null;
-  //     percentage: number;
-  //     startPercentage: number;
-  // }[] | null
   fullData: FullData | null;
   raidInfos?: RaidInfo[];
   server: GameServer;
@@ -148,13 +134,13 @@ const TierSummary = ({ fullData, raidInfos, server, activeTab }: TierSummaryProp
                 {tier.name}
               </p>
               <div className="text-right">
-                <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                <p className="font-semibold text-sm text-neutral-800 dark:text-neutral-200">
                   {tier.lowestRank.toLocaleString()} - {tier.highestRank.toLocaleString()}th
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">({tier.count.toLocaleString()} users)</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">({tier.count.toLocaleString()} users)</p>
               </div>
             </div>
-            <div className="relative w-full bg-gray-200 dark:bg-neutral-700 rounded-full h-2.5 mt-3">
+            <div className="relative w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2.5 mt-3">
               <div
                 className="absolute h-2.5 rounded-full"
                 style={{
@@ -164,15 +150,15 @@ const TierSummary = ({ fullData, raidInfos, server, activeTab }: TierSummaryProp
                 }}
               ></div>
             </div>
-            <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700 text-xs text-gray-600 dark:text-gray-400 space-y-1 font-mono">
+            <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700 text-xs text-neutral-600 dark:text-neutral-400 space-y-1 font-mono">
               <div className="flex justify-between">
-                <span className="font-sans font-semibold text-gray-500">Top:</span>
+                <span className="font-sans font-semibold text-neutral-500">Top:</span>
                 <span>
                   {tier.difficultyTop && `[${tier.difficultyTop}]`} <b>{tier.highestScore?.toLocaleString()}</b> {tier.timeTop && `(${tier.timeTop})`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="font-sans font-semibold text-gray-500">Cut:</span>
+                <span className="font-sans font-semibold text-neutral-500">Cut:</span>
                 <span>
                   {tier.difficultyCut && `[${tier.difficultyCut}]`} <b>{tier.lowestScore?.toLocaleString()}</b> {tier.timeCut && `(${tier.timeCut})`}
                 </span>
@@ -191,13 +177,13 @@ const TierSummary = ({ fullData, raidInfos, server, activeTab }: TierSummaryProp
                 {selectedTier.name}
               </p>
               <div className="text-right">
-                <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                <p className="font-semibold text-sm text-neutral-800 dark:text-neutral-200">
                   {selectedTier.lowestRank.toLocaleString()} - {selectedTier.highestRank.toLocaleString()}th
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">({selectedTier.count.toLocaleString()} users)</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">({selectedTier.count.toLocaleString()} users)</p>
               </div>
             </div>
-            <div className="relative w-full bg-gray-200 dark:bg-neutral-700 rounded-full h-2.5 mt-3">
+            <div className="relative w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2.5 mt-3">
               <div
                 className="absolute h-2.5 rounded-full"
                 style={{
@@ -208,15 +194,15 @@ const TierSummary = ({ fullData, raidInfos, server, activeTab }: TierSummaryProp
               ></div>
             </div>
             {/* {selectedTier.name !== 'Bronze' && ( */}
-            <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700 text-xs text-gray-600 dark:text-gray-400 space-y-1 font-mono">
+            <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700 text-xs text-neutral-600 dark:text-neutral-400 space-y-1 font-mono">
               <div className="flex justify-between">
-                <span className="font-sans font-semibold text-gray-500">Top:</span>
+                <span className="font-sans font-semibold text-neutral-500">Top:</span>
                 <span>
                   {selectedTier.difficultyTop && `[${selectedTier.difficultyTop}]`} <b>{selectedTier.highestScore?.toLocaleString()}</b> {selectedTier.timeTop && `(${selectedTier.timeTop})`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="font-sans font-semibold text-gray-500">Cut:</span>
+                <span className="font-sans font-semibold text-neutral-500">Cut:</span>
                 <span>
                   {selectedTier.difficultyCut && `[${selectedTier.difficultyCut}]`} <b>{selectedTier.lowestScore?.toLocaleString()}</b> {selectedTier.timeCut && `(${selectedTier.timeCut})`}
                 </span>

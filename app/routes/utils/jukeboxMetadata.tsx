@@ -138,6 +138,7 @@ export const mainStoryChapters: Record<string, { key: string; date: string }> = 
   '2부 프롤로그': { key: 'part2_prologue', date: '2026/04/22' },
   '2부 Vol.0 1장': { key: 'part2_vol0_ch1', date: '2026/04/22' },
   '2부 Ex. 로어추적 편 1장': { key: 'part2_ex_lore_ch1', date: '2026/04/22' },
+  '2부 Ex. 로어추적 편 2장': { key: 'part2_ex_lore_ch2', date: '2026/05/27' },
 };
 
 export const otherStoryTitles = {

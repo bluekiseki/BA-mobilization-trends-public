@@ -33,14 +33,19 @@ export function CalendarWidget({ server }: CalendarWidgetProps) {
     fetch(`/api/calendar?type=widget&server=${server}&lang=${locale}`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch widget data');
-        return res.json() as any;
+        return res.json();
       })
-      .then((json) => {
+      .then((json: unknown) => {
         // Assumes API response structure is { data: { tracks, timeRange } }
-        setWidgetData(json.data);
+        const data = json as { data: Awaited<ReturnType<typeof loadScheduleData>> };
+        setWidgetData(data.data);
       })
-      .catch((err) => console.error('Calendar data error:', err))
-      .finally(() => setIsLoading(false));
+      .catch((err: unknown) => {
+        console.error('Calendar data error:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [server, locale]);
 
   // loaderData: Awaited<ReturnType<typeof loadCalendarWidgetData>>;
@@ -48,13 +53,21 @@ export function CalendarWidget({ server }: CalendarWidgetProps) {
   // 2. Fetch student data
   useEffect(() => {
     fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
-      .then((r) => r.json() as any)
-      .then(setStudentData)
-      .catch(console.error);
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        setStudentData(data as Record<number, Student>);
+      })
+      .catch((err: unknown) => {
+        console.error(err);
+      });
     fetch(cdn(`/w/students_portrait.json`))
-      .then((r) => r.json() as any)
-      .then(setStudentPortraits)
-      .catch(console.error);
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        setStudentPortraits(data as StudentPortraitData);
+      })
+      .catch((err: unknown) => {
+        console.error(err);
+      });
   }, [locale]);
 
   // Set up GanttController
@@ -64,8 +77,7 @@ export function CalendarWidget({ server }: CalendarWidgetProps) {
     server,
   });
 
-  // UI for loading state or missing data (can be replaced with skeleton or spinner)
-  if (isLoading || !widgetData) {
+  if (!widgetData) {
     return (
       <div className="w-full h-132 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
         <span className="text-neutral-400 animate-pulse">{t('loading', { defaultValue: 'Loading calendar...' })}</span>
@@ -74,7 +86,9 @@ export function CalendarWidget({ server }: CalendarWidgetProps) {
   }
 
   return (
-    <div className="w-full bg-white dark:bg-neutral-900 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm transition-opacity duration-300">
+    <div
+      className={`w-full bg-white dark:bg-neutral-900 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm transition-opacity duration-300 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
+    >
       <div className="pb-2">
         <GanttChart
           data={{

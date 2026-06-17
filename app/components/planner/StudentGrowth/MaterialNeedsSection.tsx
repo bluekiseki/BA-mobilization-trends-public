@@ -43,7 +43,7 @@ export const RARITY_TEXT: Record<number, string> = {
   4: 'text-yellow-500',
   3: 'text-violet-500',
   2: 'text-blue-500',
-  1: 'text-gray-400 dark:text-neutral-500',
+  1: 'text-neutral-400 dark:text-neutral-500',
 };
 
 export const getItemRarity = (key: string, icons?: IconInfos): number => {
@@ -90,7 +90,7 @@ export const NeedsGrid = ({
           // Per sub-pool: compact items + pool XP stats
           const poolData = subPools
             .map((sp) => {
-              const keys = sp.keys as readonly string[];
+              const keys = sp.keys; // as readonly string[];
               const spItems = items.filter(({ key }) => keys.includes(key));
               const compacted = compactSubPool(sp, spItems);
               const neededXp = compacted.reduce((s, { key, amount }) => {
@@ -113,10 +113,10 @@ export const NeedsGrid = ({
 
           return (
             <div key={categoryKey}>
-              {groupIdx > 0 && <div className="border-t border-gray-200 dark:border-neutral-700 my-2" />}
+              {groupIdx > 0 && <div className="border-t border-neutral-200 dark:border-neutral-700 my-2" />}
               <div className="flex items-center gap-1.5 mb-1">
                 {showFulfillmentBadge && hasAnyInventory && <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${badgeClass}`} />}
-                <span className="text-xs text-gray-400 dark:text-neutral-500">{tStr(CATEGORY_I18N[categoryKey] ?? categoryKey)}</span>
+                <span className="text-xs text-neutral-400 dark:text-neutral-500">{tStr(CATEGORY_I18N[categoryKey] ?? categoryKey)}</span>
               </div>
 
               {poolData.map(({ sp, compacted, neededXp, ownedXp }, spIdx) => {
@@ -141,7 +141,7 @@ export const NeedsGrid = ({
                         ) : (
                           <span className="text-red-400 font-semibold">−{Math.ceil(-surplusXp / topXpPer)}</span>
                         )}
-                        <span className="text-gray-300 dark:text-neutral-700">
+                        <span className="text-neutral-300 dark:text-neutral-700">
                           ({(ownedXp / topXpPer).toFixed(1)} / {(neededXp / topXpPer).toFixed(1)})
                         </span>
                       </div>
@@ -198,17 +198,17 @@ export const NeedsGrid = ({
 
         return (
           <div key={categoryKey}>
-            {groupIdx > 0 && <div className="border-t border-gray-200 dark:border-neutral-700 my-2" />}
+            {groupIdx > 0 && <div className="border-t border-neutral-200 dark:border-neutral-700 my-2" />}
             <div className="flex items-center gap-1.5 mb-1">
               {showFulfillmentBadge && hasAnyInventory && <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${badgeClass}`} />}
-              <span className="text-xs text-gray-400 dark:text-neutral-500">{tStr(CATEGORY_I18N[categoryKey] ?? categoryKey)}</span>
+              <span className="text-xs text-neutral-400 dark:text-neutral-500">{tStr(CATEGORY_I18N[categoryKey] ?? categoryKey)}</span>
             </div>
 
             {subgroupRarity ? (
               <div className="space-y-2">
                 {byRarity.map(({ rarity, items: rItems }) => (
                   <div key={rarity}>
-                    <span className={`text-[10px] font-bold ${RARITY_TEXT[rarity] ?? 'text-gray-400'}`}>{RARITY_LABEL[rarity] ?? `Rarity ${rarity}`}</span>
+                    <span className={`text-[10px] font-bold ${RARITY_TEXT[rarity] ?? 'text-neutral-400'}`}>{RARITY_LABEL[rarity] ?? `Rarity ${rarity}`}</span>
                     <div className={`flex flex-wrap ${gap} mt-1`}>
                       {rItems.map(({ key, amount }) => (
                         <NeedsItem key={key} itemKey={key} amount={amount} materialInventory={materialInventory} eventData={eventData} iconData={iconData} iconSize={iconSize} rarity={rarity} />
@@ -250,7 +250,7 @@ interface NeedsItemProps {
   rarity: number;
 }
 
-const NeedsItem = ({ itemKey, amount, materialInventory, eventData, iconData, iconSize, rarity }: NeedsItemProps) => {
+const NeedsItem = ({ itemKey, amount, materialInventory, eventData, iconData, iconSize /*, rarity*/ }: NeedsItemProps) => {
   const [type, id] = itemKey.split('_');
   const owned = materialInventory[itemKey] ?? 0;
   const deficit = amount - owned;
@@ -259,7 +259,7 @@ const NeedsItem = ({ itemKey, amount, materialInventory, eventData, iconData, ic
     <div className="flex flex-col items-center gap-0.5">
       <ItemIcon type={type} itemId={id} amount={amount} size={iconSize} eventData={eventData} iconData={iconData} />
       {hasInventoryData && (
-        <span className={`text-xs font-semibold leading-none ${deficit > 0 ? 'text-red-500' : deficit < 0 ? 'text-green-500' : 'text-gray-400 dark:text-neutral-500'}`}>
+        <span className={`text-xs font-semibold leading-none ${deficit > 0 ? 'text-red-500' : deficit < 0 ? 'text-green-500' : 'text-neutral-400 dark:text-neutral-500'}`}>
           {deficit > 0 ? `−${deficit}` : deficit < 0 ? `+${-deficit}` : '✓'}
         </span>
       )}
@@ -281,20 +281,20 @@ export const MaterialNeedsSection = ({ calculatedNeeds, eventData, iconData, tit
     <div className="mt-4 space-y-2">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold dark:text-gray-200">{sectionTitle}</h3>
-          <button onClick={() => setModalTab('needs')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" title={t('ui.expandView')}>
+          <h3 className="font-bold dark:text-neutral-200">{sectionTitle}</h3>
+          <button onClick={() => setModalTab('needs')} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors" title={t('ui.expandView')}>
             <FaExpand size={12} />
           </button>
         </div>
         <button
           onClick={() => setModalTab('inventory')}
-          className="text-xs px-2 py-1 rounded border transition-colors text-gray-500 dark:text-gray-400 border-gray-400 dark:border-neutral-600 hover:border-blue-400 dark:hover:border-blue-500"
+          className="text-xs px-2 py-1 rounded border transition-colors text-neutral-500 dark:text-neutral-400 border-neutral-400 dark:border-neutral-600 hover:border-blue-400 dark:hover:border-blue-500"
         >
           {t('ui.ownedInput')}
         </button>
       </div>
 
-      <div className="overflow-y-auto max-h-72 p-3 bg-gray-100 dark:bg-neutral-800/50 rounded-lg space-y-2">
+      <div className="overflow-y-auto max-h-72 p-3 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg space-y-2">
         <NeedsGrid groups={groups} materialInventory={materialInventory} eventData={eventData} iconData={iconData} iconSize={12} gap="gap-2" subgroupRarity={false} showFulfillmentBadge />
       </div>
 

@@ -12,12 +12,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-bluearchive-botton-blue: #77e0ff;
-  --color-bluearchive-botton-yellow: #f6e94b;
-  --color-bluearchive-botton-gray: #e0e0e0;
-  --shadow-bluearchive: #111 0px 0px 0px 0.5px;
-  --shadow-bluearchive-xl: #ddd 1px 2px 2px 1px;
-  --font-bluearchive:
+  --color-ba-btn-blue: #77e0ff;
+  --color-ba-btn-blue-dark: #5bc4e0;
+  --color-ba-btn-yellow: #f6e94b;
+  --color-ba-btn-gray: #e0e0e0;
+  --shadow-ba: #111 0px 0px 0px 0.5px;
+  --shadow-ba-xl: #ddd 1px 2px 2px 1px;
+  --font-ba:
     'GyeonggiTitle', 'Inter', 'Pretendard JP Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Hiragino Sans', 'Apple SD Gothic Neo', Meiryo,
     'Noto Sans JP', 'Noto Sans KR', 'Malgun Gothic', Osaka, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif; /* RoG2サンセリフStdN is non-free */
   --font-pretendard:
@@ -63,11 +64,15 @@
   }
 }
 
+button {
+  cursor: pointer;
+}
+
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-white dark:bg-neutral-950;
 
-  font-family: var(--font-bluearchive);
+  font-family: var(--font-ba);
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }

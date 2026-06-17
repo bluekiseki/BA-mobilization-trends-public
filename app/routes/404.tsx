@@ -2,11 +2,11 @@ import { useTranslation } from 'react-i18next';
 import type { Route } from './+types/404';
 import { data } from 'react-router';
 
-export async function loader({ params }: Route.ActionArgs) {
+export function loader({ params: _ }: Route.ActionArgs) {
   throw data(null, { status: 404 });
 }
 
-export const action = async () => null;
+export const action = () => null;
 
 export default function NoMatch() {
   const { t } = useTranslation('common');

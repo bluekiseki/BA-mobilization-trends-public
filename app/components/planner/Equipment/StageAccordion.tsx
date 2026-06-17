@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { EventData, IconData, IconInfos } from '~/types/plannerData';
+import type { EventData, IconData } from '~/types/plannerData';
 import { NumberInput } from '../common/NumberInput';
 import { EquipmentItemIcon, type ResolvedStage } from './common';
 import { blueprintIdToType } from '~/utils/blueprintUtils';
@@ -18,7 +18,7 @@ interface StageAccordionProps {
   needsMap: Record<string, number>;
   eventDataForIcon: EventData;
   iconData: IconData;
-  iconInfoData: IconInfos;
+  // iconInfoData: IconInfos;
   studentFilter?: Set<number>;
 }
 
@@ -34,7 +34,7 @@ export const StageAccordion: React.FC<StageAccordionProps> = ({
   needsMap,
   eventDataForIcon,
   iconData,
-  iconInfoData,
+  // iconInfoData,
   studentFilter,
 }) => {
   const { t } = useTranslation('planner');
@@ -59,7 +59,7 @@ export const StageAccordion: React.FC<StageAccordionProps> = ({
     const map = new Map<number, ResolvedStage[]>();
     for (const stage of filtered) {
       if (!map.has(stage.chapter)) map.set(stage.chapter, []);
-      map.get(stage.chapter)!.push(stage);
+      map.get(stage.chapter)?.push(stage);
     }
     return Array.from(map.entries()).sort((a, b) => (isSortedDesc ? b[0] - a[0] : a[0] - b[0]));
   }, [filtered, isSortedDesc]);
@@ -67,19 +67,23 @@ export const StageAccordion: React.FC<StageAccordionProps> = ({
   const toggleChapter = (ch: number) =>
     setClosedChapters((prev) => {
       const n = new Set(prev);
-      n.has(ch) ? n.delete(ch) : n.add(ch);
+      if (n.has(ch)) {
+        n.delete(ch);
+      } else {
+        n.add(ch);
+      }
       return n;
     });
 
   if (filtered.length === 0) {
-    return <p className="py-10 text-center text-sm text-gray-400 dark:text-gray-500">{t('equipment.noStagesFound')}</p>;
+    return <p className="py-10 text-center text-sm text-neutral-400 dark:text-neutral-500">{t('equipment.noStagesFound')}</p>;
   }
 
   return (
     <div>
-      <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-        <span className="text-[11px] font-mono text-gray-400 dark:text-gray-500">{filtered.length} stages</span>
-        <button onClick={onReset} className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+      <div className="flex justify-between items-center px-3 py-1.5 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+        <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500">{filtered.length} stages</span>
+        <button onClick={onReset} className="flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
           <FaRedo size={9} />
           {t(type === 'Hard' ? 'equipment.resetHard' : 'equipment.resetNormal')}
         </button>
@@ -91,21 +95,21 @@ export const StageAccordion: React.FC<StageAccordionProps> = ({
         const chAp = chStages.reduce((sum, s) => sum + (runCounts[s.id] || 0) * s.ap, 0);
 
         return (
-          <div key={chapter} className="border-b border-gray-100 dark:border-neutral-800 last:border-b-0">
+          <div key={chapter} className="border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
             <button
               onClick={() => toggleChapter(chapter)}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-neutral-800/60 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-left sticky top-0 z-10"
+              className="w-full flex items-center gap-2 px-3 py-2 bg-neutral-50 dark:bg-neutral-800/60 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left sticky top-0 z-10"
             >
-              <FaChevronRight size={9} className={`text-gray-400 transition-transform shrink-0 ${isOpen ? 'rotate-90' : ''}`} />
-              <span className="font-mono text-xs font-bold text-gray-700 dark:text-gray-200">
+              <FaChevronRight size={9} className={`text-neutral-400 transition-transform shrink-0 ${isOpen ? 'rotate-90' : ''}`} />
+              <span className="font-mono text-xs font-bold text-neutral-700 dark:text-neutral-200">
                 {type === 'Hard' ? 'H' : ''}
                 {chapter} {t('equipment.stageArea')}
               </span>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">{chStages.length}</span>
+              <span className="text-[11px] text-neutral-400 dark:text-neutral-500 font-mono">{chStages.length}</span>
               {chRuns > 0 && (
                 <span className="ml-auto flex gap-2.5 text-[11px] font-mono">
                   <span className="font-bold text-blue-500 dark:text-blue-400">×{chRuns}</span>
-                  <span className="text-gray-400 dark:text-gray-500">{chAp.toLocaleString()} AP</span>
+                  <span className="text-neutral-400 dark:text-neutral-500">{chAp.toLocaleString()} AP</span>
                 </span>
               )}
             </button>
@@ -117,11 +121,11 @@ export const StageAccordion: React.FC<StageAccordionProps> = ({
                 return (
                   <div
                     key={stage.id}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-gray-50 dark:border-neutral-800/60 last:border-b-0 transition-colors ${
-                      runs > 0 ? 'bg-blue-50/50 dark:bg-blue-900/10' : !hasDemanded ? 'opacity-40 hover:opacity-80' : 'hover:bg-gray-50 dark:hover:bg-neutral-800/30'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-neutral-50 dark:border-neutral-800/60 last:border-b-0 transition-colors ${
+                      runs > 0 ? 'bg-blue-50/50 dark:bg-blue-900/10' : !hasDemanded ? 'opacity-40 hover:opacity-80' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/30'
                     }`}
                   >
-                    <span className="font-mono text-xs font-semibold text-gray-700 dark:text-gray-300 shrink-0 w-9">
+                    <span className="font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300 shrink-0 w-9">
                       {stage.chapter}-{stage.stageNum}
                     </span>
 
@@ -139,17 +143,17 @@ export const StageAccordion: React.FC<StageAccordionProps> = ({
                             <span
                               key={key}
                               className={`flex items-center rounded border ${
-                                demanded ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-neutral-700'
+                                demanded ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30' : 'border-neutral-200 dark:border-neutral-700'
                               }`}
                             >
-                              <EquipmentItemIcon type={itemType as keyof IconInfos} itemId={itemId} amount={dropRate} size={11} eventData={eventDataForIcon} iconData={iconData} />
+                              <EquipmentItemIcon type={itemType} itemId={itemId} amount={dropRate} size={11} eventData={eventDataForIcon} iconData={iconData} />
                             </span>
                           );
                         })}
                     </div>
 
-                    <span className="hidden sm:block font-mono text-[11px] text-gray-400 dark:text-gray-500 shrink-0 w-9 text-right">{stage.ap}</span>
-                    <span className={`hidden sm:block font-mono text-xs font-bold shrink-0 w-8 text-right ${runs > 0 ? 'text-blue-500 dark:text-blue-400' : 'text-gray-300 dark:text-neutral-700'}`}>
+                    <span className="hidden sm:block font-mono text-[11px] text-neutral-400 dark:text-neutral-500 shrink-0 w-9 text-right">{stage.ap}</span>
+                    <span className={`hidden sm:block font-mono text-xs font-bold shrink-0 w-8 text-right ${runs > 0 ? 'text-blue-500 dark:text-blue-400' : 'text-neutral-300 dark:text-neutral-700'}`}>
                       {runs > 0 ? `×${runs}` : '—'}
                     </span>
                     <div className="w-16 shrink-0">

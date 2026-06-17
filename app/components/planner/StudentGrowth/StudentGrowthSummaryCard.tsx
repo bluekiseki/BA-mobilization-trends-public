@@ -2,7 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { getCharacterStarValue, type Character } from '~/components/dashboard/common';
-import { StarRating } from '~/components/StarRatingProps';
+import { StarRating } from '~/components/StarRating';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 import type { StudentData, StudentPortraitData } from '~/types/plannerData';
 
@@ -44,8 +44,8 @@ export const StudentGrowthSummaryCard = ({
     return (
       <div
         onClick={onClick}
-        className={`p-4 border rounded-lg cursor-pointer text-center transition-colors hover:bg-gray-200 dark:hover:bg-neutral-700
-          ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-800 dark:bg-blue-900 dark:border-blue-500 dark:text-blue-200' : 'bg-white border-gray-200 text-gray-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-400'}
+        className={`p-4 border rounded-lg cursor-pointer text-center transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700
+          ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-800 dark:bg-blue-900 dark:border-blue-500 dark:text-blue-200' : 'bg-white border-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400'}
         `}
       >
         {t('growthCard.selectStudentPlaceholder')}
@@ -78,15 +78,17 @@ export const StudentGrowthSummaryCard = ({
       className={`p-3 rounded-xl shadow-md hover:shadow-lg border-2 transition-all cursor-pointer ${isSelected ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/50' : 'border-transparent bg-white dark:bg-neutral-800'}`}
     >
       <div className="flex items-center gap-4">
-        <img
-          src={`data:image/webp;base64,${studentPortraits[plan.studentId!]}`}
-          alt={studentInfo.Name}
-          className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-neutral-700"
-        />
+        {plan.studentId && (
+          <img
+            src={`data:image/webp;base64,${studentPortraits[plan.studentId]}`}
+            alt={studentInfo.Name}
+            className="w-16 h-16 rounded-full object-cover border-2 border-neutral-200 dark:border-neutral-700"
+          />
+        )}
         <div className="grow min-w-0">
-          <p className="font-bold text-lg text-gray-800 dark:text-gray-100 truncate">{studentInfo.Name}</p>
+          <p className="font-bold text-lg text-neutral-800 dark:text-neutral-100 truncate">{studentInfo.Name}</p>
           {/* Changed to flex-col gap-1, added equipment tier text */}
-          <div className="flex flex-col items-start gap-1 text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="flex flex-col items-start gap-1 text-sm text-neutral-600 dark:text-neutral-400 mt-1">
             {plan.current.level != plan.target.level && (
               <span>
                 Lv.{plan.current.level} → <span className="font-semibold text-blue-600 dark:text-blue-400">Lv.{plan.target.level}</span>

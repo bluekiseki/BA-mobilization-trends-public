@@ -6,8 +6,8 @@ import 'rc-tooltip/assets/bootstrap.css';
 import { FaShield } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 
-import { TerrainIconGameStyle, type Terrain } from '~/components/teran';
-import type { PickupStudentInfo, ScheduleItem } from '~/utils/calender.data';
+import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
+import type { PickupStudentInfo, ScheduleItem, ScheduleItemDetails } from '~/utils/calender.data';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
@@ -199,7 +199,8 @@ export function GanttTrack({ title, items, scrollLeft, viewportWidth, laneHeight
 }
 // --- 1. Gantt Bar ---
 export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortraits, lane, laneHeight, colorMap, colorKey }: GanttRenderProps) {
-  const { t: t_cal } = useTranslation('calendar');
+  const { t: t_cal_orig } = useTranslation('calendar');
+  const t_cal = t_cal_orig as (key: string) => string;
   const locale = useTranslation().i18n.language as Locale;
 
   const width = Math.max(calculateWidthPx(item.startTime, item.endTime), 2);
@@ -207,8 +208,11 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
   const isPrediction = item.details?.prediction === true;
 
   let bgClass = TRACK_COLORS[item.type] || 'bg-neutral-500';
-  if (colorMap && colorKey && item.details?.[colorKey]) {
-    bgClass = colorMap[item.details[colorKey]] || CAMPAIGN_COLORS.default;
+  if (colorMap && colorKey && item.details?.[colorKey as keyof ScheduleItemDetails]) {
+    const colorKeyValue = item.details[colorKey as keyof ScheduleItemDetails];
+    if (typeof colorKeyValue === 'string' || typeof colorKeyValue === 'number') {
+      bgClass = colorMap[String(colorKeyValue)] || CAMPAIGN_COLORS.default;
+    }
   }
 
   const textColorClass = item.textColor || 'text-white';
@@ -217,7 +221,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
 
   let displayTitle = item.title;
   if (item.type === 'campaign' && item.details?.campaignType) {
-    const rawTitle = t_cal(`campaign.${item.details.campaignType.toLowerCase()}` as any) as string;
+    const rawTitle = t_cal(`campaign.${item.details.campaignType.toLowerCase()}`);
     const multiplier = item.title.split(' x')[1];
     displayTitle = multiplier ? `${rawTitle} x${multiplier}` : rawTitle;
   }
@@ -248,10 +252,10 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
           {item.label && (
             <div
               className={`
-                absolute top-[-14px] left-0 h-[14px] px-2 flex items-center justify-center
+                absolute top-[-14px] left-0 h-[14px] px-2 flex items-center justify-center whitespace-nowrap
                 text-[9px] font-black uppercase tracking-wider
                 rounded-t-[3px] border-b-0 shadow-sm z-50 pointer-events-none
-                ${bgClass} ${textColorClass} 
+                ${bgClass} ${textColorClass}
               `}
               style={{
                 ...dynamicStyles,
@@ -304,7 +308,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
               {isEraid && (
                 <div className="flex items-center gap-1">
                   {item.details?.terrain && <TerrainIconGameStyle terrain={item.details.terrain as Terrain} size="0.7em" />}
-                  {item.details!.bosses.map((boss: any, idx: number) => (
+                  {item.details?.bosses?.map((boss: { armorType: string; armorName: string; difficulty: string }, idx: number) => (
                     <div key={idx} className="flex items-center scale-90">
                       <ArmorIcon armorType={boss.armorType} difficulty={boss.difficulty} />
                     </div>
@@ -342,7 +346,7 @@ const PickupStudentItem = ({
   portrait: string;
   studentName: string;
   laneHeight: number;
-  TooltipComponent: any;
+  TooltipComponent: typeof Tooltip;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [tappedOnce, setTappedOnce] = useState(false); // State for checking mobile double-tap
@@ -411,8 +415,8 @@ const PickupStudentItem = ({
           <div className="absolute top-[-4px] left-0 right-0 flex justify-between w-full px-0 pointer-events-none opacity-90 group-hover:opacity-100">
             {student.rerun ? <span className="bg-blue-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm backdrop-blur-[1px] whitespace-nowrap">{t_c('rerun')}</span> : <span />}
             <div className="flex gap-px whitespace-nowrap">
-              {student.fast && <span className="bg-amber-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('fast')}</span>}
-              {!student.fast && student.limited && <span className="bg-pink-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('limited')}</span>}
+              {student.fest && <span className="bg-amber-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('fest')}</span>}
+              {!student.fest && student.limited && <span className="bg-pink-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('limited')}</span>}
             </div>
           </div>
         </Link>
@@ -425,7 +429,7 @@ export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studen
   const width = Math.max(calculateWidthPx(item.startTime, item.endTime), 2);
   const left = calculateLeftPx(item.startTime);
   const isPrediction = item.details?.prediction === true;
-  const TooltipComponent = (Tooltip as any).default || Tooltip;
+  const TooltipComponent = ((Tooltip as unknown as Record<string, unknown>).default as typeof Tooltip) || Tooltip;
   const students = item.details?.students || [];
 
   const containerStyle = `
@@ -470,7 +474,8 @@ export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studen
 }
 
 export function GanttMarker({ item, calculateLeftPx, lane, laneHeight }: GanttRenderProps) {
-  const { t: t_cal } = useTranslation('calendar');
+  const { t: t_cal_orig } = useTranslation('calendar');
+  const t_cal = t_cal_orig as (key: string) => string;
   const left = calculateLeftPx(item.startTime);
   const colorClass = TRACK_COLORS[item.type] || 'bg-neutral-500';
 
@@ -486,7 +491,7 @@ export function GanttMarker({ item, calculateLeftPx, lane, laneHeight }: GanttRe
           ${bgColorClass} ${textColorClass} 
         `}
       >
-        {item.type === 'shop-reset' ? t_cal(item.title as any) : item.title}
+        {item.type === 'shop-reset' ? t_cal(item.title) : item.title}
       </div>
 
       <div className={`w-[2px] grow ${bgColorClass} opacity-60 group-hover:opacity-100 transition-opacity`} />

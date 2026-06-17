@@ -15,7 +15,7 @@ interface InteractiveSimulatorProps {
   onClose: () => void;
 }
 
-export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData, initialConfig, onComplete, onClose }: InteractiveSimulatorProps) => {
+export const DreamMakerInteractiveSimulator = ({ dreamData, /*eventData, iconData,*/ initialConfig, onComplete, onClose }: InteractiveSimulatorProps) => {
   // --- Data Setup ---
   const {
     daily_point,
@@ -49,29 +49,25 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
 
   const paramInfo = useMemo(
     () =>
-      parameter.reduce(
-        (acc, p) => {
-          acc[p.ParameterType] = p;
-          return acc;
-        },
-        {} as Record<number, MinigameDreamParameter>,
-      ),
+      parameter.reduce<Record<number, MinigameDreamParameter>>((acc, p) => {
+        acc[p.ParameterType] = p;
+        return acc;
+      }, {}),
     [parameter],
   );
   const scheduleResultsByGroup = useMemo(
     () =>
-      schedule_result.reduce(
-        (acc, res) => {
-          if (!acc[res.DreamMakerScheduleGroup]) acc[res.DreamMakerScheduleGroup] = [];
-          acc[res.DreamMakerScheduleGroup].push(res);
-          return acc;
-        },
-        {} as Record<number, MinigameDreamScheduleResult[]>,
-      ),
+      schedule_result.reduce<Record<number, MinigameDreamScheduleResult[]>>((acc, res) => {
+        if (!acc[res.DreamMakerScheduleGroup]) acc[res.DreamMakerScheduleGroup] = [];
+        acc[res.DreamMakerScheduleGroup].push(res);
+        return acc;
+      }, {}),
     [schedule_result],
   );
-  const specialEnding = useMemo(() => ending.find((e) => e.DreamMakerEndingType === 2)!, [ending]);
-  const normalEnding = useMemo(() => ending.find((e) => e.DreamMakerEndingType === 1)!, [ending]);
+  const specialEnding = useMemo(() => ending.find((e) => e.DreamMakerEndingType === 2), [ending]);
+  const normalEnding = useMemo(() => ending.find((e) => e.DreamMakerEndingType === 1), [ending]);
+
+  if (!specialEnding || !normalEnding) throw Error('no ending of dream');
 
   // --- State ---
   const [currentLoop, setCurrentLoop] = useState(1);
@@ -148,8 +144,8 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
     const newStats = { ...currentStats };
     const statChangesLog: string[] = [];
     outcome.RewardParameter.forEach((paramType, index) => {
-      const amount = outcome!.RewardParameterAmount[index];
-      const operation = outcome!.RewardParameterOperationTypeStr[index];
+      const amount = outcome.RewardParameterAmount[index];
+      const operation = outcome.RewardParameterOperationTypeStr[index];
       const oldVal = newStats[paramType];
       let newVal = oldVal;
       if (operation.includes('GrowUp')) newVal += amount;
@@ -187,7 +183,7 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
 
       const nextDay = currentDay + 1;
       if (nextDay > days) {
-        let reachedSpecial = specialEnding.EndingCondition ? specialEnding.EndingCondition.every((paramType, j) => newStats[paramType] >= specialEnding.EndingConditionValue![j]) : false;
+        const reachedSpecial = specialEnding.EndingCondition ? specialEnding.EndingCondition.every((paramType, j) => newStats[paramType] >= (specialEnding.EndingConditionValue?.[j] || 0)) : false;
         const finalEnding = reachedSpecial ? specialEnding : normalEnding;
         setEndingHistory((prev) => [...prev, reachedSpecial ? 'Special' : 'Normal']);
 
@@ -259,8 +255,8 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
       <div className="bg-white dark:bg-neutral-800 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/*  Header */}
         <div className="flex justify-between items-center mb-4 pb-4 border-b dark:border-neutral-700">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('sim.title')}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">
+          <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('sim.title')}</h3>
+          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 text-2xl leading-none">
             &times;
           </button>
         </div>
@@ -269,9 +265,9 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
         {isComplete ? (
           <div className="text-center py-10 grow flex flex-col justify-center items-center">
             <FiCheckCircle className="text-green-500 text-5xl mb-4" />
-            <p className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">{t('sim.completeTitle')}</p>
+            <p className="text-2xl font-bold mb-2 text-neutral-900 dark:text-neutral-100">{t('sim.completeTitle')}</p>
             <p className="text-neutral-700 dark:text-neutral-300">{t('sim.completeBody', { count: initialConfig.targetLoops })}</p>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
               {t('sim.endingHistoryLabel')} {endingHistory.join(', ')}
             </p>
             <button onClick={handleComplete} className="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-2 rounded-lg transition-colors">
@@ -284,20 +280,20 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
             {' '}
             {/* Added custom-scrollbar class */}
             {/* Status Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 p-3 bg-gray-50 dark:bg-neutral-700/50 rounded-lg text-sm">
-              <div className="font-semibold text-gray-800 dark:text-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg text-sm">
+              <div className="font-semibold text-neutral-800 dark:text-neutral-200">
                 {t('sim.loopLabel')}:{' '}
                 <span className="text-blue-600 dark:text-blue-400">
                   {currentLoop} / {initialConfig.targetLoops}
                 </span>
               </div>
-              <div className="font-semibold text-gray-800 dark:text-gray-200">
+              <div className="font-semibold text-neutral-800 dark:text-neutral-200">
                 {t('sim.dayLabel')}:{' '}
                 <span className="text-blue-600 dark:text-blue-400">
                   {currentDay} / {days}
                 </span>
               </div>
-              <div className="font-semibold text-gray-800 dark:text-gray-200">
+              <div className="font-semibold text-neutral-800 dark:text-neutral-200">
                 {t('sim.actionsRemaining')}:{' '}
                 <span className="text-blue-600 dark:text-blue-400">
                   {actionsRemaining} / {actionsPerDay}
@@ -307,9 +303,9 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
             {/* Stats Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
               {parameter.map((p) => (
-                <div key={p.ParameterType} className="bg-gray-100 dark:bg-neutral-700 p-2 rounded-lg">
-                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">{getLocaleString(p.LocalizeEtc)}</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{currentStats[p.ParameterType]?.toLocaleString() ?? '...'}</p>
+                <div key={p.ParameterType} className="bg-neutral-100 dark:bg-neutral-700 p-2 rounded-lg">
+                  <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">{getLocaleString(p.LocalizeEtc)}</p>
+                  <p className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{currentStats[p.ParameterType]?.toLocaleString() ?? '...'}</p>
                 </div>
               ))}
             </div>
@@ -321,7 +317,7 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
                   <button
                     key={s.DreamMakerScheduleGroupId}
                     onClick={() => handleAction(s.DreamMakerScheduleGroupId)}
-                    className="cursor-pointer p-3 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg text-left transition-all shadow-sm border dark:border-neutral-600"
+                    className="cursor-pointer p-3 bg-white dark:bg-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-600 rounded-lg text-left transition-all shadow-sm border dark:border-neutral-600"
                   >
                     <p className="font-semibold text-sm text-blue-600 dark:text-blue-400 mb-1">{getLocaleString(s.LocalizeEtc)}</p>
                     <div className="text-xs space-y-0.5">
@@ -334,7 +330,7 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
                           const color = netChange > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
                           return (
                             <div key={p.ParameterType} className={`flex items-center justify-between ${color}`}>
-                              <span className="text-gray-600 dark:text-gray-400">{getLocaleString(p.LocalizeEtc)}:</span>
+                              <span className="text-neutral-600 dark:text-neutral-400">{getLocaleString(p.LocalizeEtc)}:</span>
                               <span className="font-medium flex items-center">
                                 {netChange > 0 ? <FiTrendingUp size={12} className="mr-0.5" /> : <FiTrendingDown size={12} className="mr-0.5" />}
                                 {netChange.toFixed(1)}
@@ -350,24 +346,24 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, eventData, iconData,
             {/* Outcome & History */}
             <div className="border-t dark:border-neutral-700 pt-3 mt-3 space-y-2">
               {/* Last Outcome */}
-              <div className="text-sm text-gray-700 dark:text-gray-300 p-2 bg-gray-50 dark:bg-neutral-700/50 rounded">
+              <div className="text-sm text-neutral-700 dark:text-neutral-300 p-2 bg-neutral-50 dark:bg-neutral-700/50 rounded">
                 {lastOutcome ? (
                   <>
                     <strong>{t('sim.outcomeLabel')}:</strong> {lastOutcome}
                   </>
                 ) : (
-                  <span className="text-gray-400 dark:text-gray-500">{t('sim.waiting')}</span>
+                  <span className="text-neutral-400 dark:text-neutral-500">{t('sim.waiting')}</span>
                 )}
               </div>
 
               {/* History Log */}
               <div className="text-xs">
-                <button onClick={() => setShowHistory((prev) => !prev)} className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white">
+                <button onClick={() => setShowHistory((prev) => !prev)} className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white">
                   {showHistory ? <FiChevronUp /> : <FiChevronDown />}
                   {t('sim.historyLog')}
                 </button>
                 {showHistory && (
-                  <div className="mt-2 p-2 bg-gray-900 dark:bg-black text-gray-300 rounded max-h-40 overflow-y-auto font-mono text-[11px] leading-relaxed custom-scrollbar">
+                  <div className="mt-2 p-2 bg-neutral-900 dark:bg-black text-neutral-300 rounded max-h-40 overflow-y-auto font-mono text-[11px] leading-relaxed custom-scrollbar">
                     {history.length > 0 ? history.map((line, i) => <p key={i}>{line}</p>) : <p>{t('sim.noHistory')}</p>}
                   </div>
                 )}

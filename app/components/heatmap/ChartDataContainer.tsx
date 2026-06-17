@@ -1,6 +1,6 @@
 // app/components/heatmap/ChartDataContainer.tsx
 
-import { useMemo, useEffect, memo, lazy } from 'react';
+import { useMemo, useEffect, memo, lazy, Suspense } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useChartControlsStore } from '../../store/chartControlsStore';
 import { useDataCache } from '../../utils/cache';
@@ -55,7 +55,7 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
   const fetchAndProcessWithCache = useDataCache<string>();
 
   useEffect(() => {
-    fetchAndProcessChartData(server, fetchAndProcessWithCache, locale);
+    void fetchAndProcessChartData(server, fetchAndProcessWithCache, locale);
   }, [
     fetchAndProcessChartData,
     processingParams.selectedStudentId,
@@ -76,14 +76,16 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
       .map((z) => chartDataByZ.get(z))
       .filter((d): d is ChartData => d !== undefined);
     if (selectedData.length === 0) return null;
-    const base = JSON.parse(JSON.stringify(selectedData[0]));
+    const base: ChartData = JSON.parse(JSON.stringify(selectedData[0])) as ChartData;
     const aggregated: ChartData = base;
     for (let i = 1; i < selectedData.length; i++) {
       const data = selectedData[i];
       for (let r = 0; r < data.heatmap.z.length; r++) {
         for (let c = 0; c < data.heatmap.z[r].length; c++) {
-          if (aggregated.heatmap.z[r][c] !== null && data.heatmap.z[r][c] !== null) {
-            (aggregated.heatmap.z[r][c] as number) += data.heatmap.z[r][c]!;
+          const currVal = aggregated.heatmap.z[r][c];
+          const dataVal = data.heatmap.z[r][c];
+          if (currVal !== null && dataVal !== null) {
+            aggregated.heatmap.z[r][c] = currVal + dataVal;
           }
         }
       }
@@ -141,15 +143,9 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
 
   const chartComponent = useMemo(() => {
     return (
-      <DynamicHeatmapChart
-        // <HeatmapChart
-        isLoading={isLoading}
-        error={error}
-        aggregatedChartData={aggregatedChartData}
-        layout={layout}
-        heatmapData={heatmapData}
-        unit={t(`unit.${histogramMode}`)}
-      />
+      <Suspense fallback={null}>
+        <DynamicHeatmapChart isLoading={isLoading} error={error} aggregatedChartData={aggregatedChartData} layout={layout} heatmapData={heatmapData} unit={t(`unit.${histogramMode}`)} />
+      </Suspense>
     );
   }, [isLoading, error, aggregatedChartData, layout, heatmapData]);
 
@@ -157,7 +153,7 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
   return (
     <div data-component-name="ChartDataContainer">
       <div className="md-4">
-        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">{t('desp_chart')}</p>
+        <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 transition-colors duration-300">{t('desp_chart')}</p>
       </div>
       {chartComponent}
 

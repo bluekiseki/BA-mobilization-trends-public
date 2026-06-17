@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { difficultyInfo, type DifficultyName } from '~/components/Difficulty';
+import { difficultyInfo, type DifficultyName } from '~/components/raid/Difficulty';
 
 export interface DifficultySetting {
   isVisible: boolean;
@@ -102,7 +102,7 @@ export default function DifficultySettingsPanel({ settings, onChange }: Difficul
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-neutral-800/50 p-3 rounded-lg border dark:border-neutral-700 text-sm">
+    <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg border dark:border-neutral-700 text-sm">
       <div className="grid grid-cols-12 gap-2 font-bold px-2 pb-2 border-b dark:border-neutral-700">
         <div className="col-span-5">{t('headerDifficulty')}</div>
         <div className="col-span-3 text-center">{t('headerInterval')}</div>
@@ -114,7 +114,7 @@ export default function DifficultySettingsPanel({ settings, onChange }: Difficul
 
       <div className="space-y-1 mt-2">
         {difficultyInfo.map(({ name }) => (
-          <div key={name} className="grid grid-cols-12 gap-2 items-center px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-neutral-700/50">
+          <div key={name} className="grid grid-cols-12 gap-2 items-center px-2 py-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700/50">
             <label htmlFor={`check-${name}`} className="col-span-5 flex items-center cursor-pointer truncate">
               <input
                 type="checkbox"

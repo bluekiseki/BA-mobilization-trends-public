@@ -27,7 +27,14 @@ import { ServerToggleSwitch } from './ServerSwitcher';
 // ==========================================
 // 1. Utilities & configuration data
 // ==========================================
-const navLinks = [
+interface NavLink {
+  key: string;
+  label: 'dashboard' | 'ranking' | 'heatmap';
+  path: (c: string | null) => string;
+  regex: RegExp;
+}
+
+const navLinks: NavLink[] = [
   { key: 'dashboard', label: 'dashboard', path: (c: string | null) => `/dashboard/${c || 'jp'}`, regex: /\/dashboard\/(kr|jp)/ },
   { key: 'ranking', label: 'ranking', path: (c: string | null) => `/charts/${c || 'jp'}/ranking`, regex: /\/charts\/(kr|jp)\/ranking$/ },
   { key: 'heatmap', label: 'heatmap', path: (c: string | null) => `/charts/${c || 'jp'}/heatmap`, regex: /\/charts\/(kr|jp)\/heatmap$/ },
@@ -187,21 +194,21 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
     <>
       <div className="relative flex items-center" ref={ref}>
         {/* 1. Help icon button (opens dropdown on click) */}
-        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors">
           <HiOutlineQuestionMarkCircle className="text-xl" strokeWidth={1.5} />
           <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('help')}</span>
         </button>
 
         {/* 2. Dropdown menu */}
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
+          <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
             {isHelpAvailable && (
               <button
                 onClick={() => {
                   openSidebar();
                   setIsOpen(false);
                 }}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
               >
                 <HiOutlineLightBulb className="text-lg" /> {t('viewDescription')}
               </button>
@@ -212,7 +219,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
                 onOpenBugModal();
                 setIsOpen(false);
               }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
             >
               <HiOutlineFlag className="text-lg" /> {t('reportBug')}
             </button>
@@ -223,7 +230,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
                 // target="_blank"
                 // rel="noreferrer"
                 // onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
               >
                 <HiOutlineMail className="text-lg" /> {t('email')}
               </span>
@@ -234,7 +241,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
               target="_blank"
               rel="noreferrer"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors text-left"
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
             >
               <HiCode className="text-lg" /> {t('viewCode')}
             </a>
@@ -242,6 +249,53 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
         )}
       </div>
     </>
+  );
+};
+
+const MoreDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; isActive: boolean; activeLinkStyle: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { t: t_c } = useTranslation('common');
+  const { t: t_j } = useTranslation('jukebox');
+  const { t: t_n } = useTranslation('notices');
+
+  useOutsideClick(ref, () => setIsOpen(false));
+
+  const calendarPath = locale === 'ja' ? '/calendar/jp' : '/calendar/kr';
+
+  const moreItems = [
+    { key: 'jukebox', to: '/utils/jukebox', label: t_j('title'), regex: /\/utils\/jukebox/ },
+    { key: 'notices', to: '/notices', label: t_n('title'), regex: /\/notices/ },
+    { key: 'calendar', to: calendarPath, label: t_c('home.schedule'), regex: /\/calendar\// },
+  ];
+
+  return (
+    <div className="relative flex items-center" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
+          isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
+        }`}
+      >
+        {t_c('etc')}
+        <HiChevronDown className={`text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg py-1 z-50">
+          {moreItems.map((item) => (
+            <Link
+              key={item.key}
+              to={localeLink(locale, item.to)}
+              onClick={() => setIsOpen(false)}
+              className="flex items-center px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -266,7 +320,7 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
-          isActive ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'
+          isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
         }`}
       >
         {t('planner')}
@@ -274,13 +328,13 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
       </button>
 
       {isOpen && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-52 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-52 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
           {plannerItems.map((item) => (
             <Link
               key={item.key}
               to={localeLink(locale, item.to)}
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2.5 text-sm text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="flex items-center px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors"
             >
               {item.label}
             </Link>
@@ -302,12 +356,13 @@ const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pat
     { key: 'students', to: '/planner/students', label: t_p('page.studentGrowthPlanner') },
     { key: 'equipment', to: '/planner/equipment', label: t_p('page.equipmentFarmingPlanner') },
     { key: 'favor', to: '/utils/favor', label: t_p('page.favorCalculator') },
+    { key: 'scanner', to: '/planner/item-scanner', label: t_p('page.itemScanner') },
   ];
 
   return (
     <div className="flex flex-col gap-2">
-      <span className={`text-base font-bold ${isPlannerActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-neutral-400'}`}>{t('planner')}</span>
-      <div className="flex flex-col gap-3 pl-3 border-l-2 border-slate-100 dark:border-neutral-800">
+      <span className={`text-base font-bold ${isPlannerActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>{t('planner')}</span>
+      <div className="flex flex-col gap-3 pl-3 border-l-2 border-neutral-100 dark:border-neutral-800">
         {plannerItems.map((item) => {
           const isActive = pathname.includes(item.to);
           return (
@@ -315,7 +370,43 @@ const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pat
               key={item.key}
               to={localeLink(locale, item.to)}
               onClick={onClose}
-              className={`text-sm font-medium transition-colors ${isActive ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
+              className={`text-sm font-medium transition-colors ${isActive ? 'text-neutral-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-neutral-500 dark:text-neutral-400'}`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const MobileMoreGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
+  const { t: t_c } = useTranslation('common');
+  const { t: t_j } = useTranslation('jukebox');
+  const { t: t_n } = useTranslation('notices');
+  const isMoreActive = /\/utils\/jukebox|\/notices|\/calendar\//.test(pathname);
+
+  const calendarPath = locale === 'ja' ? '/calendar/jp' : '/calendar/kr';
+
+  const moreItems = [
+    { key: 'jukebox', to: '/utils/jukebox', label: t_j('title') },
+    { key: 'notices', to: '/notices', label: t_n('title') },
+    { key: 'calendar', to: calendarPath, label: t_c('home.schedule') },
+  ];
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className={`text-base font-bold ${isMoreActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>{t_c('etc')}</span>
+      <div className="flex flex-col gap-3 pl-3 border-l-2 border-neutral-100 dark:border-neutral-800">
+        {moreItems.map((item) => {
+          const isActive = pathname.includes(item.to);
+          return (
+            <Link
+              key={item.key}
+              to={localeLink(locale, item.to)}
+              onClick={onClose}
+              className={`text-sm font-medium transition-colors ${isActive ? 'text-neutral-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-neutral-500 dark:text-neutral-400'}`}
             >
               {item.label}
             </Link>
@@ -357,8 +448,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
 
   const isHelpAvailable = helpWhitelist.some((pattern) => pattern.test(pathname));
   const isPlannerActive = /\/planner\/|\/utils\/favor/.test(pathname);
-  const activeLinkStyle =
-    "relative after:content-[''] after:absolute after:left-0 after:bottom-[2px] after:w-full after:h-[4px] after:bg-yellow-500 after:-z-10 dark:after:bg-bluearchive-botton-yellow";
+  const activeLinkStyle = "relative after:content-[''] after:absolute after:left-0 after:bottom-[2px] after:w-full after:h-[4px] after:bg-yellow-500 after:-z-10 dark:after:bg-ba-btn-yellow";
 
   return (
     <>
@@ -384,19 +474,14 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                 <Link
                   key={link.key}
                   to={localeLink(locale, link.path(country))}
-                  className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'}`}
+                  className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'}`}
                 >
-                  {t(link.label as any)}
+                  {t(link.label)}
                 </Link>
               );
             })}
             <PlannerDropdown locale={locale} isActive={isPlannerActive} activeLinkStyle={activeLinkStyle} />
-            <Link
-              to={localeLink(locale, '/utils/jukebox')}
-              className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${/\/utils\/jukebox/.test(pathname) ? activeLinkStyle : 'text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white'}`}
-            >
-              BGM
-            </Link>
+            <MoreDropdown locale={locale} isActive={/\/utils\/jukebox|\/notices|\/calendar\//.test(pathname)} activeLinkStyle={activeLinkStyle} />
           </nav>
 
           {/* Right: Utilities (Icons common to desktop & mobile) */}
@@ -413,7 +498,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
             )}
 
             {/* Mobile hamburger icon */}
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-slate-600 dark:text-neutral-300 ml-1">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-neutral-600 dark:text-neutral-300 ml-1">
               {isMobileMenuOpen ? <HiOutlineXMark className="text-2xl" strokeWidth={1.5} /> : <HiOutlineBars3 className="text-2xl" strokeWidth={1.5} />}
             </button>
           </div>
@@ -421,7 +506,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
 
         {/* Mobile hamburger menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-14 left-0 w-full bg-white dark:bg-neutral-950 border-b border-slate-200 dark:border-neutral-800 shadow-xl px-5 py-5 space-y-5 z-10">
+          <div className="md:hidden absolute top-14 left-0 w-full bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 shadow-xl px-5 py-5 space-y-5 z-10">
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => {
                 const isActive = link.regex.test(pathname);
@@ -430,9 +515,9 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                     key={link.key}
                     to={localeLink(locale, link.path(country))}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-base font-bold transition-colors ${isActive ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
+                    className={`text-base font-bold transition-colors ${isActive ? 'text-neutral-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-neutral-500 dark:text-neutral-400'}`}
                   >
-                    {t(link.label as any)}
+                    {t(link.label)}
                   </Link>
                 );
               })}
@@ -440,14 +525,8 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
               {/* Planner Group */}
               <MobilePlannerGroup locale={locale} pathname={pathname} onClose={() => setIsMobileMenuOpen(false)} />
 
-              {/* BGM */}
-              <Link
-                to={localeLink(locale, '/utils/jukebox')}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-base font-bold transition-colors ${/\/utils\/jukebox/.test(pathname) ? 'text-slate-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-slate-500 dark:text-neutral-400'}`}
-              >
-                BGM
-              </Link>
+              {/* More group */}
+              <MobileMoreGroup locale={locale} pathname={pathname} onClose={() => setIsMobileMenuOpen(false)} />
 
               {/* Bug Report */}
               <button
@@ -455,7 +534,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                   setIsBugModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="text-base font-bold transition-colors text-slate-500 dark:text-neutral-400 text-left flex items-center gap-2"
+                className="text-base font-bold transition-colors text-neutral-500 dark:text-neutral-400 text-left flex items-center gap-2"
               >
                 {/* <HiOutlineFlag className="text-base" /> */}
                 {t('reportBug')}
@@ -465,9 +544,9 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
             {/* Render mobile toggle switch only if server selection is available on the current page */}
             {currentServer && (
               <>
-                <div className="h-px bg-slate-100 dark:bg-neutral-800 w-full" />
+                <div className="h-px bg-neutral-100 dark:bg-neutral-800 w-full" />
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-slate-500 dark:text-neutral-400 mb-1">{t('serverSettings')}</span>
+                  <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 mb-1">{t('serverSettings')}</span>
                   <div className="-ml-2">
                     <ServerToggleSwitch currentServer={currentServer} />
                   </div>

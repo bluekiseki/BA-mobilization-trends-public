@@ -1,0 +1,52 @@
+{
+  "name": "your-worker-name",
+  "compatibility_date": "2026-01-03",
+  "main": "./workers/app.ts",
+  "assets": {
+    "directory": "./build/client",
+    "binding": "ASSETS",
+  },
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true,
+    },
+  },
+  "vars": {
+    "VITE_TURNSTILE_SITE_KEY": "your-turnstile-site-key",
+    "VITE_PUBLIC_POSTHOG_KEY": "your-posthog-public-key",
+    "VITE_PUBLIC_POSTHOG_HOST": "https://your-posthog-host",
+    "VITE_WEB3FORMS_ACCESS_KEY": "your-web3forms-access-key",
+    "GITHUB_CLIENT_ID": "your-github-oauth-client-id",
+    "ENVIRONMENT": "production",
+  },
+  "preview_urls": false,
+  "workers_dev": false,
+  "r2_buckets": [
+    {
+      "binding": "MY_BUCKET",
+      "bucket_name": "your-r2-bucket-name",
+    },
+  ],
+  "services": [
+    {
+      "binding": "AUTH_WORKER",
+      "service": "your-auth-worker-name",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "your-db-name",
+      "database_id": "your-d1-database-id",
+    },
+    {
+      "binding": "ba_user",
+      "database_name": "your-user-db-name",
+      "database_id": "your-d1-database-id",
+    },
+  ],
+}

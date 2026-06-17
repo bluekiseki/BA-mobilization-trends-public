@@ -14,7 +14,7 @@ interface SpreadsheetTableRowProps {
   rowIndex: number;
   plan: GrowthPlan | null;
   starUwOptions: readonly { label: string; star: number; uw: number }[];
-  updatePlan: (uuid: string, field: string, value: any, saveUndo?: boolean) => void;
+  updatePlan: (uuid: string, field: string, value: unknown, saveUndo?: boolean) => void;
   handleAdd: (studentId: number) => void;
   handleRemove: (uuid: string) => void;
   handleStarUw: (uuid: string, section: 'current' | 'target', idx: number) => void;
@@ -38,7 +38,7 @@ function SpreadsheetTableRowComponent({
 }: SpreadsheetTableRowProps) {
   // console.log('SpreadsheetTableRowComponent',SpreadsheetTableRowComponent)
   const isAdded = plan !== null;
-  const rowBg = isAdded ? 'bg-white dark:bg-neutral-900' : 'bg-gray-50 dark:bg-neutral-950';
+  const rowBg = isAdded ? 'bg-white dark:bg-neutral-900' : 'bg-neutral-50 dark:bg-neutral-950';
   const cellId = useCallback((col: string) => `row-${rowIndex}-${col}`, [rowIndex]);
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
 
@@ -49,17 +49,23 @@ function SpreadsheetTableRowComponent({
   return (
     <tr className={rowBg}>
       <td className={`${td} sticky z-10 bg-inherit`} style={{ left: L.add, width: 40, minWidth: 40, maxWidth: 40 }}>
-        <input type="checkbox" checked={isAdded} onChange={() => (isAdded ? handleRemove(plan!.uuid) : handleAdd(row.studentId))} className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer" />
+        <input
+          type="checkbox"
+          checked={isAdded}
+          onChange={() => {
+            if (plan) {
+              handleRemove(plan.uuid);
+            } else {
+              handleAdd(row.studentId);
+            }
+          }}
+          className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
+        />
       </td>
 
       <td className={`${td} sticky z-10 bg-inherit`} style={{ left: L.sel, width: 40, minWidth: 40, maxWidth: 40 }}>
         {plan && (
-          <input
-            type="checkbox"
-            checked={plan.isSelected !== false}
-            onChange={() => updatePlan(plan.uuid, 'isSelected', !plan.isSelected)}
-            className="w-3.5 h-3.5 rounded text-emerald-600 cursor-pointer"
-          />
+          <input type="checkbox" checked={plan.isSelected} onChange={() => updatePlan(plan.uuid, 'isSelected', !plan.isSelected)} className="w-3.5 h-3.5 rounded text-emerald-600 cursor-pointer" />
         )}
       </td>
 
@@ -67,12 +73,12 @@ function SpreadsheetTableRowComponent({
         {row.portrait ? (
           <img src={`data:image/webp;base64,${row.portrait}`} alt={row.name} className="w-8 h-8 rounded object-cover" />
         ) : (
-          <div className="w-8 h-8 rounded bg-gray-200 dark:bg-neutral-700" />
+          <div className="w-8 h-8 rounded bg-neutral-200 dark:bg-neutral-700" />
         )}
       </td>
 
       <td
-        className={`${td} sticky z-10 bg-inherit pl-2 text-left font-medium truncate ${isAdded ? 'text-gray-800 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}
+        className={`${td} sticky z-10 bg-inherit pl-2 text-left font-medium truncate ${isAdded ? 'text-neutral-800 dark:text-neutral-100' : 'text-neutral-400 dark:text-neutral-500'}`}
         style={{ left: L.name, width: screenWidth > 600 ? 120 : 0, minWidth: screenWidth > 600 ? 120 : 0, maxWidth: screenWidth > 600 ? 120 : 0 }}
         title={row.name}
       >
@@ -80,7 +86,7 @@ function SpreadsheetTableRowComponent({
       </td>
 
       <td
-        className={`${td} sticky z-10 bg-inherit pl-1 text-left truncate text-gray-500 dark:text-gray-400 whitespace-nowrap`}
+        className={`${td} sticky z-10 bg-inherit pl-1 text-left truncate text-neutral-500 dark:text-neutral-400 whitespace-nowrap`}
         style={{ left: L.school, width: screenWidth > 600 ? 70 : 0, minWidth: screenWidth > 600 ? 70 : 0, maxWidth: screenWidth > 600 ? 70 : 0 }}
       >
         {row.school}
@@ -200,7 +206,7 @@ function SpreadsheetTableRowComponent({
             <GearInput plan={plan} section="current" value={plan.current.gear} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('currentGear')} />
           ) : (
             <td className={td} data-cell-id={cellId('currentGear')}>
-              <span className="text-gray-300 dark:text-neutral-600">-</span>
+              <span className="text-neutral-300 dark:text-neutral-600">-</span>
             </td>
           )}
 
@@ -222,7 +228,7 @@ function SpreadsheetTableRowComponent({
             <GearInput plan={plan} section="target" value={plan.target.gear} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('targetGear')} />
           ) : (
             <td className={td} data-cell-id={cellId('targetGear')}>
-              <span className="text-gray-300 dark:text-neutral-600">-</span>
+              <span className="text-neutral-300 dark:text-neutral-600">-</span>
             </td>
           )}
 
@@ -232,7 +238,7 @@ function SpreadsheetTableRowComponent({
               value={plan.acquiredDate || ''}
               placeholder="YYYY-MM-DD"
               className={inp}
-              onChange={(e) => {}}
+              onChange={() => {}}
               onBlur={(e) => updatePlan(plan.uuid, 'acquiredDate', e.target.value || null)}
             />
           </td>
@@ -240,7 +246,7 @@ function SpreadsheetTableRowComponent({
           <td className={td}>
             <input
               type="checkbox"
-              checked={plan.useEligmaForStar !== false}
+              checked={plan.useEligmaForStar}
               onChange={() => updatePlan(plan.uuid, 'useEligmaForStar', !plan.useEligmaForStar)}
               className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
             />
@@ -277,7 +283,7 @@ function SpreadsheetTableRowComponent({
           <td className={td}></td>
         </>
       ) : (
-        <td colSpan={30} className="border-b border-gray-100 dark:border-neutral-800 text-center text-gray-300 dark:text-neutral-700 italic py-1">
+        <td colSpan={30} className="border-b border-neutral-100 dark:border-neutral-800 text-center text-neutral-300 dark:text-neutral-700 italic py-1">
           {t('messages.addPlanHint')}
         </td>
       )}

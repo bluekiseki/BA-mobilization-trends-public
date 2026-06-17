@@ -26,7 +26,8 @@ export const useDraftUndoRedoStore = create<DraftUndoRedoState>((set, get) => ({
     if (undoStack.length === 0) return null;
 
     const newUndoStack = [...undoStack];
-    const previousPlans = newUndoStack.pop()!;
+    const previousPlans = newUndoStack.pop();
+    if (!previousPlans) return null;
 
     set({
       undoStack: newUndoStack,
@@ -41,7 +42,8 @@ export const useDraftUndoRedoStore = create<DraftUndoRedoState>((set, get) => ({
     if (redoStack.length === 0) return null;
 
     const newRedoStack = [...redoStack];
-    const nextPlans = newRedoStack.shift()!;
+    const nextPlans = newRedoStack.shift();
+    if (!nextPlans) return null;
 
     set({
       undoStack: [...undoStack, JSON.parse(JSON.stringify(currentPlans))],

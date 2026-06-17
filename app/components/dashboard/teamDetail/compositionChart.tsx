@@ -1,38 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Character, PortraitData, ReportEntryRank, StudentData } from '../common';
 import { StudentIcon } from '../studentIcon';
 import { useTranslation } from 'react-i18next';
 import { CompositionDetailView } from './compositionDetailView';
+import { InfiniteScrollList } from '~/components/InfiniteScrollList';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { RankScatterPlot } from './RankScatterPlot';
 import { FaChevronDown } from 'react-icons/fa6';
-import { FiVideo } from 'react-icons/fi';
+import { FiVideo, FiX } from 'react-icons/fi';
 import React from 'react';
 import { CustomNumberInput } from '~/components/CustomInput';
-import { StarRating } from '~/components/StarRatingProps';
 import { cdn } from '~/utils/cdn';
-
-// --- Video Data Types ---
-interface VideoStudent {
-  id: number;
-  name_ja: string;
-  name_en: string;
-  grade: string;
-}
-
-interface VideoEntry {
-  url: string;
-  title: string;
-  score: number;
-  difficulty: string;
-  has_tl: boolean;
-  boss_types: string[];
-  is_target_type: boolean;
-  num_parties: number;
-  parties: VideoStudent[][];
-  channel_name: string;
-  channel_id: string;
-}
+import { VideoMatchSection } from '../video/VideoMatchSection';
+import type { VideoEntry } from '../video/types';
+import { useSearchMatcher } from '~/utils/useSearchMatcher';
+import type { Locale } from '~/utils/i18n/config';
 
 // --- Types ---
 interface TeamSnapshot {
@@ -48,7 +30,7 @@ interface PositionVariant {
 
 interface MulliganVariant {
   key: string;
-  mulliganIds: number[];
+  mulliganIdsByTeam: number[][]; // per-party mulligan IDs; in pick order when hasMulliganOrder
   count: number;
 }
 
@@ -58,6 +40,7 @@ interface AggregatedComp {
   ranks: number[];
   posVariants: PositionVariant[];
   mulVariants: MulliganVariant[];
+  hasMulliganOrder: boolean;
 }
 
 interface FilterState {
@@ -70,6 +53,8 @@ interface FilterState {
   excludeIncomplete: boolean;
   onlyWithVideo: boolean;
 }
+
+const MUL_OX_MAX_PER_TEAM = 3;
 
 // --- Helper ---
 const isValid = (c: Character | null): c is Character => c !== null && c !== undefined && Boolean(c.id);
@@ -85,13 +70,16 @@ export const CompositionChart: React.FC<{
   useDetailed: boolean;
   onUseDetailedChange: (v: boolean) => void;
 }> = React.memo(({ data, detailedData, studentData, portraitData, raidInfo, server, onScrollToFilter, useDetailed, onUseDetailedChange }) => {
-  const { t } = useTranslation('dashboard'); // Translation hook
+  const { t, i18n } = useTranslation('dashboard'); // Translation hook
+  const locale = i18n.language as Locale;
+  const matcher = useSearchMatcher(locale);
   const [analysisUnit, setAnalysisUnit] = useState<'report' | 'team'>('report');
   const [selectedCompKey, setSelectedCompKey] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
   const [showIdOrder, setShowIdOrder] = useState(false);
   const [sortBy, setSortBy] = useState<'count' | 'bestRank'>('count');
   const [videoData, setVideoData] = useState<VideoEntry[] | null>(null);
+  const [studentFilter, setStudentFilter] = useState<{ excludeIds: number[]; includeIds: number[] }>({ excludeIds: [], includeIds: [] });
 
   useEffect(() => {
     // const filename = ;
@@ -114,7 +102,7 @@ export const CompositionChart: React.FC<{
           .sort((a, b) => a - b)
           .join(',');
         if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push(video);
+        map.get(key)?.push(video);
       } else {
         for (const party of video.parties) {
           const key = party
@@ -122,7 +110,7 @@ export const CompositionChart: React.FC<{
             .sort((a, b) => a - b)
             .join(',');
           if (!map.has(key)) map.set(key, []);
-          map.get(key)!.push(video);
+          map.get(key)?.push(video);
         }
       }
     }
@@ -244,9 +232,73 @@ export const CompositionChart: React.FC<{
     return sorted;
   }, [filteredData, analysisUnit, filters.excludeIncomplete, sortBy, filters.onlyWithVideo, matchingVideos, videoData]);
 
+  const displayedCompData = useMemo(() => {
+    const { excludeIds, includeIds } = studentFilter;
+    if (analysisUnit !== 'team' || (excludeIds.length === 0 && includeIds.length === 0)) return compData;
+    return compData.filter((comp) => {
+      const compIds = new Set(comp.key.split(',').map(Number));
+      if (excludeIds.some((id) => compIds.has(id))) return false;
+      if (includeIds.some((id) => !compIds.has(id))) return false;
+      return true;
+    });
+  }, [compData, analysisUnit, studentFilter]);
+
+  const expandedCompEntries = useMemo(() => {
+    if (!selectedCompKey) return [];
+    return activeData.filter((e) => {
+      const tot = e.t.length;
+      if (filters.usePartyCount && (tot < filters.minParty || tot > filters.maxParty)) return false;
+
+      let targets: TeamSnapshot[] = e.t;
+      if (analysisUnit === 'team' && filters.useTeamIndex) {
+        const idx = filters.teamIndexDir === 'start' ? filters.teamIndexVal - 1 : tot - filters.teamIndexVal;
+        targets = e.t[idx] ? [e.t[idx]] : [];
+      }
+
+      const iterations = analysisUnit === 'report' ? [targets] : targets.map((t) => [t]);
+      return iterations.some((currentTeams) => {
+        const teams = filters.excludeIncomplete ? currentTeams.filter((t) => [...t.m, ...t.s].filter(isValid).length >= 6) : currentTeams;
+        if (analysisUnit !== 'report' && teams.length < currentTeams.length) return false;
+        const sortedIds = teams.flatMap((t) => [...t.m, ...t.s].filter(isValid).map((c) => c.id));
+        if (sortedIds.length === 0) return false;
+        return sortedIds.sort((a, b) => a - b).join(',') === selectedCompKey;
+      });
+    });
+  }, [selectedCompKey, activeData, filters, analysisUnit]);
+
+  const studentUsageCounts = useMemo<Map<number, number>>(() => {
+    const map = new Map<number, number>();
+    for (const comp of compData) {
+      const ids = comp.key.split(',').map(Number);
+      for (const id of ids) {
+        map.set(id, (map.get(id) ?? 0) + comp.totalCount);
+      }
+    }
+    return map;
+  }, [compData]);
+
+  const studentNames = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const [id, s] of Object.entries(studentData)) map.set(Number(id), s.Name);
+    return map;
+  }, [studentData]);
+
+  const searchFn = useCallback(
+    (query: string, excludedIds: Set<number>): Array<[number, string]> => {
+      const entries = Object.entries(studentData).filter(([id]) => !excludedIds.has(Number(id)));
+      const filtered = query.trim() ? entries.filter(([, s]) => matcher(s.Name, query) || s.SearchTags.some((tag) => matcher(tag, query))) : entries;
+      return filtered
+        .sort(([a], [b]) => (studentUsageCounts.get(Number(b)) ?? 0) - (studentUsageCounts.get(Number(a)) ?? 0))
+        .slice(0, 50)
+        .map(([id, s]) => [Number(id), s.Name]);
+    },
+    [studentData, matcher, studentUsageCounts],
+  );
+
   function processGroup(currentTeams: TeamSnapshot[], rank: number, compMap: Map<string, AggregatedComp>, excludeIncomplete: boolean, isReportMode: boolean) {
     const allMemberIds: number[] = [];
-    const mulliganIds: number[] = [];
+    const mulliganIdsByTeam: number[][] = [];
+    let hasIndexData = false;
     const sortedCompIds: number[] = [];
     let hasIncomplete = false;
 
@@ -293,11 +345,14 @@ export const CompositionChart: React.FC<{
         allMemberIds.push(id);
         sortedCompIds.push(id);
       }
-      for (const c of [...team.m, ...team.s]) {
-        if (c && teamMemberIds.includes(c.id) && c.isMulligan) {
-          mulliganIds.push(c.id);
-        }
+      const teamMulls = [...team.m, ...team.s].filter((c): c is Character => !!(c && teamMemberIds.includes(c.id) && (c.mulliganIndex !== undefined || c.isMulligan)));
+      if (teamMulls.some((c) => c.mulliganIndex !== undefined)) {
+        hasIndexData = true;
+        teamMulls.sort((a, b) => (a.mulliganIndex ?? 999) - (b.mulliganIndex ?? 999));
+      } else {
+        teamMulls.sort((a, b) => a.id - b.id);
       }
+      mulliganIdsByTeam.push(teamMulls.map((c) => c.id));
       posKeyParts.push(`${mIds.join(',')}|${sIds.join(',')}`);
     }
 
@@ -314,6 +369,7 @@ export const CompositionChart: React.FC<{
         ranks: [],
         posVariants: [],
         mulVariants: [],
+        hasMulliganOrder: false,
       };
       compMap.set(compKey, group);
     }
@@ -323,16 +379,17 @@ export const CompositionChart: React.FC<{
     const posKey = posKeyParts.join('_');
     let posVar = group.posVariants.find((v) => v.key === posKey);
     if (!posVar) {
-      posVar = { key: posKey, teams: currentTeams, count: 0 };
+      const teamsForDisplay = excludeIncomplete ? currentTeams.filter((team) => [...team.m, ...team.s].filter(isValid).length >= 6) : currentTeams;
+      posVar = { key: posKey, teams: teamsForDisplay, count: 0 };
       group.posVariants.push(posVar);
     }
     posVar.count++;
 
-    mulliganIds.sort((a, b) => a - b);
-    const mulKey = mulliganIds.join(',');
+    if (hasIndexData) group.hasMulliganOrder = true;
+    const mulKey = mulliganIdsByTeam.map((ids) => ids.join(',')).join('|');
     let mulVar = group.mulVariants.find((v) => v.key === mulKey);
     if (!mulVar) {
-      mulVar = { key: mulKey, mulliganIds, count: 0 };
+      mulVar = { key: mulKey, mulliganIdsByTeam, count: 0 };
       group.mulVariants.push(mulVar);
     }
     mulVar.count++;
@@ -345,9 +402,9 @@ export const CompositionChart: React.FC<{
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4">
+    <div className="w-full max-w-7xl mx-auto space-y-4">
       {/* --- Control Panel --- */}
-      <div className="text-sm overflow-hidden ">
+      <div className="text-sm">
         {/* Row 1: Display and Sort */}
         <div className="flex flex-wrap gap-2 items-center pb-3 ">
           {/* Analysis Unit */}
@@ -359,7 +416,7 @@ export const CompositionChart: React.FC<{
                 className={`px-3 py-1.5 text-xs font-medium transition-all border-r last:border-r-0 border-neutral-200 dark:border-neutral-700
                   ${
                     analysisUnit === mode
-                      ? 'bg-bluearchive-botton-blue text-black border-bluearchive-botton-blue'
+                      ? 'bg-ba-btn-blue text-black border-ba-btn-blue'
                       : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 cursor-pointer'
                   }`}
               >
@@ -377,7 +434,7 @@ export const CompositionChart: React.FC<{
                 className={`px-3 py-1.5 text-xs font-medium transition-all border-r last:border-r-0 border-neutral-200 dark:border-neutral-700
                   ${
                     sortBy === mode
-                      ? 'bg-bluearchive-botton-blue text-black border-bluearchive-botton-blue'
+                      ? 'bg-ba-btn-blue text-black border-ba-btn-blue'
                       : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 cursor-pointer'
                   }`}
               >
@@ -391,7 +448,7 @@ export const CompositionChart: React.FC<{
             className={`flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 border shadow-sm transition-all
               ${
                 showIdOrder
-                  ? 'bg-bluearchive-botton-blue text-black border-bluearchive-botton-blue'
+                  ? 'bg-ba-btn-blue text-black border-ba-btn-blue'
                   : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700 dark:hover:bg-neutral-700'
               }`}
           >
@@ -437,7 +494,7 @@ export const CompositionChart: React.FC<{
             <div className="flex items-center gap-1.5">
               <input type="checkbox" checked={useDetailed} onChange={(e) => onUseDetailedChange(e.target.checked)} className="cursor-pointer" />
               <button type="button" onClick={onScrollToFilter} className="text-left  underline  cursor-help transition-colors">
-                {t('composition.table_filter_reflect')} [New]
+                {t('composition.table_filter_reflect')}
               </button>
             </div>
           )}
@@ -447,7 +504,7 @@ export const CompositionChart: React.FC<{
               <input type="checkbox" checked={filters.onlyWithVideo} onChange={(e) => setFilters((p) => ({ ...p, onlyWithVideo: e.target.checked }))} className="" />
               <span className="flex items-center gap-1 text-neutral-600 dark:text-neutral-300">
                 <FiVideo size={12} />
-                {t('composition.only_with_video')} [NEW]
+                {t('composition.only_with_video')} [BETA]
               </span>
             </label>
           )}
@@ -463,7 +520,7 @@ export const CompositionChart: React.FC<{
             <select
               disabled={!filters.useTeamIndex}
               value={filters.teamIndexDir}
-              onChange={(e) => setFilters((p) => ({ ...p, teamIndexDir: e.target.value as any }))}
+              onChange={(e) => setFilters((p) => ({ ...p, teamIndexDir: e.target.value as 'start' | 'end' }))}
               className="px-2 py-0.5 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-xs disabled:opacity-40"
             >
               <option value="start">{t('composition.from_start')}</option>
@@ -480,10 +537,26 @@ export const CompositionChart: React.FC<{
             />
           </div>
         )}
+
+        {/* Row 4: Student pool filter (team mode only) */}
+        {analysisUnit === 'team' && (
+          <div className="flex flex-col gap-2 pb-3 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+            <StudentFilterBar
+              filter={studentFilter}
+              onChange={setStudentFilter}
+              studentNames={studentNames}
+              portraitData={portraitData}
+              searchFn={searchFn}
+              usageCounts={studentUsageCounts}
+              filteredCount={displayedCompData.length}
+              totalCount={compData.length}
+            />
+          </div>
+        )}
       </div>
 
       {/* --- List Rendering --- */}
-      {compData.slice(0, visibleCount).map((comp, i) => {
+      {displayedCompData.slice(0, visibleCount).map((comp, i) => {
         const topPos = comp.posVariants[0];
         const topMul = comp.mulVariants[0];
         const isExpanded = selectedCompKey === comp.key;
@@ -492,8 +565,8 @@ export const CompositionChart: React.FC<{
         return (
           <div
             data-component-name="CompositionChart"
-            key={comp.key}
-            className={`bg-white dark:bg-neutral-800 p-1 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-teal-500 transition-all ${isExpanded ? 'ring-2 ring-teal-500' : 'hover:scale-101'}`}
+            key={`${comp.key}-${i}`}
+            className={`bg-white dark:bg-neutral-800 p-1 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-teal-500 transition-all ${isExpanded ? 'ring-1 ring-teal-500' : ''}`}
           >
             <div
               className="group flex flex-col items-center md:flex-row md:items-center gap-4 cursor-pointer p-2 rounded-lg transition-colors "
@@ -502,6 +575,7 @@ export const CompositionChart: React.FC<{
               {/* --- Left: Character icon area --- */}
               <div className="flex flex-col gap-2 shrink-0 w-full md:w-auto items-center md:items-start">
                 {topPos.teams.map((team, tIdx) => {
+                  const teamMulIds = topMul.mulliganIdsByTeam[tIdx] ?? [];
                   const members = [...team.m, ...team.s].filter((c): c is Character => !!c?.id);
                   const displayed = showIdOrder ? [...members].sort((a, b) => a.id - b.id) : members;
                   return (
@@ -509,11 +583,15 @@ export const CompositionChart: React.FC<{
                       {analysisUnit === 'report' && <div className="hidden md:block absolute -left-5 top-1/2 -translate-y-1/2 text-xs font-mono text-neutral-400 -rotate-90">T{tIdx + 1}</div>}
 
                       <div className="grid grid-cols-6 gap-2">
-                        {displayed.map((char, idx) => (
-                          <div key={idx} className="relative">
-                            <StudentIcon character={{ id: char.id, isMulligan: topMul.mulliganIds.includes(char.id) } as Character} student={studentData[char.id]} portraitData={portraitData} />
-                          </div>
-                        ))}
+                        {displayed.map((char, idx) => {
+                          const mulIdx = teamMulIds.indexOf(char.id);
+                          const mulProps = mulIdx >= 0 ? (comp.hasMulliganOrder ? { mulliganIndex: mulIdx } : { isMulligan: true as const }) : {};
+                          return (
+                            <div key={idx} className="relative">
+                              <StudentIcon character={{ id: char.id, ...mulProps } as Character} student={studentData[char.id]} portraitData={portraitData} />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -525,10 +603,11 @@ export const CompositionChart: React.FC<{
                   <span className="text-neutral-700 dark:text-neutral-100 text-base font-bold">{((comp.totalCount / activeData.length) * 100).toFixed(1)}%</span>
                   <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{comp.totalCount.toLocaleString()}</span>
                 </div>
+                {/* {activeData.length}-{activeData[activeData.length - 1].r }-{activeData[0].r}-{console.log(activeData) || '1'} */}
                 <RankScatterPlot
                   ranks={comp.ranks}
-                  start_rank={activeData.length ? activeData[0].r : 1}
-                  max_rank={activeData.length > 1 ? activeData[activeData.length - 1].r - activeData[0].r + 1 : 1}
+                  start_rank={activeData.length ? activeData[0]?.typeRanking || activeData[0].r : 1}
+                  max_rank={activeData.length > 1 ? (activeData[activeData.length - 1]?.typeRanking || activeData[activeData.length - 1].r) - (activeData[0]?.typeRanking || activeData[0].r) + 1 : 1}
                 />
               </div>
 
@@ -553,27 +632,8 @@ export const CompositionChart: React.FC<{
                     ids: comp.key.split(',').map(Number),
                     displayChars: [],
                   }}
-                  entries={activeData.filter((e) => {
-                    const tot = e.t.length;
-                    if (filters.usePartyCount && (tot < filters.minParty || tot > filters.maxParty)) return false;
-
-                    let targets: TeamSnapshot[] = analysisUnit === 'report' ? e.t : e.t;
-                    if (analysisUnit === 'team' && filters.useTeamIndex) {
-                      const idx = filters.teamIndexDir === 'start' ? filters.teamIndexVal - 1 : tot - filters.teamIndexVal;
-                      targets = e.t[idx] ? [e.t[idx]] : [];
-                    }
-
-                    const iterations = analysisUnit === 'report' ? [targets] : targets.map((t) => [t]);
-                    return iterations.some((currentTeams) => {
-                      const sortedIds: number[] = [];
-                      for (const team of currentTeams) {
-                        const valid = [...team.m, ...team.s].filter(isValid);
-                        if (filters.excludeIncomplete && valid.length < 6) return false;
-                        sortedIds.push(...valid.map((c) => c.id));
-                      }
-                      return sortedIds.sort((a, b) => a - b).join(',') === comp.key;
-                    });
-                  })}
+                  analysisUnit={analysisUnit}
+                  entries={expandedCompEntries}
                   studentData={studentData}
                   raidInfo={raidInfo}
                   boss={raidInfo.Boss}
@@ -607,7 +667,7 @@ export const CompositionChart: React.FC<{
         );
       })}
 
-      {visibleCount < compData.length && (
+      {visibleCount < displayedCompData.length && (
         <button onClick={() => setVisibleCount((p) => p + 20)} className="w-full py-2 bg-neutral-200 dark:bg-neutral-700 rounded">
           {t('composition.load_more')}
         </button>
@@ -616,6 +676,143 @@ export const CompositionChart: React.FC<{
   );
 });
 
+// --- Exported Component: StudentFilterBar ---
+export const StudentFilterBar: React.FC<{
+  filter: { excludeIds: number[]; includeIds: number[] };
+  onChange: (f: { excludeIds: number[]; includeIds: number[] }) => void;
+  studentNames: Map<number, string>;
+  portraitData?: PortraitData;
+  searchFn: (query: string, excludedIds: Set<number>) => Array<[number, string]>;
+  usageCounts?: Map<number, number>;
+  filteredCount?: number;
+  totalCount?: number;
+}> = ({ filter, onChange, studentNames, portraitData, searchFn, usageCounts, filteredCount, totalCount }) => {
+  const { t } = useTranslation('dashboard');
+  const [addMode, setAddMode] = useState<'exclude' | 'include'>('exclude');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setStudentDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const searchResults = useMemo(() => searchFn(studentSearch, new Set([...filter.excludeIds, ...filter.includeIds])), [searchFn, studentSearch, filter.excludeIds, filter.includeIds]);
+
+  const addStudent = (id: number) => {
+    const excl = filter.excludeIds.filter((x) => x !== id);
+    const incl = filter.includeIds.filter((x) => x !== id);
+    onChange(addMode === 'exclude' ? { excludeIds: [...excl, id], includeIds: incl } : { excludeIds: excl, includeIds: [...incl, id] });
+    setStudentSearch('');
+    setStudentDropdownOpen(false);
+  };
+
+  const hasFilter = filter.excludeIds.length > 0 || filter.includeIds.length > 0;
+  const showCount = hasFilter && filteredCount !== undefined && totalCount !== undefined;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-neutral-500 dark:text-neutral-400 shrink-0">
+          {t('composition.mopup_filter')}
+          {showCount && (
+            <span className="text-xs ml-1.5 font-mono text-neutral-400 dark:text-neutral-500">
+              {filteredCount} / {totalCount}
+            </span>
+          )}
+          :
+        </span>
+        <div className="flex border border-neutral-200 dark:border-neutral-700 overflow-hidden shrink-0">
+          {(['exclude', 'include'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setAddMode(mode)}
+              className={`px-2.5 py-1 text-xs font-medium transition-all border-r last:border-r-0 border-neutral-200 dark:border-neutral-700 cursor-pointer
+                ${
+                  addMode === mode
+                    ? mode === 'exclude'
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                    : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700'
+                }`}
+            >
+              {mode === 'exclude' ? t('tagHardExclude') : t('searchYouTube.include')}
+            </button>
+          ))}
+        </div>
+        <div className="relative" ref={containerRef}>
+          <input
+            type="text"
+            value={studentSearch}
+            onChange={(e) => {
+              setStudentSearch(e.target.value);
+              setStudentDropdownOpen(true);
+            }}
+            onFocus={() => setStudentDropdownOpen(true)}
+            placeholder={t('searchStudentByName')}
+            className="w-45 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400"
+          />
+          {studentDropdownOpen && searchResults.length > 0 && (
+            <ul className="absolute z-200 w-56 mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 max-h-56 overflow-y-auto">
+              {searchResults.map(([id, name]) => (
+                <li
+                  key={id}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    addStudent(id);
+                  }}
+                  className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-xs text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                >
+                  {portraitData?.[id] && <img className="w-6 h-6 rounded-full object-cover shrink-0" src={`data:image/webp;base64,${portraitData[id]}`} alt="" />}
+                  <span className="flex-1 truncate">{name}</span>
+                  {usageCounts && <span className="font-mono text-neutral-400 dark:text-neutral-500 w-8 text-right shrink-0">{(usageCounts.get(id) ?? 0) > 0 ? usageCounts.get(id) : ''}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {hasFilter && (
+          <button onClick={() => onChange({ excludeIds: [], includeIds: [] })} className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+            {t('filter_reset')}
+          </button>
+        )}
+      </div>
+      {hasFilter && (
+        <div className="flex flex-wrap gap-1.5">
+          {filter.excludeIds.map((id) => (
+            <button
+              key={`ex-${id}`}
+              onClick={() => onChange({ ...filter, excludeIds: filter.excludeIds.filter((x) => x !== id) })}
+              className="flex items-center gap-1 bg-red-50 border border-red-200 text-red-700 hover:border-red-400 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300 pl-0.5 pr-1.5 py-0.5 rounded-full text-xs transition-colors"
+            >
+              {portraitData?.[id] && <img className="w-5 h-5 rounded-full object-cover" src={`data:image/webp;base64,${portraitData[id]}`} alt="" />}
+              <span>{studentNames.get(id)}</span>
+              <FiX size={10} className="opacity-60" />
+            </button>
+          ))}
+          {filter.includeIds.map((id) => (
+            <button
+              key={`inc-${id}`}
+              onClick={() => onChange({ ...filter, includeIds: filter.includeIds.filter((x) => x !== id) })}
+              className="flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-700 hover:border-blue-400 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300 pl-0.5 pr-1.5 py-0.5 rounded-full text-xs transition-colors"
+            >
+              {portraitData?.[id] && <img className="w-5 h-5 rounded-full object-cover" src={`data:image/webp;base64,${portraitData[id]}`} alt="" />}
+              <span>{studentNames.get(id)}</span>
+              <FiX size={10} className="opacity-60" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- Extracted Component: VariantStats ---
 const VariantStats: React.FC<{
   comp: AggregatedComp;
@@ -623,18 +820,40 @@ const VariantStats: React.FC<{
   studentData: StudentData;
 }> = ({ comp, portraitData }) => {
   const { t } = useTranslation('dashboard');
+  const [mulView, setMulView] = useState<'order' | 'ox'>('order');
+
+  const oxVariants = useMemo(() => {
+    if (!comp.hasMulliganOrder) return comp.mulVariants;
+    const map = new Map<string, MulliganVariant>();
+    for (const v of comp.mulVariants) {
+      const oxIdsByTeam = v.mulliganIdsByTeam.map((ids) => [...ids].slice(0, MUL_OX_MAX_PER_TEAM).sort((a, b) => a - b));
+      const oxKey = oxIdsByTeam.map((ids) => ids.join(',')).join('|');
+      const existing = map.get(oxKey);
+      if (existing) {
+        existing.count += v.count;
+      } else {
+        map.set(oxKey, { key: oxKey, mulliganIdsByTeam: oxIdsByTeam, count: v.count });
+      }
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count);
+  }, [comp.mulVariants, comp.hasMulliganOrder]);
+
+  const displayedMulVariants = !comp.hasMulliganOrder || mulView === 'ox' ? oxVariants : comp.mulVariants;
+
   return (
     <div data-component-name="VariantStats" className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
       <div>
         <h4 className="font-bold mb-2 text-neutral-600 dark:text-neutral-400">{t('composition.placement_variants')}</h4>
-        <ul className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar p-1">
-          {comp.posVariants.map((v, idx) => (
+        <InfiniteScrollList
+          items={comp.posVariants}
+          className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar p-1"
+          renderItem={(v, idx) => (
             <li key={idx} className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-900 rounded border border-neutral-100 dark:border-neutral-700">
               <div className="flex flex-col gap-1">
                 {v.teams.map((team, tIdx) => (
                   <div key={tIdx} className="flex -space-x-1 scale-90 origin-left">
                     {[...team.m, ...team.s].map((c, ci) => (
-                      <div key={ci} className="w-8 h-8 rounded-full border-white dark:border-neutral-600 overflow-hidden">
+                      <div key={ci} className="w-11 h-11 rounded-sm border-white dark:border-neutral-600 overflow-hidden">
                         {c && <img src={`data:image/webp;base64,${portraitData[c.id]}`} alt="" className="w-full h-full object-cover" />}
                       </div>
                     ))}
@@ -645,18 +864,67 @@ const VariantStats: React.FC<{
                 {v.count} <span className="text-neutral-400">({Math.round((v.count / comp.totalCount) * 100)}%)</span>
               </span>
             </li>
-          ))}
-        </ul>
+          )}
+        />
       </div>
       <div>
-        <h4 className="font-bold mb-2 text-neutral-600 dark:text-neutral-400">{t('composition.mulligan_variants')}</h4>
-        <ul className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar p-1">
-          {comp.mulVariants.map((v, idx) => (
+        <div className="flex items-center gap-2 mb-2">
+          <h4 className="font-bold text-neutral-600 dark:text-neutral-400">{t('composition.mulligan_variants')}</h4>
+          {comp.hasMulliganOrder && (
+            <div className="flex border border-neutral-200 dark:border-neutral-600 overflow-hidden text-xs">
+              <button
+                onClick={() => setMulView('order')}
+                className={`px-2 py-0.5 transition-colors ${mulView === 'order' ? 'bg-ba-btn-blue text-black' : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer'}`}
+              >
+                {t('composition.mulligan_view_order')}
+              </button>
+              <button
+                onClick={() => setMulView('ox')}
+                className={`px-2 py-0.5 border-l border-neutral-200 dark:border-neutral-600 transition-colors ${mulView === 'ox' ? 'bg-ba-btn-blue text-black' : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer'}`}
+              >
+                O/X
+              </button>
+            </div>
+          )}
+        </div>
+        <InfiniteScrollList
+          items={displayedMulVariants}
+          className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar p-1"
+          renderItem={(v, idx) => (
             <li key={idx} className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-900 rounded border border-neutral-100 dark:border-neutral-700">
-              <div className="flex gap-1 flex-wrap">
-                {v.mulliganIds.map((id) => (
-                  <div key={id} className="w-7 h-7 rounded-full overflow-hidden border-2 border-yellow-400 box-border">
-                    <img src={`data:image/webp;base64,${portraitData[id]}`} alt="" className="w-full h-full object-cover" />
+              <div className="flex flex-col gap-1">
+                {v.mulliganIdsByTeam.map((teamIds, tIdx) => (
+                  <div key={tIdx} className="flex items-center gap-1 flex-wrap">
+                    {teamIds.length === 0 ? (
+                      <span className="text-neutral-400 text-xs">-</span>
+                    ) : (
+                      teamIds.map((id, pickIdx) => (
+                        <div key={id} className="relative">
+                          <div
+                            className={`w-10 h-10 rounded-full overflow-hidden border-2 box-border ${
+                              comp.hasMulliganOrder && mulView === 'order'
+                                ? pickIdx >= 3
+                                  ? 'border-blue-400 dark:border-[#71fdff]'
+                                  : 'border-yellow-500 dark:border-yellow-200'
+                                : 'border-yellow-500 dark:border-yellow-200'
+                            }`}
+                          >
+                            <img src={`data:image/webp;base64,${portraitData[id]}`} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          {comp.hasMulliganOrder && mulView === 'order' && (
+                            <div
+                              className="absolute top-0 right-0 z-10 text-[8px] font-bold leading-none px-0.5"
+                              style={{
+                                backgroundColor: pickIdx >= 3 ? '#5cc8fa' : '#fff26a',
+                                color: pickIdx >= 3 ? '#153f5b' : '#80522d',
+                              }}
+                            >
+                              {pickIdx + 1}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 ))}
               </div>
@@ -664,93 +932,8 @@ const VariantStats: React.FC<{
                 {v.count} <span className="text-neutral-400">({Math.round((v.count / comp.totalCount) * 100)}%)</span>
               </span>
             </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
-
-// --- Video Match Section ---
-const getYouTubeId = (url: string) => url.match(/[?&]v=([^&]+)/)?.[1] ?? null;
-
-function parseGrade(grade: string): { num: number; isUE: boolean } {
-  if (grade.startsWith('ue')) return { num: Number(grade.slice(2)), isUE: true };
-  const m = grade.match(/^(\d+)/);
-  return { num: m ? Number(m[1]) : Number(grade), isUE: false };
-}
-
-const VideoMatchSection: React.FC<{
-  videos: VideoEntry[];
-  portraitData: PortraitData;
-}> = ({ videos, portraitData }) => {
-  return (
-    <div data-component-name="VideoMatchSection">
-      <h4 className="font-bold mb-2 text-sm text-neutral-600 dark:text-neutral-400">Video ({videos.length}) (BETA)</h4>
-      <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-        {videos
-          .sort((a, b) => {
-            return Number(b.score) - Number(a.score);
-          })
-          .map((video, idx) => {
-            const ytId = getYouTubeId(video.url);
-            return (
-              <div key={idx} className="shrink-0 w-60 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
-                {/* YouTube Thumbnail (clickable) */}
-                <a href={video.url} target="_blank" rel="noopener noreferrer" className="block hover:opacity-90 transition-opacity">
-                  {ytId ? (
-                    <div className="relative w-full aspect-video bg-neutral-200 dark:bg-neutral-800">
-                      <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={video.title} className="w-full h-full object-cover" />
-                      <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded font-mono">▶</span>
-                      {video.has_tl && <span className="absolute top-1 left-1 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded font-bold">TL</span>}
-                    </div>
-                  ) : (
-                    <div className="w-full aspect-video bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 text-xs">No Thumbnail</div>
-                  )}
-                </a>
-
-                <div className="p-2 space-y-1">
-                  {/* Score + Difficulty */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] bg-neutral-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded font-mono text-neutral-600 dark:text-neutral-300">{video.difficulty}</span>
-                    <span className="text-xs font-bold text-teal-600 dark:text-teal-400 font-mono">{video.score?.toLocaleString() || video.score}</span>
-                  </div>
-
-                  {/* Title */}
-                  <a href={video.url} target="_blank" rel="noopener noreferrer" className="block">
-                    <p className="text-[11px] text-neutral-600 dark:text-neutral-300 line-clamp-2 leading-tight hover:underline">{video.title}</p>
-                  </a>
-
-                  {/* Channel */}
-                  <p className="text-[10px] text-neutral-400 dark:text-neutral-500 truncate">{video.channel_name}</p>
-
-                  {/* Student grades per party */}
-                  <div className="space-y-1 pt-0.5">
-                    {video.parties.map((party, pIdx) => (
-                      <div key={pIdx} className="flex gap-1 flex-wrap">
-                        {party.map((student, sIdx) => {
-                          const { num, isUE } = parseGrade(student.grade);
-                          return (
-                            <div key={sIdx} className="flex flex-col items-center gap-0.5">
-                              <div className="w-6 h-6 rounded-full overflow-hidden bg-neutral-200 dark:bg-neutral-700 shrink-0">
-                                {portraitData[student.id] ? (
-                                  <img src={`data:image/webp;base64,${portraitData[student.id]}`} alt={student.name_en} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full" />
-                                )}
-                              </div>
-
-                              {student.grade ? <StarRating n={isUE ? num + 6 : num} /> : '?'}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          )}
+        />
       </div>
     </div>
   );

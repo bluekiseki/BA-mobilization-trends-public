@@ -4,10 +4,9 @@ import { cacheHeader } from 'pretty-cache-header';
 import { z } from 'zod';
 import resources from '~/locales';
 import type { Route } from './+types/locales';
-import { type Locale } from '~/utils/i18n/config';
 import { vaildClient } from '~/utils/vaildClient';
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export function loader({ request, params }: Route.LoaderArgs) {
   if (!vaildClient(request)) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
       status: 403,
@@ -35,7 +34,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     return data({}, { headers });
   }
 
-  const lng = z.enum(Object.keys(resources) as Array<keyof typeof resources>).safeParse(params.lng as Locale);
+  const lng = z.enum(Object.keys(resources) as Array<keyof typeof resources>).safeParse(params.lng);
   if (lng.error) return data({ error: lng.error }, { status: 400 });
   const namespaces = resources[lng.data];
   const nsKeys = Object.keys(namespaces) as [string, ...string[]];
@@ -58,5 +57,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     );
   }
 
-  return data((namespaces as any)[ns.data], { headers });
+  const translation = (namespaces as Record<string, unknown>)[ns.data];
+  return data(translation, { headers });
 }

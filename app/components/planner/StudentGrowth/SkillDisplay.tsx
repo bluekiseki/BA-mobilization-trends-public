@@ -4,12 +4,16 @@ import { useTranslation } from 'react-i18next';
 import type { Skill, Student } from '~/types/plannerData';
 
 // --- Helper: Format Skill Descriptions (Buffs/Debuffs) ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const formatSkillBuffDesc = (str: string, t: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const safeT = (key: string, options?: Record<string, unknown>) => String(t(key, options));
+
   return str
-    .replace(/<b:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:Buff_${param}`, { defaultValue: param })}</strong>`)
-    .replace(/<d:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:Debuff_${param}`, { defaultValue: param })}</strong>`)
-    .replace(/<s:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:Special_${param}`, { defaultValue: param })}</strong>`)
-    .replace(/<c:(\w+)>/g, (_, param) => `<strong class="underline">${t(`stat:CC_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<b:(\w+)>/g, (_, param: string) => `<strong class="underline">${safeT(`stat:Buff_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<d:(\w+)>/g, (_, param: string) => `<strong class="underline">${safeT(`stat:Debuff_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<s:(\w+)>/g, (_, param: string) => `<strong class="underline">${safeT(`stat:Special_${param}`, { defaultValue: param })}</strong>`)
+    .replace(/<c:(\w+)>/g, (_, param: string) => `<strong class="underline">${safeT(`stat:CC_${param}`, { defaultValue: param })}</strong>`)
     .replace(/\\n/g, '<br/>');
 };
 
@@ -84,7 +88,7 @@ export const SkillDisplay = ({
   // --- Logic: Text Interpolation ---
   const formatSkillDesc = (data: Skill, level: number) => {
     if (!data.Desc || !data.Parameters) return '';
-    const rawDesc = data.Desc.replace(/<\?(\d+)>/g, (match, paramIndexStr) => {
+    const rawDesc = data.Desc.replace(/<\?(\d+)>/g, (match, paramIndexStr: string) => {
       const paramIndex = parseInt(paramIndexStr, 10) - 1;
       const levelIndex = level - 1;
       const val = data.Parameters?.[paramIndex]?.[levelIndex];
@@ -97,7 +101,7 @@ export const SkillDisplay = ({
   const formatSkillDiffDesc = (data: Skill, levels: [number, number]) => {
     if (!data.Desc || !data.Parameters) return '';
 
-    const rawDesc = data.Desc.replace(/<\?(\d+)>/g, (match, paramIndexStr) => {
+    const rawDesc = data.Desc.replace(/<\?(\d+)>/g, (match, paramIndexStr: string) => {
       const paramIndex = parseInt(paramIndexStr, 10) - 1;
       const [curLvl, tarLvl] = levels;
       const curVal = data.Parameters?.[paramIndex]?.[curLvl - 1];
@@ -132,18 +136,18 @@ export const SkillDisplay = ({
       {/* Header */}
       <div className="flex justify-between items-baseline mb-2">
         <div className="flex items-center gap-2">
-          <span className="bg-gray-600 dark:bg-gray-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">{skillLabel}</span>
-          <span className="font-bold text-gray-900 dark:text-neutral-200 truncate pr-2">{targetSkillData.Name}</span>
+          <span className="bg-neutral-600 dark:bg-neutral-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">{skillLabel}</span>
+          <span className="font-bold text-neutral-900 dark:text-neutral-200 truncate pr-2">{targetSkillData.Name}</span>
         </div>
 
         {/* Cost (Ex Only) */}
         {skillKey === 'Ex' && currentCost !== undefined && targetCost !== undefined && (
           <div className="text-xs shrink-0 bg-yellow-50 dark:bg-yellow-900/20 px-1.5 py-0.5 rounded border border-yellow-100 dark:border-yellow-800/50">
-            <span className="font-bold text-gray-500 dark:text-gray-400">Cost: </span>
-            <span className="font-bold text-gray-700 dark:text-gray-300">{currentCost}</span>
+            <span className="font-bold text-neutral-500 dark:text-neutral-400">Cost: </span>
+            <span className="font-bold text-neutral-700 dark:text-neutral-300">{currentCost}</span>
             {targetCost !== currentCost && (
               <>
-                <span className="text-gray-400 mx-1">→</span>
+                <span className="text-neutral-400 mx-1">→</span>
                 <span className="font-bold text-blue-600 dark:text-blue-400">{targetCost}</span>
               </>
             )}
@@ -152,7 +156,7 @@ export const SkillDisplay = ({
       </div>
 
       {/* Description Body */}
-      <div className="font-light text-gray-600 dark:text-neutral-300 space-y-2 grow bg-gray-50 dark:bg-neutral-700/30 p-2 rounded leading-relaxed">
+      <div className="font-light text-neutral-600 dark:text-neutral-300 space-y-2 grow bg-neutral-50 dark:bg-neutral-700/30 p-2 rounded leading-relaxed">
         {currentLevel === targetLevel && !isDescriptionChanged ? (
           <div dangerouslySetInnerHTML={{ __html: currentDesc }} />
         ) : (
@@ -162,7 +166,7 @@ export const SkillDisplay = ({
                 <div className="opacity-70" dangerouslySetInnerHTML={{ __html: currentDesc }} />
                 <div className="text-center text-blue-500 text-[10px] font-bold">▼ UPGRADE ▼</div>
                 <div
-                  className="p-1.5 bg-blue-50/50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800/30 text-gray-800 dark:text-gray-200"
+                  className="p-1.5 bg-blue-50/50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800/30 text-neutral-800 dark:text-neutral-200"
                   dangerouslySetInnerHTML={{ __html: targetDesc }}
                 />
               </div>

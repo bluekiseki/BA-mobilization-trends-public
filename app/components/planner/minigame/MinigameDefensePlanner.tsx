@@ -38,7 +38,7 @@ interface MinigameDefensePlannerProps {
   onCalculate?: (result: MinigameDefenseResult) => void;
 }
 
-export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
+export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ eventId: _eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
   // const { t, i18n } = useTranslation('planner', { keyPrefix: 'minigame_defense' });
   const { t: t_common, i18n } = useTranslation('planner', { keyPrefix: 'common' });
   const { t: t_c } = useTranslation('common');
@@ -212,7 +212,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
     if (onCalculate) {
       onCalculate({ cost, rewards });
     }
-  }, [runConfig, clearStatus, missionStatus, allStagesMap, entryItemId, entryItemTypeStr, missions, onCalculate]);
+  }, [runConfig, clearStatus, missionStatus, allStagesMap, entryItemId, entryItemTypeStr, missions]);
 
   // --- Helper Functions ---
 
@@ -295,14 +295,14 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
   return (
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t_planner('minigame.minigame_defense')} (BETA)</h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t_planner('minigame.minigame_defense')} (BETA)</h2>
 
         <button
           onClick={() => setHideOneTimeRewards(!hideOneTimeRewards)}
           className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
             hideOneTimeRewards
-              ? 'bg-gray-800 text-white dark:bg-white dark:text-gray-900'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-neutral-700 dark:text-gray-300 dark:hover:bg-neutral-600'
+              ? 'bg-neutral-800 text-white dark:bg-white dark:text-neutral-900'
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600'
           }`}
         >
           {hideOneTimeRewards ? <FaEyeSlash /> : <FaEye />}
@@ -311,13 +311,13 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-neutral-700 mb-4 overflow-x-auto">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-700 mb-4 overflow-x-auto">
         <button
           onClick={() => setActiveTab('farming')}
           className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 flex flex-row justify-center items-center whitespace-nowrap ${
             activeTab === 'farming'
               ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-neutral-600'
+              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'
           }`}
         >
           <FaRedoAlt className="mr-2" /> {t_planner('label.repeatedFarming', 'Repeated Farming')}
@@ -327,7 +327,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
           className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 flex flex-row justify-center items-center whitespace-nowrap ${
             activeTab === 'onetime'
               ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-neutral-600'
+              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'
           }`}
         >
           <FaRegStar className="mr-2" /> {t_planner('label.oneTimeClear', 'One-Time Clear')}
@@ -337,7 +337,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
           className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 flex flex-row justify-center items-center whitespace-nowrap ${
             activeTab === 'mission'
               ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-              : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-neutral-600'
+              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'
           }`}
         >
           <FaTasks className="mr-2" /> {t_common('mission')}
@@ -345,11 +345,11 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
       </div>
 
       {/* Content Area */}
-      <div className="divide-y divide-gray-100 dark:divide-neutral-700 bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700">
+      <div className="divide-y divide-neutral-100 dark:divide-neutral-700 bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-neutral-200 dark:border-neutral-700">
         {/* --- FARMING TAB --- */}
         {activeTab === 'farming' && (
           <>
-            <div className="bg-gray-50 dark:bg-neutral-900/50 p-2 flex justify-end border-b dark:border-neutral-700">
+            <div className="bg-neutral-50 dark:bg-neutral-900/50 p-2 flex justify-end border-b dark:border-neutral-700">
               <button
                 onClick={toggleAllFarmingOneTime}
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
@@ -361,16 +361,16 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
             <div className="divide-y dark:divide-neutral-700">
               {normalStages.map((s) => {
                 const runs = runConfig[s.Id] || 0;
-                const isCleared = !!clearStatus[s.Id];
+                const isCleared = clearStatus[s.Id] ?? false;
 
                 return (
-                  <div key={s.Id} className="p-3 animate-fadeIn hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition-colors">
+                  <div key={s.Id} className="p-3 animate-fadeIn hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="w-full sm:w-48 sm:shrink-0">
                         <div className="flex items-center gap-2">
                           <h4 className="font-bold text-sm text-sky-600 dark:text-sky-400 truncate">Normal {s.StageNumber}</h4>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-wrap gap-2">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex flex-wrap gap-2">
                           <span>
                             <img className="h-4 w-4 inline" src={`data:image/webp;base64,${iconData.Item[`${entryItemId}`]}`} /> &times; {s.StageEnterCostAmount}
                           </span>
@@ -382,9 +382,9 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                             type="checkbox"
                             checked={isCleared}
                             onChange={() => handleClearToggle(s.Id)}
-                            className="h-3.5 w-3.5 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
+                            className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
                           />
-                          <span className="text-xs text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors">
+                          <span className="text-xs text-neutral-600 dark:text-neutral-300 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
                             {t_planner('button.includeOneTimeRewards', 'Include One-Time')}
                           </span>
                         </label>
@@ -393,18 +393,18 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                       <div className="w-full sm:flex-1 min-w-0 overflow-hidden">{renderRewards(s)}</div>
 
                       <div className="flex flex-col sm:items-end justify-center shrink-0 w-full sm:w-auto gap-1">
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase hidden sm:block">{t_common('count')}</span>
+                        <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase hidden sm:block">{t_common('count')}</span>
                         <div className="flex rounded-md shadow-sm h-8">
                           <CustomNumberInput
                             min={0}
                             max={9999}
                             value={runs}
                             onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                            className="w-16 min-w-0 flex-1 rounded-l-md border border-r-0 border-gray-300 bg-white px-2 text-center text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                            className="w-16 min-w-0 flex-1 rounded-l-md border border-r-0 border-neutral-300 bg-white px-2 text-center text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
                           />
                           <button
                             onClick={() => handleSetMaxRuns(s.Id)}
-                            className="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-100 focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-600 dark:text-gray-200 dark:hover:bg-neutral-500"
+                            className="inline-flex items-center rounded-r-md border border-l-0 border-neutral-300 bg-neutral-50 px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-600 dark:text-neutral-200 dark:hover:bg-neutral-500"
                           >
                             MAX
                           </button>
@@ -421,7 +421,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
         {/* --- ONE-TIME TAB --- */}
         {activeTab === 'onetime' && (
           <>
-            <div className="bg-gray-50 dark:bg-neutral-900/50 p-2 flex justify-end border-b dark:border-neutral-700">
+            <div className="bg-neutral-50 dark:bg-neutral-900/50 p-2 flex justify-end border-b dark:border-neutral-700">
               <button
                 onClick={toggleAllOneTimeClears}
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
@@ -432,17 +432,17 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
             </div>
             <div className="divide-y dark:divide-neutral-700">
               {oneTimeStages.map((s) => {
-                const isCleared = !!clearStatus[s.Id];
+                const isCleared = clearStatus[s.Id] ?? false;
                 const isStory = s.StageDifficulty === 1;
 
                 return (
-                  <div key={s.Id} className="p-3 animate-fadeIn hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition-colors">
+                  <div key={s.Id} className="p-3 animate-fadeIn hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="w-full sm:w-48 sm:shrink-0">
                         <h4 className={`font-bold text-sm truncate ${isStory ? 'text-indigo-600 dark:text-indigo-400' : 'text-purple-600 dark:text-purple-400'}`}>
                           {isStory ? `${t_common('story')} ${s.StageNumber}` : `Challenge ${s.StageNumber}`}
                         </h4>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex gap-2">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex gap-2">
                           <span>
                             <img className="h-4 w-4 inline" src={`data:image/webp;base64,${iconData.Item[`${entryItemId}`]}`} /> &times; {s.StageEnterCostAmount}
                           </span>
@@ -454,7 +454,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                       <div className="w-full sm:flex-1 min-w-0 overflow-hidden">{renderRewards(s)}</div>
 
                       <div className="flex items-center gap-2 shrink-0 justify-end sm:w-auto">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none">{t_c('clear')}</label>
+                        <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">{t_c('clear')}</label>
                         <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
                           <input
                             type="checkbox"
@@ -470,7 +470,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                           />
                           <label
                             onClick={() => handleClearToggle(s.Id)}
-                            className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${isCleared ? 'bg-blue-200' : 'bg-gray-300'}`}
+                            className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${isCleared ? 'bg-blue-200' : 'bg-neutral-300'}`}
                           ></label>
                         </div>
                       </div>
@@ -485,7 +485,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
         {/* --- MISSION TAB --- */}
         {activeTab === 'mission' && (
           <>
-            <div className="bg-gray-50 dark:bg-neutral-900/50 p-2 flex justify-end border-b dark:border-neutral-700">
+            <div className="bg-neutral-50 dark:bg-neutral-900/50 p-2 flex justify-end border-b dark:border-neutral-700">
               <button
                 onClick={toggleAllMissions}
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
@@ -495,16 +495,16 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
               </button>
             </div>
             <div className="divide-y dark:divide-neutral-700">
-              {missions.length === 0 && <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">No Missions Available</div>}
+              {missions.length === 0 && <div className="p-8 text-center text-neutral-500 dark:text-neutral-400 text-sm">No Missions Available</div>}
               {missions.map((m) => {
-                const isCompleted = !!missionStatus[m.Id];
+                const isCompleted = missionStatus[m.Id] ?? false;
 
                 return (
-                  <div key={m.Id} className="p-3 animate-fadeIn hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition-colors">
+                  <div key={m.Id} className="p-3 animate-fadeIn hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       {/* Description */}
                       <div className="w-full sm:flex-1">
-                        <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">{getMissionDesc(locale, m)}</p>
+                        <p className="text-sm text-neutral-800 dark:text-neutral-200 font-medium">{getMissionDesc(locale, m)}</p>
                       </div>
 
                       {/* Rewards */}
@@ -533,7 +533,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                           />
                           <label
                             onClick={() => handleMissionToggle(m.Id)}
-                            className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${isCompleted ? 'bg-blue-200' : 'bg-gray-300'}`}
+                            className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${isCompleted ? 'bg-blue-200' : 'bg-neutral-300'}`}
                           ></label>
                         </div>
                       </div>

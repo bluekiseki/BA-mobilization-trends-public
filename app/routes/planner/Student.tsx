@@ -16,6 +16,7 @@ import { getCharacterStarValue, type Character } from '~/components/dashboard/co
 import { MaterialNeedsSection } from '~/components/planner/StudentGrowth/MaterialNeedsSection';
 import { StudentGrowthPlanCard } from '~/components/planner/StudentGrowth/StudentGrowthPlanCard';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { PageHeader } from '~/components/common/PageHeader';
 import { StudentGridCard } from '~/components/StudentGridCard';
 import { FaCopy, FaRegSquareCheck } from 'react-icons/fa6';
 
@@ -28,8 +29,8 @@ import { SpreadsheetCsvTools } from '~/components/planner/StudentGrowth/Spreadsh
 import ExportImportPanel from '~/components/planner/ExportImportPanel';
 import { useSearchMatcher } from '~/utils/useSearchMatcher';
 
-export async function loader({ context }: LoaderFunctionArgs) {
-  let i18n = getInstance(context);
+export function loader({ context }: LoaderFunctionArgs) {
+  const i18n = getInstance(context);
   return data({
     siteTitle: i18n.t('common:title'),
     title: i18n.t('planner:page.studentGrowthPlanner'),
@@ -49,7 +50,7 @@ export const StudentPlannerPage = () => {
   const [allStudents, setAllStudents] = useState<StudentData>({});
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
-  const [iconInfoData, setIconInfoData] = useState<EventData['icons']>({} as any);
+  const [iconInfoData, setIconInfoData] = useState<EventData['icons'] | null>(null);
   const [loading, setLoading] = useState(true);
 
   // UI State
@@ -76,8 +77,8 @@ export const StudentPlannerPage = () => {
           fetch(cdn(`/ew/icon_img.json`)),
           fetch(cdn(`/ew/icon_info.json`)),
         ]);
-        const students = (await studentsRes.json()) as StudentData;
-        const portraits = (await portraitsRes.json()) as StudentPortraitData;
+        const students: StudentData = await studentsRes.json();
+        const portraits: StudentPortraitData = await portraitsRes.json();
         Object.entries(students).map(([studentId, student]) => {
           student.Portrait = portraits[parseInt(studentId)];
         });
@@ -91,13 +92,13 @@ export const StudentPlannerPage = () => {
         setLoading(false);
       }
     };
-    fetchData();
+    void fetchData();
   }, [locale]);
 
-  const selectedPlansCount = useMemo(() => growthPlans.filter((p) => p.isSelected !== false).length, [growthPlans]);
+  const selectedPlansCount = useMemo(() => growthPlans.filter((p) => p.isSelected).length, [growthPlans]);
 
   const totalNeeds = useMemo(() => {
-    const activePlans = growthPlans.filter((p) => p.isSelected !== false);
+    const activePlans = growthPlans.filter((p) => p.isSelected);
     return calculatedGrowthNeeds(activePlans, allStudents);
   }, [growthPlans, allStudents]);
 
@@ -124,7 +125,7 @@ export const StudentPlannerPage = () => {
 
     // Filter: Show only selected check
     if (showOnlySelected) {
-      result = result.filter((p) => p.isSelected !== false);
+      result = result.filter((p) => p.isSelected);
     }
 
     // Filter: Search Term
@@ -171,19 +172,19 @@ export const StudentPlannerPage = () => {
     return result;
   }, [growthPlans, searchTerm, sortOrder, allStudents, showOnlySelected]);
 
-  if (loading) {
+  if (loading || !iconInfoData) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-neutral-900">
-        <p className="text-gray-500">{t_c('loading_txt')}</p>
+      <div className="flex justify-center items-center h-screen bg-neutral-50 dark:bg-neutral-900">
+        <p className="text-neutral-500">{t_c('loading_txt')}</p>
       </div>
     );
   }
 
   if (selectedPlanUuid && selectedPlan) {
     return (
-      <div className="bg-gray-100 dark:bg-neutral-900 min-h-screen p-2 md:p-4">
-        <div className="max-w-5xl mx-auto">
-          <button onClick={() => setSelectedPlanUuid(null)} className="flex items-center gap-2 mb-4 text-gray-600 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">
+      <div className="bg-neutral-100 dark:bg-neutral-900 min-h-screen p-2 md:p-4">
+        <div className="max-w-7xl mx-auto">
+          <button onClick={() => setSelectedPlanUuid(null)} className="flex items-center gap-2 mb-4 text-neutral-600 dark:text-neutral-300 hover:text-blue-500 transition-colors font-medium">
             <FaArrowLeft size={14} />
             {t('ui.backToPlanner')}
           </button>
@@ -204,33 +205,30 @@ export const StudentPlannerPage = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 shadow-sm top-14">
+      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 shadow-sm top-14">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex flex-col gap-2">
-            <div>
-              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t('page.studentGrowthPlanner')}</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 break-keep">{t('page.description.studentGrowthPlanner')}</p>
-            </div>
+            <PageHeader title={t('page.studentGrowthPlanner')} description={t('page.description.studentGrowthPlanner')} className="mb-0" />
 
             <div className="flex items-center gap-1.5 flex-wrap">
               <PlannerJsonExchange />
               <button
                 onClick={() => setViewMode((v) => (v === 'card' ? 'table' : 'card'))}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
               >
                 {viewMode === 'card' ? <FaTable size={13} /> : <FaTh size={13} />}
                 {viewMode === 'card' ? t('ui.tableView', 'Table') : t('ui.cardView', 'Cards')}
               </button>
               <button
                 onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
               >
                 {isSummaryExpanded ? <FaCompressArrowsAlt size={13} /> : <FaExpandArrowsAlt size={13} />}
                 {isSummaryExpanded ? t_c('close') : `${t('ui.totalNeededTitle')} (${selectedPlansCount})`}
               </button>
               <Link
                 to={localeLink(locale, '/planner/equipment')}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
               >
                 <FaCopy size={13} />
                 {t('equipment.goToPlanner')}
@@ -248,7 +246,7 @@ export const StudentPlannerPage = () => {
                 {Object.keys(totalNeeds).length > 0 ? (
                   <MaterialNeedsSection calculatedNeeds={totalNeeds} eventData={{ icons: iconInfoData } as EventData} iconData={iconData} title={t('ui.totalNeededTitle')} />
                 ) : (
-                  <div className="text-center text-sm text-gray-400 py-4 italic bg-gray-50 dark:bg-neutral-900/50 rounded-lg">
+                  <div className="text-center text-sm text-neutral-400 py-4 italic bg-neutral-50 dark:bg-neutral-900/50 rounded-lg">
                     {selectedPlansCount === 0 ? t('ui.noStudentSelected', 'No students selected.') : t('ui.noMaterialsNeeded')}
                   </div>
                 )}
@@ -261,18 +259,18 @@ export const StudentPlannerPage = () => {
       <div className="px-4 py-3 space-y-4">
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative w-full sm:flex-1 sm:min-w-0">
-            <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+            <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-xs" />
             <input
               type="text"
               placeholder={t('ui.searchStudentPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white dark:bg-neutral-800 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-neutral-200 rounded-lg bg-white dark:bg-neutral-800 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg px-1">
+            <div className="flex items-center bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg px-1">
               <button
                 onClick={() => selectAllPlans(true)}
                 className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors"
@@ -280,32 +278,32 @@ export const StudentPlannerPage = () => {
               >
                 {t('ui.selectAll', 'ALL')}
               </button>
-              <div className="w-px h-3 bg-gray-300 dark:bg-neutral-600 mx-0.5" />
+              <div className="w-px h-3 bg-neutral-300 dark:bg-neutral-600 mx-0.5" />
               <button
                 onClick={() => selectAllPlans(false)}
-                className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-700 px-2 py-1 rounded transition-colors"
+                className="text-xs font-bold text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 px-2 py-1 rounded transition-colors"
                 title={t('ui.deselectAllTooltip', 'Deselect All Students')}
               >
                 {t('ui.deselectAll', 'NONE')}
               </button>
             </div>
 
-            <div className="flex items-center bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg overflow-hidden divide-x divide-gray-200 dark:divide-neutral-700">
-              <label className="flex items-center gap-1.5 px-2 py-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
+            <div className="flex items-center bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden divide-x divide-neutral-200 dark:divide-neutral-700">
+              <label className="flex items-center gap-1.5 px-2 py-1 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
                 <input
                   type="checkbox"
                   checked={showOnlySelected}
                   onChange={(e) => setShowOnlySelected(e.target.checked)}
                   className="rounded text-blue-600 focus:ring-blue-500 w-3 h-3 cursor-pointer"
                 />
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">{t('ui.showSelectedOnly', 'Selected')}</span>
+                <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300 whitespace-nowrap">{t('ui.showSelectedOnly', 'Selected')}</span>
               </label>
-              <div className="flex items-center px-2 py-1 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors">
-                <FaSortAmountDown className="text-gray-400 mr-1.5 text-xs shrink-0" />
+              <div className="flex items-center px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
+                <FaSortAmountDown className="text-neutral-400 mr-1.5 text-xs shrink-0" />
                 <select
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as any)}
-                  className="text-xs font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-gray-700 dark:text-gray-200 pr-5 pl-0"
+                  onChange={(e) => setSortOrder(e.target.value as 'date' | 'name' | 'level' | 'star' | 'id')}
+                  className="text-xs font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-neutral-700 dark:text-neutral-200 pr-5 pl-0"
                 >
                   <option value="date">{t('ui.sortByDate')}</option>
                   <option value="name">{t('ui.sortByName')}</option>
@@ -320,7 +318,7 @@ export const StudentPlannerPage = () => {
 
         {viewMode === 'table' ? (
           <div className="space-y-3">
-            <SpreadsheetCsvTools growthPlans={growthPlans} allStudents={allStudents} setGrowthPlans={setGrowthPlans} />
+            <SpreadsheetCsvTools growthPlans={growthPlans} allStudents={allStudents as Record<string, { Name: string }>} setGrowthPlans={setGrowthPlans} />
             <StudentSpreadsheetView allStudents={allStudents} studentPortraits={studentPortraits} searchTerm={searchTerm.trim()} showOnlySelected={showOnlySelected} />
           </div>
         ) : (
@@ -339,12 +337,12 @@ export const StudentPlannerPage = () => {
 
             <button
               onClick={() => addPlan(null)}
-              className="h-44 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-neutral-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-neutral-800 dark:hover:border-blue-500 transition-all group"
+              className="h-44 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-neutral-800 dark:hover:border-blue-500 transition-all group"
             >
-              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                <FaPlus className="text-gray-400 group-hover:text-white" />
+              <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                <FaPlus className="text-neutral-400 group-hover:text-white" />
               </div>
-              <span className="text-xs font-bold text-gray-500 group-hover:text-blue-600 dark:text-gray-400">{t('ui.addNewPlan')}</span>
+              <span className="text-xs font-bold text-neutral-500 group-hover:text-blue-600 dark:text-neutral-400">{t('ui.addNewPlan')}</span>
             </button>
           </div>
         )}

@@ -1,4 +1,4 @@
-studentId,name,startTime,endTime,rerun,limited,fast,bannerType,prediction
+studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
 23006,Shizuko,2021-02-25 14:30,2021-03-11 12:00,false,false,false
 10014,Izuna,2021-02-25 14:30,2021-03-11 12:00,false,false,false
 10002,Haruna,2021-03-11 12:30,2021-03-18 12:00,false,false,false
@@ -494,14 +494,31 @@ studentId,name,startTime,endTime,rerun,limited,fast,bannerType,prediction
 10110,Seia,2026-04-01 11:00,2026-04-15 10:59,true,true,false
 10112,Asuna (School Uniform),2026-04-01 11:00,2026-04-15 10:59,true,true,false
 10067,Toki (Bunny Girl),2026-04-01 11:00,2026-04-15 10:59,true,false,false
-10084,Kotama (Camping),2026-04-15 10:59,2026-04-21 10:59,true,false,false
-10085,Hare (Camping),2026-04-15 10:59,2026-04-21 10:59,true,false,false
-20042,Maki (Camping),2026-04-15 10:59,2026-04-21 10:59,true,false,false
-10041,Misaki,2026-04-15 10:59,2026-04-21 10:59,true,false,false
-10139,Niko,2026-04-21 10:59,2026-05-06 10:59,false,true,false
-10140,Kurumi,2026-04-21 10:59,2026-05-06 10:59,false,true,false
+10084,Kotama (Camping),2026-04-15 11:00,2026-04-21 10:59,true,false,false
+10085,Hare (Camping),2026-04-15 11:00,2026-04-21 10:59,true,false,false
+20042,Maki (Camping),2026-04-15 11:00,2026-04-21 10:59,true,false,false
+10041,Misaki,2026-04-15 11:00,2026-04-21 10:59,true,false,false
+10139,Niko,2026-04-21 11:00,2026-05-06 10:59,false,true,false
+10140,Kurumi,2026-04-21 11:00,2026-05-06 10:59,false,true,false
 20044,Sumire (Part-Timer),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
 10115,Rei,2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
 20034,Akari (New Year),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
 20043,Izumi (New Year),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
 20025,Haruka (New Year),2026-05-06 11:00:00,2026-05-20 10:59:59,true,false,false
+20058,Erika,2026-05-20 11:00:00,2026-05-27 10:59:59,false,false,false
+10093,Kirara,2026-05-20 11:00:00,2026-05-27 10:59:59,true,false,false
+20035,Tsubaki (Guide),2026-05-20 11:00:00,2026-05-27 10:59:59,true,false,false
+10090,Umika,2026-05-20 11:00:00,2026-05-27 10:59:59,true,false,false
+20045,Pina (Guide),2026-05-20 11:00:00,2026-05-27 10:59:59,true,false,false
+10141,Haruka (Dress),2026-05-27 11:00,2026-06-10 10:59,false,false,false
+20059,Mutsuki (Dress),2026-05-27 11:00,2026-06-10 10:59,false,false,false
+10089,Aru (Dress),2026-05-27 11:00,2026-06-10 10:59,true,false,false
+10088,Kayoko (Dress),2026-05-27 11:00,2026-06-10 10:59,true,false,false
+10116,Saori (Dress),2026-05-27 11:00,2026-06-10 10:59,true,false,false
+10142,Nagusa (Swimsuit),2026-06-10 11:00,2026-06-17 10:59,false,false,false
+10121,Yukari (Swimsuit),2026-06-10 11:00,2026-06-17 10:59,true,false,false
+20047,Kikyou (Swimsuit),2026-06-10 11:00,2026-06-17 10:59,true,false,false
+13014,Renge (Swimsuit),2026-06-10 11:00,2026-06-17 10:59,true,false,false
+10091,Kazusa (Band),2026-06-17 11:00,2026-06-24 10:59,true,true,false
+10092,Yoshimi (Band),2026-06-17 11:00,2026-06-24 10:59,true,true,false
+10120,Natsu (Band),2026-06-17 11:00,2026-06-24 10:59,true,false,false

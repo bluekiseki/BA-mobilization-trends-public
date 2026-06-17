@@ -32,7 +32,7 @@ export interface PaginatedStageListProps {
   studentFilter?: Set<number>; // Hard exclusive: elephant student ID filter
 }
 
-export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, maxPage, setCurrentPage, chaptersPerPage }) => {
+export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentPage, maxPage, setCurrentPage, chaptersPerPage: _chaptersPerPage }) => {
   // Use useTranslation hook
   // const { t } = useTranslation("planner");
   const pageNumbers = Array.from({ length: maxPage }, (_, i) => i + 1);
@@ -42,7 +42,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentP
       <button
         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="px-2 py-0.5 text-sm font-semibold rounded disabled:opacity-50 bg-gray-200 dark:bg-neutral-700"
+        className="px-2 py-0.5 text-sm font-semibold rounded disabled:opacity-50 bg-neutral-200 dark:bg-neutral-700"
       >
         &lt;
       </button>
@@ -50,7 +50,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentP
         <button
           key={num}
           onClick={() => setCurrentPage(num)}
-          className={`px-2 py-0.5 text-xs font-semibold rounded ${currentPage === num ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600'}`}
+          className={`px-2 py-0.5 text-xs font-semibold rounded ${currentPage === num ? 'bg-blue-600 text-white' : 'bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
         >
           {num}
         </button>
@@ -58,7 +58,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({ currentP
       <button
         onClick={() => setCurrentPage(Math.min(maxPage, currentPage + 1))}
         disabled={currentPage === maxPage}
-        className="px-2 py-0.5 text-sm font-semibold rounded disabled:opacity-50 bg-gray-200 dark:bg-neutral-700"
+        className="px-2 py-0.5 text-sm font-semibold rounded disabled:opacity-50 bg-neutral-200 dark:bg-neutral-700"
       >
         &gt;
       </button>
@@ -80,7 +80,7 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
   farmingDays,
   eventDataForIcon,
   iconData,
-  iconInfoData,
+  iconInfoData: _iconInfoData,
   studentFilter,
 }) => {
   // Use useTranslation hook
@@ -157,7 +157,7 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
   return (
     <div className="mb-4">
       <div className="flex justify-between items-center mb-1">
-        <h2 className="text-base font-bold dark:text-gray-200">
+        <h2 className="text-base font-bold dark:text-neutral-200">
           {title} {type === 'Hard' && `(${t('common.max', 'Max')} ×${farmingDays * 3})`}
         </h2>
         <button onClick={onReset} className={resetButtonClass}>
@@ -170,7 +170,7 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
       <div className="border-t dark:border-neutral-700">
         {paginatedStages.map((stage, index) => (
           <div key={stage.id} className={`flex flex-row items-start gap-2 px-1 py-1.5 ${index > 0 ? 'border-t dark:border-neutral-700' : ''}`}>
-            <span className="font-bold text-gray-800 dark:text-gray-200 shrink-0 w-9 text-sm pt-0.5">
+            <span className="font-bold text-neutral-800 dark:text-neutral-200 shrink-0 w-9 text-sm pt-0.5">
               {stage.chapter}-{stage.stageNum}
             </span>
             <div className="flex-1 flex flex-wrap gap-1">
@@ -185,7 +185,7 @@ export const PaginatedStageList: React.FC<PaginatedStageListProps> = ({
             </div>
           </div>
         ))}
-        {paginatedStages.length === 0 && <p className="py-3 text-center text-sm text-gray-500 dark:text-gray-400">{t('equipment.noStagesFound')}</p>}
+        {paginatedStages.length === 0 && <p className="py-3 text-center text-sm text-neutral-500 dark:text-neutral-400">{t('equipment.noStagesFound')}</p>}
       </div>
 
       <PaginationControls currentPage={currentPage} maxPage={maxPage} setCurrentPage={setCurrentPage} chaptersPerPage={chaptersPerPage} />

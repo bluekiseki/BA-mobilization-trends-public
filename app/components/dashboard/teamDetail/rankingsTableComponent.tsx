@@ -1,10 +1,10 @@
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { isTotalAssault, type PortraitData, type ReportEntryRank, type StudentData } from '../common';
 import { formatTimeToTimestamp } from '~/utils/time';
-import type { RankRange } from './rankFilter';
+// import type { RankRange } from './rankFilter';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { StudentIcon } from '../studentIcon';
-import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
+import { getDifficultyFromScoreAndBoss } from '~/components/raid/Difficulty';
 import { Pagination } from '../pagination';
 import React from 'react';
 
@@ -37,7 +37,7 @@ export const RankCard: React.FC<{
           <span className="text-neutral-500 dark:text-neutral-400 text-xs pb-0.5">
             {getDifficultyFromScoreAndBoss(entry.s, server, raid.Id).toUpperCase()}
             <br />
-            {isTotalAssault(raid) ? '' : ' #' + entry.r}
+            {isTotalAssault(raid) ? '' : ' #' + String(entry.r)}
           </span>
           <p className="text-xl font-bold text-neutral-900 dark:text-white">{entry.typeRanking}</p>
         </div>
@@ -80,8 +80,8 @@ export const RankingsTableComponent: React.FC<{
   portraitData: PortraitData;
   paginatedData: ReportEntryRank[];
   handlePageChange: (page: number) => void;
-  showRank: boolean;
-  activeRange: RankRange;
+  // showRank: boolean;
+  // activeRange: RankRange;
   raidInfo: RaidInfo;
   server: GameServer;
   handleItemsPerPageChange: (size: number) => void;
@@ -95,8 +95,8 @@ export const RankingsTableComponent: React.FC<{
     studentData,
     portraitData,
     paginatedData,
-    showRank,
-    activeRange,
+    // showRank,
+    // activeRange,
     raidInfo,
     server,
     handlePageChange,
@@ -117,7 +117,7 @@ export const RankingsTableComponent: React.FC<{
       />
       <div className="grid grid-cols-1 gap-4">
         {paginatedData.length > 0 ? (
-          paginatedData.map((entry, i) => (
+          paginatedData.map((entry, _i) => (
             <RankCard
               key={entry.r}
               entry={entry}
@@ -129,7 +129,7 @@ export const RankingsTableComponent: React.FC<{
             />
           ))
         ) : (
-          <p className="text-center text-gray-500 pt-10">No data</p>
+          <p className="text-center text-neutral-500 pt-10">No data</p>
         )}
       </div>
       <Pagination

@@ -4,28 +4,23 @@ import { Link } from 'react-router';
 import { useShallow } from 'zustand/shallow';
 import { useChartControlsStore } from '~/store/chartControlsStore';
 import { getGiftAffectionList } from '~/components/planner/StudentGrowth/giftAffectionList';
-import { GiftStudentSheet, getPreferenceIcon, type GiftEntry, type GiftStudentEntry } from '~/components/planner/StudentGrowth/GiftStudentSheet';
+import { ItemIcon } from '~/components/planner/common/Icon';
 import { HighFlowerBouquetItemIds, LowFlowerBouquetItemIds } from '~/components/planner/StudentGrowth/const';
-import type { IconData, IconInfos, Skill, Student } from '~/types/plannerData';
+import type { EventData, IconData, IconInfos, Skill, Student } from '~/types/plannerData';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { localeLink } from '~/utils/localeLink';
 import { HiExternalLink, HiChevronDown, HiChevronUp } from 'react-icons/hi';
-import { type_translation } from '../raidToString';
-import { TerrainIconGameStyle, type Terrain } from '../teran';
+import { type_translation } from '../raid/raidToString';
+import { TerrainIconGameStyle, type Terrain } from '../raid/teran';
 import { formatSkillBuffDesc } from '../planner/StudentGrowth/SkillDisplay';
-import { useIsDarkState } from '~/store/isDarkState';
+import { getPreferenceIcon, type GiftEntry } from '../planner/StudentGrowth/GiftStudentSheet';
 
 type FavorStory = {
   favor_rank: number;
   title: Record<string, string>;
   summary: Record<string, string>;
   is_memorial: boolean;
-};
-
-const RARITY_BG: Record<'dark' | 'light', Record<number, string>> = {
-  light: { 0: 'rgb(189,197,208)', 1: 'rgb(144,186,236)', 2: 'rgb(214,173,129)', 3: 'rgb(168,138,236)' },
-  dark: { 0: '#8c939e', 1: '#658dbf', 2: '#a87d51', 3: '#7a5bbe' },
 };
 
 interface Props {
@@ -40,6 +35,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
   const { t: t_chart } = useTranslation('charts');
 
   const locale = i18n.language as Locale;
+  const t_chart_dynamic = t_chart as (key: string) => string;
 
   const { selectedStudentId: studentId } = useChartControlsStore(
     useShallow((state) => ({
@@ -47,7 +43,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
     })),
   );
 
-  const { isDark } = useIsDarkState();
+  // const { isDark } = useIsDarkState();
   const [isGiftsOpen, setIsGiftsOpen] = useState(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState(false);
   const [showUW, setShowUW] = useState(false);
@@ -56,7 +52,6 @@ export default function StudentProfileCard({ portraitData }: Props) {
   const [normalLevel, setNormalLevel] = useState(10);
   const [iconData, setIconData] = useState<IconData>({});
   const [iconInfos, setIconInfos] = useState<IconInfos | null>(null);
-  const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
   const [favorStories, setFavorStories] = useState<Record<string, FavorStory[]> | null>(null);
   const [storyDetailLevel, setStoryDetailLevel] = useState(0);
   const [revealedTitles, setRevealedTitles] = useState<Set<number>>(new Set());
@@ -67,21 +62,21 @@ export default function StudentProfileCard({ portraitData }: Props) {
 
   useEffect(() => {
     fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
-      .then((res) => res.json() as any)
-      .then((data) => setStudentsData(data))
+      .then((res) => res.json())
+      .then((data) => setStudentsData(data as Record<string, Student>))
       .catch(console.error);
   }, [locale]);
 
   useEffect(() => {
     Promise.all([
-      fetch(cdn('/ew/icon_img.json')).then((r) => r.json() as any),
-      fetch(cdn('/ew/icon_info.json')).then((r) => r.json() as any),
-      fetch(cdn('/schaledb.com/student_favor_stories_parsed.json')).then((r) => r.json() as any),
+      fetch(cdn('/ew/icon_img.json')).then((r) => r.json()),
+      fetch(cdn('/ew/icon_info.json')).then((r) => r.json()),
+      fetch(cdn('/schaledb.com/student_favor_stories_parsed.json')).then((r) => r.json()),
     ])
       .then(([img, info, stories]) => {
-        setIconData(img);
-        setIconInfos(info);
-        setFavorStories(stories);
+        setIconData(img as IconData);
+        setIconInfos(info as IconInfos);
+        setFavorStories(stories as Record<string, FavorStory[]>);
       })
       .catch(console.error);
   }, []);
@@ -93,7 +88,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
 
   const displayedGifts = useMemo(() => {
     if (!eventDataCompat || !student) return [];
-    const all = getGiftAffectionList(student, eventDataCompat as any);
+    const all = getGiftAffectionList(student, eventDataCompat as EventData);
     const flowerIds = [...HighFlowerBouquetItemIds, ...LowFlowerBouquetItemIds];
     return all.filter((g) => {
       if (flowerIds.includes(Number(g.id))) return false;
@@ -107,25 +102,11 @@ export default function StudentProfileCard({ portraitData }: Props) {
     const map = new Map<number, GiftEntry[]>();
     for (const g of displayedGifts) {
       if (!map.has(g.preferenceLevel)) map.set(g.preferenceLevel, []);
-      map.get(g.preferenceLevel)!.push(g);
+      const arr = map.get(g.preferenceLevel);
+      if (arr) arr.push(g);
     }
     return [...map.entries()].sort((a, b) => b[0] - a[0]);
   }, [displayedGifts]);
-
-  const giftToStudentsMap = useMemo(() => {
-    if (!eventDataCompat || !studentData) return {} as Record<string, GiftStudentEntry[]>;
-    const map: Record<string, GiftStudentEntry[]> = {};
-    Object.entries(studentData).forEach(([sid, s]) => {
-      const gifts = getGiftAffectionList(s, eventDataCompat as any);
-      gifts.forEach((g) => {
-        if (g.affectionPoints <= 20) return;
-        if (!map[g.id]) map[g.id] = [];
-        map[g.id].push({ id: sid, name: s.Name, preferenceLevel: g.preferenceLevel, affectionPoints: g.affectionPoints, rarity: g.rarity });
-      });
-    });
-    Object.values(map).forEach((arr) => arr.sort((a, b) => b.affectionPoints - a.affectionPoints));
-    return map;
-  }, [studentData, eventDataCompat]);
 
   if (!student) return null;
 
@@ -141,7 +122,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
 
   const formatSkillDesc = (data: Skill, level: number) => {
     if (!data.Desc || !data.Parameters) return '';
-    const rawDesc = data.Desc.replace(/<\?(\d+)>/g, (match, paramIndexStr) => {
+    const rawDesc = data.Desc.replace(/<\?(\d+)>/g, (match: string, paramIndexStr: string) => {
       const paramIndex = parseInt(paramIndexStr, 10) - 1;
       const val = data.Parameters?.[paramIndex]?.[level - 1];
       return val !== undefined ? `<strong class="text-blue-600 dark:text-blue-400 font-bold">${val}</strong>` : match;
@@ -225,17 +206,17 @@ export default function StudentProfileCard({ portraitData }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-y-2 mt-3 w-full">
             {/* Attack/Defense types */}
             <div className="flex gap-1">
-              <Badge label="ATK" value={type_translation[student.BulletType][getLocaleShortName(locale)]} color={typeColors.Bullet[student.BulletType as keyof typeof typeColors.Bullet]} />
-              <Badge label="DEF" value={type_translation[student.ArmorType][getLocaleShortName(locale)]} color={typeColors.Armor[student.ArmorType as keyof typeof typeColors.Armor]} />
+              <Badge label="ATK" value={type_translation[student.BulletType][getLocaleShortName(locale)]} color={typeColors.Bullet[student.BulletType]} />
+              <Badge label="DEF" value={type_translation[student.ArmorType][getLocaleShortName(locale)]} color={typeColors.Armor[student.ArmorType]} />
             </div>
 
             {/* Unit Type / Tactical Role */}
             <div className="flex items-center gap-1.5 rounded overflow-hidden">
               <span className="text-xs font-bold text-white px-2 py-1" style={{ backgroundColor: squadTypeColors[student.SquadType] || '#666' }}>
-                {t_chart(`ranking.control.squad_type_${student.SquadType.toLowerCase()}` as any)}
+                {t_chart_dynamic(`ranking.control.squad_type_${student.SquadType.toLowerCase()}`)}
               </span>
               <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 px-2 py-1 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                {t_chart(`ranking.control.tactic_role_${student.TacticRole}` as any)}
+                {t_chart_dynamic(`ranking.control.tactic_role_${student.TacticRole}`)}
               </span>
             </div>
           </div>
@@ -281,23 +262,19 @@ export default function StudentProfileCard({ portraitData }: Props) {
                       {/* Right column: List of gift buttons */}
                       <td className="py-2 align-middle">
                         <div className="flex flex-wrap gap-1">
-                          {gifts.map((gift) => {
-                            const imgSrc = (iconData as any)?.Item?.[gift.id];
-                            const rarityBg = RARITY_BG[isDark === 'dark' ? 'dark' : 'light'][gift.rarity] ?? RARITY_BG.light[0];
-                            return (
-                              <button
-                                key={gift.id}
-                                onClick={() => setSelectedGiftId(selectedGiftId === gift.id ? null : gift.id)}
-                                className={`relative w-10 h-10 rounded-sm overflow-hidden shrink-0 transition-all ${
-                                  selectedGiftId === gift.id ? 'ring-2 ring-pink-400' : 'hover:ring-1 hover:ring-neutral-400'
-                                }`}
-                                style={{ backgroundColor: rarityBg }}
-                              >
-                                {imgSrc && <img src={`data:image/webp;base64,${imgSrc}`} className="w-full h-full object-cover p-0.5" alt="" />}
-                                <img src={getPreferenceIcon(gift.preferenceLevel, gift.rarity)} className="absolute bottom-0 right-0 w-4 h-4 object-cover" alt="" />
-                              </button>
-                            );
-                          })}
+                          {gifts.map((gift) => (
+                            <ItemIcon
+                              key={gift.id}
+                              type="Item"
+                              itemId={gift.id}
+                              amount={0}
+                              size={10}
+                              eventData={eventDataCompat as EventData}
+                              iconData={iconData}
+                              allStudents={studentData}
+                              studentPortraits={portraitData ?? undefined}
+                            />
+                          ))}
                         </div>
                       </td>
                     </tr>
@@ -309,27 +286,14 @@ export default function StudentProfileCard({ portraitData }: Props) {
         </div>
       )}
 
-      {/* Gift Student Sheet */}
-      {selectedGiftId &&
-        eventDataCompat &&
-        (() => {
-          const gift = displayedGifts.find((g) => g.id === selectedGiftId);
-          if (!gift) return null;
-          return (
-            <GiftStudentSheet
-              gift={gift}
-              students={giftToStudentsMap[selectedGiftId] ?? []}
-              studentPortraits={portraitData ?? undefined}
-              eventData={eventDataCompat}
-              iconData={iconData}
-              onClose={() => setSelectedGiftId(null)}
-            />
-          );
-        })()}
-
       {/* 3. Skill Area (Single accordion for all) */}
       <div className="flex flex-col border-b border-neutral-200 dark:border-neutral-700">
-        <button onClick={() => setIsSkillsOpen(!isSkillsOpen)} className="flex justify-between items-center w-full px-3 py-3 hover:opacity-70 transition-opacity cursor-pointer">
+        <div
+          onClick={() => setIsSkillsOpen(!isSkillsOpen)}
+          className="flex justify-between items-center w-full px-3 py-3 hover:opacity-70 transition-opacity cursor-pointer"
+          role="button"
+          onKeyDown={(e) => e.key === 'Enter' && setIsSkillsOpen(!isSkillsOpen)}
+        >
           <span className="text-base font-semibold text-neutral-700 dark:text-neutral-200">{t('label.skillInfo')}</span>
           <div className="flex items-center gap-2">
             <button
@@ -354,7 +318,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
             )}
             {isSkillsOpen ? <HiChevronUp className="text-neutral-400" /> : <HiChevronDown className="text-neutral-400" />}
           </div>
-        </button>
+        </div>
 
         {isSkillsOpen && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px border-t border-neutral-200 dark:border-neutral-700">
@@ -404,7 +368,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
         favorStories[studentId] &&
         Number((favorStories[studentId] as FavorStory[] | undefined)?.length) > 0 &&
         (() => {
-          const stories = favorStories[studentId] as FavorStory[];
+          const stories = favorStories[studentId] || [];
           const hasGlobalTranslation = stories.some((s) => s.title['en'] || s.title['zh-Hant']);
           const isJpOnly = !hasGlobalTranslation && locale !== 'ja';
           const allStoryIndices = stories.map((_, i) => i);

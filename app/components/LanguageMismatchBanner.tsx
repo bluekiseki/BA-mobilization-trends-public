@@ -21,7 +21,7 @@ type Props = {
 const getNativeLanguageName = (locale: string) => {
   try {
     return new Intl.DisplayNames([locale], { type: 'language' }).of(locale) || locale;
-  } catch (e) {
+  } catch (_e) {
     return locale; // Handle exceptions like non-standard codes
   }
 };

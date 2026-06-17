@@ -31,10 +31,10 @@ export const DifficultySelector: React.FC<DifficultySelectorProps> = ({ availabl
           <span>Difficulty</span>
         </div>
         <div className="flex gap-1">
-          <button onClick={handleSelectAll} title="Select All" className="p-1 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
+          <button onClick={handleSelectAll} title="Select All" className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
             <FiCheck size={14} />
           </button>
-          <button onClick={handleClear} title="Clear All" className="p-1 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
+          <button onClick={handleClear} title="Clear All" className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
             <FiX size={14} />
           </button>
         </div>
@@ -49,7 +49,7 @@ export const DifficultySelector: React.FC<DifficultySelectorProps> = ({ availabl
             <button
               key={diff}
               onClick={() => handleToggle(diff)}
-              className={`px-2 py-0.5 rounded text-xs font-medium transition-all border ${isSelected ? 'bg-white dark:bg-neutral-800 shadow-sm' : 'bg-gray-100 dark:bg-neutral-800 text-gray-400 border-transparent opacity-60'}`}
+              className={`px-2 py-0.5 rounded text-xs font-medium transition-all border ${isSelected ? 'bg-white dark:bg-neutral-800 shadow-sm' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 border-transparent opacity-60'}`}
               style={{
                 borderColor: isSelected ? color : 'transparent',
                 color: isSelected ? color : undefined,

@@ -2,7 +2,6 @@
 // Simulation result display — wrapper around SimulationResultView with empty state.
 
 import { useTranslation } from 'react-i18next';
-import { FaRocket } from 'react-icons/fa';
 import SimulationResultView from '~/components/gacha/SimulationResultView';
 import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
 
@@ -22,7 +21,7 @@ export default function SimulationResultPanel({ result, initialPyroxenes, portra
 
   return (
     <div className="text-center py-16 text-neutral-400 dark:text-neutral-500 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
-      <FaRocket className="mx-auto text-4xl mb-4 opacity-20" />
+      {/* <FaRocket className="mx-auto text-4xl mb-4 opacity-20" /> */}
       <p>{t('empty_state')}</p>
     </div>
   );

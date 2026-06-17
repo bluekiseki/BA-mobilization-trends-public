@@ -1,6 +1,6 @@
 // app/types/data.ts
 
-import type { DifficultyName } from '~/components/Difficulty';
+import type { DifficultyName } from '~/components/raid/Difficulty';
 
 // The interface of initial data row after parsing the TSV file
 export interface RawDataRow {

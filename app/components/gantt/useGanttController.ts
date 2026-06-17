@@ -6,9 +6,22 @@ import type { GameServer } from '~/types/data';
 
 const BASE_PIXELS_PER_HOUR = 1.2;
 
+interface MarkerWeekly {
+  left: number;
+  label: string;
+  date: string;
+}
+
+interface MarkerMonthly {
+  left: number;
+  label: string;
+  isYearMarker: boolean;
+  date: string;
+}
+
 interface UseGanttControllerProps {
   timeRange: { min: number; max: number };
-  server?: GameServer | string;
+  server?: GameServer; // | string;
   initialTime?: number | null;
 }
 
@@ -32,7 +45,7 @@ export interface GanttControllerReturn {
   getCurrentTime: () => number;
 
   // Markers
-  markers: { daily: number[]; weekly: any[]; monthly: any[] };
+  markers: { daily: number[]; weekly: MarkerWeekly[]; monthly: MarkerMonthly[] };
 }
 
 export function useGanttController({ timeRange, server, initialTime }: UseGanttControllerProps) {
@@ -113,11 +126,11 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
   const markers = useMemo(() => {
     if (!timeRange.min) return { daily: [], weekly: [], monthly: [] };
     const daily: number[] = [];
-    const weekly: any[] = [];
-    const monthly: any[] = [];
+    const weekly: MarkerWeekly[] = [];
+    const monthly: MarkerMonthly[] = [];
     const start = new Date(timeRange.min);
     const end = new Date(timeRange.max);
-    let curr = new Date(start);
+    const curr = new Date(start);
     curr.setHours(4, 0, 0, 0);
     if (curr.getTime() < timeRange.min) curr.setDate(curr.getDate() + 1);
 
@@ -127,7 +140,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     }
 
     const targetDay = server === 'kr' ? 2 : 3;
-    let weekCurr = new Date(start);
+    const weekCurr = new Date(start);
     weekCurr.setHours(4, 0, 0, 0);
     const dayDiff = (weekCurr.getDay() - targetDay + 7) % 7;
     weekCurr.setDate(weekCurr.getDate() - dayDiff);
@@ -144,7 +157,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
       weekCurr.setDate(weekCurr.getDate() + 7);
     }
 
-    let monthCurr = new Date(start.getFullYear(), start.getMonth(), 1);
+    const monthCurr = new Date(start.getFullYear(), start.getMonth(), 1);
     while (monthCurr <= end) {
       monthly.push({
         left: calculateLeftPx(monthCurr.toISOString()),
@@ -196,7 +209,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
 
     // Resize Observer
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) setViewportWidth(entry.contentRect.width);
+      for (const entry of entries) setViewportWidth(entry.contentRect.width);
     });
     resizeObserver.observe(el);
 

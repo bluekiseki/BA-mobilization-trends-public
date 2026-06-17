@@ -38,20 +38,20 @@ export const equipmentTypeToBlueprint: Record<string, number> = {
 export const tierReplacementCosts = [1, 2, 3, 5, 7, 10, 15, 20, 30, 50];
 
 export const getTierFromEquipmentId = (id: number): number => {
-  for (const [_type, ids] of Object.entries(equipmentBlueprintId)) {
-    const index = (ids as number[]).indexOf(id);
+  for (const [, ids] of Object.entries(equipmentBlueprintId)) {
+    const index = ids.indexOf(id);
     if (index !== -1) return index + 1;
   }
 
-  for (const [_type, ids] of Object.entries(equipmentId)) {
-    const index = (ids as number[]).indexOf(id);
+  for (const [, ids] of Object.entries(equipmentId)) {
+    const index = ids.indexOf(id);
     if (index !== -1) return index + 1;
   }
   // Universal blueprint ID (e.g., 501000->1000)
   const iconId = id % 10000;
   if (iconId !== id) {
-    for (const [_type, ids] of Object.entries(equipmentBlueprintId)) {
-      const index = (ids as number[]).indexOf(iconId);
+    for (const [, ids] of Object.entries(equipmentBlueprintId)) {
+      const index = ids.indexOf(iconId);
       if (index !== -1) return index + 1;
     }
   }
@@ -60,13 +60,16 @@ export const getTierFromEquipmentId = (id: number): number => {
 
 export const getEquipmentType = (id: number): string | null => {
   for (const [type, ids] of Object.entries(equipmentBlueprintId)) {
-    if ((ids as number[]).includes(id)) return type;
+    if (ids.includes(id)) return type;
+  }
+  for (const [type, ids] of Object.entries(equipmentId)) {
+    if (ids.includes(id)) return type;
   }
   // Universal blueprint ID (e.g., 501000->1000)
   const iconId = id % 10000;
   if (iconId !== id) {
     for (const [type, ids] of Object.entries(equipmentBlueprintId)) {
-      if ((ids as number[]).includes(iconId)) return type;
+      if (ids.includes(iconId)) return type;
     }
   }
   return null;
@@ -79,6 +82,16 @@ export const normalizeBluprintToEquipment = (id: number): number => {
   if (!type || tier === 0) return id;
 
   const equipIds = equipmentId[type as keyof typeof equipmentId];
+  return equipIds?.[tier - 1] ?? id;
+};
+
+export const convertEquipmentToBluprint = (id: number): number => {
+  const type = getEquipmentType(id);
+  const tier = getTierFromEquipmentId(id);
+
+  if (!type || tier === 0) return id;
+
+  const equipIds = equipmentBlueprintId[type as keyof typeof equipmentBlueprintId];
   return equipIds?.[tier - 1] ?? id;
 };
 
@@ -103,8 +116,16 @@ interface Step1Result {
   remaining: Record<string, number>;
 }
 
+function dropKeyNormalize(dropKey: string) {
+  if (!dropKey.startsWith('Equipment_')) return dropKey;
+  const equipId = Number(dropKey.split('_')[1]);
+  const normalizeDropKey = `${dropKey.split('_')[0]}_${normalizeBluprintToEquipment(equipId) || equipId}`;
+  return normalizeDropKey;
+}
+
 function step1TierLP(stages: FarmingStage[], remainingNeeds: Record<string, number>, normalMultiplier: number): Step1Result {
   const remaining = { ...remainingNeeds };
+  console.log('[step1TierLP] remainingNeeds', remainingNeeds);
   const runCounts: Record<number, number> = {};
   const universalsGained: Record<string, number> = {};
 
@@ -133,7 +154,7 @@ function step1TierLP(stages: FarmingStage[], remainingNeeds: Record<string, numb
     const tierNeedsArray = Object.keys(tierNeeds);
     const dropMatrix: number[][] = tierStages.map((stage) => {
       return tierNeedsArray.map((key) => {
-        const dropRate = stage.drops[key] || 0;
+        const dropRate = stage.drops[key] || stage.drops[`Equipment_${convertEquipmentToBluprint(Number(key.split('_')[1]))}`] || 0;
         return dropRate * normalMultiplier;
       });
     });
@@ -146,7 +167,7 @@ function step1TierLP(stages: FarmingStage[], remainingNeeds: Record<string, numb
       dropMatrix,
       apCosts,
       neededAmounts,
-      priorities: Array(tierStages.length).fill(false),
+      priorities: Array<boolean>(tierStages.length).fill(false),
     });
 
     console.log({
@@ -189,12 +210,13 @@ function step1TierLP(stages: FarmingStage[], remainingNeeds: Record<string, numb
         for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
           const gained = dropRate * normalMultiplier * runs;
           const equipId = Number(dropKey.split('_')[1]);
+          const normalizeDropKey = dropKeyNormalize(dropKey);
 
           if (equipId in blueprintIdToType) {
             const eqType = blueprintIdToType[equipId];
             universalsGained[eqType] = (universalsGained[eqType] || 0) + gained;
           } else {
-            remaining[dropKey] = Math.max(0, (remaining[dropKey] || 0) - gained);
+            remaining[normalizeDropKey] = Math.max(0, (remaining[normalizeDropKey] || 0) - gained);
           }
         }
       }
@@ -215,6 +237,7 @@ function step1TierLP(stages: FarmingStage[], remainingNeeds: Record<string, numb
         for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
           const gained = dropRate * normalMultiplier * runs;
           const equipId = Number(dropKey.split('_')[1]);
+          const normalizeDropKey = dropKeyNormalize(dropKey);
 
           if (equipId in blueprintIdToType) {
             // Universal blueprint
@@ -223,7 +246,7 @@ function step1TierLP(stages: FarmingStage[], remainingNeeds: Record<string, numb
           } else {
             // Normal blueprint — always update, even if not in remaining initially
             // console.log('Normal blueprint — always update, even if not in remaining initially',dropKey)
-            remaining[dropKey] = Math.max(0, (remaining[dropKey] || 0) - gained);
+            remaining[normalizeDropKey] = Math.max(0, (remaining[normalizeDropKey] || 0) - gained);
           }
         }
       }
@@ -264,8 +287,9 @@ function step2UniversalReverseSubstitution(
     if (!stage) continue;
     for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
       const equipId = Number(dropKey.split('_')[1]);
+      const normalizeDropKey = dropKeyNormalize(dropKey);
       if (!(equipId in blueprintIdToType)) {
-        farmed[dropKey] = (farmed[dropKey] || 0) + dropRate * normalMultiplier * runs;
+        farmed[normalizeDropKey] = (farmed[normalizeDropKey] || 0) + dropRate * normalMultiplier * runs;
       }
     }
   }
@@ -306,6 +330,7 @@ function step2UniversalReverseSubstitution(
       for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
         const equipId = Number(dropKey.split('_')[1]);
         const gainedPerRun = dropRate * normalMultiplier;
+        const normalizeDropKey = dropKeyNormalize(dropKey);
 
         if (equipId in blueprintIdToType) {
           // Universal blueprint loss: no longer obtainable when the stage is removed
@@ -313,9 +338,9 @@ function step2UniversalReverseSubstitution(
           lossByType[eqType] = (lossByType[eqType] || 0) + gainedPerRun;
         } else {
           // Normal blueprint loss: exhaust surplus resources first, and if still short, fill with universal blueprints
-          const currentFarmed = farmed[dropKey] || 0;
-          const need = originalRemaining[dropKey] || 0;
-          const oldShortage = shortage[dropKey] || 0; // 0 if surplus
+          const currentFarmed = farmed[normalizeDropKey] || 0;
+          const need = originalRemaining[normalizeDropKey] || 0;
+          const oldShortage = shortage[normalizeDropKey] || 0; // 0 if surplus
           const newShortage = Math.max(0, need - (currentFarmed - gainedPerRun));
           const shortageIncrease = newShortage - oldShortage; // Exhausted surplus is automatically offset
 
@@ -356,7 +381,8 @@ function step2UniversalReverseSubstitution(
     }
 
     if (bestStageId !== null) {
-      const stage = stages.find((s) => s.id === bestStageId)!;
+      const stage = stages.find((s) => s.id === bestStageId);
+      if (!stage) continue;
 
       // 1 removal
       runCounts[bestStageId]--;
@@ -365,15 +391,16 @@ function step2UniversalReverseSubstitution(
       // Tracking blueprintCoverage: calculated based on current shortage before updating farmed
       for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
         const equipId = Number(dropKey.split('_')[1]);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
         if (!(equipId in blueprintIdToType)) {
           const gainedPerRun = dropRate * normalMultiplier;
-          const currentFarmed = farmed[dropKey] || 0;
-          const needAmt = originalRemaining[dropKey] || 0;
-          const oldShortage = shortage[dropKey] || 0;
+          const currentFarmed = farmed[normalizeDropKey] || 0;
+          const needAmt = originalRemaining[normalizeDropKey] || 0;
+          const oldShortage = shortage[normalizeDropKey] || 0;
           const newShortage = Math.max(0, needAmt - (currentFarmed - gainedPerRun));
           const increase = newShortage - oldShortage;
           if (increase > 0) {
-            blueprintCoverage[dropKey] = (blueprintCoverage[dropKey] || 0) + increase;
+            blueprintCoverage[normalizeDropKey] = (blueprintCoverage[normalizeDropKey] || 0) + increase;
           }
         }
       }
@@ -381,8 +408,9 @@ function step2UniversalReverseSubstitution(
       // Update farmed (maintain farming result state)
       for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
         const equipId = Number(dropKey.split('_')[1]);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
         if (!(equipId in blueprintIdToType)) {
-          farmed[dropKey] = Math.max(0, (farmed[dropKey] || 0) - dropRate * normalMultiplier);
+          farmed[normalizeDropKey] = Math.max(0, (farmed[normalizeDropKey] || 0) - dropRate * normalMultiplier);
         }
       }
 
@@ -439,19 +467,7 @@ export function optimizeNormalStages2Step(stages: FarmingStage[], remainingNeeds
   }
 
   const step1Result = step1TierLP(stages, remainingNeeds, normalMultiplier);
-  console.log('step1Result', step1Result);
-
-  // return {
-  //   runCounts: step1Result.runCounts,
-  //   finalRemaining: step1Result.remaining,
-  //   blueprintsUsed: {}
-  // }
-
-  // interface Step2Result {
-  //   runCounts: Record<number, number>;
-  //   blueprintsUsed: Record<string, number>;
-  //   finalRemaining: Record<string, number>;
-  // }
+  // console.log('step1Result', step1Result);
 
   return step2UniversalReverseSubstitution(stages, step1Result, userBlueprints, { ...remainingNeeds }, normalMultiplier);
 }
@@ -483,7 +499,7 @@ function step1TierLPHard(stages: FarmingStage[], remainingNeeds: Record<string, 
       dropMatrix,
       apCosts: tierStages.map((s) => s.ap),
       neededAmounts: tierNeedsArray.map((key) => tierNeeds[key]),
-      priorities: Array(tierStages.length).fill(false),
+      priorities: Array<boolean>(tierStages.length).fill(false),
     });
 
     if (!lpResult || lpResult.length === 0) {
@@ -507,10 +523,12 @@ function step1TierLPHard(stages: FarmingStage[], remainingNeeds: Record<string, 
         for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
           const gained = dropRate * hardMultiplier * runs;
           const equipId = Number(dropKey.split('_')[1]);
+          const normalizeDropKey = dropKeyNormalize(dropKey);
+
           if (equipId in blueprintIdToType) {
             universalsGained[blueprintIdToType[equipId]] = (universalsGained[blueprintIdToType[equipId]] || 0) + gained;
           } else {
-            remaining[dropKey] = Math.max(0, (remaining[dropKey] || 0) - gained);
+            remaining[normalizeDropKey] = Math.max(0, (remaining[normalizeDropKey] || 0) - gained);
           }
         }
       }
@@ -525,10 +543,11 @@ function step1TierLPHard(stages: FarmingStage[], remainingNeeds: Record<string, 
       for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
         const gained = dropRate * hardMultiplier * runs;
         const equipId = Number(dropKey.split('_')[1]);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
         if (equipId in blueprintIdToType) {
           universalsGained[blueprintIdToType[equipId]] = (universalsGained[blueprintIdToType[equipId]] || 0) + gained;
         } else {
-          remaining[dropKey] = Math.max(0, (remaining[dropKey] || 0) - gained);
+          remaining[normalizeDropKey] = Math.max(0, (remaining[normalizeDropKey] || 0) - gained);
         }
       }
     }
@@ -548,4 +567,329 @@ export function optimizeHardStages(
   if (Object.keys(remainingNeeds).length === 0) return { runCounts: {}, remaining: {} };
   const { runCounts, remaining } = step1TierLPHard(stages, remainingNeeds, hardMultiplier, maxRunsPerStage);
   return { runCounts, remaining };
+}
+
+// Joint LP for hard + normal stages together per tier.
+// Hard stages are placed first in the matrix (preferred when LP is indifferent).
+// After solving, hard runs are capped at maxRunsPerStage; any shortfall is re-covered by normal-only LP.
+function step1TierLPCombined(stages: FarmingStage[], remainingNeeds: Record<string, number>, normalMultiplier: number, hardMultiplier: number, maxRunsPerStage: number): Step1Result {
+  const remaining = { ...remainingNeeds };
+  const runCounts: Record<number, number> = {};
+  const universalsGained: Record<string, number> = {};
+
+  const getMultiplier = (s: FarmingStage) => (s.type === 'Hard' ? hardMultiplier : normalMultiplier);
+
+  for (let tier = 10; tier >= 1; tier--) {
+    const hardStages = stages.filter((s) => s.type === 'Hard' && getMaxTier(s) === tier).sort((a, b) => b.chapter - a.chapter || b.stageNum - a.stageNum);
+    const normalStages = stages.filter((s) => s.type === 'Normal' && getMaxTier(s) === tier).sort((a, b) => b.chapter - a.chapter || b.stageNum - a.stageNum);
+
+    if (hardStages.length === 0 && normalStages.length === 0) continue;
+
+    // Hard 2n+2, Hard 2n+1, Normal 2n+2, Normal 2n+1
+    const tierStages = [...hardStages, ...normalStages];
+    const hardCount = hardStages.length;
+
+    console.log(`tierStages, tier=${tier}`, tierStages);
+
+    const tierNeeds: Record<string, number> = {};
+    for (const [key, amount] of Object.entries(remaining)) {
+      if (amount > 0) {
+        const equipId = Number(key.split('_')[1]);
+        if (!(equipId in blueprintIdToType) && getTierFromEquipmentId(equipId) === tier) {
+          tierNeeds[key] = amount;
+        }
+      }
+    }
+
+    if (Object.keys(tierNeeds).length === 0) continue;
+
+    const tierNeedsArray = Object.keys(tierNeeds);
+
+    const lookupDropRate = (stage: FarmingStage, key: string) => {
+      const direct = stage.drops[key] || 0;
+      if (direct) return direct;
+      const bpKey = `Equipment_${convertEquipmentToBluprint(Number(key.split('_')[1]))}`;
+      return stage.drops[bpKey] || 0;
+    };
+
+    const dropMatrix: number[][] = tierStages.map((stage) => tierNeedsArray.map((key) => lookupDropRate(stage, key) * getMultiplier(stage)));
+
+    console.log('dropMatrix', dropMatrix);
+    const apCosts = tierStages.map((s) => s.ap);
+    const neededAmounts = tierNeedsArray.map((key) => tierNeeds[key]);
+
+    const lpResult = solveOptimalRuns({
+      dropMatrix,
+      apCosts,
+      neededAmounts,
+      priorities: Array<boolean>(tierStages.length).fill(false),
+    });
+
+    const applyDrops = (stage: FarmingStage, runs: number) => {
+      runCounts[stage.id] = (runCounts[stage.id] || 0) + runs;
+      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
+        const gained = dropRate * getMultiplier(stage) * runs;
+        const equipId = Number(dropKey.split('_')[1]);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
+        if (equipId in blueprintIdToType) {
+          universalsGained[blueprintIdToType[equipId]] = (universalsGained[blueprintIdToType[equipId]] || 0) + gained;
+        } else {
+          remaining[normalizeDropKey] = Math.max(0, (remaining[normalizeDropKey] || 0) - gained);
+        }
+      }
+    };
+
+    if (!lpResult || lpResult.length === 0) {
+      // Greedy fallback: hard stages first (already sorted to front), respect cap
+      for (const [key, need] of Object.entries(tierNeeds)) {
+        if (need <= 0) continue;
+        let leftover = need;
+        for (const stage of tierStages) {
+          if (leftover <= 0) break;
+          const rate = lookupDropRate(stage, key) * getMultiplier(stage);
+          if (rate <= 0) continue;
+          const cap = stage.type === 'Hard' ? maxRunsPerStage : Infinity;
+          const already = runCounts[stage.id] || 0;
+          const available = stage.type === 'Hard' ? Math.max(0, cap - already) : Infinity;
+          const needed = Math.ceil(leftover / rate);
+          const actual = isFinite(available) ? Math.min(needed, available) : needed;
+          if (actual > 0) {
+            applyDrops(stage, actual);
+            leftover = Math.max(0, leftover - actual * rate);
+          }
+        }
+      }
+      continue;
+    }
+
+    // Apply capped hard runs and LP normal runs
+    for (let i = 0; i < tierStages.length; i++) {
+      const stage = tierStages[i];
+      const isHard = i < hardCount;
+      const runs = isHard ? Math.min(Math.ceil(lpResult[i]), maxRunsPerStage) : Math.ceil(lpResult[i]);
+      if (runs > 0) applyDrops(stage, runs);
+    }
+
+    // If hard stages were capped, LP normal allocation may be insufficient — re-run normal-only LP
+    const stillNeeded: Record<string, number> = {};
+    for (const key of tierNeedsArray) {
+      const leftover = remaining[key] ?? 0;
+      if (leftover > 0) stillNeeded[key] = leftover;
+    }
+
+    if (Object.keys(stillNeeded).length > 0 && normalStages.length > 0) {
+      const stillArray = Object.keys(stillNeeded);
+      const fallbackMatrix = normalStages.map((stage) => stillArray.map((key) => lookupDropRate(stage, key) * normalMultiplier));
+      const fallbackResult = solveOptimalRuns({
+        dropMatrix: fallbackMatrix,
+        apCosts: normalStages.map((s) => s.ap),
+        neededAmounts: stillArray.map((k) => stillNeeded[k]),
+        priorities: Array<boolean>(normalStages.length).fill(false),
+      });
+      if (fallbackResult && fallbackResult.length > 0) {
+        for (let k = 0; k < normalStages.length; k++) {
+          const runs = Math.ceil(fallbackResult[k]);
+          if (runs > 0) applyDrops(normalStages[k], runs);
+        }
+      }
+    }
+  }
+
+  return { runCounts, universalsGained, remaining };
+}
+
+// Copy of step2UniversalReverseSubstitution adapted for combined hard+normal stages.
+// Uses per-stage multipliers: hardMultiplier for Hard stages, normalMultiplier for Normal stages.
+function step2CombinedSubstitution(
+  stages: FarmingStage[],
+  step1Result: Step1Result,
+  userBlueprints: Record<string, number>,
+  originalRemaining: Record<string, number>,
+  normalMultiplier: number,
+  hardMultiplier: number,
+): Step2Result {
+  const runCounts = { ...step1Result.runCounts };
+  const blueprintsUsed: Record<string, number> = {};
+
+  const getMultiplier = (stage: FarmingStage) => (stage.type === 'Hard' ? hardMultiplier : normalMultiplier);
+
+  const availableUniversals: Record<string, number> = { ...step1Result.universalsGained };
+  for (const [type, amount] of Object.entries(userBlueprints)) {
+    availableUniversals[type] = (availableUniversals[type] || 0) + amount;
+  }
+
+  const farmed: Record<string, number> = {};
+  for (const [stageIdStr, runs] of Object.entries(runCounts)) {
+    const stage = stages.find((s) => s.id === Number(stageIdStr));
+    if (!stage) continue;
+    for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
+      const equipId = Number(dropKey.split('_')[1]);
+      const normalizeDropKey = dropKeyNormalize(dropKey);
+      if (!(equipId in blueprintIdToType)) {
+        farmed[normalizeDropKey] = (farmed[normalizeDropKey] || 0) + dropRate * getMultiplier(stage) * runs;
+      }
+    }
+  }
+
+  const blueprintCoverage: Record<string, number> = {};
+
+  let removed = true;
+  while (removed) {
+    removed = false;
+
+    const shortage: Record<string, number> = {};
+    for (const [key, need] of Object.entries(originalRemaining)) {
+      const s = Math.max(0, need - (farmed[key] || 0));
+      if (s > 0) shortage[key] = s;
+    }
+
+    let bestStageId: number | null = null;
+    let bestEfficiency = -Infinity;
+    let bestCostByType: Record<string, number> = {};
+    let bestLossByType: Record<string, number> = {};
+
+    for (const [stageIdStr, runs] of Object.entries(runCounts)) {
+      if (runs <= 0) continue;
+      const stageId = Number(stageIdStr);
+      const stage = stages.find((s) => s.id === stageId);
+      if (!stage) continue;
+
+      const costByType: Record<string, number> = {};
+      const lossByType: Record<string, number> = {};
+
+      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
+        const equipId = Number(dropKey.split('_')[1]);
+        const gainedPerRun = dropRate * getMultiplier(stage);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
+
+        if (equipId in blueprintIdToType) {
+          const eqType = blueprintIdToType[equipId];
+          lossByType[eqType] = (lossByType[eqType] || 0) + gainedPerRun;
+        } else {
+          const currentFarmed = farmed[normalizeDropKey] || 0;
+          const need = originalRemaining[normalizeDropKey] || 0;
+          const oldShortage = shortage[normalizeDropKey] || 0;
+          const newShortage = Math.max(0, need - (currentFarmed - gainedPerRun));
+          const shortageIncrease = newShortage - oldShortage;
+
+          if (shortageIncrease > 0) {
+            const tier = getTierFromEquipmentId(equipId);
+            const eqType = getEquipmentType(equipId);
+            const blueprintCost = calculateBlueprintCost(tier);
+            if (eqType && blueprintCost > 0) {
+              costByType[eqType] = (costByType[eqType] || 0) + Math.ceil(shortageIncrease * blueprintCost);
+            }
+          }
+        }
+      }
+
+      let canAfford = true;
+      const allTypes = new Set([...Object.keys(costByType), ...Object.keys(lossByType)]);
+      for (const type of allTypes) {
+        const total = (costByType[type] || 0) + (lossByType[type] || 0);
+        if (total > 0 && (availableUniversals[type] || 0) < total) {
+          canAfford = false;
+          break;
+        }
+      }
+      if (!canAfford) continue;
+
+      const apSaved = stage.ap;
+      const totalSpend = [...Object.values(costByType), ...Object.values(lossByType)].reduce((s, v) => s + v, 0);
+      const efficiency = totalSpend > 0 ? apSaved / totalSpend : Infinity;
+
+      if (efficiency > bestEfficiency) {
+        bestEfficiency = efficiency;
+        bestStageId = stageId;
+        bestCostByType = costByType;
+        bestLossByType = lossByType;
+      }
+    }
+
+    if (bestStageId !== null) {
+      const stage = stages.find((s) => s.id === bestStageId);
+      if (!stage) continue;
+
+      runCounts[bestStageId]--;
+      if (runCounts[bestStageId] <= 0) delete runCounts[bestStageId];
+
+      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
+        const equipId = Number(dropKey.split('_')[1]);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
+        if (!(equipId in blueprintIdToType)) {
+          const gainedPerRun = dropRate * getMultiplier(stage);
+          const currentFarmed = farmed[normalizeDropKey] || 0;
+          const needAmt = originalRemaining[normalizeDropKey] || 0;
+          const oldShortage = shortage[normalizeDropKey] || 0;
+          const newShortage = Math.max(0, needAmt - (currentFarmed - gainedPerRun));
+          const increase = newShortage - oldShortage;
+          if (increase > 0) {
+            blueprintCoverage[normalizeDropKey] = (blueprintCoverage[normalizeDropKey] || 0) + increase;
+          }
+        }
+      }
+
+      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
+        const equipId = Number(dropKey.split('_')[1]);
+        const normalizeDropKey = dropKeyNormalize(dropKey);
+        if (!(equipId in blueprintIdToType)) {
+          farmed[normalizeDropKey] = Math.max(0, (farmed[normalizeDropKey] || 0) - dropRate * getMultiplier(stage));
+        }
+      }
+
+      for (const [type, cost] of Object.entries(bestCostByType)) {
+        availableUniversals[type] = (availableUniversals[type] || 0) - cost;
+        blueprintsUsed[type] = (blueprintsUsed[type] || 0) + cost;
+      }
+      for (const [type, loss] of Object.entries(bestLossByType)) {
+        availableUniversals[type] = (availableUniversals[type] || 0) - loss;
+      }
+
+      removed = true;
+    }
+  }
+
+  const finalRemaining: Record<string, number> = {};
+  for (const [key, need] of Object.entries(originalRemaining)) {
+    const shortfall = Math.max(0, need - (farmed[key] || 0) - (blueprintCoverage[key] || 0));
+    if (shortfall <= 1e-9) continue;
+
+    const equipId = Number(key.split('_')[1]);
+    const eqType = getEquipmentType(equipId);
+    const tier = getTierFromEquipmentId(equipId);
+    const blueprintCost = calculateBlueprintCost(tier);
+
+    if (eqType && blueprintCost > 0 && (availableUniversals[eqType] || 0) > 0) {
+      const universalsNeeded = Math.ceil(shortfall * blueprintCost);
+      const used = Math.min(universalsNeeded, availableUniversals[eqType]);
+      availableUniversals[eqType] -= used;
+      blueprintsUsed[eqType] = (blueprintsUsed[eqType] || 0) + used;
+      const left = shortfall - used / blueprintCost;
+      if (left > 1e-9) finalRemaining[key] = left;
+    } else {
+      finalRemaining[key] = shortfall;
+    }
+  }
+
+  return { runCounts, blueprintsUsed, finalRemaining };
+}
+
+// Combined LP: hard + normal stages solved jointly per tier to eliminate AP waste
+// from hard-only pre-allocation when hard and normal stages share equipment types.
+export function optimizeCombinedStages2Step(
+  stages: FarmingStage[],
+  remainingNeeds: Record<string, number>,
+  userBlueprints: Record<string, number>,
+  normalMultiplier: number,
+  hardMultiplier: number,
+  maxRunsPerStage: number,
+): OptimizeResult {
+  if (Object.keys(remainingNeeds).length === 0) {
+    return { runCounts: {}, blueprintsUsed: {}, finalRemaining: {} };
+  }
+
+  console.log('optimizeCombinedStages2Step', stages, remainingNeeds, userBlueprints, normalMultiplier, hardMultiplier, maxRunsPerStage);
+
+  const step1Result = step1TierLPCombined(stages, remainingNeeds, normalMultiplier, hardMultiplier, maxRunsPerStage);
+  return step2CombinedSubstitution(stages, step1Result, userBlueprints, { ...remainingNeeds }, normalMultiplier, hardMultiplier);
 }

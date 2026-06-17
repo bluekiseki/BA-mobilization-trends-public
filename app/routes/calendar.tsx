@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { type loadScheduleData, type ScheduleItem } from '~/utils/calender.data';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import type { loader as rootLorder } from '~/root';
 
 import { useGanttController } from '~/components/gantt/useGanttController';
 import { GanttChart } from '~/components/gantt/GanttChart';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { PageHeader } from '~/components/common/PageHeader';
 import type { AppHandle } from '~/types/link';
 import type { GameServer } from '~/types/data';
 import { getInstance } from '~/middleware/i18next';
@@ -19,19 +19,19 @@ import { FiClock } from 'react-icons/fi';
 import { localeLink } from '~/utils/localeLink';
 
 // --- 1. Loader: Used only for metadata and parameter validation (heavy data fetching removed) ---
-export async function loader({ request, context, params }: LoaderFunctionArgs) {
-  const server = params.server || 'jp';
+export function loader({ context, params }: LoaderFunctionArgs) {
+  const server: GameServer = (params.server || 'jp') as GameServer;
   if (server !== 'jp' && server !== 'kr') {
     throw new Response('Not Found: Invalid server parameter.', { status: 404 });
   }
 
-  let i18n = getInstance(context);
+  const i18n = getInstance(context);
   const locale = i18n.language as Locale;
 
-  // 🗑️ loadScheduleData call removed (called via API from the client)
+  // loadScheduleData call removed (called via API from the client)
 
   return {
-    server: server as GameServer,
+    server,
     locale,
     title: i18n.t('calendar:title'),
     description: i18n.t('calendar:description.main'),
@@ -43,12 +43,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export const handle: AppHandle = {
-  preload: (data) => {
-    const { server, server: loadedServer } = useLoaderData<typeof rootLorder>().params;
+  preload: (data: unknown, routeMatch) => {
+    const d = data as Record<string, unknown> | undefined;
+
+    const { server, server: loadedServer } = routeMatch?.params || {};
+    const locale = d?.locale as Locale;
     return [
       {
         rel: 'preload',
-        href: cdn(`/schaledb.com/${getLocaleShortName(data?.locale)}.students.min.json`),
+        href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -60,7 +63,7 @@ export const handle: AppHandle = {
       },
       {
         rel: 'preload',
-        href: `/api/calendar?type=all&server=${loadedServer}&lang=${data?.locale}`,
+        href: `/api/calendar?type=all&server=${loadedServer}&lang=${locale}`,
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -86,12 +89,12 @@ export default function SchedulePageGantt() {
 
   useEffect(() => {
     fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
-      .then((r) => r.json() as any)
-      .then(setStudentData)
+      .then((r) => r.json())
+      .then((data) => setStudentData(data as Record<number, Student>))
       .catch(console.error);
     fetch(cdn(`/w/students_portrait.json`))
-      .then((r) => r.json() as any)
-      .then(setStudentPortraits)
+      .then((r) => r.json())
+      .then((data) => setStudentPortraits(data as StudentPortraitData))
       .catch(console.error);
   }, [locale]);
 
@@ -101,12 +104,12 @@ export default function SchedulePageGantt() {
     fetch(`/api/calendar?type=all&server=${loadedServer}&lang=${locale}`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch full calendar data');
-        return res.json() as any;
+        return res.json();
       })
       .then((json) => {
-        setCalendarData(json.data); // Assume API response structure is { data: { tracks, timeRange } }
+        setCalendarData((json as { data: Awaited<ReturnType<typeof loadScheduleData>> }).data);
       })
-      .catch((err) => console.error('Full calendar data error:', err))
+      .catch((err: unknown) => console.error('Full calendar data error:', err))
       .finally(() => setIsLoading(false));
   }, [loadedServer, locale]);
 
@@ -148,23 +151,15 @@ export default function SchedulePageGantt() {
 
   // 5. Server Change Handler
   const handleServerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    navigate(localeLink(locale, `/calendar/${e.target.value}`));
+    void navigate(localeLink(locale, `/calendar/${e.target.value}`));
   };
 
   return (
-    <div className="w-full bg-white dark:bg-neutral-900 text-gray-900 dark:text-white min-h-screen flex flex-col">
+    <div className="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white min-h-screen flex flex-col">
       <div className="px-4 py-6 sm:px-8 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm top-0 z-40">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              {t('title')} <span className="text-blue-600 dark:text-blue-400 uppercase">({loadedServer})</span>
-            </h1>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              {t('description.main')} / {t('description.prediction')}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader title={`${t('title')} (${loadedServer})`} description={`${t('description.main')} / ${t('description.prediction')}`} />
+          <div className="flex items-center gap-3 mt-3">
             <div className="relative">
               <select
                 value={loadedServer}
@@ -196,21 +191,22 @@ export default function SchedulePageGantt() {
       {/* Chart Section */}
       <div className="flex-1 w-full max-w-[100vw] overflow-hidden">
         <div className="py-4">
-          {/* Handle loading state */}
-          {isLoading || !calendarData ? (
+          {!calendarData ? (
             <div className="flex justify-center items-center h-64 text-neutral-500 animate-pulse">{t('loading', 'Loading calendar data...')}</div>
           ) : (
-            <GanttChart
-              mode="full"
-              data={{
-                tracks: calendarData.tracks,
-                timeRange: calendarData.timeRange,
-                studentData,
-                studentPortraits,
-                birthdayTrackItems,
-              }}
-              controller={ganttController}
-            />
+            <div className={`transition-opacity duration-200 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+              <GanttChart
+                mode="full"
+                data={{
+                  tracks: calendarData.tracks,
+                  timeRange: calendarData.timeRange,
+                  studentData,
+                  studentPortraits,
+                  birthdayTrackItems,
+                }}
+                controller={ganttController}
+              />
+            </div>
           )}
         </div>
       </div>

@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useIsDarkState } from '~/store/isDarkState';
 import { getBackgroundRatingColor, getCharacterStarValue, type PortraitData, type ReportEntry, type StudentData } from '../common';
 import { Bar, BarChart, CartesianGrid, LabelList, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { StarRating } from '~/components/StarRatingProps';
+import { StarRating } from '~/components/StarRating';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
 
@@ -38,8 +38,8 @@ export const StackedPickRateChart: React.FC<{
               // 'only'
               if (!isAssist) return;
             }
-            if (!pickCounts.has(id)) pickCounts.set(id, new Map());
-            const starMap = pickCounts.get(id)!;
+            if (!pickCounts.has(id)) pickCounts.set(id, new Map<number, number>());
+            const starMap = pickCounts.get(id) ?? new Map<number, number>();
             starMap.set(starValue, (starMap.get(starValue) || 0) + 1);
           }),
       );
@@ -47,7 +47,7 @@ export const StackedPickRateChart: React.FC<{
 
     // Process into chart format
     const processed = Array.from(pickCounts.entries()).map(([id, starMap]) => {
-      const entry: { [key: string]: any } = {
+      const entry: Record<string, number | string> = {
         id: id,
         name: studentData[id]?.Name || `ID ${id}`,
       };
@@ -57,7 +57,7 @@ export const StackedPickRateChart: React.FC<{
       });
       return entry;
     });
-    return processed.sort((a, b) => b.total - a.total).filter((v) => v.total);
+    return processed.sort((a, b) => Number(b.total) - Number(a.total)).filter((v) => v.total);
   }, [data, studentData, currentRank, assistantFilter]);
 
   const displayChartData = useMemo(() => {
@@ -69,10 +69,15 @@ export const StackedPickRateChart: React.FC<{
     [fullChartData],
   );
 
-  const CustomYAxisTick = (props: any) => {
-    const { x, y, payload } = props;
-    const studentId = Number(payload.value);
-    const imageUrl = `data:image/webp;base64,${portraitData[studentId]}` || '';
+  interface AxisTickProps {
+    x?: number;
+    y?: number;
+    payload?: { value?: number | string };
+  }
+
+  const CustomYAxisTick = ({ x = 0, y = 0, payload }: AxisTickProps) => {
+    const studentId = Number(payload?.value ?? 0);
+    const imageUrl = portraitData[studentId] ? `data:image/webp;base64,${portraitData[studentId]}` : '';
 
     if (imageUrl) {
       return <image x={x - 24} y={y - 14} href={imageUrl} width={28} height={28} />;
@@ -95,7 +100,7 @@ export const StackedPickRateChart: React.FC<{
     setActiveIndex(null);
   };
 
-  const renderCustomizedLabel = (label: any): string | null => {
+  const renderCustomizedLabel = (label: number | string): string | null => {
     if (typeof label === 'number' && label > 10) {
       return `${label.toFixed(1)}%`;
     }
@@ -115,7 +120,7 @@ export const StackedPickRateChart: React.FC<{
   // const calculatedHeight = chartData.length * BAR_HEIGHT + CHART_VERTICAL_PADDING;
   const calculatedHeight = displayChartData.length * BAR_HEIGHT + CHART_VERTICAL_PADDING;
 
-  const filterOptions: { value: AssistantFilter; labelKey: string }[] = [
+  const filterOptions: Array<{ value: AssistantFilter; labelKey: 'rank_all' | 'rank_normal' | 'rank_assist' }> = [
     { value: 'include', labelKey: 'rank_all' },
     { value: 'exclude', labelKey: 'rank_normal' },
     { value: 'only', labelKey: 'rank_assist' },
@@ -131,9 +136,9 @@ export const StackedPickRateChart: React.FC<{
           <button
             key={opt.value}
             onClick={() => setAssistantFilter(opt.value)}
-            className={`px-2 py-1.5 text-xs font-medium rounded-sm transition-colors ${assistantFilter === opt.value ? 'bg-bluearchive-botton-blue text-black' : 'bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600'}`}
+            className={`px-2 py-1.5 text-xs font-medium rounded-sm transition-colors ${assistantFilter === opt.value ? 'bg-ba-btn-blue text-black' : 'bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
           >
-            {t_a(opt.labelKey as any) as any} {/* Translate the label key */}
+            {t_a(opt.labelKey)} {/* Translate the label key */}
           </button>
         ))}
       </div>
@@ -141,14 +146,15 @@ export const StackedPickRateChart: React.FC<{
       <ResponsiveContainer width="100%" height={calculatedHeight} className="animate-none">
         <BarChart layout="vertical" data={displayChartData} margin={{ left: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#404040' : '#e2e8f0'} /> {/* Adjusted dark color */}
-          <XAxis type="number" stroke="#64748b" domain={[0, 'dataMax + 10']} tickFormatter={(val) => `${val.toPrecision(3).toLocaleString()}%`} /> {/* Added % to tick */}
+          <XAxis type="number" stroke="#64748b" domain={[0, 'dataMax + 10']} tickFormatter={(val: number) => `${val.toPrecision(3).toLocaleString()}%`} /> {/* Added % to tick */}
           <YAxis type="category" dataKey="id" stroke="#64748b" width={2} tick={<CustomYAxisTick />} interval={0} />
           <Tooltip
-            content={({ active, payload, label }) => {
+            content={(props) => {
+              const { active, payload, label } = props; // as { active?: boolean; payload?: Array<{ value?: number; color?: string; name?: string; payload?: Record<string, number | string> }>; label?: number | string };
               if (active && payload && payload.length) {
-                const studentId = Number(label);
-                const studentInfo = payload[0].payload; // Access the underlying data point
-                const totalPickRate = (studentInfo.total / currentRank) * 100; // Calculate total %
+                const studentId = label ? Number(label) : 0;
+                const studentInfo = (payload[0].payload ?? {}) as Record<string, number | string>;
+                const totalPickRate = (((studentInfo.total as number) ?? 0) / currentRank) * 100; // Calculate total %
 
                 return (
                   <div className="rounded border bg-white p-3 text-sm shadow-md dark:border-neutral-700 dark:bg-neutral-800">
@@ -181,8 +187,8 @@ export const StackedPickRateChart: React.FC<{
                             <div
                               className="h-1 rounded"
                               style={{
-                                width: `${entry.value}%`,
-                                backgroundColor: entry.color,
+                                width: `${Number(entry.value ?? 0)}%`,
+                                backgroundColor: entry.color ?? '#ccc',
                               }}
                             />
                           </div>
@@ -213,6 +219,7 @@ export const StackedPickRateChart: React.FC<{
                 position="center"
                 fill="#fff" // Consider dark text on light bars?
                 fontSize={10}
+                // @ts-expect-error - LabelFormatter type compatibility
                 formatter={renderCustomizedLabel}
               />
             </Bar>

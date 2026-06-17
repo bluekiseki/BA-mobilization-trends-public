@@ -24,8 +24,9 @@ export const useDataCacheJson = <T>() => {
 
   const fetchAndCacheJson = useCallback((url: string, doXor: boolean = true): Promise<T> => {
     // 1. Check cache
-    if (dataCache.current.has(url)) {
-      return dataCache.current.get(url)!;
+    const cached = dataCache.current.get(url);
+    if (cached) {
+      return cached;
     }
 
     console.log(`[Cache MISS]: ${url}`);
@@ -41,7 +42,7 @@ export const useDataCacheJson = <T>() => {
         console.log('worker end');
 
         if (status === 'success' && data) {
-          resolve(data as T);
+          resolve(data);
         } else {
           reject(new Error(error || 'Worker failed to return data.'));
         }
@@ -51,15 +52,15 @@ export const useDataCacheJson = <T>() => {
       };
 
       // Worker error handling
-      worker.onerror = (e) => {
+      worker.onerror = (e: ErrorEvent) => {
         dataCache.current.delete(url); // Remove from cache on failure
-        reject(e);
+        reject(new Error(e.message || 'Worker error'));
         worker.terminate();
       };
 
       // 4. Post message to worker (request task)
       worker.postMessage({ url, doXor });
-    }).catch((error) => {
+    }).catch((error: unknown) => {
       // Catch any errors in the Promise chain and clear the cache
       dataCache.current.delete(url);
       throw error; // Rethrow the error so it can be handled at the component level

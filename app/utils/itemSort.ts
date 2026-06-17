@@ -21,7 +21,9 @@ export const getItemSortPriority = (key: string, eventData: EventData): number =
   if (type == 'Currency') return 20;
 
   // rarity
-  const rarity = (eventData.icons as any)?.[type]?.[id]?.Rarity;
+  type IconMap = Record<string, Record<string, { Rarity?: number }>>;
+  const iconMap = eventData.icons as unknown as IconMap | undefined;
+  const rarity = iconMap?.[type]?.[id]?.Rarity;
   switch (rarity) {
     case 3:
       return 30;

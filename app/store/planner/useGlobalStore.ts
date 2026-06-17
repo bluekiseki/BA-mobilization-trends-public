@@ -1,11 +1,13 @@
 // app/store/planner/useGlobalStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { type GrowthPlan } from '~/types/growthPlan';
+export type { GrowthPlan };
 
 /**
  * return true when a>b
  */
-export const isLarger = (a: any, b: any) => {
+export const isLarger = (a: unknown, b: unknown): boolean => {
   // 1. Number vs Number comparison
   if (typeof a === 'number' && typeof b === 'number') {
     return a > b;
@@ -40,55 +42,12 @@ export const isLarger = (a: any, b: any) => {
   return false;
 };
 
-export interface GrowthPlan {
-  uuid: string;
-  studentId: number | null;
-  current: {
-    level: number;
-    star: number;
-    uw: number;
-    uwLevel: number;
-    ex: number;
-    normal: number;
-    passive: number;
-    sub: number;
-    eleph: number;
-
-    affection: number;
-    affectionExp: number;
-    equipment: [number, number, number];
-    gear: number;
-    potential: { hp: number; atk: number; heal: number };
-  };
-  target: {
-    level: number;
-    star: number;
-    uw: number;
-    uwLevel: number;
-    ex: number;
-    normal: number;
-    passive: number;
-    sub: number;
-    affection: number;
-    equipment: [number, number, number];
-    gear: number;
-    potential: { hp: number; atk: number; heal: number };
-  };
-  includedInEvents: number[];
-  useEligmaForStar: boolean;
-  eligmaInfo: {
-    price: number;
-    stock: number;
-  };
-  isSelected: boolean;
-  acquiredDate?: string;
-}
-
 interface GlobalState {
   growthPlans: GrowthPlan[];
   ownedGifts: Record<string, number>;
-  addPlan: (eventId: number | null) => string | undefined;
+  addPlan: (eventId?: number | null) => string | undefined;
   removePlan: (uuid: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updatePlan: (uuid: string, field: string, value: any) => void;
   toggleEventInclusion: (uuid: string, eventId: number) => void;
   setGrowthPlans: (plans: GrowthPlan[]) => void;
@@ -106,7 +65,7 @@ export const useGlobalStore = create<GlobalState>()(
     (set, get) => ({
       growthPlans: [],
       ownedGifts: {},
-      addPlan: (eventId: number | null = null) => {
+      addPlan: (eventId?: number | null) => {
         const { growthPlans } = get();
 
         const hasUnselectedPlan = growthPlans.some((plan) => plan.studentId === null);
@@ -170,13 +129,17 @@ export const useGlobalStore = create<GlobalState>()(
         set((state) => {
           const newGrowthPlans = state.growthPlans.map((p) => {
             if (p.uuid === uuid) {
-              const newPlan = JSON.parse(JSON.stringify(p));
+              const newPlan = JSON.parse(JSON.stringify(p)) as GrowthPlan;
 
-              const [main, sub] = field.split('.');
-              if (sub) {
-                (newPlan as any)[main][sub] = value;
+              const parts = field.split('.');
+              if (parts.length === 2) {
+                const [main, sub] = parts;
+                const obj = newPlan[main as keyof GrowthPlan];
+                if (typeof obj === 'object' && obj !== null) {
+                  (obj as Record<string, unknown>)[sub] = value;
+                }
               } else {
-                (newPlan as any)[field] = value;
+                (newPlan as Record<string, unknown>)[field] = value;
                 // Reset gear when student changes — new student may not have gear
                 if (field === 'studentId') {
                   newPlan.current.gear = 0;
@@ -184,14 +147,15 @@ export const useGlobalStore = create<GlobalState>()(
                 }
               }
               // Ensure target >= current
-              if (sub) {
-                const currentVal = newPlan.current[sub];
-                const targetVal = newPlan.target[sub];
+              if (parts.length === 2) {
+                const [, sub] = parts;
+                const currentVal = newPlan.current[sub as keyof typeof newPlan.current];
+                const targetVal = newPlan.target[sub as keyof typeof newPlan.target];
 
                 if (isLarger(currentVal, targetVal)) {
-                  newPlan.target[sub] = currentVal;
+                  (newPlan.target as Record<string, unknown>)[sub] = currentVal;
                 } else if (typeof currentVal === 'object' && typeof targetVal === 'object' && isLarger(Object.values(currentVal), Object.values(targetVal))) {
-                  newPlan.target[sub] = currentVal;
+                  (newPlan.target as Record<string, unknown>)[sub] = currentVal;
                 }
 
                 // ★ rank

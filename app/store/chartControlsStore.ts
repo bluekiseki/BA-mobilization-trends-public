@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { DifficultySelect } from '~/components/Difficulty';
+import type { DifficultySelect } from '~/components/raid/Difficulty';
 import type { ChartData, GameServer, RaidInfo, RaidInfoFiltered } from '~/types/data';
 import type { fetchCacheProcessor } from '~/utils/cache';
 import { getRawTsvData, processChartData } from '~/utils/chartDataProcessor';
@@ -110,7 +110,7 @@ export const useChartControlsStore = create<State & Actions>()(
       const rawTsvData = await getRawTsvData(server, selectedStudentId, fetchAndProcessWithCache);
 
       try {
-        const result = await processChartData({
+        const result = processChartData({
           rankWidth,
           hideXThreshold,
           xRange,

@@ -21,7 +21,7 @@ export const EquipmentStudentCard = React.memo(({ plan, studentName, portraitSrc
       className={`w-24 flex flex-col items-center gap-0.5 p-1.5 rounded cursor-pointer transition-all select-none ${
         isSelected
           ? 'border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
-          : 'border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-750'
+          : 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-750'
       }`}
     >
       {/* Portrait */}
@@ -29,8 +29,8 @@ export const EquipmentStudentCard = React.memo(({ plan, studentName, portraitSrc
         {portraitSrc ? (
           <img src={portraitSrc} alt={studentName} className="w-8 h-8 rounded-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
-            <span className="text-[10px] text-gray-400">?</span>
+          <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+            <span className="text-[10px] text-neutral-400">?</span>
           </div>
         )}
         {isSelected && (
@@ -43,7 +43,7 @@ export const EquipmentStudentCard = React.memo(({ plan, studentName, portraitSrc
       </div>
 
       {/* Name */}
-      <p className="text-[10px] font-semibold text-gray-800 dark:text-gray-100 truncate w-full text-center leading-tight">{studentName}</p>
+      <p className="text-[10px] font-semibold text-neutral-800 dark:text-neutral-100 truncate w-full text-center leading-tight">{studentName}</p>
 
       {/* Slot changes — show as e.g. "1/1/1 → 3/3/3" */}
       {hasChanges && (

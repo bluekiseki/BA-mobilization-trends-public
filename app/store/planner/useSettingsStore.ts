@@ -6,6 +6,7 @@ import type { DiceRaceTab } from '~/components/planner/minigame/DiceRacePlanner'
 import type { AvgPtDisplayMode, DreamMakerResult, DreamMakerSimResult, DreamMakerTab } from '~/components/planner/minigame/dreamMaker/type';
 import type { CardMatchResult, CardMatchTab, CardMatchViewMode } from '~/components/planner/minigame/CardMatchPlanner';
 import type { ClueSearchResult, ClueSearchTab } from '~/components/planner/minigame/ClueSearchPlanner';
+import type { FieldEventResult, FieldEventTab } from '~/components/planner/minigame/FieldEventPlanner';
 
 interface EventSettings {
   // FarmingPlanner.tsx
@@ -46,6 +47,10 @@ interface EventSettings {
   // ClueSearchPlanner.tsx
   clueSearchActiveTab: ClueSearchTab;
   clueSearchDisplayResult: ClueSearchResult | null;
+
+  // FieldEventPlanner.tsx
+  fieldEventActiveTab: FieldEventTab;
+  fieldEventDisplayResult: FieldEventResult | null;
 }
 
 // Store Status Type
@@ -94,6 +99,9 @@ interface SettingsState {
 
   setClueSearchActiveTab: (eventId: number, tab: ClueSearchTab) => void;
   setClueSearchDisplayResult: (eventId: number, result: ClueSearchResult | null) => void;
+
+  setFieldEventActiveTab: (eventId: number, tab: FieldEventTab) => void;
+  setFieldEventDisplayResult: (eventId: number, result: FieldEventResult | null) => void;
 }
 
 const initialSettings: EventSettings = {
@@ -118,6 +126,8 @@ const initialSettings: EventSettings = {
   cardMatchDisplayResult: null,
   clueSearchActiveTab: 'info',
   clueSearchDisplayResult: null,
+  fieldEventActiveTab: 'quest',
+  fieldEventDisplayResult: null,
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -195,6 +205,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setClueSearchActiveTab: (eventId, tab) => get().updateSettings(eventId, { clueSearchActiveTab: tab }),
   setClueSearchDisplayResult: (eventId, result) => get().updateSettings(eventId, { clueSearchDisplayResult: result }),
+
+  setFieldEventActiveTab: (eventId, tab) => get().updateSettings(eventId, { fieldEventActiveTab: tab }),
+  setFieldEventDisplayResult: (eventId, result) => get().updateSettings(eventId, { fieldEventDisplayResult: result }),
 }));
 
 export const useEventSettings = (eventId: number) => {
@@ -257,6 +270,9 @@ export const useEventSettings = (eventId: number) => {
 
     setClueSearchActiveTab: (tab: ClueSearchTab) => store.setClueSearchActiveTab(eventId, tab),
     setClueSearchDisplayResult: (result: ClueSearchResult | null) => store.setClueSearchDisplayResult(eventId, result),
+
+    setFieldEventActiveTab: (tab: FieldEventTab) => store.setFieldEventActiveTab(eventId, tab),
+    setFieldEventDisplayResult: (result: FieldEventResult | null) => store.setFieldEventDisplayResult(eventId, result),
   };
 
   return {

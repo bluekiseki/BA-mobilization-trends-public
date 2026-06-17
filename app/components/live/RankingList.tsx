@@ -20,7 +20,7 @@ export const RankingList: FC<RankingListProps> = ({ title, data, studentData, po
         {data.length > 0 ? (
           data.map((entry) => <RankCard key={entry.r} entry={entry as ReportEntryRank} studentData={studentData} portraitData={portraitData} raid={raidInfo} server={server} />)
         ) : (
-          <p className="text-center text-gray-500">No Data</p>
+          <p className="text-center text-neutral-500">No Data</p>
         )}
       </div>
     </>

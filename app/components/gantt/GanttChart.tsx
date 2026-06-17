@@ -8,6 +8,19 @@ import { MS_PER_HOUR, CAMPAIGN_COLORS } from './constants';
 import { GanttTrack } from './GanttRenderers';
 import type { GanttControllerReturn } from './useGanttController';
 
+interface WeeklyMarker {
+  left: number;
+  label: string;
+  date: string;
+}
+
+interface MonthlyMarker {
+  left: number;
+  label: string;
+  date: string;
+  isYearMarker: boolean;
+}
+
 export interface GanttChartProps {
   // 1. Data Props
   data: {
@@ -69,7 +82,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
   return (
     <div className={`relative group ${className || ''}`}>
       {/* Zoom Controls */}
-      <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 shadow-lg bg-white/90 dark:bg-neutral-800/90 rounded-lg p-1 border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm">
+      <div className="absolute top-2 right-2 z-20 flex flex-col gap-1 shadow-lg bg-white/90 dark:bg-neutral-800/90 rounded-lg p-1 border border-neutral-200 dark:border-neutral-700 backdrop-blur-sm touch-manipulation">
         <button onClick={zoomIn} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md text-neutral-600 dark:text-neutral-300 transition-colors">
           <FiZoomIn className="w-4 h-4" />
         </button>
@@ -82,7 +95,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
       {/* Hover Tooltip */}
       {hoverInfo && (
         <div
-          className="fixed z-50 px-1.5 py-0.5 bg-slate-900/95 text-white rounded-[2px] text-[10px] font-mono pointer-events-none shadow-sm backdrop-blur-sm border border-white/10"
+          className="fixed z-50 px-1.5 py-0.5 bg-neutral-900/95 text-white rounded-[2px] text-[10px] font-mono pointer-events-none shadow-sm backdrop-blur-sm border border-white/10"
           style={{ top: hoverInfo.y + 10, left: hoverInfo.x + 10 }}
         >
           {hoverInfo.time}
@@ -90,7 +103,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
       )}
 
       {/* Main Scroll Container */}
-      <div ref={scrollContainerRef} className="w-full overflow-x-auto border-y border-neutral-200 dark:border-neutral-800 select-none custom-scrollbar touch-pan-x overscroll-x-none">
+      <div ref={scrollContainerRef} className="w-full overflow-x-auto border-y border-neutral-200 dark:border-neutral-800 select-none custom-scrollbar touch-[pan-x_pan-y] overscroll-x-none">
         <div className="relative" style={{ width: `${totalWidth}px` }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverInfo(null)}>
           {/* Grid Layer */}
           <div className="absolute inset-0 pointer-events-none">
@@ -98,7 +111,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
               <div key={`d-${i}`} className="absolute top-0 h-full border-l border-dashed border-neutral-200 dark:border-neutral-800" style={{ left }} />
             ))}
 
-            {markers.weekly.map((m: any) => (
+            {markers.weekly.map((m: WeeklyMarker) => (
               <div key={m.date} className="absolute top-0 h-full border-l border-neutral-300 dark:border-neutral-600 z-0" style={{ left: m.left }}>
                 <span className="sticky top-8 -ml-1 text-[10px] font-bold text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-black/80 px-1 rounded shadow-xs truncate max-w-[80px]">
                   {m.label}
@@ -107,7 +120,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
             ))}
 
             {/* 3. Monthly Markers */}
-            {markers.monthly.map((m: any) => (
+            {markers.monthly.map((m: MonthlyMarker) => (
               <div key={m.date} className={`absolute top-0 h-full border-l-2 ${m.isYearMarker ? 'border-neutral-500' : 'border-neutral-400 dark:border-neutral-500'} z-0`} style={{ left: m.left }}>
                 <span className="sticky top-0 -ml-1 text-xs font-black p-1 text-neutral-900 dark:text-neutral-100 bg-white/90 dark:bg-black/90 rounded-br shadow-sm">{m.label}</span>
               </div>

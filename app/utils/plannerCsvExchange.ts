@@ -1,7 +1,12 @@
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 
-interface StudentData {
-  [id: string]: any;
+interface StudentInfo {
+  Name: string;
+  [key: string]: unknown;
+}
+
+export interface StudentData {
+  [id: string]: StudentInfo;
 }
 
 const STAR_UW_OPTIONS = [
@@ -16,7 +21,7 @@ const STAR_UW_OPTIONS = [
   { id: 'ue4', star: 5, uw: 4 },
 ] as const;
 
-const safeStr = (value: any): string => {
+const safeStr = (value: string | number | boolean | null | undefined): string => {
   if (value === null || value === undefined) return '';
   return String(value);
 };
@@ -102,7 +107,7 @@ export function plansToCsv(growthPlans: GrowthPlan[], allStudents: StudentData, 
   const rows = growthPlans
     .filter((plan) => plan.studentId !== null)
     .map((plan) => {
-      const student = allStudents[plan.studentId!];
+      const student = plan.studentId !== null ? allStudents[String(plan.studentId)] : undefined;
       if (!student) return null;
 
       const row = [
@@ -141,7 +146,7 @@ export function plansToCsv(growthPlans: GrowthPlan[], allStudents: StudentData, 
         safeStr(plan.target.gear),
         // Others
         safeStr(plan.acquiredDate),
-        plan.useEligmaForStar !== false ? 'yes' : 'no',
+        plan.useEligmaForStar ? 'yes' : 'no',
         safeStr(plan.eligmaInfo?.price),
         safeStr(plan.eligmaInfo?.stock),
       ];
@@ -346,7 +351,7 @@ export function csvToPlans(csvContent: string, existingPlans: GrowthPlan[], allS
     if (!isNaN(targetAffection)) plan.target.affection = Math.max(1, Math.min(100, targetAffection));
 
     // Skills (Current)
-    const skillFields = [
+    const skillFields: Array<{ headerId: string; field: keyof typeof plan.current; max: number }> = [
       { headerId: 'currentEx', field: 'ex', max: 5 },
       { headerId: 'currentNormal', field: 'normal', max: 10 },
       { headerId: 'currentPassive', field: 'passive', max: 10 },
@@ -355,12 +360,12 @@ export function csvToPlans(csvContent: string, existingPlans: GrowthPlan[], allS
     for (const { headerId, field, max } of skillFields) {
       const val = parseInt(getCell(headerId));
       if (!isNaN(val)) {
-        (plan.current as any)[field] = Math.max(1, Math.min(max, val));
+        plan.current[field] = Math.max(1, Math.min(max, val)) as never;
       }
     }
 
     // Skills (Target)
-    const targetSkillFields = [
+    const targetSkillFields: Array<{ headerId: string; field: keyof typeof plan.target; max: number }> = [
       { headerId: 'targetEx', field: 'ex', max: 5 },
       { headerId: 'targetNormal', field: 'normal', max: 10 },
       { headerId: 'targetPassive', field: 'passive', max: 10 },
@@ -369,7 +374,7 @@ export function csvToPlans(csvContent: string, existingPlans: GrowthPlan[], allS
     for (const { headerId, field, max } of targetSkillFields) {
       const val = parseInt(getCell(headerId));
       if (!isNaN(val)) {
-        (plan.target as any)[field] = Math.max(1, Math.min(max, val));
+        plan.target[field] = Math.max(1, Math.min(max, val)) as never;
       }
     }
 

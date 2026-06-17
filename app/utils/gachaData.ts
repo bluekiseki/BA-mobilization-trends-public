@@ -58,7 +58,7 @@ interface CsvRow {
   endTime: string;
   rerun: string; // "true" | "false"
   limited: string; // "true" | "false"
-  fast: string; // "true" | "false" -> FES status
+  fest: string; // "true" | "false" -> FES status
   prediction: string;
   bannerType: string;
 }
@@ -92,7 +92,7 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
     const studentId = Number(row.studentId);
 
     // Convert CSV text to boolean
-    const isFes = row.fast?.toLowerCase() === 'true';
+    const isFes = row.fest?.toLowerCase() === 'true';
     const isLimitedCsv = row.limited?.toLowerCase() === 'true';
     const isRerun = row.rerun?.toLowerCase() === 'true';
 
@@ -126,7 +126,8 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
       });
     }
 
-    const group = groupedMap.get(groupKey)!;
+    const group = groupedMap.get(groupKey);
+    if (!group) return;
 
     // Update group attributes (OR condition)
     if (isFes) group.isFes = true;

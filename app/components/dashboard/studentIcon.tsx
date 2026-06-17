@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Student } from '~/types/data';
 import { getCharacterStarValue, Transparent_Image, type Character, type PortraitData } from './common';
-import { StarRating } from '../StarRatingProps';
+import { StarRating } from '../StarRating';
 import React from 'react';
 
 export const StudentIcon: React.FC<{
@@ -37,7 +37,13 @@ export const StudentIcon: React.FC<{
       onBlur={() => setShowTooltip(false)}
     >
       <div
-        className={`relative w-full aspect-square rounded-sm max-w-14 max-h-14 ${character?.isMulligan ? 'ring-2 dark:ring-1  ring-yellow-500 dark:ring-yellow-200' : 'border-0 border-neutral-400 dark:border-neutral-500'} z-5 overflow-hidden`}
+        className={`relative w-full aspect-square rounded-sm max-w-14 max-h-14 ${
+          typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= 3
+            ? 'ring-2 dark:ring-1 ring-blue-400 dark:ring-[#71fdff]'
+            : character?.isMulligan || (typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= 0 && character.mulliganIndex < 3)
+              ? 'ring-2 dark:ring-1 ring-yellow-500 dark:ring-yellow-200'
+              : 'border-0 border-neutral-400 dark:border-neutral-500'
+        } z-5 overflow-hidden`}
         style={{}}
       >
         <img src={imageUrl ? imageUrl : Transparent_Image} alt={student?.Name} className={`w-full h-full mb-0.5 rounded-sm bg-sky-50 dark:bg-neutral-700`} />
@@ -87,6 +93,25 @@ export const StudentIcon: React.FC<{
         )}
       </div>
 
+      {character && typeof character.mulliganIndex === 'number' && (
+        <div
+          className="absolute z-5 font-bold"
+          style={{
+            top: '-2px',
+            right: '-2px',
+            fontSize: '10px',
+            lineHeight: 1,
+            padding: '2px 2.5px',
+            borderRadius: '2px',
+            color: character.mulliganIndex >= 3 ? '#153f5b' : '#80522d',
+            backgroundColor: character.mulliganIndex >= 3 ? '#5cc8fa' : '#fff26a',
+            border: `1px solid ${character.mulliganIndex >= 3 ? '#377dcf' : '#ec9c4e'}`,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.35)',
+          }}
+        >
+          {character.mulliganIndex + 1}
+        </div>
+      )}
       {showTooltip && student?.Name && (
         <div className="absolute bottom-full left-1/2 z-100 mb-2 w-max -translate-x-1/2 rounded bg-neutral-800 px-2 py-1 text-xs text-white shadow-lg dark:bg-black">
           {student.Name}

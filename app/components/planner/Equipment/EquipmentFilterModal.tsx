@@ -12,7 +12,7 @@ export const EquipmentFilterModal = ({
   setItemFilter,
   eventDataForIcon,
   iconData,
-  iconInfoData,
+  // iconInfoData,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -21,7 +21,7 @@ export const EquipmentFilterModal = ({
   setItemFilter: React.Dispatch<React.SetStateAction<Set<string>>>;
   eventDataForIcon: EventData;
   iconData: IconData;
-  iconInfoData: IconInfos;
+  // iconInfoData: IconInfos;
 }) => {
   // Use useTranslation hook
   const { t } = useTranslation('planner');
@@ -41,14 +41,14 @@ export const EquipmentFilterModal = ({
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="relative w-full max-w-2xl max-h-[70vh] bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold dark:text-gray-100 flex items-center gap-2">
+          <h3 className="text-xl font-bold dark:text-neutral-100 flex items-center gap-2">
             <FaFilter /> {t('equipment.itemFilter')}
           </h3>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-2xl">
+          <button onClick={onClose} className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 text-2xl">
             &times;
           </button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t('equipment.filterModalDesc')}</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">{t('equipment.filterModalDesc')}</p>
         <div className="max-h-[50vh] overflow-y-auto pr-2 -mr-2">
           <div className="flex flex-wrap gap-2">
             {allFarmableItems.map((key) => {
@@ -62,7 +62,7 @@ export const EquipmentFilterModal = ({
                 <button
                   key={key}
                   onClick={() => toggleItem(key)}
-                  className={`p-1 rounded-md transition-all ${isSelected ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500' : 'bg-gray-100 dark:bg-neutral-700 opacity-60 hover:opacity-100'}`}
+                  className={`p-1 rounded-md transition-all ${isSelected ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500' : 'bg-neutral-100 dark:bg-neutral-700 opacity-60 hover:opacity-100'}`}
                 >
                   <EquipmentItemIcon type={itemType} itemId={itemId} amount={0} size={12} eventData={eventDataForIcon} iconData={iconData} />
                 </button>

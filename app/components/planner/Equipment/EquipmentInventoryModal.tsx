@@ -35,8 +35,8 @@ export const EquipmentInventoryModal = ({
       const idB = parseInt(b.split('_')[1], 10);
       if (sortMode === 'tier') {
         // Apply requested tier sorting logic
-        const itemInfoA = iconInfoData.Equipment?.[idA];
-        const itemInfoB = iconInfoData.Equipment?.[idB];
+        const itemInfoA = iconInfoData.Equipment[idA];
+        const itemInfoB = iconInfoData.Equipment[idB];
         const tierLabelA = getEquipmentTierLabel(itemInfoA);
         const tierLabelB = getEquipmentTierLabel(itemInfoB);
         const tierA = tierLabelA ? parseInt(tierLabelA) : 0;
@@ -64,17 +64,17 @@ export const EquipmentInventoryModal = ({
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
       <div className="relative w-full max-w-2xl max-h-[70vh] bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold dark:text-gray-100 flex items-center gap-2">
+          <h3 className="text-xl font-bold dark:text-neutral-100 flex items-center gap-2">
             <FaBoxOpen /> {t('equipment.inventoryModalTitle')}
           </h3>
-          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-2xl">
+          <button onClick={onClose} className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 text-2xl">
             &times;
           </button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t('equipment.inventoryModalDesc')}</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">{t('equipment.inventoryModalDesc')}</p>
         {/* Control Buttons (Sort, Min/Max) */}
         <div className="flex justify-between items-center mb-4 gap-2">
-          <button onClick={() => setSortMode((prev) => (prev === 'id' ? 'tier' : 'id'))} className="text-sm flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-neutral-700 rounded-md">
+          <button onClick={() => setSortMode((prev) => (prev === 'id' ? 'tier' : 'id'))} className="text-sm flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-700 rounded-md">
             <FaSort /> {sortMode === 'id' ? t('equipment.sortById') : t('equipment.sortByTier')}
           </button>
           <div className="flex gap-2">
@@ -91,10 +91,10 @@ export const EquipmentInventoryModal = ({
             {sortedFarmableItems.map((key) => {
               const itemType = key.split('_')[0] as keyof IconInfos;
               const itemId = key.split('_')[1];
-              const itemInfo = iconInfoData.Equipment?.[itemId];
+              const itemInfo = iconInfoData.Equipment[itemId];
               const tierLabel = getEquipmentTierLabel(itemInfo);
               return (
-                <div key={key} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-700/50 rounded-md">
+                <div key={key} className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-700/50 rounded-md">
                   <div className="shrink-0">
                     <EquipmentItemIcon
                       type={itemType}

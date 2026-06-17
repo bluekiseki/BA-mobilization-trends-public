@@ -25,7 +25,7 @@
     "acquire": "獲得",
     "loop": "周回",
     "rerun": "復刻",
-    "fast": "Fast",
+    "fest": "フェス",
     "limited": "限定",
     "clear": "クリア",
     "period": "期間",
@@ -143,7 +143,12 @@
       "jpStats": "JP 統計",
       "kivotosPeace": "キヴォトスは現在平和な状態です",
       "noEvent": "現在イベントはありません。"
-    }
+    },
+    "scroll_to_first_page": "最初のページ",
+    "scroll_to_prev_page": "前のページ",
+    "scroll_to_next_page": "次のページ",
+    "scroll_to_last_page": "最後のページ",
+    "scroll_to_top": "上にスクロール"
   },
   "charts": {
     "ranking": {
@@ -362,6 +367,11 @@
     "timeViewUnavailableNotice": "難易度の異なる記録が混在しているため、時間別での照会はできません。",
     "byRank": "ランク",
     "rankDistribution": "ランク分布",
+    "byDefault": "デフォルト",
+    "byTotalPartyCount": "パーティ数別",
+    "byPartyPosition": "パーティ順別",
+    "nPartyCount": "{{n}}パーティ",
+    "nthPosition": "{{n}}/{{m}}番目",
     "select_boss_type_for_stats": "詳細な統計を見るためにボスタイプを選択してください。",
     "recordLookup": "記録検索",
     "lookupPlaceholder": "順位、スコア、または時間計算式（例: 4:00 - 2:30.5）を入力...",
@@ -414,8 +424,18 @@
       "sort_bestRank": "最高スコア順",
       "ignore_position": "配置を無視",
       "placement_variants": "配置パターン",
-      "mulligan_variants": "初手(スキル)パターン"
-    }
+      "mulligan_variants": "初手(スキル)パターン",
+      "mulligan_view_order": "ピック順",
+      "mopup_filter": "残処理パーティフィルター"
+    },
+    "videos": "動画",
+    "videos_select_boss": "動画を見るにはボスタイプを選択してください。",
+    "videos_empty": "動画がありません。",
+    "videos_filter_tl": "TLのみ",
+    "videos_filter_target_type": "ターゲットタイプのみ",
+    "videos_missing_note": "自動処理のため、一部の動画が欠けている場合があります。",
+    "videos_view_all": "収録した全動画を確認",
+    "videos_external_sites": "参考になる外部サイト："
   },
   "dashboardIndex": {
     "title": "ダッシュボード一覧",
@@ -484,7 +504,7 @@
       "prediction": "斜線の項目は先行サーバー基準の予測スケジュールです。"
     },
     "distribute": "(配布: {{name}})",
-    "fast": "Fast",
+    "fest": "Fes",
     "limited": "限定",
     "track": {
       "raid": "総力戦・大決戦",

@@ -1,17 +1,18 @@
 // app/components/planner/FloatingCurrencyStatus.tsx
 import { useState, useRef, useEffect } from 'react';
 import { ItemIcon } from './common/Icon';
-import type { EventData, IconData, TransactionEntry } from '~/types/plannerData';
+import type { EventData, IconData, TransactionEntry, StudentData, StudentPortraitData } from '~/types/plannerData';
 import { getFreeStudentID } from './getFreeStudentId';
 import { CurrencyStatus } from './CurrencyStatus';
 import { FinalResultsDisplay } from './FinalResultsDisplay';
 import { IoMdClose } from 'react-icons/io';
 import { useTranslation } from 'react-i18next';
 import { FiSearch } from 'react-icons/fi';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
 
 interface FloatingCurrencyStatusProps {
   eventId: number;
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency'>;
   iconData: IconData;
   ownedCurrency: Record<number, number>; // for CurrencyStatus
   setOwnedCurrency: React.Dispatch<React.SetStateAction<Record<number, number>>>; // for CurrencyStatus
@@ -27,9 +28,11 @@ interface FloatingCurrencyStatusProps {
     transactions: TransactionEntry[];
     totalApUsed: number;
   } | null; // for FinalResultsDisplay
+  allStudents?: StudentData;
+  studentPortraits?: StudentPortraitData;
 }
 
-const getShowItems = (eventData: EventData, remainingCurrency: Record<number, number>) => {
+const getShowItems = (eventData: WithNonNullable<EventData, 'currency'>, remainingCurrency: Record<number, number>) => {
   const items = eventData.currency
     .filter((currency) => currency.EventContentItemType != 7) // Exclusion of Type 7 (e.g., Event Points)
     .map((currency) => ({
@@ -49,7 +52,17 @@ const getShowItems = (eventData: EventData, remainingCurrency: Record<number, nu
   return items;
 };
 
-export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurrency, setOwnedCurrency, remainingCurrency, acquiredItemsResult }: FloatingCurrencyStatusProps) => {
+export const FloatingCurrencyStatus = ({
+  // eventId,
+  eventData,
+  iconData,
+  ownedCurrency,
+  setOwnedCurrency,
+  remainingCurrency,
+  acquiredItemsResult,
+  allStudents,
+  studentPortraits,
+}: FloatingCurrencyStatusProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -81,7 +94,7 @@ export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurr
           <div className="relative bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md rounded-xl shadow-lg border dark:border-neutral-700">
             <button
               onClick={() => setIsExpanded(true)}
-              className="absolute -top-3 -left-3 z-10 p-2 bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold rounded-full shadow-md transition-all hover:scale-110 active:scale-95"
+              className="absolute -top-3 -left-3 z-10 p-2 bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold rounded-full shadow-md transition-all hover:scale-110 active:scale-95"
               aria-label="View more"
             >
               {/* <BsArrowsFullscreen size={14} /> */}
@@ -93,7 +106,7 @@ export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurr
                 {showItems.map(({ type, id, amount }) => (
                   <div key={`${type}-${id}`} className="flex items-center flex-col gap-0.5" style={{ minWidth: '40px' }}>
                     <ItemIcon type={type} itemId={String(id)} amount={Math.abs(amount)} size={8} eventData={eventData} iconData={iconData} />
-                    <span className={`text-xs font-bold ${amount < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-700 dark:text-gray-200'}`}>{Math.round(amount).toLocaleString()}</span>
+                    <span className={`text-xs font-bold ${amount < 0 ? 'text-red-500 dark:text-red-400' : 'text-neutral-700 dark:text-neutral-200'}`}>{Math.round(amount).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -110,10 +123,10 @@ export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurr
             className="bg-white dark:bg-neutral-800 rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-4xl h-[95vh] sm:h-auto sm:max-h-[185vh] flex flex-col overflow-hidden border dark:border-neutral-700 animate-slide-up sm:animate-fade-in-up"
           >
             <div className="flex justify-between items-center p-3 sm:p-4 border-b dark:border-neutral-700 ">
-              <h2 className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100">{t('ui.currencyStatusTitle')}</h2>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-800 dark:text-neutral-100">{t('ui.currencyStatusTitle')}</h2>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="p-1 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="p-1 text-neutral-500 hover:text-red-500 dark:text-neutral-400 dark:hover:text-red-400 transition-colors rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700"
                 aria-label="Close"
               >
                 <IoMdClose size={20} />
@@ -127,9 +140,9 @@ export const FloatingCurrencyStatus = ({ eventId, eventData, iconData, ownedCurr
                 </div>
                 <div>
                   {acquiredItemsResult ? (
-                    <FinalResultsDisplay acquiredItemsResult={acquiredItemsResult} eventData={eventData} iconData={iconData} />
+                    <FinalResultsDisplay acquiredItemsResult={acquiredItemsResult} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">There is no calculation result.</div>
+                    <div className="flex items-center justify-center h-full text-neutral-500">There is no calculation result.</div>
                   )}
                 </div>
               </div>

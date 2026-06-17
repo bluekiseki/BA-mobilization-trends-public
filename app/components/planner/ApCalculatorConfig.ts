@@ -1,18 +1,6 @@
-export interface ApCalculatorConfig {
-  startDate: string;
-  endDate: string;
-  cafeRank: number;
-  gemRefills: number;
-  pvpRefills: number;
-  hardStages: number;
-  exchangeRuns: number;
-  exchangeCost: number;
-  miscDailySpend: number;
-  attendanceStartDate: string;
-  attendanceStartDay: number;
-  bonusAp: number;
-  apPackageDates: string[];
-}
+import { apCalculatorConfigSchema, type ApCalculatorConfig } from '~/types/minigame/apCalculator';
+
+export { apCalculatorConfigSchema, type ApCalculatorConfig };
 
 export const getDefaultApConfig = (startTime: string, endTime: string): ApCalculatorConfig => ({
   startDate: startTime.slice(0, 16),

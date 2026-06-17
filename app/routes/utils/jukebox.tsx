@@ -1,8 +1,9 @@
 // app/routes/utils/jukebox.tsx
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import eventList from '~/data/jp/eventList.json';
+import type { EventListData } from '~/types/eventList';
 import { useDataCache } from '~/utils/cache';
 import type { Student } from '~/types/data';
 import { eventConvertor, FilterIcon, GENERAL_CATEGORIES, mainStoryChapters, otherStoryTitles, PlayIcon, SoundWaveIcon, XREF_PREFIXES, type OtherStoryData } from './jukeboxMetadata';
@@ -15,10 +16,12 @@ import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { useHelpKey } from '~/utils/usePageHelp';
+import { useSearchMatcher } from '~/utils/useSearchMatcher';
 import Player from '~/components/jukebox/Player';
 import StoryFilters from '~/components/jukebox/StoryFilters';
 import type { StudentPortraitData } from '~/types/plannerData';
 import { FiChevronDown } from 'react-icons/fi';
+import { PageHeader } from '~/components/common/PageHeader';
 
 // --- TYPE DEFINITIONS ---
 type Language = 'en' | 'jp' | 'ko' | 'tw';
@@ -28,13 +31,41 @@ interface LocalizedName {
   en?: string | string[] | null;
   tw?: string | string[] | null;
 }
+interface LocalizedObj {
+  ja?: string | string[] | null;
+  jp?: string | string[] | null;
+  ko?: string | string[] | null;
+  en?: string | string[] | null;
+  tw?: string | string[] | null;
+  Name?: string | null;
+}
+interface XrefEntry {
+  type: string;
+  title?: string | number | null;
+  name?: LocalizedObj;
+  episode?: string | number | null;
+}
+interface BgmEntry {
+  id: string;
+  title?: string;
+  composer?: string;
+  youtube_url?: string;
+  xref: XrefEntry[];
+}
+interface YTPlayer {
+  seekTo: (seconds: number) => void;
+  playVideo: () => void;
+}
 
 // --- HELPER FUNCTIONS ---
-const getLocalizedText = (obj: any, lang: Language, fallbackKey: keyof LocalizedName = 'ja'): string => obj?.[lang] || obj?.[fallbackKey] || obj?.['Name'] || '';
-const getLocalizedTextArr = (obj: any, lang: Language, fallbackKey: keyof LocalizedName = 'ja'): string | string[] => obj?.[lang] || obj?.[fallbackKey] || obj?.['Name'] || '';
+const getLocalizedText = (obj: LocalizedObj | null | undefined, lang: Language, fallbackKey: keyof LocalizedName = 'ja'): string => {
+  const val = obj?.[lang] || obj?.[fallbackKey] || obj?.Name || '';
+  return Array.isArray(val) ? (val[0] ?? '') : val;
+};
+const getLocalizedTextArr = (obj: LocalizedObj | null | undefined, lang: Language, fallbackKey: keyof LocalizedName = 'ja'): string | string[] => obj?.[lang] || obj?.[fallbackKey] || obj?.Name || '';
 
 // --- LOADER / META / HANDLE ---
-export async function loader({ context }: Route.LoaderArgs) {
+export function loader({ context }: Route.LoaderArgs) {
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
   return data({
@@ -50,12 +81,85 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export const handle: AppHandle = {
-  preload: (data) => [
-    { rel: 'preload', href: cdn(`/w/${getLocaleShortName(data?.locale)}.students.bin`), as: 'fetch', crossOrigin: 'anonymous' },
-    { rel: 'preload', href: cdn(`/w/students_portrait.json`), as: 'fetch', crossOrigin: 'anonymous' },
-    ...createLinkHreflang(`/utils/jukebox`),
-  ],
+  preload: (rawData) => {
+    const loaderData = rawData as { locale: Locale };
+    return [
+      { rel: 'preload', href: cdn(`/w/${getLocaleShortName(loaderData.locale)}.students.bin`), as: 'fetch', crossOrigin: 'anonymous' },
+      { rel: 'preload', href: cdn(`/w/students_portrait.json`), as: 'fetch', crossOrigin: 'anonymous' },
+      ...createLinkHreflang(`/utils/jukebox`),
+    ];
+  },
 };
+
+// --- BGM LIST ITEM (memoized to prevent re-renders on unrelated state changes) ---
+const BgmItem = memo(function BgmItem({
+  bgm,
+  isExpanded,
+  isPlaying,
+  hasAnyActiveFilter,
+  isXrefMatchingActive,
+  renderXrefLine,
+  onSelect,
+  onToggleDetails,
+}: {
+  bgm: BgmEntry;
+  isExpanded: boolean;
+  isPlaying: boolean;
+  hasAnyActiveFilter: boolean;
+  isXrefMatchingActive: (xref: XrefEntry) => boolean;
+  renderXrefLine: (xref: XrefEntry, bgm: BgmEntry) => string;
+  onSelect: (bgm: BgmEntry) => void;
+  onToggleDetails: (id: string) => void;
+}) {
+  const { t } = useTranslation('jukebox');
+
+  const matchingXrefs = useMemo(() => (hasAnyActiveFilter ? bgm.xref.filter(isXrefMatchingActive) : []), [hasAnyActiveFilter, bgm.xref, isXrefMatchingActive]);
+
+  return (
+    <div
+      id={`bgm-item-${bgm.id}`}
+      className={`scroll-mt-24 md:scroll-mt-16 px-4 py-3 transition-colors duration-150 ${isPlaying ? 'bg-sky-50 dark:bg-sky-950/30' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/30'}`}
+    >
+      <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelect(bgm)}>
+        <span className={`font-mono text-base font-bold w-10 shrink-0 tabular-nums ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-400 dark:text-neutral-500'}`}>
+          {Number(bgm.id) < 10000 ? bgm.id : 'N/A'}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-semibold leading-tight ${isPlaying ? 'text-sky-700 dark:text-sky-300' : 'text-neutral-800 dark:text-neutral-100'}`}>{bgm.title || `BGM #${bgm.id}`}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate mt-0.5">{bgm.composer}</p>
+        </div>
+        {bgm.youtube_url && <div className={`shrink-0 ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-300 dark:text-neutral-600'}`}>{isPlaying ? <SoundWaveIcon /> : <PlayIcon />}</div>}
+      </div>
+
+      {matchingXrefs.length > 0 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleDetails(bgm.id);
+          }}
+          className="mt-2 w-full text-left group"
+        >
+          <div className="flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
+            <FiChevronDown className={`w-3 h-3 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+            <span className="font-medium">
+              {matchingXrefs.length} {isExpanded ? t('actions.hide_details') : t('actions.view_details')}
+            </span>
+          </div>
+          {isExpanded && (
+            <ul className="mt-1.5 ml-3.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
+              {matchingXrefs.map((x, i) => (
+                <li key={i} className="flex items-baseline gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+                  <span className="shrink-0 text-neutral-300 dark:text-neutral-600">·</span>
+                  <RubyText>{renderXrefLine(x, bgm)}</RubyText>
+                </li>
+              ))}
+            </ul>
+          )}
+        </button>
+      )}
+    </div>
+  );
+});
 
 // --- PAGE COMPONENT ---
 export default function JukeboxPage() {
@@ -65,11 +169,11 @@ export default function JukeboxPage() {
   const language = ({ ja: 'jp', ko: 'ko', en: 'en', 'zh-Hant': 'zh_Hant' }[locale] as Language) || 'jp';
 
   // --- State ---
-  const [allBgm, setAllBgm] = useState<any[]>([]);
+  const [allBgm, setAllBgm] = useState<BgmEntry[]>([]);
   const [studentData, setStudentData] = useState<Record<string, Student>>({});
-  const [eventData, setEventData] = useState<any>({});
-  const [filteredBgm, setFilteredBgm] = useState<any[]>([]);
-  const [currentSong, setCurrentSong] = useState<any | null>(null);
+  const [eventData, setEventListData] = useState<EventListData>({});
+  const [filteredBgm, setFilteredBgm] = useState<BgmEntry[]>([]);
+  const [currentSong, setCurrentSong] = useState<BgmEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [otherStoryData] = useState<OtherStoryData>(otherStoryTitles);
@@ -88,6 +192,7 @@ export default function JukeboxPage() {
   const [studentFilterList, setStudentFilterList] = useState<[string, Student][]>([]);
   const [expandedBgmIds, setExpandedBgmIds] = useState<Record<string, boolean>>({});
 
+  const [, startTransition] = useTransition();
   const [playbackMode, setPlaybackMode] = useState<'autoplay' | 'repeat' | 'off'>('autoplay');
   const [showStoryNames, setShowStoryNames] = useState(false);
   const [sortOrder, setSortOrder] = useState<'ascending' | 'descending'>('ascending');
@@ -102,42 +207,47 @@ export default function JukeboxPage() {
 
   const fetchStudents = useDataCache<Record<string, Student>>();
   useHelpKey('jukebox');
+  const matcher = useSearchMatcher(locale);
 
   // --- Data Fetch ---
   useEffect(() => {
-    fetch(cdn('/w/bgm_database_combined.json'))
-      .then((r) => r.json())
-      .then((d: any) => setAllBgm(d.sort((a: any, b: any) => Number(a.id) - Number(b.id))));
+    const loadBgm = async () => {
+      const response = await fetch(cdn('/w/bgm_database_combined.json'));
+      const raw: unknown = await response.json();
+      const d = raw as BgmEntry[];
+      setAllBgm(d.sort((a, b) => Number(a.id) - Number(b.id)));
+    };
+    void loadBgm();
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const studentsRes = await fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`), (r) => r.json() as Promise<Record<string, Student>>);
+        const studentsRes = await fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`), (r) => r.json());
 
-        const setStudentPortraits = (await (await fetch(cdn(`/w/students_portrait.json`))).json()) as StudentPortraitData;
+        const setStudentPortraits: StudentPortraitData = await (await fetch(cdn(`/w/students_portrait.json`))).json();
         if (studentsRes)
           for (const i in setStudentPortraits) {
             if (studentsRes[i]) studentsRes[i].Portrait = setStudentPortraits[i];
           }
 
         const studentJson = studentsRes || {};
-        const eventJson: any = eventList;
+        const eventJson = eventList as unknown as EventListData;
         setStudentData(studentJson);
-        setEventData(eventJson);
+        setEventListData(eventJson);
 
         const mainStories = new Map<string, string>();
         const eventStories = new Map<string, string>();
         const students = new Map<string, Student>();
 
-        allBgm.forEach((bgm: any) =>
-          bgm.xref.forEach((xref: any) => {
+        allBgm.forEach((bgm) =>
+          bgm.xref.forEach((xref) => {
             if (xref.type === 'Main_Story' && xref.title) {
               const key = String(xref.title);
-              mainStories.set(key, mainStoryChapters[key] ? t(`main_story.${mainStoryChapters[key].key}` as any) : key);
+              mainStories.set(key, mainStoryChapters[key] ? t(`main_story.${mainStoryChapters[key].key}`, key) : key);
             }
             if (xref.type === 'Event_Story' && xref.title) {
-              const localeMap: Record<string, 'En' | 'Jp' | 'Kr'> = { en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' as any };
+              const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' };
               eventStories.set(
                 String(xref.title),
                 (!Number.isNaN(Number(xref.title)) ? eventJson[eventConvertor[Number(xref.title) as keyof typeof eventConvertor]]?.[localeMap[locale]] : '') ||
@@ -169,7 +279,7 @@ export default function JukeboxPage() {
         setIsLoading(false);
       }
     };
-    fetchData();
+    void fetchData();
   }, [locale, t, fetchStudents, allBgm]);
 
   // --- Active filters (used in filtering effect and render) ---
@@ -192,11 +302,11 @@ export default function JukeboxPage() {
   useEffect(() => {
     if (isLoading || error) return;
     const { general, mainStories, eventStories, favorStudents, memorialStudents } = activeFilters;
-    let results: any[] = [];
+    let results: BgmEntry[] = [];
 
     if ([...general, ...mainStories, ...eventStories, ...favorStudents, ...memorialStudents].length > 0) {
-      results = allBgm.filter((bgm: any) =>
-        bgm.xref.some((xref: any) => {
+      results = allBgm.filter((bgm) =>
+        bgm.xref.some((xref) => {
           if (xref.type === 'Favor_Story' && xref.title && favorStudents.includes(String(xref.title))) return true;
           if (xref.type === 'Memorial' && xref.title && memorialStudents.includes(String(xref.title))) return true;
           if ((xref.type === 'raid' || xref.type === 'limitraid') && general.includes('Raid')) return true;
@@ -213,13 +323,12 @@ export default function JukeboxPage() {
     }
 
     if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      results = results.filter((bgm: any) => bgm.id.includes(lower) || bgm.title?.toLowerCase().includes(lower) || bgm.composer?.toLowerCase().includes(lower));
+      results = results.filter((bgm) => matcher(bgm.id, searchTerm) || (bgm.title ? matcher(bgm.title, searchTerm) : false) || (bgm.composer ? matcher(bgm.composer, searchTerm) : false));
     }
 
     results.sort((a, b) => (sortOrder === 'ascending' ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id)));
     setFilteredBgm(results);
-  }, [searchTerm, activeFilters, allBgm, isLoading, error, sortOrder]);
+  }, [searchTerm, activeFilters, allBgm, isLoading, error, sortOrder, matcher]);
 
   // --- Scroll ---
   const bgmListContainerRef = useRef<HTMLDivElement>(null);
@@ -253,7 +362,6 @@ export default function JukeboxPage() {
     let idx: number;
     do {
       idx = Math.floor(Math.random() * filteredBgm.length);
-      console.log('filteredBgm[idx]', filteredBgm[idx]);
     } while (filteredBgm.length > 1 && (filteredBgm[idx].id === currentSong?.id || !filteredBgm[idx].youtube_url));
     setCurrentSong(filteredBgm[idx]);
   }, [filteredBgm, currentSong?.id]);
@@ -264,7 +372,7 @@ export default function JukeboxPage() {
   }, [playNextRandomSong]);
 
   const stableOnSongEnd = useCallback(
-    (player: any) => {
+    (player: YTPlayer | null) => {
       if (playbackMode === 'autoplay') playNextRef.current();
       else if (playbackMode === 'repeat' && player) {
         player.seekTo(0);
@@ -362,10 +470,10 @@ export default function JukeboxPage() {
         return {
           ...p,
           general: newGeneral,
-          mainStories: {},
-          eventStories: {},
-          favorStudents: {},
-          memorialStudents: {},
+          mainStories: Object.fromEntries(Object.keys(p.mainStories).map((k) => [k, false])),
+          eventStories: Object.fromEntries(Object.keys(p.eventStories).map((k) => [k, false])),
+          favorStudents: Object.fromEntries(Object.keys(p.favorStudents).map((k) => [k, false])),
+          memorialStudents: Object.fromEntries(Object.keys(p.memorialStudents).map((k) => [k, false])),
         };
       }
 
@@ -381,17 +489,19 @@ export default function JukeboxPage() {
     });
   }, [isAllSelected, mainStoryList, eventStoryList, studentFilterList]);
 
-  const handleToggleDetails = (bgmId: string) => setExpandedBgmIds((prev) => ({ ...prev, [bgmId]: !prev[bgmId] }));
+  const handleToggleDetails = useCallback((bgmId: string) => setExpandedBgmIds((prev) => ({ ...prev, [bgmId]: !prev[bgmId] })), []);
 
   const handleToggleAllDetails = () => {
-    const allAreExpanded = filteredBgm.length > 0 && filteredBgm.every((bgm) => !!expandedBgmIds[bgm.id]);
-    if (allAreExpanded) setExpandedBgmIds({});
-    else setExpandedBgmIds(Object.fromEntries(filteredBgm.map((bgm) => [bgm.id, true])));
+    const allAreExpanded = filteredBgm.length > 0 && filteredBgm.every((bgm) => expandedBgmIds[bgm.id]);
+    startTransition(() => {
+      if (allAreExpanded) setExpandedBgmIds({});
+      else setExpandedBgmIds(Object.fromEntries(filteredBgm.map((bgm) => [bgm.id, true])));
+    });
   };
 
   // --- xref helpers ---
   const isXrefMatchingActive = useCallback(
-    (xref: any): boolean => {
+    (xref: XrefEntry): boolean => {
       const { general, mainStories, eventStories, favorStudents, memorialStudents } = activeFilters;
       if (xref.type === 'Favor_Story' && favorStudents.includes(String(xref.title))) return true;
       if (xref.type === 'Memorial' && memorialStudents.includes(String(xref.title))) return true;
@@ -409,24 +519,24 @@ export default function JukeboxPage() {
   );
 
   const renderXrefLine = useCallback(
-    (xref: any, bgm: any): string => {
-      const name_title = getLocalizedTextArr(xref.name, locale as Language) || getLocalizedTextArr(xref.name, 'ko' as Language) || getLocalizedTextArr(xref.name, 'en' as Language);
+    (xref: XrefEntry, bgm: BgmEntry): string => {
+      const name_title = getLocalizedTextArr(xref.name, locale as Language) || getLocalizedTextArr(xref.name, 'ko') || getLocalizedTextArr(xref.name, 'en');
       let name = Array.isArray(name_title) ? (showStoryNames ? name_title.join(' - ') : name_title[0] || '') : name_title;
 
       const episodeString = xref.episode ? t('meta.episode', { x: xref.episode }) : '';
-      const getPrefix = (key: keyof typeof XREF_PREFIXES) => t(XREF_PREFIXES[key] || (key as any));
+      const getPrefix = (key: keyof typeof XREF_PREFIXES): string => t(XREF_PREFIXES[key] || key, '');
 
       if (xref.type === 'Favor_Story' || xref.type === 'Memorial') {
         if (episodeString && showStoryNames) name = `${t('meta.rank')} ${xref.episode} - ${name}`;
         else if (episodeString) name = `${t('meta.rank')} ${xref.episode}`;
       }
 
-      const localeMap: Record<string, 'En' | 'Jp' | 'Kr'> = { en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' as any };
+      const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' };
 
       switch (xref.type) {
         case 'Main_Story': {
           const key = String(xref.title);
-          const title = mainStoryChapters[key] ? t(`main_story.${mainStoryChapters[key].key}` as any) : key;
+          const title = mainStoryChapters[key] ? t(`main_story.${mainStoryChapters[key].key}`, key) : key;
           return `${getPrefix('Main_Story')} ${title} ${name}`;
         }
         case 'Event_Story': {
@@ -435,8 +545,8 @@ export default function JukeboxPage() {
         }
         case 'Favor_Story':
         case 'Memorial': {
-          const sid = xref.title || bgm.xref.find((x: any) => x.type === 'Favor_Story')?.title;
-          return `${getPrefix(xref.type)} ${sid ? studentData[sid]?.Name || '' : ''} ${name}`;
+          const sid = xref.title || bgm.xref.find((x) => x.type === 'Favor_Story')?.title;
+          return `${getPrefix(xref.type)} ${sid !== null && sid !== undefined ? studentData[String(sid)]?.Name || '' : ''} ${name}`;
         }
         case 'event_work':
         case 'main_work':
@@ -465,7 +575,7 @@ export default function JukeboxPage() {
   );
 
   // --- Loading / Error states ---
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-sky-50 dark:bg-neutral-900 text-slate-500">{t('status.loading')}</div>;
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-sky-50 dark:bg-neutral-900 text-neutral-500">{t('status.loading')}</div>;
   if (error)
     return (
       <div className="flex items-center justify-center min-h-screen bg-sky-50 dark:bg-neutral-900 text-red-500">
@@ -475,21 +585,21 @@ export default function JukeboxPage() {
 
   // --- Filter chip label helpers ---
   const chipClass =
-    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/40 border border-sky-300 dark:border-sky-600 text-sky-700 dark:text-sky-300 text-xs font-medium';
-  const chipX = 'hover:text-sky-900 dark:hover:text-sky-100 ml-0.5 leading-none';
+    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 text-xs font-medium';
+  const chipX = 'hover:text-blue-900 dark:hover:text-blue-100 ml-0.5 leading-none';
 
   // --- Render ---
   return (
-    <div className="min-h-screen bg-sky-50 dark:bg-neutral-900 text-slate-800 dark:text-slate-200 font-sans">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 font-sans">
       <style>{`@keyframes wave{0%,100%{transform:scaleY(0.8)}50%{transform:scaleY(1)}} @keyframes drawer-up{from{transform:translateY(100%)}to{transform:translateY(0)}} .drawer-up{animation:drawer-up 0.28s cubic-bezier(0.32,0.72,0,1) forwards}`}</style>
 
       {/* ── Sticky top bar: search + category chips ── */}
-      <div ref={stickyBarRef} className="sticky top-14 z-20 bg-sky-50/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/60">
+      <div ref={stickyBarRef} className="sticky top-14 z-20 bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-700/60">
         <div className="px-2 sm:px-4 lg:px-8 py-2 flex flex-col gap-2">
           {/* Search row */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
               <input
@@ -497,24 +607,24 @@ export default function JukeboxPage() {
                 placeholder={t('search.placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-sky-400 dark:focus:border-sky-500 transition-colors"
+                className="w-full pl-8 pr-3 py-1.5 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
               />
             </div>
 
             {/* Mobile: story filter button */}
             <button
               onClick={() => setFilterDrawerOpen(true)}
-              className="md:hidden relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-neutral-800 text-sm text-slate-600 dark:text-slate-300 hover:border-sky-400 transition-colors shrink-0"
+              className="md:hidden relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-neutral-600 dark:text-neutral-300 hover:border-blue-400 transition-colors shrink-0"
             >
               <FilterIcon />
               <span className="text-xs font-medium">{t('filter_title')}</span>
-              {hasAnyActiveFilter && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-sky-500 rounded-full border-2 border-sky-50 dark:border-slate-900" />}
+              {hasAnyActiveFilter && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-neutral-50 dark:border-neutral-900" />}
             </button>
 
             {/* Sort button (sm+) */}
             <button
               onClick={() => setSortOrder((p) => (p === 'ascending' ? 'descending' : 'ascending'))}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-neutral-800 text-slate-600 dark:text-slate-300 hover:border-sky-400 transition-colors shrink-0"
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-sky-400 transition-colors shrink-0"
             >
               {sortOrder === 'ascending' ? <FaSortAmountDown className="h-3.5 w-3.5" /> : <FaSortAmountUp className="h-3.5 w-3.5" />}
               <span className="text-xs font-medium">{sortOrder === 'ascending' ? t('meta.sort_ascending') : t('meta.sort_descending')}</span>
@@ -529,24 +639,24 @@ export default function JukeboxPage() {
               className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full border transition-all duration-150 ${
                 isAllSelected
                   ? 'bg-sky-500 border-sky-500 text-white shadow-sm'
-                  : 'bg-white dark:bg-neutral-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-sky-400 dark:hover:border-sky-500'
+                  : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-sky-400 dark:hover:border-sky-500'
               }`}
             >
               {isAllSelected ? t('actions.deselect_all') : t('actions.select_all')}
             </button>
 
             <button
-              // {filteredBgm.length > 0 && filteredBgm.every((bgm) => !!expandedBgmIds[bgm.id]) ? t('actions.hide_all_details') : t('actions.view_all_details')}
+              // {filteredBgm.length > 0 && filteredBgm.every((bgm) => expandedBgmIds[bgm.id]) ? t('actions.hide_all_details') : t('actions.view_all_details')}
 
               onClick={handleToggleAllDetails}
               disabled={filteredBgm.length === 0}
               className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full border transition-all duration-150 ${
-                filteredBgm.length > 0 && filteredBgm.every((bgm) => !!expandedBgmIds[bgm.id])
+                filteredBgm.length > 0 && filteredBgm.every((bgm) => expandedBgmIds[bgm.id])
                   ? 'bg-sky-500 border-sky-500 text-white shadow-sm'
-                  : 'bg-white dark:bg-neutral-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-sky-400 dark:hover:border-sky-500'
+                  : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-sky-400 dark:hover:border-sky-500'
               }`}
             >
-              {filteredBgm.length > 0 && filteredBgm.every((bgm) => !!expandedBgmIds[bgm.id]) ? t('actions.hide_all_details') : t('actions.view_all_details')}
+              {filteredBgm.length > 0 && filteredBgm.every((bgm) => expandedBgmIds[bgm.id]) ? t('actions.hide_all_details') : t('actions.view_all_details')}
             </button>
 
             {(Object.keys(GENERAL_CATEGORIES) as Array<keyof typeof GENERAL_CATEGORIES>).map((key) => (
@@ -556,10 +666,10 @@ export default function JukeboxPage() {
                 className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full border transition-all duration-150 ${
                   spoilerFilters.general[key]
                     ? 'bg-sky-500 border-sky-500 text-white shadow-sm'
-                    : 'bg-white dark:bg-neutral-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-sky-400 dark:hover:border-sky-500'
+                    : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-sky-400 dark:hover:border-sky-500'
                 }`}
               >
-                {t(GENERAL_CATEGORIES[key] as any)}
+                {t(GENERAL_CATEGORIES[key], '')}
               </button>
             ))}
             <button
@@ -574,17 +684,14 @@ export default function JukeboxPage() {
       </div>
 
       {/* ── Main content ── */}
-      <div className="max-w-7xl mx-auto py-4 pb-24 md:pb-8">
-        <header className="mb-4 px-2 sm:px-4 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-sky-500 to-blue-600 tracking-tight">{t('title')}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{t('description')}</p>
-        </header>
+      <div className="max-w-7xl mx-auto py-4 pb-24 md:pb-8 px-2 sm:px-4 lg:px-8">
+        <PageHeader title={t('title')} description={t('description')} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-0 sm:px-4 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* ── Story filter sidebar (desktop only) ── */}
           <aside className="hidden md:block md:col-span-1 self-start sticky top-[88px]">
-            <div className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm">
-              <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">{t('filter_title')}</h2>
+            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 shadow-sm">
+              <h2 className="text-sm font-bold text-neutral-700 dark:text-neutral-300 mb-4">{t('filter_title')}</h2>
               <StoryFilters
                 mainStoryList={mainStoryList}
                 eventStoryList={eventStoryList}
@@ -603,6 +710,7 @@ export default function JukeboxPage() {
                 playbackMode={playbackMode}
                 setPlaybackMode={setPlaybackMode}
                 t={t}
+                matcher={matcher}
               />
             </div>
           </aside>
@@ -614,7 +722,7 @@ export default function JukeboxPage() {
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {activeFilters.general.map((k) => (
                   <span key={k} className={chipClass}>
-                    {t(GENERAL_CATEGORIES[k as keyof typeof GENERAL_CATEGORIES] as any)}
+                    {t(GENERAL_CATEGORIES[k as keyof typeof GENERAL_CATEGORIES], '')}
                     <button onClick={() => handleFilterToggle('general', k)} className={chipX}>
                       ×
                     </button>
@@ -655,80 +763,38 @@ export default function JukeboxPage() {
               </div>
             )}
 
-            <div className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-slate-700 sm:rounded-xl shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/60">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('meta.bgm_list_title')}</span>
+            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 sm:rounded-xl shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 dark:border-neutral-700/60">
+                <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">{t('meta.bgm_list_title')}</span>
                 <div className="flex items-center gap-2">
-                  {filteredBgm.length > 0 && <span className="text-xs text-slate-400">{filteredBgm.length} tracks</span>}
+                  {filteredBgm.length > 0 && <span className="text-xs text-neutral-400">{filteredBgm.length} tracks</span>}
                   {/* Sort (mobile only — sm+ is in top bar) */}
                   <button
                     onClick={() => setSortOrder((p) => (p === 'ascending' ? 'descending' : 'ascending'))}
-                    className="sm:hidden flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-sky-400 transition-colors"
+                    className="sm:hidden flex items-center gap-1 px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-sky-400 transition-colors"
                   >
                     {sortOrder === 'ascending' ? <FaSortAmountDown className="h-3 w-3" /> : <FaSortAmountUp className="h-3 w-3" />}
                   </button>
                 </div>
               </div>
 
-              <div ref={bgmListContainerRef} className="max-h-[80vh] mx-2 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50">
+              <div ref={bgmListContainerRef} className="max-h-[80vh] mx-2 overflow-y-auto divide-y divide-neutral-100 dark:divide-neutral-700/50">
                 {filteredBgm.length > 0 ? (
-                  filteredBgm.map((bgm: any) => {
-                    const matchingXrefs = hasAnyActiveFilter ? bgm.xref.filter(isXrefMatchingActive) : [];
-                    const isPlaying = currentSong?.id === bgm.id;
-
-                    return (
-                      <div
-                        key={bgm.id}
-                        id={`bgm-item-${bgm.id}`}
-                        className={`scroll-mt-24 md:scroll-mt-16 px-4 py-3 transition-colors duration-150 ${isPlaying ? 'bg-sky-50 dark:bg-sky-950/30' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/30'}`}
-                      >
-                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentSong(bgm)}>
-                          <span className={`font-mono text-base font-bold w-10 shrink-0 tabular-nums ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'}`}>
-                            {Number(bgm.id) < 10000 ? bgm.id : 'N/A'}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold leading-tight ${isPlaying ? 'text-sky-700 dark:text-sky-300' : 'text-slate-800 dark:text-slate-100'}`}>
-                              {bgm.title || `BGM #${bgm.id}`}
-                            </p>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{bgm.composer}</p>
-                          </div>
-                          {bgm.youtube_url && (
-                            <div className={`shrink-0 ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-slate-300 dark:text-slate-600'}`}>{isPlaying ? <SoundWaveIcon /> : <PlayIcon />}</div>
-                          )}
-                        </div>
-
-                        {/* ── Toggleable matching story info ── */}
-                        {matchingXrefs.length > 0 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleDetails(bgm.id);
-                            }}
-                            className="mt-2 w-full text-left group"
-                          >
-                            <div className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">
-                              <FiChevronDown className={`w-3 h-3 shrink-0 transition-transform duration-200 ${!!expandedBgmIds[bgm.id] ? 'rotate-180' : ''}`} />
-                              <span className="font-medium">
-                                {matchingXrefs.length} {!!expandedBgmIds[bgm.id] ? t('actions.hide_details') : t('actions.view_details')}
-                              </span>
-                            </div>
-                            {!!expandedBgmIds[bgm.id] && (
-                              <ul className="mt-1.5 ml-3.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                                {matchingXrefs.map((x: any, i: number) => (
-                                  <li key={i} className="flex items-baseline gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                                    <span className="shrink-0 text-slate-300 dark:text-slate-600">·</span>
-                                    <RubyText>{renderXrefLine(x, bgm)}</RubyText>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })
+                  filteredBgm.map((bgm) => (
+                    <BgmItem
+                      key={bgm.id}
+                      bgm={bgm}
+                      isExpanded={expandedBgmIds[bgm.id]}
+                      isPlaying={currentSong?.id === bgm.id}
+                      hasAnyActiveFilter={hasAnyActiveFilter}
+                      isXrefMatchingActive={isXrefMatchingActive}
+                      renderXrefLine={renderXrefLine}
+                      onSelect={setCurrentSong}
+                      onToggleDetails={handleToggleDetails}
+                    />
+                  ))
                 ) : (
-                  <p className="text-center text-slate-400 dark:text-slate-500 py-12 text-sm">{t('search.no_results')}</p>
+                  <p className="text-center text-neutral-400 dark:text-neutral-500 py-12 text-sm">{t('search.no_results')}</p>
                 )}
               </div>
             </div>
@@ -740,13 +806,13 @@ export default function JukeboxPage() {
       {isFilterDrawerOpen && (
         <>
           <div className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setFilterDrawerOpen(false)} />
-          <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] flex flex-col bg-white dark:bg-neutral-900 rounded-t-2xl border-t border-slate-200 dark:border-slate-700 shadow-2xl drawer-up">
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] flex flex-col bg-white dark:bg-neutral-900 rounded-t-2xl border-t border-neutral-200 dark:border-neutral-700 shadow-2xl drawer-up">
             <div className="flex justify-center pt-2.5 pb-1 shrink-0">
               <div className="w-9 h-1 rounded-full bg-neutral-300 dark:bg-neutral-600" />
             </div>
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 shrink-0">
-              <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{t('filter_title')}</h2>
-              <button onClick={() => setFilterDrawerOpen(false)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-slate-500 transition-colors">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
+              <h2 className="font-bold text-neutral-900 dark:text-neutral-100 text-sm">{t('filter_title')}</h2>
+              <button onClick={() => setFilterDrawerOpen(false)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -772,6 +838,7 @@ export default function JukeboxPage() {
                 playbackMode={playbackMode}
                 setPlaybackMode={setPlaybackMode}
                 t={t}
+                matcher={matcher}
               />
             </div>
           </div>

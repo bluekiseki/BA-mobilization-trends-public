@@ -1,0 +1,37 @@
+{
+  "name": "your-auth-worker-name",
+  "compatibility_date": "2026-01-03",
+  "main": "./workers/auth/index.ts",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "vars": {
+    "ENVIRONMENT": "production",
+    "GITHUB_CLIENT_ID": "your-github-oauth-client-id",
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true,
+    },
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "your-db-name",
+      "database_id": "your-d1-database-id",
+    },
+    {
+      "binding": "ba_user",
+      "database_name": "your-user-db-name",
+      "database_id": "your-d1-database-id",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MY_BUCKET",
+      "bucket_name": "your-r2-bucket-name",
+    },
+  ],
+}

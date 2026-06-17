@@ -2,26 +2,26 @@
 
 import { useState, memo, useCallback } from 'react';
 import StudentSearchDropdown from '../StudentSearchDropdown';
-import { StarRating } from '../StarRatingProps';
+import { StarRating } from '../StarRating';
 import { useChartControlsStore } from '../../store/chartControlsStore';
 import { useShallow } from 'zustand/react/shallow';
 import TooltipSlider from '../HandleTooltip';
 import 'rc-slider/assets/index.css';
-import { raidToString, raidToStringTsx } from '../raidToString';
+import { raidToString, raidToStringTsx } from '../raid/raidToString';
 
-function debounce<T extends (...args: any[]) => void>(func: T, wait: number) {
+function debounce<T extends unknown[]>(func: (...args: T) => void, wait: number) {
   let timeout: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<T>) => {
+  return (...args: T) => {
     if (timeout !== null) clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
 }
 
 import React from 'react';
-import { ToggleButtonGroup } from '../ToggleButtonGroupProps';
+import { ToggleButtonGroup } from '../ToggleButtonGroup';
 import type { Student } from '~/types/data';
 import { useTranslation } from 'react-i18next';
-import { difficultyInfo, type DifficultySelect } from '../Difficulty';
+import { difficultyInfo, type DifficultySelect } from '../raid/Difficulty';
 import type { Locale } from '~/utils/i18n/config';
 import { CustomNumberInput } from '../CustomInput';
 import StudentProfileCard from '../common/StudentProfileCard';
@@ -121,13 +121,10 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
   const [tempRankWidth, setTempRankWidth] = useState<number>(rankwidth);
   const xLabels = getFilteredRaidInfoByDifficulty();
 
-  const labelMap: Record<number, React.ReactNode> = xLabels.reduce(
-    (map, raid, index) => {
-      map[index] = raidToString(raid, locale, true);
-      return map;
-    },
-    {} as Record<number, React.ReactNode>,
-  );
+  const labelMap: Record<number, React.ReactNode> = xLabels.reduce<Record<number, React.ReactNode>>((map, raid, index) => {
+    map[index] = raidToString(raid, locale, true);
+    return map;
+  }, {});
 
   const handleSelectAllZValues = () => {
     setSelectedZValues(Array.from(availableZValueCounter.keys()));
@@ -183,7 +180,7 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
                 />
                 <button
                   onClick={() => setRankWidth(tempRankWidth)}
-                  className="px-3 py-1 bg-bluearchive-botton-blue hover:bg-sky-400 transition-colors w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold"
+                  className="px-3 py-1 bg-ba-btn-blue hover:bg-sky-400 transition-colors w-full shadow-ba text-black rounded-r-md text-xs font-semibold"
                 >
                   {t('setButton')}
                 </button>
@@ -201,7 +198,7 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
                 />
                 <button
                   onClick={() => setHideXThreshold(hideXThreshold)}
-                  className="px-3 py-1.5 bg-bluearchive-botton-blue hover:bg-sky-400 transition-colors w-full shadow-bluearchive text-black rounded-r-md text-xs font-semibold"
+                  className="px-3 py-1.5 bg-ba-btn-blue hover:bg-sky-400 transition-colors w-full shadow-ba text-black rounded-r-md text-xs font-semibold"
                 >
                   {t('setButton')}
                 </button>
@@ -234,13 +231,13 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
           <div className="flex gap-1 mb-2">
             <button
               onClick={handleSelectAllZValues}
-              className="px-3 py-1 text-xs font-medium text-black bg-bluearchive-botton-blue rounded-md hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors w-full shadow-bluearchive"
+              className="px-3 py-1 text-xs font-medium text-black bg-ba-btn-blue rounded-md hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors w-full shadow-ba"
             >
               {t('filterByStars.all')}
             </button>
             <button
               onClick={handleDeselectAllZValues}
-              className="px-3 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 bg-bluearchive-botton-gray dark:bg-neutral-600 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500 transition-colors w-full shadow-bluearchive"
+              className="px-3 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 bg-ba-btn-gray dark:bg-neutral-600 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500 transition-colors w-full shadow-ba"
             >
               {t('filterByStars.none')}
             </button>

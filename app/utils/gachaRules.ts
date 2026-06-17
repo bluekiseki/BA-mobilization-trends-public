@@ -1,10 +1,14 @@
 // src/utils/gachaRules.ts
 
+// Wakamo=10033, S.Hoshino=10045, Mika=10059
+const WAKAMO_MIKA_BANNER_EXCL = [10033, 10045, 10059];
+
 export const FES_EXCLUSIONS_BY_PICKUP_ID: Record<number, number[]> = {
-  // Example data (Actual IDs need verification)
-  // Pickup Student ID : [List of FES student IDs to exclude]
-  10134: [10059, 10045, 10033], // On Aris pickup -> Mika, S.Hoshino, Wakamo excluded
-  10135: [10059, 10045, 10033], // On Kei pickup -> Same as above
+  // Aris(Battle)/Kei/Hoshino(Battle)/Shiroko*Terror banner — Wakamo, S.Hoshino, Mika, Hina(Dress) excluded
+  10134: WAKAMO_MIKA_BANNER_EXCL,
+  10135: WAKAMO_MIKA_BANNER_EXCL,
+  10098: WAKAMO_MIKA_BANNER_EXCL,
+  10100: WAKAMO_MIKA_BANNER_EXCL,
 };
 
 export const FES_EXCLUSIONS = FES_EXCLUSIONS_BY_PICKUP_ID;
@@ -57,6 +61,8 @@ export const ARCHIVE_STUDENT_IDS = new Set([
   20011, // serika_newyear
   20012, // sena
   20013, // chihiro
+
+  10099, // hoshino_battle (variant, excluded from all gacha)
 ]);
 
 /**

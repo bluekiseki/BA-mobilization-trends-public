@@ -15,14 +15,40 @@ export const getEquipmentTierLabel = (itemInfo: IconInfo | undefined): string | 
   return null;
 };
 
-export const EquipmentItemIcon = ({ type, itemId, amount, size = 16, eventData, iconData, label, labelColor = 'bg-gray-700', imageOnly = false }: ItemIconProps & { imageOnly?: boolean }) => {
+// size default: 16
+export const EquipmentItemIcon = ({
+  type,
+  itemId,
+  amount,
+  size,
+  eventData,
+  iconData,
+  label,
+  labelColor = 'bg-neutral-700',
+  imageOnly = false,
+  forceDecimal = false,
+  decimalPlaces,
+}: ItemIconProps & { imageOnly?: boolean }) => {
   if (!eventData) return null;
 
   if (type == 'Equipment') {
     const numId = Number(itemId);
     // Universal blueprint (501000-509000): item itself, displayed without conversion
     if (numId in blueprintIdToType) {
-      return <ItemIcon type="Equipment" itemId={itemId} amount={amount} size={size} eventData={eventData} iconData={iconData} label={label} labelColor={labelColor} />;
+      return (
+        <ItemIcon
+          type="Equipment"
+          itemId={itemId}
+          amount={amount}
+          size={size}
+          eventData={eventData}
+          iconData={iconData}
+          label={label}
+          labelColor={labelColor}
+          forceDecimal={forceDecimal}
+          decimalPlaces={decimalPlaces}
+        />
+      );
     }
     const eqipitemId = String(blueprintToEqipIcon(numId));
     const itemInfo = eventData.icons[type][eqipitemId];
@@ -40,7 +66,20 @@ export const EquipmentItemIcon = ({ type, itemId, amount, size = 16, eventData, 
       );
     }
 
-    return <ItemIcon type="Equipment" itemId={eqipitemId} amount={amount} size={size} eventData={eventData} iconData={iconData} label={tierLabel} labelColor="bg-teal-700 dark:bg-teal-800" />;
+    return (
+      <ItemIcon
+        type="Equipment"
+        itemId={eqipitemId}
+        amount={amount}
+        size={size}
+        eventData={eventData}
+        iconData={iconData}
+        label={tierLabel}
+        labelColor="bg-teal-700 dark:bg-teal-800"
+        forceDecimal={forceDecimal}
+        decimalPlaces={decimalPlaces}
+      />
+    );
   }
 
   if (imageOnly) {
@@ -54,7 +93,20 @@ export const EquipmentItemIcon = ({ type, itemId, amount, size = 16, eventData, 
       />
     );
   }
-  return <ItemIcon type={type} itemId={itemId} amount={amount} size={size} eventData={eventData} iconData={iconData} label={label} labelColor={labelColor} />;
+  return (
+    <ItemIcon
+      type={type}
+      itemId={itemId}
+      amount={amount}
+      size={size}
+      eventData={eventData}
+      iconData={iconData}
+      label={label}
+      labelColor={labelColor}
+      forceDecimal={forceDecimal}
+      decimalPlaces={decimalPlaces}
+    />
+  );
 };
 
 export interface ResolvedStage {

@@ -11,11 +11,11 @@ interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   disabled?: boolean;
 }
 
-const useLongPress = (onShortPress: () => void, onLongPress: () => void, disabled: boolean = false, delay: number = 600) => {
+const useLongPress = (/*onShortPress: () => void, */ onLongPress: () => void, disabled: boolean = false, delay: number = 600) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressTriggered = useRef(false);
 
-  const start = (e: React.SyntheticEvent) => {
+  const start = (_e: React.SyntheticEvent) => {
     if (disabled) return;
     // e.preventDefault();
 
@@ -26,7 +26,7 @@ const useLongPress = (onShortPress: () => void, onLongPress: () => void, disable
     }, delay);
   };
 
-  const end = (e: React.SyntheticEvent) => {
+  const end = (_e: React.SyntheticEvent) => {
     if (disabled) return;
 
     if (timeoutRef.current) {
@@ -88,13 +88,13 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
     onChange(max);
   };
 
-  const minusButtonEvents = useLongPress(handleDecrement, handleSetMin, disabled || value <= min);
-  const plusButtonEvents = useLongPress(handleIncrement, handleSetMax, disabled || value >= max);
+  const minusButtonEvents = useLongPress(handleSetMin, disabled || value <= min);
+  const plusButtonEvents = useLongPress(handleSetMax, disabled || value >= max);
 
   const hiding_in_narrow_width_class = 'hidden sm:block';
 
   return (
-    <div className="flex items-center w-full h-8 border border-gray-400 dark:border-neutral-600 bg-white dark:bg-neutral-700/50">
+    <div className="flex items-center w-full h-8 border border-neutral-400 dark:border-neutral-600 bg-white dark:bg-neutral-700/50">
       {/* Min btn */}
       <button
         onClick={handleSetMin}
@@ -103,7 +103,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         className={
           (narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') +
           (narrowButtonType == 'plus_only' ? 'hidden' : '') +
-          ' w-9 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors select-none'
+          ' w-9 h-full bg-neutral-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors select-none'
         }
       >
         0
@@ -117,7 +117,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         className={
           (narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') +
           (narrowButtonType == 'max_only' ? 'hidden' : '') +
-          ' w-8 h-full bg-gray-300 dark:bg-neutral-600 text-base font-bold disabled:opacity-5 border-r border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500 select-none'
+          ' w-8 h-full bg-neutral-300 dark:bg-neutral-600 text-base font-bold disabled:opacity-5 border-r border-neutral-400 dark:border-neutral-500 hover:bg-neutral-400 dark:hover:bg-neutral-500 select-none'
         }
       >
         -
@@ -130,7 +130,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         min={min}
         max={max === Infinity ? undefined : max}
         disabled={disabled}
-        className="w-full h-full text-center text-base scale-[0.85] font-semibold focus:outline-none dark:text-gray-200"
+        className="w-full h-full text-center text-base scale-[0.85] font-semibold focus:outline-none dark:text-neutral-200"
         style={{ appearance: 'textfield' }}
         {...rest}
       />
@@ -143,7 +143,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         className={
           (narrowButtonType == 'max' ? hiding_in_narrow_width_class : '') +
           (narrowButtonType == 'max_only' ? 'hidden' : '') +
-          ' w-8 h-full bg-gray-300 dark:bg-neutral-600 text-base font-bold disabled:opacity-5 border-l border-gray-400 dark:border-neutral-500 hover:bg-gray-400 dark:hover:bg-neutral-500 select-none'
+          ' w-8 h-full bg-neutral-300 dark:bg-neutral-600 text-base font-bold disabled:opacity-5 border-l border-neutral-400 dark:border-neutral-500 hover:bg-neutral-400 dark:hover:bg-neutral-500 select-none'
         }
       >
         +
@@ -157,7 +157,7 @@ export const NumberInput = ({ value, onChange, min, max, disabled, narrowButtonT
         className={
           (narrowButtonType == 'plus' ? hiding_in_narrow_width_class : '') +
           (narrowButtonType == 'plus_only' ? 'hidden' : '') +
-          ' w-9 h-full bg-gray-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors select-none'
+          ' w-9 h-full bg-neutral-200 dark:bg-neutral-700 text-xs font-bold disabled:opacity-5 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors select-none'
         }
       >
         M

@@ -2,7 +2,8 @@ import {
   affectionExpToNextLevel,
   CREDIT_ID,
   ELIGMA_ID,
-  equipmentBlueprintId,
+  // equipmentBlueprintId,
+  equipmentId,
   equipmentLevelUpCost,
   equipmentReinforcementExp,
   equipmentTierUpgradeCost,
@@ -31,7 +32,7 @@ export const calculateAffectionExp = (currentLevel: number, targetLevel: number)
 
   let totalNeededExp = 0;
   for (let i = currentLevel; i <= targetLevel; i++) {
-    const expToNext = affectionExpToNextLevel[i as keyof typeof affectionExpToNextLevel];
+    const expToNext = affectionExpToNextLevel[i];
     if (expToNext) {
       totalNeededExp += expToNext;
     }
@@ -47,14 +48,15 @@ export const calcEquipmentSlotNeeds = (currentTier: number, targetTier: number, 
   for (let tier = currentTier + 1; tier <= targetTier; tier++) {
     const maxLevel = TIER_MAX_LEVEL[tier];
     for (let lv = 1; lv <= maxLevel; lv++) {
-      totalExp += equipmentLevelUpCost[lv as keyof typeof equipmentLevelUpCost].exp;
-      needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + equipmentLevelUpCost[lv as keyof typeof equipmentLevelUpCost].credits;
+      totalExp += equipmentLevelUpCost[lv].exp;
+      needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + equipmentLevelUpCost[lv].credits;
     }
     const upgradeCost = equipmentTierUpgradeCost[(tier + 1) as keyof typeof equipmentTierUpgradeCost];
     if (upgradeCost) {
       needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + upgradeCost.credits;
       upgradeCost.blueprints.forEach((bp) => {
-        const bpIds = equipmentBlueprintId[equipType as keyof typeof equipmentBlueprintId];
+        // const bpIds = equipmentBlueprintId[equipType as keyof typeof equipmentBlueprintId];
+        const bpIds = equipmentId[equipType as keyof typeof equipmentId];
         if (bpIds) {
           needs[`Equipment_${bpIds[bp.tier - 1]}`] = (needs[`Equipment_${bpIds[bp.tier - 1]}`] || 0) + bp.amount;
         }

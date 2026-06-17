@@ -6,7 +6,7 @@ import type { Locale } from '~/utils/i18n/config';
 import { cacheHeader } from 'pretty-cache-header';
 import { vaildClient } from '~/utils/vaildClient';
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
+export function loader({ request, context }: LoaderFunctionArgs) {
   // Security check (block unauthorized access)
   if (!vaildClient(request)) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
@@ -19,17 +19,17 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const type = url.searchParams.get('type');
   const server = url.searchParams.get('server');
 
-  let i18n = getInstance(context);
+  const i18n = getInstance(context);
   const locale = i18n.language as Locale;
 
   // 1. Map function to execute (all vs widget)
   let targetFunction: (ctx: Readonly<RouterContextProvider>, server: GameServer) => ReturnType<typeof loadScheduleData>;
 
   if (type === 'all') {
-    targetFunction = (ctx, server) => loadScheduleData({ server, locale, i18n, tracksToLoad: 'all' });
+    targetFunction = (_ctx, server) => loadScheduleData({ server, locale, i18n, tracksToLoad: 'all' });
   } else if (type === 'widget') {
     const widgetTracks: ScheduleTrack[] = ['raid', 'event', 'campaign', 'pickup'];
-    targetFunction = (ctx, server) => loadScheduleData({ server, locale, i18n, tracksToLoad: widgetTracks });
+    targetFunction = (_ctx, server) => loadScheduleData({ server, locale, i18n, tracksToLoad: widgetTracks });
   } else {
     return Response.json({ error: 'Bad Request: "type" parameter must be "all" or "widget"' }, { status: 400 });
   }
@@ -49,12 +49,12 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
   try {
     if (server === 'jp' || server === 'kr') {
-      const singleData = await targetFunction(context, server);
+      const singleData = targetFunction(context, server);
       // Pass headers object along
       return Response.json({ data: singleData }, { headers });
     }
 
-    const [dataJp, dataKr] = await Promise.all([targetFunction(context, 'jp'), targetFunction(context, 'kr')]);
+    const [dataJp, dataKr] = [targetFunction(context, 'jp'), targetFunction(context, 'kr')];
 
     return Response.json(
       {

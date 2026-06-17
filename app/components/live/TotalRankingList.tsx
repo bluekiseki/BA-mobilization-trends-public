@@ -4,8 +4,8 @@ import type { GameServer, RaidInfo } from '~/types/data';
 import { StudentIcon } from '../dashboard/studentIcon';
 import { formatTimeToTimestamp } from '~/utils/time';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
-import { getDifficultyFromScoreAndBoss } from '../Difficulty';
-import { type_translation } from '../raidToString';
+import { getDifficultyFromScoreAndBoss } from '../raid/Difficulty';
+import { type_translation } from '../raid/raidToString';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 
@@ -42,12 +42,12 @@ const BossTeamDetails: FC<{
   const locale = i18n.language as Locale;
 
   return (
-    <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg">
+    <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
       <div className="flex justify-between items-start mb-2">
         {/* Boss Name & Difficulty */}
         <div>
           <h4 className="font-bold text-blue-600 dark:text-blue-400">{type_translation[bossName as keyof typeof type_translation][getLocaleShortName(locale)]}</h4>
-          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{getDifficultyFromScoreAndBoss(entry.s, server, raidInfo.Id).toUpperCase()}</span>
+          <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{getDifficultyFromScoreAndBoss(entry.s, server, raidInfo.Id).toUpperCase()}</span>
         </div>
         {/* Score & Time */}
         <div className="text-right">

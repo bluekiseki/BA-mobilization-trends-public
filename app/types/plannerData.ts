@@ -2,7 +2,6 @@
 import type { Student as StudentBase } from './data';
 // src/types/student.ts
 export interface Student extends StudentBase {
-  PieceId?: any;
   Name: string;
   SearchTags: string[];
   // Position: "Back" | "Front" | "Middle";
@@ -27,7 +26,7 @@ export interface Student extends StudentBase {
   OutdoorBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
   IndoorBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
   Gear:
-    | {}
+    | Record<string, never>
     | {
         Name: string;
         Desc: string;
@@ -60,20 +59,25 @@ interface ShopInfo {
 
 export interface EventData {
   season: EventSeason;
-  bonus: Record<string, EventBonus>; // key: student ID
-  currency: EventCurrency[];
-  stage: {
-    stage: Stage[];
-    story: Stage[];
-    challenge: Stage[];
+  bonus?: Record<string, EventBonus>; // key: student ID
+  currency?: EventCurrency[];
+  stage?: {
+    stage?: Stage[];
+    story?: Stage[];
+    challenge?: Stage[];
   };
-  shop: Record<string, ShopItem[]>; // key: shop ID
+  shop?: Record<string, ShopItem[]>; // key: shop ID
   icons: IconInfos;
-  shop_info: ShopInfo[];
-  mission: Mission[];
+  shop_info?: ShopInfo[];
+  mission?: Mission[];
   card_shop?: CardShopItem[];
   treasure?: {
-    info: any[];
+    info: {
+      LoopRound: number;
+      TitleLocalize: string;
+      TreasureBgimagePath: string;
+      UsePrefabName: string;
+    }[];
     round: TreasureRound[];
     reward: Record<string, TreasureReward>;
     cell_reward: Record<string, CellReward>;
@@ -90,7 +94,13 @@ export interface EventData {
   total_reward?: TotalRewardItem[];
   dice_race?: {
     info: DiceRaceInfo[];
-    porb: any[]; // 'porb'
+    porb: {
+      CostItemAmount: number;
+      CostItemId: number;
+      DiceResult: number;
+      EventContentDiceRaceResultType: number;
+      Prob: number;
+    }[]; // 'porb'
     total_reward: DiceRaceTotalReward[];
     race_node: DiceRaceNode[];
   };
@@ -100,7 +110,79 @@ export interface EventData {
   concentration?: MinigameConcentration;
   minigame_defense?: MinigameDefense;
   clue?: ClueSearchData;
+  field?: FieldEventData;
+  interactive_world_raid?: {
+    interactive_world_raid_stage: Record<string, InteractiveWorldRaidStage>;
+    interactive_world_raid_boss_group: Record<string, InteractiveWorldRaidBossGroup>;
+    world_raid_stage_reward: Record<string, WorldRaidStageReward[]>;
+  };
+  minigame_road_puzzle?: RoadPuzzleData;
 }
+
+export interface RoadPuzzleData {
+  info: RoadPuzzleInfo[];
+  road_round: RoadPuzzleRound[];
+  reward?: RoadPuzzleRewardItem[];
+  additional_reward?: RoadPuzzleAdditionalRewardItem[];
+  rail_set_reward?: RoadPuzzleRewardItem[];
+  rail_tile: RoadPuzzleRailTile[];
+  map: RoadPuzzleMap[];
+}
+
+export interface RoadPuzzleInfo {
+  EventUseCostId: number;
+  InstantClearRound: number;
+  RailSetRewardId: number;
+  CostGoods: {
+    ConsumeParcelId: number[];
+    ConsumeParcelAmount: number[];
+    ConsumeParcelTypeStr: string[];
+  };
+}
+
+export interface RoadPuzzleRound {
+  Round: number;
+  MapGroupId: number;
+  IsLoop: boolean;
+  RoundReward: number;
+  UniqueId: number;
+  AdditionalRewardId?: number[];
+  AdditionalRewardAmount?: number[];
+}
+
+export interface RoadPuzzleRewardItem {
+  UniqueId: number;
+  RewardParcelId: number[];
+  RewardParcelAmount: number[];
+  RewardParcelTypeStr: string[];
+}
+
+// additional_reward uses scalar fields (not arrays)
+export interface RoadPuzzleAdditionalRewardItem {
+  UniqueId: number;
+  RewardParcelId: number;
+  RewardParcelAmount: number;
+  RewardParcelTypeStr: string;
+}
+
+export interface RoadPuzzleRailTile {
+  UniqueId: number;
+  RailTileType: 1 | 2 | 3;
+  PrefabName: string;
+  OriginalTile: boolean;
+}
+
+export interface RoadPuzzleMap {
+  UniqueId: number;
+  MapGroupId: number;
+  Map: string;
+  AvailableRailTile: number[];
+  AvailableRailTileAmount: number[];
+  // OriginalTileCount: number[];
+  TrainSpeed: number;
+}
+
+type ParcelType = 'Currency' | 'Equipment' | 'Item' | 'GachaGroup' | 'Furniture' | 'Emblem';
 
 export interface IconInfos {
   Item: Record<string, IconInfo>; // key: Item ID
@@ -112,7 +194,7 @@ export interface IconInfos {
 }
 
 // About the duration of the event
-interface EventSeason {
+export interface EventSeason {
   Name: string;
   EventContentOpenTime: string;
   EventContentCloseTime: string;
@@ -149,7 +231,7 @@ export interface Stage {
 }
 
 // Stage compensation information
-interface StageReward {
+export interface StageReward {
   RewardId: number;
   RewardAmount: number;
   RewardTagStr: string; // 'Event', 'Default', 'FirstClear_etc', etc.
@@ -163,6 +245,8 @@ interface ShopItem {
   PurchaseCountLimit: number;
   LocalizeEtc: LocalizeEtc;
   Goods?: GoodsInfo[]; // Items may be missing Goods
+  SalePeriodFrom?: string;
+  SalePeriodTo?: string;
 }
 
 // Goods and rewards information for store items
@@ -170,9 +254,11 @@ interface GoodsInfo {
   ConsumeParcelId: number[];
   ConsumeParcelAmount: number[];
   ConsumeParcelTypeStr: string[];
+  ConsumeExtraStep?: number[];
+  ConsumeExtraAmount?: number[];
   ParcelId: number[];
   ParcelAmount: number[];
-  ParcelTypeStr: string[];
+  ParcelTypeStr: ParcelType[];
 }
 
 export interface LocalizeEtc {
@@ -193,6 +279,7 @@ export interface IconInfo {
   LocalizeEtc?: LocalizeEtc;
   TagsStr: string[];
   Rarity: number;
+  UsingResultParcelTypeStr?: 'None' | 'GachaGroup';
 }
 
 export interface GachaElement {
@@ -300,7 +387,14 @@ export interface Skill {
   Parameters: string[][];
   Icon: string;
   Cost?: number[];
-  Effects: any[]; // simplified to any[]
+  Effects: {
+    Type: string;
+    Block: 0 | 1;
+    CriticalCheck: string;
+    Hits: number[];
+    DescParamId: number;
+    Scale: number[];
+  }[]; // simplified to any[]
 }
 
 export interface EXSkill extends Skill {
@@ -350,18 +444,26 @@ export interface TotalRewardItem {
   RewardParcelTypeStr: string[];
 }
 
-export interface DiceRaceNode {
+export type DiceRaceNode = {
   NodeId: number;
-  EventContentDiceRaceNodeType: number; //0: Completion, 1: Reward, 2: Movement, 3: Special reward
-  MoveForwardTypeArg?: number;
-  RewardParcelTypeStr?: string[];
-  RewardParcelId?: number[];
-  RewardAmount?: number[];
-}
+  EventContentDiceRaceNodeType: number;
+  MoveForwardTypeArg: number;
+} & (
+  | {
+      RewardParcelTypeStr: ParcelType[];
+      RewardParcelId: number[];
+      RewardAmount: number[];
+    }
+  | {
+      RewardParcelTypeStr?: never;
+      RewardParcelId?: never;
+      RewardAmount?: never;
+    }
+);
 
 export interface DiceRaceTotalReward {
   RequiredLapFinishCount: number;
-  RewardParcelTypeStr: string[];
+  RewardParcelTypeStr: ParcelType[];
   RewardParcelId: number[];
   RewardParcelAmount: number[];
 }
@@ -469,6 +571,7 @@ export interface MinigameMission {
   MissionRewardParcelId: number[];
   MissionRewardParcelType: number[];
   MissionRewardParcelTypeStr: string[];
+  Description: number;
   DescriptionStr: {
     Kr: string;
     Jp: string;
@@ -622,6 +725,74 @@ export interface ClueSearchData {
   round: ClueSearchRound[];
 }
 
+// FieldEvent Types
+interface FieldRewardItem {
+  RewardProb: number;
+  RewardParcelType: string;
+  RewardId: number;
+  RewardAmount: number;
+}
+
+interface FieldQuestNameKey {
+  Jp: string;
+  Kr: string;
+  NameEn: string;
+  NameTw: string;
+  Key: number;
+}
+
+interface FieldQuestDescKey {
+  Jp: string;
+  Kr: string;
+  DescriptionEn: string | null;
+  DescriptionTw: string | null;
+  Key: number;
+}
+
+export interface FieldQuestItem {
+  UniqueId: number;
+  FieldSeasonId: number;
+  IsDaily: boolean;
+  FieldDateId: number;
+  QuestNamKeyData: FieldQuestNameKey;
+  QuestDescKeyData: FieldQuestDescKey;
+  Reward: FieldRewardItem[];
+}
+
+export interface FieldMasteryManageItem {
+  FieldSeason: number;
+  LevelId: number;
+  LocalizeEtcData: {
+    NameJp: string;
+    NameKr: string;
+    NameEn: string;
+  };
+}
+
+export interface FieldMasteryLevelItem {
+  Level: number;
+  Id: number[];
+  Exp: number[];
+  TotalExp: number[];
+  RewardId?: number[];
+  Reward?: FieldRewardItem[];
+}
+
+export interface FieldContentStageRewardItem {
+  RewardTag: string; // 'FirstClear' | 'Default' | 'ThreeStar' | etc.
+  RewardProb: number; // 0~10000
+  RewardParcelType: string;
+  RewardId: number;
+  RewardAmount: number;
+}
+
+export interface FieldEventData {
+  FieldQuest: FieldQuestItem[];
+  FieldMasteryManage: FieldMasteryManageItem[];
+  FieldMasteryLevel: FieldMasteryLevelItem[];
+  FieldContentStageReward: Record<string, FieldContentStageRewardItem[]>;
+}
+
 export type TransactionEntry = {
   source: string; // ex: 'shop_cost', 'farming', 'studentGrowth_cost'
   items: Record<string, { amount: number; isBonusApplied: boolean }>;
@@ -635,8 +806,8 @@ export interface CampaignReward {
   StageRewardId: number;
   StageRewardParcelType: number;
   StageRewardProb: number;
-  RewardTagStr: 'Default' | 'Rare' | string; // 'Default', 'Rare', etc.
-  StageRewardParcelTypeStr: 'Equipment' | 'GachaGroup' | 'Item' | 'Currency' | string;
+  RewardTagStr: 'Default' | 'Rare' | 'FirstClear' | 'EventBonus' | 'ThreeStar'; // 'Default', 'Rare', etc.
+  StageRewardParcelTypeStr: ParcelType;
 }
 
 export interface CampaignStage {
@@ -645,7 +816,7 @@ export interface CampaignStage {
   Stage: number;
   Name: string;
   RecommandLevel: number;
-  StageEnterCostTypeStr: 'Currency' | string;
+  StageEnterCostTypeStr: 'Currency' | ParcelType;
   AP: number;
   Reward: CampaignReward[];
 }
@@ -656,3 +827,39 @@ export interface CampaignStage {
  * Value: CampaignStage
  */
 export type CampaignData = Record<string, CampaignStage>;
+
+// ===================================================================
+// InteractiveWorldRaid Types
+// ===================================================================
+
+export interface WorldRaidStageReward {
+  ClearStageRewardAmount: number;
+  ClearStageRewardParcelType: number;
+  ClearStageRewardParcelUniqueId: number;
+  ClearStageRewardParcelTypeStr: string;
+  ClearStageRewardProb: number;
+  IsClearStageRewardHideInfo: boolean;
+}
+
+export interface InteractiveWorldRaidStage {
+  Id: number;
+  WorldRaidBossGroupId: number;
+  WorldRaidDifficulty: number;
+  IsRaidScenarioBattle: boolean;
+  DamageToWorldBoss: number;
+  RaidEnterAmount: number;
+  ReEnterAmount: number;
+  RaidBattleEndRewardGroupId: number;
+  RaidRewardGroupId: number;
+  PortraitPath: string;
+}
+
+export interface InteractiveWorldRaidBossGroup {
+  Id: number;
+  WorldRaidBossGroupId: number;
+  WorldBossName: string;
+  WorldBossHp: number;
+  IsSeasonFinalBoss: boolean;
+  WorldBossPopupPortrait: string;
+  WorldBossPopupNameTexture: string;
+}

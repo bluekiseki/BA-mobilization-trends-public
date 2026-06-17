@@ -68,7 +68,7 @@ const RubyText: React.FC<RubyTextProps> = ({ children }) => {
             <ruby key={index}>
               {part.base}
               {/* The small text above, styled with Tailwind CSS */}
-              <rt className="select-none text-[0.8em] text-slate-500 opacity-90">{part.text}</rt>
+              <rt className="select-none text-[0.8em] text-neutral-500 opacity-90">{part.text}</rt>
             </ruby>
           );
         }

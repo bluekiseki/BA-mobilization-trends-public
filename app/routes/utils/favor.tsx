@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaExternalLinkAlt, FaSearch, FaHeart } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaHeart } from 'react-icons/fa';
 import { data, useNavigate, type LoaderFunctionArgs } from 'react-router';
 
 // Utils & Stores
@@ -9,6 +9,7 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { cdn } from '~/utils/cdn';
 import { getInstance } from '~/middleware/i18next';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { PageHeader } from '~/components/common/PageHeader';
 import { localeLink } from '~/utils/localeLink';
 import { getGiftAffectionList } from '~/components/planner/StudentGrowth/giftAffectionList';
 
@@ -17,7 +18,7 @@ import { AffectionTab } from '~/components/planner/StudentGrowth/FaverTab';
 import StudentSearchDropdown from '~/components/StudentSearchDropdown';
 
 // Types
-import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, Student, StudentPortraitData } from '~/types/plannerData';
 import type { Route } from './+types/favor';
 import type { AppHandle } from '~/types/link';
 
@@ -29,13 +30,18 @@ const BULLET_TYPE_COLORS: Record<string, string> = {
   Chemical: '#137973',
 };
 
-const DEFAULT_PLAN_TEMPLATE = {
+interface PlanTemplate {
+  current: { affection: number; affectionExp: number };
+  target: { affection: number };
+}
+
+const DEFAULT_PLAN_TEMPLATE: PlanTemplate = {
   current: { affection: 1, affectionExp: 0 },
   target: { affection: 25 },
 };
 
-export async function loader({ context }: LoaderFunctionArgs) {
-  let i18n = getInstance(context);
+export function loader({ context }: LoaderFunctionArgs) {
+  const i18n = getInstance(context);
   return data({
     siteTitle: i18n.t('common:title'),
     title: i18n.t('planner:page.favorCalculator'),
@@ -72,12 +78,14 @@ export function links() {
 }
 
 export const handle: AppHandle = {
-  preload: (data) => {
-    if (!data?.locale) return [];
+  preload: (data: unknown) => {
+    const d = data as Record<string, unknown> | undefined;
+    if (!d?.locale) return [];
+    const locale = d.locale as Locale;
     return [
       {
         rel: 'preload',
-        href: cdn(`/schaledb.com/${getLocaleShortName(data?.locale)}.students.min.json`),
+        href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -87,15 +95,15 @@ export const handle: AppHandle = {
 
 export const FavorPlannerPage = () => {
   // 1. Data Loading State
-  const [allStudents, setAllStudents] = useState<StudentData>({});
+  const [allStudents, setAllStudents] = useState<Record<string, Student>>({});
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
-  const [iconInfoData, setIconInfoData] = useState<EventData['icons']>({} as any);
+  const [iconInfoData, setIconInfoData] = useState<EventData['icons'] | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 2. Local UI State (Independent of Global Store)
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-  const [localPlan, setLocalPlan] = useState(DEFAULT_PLAN_TEMPLATE);
+  const [localPlan, setLocalPlan] = useState<PlanTemplate>(DEFAULT_PLAN_TEMPLATE);
 
   const { t, i18n } = useTranslation('planner');
   const locale = i18n.language as Locale;
@@ -112,10 +120,10 @@ export const FavorPlannerPage = () => {
           fetch(cdn(`/ew/icon_img.json`)),
           fetch(cdn(`/ew/icon_info.json`)),
         ]);
-        const students = (await studentsRes.json()) as StudentData;
-        const portraits = (await portraitsRes.json()) as StudentPortraitData;
+        const students: Record<string, Student> = await studentsRes.json();
+        const portraits: StudentPortraitData = await portraitsRes.json();
 
-        Object.entries(students).forEach(([id, student]: any) => {
+        Object.entries(students).forEach(([id, student]) => {
           student.Portrait = portraits[parseInt(id)];
         });
 
@@ -129,7 +137,7 @@ export const FavorPlannerPage = () => {
         setLoading(false);
       }
     };
-    fetchData();
+    void fetchData();
   }, [locale]);
 
   // Handlers
@@ -138,19 +146,22 @@ export const FavorPlannerPage = () => {
     setLocalPlan(DEFAULT_PLAN_TEMPLATE); // Reset to default on new selection
   }, []);
 
-  const handlePlanChange = useCallback((field: string, value: any) => {
+  const handlePlanChange = useCallback((field: string, value: string | number | boolean) => {
     setLocalPlan((prev) => {
-      const next = { ...prev };
+      const next: PlanTemplate = { ...prev };
+      const numValue = typeof value === 'number' ? value : Number(value);
       if (field.includes('.')) {
         const [p, c] = field.split('.');
-        // @ts-ignore
-        next[p] = { ...next[p], [c]: value };
+        if (p === 'current' || p === 'target') {
+          // @ts-expect-error - dynamic nested object update
+          next[p] = { ...next[p], [c]: numValue };
+        }
       } else {
-        // @ts-ignore
-        next[field] = value;
+        // @ts-expect-error - dynamic object update
+        next[field as keyof PlanTemplate] = numValue;
       }
-      if (field == 'target.affection' && value < prev.current.affection) next.current.affection = value;
-      if (field == 'current.affection' && value > prev.target.affection) next.target.affection = value;
+      if (field == 'target.affection' && numValue < prev.current.affection) next.current.affection = numValue;
+      if (field == 'current.affection' && numValue > prev.target.affection) next.target.affection = numValue;
 
       return next;
     });
@@ -179,12 +190,12 @@ export const FavorPlannerPage = () => {
     if (targetUuid) {
       updatePlan(targetUuid, 'current.affection', localPlan.current.affection);
       updatePlan(targetUuid, 'target.affection', localPlan.target.affection);
-      navigate(localeLink(locale, '/planner/students'));
+      void navigate(localeLink(locale, '/planner/students'));
     }
   };
 
   const giftAffectionList = useMemo(() => {
-    if (!selectedStudentId || !allStudents[selectedStudentId] || !iconInfoData.Item) return [];
+    if (!selectedStudentId || !allStudents[selectedStudentId] || !iconInfoData || !iconInfoData.Item) return [];
     return getGiftAffectionList(allStudents[selectedStudentId], { icons: iconInfoData } as EventData);
   }, [selectedStudentId, allStudents, iconInfoData]);
 
@@ -200,51 +211,25 @@ export const FavorPlannerPage = () => {
 
   return (
     <div className="px-4 py-8 md:py-10 w-full mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold flex items-center gap-2 text-neutral-800 dark:text-neutral-100">
-          <FaHeart className="text-pink-500" />
-          <span>{t('page.favorCalculator')}</span>
-        </h1>
-        {isSelected && (
-          <button
-            onClick={handleGoToPlanner}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all font-medium text-sm border border-neutral-200 dark:border-neutral-700"
-          >
-            <span>{t('ui.openInPlanner', 'Open in Planner')}</span>
-            <FaExternalLinkAlt className="text-xs" />
-          </button>
-        )}
-      </div>
+      <PageHeader icon={<span className="text-red-400">♥</span>} title={t('page.favorCalculator')} description={t('page.description.favorCalculator')} />
 
-      {/* Search Section */}
+      {/* Student Selection Bar */}
       {!isSelected ? (
-        <section className="min-h-[45vh] flex flex-col justify-center items-center">
-          <div className="w-full max-w-md text-center space-y-5">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-500">
-              <FaSearch size={24} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-neutral-700 dark:text-neutral-200">{t('ui.selectStudentToStart', 'Select a student to start')}</h2>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{t('page.description.favorCalculator')}</p>
-            </div>
-            <div className="w-full relative z-10">
-              <StudentSearchDropdown students={allStudents as any} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
-            </div>
-          </div>
-        </section>
+        <div className="w-full relative z-10">
+          <StudentSearchDropdown students={allStudents} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
+        </div>
       ) : (
         <>
           {/* Selected Student Bar */}
           <div className="flex items-center gap-3 mb-5 p-2 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 animate-fadeIn">
             <div
               className="flex items-center justify-center rounded-full shrink-0 shadow"
-              style={{ width: '44px', height: '44px', backgroundColor: BULLET_TYPE_COLORS[allStudents[selectedStudentId!].BulletType] || '#888' }}
+              style={{ width: '44px', height: '44px', backgroundColor: BULLET_TYPE_COLORS[allStudents[selectedStudentId].BulletType] || '#888' }}
             >
-              {studentPortraits[selectedStudentId!] && <img src={`data:image/webp;base64,${studentPortraits[selectedStudentId!]}`} alt="icon" width={38} height={38} className="rounded-full" />}
+              {studentPortraits[selectedStudentId] && <img src={`data:image/webp;base64,${studentPortraits[selectedStudentId]}`} alt="icon" width={38} height={38} className="rounded-full" />}
             </div>
             <div className="flex-1 relative z-20">
-              <StudentSearchDropdown students={allStudents as any} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
+              <StudentSearchDropdown students={allStudents} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
             </div>
           </div>
 
@@ -259,6 +244,17 @@ export const FavorPlannerPage = () => {
               allStudents={allStudents}
               studentPortraits={studentPortraits}
             />
+
+            {/* Open in Planner Button */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleGoToPlanner}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-ba-btn-blue dark:bg-ba-btn-blue-dark text-neutral-900 dark:text-neutral-900 transition-opacity hover:opacity-80 cursor-pointer"
+              >
+                <span>{t('ui.openInPlanner', 'Open in Planner')}</span>
+                <FaExternalLinkAlt className="text-xs" />
+              </button>
+            </div>
           </div>
         </>
       )}

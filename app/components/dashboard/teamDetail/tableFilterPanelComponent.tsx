@@ -1,13 +1,14 @@
 import type { Student } from '~/types/data';
 import { InclusionUsage, type ExcludableStudentCondition, type IncludableStudentCondition, type PortraitData, type StudentData, type TableFilters, type UsageStats } from '../common';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StarRating } from '~/components/StarRatingProps';
+import { StarRating } from '~/components/StarRating';
 import { useSearchMatcher } from '~/utils/useSearchMatcher';
 import type { Locale } from '~/utils/i18n/config';
 import { FiCopy, FiCheck, FiCode, FiDownload, FiX, FiPlus, FiRotateCcw } from 'react-icons/fi';
 import { CustomNumberInput } from '~/components/CustomInput';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
+import { SearchableDropdown } from '~/components/SearchableDropdown';
 
 const StudentDropdownItem: React.FC<{
   studentId: number;
@@ -37,7 +38,8 @@ const StudentDropdownItem: React.FC<{
       if (!groupedStars.has(absStar)) {
         groupedStars.set(absStar, { normal: 0, assist: 0 });
       }
-      const current = groupedStars.get(absStar)!;
+      const current = groupedStars.get(absStar);
+      if (!current) continue;
       if (star > 0) current.normal += count;
       else current.assist += count;
     }
@@ -95,7 +97,7 @@ const StudentDropdownItem: React.FC<{
           {t_c('times')}
         </span>
       </div>
-      {isExpanded && (
+      {isExpanded && availableStars && (
         <div className="p-2 bg-neutral-100 dark:bg-neutral-900/70" onClick={handleDetailClick}>
           {type === 'includable' && (
             <>
@@ -164,7 +166,7 @@ const StudentDropdownItem: React.FC<{
             </div>
           )}
 
-          <button onClick={handleApply} disabled={isApplyDisabled} className="w-full bg-bluearchive-botton-blue hover:bg-sky-500 text-black p-1 mt-2 rounded disabled:opacity-50">
+          <button onClick={handleApply} disabled={isApplyDisabled} className="w-full bg-ba-btn-blue hover:bg-sky-500 text-black p-1 mt-2 rounded disabled:opacity-50">
             {t_c('confirm')}
           </button>
         </div>
@@ -184,19 +186,10 @@ const FilterConditionBuilder: React.FC<{
   const [searchText, setSearchText] = useState('');
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const { t, i18n } = useTranslation('dashboard');
   const locale = i18n.language as Locale;
 
   const matcher = useSearchMatcher(locale);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) setDropdownOpen(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [wrapperRef]);
 
   const studentOptions = useMemo(() => {
     const sortFn = ([keyA]: [string, Student], [keyB]: [string, Student]) => {
@@ -212,7 +205,7 @@ const FilterConditionBuilder: React.FC<{
         return matcher(s.Name, searchText) || s.SearchTags.some((tag) => matcher(tag, searchText));
       })
       .sort(sortFn);
-  }, [studentData, searchText, usageStats, matcher]); //
+  }, [studentData, searchText, usageStats, matcher]);
 
   const handleAddCondition = (condition: IncludableStudentCondition | ExcludableStudentCondition) => {
     onAdd(condition);
@@ -223,24 +216,25 @@ const FilterConditionBuilder: React.FC<{
 
   const handleToggleExpand = (id: number) => setExpandedId((prevId) => (prevId === id ? null : id));
 
+  const visibleOptions = studentOptions.slice(0, 50);
+
   return (
-    <div className="relative" ref={wrapperRef}>
-      <input
-        type="text"
-        placeholder={placeholderText}
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        onFocus={() => setDropdownOpen(true)}
-        className="w-full rounded-md border border-neutral-300 bg-white p-2 text-neutral-900 placeholder:text-neutral-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder:text-neutral-400"
-      />
-      {isDropdownOpen && (
+    <SearchableDropdown
+      value={searchText}
+      onChange={setSearchText}
+      isOpen={isDropdownOpen}
+      onOpenChange={setDropdownOpen}
+      placeholder={placeholderText}
+      inputClassName="w-full rounded-md border border-neutral-300 bg-white p-2 text-neutral-900 placeholder:text-neutral-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder:text-neutral-400"
+      itemCount={visibleOptions.length}
+      onSelectIndex={(i) => handleToggleExpand(Number(visibleOptions[i][0]))}
+    >
+      {(highlightedIndex, onHighlight) => (
         <div className="absolute z-10 mt-1 w-full max-h-83 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-lg dark:border-neutral-600 dark:bg-neutral-800">
-          {studentOptions.length > 0 ? (
-            studentOptions
-              .slice(0, 50)
-              .map(([id, s]) => (
+          {visibleOptions.length > 0 ? (
+            visibleOptions.map(([id, s], index) => (
+              <div key={Number(id)} data-index={index} onMouseEnter={() => onHighlight(index)} className={index === highlightedIndex ? 'bg-teal-500/10 dark:bg-teal-500/20' : ''}>
                 <StudentDropdownItem
-                  key={Number(id)}
                   student={s}
                   studentId={Number(id)}
                   usageStats={usageStats}
@@ -250,13 +244,14 @@ const FilterConditionBuilder: React.FC<{
                   onToggleExpand={() => handleToggleExpand(Number(id))}
                   onAdd={handleAddCondition}
                 />
-              ))
+              </div>
+            ))
           ) : (
             <div className="p-2 text-neutral-500 dark:text-neutral-400">{t('noResults')}</div>
           )}
         </div>
       )}
-    </div>
+    </SearchableDropdown>
   );
 };
 
@@ -283,7 +278,7 @@ export const TableFilterPanelComponent: React.FC<{
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(codeText).then(() => {
+    void navigator.clipboard.writeText(codeText).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -291,13 +286,13 @@ export const TableFilterPanelComponent: React.FC<{
 
   const handleApplyCode = () => {
     try {
-      const parsed = JSON.parse(codeText);
+      const parsed = JSON.parse(codeText) as { includable: IncludableStudentCondition[]; excludable: ExcludableStudentCondition[] };
       if (!Array.isArray(parsed.includable) || !Array.isArray(parsed.excludable)) {
         setCodeError(t('filter_import_error'));
         return;
       }
-      const validIncludable: IncludableStudentCondition[] = parsed.includable.filter((c: any) => typeof c.id === 'number' && Array.isArray(c.starValues) && typeof c.mustBeIncluded === 'boolean');
-      const validExcludable: ExcludableStudentCondition[] = parsed.excludable.filter((c: any) => typeof c.id === 'number' && typeof c.isHardExclude === 'boolean');
+      const validIncludable: IncludableStudentCondition[] = parsed.includable.filter((c) => typeof c.id === 'number' && Array.isArray(c.starValues) && typeof c.mustBeIncluded === 'boolean');
+      const validExcludable: ExcludableStudentCondition[] = parsed.excludable.filter((c) => typeof c.id === 'number' && typeof c.isHardExclude === 'boolean');
       handleTableFilterChange({ includable: validIncludable, excludable: validExcludable });
       setViewMode('gui');
     } catch {
@@ -374,7 +369,7 @@ export const TableFilterPanelComponent: React.FC<{
     onRemove: () => void;
   }> = ({ cond, onRemove }) => {
     const getIncludableTagText = (c: IncludableStudentCondition) => {
-      let tags = [];
+      const tags: string[] = [];
       if (c.mustBeIncluded) tags.push(t('tagMustInclude'));
       if (c.usage === InclusionUsage.Assist) tags.push(t('tagUsageAssist'));
       else if (c.usage === InclusionUsage.Twice) tags.push(t('tagUsageTwice'));
@@ -400,7 +395,7 @@ export const TableFilterPanelComponent: React.FC<{
           {'mustBeIncluded' in cond ? (
             <span className="text-sky-700 dark:text-sky-300 font-semibold">{getIncludableTagText(cond)}</span>
           ) : (
-            <span className="text-red-600 dark:text-red-400 font-semibold ml-1">{getExcludableTagText(cond as ExcludableStudentCondition)}</span>
+            <span className="text-red-600 dark:text-red-400 font-semibold ml-1">{getExcludableTagText(cond)}</span>
           )}
         </span>
         <button onClick={onRemove} className="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors">
@@ -448,12 +443,12 @@ export const TableFilterPanelComponent: React.FC<{
             <div className="ml-auto flex gap-2">
               <button
                 onClick={resetFilters}
-                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-bluearchive-botton-gray text-neutral-600 border-neutral-300 hover:brightness-95"
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-ba-btn-gray text-neutral-600 border-neutral-300 hover:brightness-95 dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600"
               >
                 <FiRotateCcw size={11} />
                 {t('filter_reset')}
               </button>
-              <label className="flex items-center gap-1.5 px-1 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-bluearchive-botton-gray text-neutral-600 border-neutral-300 hover:brightness-95">
+              <label className="flex items-center gap-1.5 px-1 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-ba-btn-gray text-neutral-600 border-neutral-300 hover:brightness-95 dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600">
                 <input type="checkbox" onChange={switchToCode} className="hidden" />
                 <FiCode size={11} />
                 {t('filter_view_code')}
@@ -483,7 +478,10 @@ export const TableFilterPanelComponent: React.FC<{
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-lg text-red-500 dark:text-red-400">{t('excludableStudentTitle')}</h3>
                 {growthPlans.length > 30 && (
-                  <button onClick={addAllMyStudentsAsAssist} className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded transition-colors">
+                  <button
+                    onClick={addAllMyStudentsAsAssist}
+                    className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium border border-neutral-300 bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+                  >
                     <FiPlus size={12} />
                     {t('add_my_students')}
                   </button>
@@ -521,23 +519,21 @@ export const TableFilterPanelComponent: React.FC<{
           />
           {codeError && <p className="text-red-500 text-xs">{codeError}</p>}
           <div className="flex gap-2 items-center">
-            <label
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-bluearchive-botton-blue text-black border-bluearchive-botton-blue`}
-            >
+            <label className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-ba-btn-blue text-black border-ba-btn-blue`}>
               <input type="checkbox" checked onChange={() => setViewMode('gui')} className="hidden" />
               <FiCode size={11} />
               {t('filter_view_code')}
             </label>
             <button
               onClick={handleCopy}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold transition-colors shadow-sm text-black ${copied ? 'bg-bluearchive-botton-yellow' : 'bg-bluearchive-botton-blue hover:brightness-110 active:brightness-95'}`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold transition-colors shadow-sm text-black ${copied ? 'bg-ba-btn-yellow' : 'bg-ba-btn-blue hover:brightness-110 active:brightness-95'}`}
             >
               {copied ? <FiCheck size={13} /> : <FiCopy size={13} />}
               {copied ? t('filter_copy_done') : t('filter_export')}
             </button>
             <button
               onClick={handleApplyCode}
-              className="flex items-center gap-1.5 bg-bluearchive-botton-gray hover:brightness-95 text-black px-4 py-1.5 text-xs font-bold transition-colors shadow-sm border border-neutral-300"
+              className="flex items-center gap-1.5 bg-ba-btn-gray hover:brightness-95 text-black px-4 py-1.5 text-xs font-bold transition-colors shadow-sm border border-neutral-300 dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600"
             >
               <FiDownload size={13} />
               {t('filter_import_apply')}

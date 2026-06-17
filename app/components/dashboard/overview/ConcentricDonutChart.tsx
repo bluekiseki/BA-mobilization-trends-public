@@ -2,8 +2,9 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
+import { ResponsiveContainer, PieChart, Pie, Sector } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
+import { getDifficultyFromScoreAndBoss } from '~/components/raid/Difficulty';
 import { calculateTimeFromScore, getTimeoutFromBoss } from '~/utils/calculateTimeFromScore';
 import type { GameServer } from '~/types/data';
 import ReactDOMServer from 'react-dom/server';
@@ -19,7 +20,8 @@ interface ChartData {
   name: string;
   value: number;
   difficultyName?: string;
-  [key: string]: any;
+  timeBinName?: string;
+  percent?: number;
 }
 
 interface FilterState {
@@ -70,7 +72,9 @@ const calculateDistribution = (players: PlayerData[], category: keyof PlayerData
   return Array.from(counts.entries()).map(([name, value]) => ({ name, value }));
 };
 
-const CustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }: any) => {
+type CustomizedLabelProps = Partial<PieLabelRenderProps> & { timeBinName?: string };
+
+const CustomizedLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, percent = 0, name, value = 0 }: CustomizedLabelProps) => {
   if (percent < 2) return null;
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -122,10 +126,10 @@ const TooltipContent = ({ data, fill }: { data: ChartData; fill: string }) => {
     <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3 border rounded-lg shadow-lg text-sm">
       <div className="flex items-center mb-1">
         <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: fill }} />
-        <p className="font-bold text-gray-800 dark:text-gray-100">{name}</p>
+        <p className="font-bold text-neutral-800 dark:text-neutral-100">{name}</p>
       </div>
-      <p className="text-gray-700 dark:text-gray-300">{t('tooltipPlayers', { count: value.toLocaleString() as any })}</p>
-      {percent !== undefined && <p className="text-gray-600 dark:text-gray-400">{t('tooltipRatio', { percent: percent.toFixed(1) })}</p>}
+      <p className="text-neutral-700 dark:text-neutral-300">{t('tooltipPlayers', { count: value })}</p>
+      {percent !== undefined && <p className="text-neutral-600 dark:text-neutral-400">{t('tooltipRatio', { percent: percent.toFixed(1) })}</p>}
     </div>
   );
 };
@@ -264,29 +268,42 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
               y="50%"
               textAnchor="middle"
               dominantBaseline="central"
-              className="cursor-pointer text-lg font-bold fill-current text-gray-800 dark:text-gray-200"
+              className="cursor-pointer text-lg font-bold fill-current text-neutral-800 dark:text-neutral-200"
               onClick={() => setFilter(null)}
             >
-              {filter ? `${filter.value}` : t('totalStatus')}
+              {filter ? filter.value : t('totalStatus')}
             </text>
             {filter && (
-              <text x="50%" y="50%" dy={20} textAnchor="middle" className="cursor-pointer text-xs fill-current text-gray-500 dark:text-gray-400" onClick={() => setFilter(null)}>
+              <text x="50%" y="50%" dy={20} textAnchor="middle" className="cursor-pointer text-xs fill-current text-neutral-500 dark:text-neutral-400" onClick={() => setFilter(null)}>
                 {t('clickToReset')}
               </text>
             )}
 
-            <Pie data={displayData.tier} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="39%" innerRadius="20%" onClick={(_, i) => handleFilter('tier', displayData.tier[i].name)}>
-              {displayData.tier.map((entry, index) => (
-                <Cell
-                  key={`cell-tier-${index}`}
-                  fill={tierColors[entry.name] || '#8884d8'}
-                  className={`cursor-pointer transition-opacity ${filter && filter.type === 'tier' && filter.value !== entry.name ? 'opacity-30' : 'opacity-100'}`}
-                  onMouseEnter={(e) => handleMouseEnter(entry, e, tierColors[entry.name])}
-                  onMouseLeave={handleMouseLeave}
-                  onTouchStart={(e) => handleTouchStart(entry, e, tierColors[entry.name])}
-                />
-              ))}
-            </Pie>
+            <Pie
+              data={displayData.tier}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius="39%"
+              innerRadius="20%"
+              onClick={(_, i) => handleFilter('tier', displayData.tier[i].name)}
+              shape={(props, index) => {
+                const entry = displayData.tier[index];
+                if (!entry) return <Sector {...props} />;
+                const fill = tierColors[entry.name] ?? '#8884d8';
+                return (
+                  <Sector
+                    {...props}
+                    fill={fill}
+                    className={`cursor-pointer transition-opacity ${filter?.type === 'tier' && filter.value !== entry.name ? 'opacity-30' : 'opacity-100'}`}
+                    onMouseEnter={(e) => handleMouseEnter(entry, e, fill)}
+                    onMouseLeave={handleMouseLeave}
+                    onTouchStart={(e) => handleTouchStart(entry, e, fill)}
+                  />
+                );
+              }}
+            />
 
             <Pie
               data={displayData.difficulty}
@@ -299,18 +316,22 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
               labelLine={false}
               label={<CustomizedLabel />}
               onClick={(_, i) => handleFilter('difficulty', displayData.difficulty[i].name)}
-            >
-              {displayData.difficulty.map((entry, index) => (
-                <Cell
-                  key={`cell-diff-${index}`}
-                  fill={difficultyColors[entry.name] || '#82ca9d'}
-                  className={`cursor-pointer transition-opacity ${filter && filter.type === 'difficulty' && filter.value !== entry.name ? 'opacity-30' : 'opacity-100'}`}
-                  onMouseEnter={(e) => handleMouseEnter(entry, e, difficultyColors[entry.name])}
-                  onMouseLeave={handleMouseLeave}
-                  onTouchStart={(e) => handleTouchStart(entry, e, difficultyColors[entry.name])}
-                />
-              ))}
-            </Pie>
+              shape={(props, index) => {
+                const entry = displayData.difficulty[index];
+                if (!entry) return <Sector {...props} />;
+                const fill = difficultyColors[entry.name] ?? '#82ca9d';
+                return (
+                  <Sector
+                    {...props}
+                    fill={fill}
+                    className={`cursor-pointer transition-opacity ${filter?.type === 'difficulty' && filter.value !== entry.name ? 'opacity-30' : 'opacity-100'}`}
+                    onMouseEnter={(e) => handleMouseEnter(entry, e, fill)}
+                    onMouseLeave={handleMouseLeave}
+                    onTouchStart={(e) => handleTouchStart(entry, e, fill)}
+                  />
+                );
+              }}
+            />
 
             <Pie
               data={displayData.timeBin}
@@ -321,19 +342,17 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
               outerRadius="100%"
               innerRadius="71%"
               labelLine={false}
-              label={({ name, percent, ...props }) => <CustomizedLabel {...props} percent={percent} name={(props as any).timeBinName} />}
-            >
-              {displayData.timeBin.map((entry, index) => (
-                <Cell
-                  key={`cell-time-${index}`}
-                  fill={difficultyColors[entry.difficultyName as keyof typeof difficultyColors]}
-                  className=""
-                  onMouseEnter={(e) => handleMouseEnter(entry, e, difficultyColors[entry.difficultyName as keyof typeof difficultyColors])}
-                  onMouseLeave={handleMouseLeave}
-                  onTouchStart={(e) => handleTouchStart(entry, e, difficultyColors[entry.difficultyName as keyof typeof difficultyColors])}
-                />
-              ))}
-            </Pie>
+              label={(labelProps) => {
+                const timeBinName = (labelProps as PieLabelRenderProps & { timeBinName?: string }).timeBinName;
+                return <CustomizedLabel {...labelProps} name={timeBinName} />;
+              }}
+              shape={(props, index) => {
+                const entry = displayData.timeBin[index];
+                if (!entry) return <Sector {...props} />;
+                const fill = difficultyColors[entry.difficultyName as keyof typeof difficultyColors];
+                return <Sector {...props} fill={fill} onMouseEnter={(e) => handleMouseEnter(entry, e, fill)} onMouseLeave={handleMouseLeave} onTouchStart={(e) => handleTouchStart(entry, e, fill)} />;
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -349,7 +368,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
             return (
               <div
                 key={diff.name}
-                className={` p-1.5 rounded-lg cursor-pointer transition-all duration-200 ${isActive ? 'bg-gray-200 dark:bg-neutral-700 ring-2 ring-blue-500' : 'bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700'} ${isFiltered ? 'opacity-50' : 'opacity-100'}`}
+                className={` p-1.5 rounded-lg cursor-pointer transition-all duration-200 ${isActive ? 'bg-neutral-200 dark:bg-neutral-700 ring-2 ring-blue-500' : 'bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700'} ${isFiltered ? 'opacity-50' : 'opacity-100'}`}
                 onClick={() => handleFilter('difficulty', diff.name)}
               >
                 <div className="flex items-center justify-between">
@@ -358,7 +377,7 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
                 </div>
                 <div className="mt-1 flex flex-raw items-center gap-x-0.5">
                   <div className="text-xs font-mono font-bold">{diff.value.toLocaleString()}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">({percentage}%)</div>
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">({percentage}%)</div>
                 </div>
               </div>
             );
@@ -398,7 +417,7 @@ const ConcentricDonutChart: React.FC<ConcentricDonutChartProps> = React.memo(({ 
             <button
               key={min}
               onClick={() => setTimeBinMinutes(min)}
-              className={`cursor-pointer px-4 py-1.5 text-sm rounded-md font-semibold transition-colors ${timeBinMinutes === min ? 'bg-blue-500 text-white shadow' : 'bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600'}`}
+              className={`cursor-pointer px-4 py-1.5 text-sm rounded-md font-semibold transition-colors ${timeBinMinutes === min ? 'bg-blue-500 text-white shadow' : 'bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
             >
               {min >= 1 ? `${min}${t('unitMinute')}` : `${min * 60}${t('unitSecond')}`}
             </button>
@@ -412,7 +431,7 @@ const ConcentricDonutChart: React.FC<ConcentricDonutChartProps> = React.memo(({ 
             }}
             min="1"
             max="60"
-            className="w-16 p-1 text-center border border-gray-300 dark:border-neutral-600 bg-transparent rounded-md"
+            className="w-16 p-1 text-center border border-neutral-300 dark:border-neutral-600 bg-transparent rounded-md"
           />
         </div>
       </div>

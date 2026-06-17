@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { RaidInfo } from '~/types/data';
-import { difficultyInfo } from '~/components/Difficulty';
+import { difficultyInfo } from '~/components/raid/Difficulty';
 import { CustomNumberInput } from '~/components/CustomInput';
 
 export interface RankRange {
@@ -126,7 +126,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
             className={`px-3 py-1.5 text-xs font-medium transition-all shadow-sm border
                             ${
                               minRankInput === opt.value
-                                ? 'bg-bluearchive-botton-yellow text-black border-bluearchive-botton-yellow ring-2 ring-yellow-200/50'
+                                ? 'bg-ba-btn-yellow text-black border-ba-btn-yellow ring-2 ring-yellow-200/50'
                                 : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed'
                             }`}
           >
@@ -147,7 +147,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
             className={`px-3 py-1.5 text-xs font-medium transition-all shadow-sm border
                             ${
                               maxRankInput === opt.value
-                                ? 'bg-bluearchive-botton-yellow text-black border-bluearchive-botton-yellow ring-2 ring-yellow-200/50'
+                                ? 'bg-ba-btn-yellow text-black border-ba-btn-yellow ring-2 ring-yellow-200/50'
                                 : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed'
                             }`}
           >
@@ -177,7 +177,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
           />
         </div>
 
-        <button onClick={handleInputConfirm} className="bg-bluearchive-botton-blue hover:bg-sky-500 active:bg-sky-600 text-black px-5 py-2 text-sm font-bold transition-colors shadow-sm">
+        <button onClick={handleInputConfirm} className="bg-ba-btn-blue hover:bg-sky-500 active:bg-sky-600 text-black px-5 py-2 text-sm font-bold transition-colors shadow-sm">
           {t_c('confirm')}
         </button>
       </div>

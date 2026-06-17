@@ -4,9 +4,12 @@
  * @returns
  */
 export function formatTimeToTimestamp(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  const milliseconds = Math.round(((Math.round(seconds * 30) % 30) * 100) / 3);
+  const fps30Seconds = Math.round(seconds * 30) / 30;
+
+  const minutes = Math.floor(fps30Seconds / 60);
+  const remainingSeconds = Math.floor(fps30Seconds % 60);
+
+  const milliseconds = Math.floor(Math.round(((fps30Seconds * 30) % 30) * 100) / 3);
   const pad = (num: number, digits: number) => String(num).padStart(digits, '0');
 
   return `${pad(minutes, 2)}:${pad(remainingSeconds, 2)}.${pad(milliseconds, 3)}`;

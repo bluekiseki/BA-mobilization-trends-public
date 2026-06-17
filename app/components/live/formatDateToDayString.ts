@@ -18,15 +18,12 @@ export const formatDateToDayString = (dateInput: Date | string, raidInfo: RaidIn
     hour12: false,
   })
     .formatToParts(initialDate)
-    .reduce(
-      (acc, part) => {
-        if (part.type !== 'literal') {
-          acc[part.type] = Number(part.value);
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    .reduce<Record<string, number>>((acc, part) => {
+      if (part.type !== 'literal') {
+        acc[part.type] = Number(part.value);
+      }
+      return acc;
+    }, {});
 
   // 3. Round the minutes in 10-minute increments.
   const roundedMinutes = Math.floor(kstParts.minute / 10) * 10;

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useIsDarkState } from '~/store/isDarkState';
 import { getBackgroundRatingColor, getCharacterStarValue, type Character, type PortraitData, type ReportEntryRank, type StudentData } from '../common';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { StarRating } from '~/components/StarRatingProps';
+import { StarRating } from '~/components/StarRating';
 import { StudentIcon } from '../studentIcon';
 
 const HASH_COLORS = [
@@ -94,7 +94,7 @@ export const RankUsageChart: React.FC<{
       const bucketStart = Math.floor((entry.typeRanking - 1) / bucketSize) * bucketSize + 1;
       if (!buckets.has(bucketStart)) buckets.set(bucketStart, { total: 0, students: new Map() });
 
-      const bucket = buckets.get(bucketStart)!;
+      const bucket = buckets.get(bucketStart) ?? { total: 0, students: new Map<string, number>() };
       bucket.total++;
 
       const uniqueChars = new Set(entry.t.flatMap((team) => [...team.m, ...team.s].filter((v) => v && Object.keys(v).length).map((c) => c.id)));
@@ -108,7 +108,7 @@ export const RankUsageChart: React.FC<{
 
     const allTopStudents = new Set<string>();
     const finalChartData = Array.from(buckets.entries()).map(([start, bucketData]) => {
-      const result: { [key: string]: any } = {
+      const result: Record<string, number | string> = {
         rank: `${startRank + start}-${startRank + start + bucketSize - 1}`,
       };
       let othersCount = 0;
@@ -147,8 +147,8 @@ export const RankUsageChart: React.FC<{
     const buckets = new Map<number, { total: number; stars: Map<number, number> }>();
     data.forEach((entry) => {
       const bucketStart = Math.floor((entry.typeRanking - 1) / bucketSize) * bucketSize + 1;
-      if (!buckets.has(bucketStart)) buckets.set(bucketStart, { total: 0, stars: new Map() });
-      const bucket = buckets.get(bucketStart)!;
+      if (!buckets.has(bucketStart)) buckets.set(bucketStart, { total: 0, stars: new Map<number, number>() });
+      const bucket = buckets.get(bucketStart) ?? { total: 0, stars: new Map<number, number>() };
       bucket.total++;
       entry.t.forEach((team) =>
         [...team.m, ...team.s]
@@ -162,10 +162,12 @@ export const RankUsageChart: React.FC<{
       );
     });
     return Array.from(buckets.entries()).map(([start, d]) => {
-      const result: { [key: string]: any } = {
+      const result: Record<string, number | string> = {
         rank: `${start}-${start + bucketSize - 1}`,
       };
-      d.stars.forEach((count, star) => (result[star] = (count / d.total) * 100));
+      d.stars.forEach((count, star) => {
+        result[star] = (count / d.total) * 100;
+      });
       return result;
     });
   }, [data, selectedCharId]);
@@ -217,13 +219,14 @@ export const RankUsageChart: React.FC<{
   const defaultChartDataMax = Math.max(
     ...defaultChartData.chartData.map((item) =>
       Object.entries(item)
-        .filter(([a, b]) => a != 'rank')
-        .map(([a, b]) => b)
-        .reduce((a, b) => a + b, 0),
+        .filter(([key]) => key !== 'rank')
+        .map(([, value]) => value as number)
+        .reduce((sum, val) => sum + val, 0),
     ),
+    0,
   );
 
-  const defaultChartDataTick = defaultChartDataMax > 1500 ? new Array(Math.ceil(defaultChartDataMax / 600)).fill(0).map((v, i) => i * 600) : undefined;
+  const defaultChartDataTick = defaultChartDataMax > 1500 ? new Array(Math.ceil(defaultChartDataMax / 600)).fill(0).map((_, i) => i * 600) : undefined;
 
   return (
     <>
@@ -266,7 +269,7 @@ export const RankUsageChart: React.FC<{
                                       <div
                                         className="h-0.5 rounded-full"
                                         style={{
-                                          width: `${entry.value}%`,
+                                          width: `${Number(entry.value ?? 0)}%`,
                                           backgroundColor: color,
                                         }}
                                       />
@@ -313,7 +316,7 @@ export const RankUsageChart: React.FC<{
                 <YAxis stroke="#94a3b8" unit="%" domain={[0, 100]} />
                 {/* <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }} /> */}
                 <Tooltip
-                  content={({ payload, label, active }) => {
+                  content={({ payload, label }) => {
                     if (label && payload?.length) {
                       return (
                         <div className="rounded border bg-white p-2 text-sm text-neutral-700 shadow-md dark:border-neutral-600 dark:bg-neutral-800 dark:text-white">
@@ -321,7 +324,7 @@ export const RankUsageChart: React.FC<{
                           <div> {label}</div>
 
                           {payload
-                            .filter((entry, i) => entry.value)
+                            .filter((entry) => entry.value)
                             .map((entry, i) => {
                               const starNumber = Number(String(entry.name).replace('★ ', ''));
 
@@ -338,7 +341,7 @@ export const RankUsageChart: React.FC<{
                                     <div
                                       className="h-1 rounded"
                                       style={{
-                                        width: `${entry.value}%`,
+                                        width: `${Number(entry.value ?? 0)}%`,
                                         backgroundColor: getBackgroundRatingColor(starNumber, isDark),
                                       }}
                                     />

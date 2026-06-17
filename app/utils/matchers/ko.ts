@@ -32,6 +32,7 @@ export default function match(target: string, query: string): boolean {
 
     return tJamo.includes(qJamo);
   } catch (e) {
+    console.error(e);
     // Ignore cases where disassembly fails (e.g., due to special characters)
     return false;
   }

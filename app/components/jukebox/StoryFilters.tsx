@@ -49,6 +49,7 @@ export interface StoryFiltersProps {
   // i18n
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (...args: any[]) => string;
+  matcher: (target: string, query: string) => boolean;
 }
 
 const SectionHeader = ({
@@ -68,9 +69,9 @@ const SectionHeader = ({
   t: (...args: any[]) => string;
 }) => (
   <div className="flex items-center justify-between mb-1.5">
-    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</span>
+    <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{label}</span>
     <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-400">
+      <span className="text-xs text-neutral-400">
         {activeCount}/{total}
       </span>
       {/* Select All (Show only when not all are selected) */}
@@ -96,7 +97,7 @@ const SectionSearch = ({ value, onChange, placeholder }: { value: string; onChan
     placeholder={placeholder}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full px-2.5 py-1.5 mb-1.5 text-xs bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-sky-400 dark:focus:border-sky-500 transition-colors"
+    className="w-full px-2.5 py-1.5 mb-1.5 text-xs bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-sky-400 dark:focus:border-sky-500 transition-colors"
   />
 );
 
@@ -118,36 +119,37 @@ export default function StoryFilters({
   playbackMode,
   setPlaybackMode,
   t,
+  matcher,
 }: StoryFiltersProps) {
   return (
     <div className="flex flex-col gap-5">
       {/* ── Options ── */}
-      <div className="flex flex-col gap-2.5 pb-3 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex flex-col gap-2.5 pb-3 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-600 dark:text-slate-400">{showStoryNames ? t('actions.hide_story_names') : t('actions.show_story_names')}</span>
+          <span className="text-xs text-neutral-600 dark:text-neutral-400">{showStoryNames ? t('actions.hide_story_names') : t('actions.show_story_names')}</span>
           <button
             onClick={() => setShowStoryNames((p) => !p)}
-            className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${showStoryNames ? 'bg-sky-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+            className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${showStoryNames ? 'bg-sky-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}
           >
             <span className={`inline-block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mt-[3px] ${showStoryNames ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </button>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-600 dark:text-slate-400">{t('playback.autoplay_scroll')}</span>
+          <span className="text-xs text-neutral-600 dark:text-neutral-400">{t('playback.autoplay_scroll')}</span>
           <button
             onClick={() => setAutoScrollEnabled((p) => !p)}
-            className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${isAutoScrollEnabled ? 'bg-sky-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+            className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${isAutoScrollEnabled ? 'bg-sky-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}
           >
             <span className={`inline-block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mt-[3px] ${isAutoScrollEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </button>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-600 dark:text-slate-400">{t('playback.options')}</span>
+          <span className="text-xs text-neutral-600 dark:text-neutral-400">{t('playback.options')}</span>
           <button
             onClick={() => setPlaybackMode((p) => (p === 'autoplay' ? 'repeat' : p === 'repeat' ? 'off' : 'autoplay'))}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors"
           >
             {playbackMode === 'autoplay' && (
               <>
@@ -184,16 +186,13 @@ export default function StoryFilters({
         <SectionSearch value={sectionSearch.mainStories} onChange={(v) => setSectionSearch((p) => ({ ...p, mainStories: v }))} placeholder={t('search.placeholder')} />
         <div className="max-h-36 overflow-y-auto space-y-0.5 pr-1">
           {mainStoryList
-            .filter(([, name]) => !sectionSearch.mainStories || name.toLowerCase().includes(sectionSearch.mainStories.toLowerCase()))
+            .filter(([, name]) => !sectionSearch.mainStories || matcher(name, sectionSearch.mainStories))
             .map(([id, name]) => (
-              <label key={id} className="flex items-center gap-2 px-1.5 py-1 rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                <input
-                  type="checkbox"
-                  checked={!!spoilerFilters.mainStories[id]}
-                  onChange={() => handleFilterToggle('mainStories', id)}
-                  className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer"
-                />
-                <span className={`text-xs leading-snug ${spoilerFilters.mainStories[id] ? 'text-slate-900 dark:text-slate-100 font-medium' : 'text-slate-600 dark:text-slate-400'}`}>{name}</span>
+              <label key={id} className="flex items-center gap-2 px-1.5 py-1 rounded-md cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                <input type="checkbox" checked={spoilerFilters.mainStories[id]} onChange={() => handleFilterToggle('mainStories', id)} className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer" />
+                <span className={`text-xs leading-snug ${spoilerFilters.mainStories[id] ? 'text-neutral-900 dark:text-neutral-100 font-medium' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                  {name}
+                </span>
               </label>
             ))}
         </div>
@@ -212,16 +211,16 @@ export default function StoryFilters({
         <SectionSearch value={sectionSearch.eventStories} onChange={(v) => setSectionSearch((p) => ({ ...p, eventStories: v }))} placeholder={t('search.placeholder')} />
         <div className="max-h-36 overflow-y-auto space-y-0.5 pr-1">
           {eventStoryList
-            .filter(([, name]) => !sectionSearch.eventStories || name.toLowerCase().includes(sectionSearch.eventStories.toLowerCase()))
+            .filter(([, name]) => !sectionSearch.eventStories || matcher(name, sectionSearch.eventStories))
             .map(([id, name]) => (
-              <label key={id} className="flex items-center gap-2 px-1.5 py-1 rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
+              <label key={id} className="flex items-center gap-2 px-1.5 py-1 rounded-md cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
                 <input
                   type="checkbox"
-                  checked={!!spoilerFilters.eventStories[id]}
+                  checked={spoilerFilters.eventStories[id]}
                   onChange={() => handleFilterToggle('eventStories', id)}
                   className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer"
                 />
-                <span className={`text-xs leading-snug truncate ${spoilerFilters.eventStories[id] ? 'text-slate-900 dark:text-slate-100 font-medium' : 'text-slate-600 dark:text-slate-400'}`}>
+                <span className={`text-xs leading-snug truncate ${spoilerFilters.eventStories[id] ? 'text-neutral-900 dark:text-neutral-100 font-medium' : 'text-neutral-600 dark:text-neutral-400'}`}>
                   {name}
                 </span>
               </label>
@@ -243,17 +242,19 @@ export default function StoryFilters({
         <div className="max-h-36 overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-0.5">
             {studentFilterList
-              .filter(([, s]) => !sectionSearch.favorStudents || s.Name.toLowerCase().includes(sectionSearch.favorStudents.toLowerCase()))
+              .filter(([, s]) => !sectionSearch.favorStudents || matcher(s.Name, sectionSearch.favorStudents))
               .map(([id, s]) => (
-                <label key={id} className="flex items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                <label key={id} className="flex items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
                   <input
                     type="checkbox"
-                    checked={!!spoilerFilters.favorStudents[id]}
+                    checked={spoilerFilters.favorStudents[id]}
                     onChange={() => handleFilterToggle('favorStudents', id)}
                     className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer shrink-0"
                   />
                   <img className="h-4 w-4 rounded-full" src={`data:image/webp;base64,${s.Portrait}`} alt={s.Name}></img>
-                  <span className={`text-xs truncate ${spoilerFilters.favorStudents[id] ? 'text-slate-900 dark:text-slate-100 font-medium' : 'text-slate-600 dark:text-slate-400'}`}>{s.Name}</span>
+                  <span className={`text-xs truncate ${spoilerFilters.favorStudents[id] ? 'text-neutral-900 dark:text-neutral-100 font-medium' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                    {s.Name}
+                  </span>
                 </label>
               ))}
           </div>
@@ -278,17 +279,19 @@ export default function StoryFilters({
         <div className="max-h-36 overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-0.5">
             {studentFilterList
-              .filter(([, s]) => !sectionSearch.memorialStudents || s.Name.toLowerCase().includes(sectionSearch.memorialStudents.toLowerCase()))
+              .filter(([, s]) => !sectionSearch.memorialStudents || matcher(s.Name, sectionSearch.memorialStudents))
               .map(([id, s]) => (
-                <label key={id} className="flex items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                <label key={id} className="flex items-center gap-1.5 px-1.5 py-1 rounded-md cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
                   <input
                     type="checkbox"
-                    checked={!!spoilerFilters.memorialStudents[id]}
+                    checked={spoilerFilters.memorialStudents[id]}
                     onChange={() => handleFilterToggle('memorialStudents', id)}
                     className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer shrink-0"
                   />
                   <img className="h-4 w-4 rounded-full" src={`data:image/webp;base64,${s.Portrait}`} alt={s.Name}></img>
-                  <span className={`text-xs truncate ${spoilerFilters.memorialStudents[id] ? 'text-slate-900 dark:text-slate-100 font-medium' : 'text-slate-600 dark:text-slate-400'}`}>{s.Name}</span>
+                  <span className={`text-xs truncate ${spoilerFilters.memorialStudents[id] ? 'text-neutral-900 dark:text-neutral-100 font-medium' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                    {s.Name}
+                  </span>
                 </label>
               ))}
           </div>

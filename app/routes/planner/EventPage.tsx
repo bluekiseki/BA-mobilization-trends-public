@@ -2,19 +2,18 @@
 import { useState, useEffect } from 'react';
 import { data, useLoaderData, useParams, type LoaderFunctionArgs } from 'react-router';
 import { EventInfo } from '~/components/planner/EventInfo';
-import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, EventSeason, IconData, IconInfos, StudentData, StudentPortraitData } from '~/types/plannerData';
 // import iconDataInfoModule from "~/data/event/icon_info.json"
 // import iconDataAllModule from "~/data/event/icon_img.json"
 import { useTranslation } from 'react-i18next';
 
-import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import type { loader as rootLorder } from '~/root';
+import { DEFAULT_LOCALE, getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 import eventList from '~/data/jp/eventList.json';
 import { getlocaleMethond } from '~/components/planner/common/locale';
 import type { Route } from './+types/EventPage';
 import { getInstance } from '~/middleware/i18next';
-import type { AppHandle } from '~/types/link';
+import type { AppHandle, AppUIMatch } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { EventPlannerLoader } from '~/components/planner/event/EventPlannerLoader';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
@@ -24,17 +23,18 @@ const fetchEventSeasonData = async (eventId: number) => {
   try {
     const eventDataModules = import.meta.glob('/app/data/event/event.season.*.json');
     const modulePath = `/app/data/event/event.season.${eventId}.json`;
-    const eventDataModule: any = await eventDataModules[modulePath]();
-
-    return eventDataModule;
+    // console.log(`eventDataModules[${modulePath}] `,eventDataModules[modulePath] )
+    if (!eventDataModules[modulePath]) return null;
+    const eventDataModule = await eventDataModules[modulePath]();
+    return eventDataModule as EventSeason;
   } catch (e) {
     console.warn('e', e);
     return null;
   }
 };
 
-export async function loader({ context, params, request }: LoaderFunctionArgs) {
-  let i18n = getInstance(context);
+export async function loader({ context, params }: LoaderFunctionArgs) {
+  const i18n = getInstance(context);
   const locale = i18n.language as Locale;
   const evnetSeasonData = await fetchEventSeasonData(Number(params.eventId));
   if (evnetSeasonData == null) {
@@ -46,7 +46,7 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
     // title: i18n.t("dashboardIndex:title"),
     description: i18n.t('planner:page.plannerescription'),
     rerun: i18n.t('planner:common.rerun'),
-    evnetSeasonData: await fetchEventSeasonData(Number(params.eventId)),
+    evnetSeasonData: evnetSeasonData, //await fetchEventSeasonData(Number(params.eventId)),
   });
 }
 
@@ -58,19 +58,19 @@ export function meta({ loaderData, params }: Route.MetaArgs) {
     (eventId > 10000 && eventId < 60000 ? `[${loaderData.rerun}] ` : '') +
     (eventList[String(eventId < 60000 ? eventId % 10000 : eventId) as keyof typeof eventList][locale_key] ||
       eventList[String(eventId % 10000) as keyof typeof eventList]['Jp'] ||
-      name ||
       'No event information');
 
   return createMetaDescriptor(format_name + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp');
 }
 
 export const handle: AppHandle = {
-  preload: (data) => {
-    const { eventId } = useLoaderData<typeof rootLorder>().params;
+  preload: (data, match?: AppUIMatch) => {
+    const eventId = match?.params.eventId;
+    const locale = (data as { locale?: Locale })?.locale || DEFAULT_LOCALE;
     return [
       {
         rel: 'preload',
-        href: cdn(`/schaledb.com/${getLocaleShortName(data?.locale)}.students.min.json`),
+        href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -80,12 +80,12 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
-      ...createLinkHreflang(`/planner/event/${eventId}`),
+      ...(eventId ? createLinkHreflang(`/planner/event/${eventId}`) : []),
     ];
   },
 };
 
-export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+export function headers({}: Route.HeadersArgs) {
   if (process.env.NODE_ENV === 'production')
     return {
       'Cache-Control': CACHE_CONTROL_CONFIG,
@@ -126,16 +126,16 @@ export const EventPage = () => {
         // const eventDataModules = import.meta.glob('/app/data/event/event.*.json');
         // const modulePath = `/app/data/event/event.${eventId}.json`;
         // const eventDataModule: any = await eventDataModules[modulePath]()
-        const eventDataModule = (await (await fetch(cdn(`/ew/event.${eventId}.json`))).json()) as any;
+        const eventDataModule: EventData = await (await fetch(cdn(`/ew/event.${eventId}.json`))).json();
 
         // const eventDataModule = (await import(/* @vite-ignore */ `/app/data/event/event.${eventId}.json`)).default;
         // const iconDataInfoModule = (await import(`~/data/event/icon_info.json`)).default;
-        const iconDataInfoModule = (await (await fetch(cdn('/ew/icon_info.json'))).json()) as any;
+        const iconDataInfoModule: Partial<IconInfos> = await (await fetch(cdn('/ew/icon_info.json'))).json();
         for (const key in iconDataInfoModule) {
-          eventDataModule.icons[key] = {
-            ...eventDataModule.icons[key],
-            ...iconDataInfoModule[key as keyof typeof iconDataInfoModule],
-          };
+          const k = key as keyof IconInfos;
+          Object.assign(eventDataModule.icons, {
+            [k]: { ...eventDataModule.icons[k], ...iconDataInfoModule[k] },
+          });
         }
         setEventData(eventDataModule);
 
@@ -166,18 +166,16 @@ export const EventPage = () => {
         const modulePath = `/app/data/event/icon_img.${eventId}.json`;
         const iconDataModule: any = await iconModules[modulePath]()
         */
-        const iconDataModule = (await (await fetch(cdn(`/ew/icon_img.${eventId}.json`))).json()) as any;
-        const iconDataAllModule = (await (await fetch(cdn(`/ew/icon_img.json`))).json()) as any;
-        let ext = {
+        const iconDataModule: IconData = await (await fetch(cdn(`/ew/icon_img.${eventId}.json`))).json();
+        const iconDataAllModule: IconData = await (await fetch(cdn(`/ew/icon_img.json`))).json();
+        const ext: IconData = {
           Item: {},
           Equipment: {},
         };
         for (const key in iconDataModule) {
-          const baseData = (iconDataAllModule[key as keyof typeof iconDataAllModule] as any) || {};
-
-          ext[key as keyof typeof ext] = {
+          ext[key] = {
             ...iconDataModule[key],
-            ...baseData,
+            ...iconDataAllModule[key],
           };
         }
         setIconData(ext);
@@ -198,7 +196,7 @@ export const EventPage = () => {
       }
     };
 
-    Promise.all([fetchEventData(), fetchStudentData(), fetchIconData()]).finally(() => setIsLoading(false));
+    void Promise.all([fetchEventData(), fetchStudentData(), fetchIconData()]).finally(() => setIsLoading(false));
 
     // Reset all related states when the event changes
     // setShopResult(null)
@@ -208,20 +206,22 @@ export const EventPage = () => {
   }, [eventId]);
 
   // --- [Style Definitions] ---
-  const containerBase = 'min-h-screen bg-gray-50 dark:bg-neutral-900 text-gray-800 dark:text-gray-200 transition-colors duration-300';
+  const containerBase = 'min-h-screen bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 transition-colors duration-300';
 
   return (
     <div className={containerBase}>
       {/* 1. Global Header (Event Info) */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-800">
+      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <EventInfo
-            name={evnetSeasonData.Name}
-            eventId={Number(eventId) || 0}
-            startTime={evnetSeasonData.EventContentOpenTime}
-            endTime={evnetSeasonData.EventContentCloseTime || evnetSeasonData.ExtensionTime}
-            eventContentTypeStr={evnetSeasonData.EventContentTypeStr}
-          />
+          {evnetSeasonData && (
+            <EventInfo
+              name={evnetSeasonData.Name}
+              eventId={eventId || 0}
+              startTime={evnetSeasonData.EventContentOpenTime}
+              endTime={evnetSeasonData.EventContentCloseTime || evnetSeasonData.ExtensionTime}
+              eventContentTypeStr={evnetSeasonData.EventContentTypeStr}
+            />
+          )}
         </div>
       </div>
 

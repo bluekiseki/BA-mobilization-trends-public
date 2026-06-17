@@ -1,5 +1,9 @@
 import { useState, type ReactElement } from 'react';
 
+interface ContractResponse {
+  data?: string;
+}
+
 export default function ContactButton({ children }: { children: ReactElement | string }) {
   const [loading, setLoading] = useState(false);
 
@@ -8,7 +12,7 @@ export default function ContactButton({ children }: { children: ReactElement | s
       setLoading(true);
 
       const response = await fetch('/api/contract');
-      const json = (await response.json()) as any;
+      const json: ContractResponse = await response.json();
 
       if (!json?.data) throw new Error('Error');
 
@@ -25,7 +29,7 @@ export default function ContactButton({ children }: { children: ReactElement | s
   };
 
   return (
-    <span onClick={handleSendEmail} style={{ cursor: loading ? 'wait' : 'pointer' }}>
+    <span onClick={() => void handleSendEmail()} style={{ cursor: loading ? 'wait' : 'pointer' }}>
       {children}
     </span>
   );

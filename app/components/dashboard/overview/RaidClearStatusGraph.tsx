@@ -1,7 +1,7 @@
 // app/components/dashboard/RaidClearStatusGraph.tsx
 
 import { useEffect, useMemo, useState } from 'react';
-import { getDifficultyFromScoreAndBoss, difficultyInfo, type DifficultyName } from '~/components/Difficulty';
+import { getDifficultyFromScoreAndBoss, difficultyInfo, type DifficultyName } from '~/components/raid/Difficulty';
 import { calculateScoreFromTime, calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import type { GameServer } from '~/types/data';
 import DifficultySettingsPanel, { type DifficultySettings } from './DifficultySettingsPanel';
@@ -102,11 +102,11 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
     // console.log('useEffect(() => {', flag);
 
     // Create a new object based on previous configuration values
-    const newSettings = { ...difficultySettings } as DifficultySettings;
+    const newSettings = { ...difficultySettings }; // as DifficultySettings;
     let hasChanges = false;
 
     for (const { name } of difficultyInfo) {
-      const diffArray = timeDataByDifficulty[name]?.filter((v, i) => startRank + i <= rankRange_max) || [];
+      const diffArray = timeDataByDifficulty[name]?.filter((_v, i) => startRank + i <= rankRange_max) || [];
       if (!diffArray.length && flag != 'before') flag = 'after';
       else flag = 'do';
 
@@ -125,21 +125,6 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
         const calculatedTimeout = scoreDiffp0 + scoreDiffRange;
         const rawBinSize = scoreDiffRange / dinDiffCnt;
         const cleanBinSize = getCleanBinSize(rawBinSize);
-
-        //         console.log('1234',{
-
-        //           rankRange_max,
-        // binAllCnt,
-        // itemAllCnt,
-        //           scoreDiffp9,
-        //           startRank, endRank,
-        // scoreDiffp0,
-        // scoreDiffRange,
-        // calculatedBinSize,
-        // calculatedTimeout,
-        // rawBinSize,
-        // cleanBinSize,
-        //         })
 
         // Execute update logic only when values differ from existing ones
         if (newSettings[name]?.binSize !== calculatedBinSize || newSettings[name]?.timeout !== calculatedTimeout) {
@@ -271,7 +256,7 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
       <div className="flex justify-between items-center mb-2">
         <div className="font-bold"></div>
         {/* Setting Panel toggle button */}
-        <button onClick={() => setIsSettingsVisible(!isSettingsVisible)} className="text-sm px-3 py-1 rounded-md bg-gray-200 dark:bg-neutral-700 hover:bg-gray-300 dark:hover:bg-neutral-600">
+        <button onClick={() => setIsSettingsVisible(!isSettingsVisible)} className="text-sm px-3 py-1 rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600">
           {t('clearTime')} {isSettingsVisible ? t('hideSettings') : t('showSettings')}
         </button>
       </div>
@@ -281,13 +266,13 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
         {histogramData.length > 0 ? (
           <ScoreHistogram data={histogramData} calculateScoreFromTime={(s: number, d: DifficultyName) => calculateScoreFromTime(s, d, boss, server, id) || 0} />
         ) : (
-          <div className="text-center text-gray-500 py-10">{t('noData')}</div>
+          <div className="text-center text-neutral-500 py-10">{t('noData')}</div>
         )}
       </div>
 
       {isSettingsVisible && (
         <div className="space-y-4">
-          <div className="bg-gray-50 dark:bg-neutral-800/50 p-3 rounded-lg border dark:border-neutral-700">
+          <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg border dark:border-neutral-700">
             <h3 className="font-bold mb-2 text-center">{t('rankRangeSettings')}</h3>
             <div className="flex items-center justify-center gap-2">
               <CustomNumberInput

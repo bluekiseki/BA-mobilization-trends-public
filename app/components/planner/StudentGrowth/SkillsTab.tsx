@@ -3,7 +3,7 @@
 import { useTranslation } from 'react-i18next';
 import { FiInfo } from 'react-icons/fi';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { EventData, EXSkill, IconData, Student } from '~/types/plannerData';
+import type { EventData, EXSkill, IconData, Student, Skill } from '~/types/plannerData';
 import { calcSkillCostNeeds } from '~/utils/calculatedGrowthNeeds';
 import { SkillDisplay } from './SkillDisplay';
 import { MinMaxControls } from './MinMaxControls';
@@ -24,7 +24,7 @@ export const SKILL_CONFIG = [
 interface SkillsTabProps {
   plan: GrowthPlan;
   studentInfo: Student | null;
-  handlePlanChange: (field: string, value: any, isNumeric?: boolean) => void;
+  handlePlanChange: (field: string, value: string | number, isNumeric?: boolean) => void;
   iconData?: IconData;
   eventData?: EventData;
 }
@@ -32,19 +32,19 @@ interface SkillsTabProps {
 export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, eventData }: SkillsTabProps) => {
   const { t } = useTranslation('planner');
 
-  if (!studentInfo) return <div className="text-center p-4 text-xs text-gray-400">Please select a student.</div>;
+  if (!studentInfo) return <div className="text-center p-4 text-xs text-neutral-400">Please select a student.</div>;
 
   return (
-    <div className="flex flex-col divide-y divide-gray-200 dark:divide-neutral-700">
+    <div className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700">
       {SKILL_CONFIG.map(({ id, labelKey, skillKey, maxLevel }) => {
-        // @ts-ignore
-        const mainSkillData = studentInfo.Skills[skillKey];
+        const skillValue = studentInfo.Skills[skillKey as keyof typeof studentInfo.Skills];
+        const mainSkillData: Skill | EXSkill = skillValue || ({} as Skill);
 
         const skillRenderList = skillKey === 'Ex' && (mainSkillData as EXSkill)?.ExtraSkills ? (mainSkillData as EXSkill).ExtraSkills : [mainSkillData];
 
         // Bond Gear hint: normal skill upgrades when affection >= 20 AND gear T2
-        const hasGearNormalUpgrade = id === 'normal' && !!(studentInfo.Skills as any).GearPublic;
-        const hasGear = !!(studentInfo.Gear && 'TierUpMaterial' in studentInfo.Gear);
+        const hasGearNormalUpgrade = id === 'normal' && studentInfo.Skills.GearPublic !== undefined;
+        const hasGear = studentInfo.Gear !== undefined && 'TierUpMaterial' in studentInfo.Gear;
         const targetMeetsGearCondition = plan.target.affection >= 20 && (plan.target.gear ?? 0) >= 2;
         const showGearHint = hasGearNormalUpgrade && hasGear && !targetMeetsGearCondition;
 
@@ -59,8 +59,8 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
             {}
             <div className="flex-1 min-w-0 overflow-hidden">
               {skillRenderList &&
-                skillRenderList.map((s: any, idx: number) => (
-                  <div key={idx} className={idx > 0 ? 'mt-2 pt-2 border-t border-dashed border-gray-100 dark:border-neutral-800' : ''}>
+                skillRenderList.map((s: Skill, idx: number) => (
+                  <div key={idx} className={idx > 0 ? 'mt-2 pt-2 border-t border-dashed border-neutral-100 dark:border-neutral-800' : ''}>
                     <SkillDisplay
                       studentInfo={studentInfo}
                       skillKey={skillKey}
@@ -103,7 +103,7 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
                   <select
                     value={plan.current[id]}
                     onChange={(e) => handlePlanChange(`current.${id}`, e.target.value, true)}
-                    className="w-full p-1.5 text-sm border border-gray-200 rounded bg-white dark:bg-neutral-700 dark:border-neutral-600 text-center"
+                    className="w-full p-1.5 text-sm border border-neutral-200 rounded bg-white dark:bg-neutral-700 dark:border-neutral-600 text-center"
                   >
                     {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
                       <option key={level} value={level}>

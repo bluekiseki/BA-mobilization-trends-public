@@ -1,5 +1,5 @@
 import type { ReportEntry } from '~/components/dashboard/common';
-import type { DifficultyName } from '~/components/Difficulty';
+import type { DifficultyName } from '~/components/raid/Difficulty';
 
 interface BossData {
   d: ReportEntry[];

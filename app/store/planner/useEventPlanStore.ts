@@ -3,87 +3,23 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useMemo, useCallback } from 'react';
-import type { CustomGameItem } from '~/components/planner/minigame/CustomGamePlanner';
-import type { CardShopConfig } from '~/components/planner/minigame/CardShopPlanner';
-import { DefaultDiceRaceSimConfig, type DiceRaceSimConfig } from '~/components/planner/minigame/DiceRacePlanner';
-import type { FortuneGachaAvgRates } from '~/components/planner/minigame/FortuneGachaPlanner';
-import { DefaultTreasureSimConfig, type TreasureSimConfig } from '~/components/planner/minigame/TreasurePlanner';
-import { getDefaultApConfig, type ApCalculatorConfig } from '~/components/planner/ApCalculatorConfig';
-import { defaultDreamMakerConfig, type DreamMakerSimConfig, type DreamMakerSimResult } from '~/components/planner/minigame/dreamMaker/type';
-import { defaultCardMatchSimConfig, type CardMatchSimConifg } from '~/components/planner/minigame/CardMatchPlanner';
-import { defaultClueSearchConfig, type ClueSearchConfig } from '~/components/planner/minigame/ClueSearchPlanner';
-import type { CcgRunInput } from '~/components/planner/minigame/MinigameCCGPlanner';
+import type { CustomGameItem } from '~/types/minigame/customGame';
+import type { CardShopConfig } from '~/types/minigame/cardShop';
+import { DefaultDiceRaceSimConfig, type DiceRaceSimConfig } from '~/types/minigame/diceRace';
+import type { FortuneGachaAvgRates } from '~/types/minigame/fortuneGacha';
+import { DefaultTreasureSimConfig, type TreasureSimConfig } from '~/types/minigame/treasure';
+import { getDefaultApConfig } from '~/components/planner/ApCalculatorConfig';
+import { type ApCalculatorConfig } from '~/types/minigame/apCalculator';
+import { defaultDreamMakerConfig, type DreamMakerSimConfig, type DreamMakerSimResult } from '~/types/minigame/dreamMaker';
+import { defaultCardMatchSimConfig, type CardMatchSimConifg } from '~/types/minigame/cardMatch';
+import { defaultClueSearchConfig, type ClueSearchConfig } from '~/types/minigame/clueSearch';
+import { defaultFieldEventConfig, type FieldEventConfig } from '~/types/minigame/fieldEvent';
+import { defaultInteractiveWorldRaidConfig, type InteractiveWorldRaidConfig } from '~/types/minigame/interactiveWorldRaid';
+import { defaultRoadPuzzleConfig, type RoadPuzzleConfig } from '~/types/minigame/roadPuzzle';
+import type { CcgRunInput } from '~/types/minigame/ccg';
+import { type EventPlan, type StagePrio } from '~/types/eventPlan';
 
-type StagePrio = 'include' | 'exclude' | 'priority';
-
-// All user input state for a single event
-export interface EventPlan {
-  // BonusSelector
-  selectedStudents: string[];
-  // CurrencyStatus
-  ownedCurrency: Record<number, number>;
-  // ShopPlanner
-  purchaseCounts: Record<number, number>;
-  alreadyPurchasedCounts: Record<number, number>;
-  // FarmingPlanner
-  runCounts: Record<number, number>;
-  firstClears: Record<number, boolean>;
-  stagePrio: Record<number, StagePrio>;
-  // MissionPlanner
-  completedMissions: number[]; // Store Set as array
-  minigameMissionStatus: Record<number, boolean>;
-  durationDays: number;
-  // ApCalculator
-  apConfig: ApCalculatorConfig;
-  // Minigame Planners
-  finalCardFlips: number;
-
-  // TreasurePlanner
-  treasureStartRound: number;
-  treasureEndRound: number;
-  treasureFinalTotalRounds: number; // New
-  treasureSimConfig: TreasureSimConfig; // New
-
-  // BoxGachaPlanner
-  boxGachaStartBox: number;
-  boxGachaEndBox: number;
-  boxGachaFinalTotalBoxes: number; // New
-
-  // CustomGamePlanner
-  customGamePlays: number;
-  customGameCost: CustomGameItem | null; // New
-  customGameRewards: CustomGameItem[]; // New
-  customGameOneTimeRewards: CustomGameItem[]; // New
-
-  // CardShopPlanner
-  cardShopConfig: CardShopConfig; // New
-
-  // DiceRacePlanner (fixedDicePriority is number[] when stored)
-  // diceRaceSimConfig: Omit<DiceRaceSimConfig, 'fixedDicePriority'> & { fixedDicePriority: number[] }; // New
-  diceRaceSimConfig: DiceRaceSimConfig; // New
-
-  // FortuneGachaPlanner
-  fortuneGachaSimRuns: number; // New
-  fortuneGachaFinalPulls: number; // New
-  fortuneGachaAvgRates: FortuneGachaAvgRates | null; // New
-
-  // DreamMakerPlanner properties
-  dreamMakerSimConfig: DreamMakerSimConfig;
-  dreamMakerClaimedMissions: number[];
-  dreamMakerInteractiveResult: DreamMakerSimResult | null;
-
-  // MinigameCCGPlanner
-  minigameCCGConfig: CcgRunInput[]; // New
-
-  cardMatchSimConfig: CardMatchSimConifg | null;
-
-  // ClueSearchPlanner
-  clueSearchConfig: ClueSearchConfig;
-
-  // TotalRewardPlanner
-  totalRewardCurrentAmount: number;
-  totalRewardTargetAmount: number;
-}
+export type { EventPlan };
 
 interface EventPlanStoreState {
   plans: Record<string, Partial<EventPlan>>; // eventId as key
@@ -97,6 +33,7 @@ interface EventPlanStoreState {
   setRunCounts: (eventId: number, counts: Record<number, number>) => void;
   setFirstClears: (eventId: number, clears: Record<number, boolean>) => void;
   setStagePrio: (eventId: number, prio: Record<number, StagePrio>) => void;
+  setPriorityItemId: (eventId: number, itemId: number | null) => void;
   setCompletedMissions: (eventId: number, missions: Set<number>) => void;
   setDurationDays: (eventId: number, days: number) => void;
   setApConfig: (eventId: number, config: ApCalculatorConfig) => void;
@@ -126,17 +63,20 @@ interface EventPlanStoreState {
   setMinigameMissionStatus: (eventId: number, status: Record<number, boolean>) => void;
   setCardMatchSimConfig: (eventId: number, result: CardMatchSimConifg | null) => void;
   setClueSearchConfig: (eventId: number, config: ClueSearchConfig) => void;
+  setFieldEventConfig: (eventId: number, config: FieldEventConfig) => void;
+  setInteractiveWorldRaidConfig: (eventId: number, config: InteractiveWorldRaidConfig) => void;
+  setRoadPuzzleConfig: (eventId: number, config: RoadPuzzleConfig) => void;
 
   setTotalRewardCurrentAmount: (eventId: number, amount: number) => void;
   setTotalRewardTargetAmount: (eventId: number, amount: number) => void;
 
   // Action to reset all plans (for data import/export)
-  resetAllPlans: (allPlans: Record<string, EventPlan>) => void;
+  resetAllPlans: (allPlans: Record<string, Partial<EventPlan>>) => void;
 }
 
 // --- Default Values ---
 
-const defaultPlan: EventPlan = {
+const defaultPlan: Partial<EventPlan> = {
   selectedStudents: [],
   ownedCurrency: {},
   purchaseCounts: {},
@@ -144,54 +84,11 @@ const defaultPlan: EventPlan = {
   runCounts: {},
   firstClears: {},
   stagePrio: {},
+  priorityItemId: null,
   completedMissions: [],
+  minigameMissionStatus: {},
   durationDays: 15,
   apConfig: getDefaultApConfig('', ''),
-
-  // Minigame Defaults
-  finalCardFlips: 0,
-
-  // TreasurePlanner
-  treasureStartRound: 1,
-  treasureEndRound: 0,
-  treasureFinalTotalRounds: 0,
-  treasureSimConfig: DefaultTreasureSimConfig,
-
-  // BoxGachaPlanner
-  boxGachaStartBox: 1,
-  boxGachaEndBox: 0,
-  boxGachaFinalTotalBoxes: 0,
-
-  // CustomGamePlanner
-  customGamePlays: 0,
-  customGameCost: null,
-  customGameRewards: [],
-  customGameOneTimeRewards: [],
-
-  // CardShopPlanner
-  cardShopConfig: { rounds: 5000, strategy: 'sr-reset' },
-
-  // DiceRacePlanner
-  diceRaceSimConfig: DefaultDiceRaceSimConfig,
-
-  // FortuneGachaPlanner
-  fortuneGachaSimRuns: 10000,
-  fortuneGachaFinalPulls: 0,
-  fortuneGachaAvgRates: null,
-
-  // DreamMakerPlanner defaults
-  dreamMakerSimConfig: defaultDreamMakerConfig,
-  dreamMakerClaimedMissions: [],
-  dreamMakerInteractiveResult: null,
-
-  // MinigameCCGPlanner Default
-  minigameCCGConfig: [{ id: 'initial', stage: 21, count: 0 }],
-  minigameMissionStatus: {},
-
-  cardMatchSimConfig: defaultCardMatchSimConfig,
-  clueSearchConfig: defaultClueSearchConfig,
-
-  // totalRewardPlanner
   totalRewardCurrentAmount: 0,
   totalRewardTargetAmount: 0,
 };
@@ -221,6 +118,7 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setRunCounts: (eventId, counts) => updatePlanForEvent(eventId, { runCounts: counts }),
         setFirstClears: (eventId, clears) => updatePlanForEvent(eventId, { firstClears: clears }),
         setStagePrio: (eventId, prio) => updatePlanForEvent(eventId, { stagePrio: prio }),
+        setPriorityItemId: (eventId, itemId) => updatePlanForEvent(eventId, { priorityItemId: itemId }),
         setCompletedMissions: (eventId, missions) =>
           updatePlanForEvent(eventId, {
             completedMissions: Array.from(missions),
@@ -252,6 +150,9 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setDreamMakerInteractiveResult: (eventId, result) => updatePlanForEvent(eventId, { dreamMakerInteractiveResult: result }),
         setCardMatchSimConfig: (eventId, result) => updatePlanForEvent(eventId, { cardMatchSimConfig: result }),
         setClueSearchConfig: (eventId, config) => updatePlanForEvent(eventId, { clueSearchConfig: config }),
+        setFieldEventConfig: (eventId, config) => updatePlanForEvent(eventId, { fieldEventConfig: config }),
+        setInteractiveWorldRaidConfig: (eventId, config) => updatePlanForEvent(eventId, { interactiveWorldRaidConfig: config }),
+        setRoadPuzzleConfig: (eventId, config) => updatePlanForEvent(eventId, { roadPuzzleConfig: config }),
         setTotalRewardCurrentAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardCurrentAmount: amount }),
         setTotalRewardTargetAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardTargetAmount: amount }),
         setMinigameCCGConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameCCGConfig: config }),
@@ -301,6 +202,7 @@ export const usePlanForEvent = (eventId: number) => {
     setStagePrio: (updater: (prev: Record<number, StagePrio>) => Record<number, StagePrio>) => {
       if (eventId) actions.setStagePrio(eventId, updater(plan.stagePrio || {}));
     },
+    setPriorityItemId: (itemId: number | null) => eventId && actions.setPriorityItemId(eventId, itemId),
     setDurationDays: (days: number) => eventId && actions.setDurationDays(eventId, days),
     setApConfig: (config: ApCalculatorConfig) => eventId && actions.setApConfig(eventId, config),
     setFinalCardFlips: (flips: number) => eventId && actions.setFinalCardFlips(eventId, flips),
@@ -343,6 +245,15 @@ export const usePlanForEvent = (eventId: number) => {
     setClueSearchConfig: (config: ClueSearchConfig) => {
       if (eventId) actions.setClueSearchConfig(eventId, config);
     },
+    setFieldEventConfig: (config: FieldEventConfig) => {
+      if (eventId) actions.setFieldEventConfig(eventId, config);
+    },
+    setInteractiveWorldRaidConfig: (config: InteractiveWorldRaidConfig) => {
+      if (eventId) actions.setInteractiveWorldRaidConfig(eventId, config);
+    },
+    setRoadPuzzleConfig: (config: RoadPuzzleConfig) => {
+      if (eventId) actions.setRoadPuzzleConfig(eventId, config);
+    },
     setTotalRewardCurrentAmount: (amount: number) => eventId && actions.setTotalRewardCurrentAmount(eventId, amount),
     setTotalRewardTargetAmount: (amount: number) => eventId && actions.setTotalRewardTargetAmount(eventId, amount),
     // setMinigameCCGConfig: (updater: (prev: CcgRunInput[]) => CcgRunInput[]) => {
@@ -359,6 +270,35 @@ export const usePlanForEvent = (eventId: number) => {
   return {
     plan,
     ...plan,
+    // Farming optimization priority item
+    priorityItemId: plan.priorityItemId ?? null,
+    // Minigame fields: provide defaults so consumers always get a valid value
+    finalCardFlips: plan.finalCardFlips ?? 0,
+    treasureStartRound: plan.treasureStartRound ?? 1,
+    treasureEndRound: plan.treasureEndRound ?? 0,
+    treasureFinalTotalRounds: plan.treasureFinalTotalRounds ?? 0,
+    treasureSimConfig: plan.treasureSimConfig ?? DefaultTreasureSimConfig,
+    boxGachaStartBox: plan.boxGachaStartBox ?? 1,
+    boxGachaEndBox: plan.boxGachaEndBox ?? 0,
+    boxGachaFinalTotalBoxes: plan.boxGachaFinalTotalBoxes ?? 0,
+    customGamePlays: plan.customGamePlays ?? 0,
+    customGameCost: plan.customGameCost ?? null,
+    customGameRewards: plan.customGameRewards ?? [],
+    customGameOneTimeRewards: plan.customGameOneTimeRewards ?? [],
+    cardShopConfig: plan.cardShopConfig ?? { rounds: 500000, strategy: 'sr-reset' },
+    diceRaceSimConfig: plan.diceRaceSimConfig ?? DefaultDiceRaceSimConfig,
+    fortuneGachaSimRuns: plan.fortuneGachaSimRuns ?? 100000,
+    fortuneGachaFinalPulls: plan.fortuneGachaFinalPulls ?? 0,
+    fortuneGachaAvgRates: plan.fortuneGachaAvgRates ?? null,
+    dreamMakerSimConfig: plan.dreamMakerSimConfig ?? defaultDreamMakerConfig,
+    dreamMakerClaimedMissions: plan.dreamMakerClaimedMissions ?? [],
+    dreamMakerInteractiveResult: plan.dreamMakerInteractiveResult ?? null,
+    minigameCCGConfig: plan.minigameCCGConfig ?? [{ id: 'initial', stage: 21, count: 0 }],
+    cardMatchSimConfig: plan.cardMatchSimConfig ?? defaultCardMatchSimConfig,
+    clueSearchConfig: plan.clueSearchConfig ?? defaultClueSearchConfig,
+    fieldEventConfig: plan.fieldEventConfig ?? defaultFieldEventConfig,
+    interactiveWorldRaidConfig: plan.interactiveWorldRaidConfig ?? defaultInteractiveWorldRaidConfig,
+    roadPuzzleConfig: plan.roadPuzzleConfig ?? defaultRoadPuzzleConfig,
     ...setters,
     completedMissionsSet,
     setCompletedMissions,

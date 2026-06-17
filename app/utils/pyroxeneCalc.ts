@@ -15,15 +15,21 @@ export const PYROXENE_PER_EVENT: Record<number, number> = {
   10842: 1900,
   856: 2100,
   10843: 1250,
+  857: 2120,
+  10845: 2220,
 };
 
 export const PYROXENE_PER_MAIN_STORY: Record<string, number> = {
   'Vol.6 Ch.2': 660,
   'Vol.6 Ch.3': 600,
-  'Vol.Ex Ch.3 Pt.1': 540,
-  'Vol.Ex Ch.3 Pt.2': 60,
-  'Vol.Ex Ch.3 Pt.3': 60,
-  'Vol.Ex Ch.3 Pt.4': 900,
+  'Vol.Ex. デカグラマトン Ch.3 Pt.1': 540,
+  'Vol.Ex. デカグラマトン Ch.3 Pt.2': 60,
+  'Vol.Ex. デカグラマトン Ch.3 Pt.3': 60,
+  'Vol.Ex. デカグラマトン Ch.3 Pt.4': 900,
+  '第2部メインストーリープロロ－グ': 240,
+  'Vol.0 Ch.1': 600,
+  'Vol.Ex. ロア追跡 Ch.1': 660,
+  'Vol.Ex. ロア追跡 Ch.2': 660,
 };
 
 // --- Types ---
@@ -34,6 +40,9 @@ export interface PlannerSchedule {
   end: string;
   type: 'Event' | 'Raid' | 'Elimination' | 'Multifloor' | 'Campaign' | 'JointFiringDrill' | 'MainStory' | 'MiniStory' | 'Maintenance';
   amount?: number;
+  campaignType?: string;
+  multiplier?: number;
+  isApEvent?: boolean; // true only for 8xx / 108xx event IDs
 }
 
 // Extended interface for Gantt chart rendering
@@ -52,19 +61,20 @@ export interface PyroxeneConfig {
 
   apRefreshes_normal: number;
   apRefreshes_event: number;
+  apRefreshes_campaigns?: Record<string, number>; // key: "{CampaignType}_{multiplier}", e.g. "Normal_2"
 
   raidRank: 'platinum' | 'gold' | 'silver' | 'bronze';
   pvpRankTier: number;
 }
 
-export interface SimulationResult {
-  date: string;
-  dateObj: Date;
-  pyroxene: number; // Cumulative net income (excluding gacha)
-  income: number;
-  expense: number; // Fixed expenses (AP, etc.)
-  events: string[];
-}
+// export interface SimulationResult {
+//   date: string;
+//   dateObj: Date;
+//   pyroxene: number; // Cumulative net income (excluding gacha)
+//   income: number;
+//   expense: number; // Fixed expenses (AP, etc.)
+//   events: string[];
+// }
 
 export interface SimulationStats {
   income: {
@@ -133,6 +143,22 @@ export interface CustomIncome {
   date: string;
   title: string;
   amount: number;
+}
+
+export interface TimelineLog {
+  title?: string;
+  i18nKey?: string;
+  params?: Record<string, string | number>;
+  amount: number;
+}
+
+export interface TimelineEntry {
+  date: string;
+  dateObj: Date;
+  pyroxene: number;
+  income: number;
+  expense: number;
+  logs: TimelineLog[];
 }
 
 // Find the value corresponding to a specific percentile in the distribution data (interpolation)
@@ -215,9 +241,9 @@ export function calculatePyroxeneTimeline(
     customApOverrides?: Record<string, number>;
     customIncomes?: CustomIncome[];
   } = {},
-): { timeline: any[]; stats: SimulationStats } {
+): { timeline: TimelineEntry[]; stats: SimulationStats } {
   const { simulationDays = 180, customApOverrides = {}, customIncomes = [] } = options;
-  const timeline: any[] = [];
+  const timeline: TimelineEntry[] = [];
 
   const stats: SimulationStats = {
     income: {
@@ -254,7 +280,7 @@ export function calculatePyroxeneTimeline(
     let dailyIncome = 0;
     let dailyExpense = 0;
 
-    const logs: { title?: string; i18nKey?: string; params?: any; amount: number }[] = [];
+    const logs: TimelineLog[] = [];
 
     // ==========================================
     // 1. Daily / Monthly Fixed Income
@@ -307,11 +333,9 @@ export function calculatePyroxeneTimeline(
     // ==========================================
     const endingSchedules = schedules.filter((s) => s.end === dateStr);
     const startingSchedules = schedules.filter((s) => s.start === dateStr);
-    let isEventPeriod = false;
-
     const activeSchedules = schedules.filter((s) => s.start <= dateStr && s.end >= dateStr);
-    const activeEvent = activeSchedules.find((s) => s.type === 'Event' || s.type === 'Campaign');
-    if (activeEvent) isEventPeriod = true;
+    const activeEvt = activeSchedules.find((s) => s.type === 'Event');
+    const activeCampaign = activeSchedules.find((s) => s.type === 'Campaign');
 
     endingSchedules.forEach((sch) => {
       let reward = 0;
@@ -347,27 +371,27 @@ export function calculatePyroxeneTimeline(
 
       switch (sch.type) {
         case 'Event':
-          reward = Number(sch.amount || 0);
+          reward = sch.amount || 0;
           stats.income.event += reward;
           logKey = 'log.event';
           break;
         case 'MiniStory':
-          reward = Number(sch.amount || 200);
+          reward = sch.amount || (10 + 20 + 40) * 2;
           stats.income.miniStory += reward;
           logKey = 'log.mainstory';
           break;
         case 'Maintenance':
-          reward = Number(sch.amount || 300);
+          reward = sch.amount || 360;
           stats.income.maintenance += reward;
           logKey = 'log.event';
           break;
         case 'Multifloor':
-          reward = 60;
+          reward = 10;
           stats.income.multifloor += reward;
           logKey = 'log.multifloor';
           break;
         case 'MainStory':
-          reward = Number(sch.amount || 0);
+          reward = sch.amount || 0;
           stats.income.mainstory += reward;
           logKey = 'log.mainstory';
           break;
@@ -393,11 +417,21 @@ export function calculatePyroxeneTimeline(
     // ==========================================
     // 4. Expense (AP Refresh)
     // ==========================================
-    let apCount = isEventPeriod ? config.apRefreshes_event : config.apRefreshes_normal;
+    let apCount = config.apRefreshes_normal;
 
-    if (activeEvent && customApOverrides[activeEvent.id] !== undefined && customApOverrides[activeEvent.id] !== -1) {
-      apCount = customApOverrides[activeEvent.id];
+    // Apply bulk defaults: only AP-eligible events (8xx / 108xx) use apRefreshes_event
+    if (activeEvt?.isApEvent) apCount = Math.max(apCount, config.apRefreshes_event);
+    if (activeCampaign) {
+      const campKey = activeCampaign.campaignType && activeCampaign.multiplier ? `${activeCampaign.campaignType}_${activeCampaign.multiplier}` : null;
+      const campDefault = campKey ? (config.apRefreshes_campaigns?.[campKey] ?? config.apRefreshes_normal) : config.apRefreshes_normal;
+      apCount = Math.max(apCount, campDefault);
     }
+
+    // Per-schedule overrides: event override takes priority, then campaign override
+    const evtOverride = activeEvt ? customApOverrides[activeEvt.id] : undefined;
+    const campOverride = activeCampaign ? customApOverrides[activeCampaign.id] : undefined;
+    if (evtOverride !== undefined && evtOverride !== -1) apCount = evtOverride;
+    else if (campOverride !== undefined && campOverride !== -1) apCount = campOverride;
 
     // Assuming getApCost function exists
     const apCost = getApCost(apCount);

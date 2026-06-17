@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useTransition } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Slider from 'rc-slider';
 import { useTierDashboardStore } from '~/store/tierDashboardStore';
 import { FiCalendar, FiRefreshCcw } from 'react-icons/fi';
@@ -15,9 +15,8 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
   const { t: t_c } = useTranslation('common');
 
   const [isMounted, setIsMounted] = useState(false);
-  // Local state for immediate UI response
   const [localIndex, setLocalIndex] = useState<[number, number]>([dateRangeIndex[0], dateRangeIndex[1]]);
-  const [, startTransition] = useTransition();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -27,7 +26,7 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
   const marks = useMemo(() => {
     if (!distinctDays || distinctDays.length === 0) return {};
 
-    const marksObj: Record<number, any> = {};
+    const marksObj: Record<number, { style: Record<string, string>; label: React.ReactNode }> = {};
     const markedDays = new Set<string>();
 
     distinctDays.forEach((dayStr, index) => {
@@ -48,7 +47,7 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
             },
             label: (
               <div className="flex flex-col items-center">
-                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Day {dayNum}</span>
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium whitespace-nowrap">Day {dayNum}</span>
               </div>
             ),
           };
@@ -67,21 +66,19 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
   const currentIndex: [number, number] = [Math.min(localIndex[0], maxIndex), Math.min(localIndex[1], maxIndex)];
 
   const handleChange = (value: number | number[]) => {
-    if (Array.isArray(value)) {
-      // High priority: slider thumb moves immediately
-      setLocalIndex([value[0], value[1]]);
-      // Low priority: chart recalculation deferred, won't block UI
-      startTransition(() => {
-        setDateRangeIndex([value[0], value[1]]);
-      });
-    }
+    if (!Array.isArray(value)) return;
+    setLocalIndex([value[0], value[1]]);
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDateRangeIndex([value[0], value[1]]);
+    }, 300);
   };
 
-  // Ensure final value is always committed
   const handleChangeComplete = (value: number | number[]) => {
-    if (Array.isArray(value)) {
-      setDateRangeIndex([value[0], value[1]]);
-    }
+    if (!Array.isArray(value)) return;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    setDateRangeIndex([value[0], value[1]]);
   };
 
   const handleReset = () => {
@@ -102,7 +99,7 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
             {distinctDays[currentIndex[0]]} ~ {distinctDays[currentIndex[1]]}
           </span>
 
-          <button onClick={handleReset} title="Reset to full range" className="p-1 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full text-neutral-500 transition-colors">
+          <button onClick={handleReset} title="Reset to full range" className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-full text-neutral-500 transition-colors">
             <FiRefreshCcw size={12} />
           </button>
         </div>
@@ -120,9 +117,9 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
             onChangeComplete={handleChangeComplete}
             marks={marks}
             dots={false}
-            trackStyle={[{ backgroundColor: '#3b82f6', height: 4 }]}
-            handleStyle={[
-              {
+            styles={{
+              track: { backgroundColor: '#3b82f6', height: 4 },
+              handle: {
                 borderColor: '#3b82f6',
                 backgroundColor: '#fff',
                 opacity: 1,
@@ -130,19 +127,11 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
                 width: 14,
                 marginTop: -5,
               },
-              {
-                borderColor: '#3b82f6',
-                backgroundColor: '#fff',
-                opacity: 1,
-                height: 14,
-                width: 14,
-                marginTop: -5,
-              },
-            ]}
-            railStyle={{ backgroundColor: '#e5e7eb', height: 4 }}
+              rail: { backgroundColor: '#e5e7eb', height: 4 },
+            }}
           />
         ) : (
-          <div className="w-full h-1 bg-gray-200 dark:bg-neutral-700 rounded mt-2" />
+          <div className="w-full h-1 bg-neutral-200 dark:bg-neutral-700 rounded mt-2" />
         )}
       </div>
     </div>

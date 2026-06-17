@@ -12,7 +12,7 @@ export interface CollectedLink {
 
 // Custom type to the handle object on the React Router.
 export interface AppHandle {
-  preload?: (data: any) => CollectedLink[];
+  preload?: (data: unknown, match?: AppUIMatch) => CollectedLink[];
 }
 
 // Expand the type of UIMatch to our AppHandle.

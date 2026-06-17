@@ -1,6 +1,6 @@
 import { redirect, type LoaderFunctionArgs } from 'react-router';
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export function loader({ params }: LoaderFunctionArgs) {
   return redirect(`/dashboard/${params.server}/${params.id}/`, 301);
 }
 

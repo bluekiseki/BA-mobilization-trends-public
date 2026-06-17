@@ -1,6 +1,7 @@
 // app/locales/ko/index.ts
 import type { ResourceLanguage } from 'i18next';
 import { common, charts, raidInfo, dashboard, dashboardIndex, liveDashboard, emblemCounter, calendar } from './zh_Hant.json'; // import your namespaced locales
+import auth from './auth.json';
 import club from './club.json';
 import stat from './stat.json';
 import planner from './planner.json';
@@ -12,6 +13,7 @@ export default {
   // translation: {},
   common,
   // home,
+  auth,
   charts,
   raidInfo,
   dashboard,

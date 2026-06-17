@@ -1,5 +1,5 @@
-import { domain, vercelDomain, localDomain } from '~/data/livedataServer.json';
-const ALLOWED_DOMAINS = ['https://' + domain, 'https://' + vercelDomain, 'http://' + localDomain];
+import { domain, localDomain } from '~/data/livedataServer.json';
+const ALLOWED_DOMAINS = ['https://' + domain, 'http://' + localDomain];
 
 export function vaildClient(request: Request) {
   const origin = request.headers.get('Origin');

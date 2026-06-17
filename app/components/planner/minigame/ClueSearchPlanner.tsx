@@ -4,10 +4,14 @@ import { ItemIcon } from '../common/Icon';
 import type { EventData, IconData } from '~/types/plannerData';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
-import { ChevronIcon } from '~/components/Icon';
+
 import { useTranslation } from 'react-i18next';
 import { getItemSortPriority } from '~/utils/itemSort';
 import { CustomNumberInput } from '~/components/CustomInput';
+import { type ClueSearchConfig, defaultClueSearchConfig } from '~/types/minigame/clueSearch';
+
+export type { ClueSearchConfig };
+export { defaultClueSearchConfig };
 
 // --- Type definitions ---
 export type ClueSearchTab = 'info' | 'calculator';
@@ -15,16 +19,6 @@ export type ClueSearchTab = 'info' | 'calculator';
 export type ClueSearchResult = {
   cost: Record<string, number>;
   rewards: Record<string, number>;
-};
-
-export interface ClueSearchConfig {
-  startRound: number;
-  endRound: number;
-}
-
-export const defaultClueSearchConfig: ClueSearchConfig = {
-  startRound: 1,
-  endRound: 7,
 };
 
 interface ClueSearchPlannerProps {
@@ -69,15 +63,14 @@ const getLocalizedDesc = (
 };
 
 // --- Component ---
-export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: ClueSearchPlannerProps) => {
+export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }: ClueSearchPlannerProps) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'clue_search' });
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeHint, setActiveHint] = useState<number | null>(null);
 
   const { clueSearchActiveTab: activeTab, setClueSearchActiveTab: setActiveTab, clueSearchDisplayResult: displayResult, setClueSearchDisplayResult: setDisplayResult } = useEventSettings(eventId);
 
-  const { plan, clueSearchConfig, setClueSearchConfig, setPurchaseCounts } = usePlanForEvent(eventId);
-  const { alreadyPurchasedCounts } = plan;
+  const { plan, setClueSearchConfig, setPurchaseCounts } = usePlanForEvent(eventId);
+  const { alreadyPurchasedCounts, clueSearchConfig } = plan;
   const config: ClueSearchConfig = clueSearchConfig ?? defaultClueSearchConfig;
 
   const clueData = eventData.clue;
@@ -161,7 +154,6 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate, r
     if (!displayResult) {
       calculate(config);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (field: keyof ClueSearchConfig, raw: number) => {
@@ -248,176 +240,169 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate, r
 
   return (
     <>
-      <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">🔍 {t('title')}</h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
-          <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
-        </span>
-      </div>
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('title')}</h2>
 
-      {!isCollapsed && (
-        <div className="mt-4 space-y-4">
-          {/* Tab Navigation */}
-          <div className="flex border-b border-gray-200 dark:border-neutral-700">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab.id ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-neutral-600'}`}
-              >
-                {tab.name}
-              </button>
-            ))}
-          </div>
+      <div className="mt-4 space-y-4">
+        {/* Tab Navigation */}
+        <div className="flex border-b border-neutral-200 dark:border-neutral-700">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab.id ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'}`}
+            >
+              {tab.name}
+            </button>
+          ))}
+        </div>
 
-          {/* Info Tab */}
-          {activeTab === 'info' && (
-            <div className="space-y-3">
-              {clueData.round.map((round) => (
-                <div key={round.Round} className="bg-gray-50 dark:bg-neutral-800/50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className={`font-bold text-xs px-2 py-0.5 rounded ${round.IsLoop ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}
-                    >
-                      {round.IsLoop ? t('roundLoop', { round: round.Round }) : t('roundLabel', { round: round.Round })}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{t('totalFragments', { count: round.ClueCostAmount.reduce((a, b) => a + b, 0) })}</span>
-                  </div>
+        {/* Info Tab */}
+        {activeTab === 'info' && (
+          <div className="space-y-3">
+            {clueData.round.map((round) => (
+              <div key={round.Round} className="bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span
+                    className={`font-bold text-xs px-2 py-0.5 rounded ${round.IsLoop ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`}
+                  >
+                    {round.IsLoop ? t('roundLoop', { round: round.Round }) : t('roundLabel', { round: round.Round })}
+                  </span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('totalFragments', { count: round.ClueCostAmount.reduce((a, b) => a + b, 0) })}</span>
+                </div>
 
-                  {/* Clue slots */}
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {round.ClueId.map((clueId, idx) => {
-                      const clue = clueMap[clueId];
-                      const isHintOpen = activeHint === clueId;
-                      return (
-                        <div key={clueId} className="relative">
-                          <div className="flex items-center gap-1 bg-white dark:bg-neutral-700 rounded px-2 py-1 text-xs border border-gray-100 dark:border-neutral-600">
-                            <span className="font-bold text-gray-400 dark:text-gray-500">#{round.ClueSlotNumber[idx]}</span>
-                            <ItemIcon type="Item" itemId={String(clueId)} amount={round.ClueCostAmount[idx]} size={7} eventData={eventData} iconData={iconData} />
-                            {clue && <span className="text-gray-700 dark:text-gray-300">{getLocalizedName(clue.Hintlocalize, i18n.language)}</span>}
-                            {clue?.HintUse && (
-                              <button
-                                onClick={() => setActiveHint(isHintOpen ? null : clueId)}
-                                className={`ml-0.5 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors ${isHintOpen ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-600 text-gray-500 dark:text-gray-400 hover:bg-blue-100 dark:hover:bg-blue-900/40'}`}
-                                aria-label="hint"
-                              >
-                                ?
-                              </button>
-                            )}
-                          </div>
-                          {isHintOpen && clue && (
-                            <div className="absolute left-0 top-full mt-1 z-15 w-56 bg-white dark:bg-neutral-800 border border-blue-200 dark:border-blue-700 rounded-lg shadow-lg p-2 text-xs">
-                              <p className="font-semibold text-blue-700 dark:text-blue-300 mb-1">{getLocalizedName(clue.Hintlocalize, i18n.language)}</p>
-                              <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-line">{getLocalizedDesc(clue.Hintlocalize, i18n.language)}</p>
-                            </div>
+                {/* Clue slots */}
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {round.ClueId.map((clueId, idx) => {
+                    const clue = clueMap[clueId];
+                    const isHintOpen = activeHint === clueId;
+                    return (
+                      <div key={clueId} className="relative">
+                        <div className="flex items-center gap-1 bg-white dark:bg-neutral-700 rounded px-2 py-1 text-xs border border-neutral-100 dark:border-neutral-600">
+                          <span className="font-bold text-neutral-400 dark:text-neutral-500">#{round.ClueSlotNumber[idx]}</span>
+                          <ItemIcon type="Item" itemId={String(clueId)} amount={round.ClueCostAmount[idx]} size={7} eventData={eventData} iconData={iconData} />
+                          {clue && <span className="text-neutral-700 dark:text-neutral-300">{getLocalizedName(clue.Hintlocalize, i18n.language)}</span>}
+                          {clue?.HintUse && (
+                            <button
+                              onClick={() => setActiveHint(isHintOpen ? null : clueId)}
+                              className={`ml-0.5 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors ${isHintOpen ? 'bg-blue-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-500 dark:text-neutral-400 hover:bg-blue-100 dark:hover:bg-blue-900/40'}`}
+                              aria-label="hint"
+                            >
+                              ?
+                            </button>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Round completion rewards */}
-                  <div className="flex flex-wrap gap-1">
-                    {round.Reward.RewardParcelId.map((id, idx) => (
-                      <ItemIcon
-                        key={idx}
-                        type={round.Reward.RewardParcelTypeStr[idx]}
-                        itemId={String(id)}
-                        amount={round.Reward.RewardParcelAmount[idx]}
-                        size={9}
-                        eventData={eventData}
-                        iconData={iconData}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Calculator Tab */}
-          {activeTab === 'calculator' && (
-            <div className="p-4 rounded-b-lg bg-gray-50 dark:bg-neutral-800/50 space-y-6 text-sm">
-              {/* Range inputs */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-base dark:text-gray-200">{t('rangeTitle')}</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="dark:text-gray-300">{t('startRound')}</label>
-                    <CustomNumberInput
-                      min={1}
-                      value={config.startRound}
-                      onChange={(e) => handleChange('startRound', Number(e))}
-                      className="w-full p-1 border rounded mt-1 dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="dark:text-gray-300">{t('endRound')}</label>
-                    <CustomNumberInput
-                      min={config.startRound}
-                      value={config.endRound}
-                      onChange={(e) => handleChange('endRound', Number(e))}
-                      className="w-full p-1 border rounded mt-1 dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100"
-                    />
-                  </div>
+                        {isHintOpen && clue && (
+                          <div className="absolute left-0 top-full mt-1 z-15 w-56 bg-white dark:bg-neutral-800 border border-blue-200 dark:border-blue-700 rounded-lg shadow-lg p-2 text-xs">
+                            <p className="font-semibold text-blue-700 dark:text-blue-300 mb-1">{getLocalizedName(clue.Hintlocalize, i18n.language)}</p>
+                            <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line">{getLocalizedDesc(clue.Hintlocalize, i18n.language)}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Shortcut: max one-time rewards */}
-                {lastOneTimeRound > 0 && (
-                  <button
-                    onClick={handleShortcutMaxOneTime}
-                    className="w-full flex items-center justify-between p-3 rounded border border-gray-200 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-700 transition-colors text-left group"
-                  >
-                    <div>
-                      <div className="font-bold text-sm text-gray-800 dark:text-gray-200">{t('shortcutMaxOneTime')}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('shortcutMaxOneTimeDesc', { round: lastOneTimeRound })}</div>
-                    </div>
-                    <span className="text-lg group-hover:scale-110 transition-transform">⚡</span>
-                  </button>
-                )}
+                {/* Round completion rewards */}
+                <div className="flex flex-wrap gap-1">
+                  {round.Reward.RewardParcelId.map((id, idx) => (
+                    <ItemIcon
+                      key={idx}
+                      type={round.Reward.RewardParcelTypeStr[idx]}
+                      itemId={String(id)}
+                      amount={round.Reward.RewardParcelAmount[idx]}
+                      size={9}
+                      eventData={eventData}
+                      iconData={iconData}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Calculator Tab */}
+        {activeTab === 'calculator' && (
+          <div className="p-4 rounded-b-lg bg-neutral-50 dark:bg-neutral-800/50 space-y-6 text-sm">
+            {/* Range inputs */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-base dark:text-neutral-200">{t('rangeTitle')}</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="dark:text-neutral-300">{t('startRound')}</label>
+                  <CustomNumberInput
+                    min={1}
+                    value={config.startRound}
+                    onChange={(e) => handleChange('startRound', Number(e))}
+                    className="w-full p-1 border rounded mt-1 dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-100"
+                  />
+                </div>
+                <div>
+                  <label className="dark:text-neutral-300">{t('endRound')}</label>
+                  <CustomNumberInput
+                    min={config.startRound}
+                    value={config.endRound}
+                    onChange={(e) => handleChange('endRound', Number(e))}
+                    className="w-full p-1 border rounded mt-1 dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-100"
+                  />
+                </div>
               </div>
 
-              {/* Results */}
-              {displayResult && (
-                <div className="pt-4 border-t dark:border-neutral-700 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-base dark:text-gray-200">{t('resultTitle')}</h3>
-                    {hasShopClues && (
-                      <button
-                        onClick={handleAutoBuyFromShop}
-                        className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg"
-                        title={t('autoBuyTooltip')}
-                      >
-                        {t('autoBuy')}
-                      </button>
-                    )}
+              {/* Shortcut: max one-time rewards */}
+              {lastOneTimeRound > 0 && (
+                <button
+                  onClick={handleShortcutMaxOneTime}
+                  className="w-full flex items-center justify-between p-3 rounded border border-neutral-200 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-700 transition-colors text-left group"
+                >
+                  <div>
+                    <div className="font-bold text-sm text-neutral-800 dark:text-neutral-200">{t('shortcutMaxOneTime')}</div>
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{t('shortcutMaxOneTimeDesc', { round: lastOneTimeRound })}</div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-red-50 dark:bg-red-900/40 p-3 rounded-lg">
-                      <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('cost')}</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(displayResult.cost).map(([key, amount]) => (
+                  <span className="text-lg group-hover:scale-110 transition-transform">⚡</span>
+                </button>
+              )}
+            </div>
+
+            {/* Results */}
+            {displayResult && (
+              <div className="pt-4 border-t dark:border-neutral-700 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-base dark:text-neutral-200">{t('resultTitle')}</h3>
+                  {hasShopClues && (
+                    <button
+                      onClick={handleAutoBuyFromShop}
+                      className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white font-bold text-xs py-1.5 px-3 rounded-lg"
+                      title={t('autoBuyTooltip')}
+                    >
+                      {t('autoBuy')}
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-red-50 dark:bg-red-900/40 p-3 rounded-lg">
+                    <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('cost')}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(displayResult.cost).map(([key, amount]) => (
+                        <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={11} eventData={eventData} iconData={iconData} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/40 p-3 rounded-lg">
+                    <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t('rewards')}</h4>
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                      {Object.entries(displayResult.rewards)
+                        .sort(([ka], [kb]) => getItemSortPriority(ka, eventData) - getItemSortPriority(kb, eventData))
+                        .map(([key, amount]) => (
                           <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={11} eventData={eventData} iconData={iconData} />
                         ))}
-                      </div>
-                    </div>
-                    <div className="bg-green-50 dark:bg-green-900/40 p-3 rounded-lg">
-                      <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t('rewards')}</h4>
-                      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                        {Object.entries(displayResult.rewards)
-                          .sort(([ka], [kb]) => getItemSortPriority(ka, eventData) - getItemSortPriority(kb, eventData))
-                          .map(([key, amount]) => (
-                            <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={11} eventData={eventData} iconData={iconData} />
-                          ))}
-                      </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </>
   );
 };

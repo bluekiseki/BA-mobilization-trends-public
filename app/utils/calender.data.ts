@@ -1,8 +1,10 @@
 // app/utils/calender.data.ts
 import Papa from 'papaparse';
-import { type_translation } from '~/components/raidToString';
-import jpEventList from '~/data/jp/eventList.json';
-import krEventList from '~/data/jp/eventList.json';
+import { type_translation } from '~/components/raid/raidToString';
+import jpEventListJson from '~/data/jp/eventList.json';
+import krEventListJson from '~/data/jp/eventList.json';
+import type { EventListData } from '~/types/eventList';
+
 import bossData from '~/data/bossdata.json';
 import { getInstance } from '~/middleware/i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
@@ -36,6 +38,8 @@ import { loadRaidInfosById } from './loadRaidInfo';
 import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
 import { getKstTime } from '~/data/globalRaidDates';
 
+const jpEventList = jpEventListJson as unknown as EventListData;
+const krEventList = krEventListJson as unknown as EventListData;
 const armorTypeTranslation = type_translation;
 
 const MS_PER_HOUR = 1000 * 60 * 60;
@@ -55,8 +59,26 @@ export interface PickupStudentInfo {
   id: number;
   limited: boolean;
   rerun: boolean;
-  fast: boolean;
+  fest: boolean;
 }
+
+export interface ScheduleItemDetails {
+  students?: PickupStudentInfo[];
+  isPointEvent?: boolean;
+  rerun?: boolean;
+  studentId?: number;
+  prediction?: boolean;
+  maxDifficulty?: string;
+  terrain?: string;
+  armorType?: string;
+  armorName?: string;
+  jfdType?: string;
+  campaignType?: string;
+  noticeURL?: string;
+  bosses?: Array<{ armorType: string; armorName: string; difficulty: string }>;
+  title?: string;
+}
+
 export interface ScheduleItem {
   id: string;
   type: string;
@@ -66,13 +88,103 @@ export interface ScheduleItem {
   label?: string;
   textColor?: string;
   link?: string;
-  details?: Record<string, any> & {
-    students?: PickupStudentInfo[];
-    isPointEvent?: boolean;
-  };
+  details?: ScheduleItemDetails;
 }
 
 export type ScheduleTrack = 'raid' | 'event' | 'multifloor' | 'campaign' | 'pickup' | 'maintenance' | 'story' | 'patch' | 'misc';
+
+interface EventItem {
+  id: string;
+  name: string;
+  openTime: string;
+  closeTime: string;
+  planable?: boolean;
+  rerun?: boolean;
+  studentId?: number;
+  prediction?: boolean;
+}
+
+interface RaidItem {
+  season: number;
+  boss?: string;
+  startTime: string;
+  endTime: string;
+  maxDifficulty?: string;
+  prediction?: boolean;
+}
+
+interface ERaidItem {
+  season: number;
+  boss1?: string;
+  boss2?: string;
+  boss3?: string;
+  difficulty1?: string;
+  difficulty2?: string;
+  difficulty3?: string;
+  startTime: string;
+  endTime: string;
+  prediction?: boolean;
+}
+
+interface MultifloorItem {
+  season: number;
+  boss?: string;
+  armorType?: string;
+  startTime: string;
+  endTime: string;
+  prediction?: boolean;
+}
+
+interface CampaignItem {
+  campaignType: string;
+  multiplier: number;
+  startTime: string;
+  endTime: string;
+  prediction?: boolean;
+}
+
+interface PickupItem {
+  studentId: number;
+  startTime: string;
+  endTime: string;
+  limited: boolean;
+  rerun: boolean;
+  fest: boolean;
+  prediction?: boolean;
+}
+
+interface MaintenanceItem {
+  startTime: string;
+  endTime: string;
+  noticeURL?: string;
+  prediction?: boolean;
+}
+
+interface StoryItemBase {
+  startTime: string;
+  volume?: number;
+  chapter?: number;
+  part?: number;
+  titleEn?: string;
+  titleJa?: string;
+  titleKo?: string;
+  titleTw?: string;
+  prediction?: boolean;
+}
+
+interface PatchItem extends StoryItemBase {
+  startTime: string;
+}
+
+interface JfdItem {
+  season: number;
+  type: string;
+  armorType?: string;
+  startTime: string;
+  endTime: string;
+  teran?: string;
+  prediction?: boolean;
+}
 
 // CSV parsing helper (internal to file)
 export function parseCsvString<T extends object>(csvString: string): T[] {
@@ -83,8 +195,9 @@ export function parseCsvString<T extends object>(csvString: string): T[] {
       dynamicTyping: true,
     });
     return parsed.data.filter((row) => Object.values(row).some((val) => val !== null && val !== ''));
-  } catch (error) {
-    console.error(`[Schedule Loader] Failed to parse CSV string:`, error);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[Schedule Loader] Failed to parse CSV string:`, errorMsg);
     return [];
   }
 }
@@ -103,7 +216,7 @@ interface LoadScheduleDataOptions {
  * @param options.locale - 'en', 'ko', 'ja'
  * @param options.tracksToLoad - Array of tracks to load
  */
-export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: LoadScheduleDataOptions) {
+export function loadScheduleData({ server, locale, i18n, tracksToLoad }: LoadScheduleDataOptions) {
   const dataSources = {
     jp: {
       eventList: jpEventList,
@@ -206,13 +319,16 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   //  the CSV parsing logic itself doesn&#39;t need modification.)
 
   if (tracksToLoadArray.includes('event')) {
-    parseCsvString<any>(sources.event).forEach((item) => {
-      const eventInfo = (eventList as any)[item.id?.toString()];
+    parseCsvString<EventItem>(sources.event).forEach((item) => {
+      const itemId = Number(item.id);
+      const eventInfo = item.id != null ? eventList[item.id] : undefined;
 
-      const planable = eventInfo ? (eventInfo.Planable == false ? false : true) : true;
-      const title = eventInfo?.[{ en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' }[locale]] || eventInfo?.Jp || item.name || `Event`;
+      const planable = eventInfo ? eventInfo.Planable !== false : true;
+      const localeKey = ({ en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' } as const)[locale];
+      const title = (eventInfo?.[localeKey] as string | undefined) || eventInfo?.Jp || item.name || 'Event';
 
-      const label = `${t_cal('track.event')}${item.rerun ? '/' + t_com('rerun') : ''}`;
+      const rerunText = item.rerun ? `/${t_com('rerun') as string}` : '';
+      const label = `${t_cal('track.event') as string}${rerunText}`;
 
       addItem('event', {
         id: `event-${item.id}`,
@@ -221,7 +337,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         endTime: item.closeTime,
         title: title,
         label: label,
-        link: item.planable == false || planable == false ? undefined : `/planner/event/${item.id % 100000}`,
+        link: !planable ? undefined : `/planner/event/${itemId % 100000}`,
         details: {
           rerun: item.rerun,
           studentId: item.studentId,
@@ -233,19 +349,19 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
 
   if (tracksToLoadArray.includes('raid')) {
     // 2. Total Assault (Raid)
-    parseCsvString<any>(sources.raid).forEach((item) => {
+    parseCsvString<RaidItem>(sources.raid).forEach((item) => {
       if (item.boss) {
-        const bossInfo = (bossData as any)[item.boss];
-        let title = `${item.boss}`;
-        let details: any = {
+        const bossInfo = (bossData as unknown as Record<string, { name: Record<string, string>; teran?: string; armorType?: string }>)[item.boss];
+        let title = item.boss;
+        const details: ScheduleItemDetails = {
           maxDifficulty: item.maxDifficulty,
           prediction: !!item.prediction,
         };
         if (bossInfo) {
-          title = `${bossInfo.name[getLocaleShortName(locale)]}`;
+          title = bossInfo.name[getLocaleShortName(locale)];
           details.terrain = bossInfo.teran;
           details.armorType = bossInfo.armorType;
-          details.armorName = (armorTypeTranslation as any)[bossInfo.armorType][getLocaleShortName(locale)] || bossInfo.armorType;
+          details.armorName = (armorTypeTranslation as Record<string, Record<string, string>>)[bossInfo.armorType ?? '']?.[getLocaleShortName(locale)] || bossInfo.armorType;
         }
 
         // Time comparison for link logic is also performed using KST-parsed time (ms)
@@ -267,14 +383,14 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         } else if (nowMs >= startMs && nowMs <= endMs && server == 'jp' && isLiveRunning) {
           link = '/live';
         } else if (server == 'kr' && item.season > KR_RAID_SEASON_EXIST_END) {
-          const id = 'R' + (item.season + 3);
+          const id = `R${item.season + 3}`;
           if (loadRaidInfosById('jp', locale, id).length) {
             link = `/dashboard/jp/R${item.season + 3}`;
           }
         } else if (nowMs > endMs) {
           link = `/dashboard/${server}/R${item.season}`;
         }
-        const label = String(t_com('raid'));
+        const label = t_com('raid') as string;
 
         addItem('raid', {
           id: `raid-${item.season}`,
@@ -290,26 +406,30 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
     });
 
     // 3. E. Raid
-    parseCsvString<any>(sources.eraid).forEach((item) => {
+    parseCsvString<ERaidItem>(sources.eraid).forEach((item) => {
       if (item.boss1) {
-        const bossInfo = (bossData as any)[item.boss1.split('_')[0]];
-        const title = `${bossInfo?.name[getLocaleShortName(locale)] || '???'}`;
-        const terrain = item?.boss1?.split('_')?.[1];
-        const bosses: any[] = [];
-        const parseBossDetails = (bossString: string, difficulty: string) => {
-          if (!bossString) return null;
+        const bossKey = item.boss1.split('_')[0];
+        const bossInfo = (bossData as unknown as Record<string, { name: Record<string, string> }>)[bossKey];
+        const title = bossInfo?.name[getLocaleShortName(locale)] || '???';
+        const terrain = item.boss1.split('_')[1];
+        const bosses: Array<{ armorType: string; armorName: string; difficulty: string }> = [];
+        const parseBossDetails = (bossString: string | undefined, difficulty: string | undefined) => {
+          if (!bossString || !difficulty) return null;
           const parts = bossString.split('_');
           if (parts.length < 3) return { armorType: 'Unknown', armorName: 'Unknown', difficulty };
           const armorType = parts[2];
           return {
             armorType: armorType,
-            armorName: (armorTypeTranslation as any)[armorType]?.[getLocaleShortName(locale)] || armorType,
+            armorName: (armorTypeTranslation as Record<string, Record<string, string>>)[armorType]?.[getLocaleShortName(locale)] || armorType,
             difficulty: difficulty,
           };
         };
-        [parseBossDetails(item.boss1, item.difficulty1), parseBossDetails(item.boss2, item.difficulty2), parseBossDetails(item.boss3, item.difficulty3)].forEach((b) => {
-          if (b) bosses.push(b);
-        });
+        const boss1Details = parseBossDetails(item.boss1, item.difficulty1);
+        const boss2Details = parseBossDetails(item.boss2, item.difficulty2);
+        const boss3Details = parseBossDetails(item.boss3, item.difficulty3);
+        if (boss1Details) bosses.push(boss1Details);
+        if (boss2Details) bosses.push(boss2Details);
+        if (boss3Details) bosses.push(boss3Details);
 
         // Time comparison for link logic is also performed using KST-parsed time (ms)
         const startMs = new Date(parseKST(item.startTime)).getTime();
@@ -319,14 +439,14 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
         if (nowMs >= startMs && nowMs <= endMs && server == 'jp') {
           link = '/live';
         } else if (server == 'kr' && item.season > KR_ERAID_SEASON_EXIST_END) {
-          const id = 'E' + item.season;
+          const id = `E${item.season}`;
           if (loadRaidInfosById('jp', locale, id).length) {
             link = `/dashboard/jp/E${item.season}`;
           }
         } else if (nowMs > endMs) {
           link = `/dashboard/${server}/E${item.season}`;
         }
-        const label = String(t_com('eraid'));
+        const label = t_com('eraid') as string;
 
         addItem('raid', {
           id: `eraid-${item.season}`,
@@ -346,23 +466,24 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
     });
 
     // 8. Comprehensive Tactical Exam
-    parseCsvString<any>(sources.jfd).forEach((item) => {
+    parseCsvString<JfdItem>(sources.jfd).forEach((item) => {
       if (item.startTime) {
-        const armorKo = (armorTypeTranslation as any)[item.armorType]?.[locale] || item.armorType;
-        const label = String(t_com('jfd') || 'JFD');
+        const armorName = (armorTypeTranslation as Record<string, Record<string, string>>)[item.armorType ?? '']?.[locale] || item.armorType;
+        const label = (t_com('jfd') as string) || 'JFD';
+        const jfdTitle = t_cal(`jfd:${item.type}`) as string;
 
         addItem('raid', {
           id: `jfd-${item.season}`,
           type: 'jointFiringDrill',
           startTime: item.startTime,
           endTime: item.endTime,
-          title: `#${item.season} ${t_cal(`jfd:${item.type}`)}`,
+          title: `#${item.season} ${jfdTitle}`,
           label: label,
           details: {
             jfdType: item.type,
             terrain: item.teran,
             armorType: item.armorType,
-            armorName: armorKo,
+            armorName: armorName,
             prediction: !!item.prediction,
           },
         });
@@ -371,22 +492,22 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   }
 
   if (tracksToLoadArray.includes('multifloor')) {
-    parseCsvString<any>(sources.multifloor).forEach((item) => {
-      const bossInfo = (bossData as any)[item.boss];
-      let title = `${item.boss}`;
-      if (bossInfo) {
-        title = bossInfo.name?.[getLocaleShortName(locale)];
+    parseCsvString<MultifloorItem>(sources.multifloor).forEach((item) => {
+      const bossInfo = (bossData as unknown as Record<string, { name?: Record<string, string> }>)[item.boss ?? ''];
+      let title = item.boss || '';
+      if (bossInfo?.name) {
+        title = bossInfo.name[getLocaleShortName(locale)];
       }
-      const armorKo = (armorTypeTranslation as any)[item.armorType]?.[getLocaleShortName(locale)] || item.armorType;
+      const armorName = (armorTypeTranslation as Record<string, Record<string, string>>)[item.armorType ?? '']?.[getLocaleShortName(locale)] || item.armorType;
       addItem('multifloor', {
         id: `multifloor-${item.season}`,
         type: 'multifloor',
         startTime: item.startTime,
         endTime: item.endTime,
-        title: `${title}`,
+        title: title,
         details: {
           armorType: item.armorType,
-          armorName: armorKo,
+          armorName: armorName,
           prediction: !!item.prediction,
         },
       });
@@ -394,7 +515,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   }
 
   if (tracksToLoadArray.includes('campaign')) {
-    parseCsvString<any>(sources.campaign).forEach((item, index) => {
+    parseCsvString<CampaignItem>(sources.campaign).forEach((item, index) => {
       addItem('campaign', {
         id: `campaign-${item.startTime}-${index}`,
         type: 'campaign',
@@ -411,14 +532,14 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
 
   if (tracksToLoadArray.includes('pickup')) {
     const pickupGroups = new Map<string, ScheduleItem>();
-    parseCsvString<any>(sources.pickup).forEach((item, index) => {
+    parseCsvString<PickupItem>(sources.pickup).forEach((item) => {
       if (!item.startTime || !item.endTime) return;
-      const groupKey = `${item.startTime}|${item.endTime}`; // Grouping based on KST string
+      const groupKey = `${item.startTime}|${item.endTime}`;
       const studentInfo: PickupStudentInfo = {
         id: item.studentId,
         limited: item.limited,
         rerun: item.rerun,
-        fast: item.fast,
+        fest: item.fest,
       };
       const isPrediction = !!item.prediction;
       if (!pickupGroups.has(groupKey)) {
@@ -431,10 +552,12 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
           details: { students: [studentInfo], prediction: isPrediction },
         });
       } else {
-        const group = pickupGroups.get(groupKey)!;
-        group.details!.students!.push(studentInfo);
-        if (isPrediction) {
-          group.details!.prediction = true;
+        const group = pickupGroups.get(groupKey);
+        if (group?.details?.students) {
+          group.details.students.push(studentInfo);
+          if (isPrediction) {
+            group.details.prediction = true;
+          }
         }
       }
     });
@@ -442,7 +565,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   }
 
   if (tracksToLoadArray.includes('maintenance')) {
-    parseCsvString<any>(sources.maintenance).forEach((item) => {
+    parseCsvString<MaintenanceItem>(sources.maintenance).forEach((item) => {
       addItem('maintenance', {
         id: `maintenance-${item.startTime}`,
         type: 'maintenance',
@@ -455,37 +578,40 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   }
 
   if (tracksToLoadArray.includes('story')) {
-    parseCsvString<any>(sources.mainstory).forEach((item, index) => {
+    parseCsvString<StoryItemBase>(sources.mainstory).forEach((item, index) => {
       if (item.startTime) {
         // Calculate endTime for one-time events based on KST
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endTimeISO = new Date(startMs + MS_PER_HOUR).toISOString();
+        const titleKey = convTitleLnag(locale);
+        const title = item.volume != null ? `Vol.${item.volume} Ch.${item.chapter} ${item.part ? `Pt.${item.part}` : ''}` : item[titleKey as keyof typeof item] || item[convTitleLnag('ja')];
         addItem('mainstory', {
           id: `mainstory-${item.startTime}-${index}`,
           type: 'mainstory',
           startTime: item.startTime,
-          endTime: endTimeISO, // ISO string for 1 hour later
-          title: item.volume != null ? `Vol.${item.volume} Ch.${item.chapter} ${item.part ? `Pt.${item.part}` : ''}` : item[convTitleLnag(locale)] || item[convTitleLnag('ja')],
+          endTime: endTimeISO,
+          title: String(title),
           details: { isPointEvent: true, prediction: !!item.prediction },
         });
       }
     });
-    parseCsvString<any>(sources.ministory).forEach((item, index) => {
+    parseCsvString<StoryItemBase>(sources.ministory).forEach((item, index) => {
       if (item.startTime) {
         // Calculate endTime for one-time events based on KST
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endTimeISO = new Date(startMs + MS_PER_HOUR).toISOString();
-        const title = item[convTitleLnag(locale)] || item[convTitleLnag('en')];
+        const titleKey = convTitleLnag(locale);
+        const storyTitle = item[titleKey as keyof typeof item] || item[convTitleLnag('en')];
+        const miniText = (t_cal('story.mini') as string).replace('{{title}}', String(storyTitle));
         addItem('ministory', {
           id: `ministory-${item.startTime}-${index}`,
           type: 'ministory',
           startTime: item.startTime,
-          endTime: endTimeISO, // ISO string for 1 hour later
-          title: `${String(t_cal('story.mini')).replace('{{title}}', title)}`,
-          // title: '',
+          endTime: endTimeISO,
+          title: miniText,
           details: {
             isPointEvent: true,
-            title: item[convTitleLnag(locale)] || item[convTitleLnag('en')],
+            title: String(storyTitle),
             prediction: !!item.prediction,
           },
         });
@@ -494,17 +620,19 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   }
 
   if (tracksToLoadArray.includes('patch')) {
-    parseCsvString<any>(sources.patch).forEach((item, index) => {
+    parseCsvString<PatchItem>(sources.patch).forEach((item, index) => {
       if (item.startTime) {
         // Calculate endTime for one-time events based on KST
         const startMs = new Date(parseKST(item.startTime)).getTime();
         const endTimeISO = new Date(startMs + MS_PER_HOUR).toISOString();
+        const titleKey = convTitleLnag(locale);
+        const title = item[titleKey as keyof typeof item] || item[convTitleLnag('en')];
         addItem('patch', {
           id: `patch-${item.startTime}-${index}`,
           type: 'patch',
           startTime: item.startTime,
-          endTime: endTimeISO, // ISO string for 1 hour later
-          title: `${item[convTitleLnag(locale)] || item[convTitleLnag('en')]}`,
+          endTime: endTimeISO,
+          title: String(title),
           details: { isPointEvent: true, prediction: !!item.prediction },
         });
       }
@@ -521,7 +649,7 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
       maxDate = new Date(nowMs + (365 / 2) * 24 * MS_PER_HOUR);
     }
 
-    let currentMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const currentMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     while (currentMonth <= maxDate) {
       // Create shop reset time (Every 1st of the month, 4:00) based on KST (UTC+9)
       // Date(year, month, day, hour) is created in local timezone (KST)
@@ -557,32 +685,29 @@ export async function loadScheduleData({ server, locale, i18n, tracksToLoad }: L
   const timeRange = { min: minTime, max: maxTime };
 
   // (filteredTracks return logic is the same)
-  const filteredTracks = Object.keys(tracks).reduce(
-    (acc, key) => {
-      // ...
-      if ((key === 'mainstory' || key === 'ministory') && tracksToLoadArray.includes('story')) {
-        acc[key] = tracks[key];
-      } else if (key === 'misc' && tracksToLoadArray.includes('misc')) {
-        acc[key] = tracks[key];
-      } else if (key === 'patch' && tracksToLoadArray.includes('patch')) {
-        acc[key] = tracks[key];
-      } else if (key === 'maintenance' && tracksToLoadArray.includes('maintenance')) {
-        acc[key] = tracks[key];
-      } else if (key === 'pickup' && tracksToLoadArray.includes('pickup')) {
-        acc[key] = tracks[key];
-      } else if (key === 'campaign' && tracksToLoadArray.includes('campaign')) {
-        acc[key] = tracks[key];
-      } else if (key === 'multifloor' && tracksToLoadArray.includes('multifloor')) {
-        acc[key] = tracks[key];
-      } else if (key === 'event' && tracksToLoadArray.includes('event')) {
-        acc[key] = tracks[key];
-      } else if (key === 'raid' && tracksToLoadArray.includes('raid')) {
-        acc[key] = tracks[key];
-      }
-      return acc;
-    },
-    {} as Record<string, ScheduleItem[]>,
-  );
+  const filteredTracks = Object.keys(tracks).reduce<Record<string, ScheduleItem[]>>((acc, key) => {
+    // ...
+    if ((key === 'mainstory' || key === 'ministory') && tracksToLoadArray.includes('story')) {
+      acc[key] = tracks[key];
+    } else if (key === 'misc' && tracksToLoadArray.includes('misc')) {
+      acc[key] = tracks[key];
+    } else if (key === 'patch' && tracksToLoadArray.includes('patch')) {
+      acc[key] = tracks[key];
+    } else if (key === 'maintenance' && tracksToLoadArray.includes('maintenance')) {
+      acc[key] = tracks[key];
+    } else if (key === 'pickup' && tracksToLoadArray.includes('pickup')) {
+      acc[key] = tracks[key];
+    } else if (key === 'campaign' && tracksToLoadArray.includes('campaign')) {
+      acc[key] = tracks[key];
+    } else if (key === 'multifloor' && tracksToLoadArray.includes('multifloor')) {
+      acc[key] = tracks[key];
+    } else if (key === 'event' && tracksToLoadArray.includes('event')) {
+      acc[key] = tracks[key];
+    } else if (key === 'raid' && tracksToLoadArray.includes('raid')) {
+      acc[key] = tracks[key];
+    }
+    return acc;
+  }, {});
 
   return { tracks: filteredTracks, timeRange };
 }

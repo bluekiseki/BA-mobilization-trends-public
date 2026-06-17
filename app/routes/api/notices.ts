@@ -2,6 +2,23 @@ import { type LoaderFunctionArgs } from 'react-router';
 import { env } from 'cloudflare:workers';
 import { vaildClient } from '~/utils/vaildClient';
 
+interface PostRow {
+  post_id: number;
+  region: string;
+  category: string;
+  type: string;
+  thumbnail: string;
+  url: string;
+  first_crawled_at: string;
+  title: string;
+  api_modify_date: string;
+  api_create_date: string;
+}
+
+interface CountRow {
+  total: number;
+}
+
 export async function loader({ request }: LoaderFunctionArgs) {
   if (!vaildClient(request)) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -20,10 +37,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const limit = Number(url.searchParams.get('limit')) || 20;
   const page = Number(url.searchParams.get('page')) || 1;
   const offset = (page - 1) * limit;
+  const withTotal = url.searchParams.get('with_total') === 'true';
 
   // 1. Prepare arrays to separate dynamic filter conditions and binding values
   const conditions = [];
-  const bindValues: any[] = []; // Values to be mapped to '?'
+  const bindValues: string[] = []; // Values to be mapped to '?'
 
   // 2. Parameter binding processing (SQL Injection protection)
   if (region !== 'ALL') {
@@ -44,14 +62,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const orderBy = sort === 'new' ? 'pv.api_create_date' : 'pv.api_modify_date';
 
   const query = `
-    SELECT 
+    SELECT
         p.post_id, p.region, p.category, p.type, p.thumbnail, p.url, p.first_crawled_at,
         pv.title, pv.api_modify_date, pv.api_create_date
     FROM posts p
     JOIN post_versions pv ON p.post_id = pv.post_id
-    WHERE pv.version_id IN (
-        SELECT MAX(version_id) FROM post_versions GROUP BY post_id
-    )
+    WHERE pv.is_latest = 1
     ${whereClause}
     ORDER BY ${orderBy} DESC
     LIMIT ? OFFSET ?;
@@ -59,29 +75,31 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const countQuery = `
     SELECT COUNT(*) as total
-    FROM posts p
-    WHERE 1=1 ${whereClause};
+    FROM post_versions pv
+    JOIN posts p ON p.post_id = pv.post_id
+    WHERE pv.is_latest = 1 ${whereClause};
   `;
 
   try {
-    // 3. Bind values from bindValues array along with limit and offset in order using the spread operator (...)
-    const [dataResult, countResult] = await Promise.all([
-      db
-        .prepare(query)
-        .bind(...bindValues, limit, offset)
-        .all(),
-      db
-        .prepare(countQuery)
-        .bind(...bindValues)
-        .first(),
-    ]);
+    if (withTotal) {
+      const [dataResult, countResult] = await Promise.all([
+        db
+          .prepare(query)
+          .bind(...bindValues, limit, offset)
+          .all<PostRow>(),
+        db
+          .prepare(countQuery)
+          .bind(...bindValues)
+          .first<CountRow>(),
+      ]);
+      return Response.json({ data: dataResult.results, total: countResult?.total ?? 0, page, limit });
+    }
 
-    return Response.json({
-      data: dataResult.results,
-      total: countResult?.total || 0,
-      page,
-      limit,
-    });
+    const dataResult = await db
+      .prepare(query)
+      .bind(...bindValues, limit, offset)
+      .all<PostRow>();
+    return Response.json({ data: dataResult.results, page, limit });
   } catch (error) {
     console.error(error);
     return Response.json({ error: 'DB Error' }, { status: 500 });

@@ -6,7 +6,7 @@ import { Card } from '~/components/dashboard/card';
 import {
   getCharacterStarValue,
   InclusionUsage,
-  isTotalAssault,
+  // isTotalAssault,
   type Character,
   type PortraitData,
   type ReportEntryRank,
@@ -15,12 +15,12 @@ import {
   type UsageStats,
 } from '~/components/dashboard/common';
 import type { GameServer, RaidInfo } from '~/types/data';
-import { difficultyInfo } from '~/components/Difficulty';
+import { difficultyInfo } from '~/components/raid/Difficulty';
 import { DownloadButton } from './DownloadButton';
 import { RankFilter, type RankRange } from './teamDetail/rankFilter';
 import { ScoreDistributionChart } from './teamDetail/scoreDistributionChart';
 import { StackedPickRateChart } from './teamDetail/stackedPickRateChart';
-import { PartyCountChart } from './teamDetail/partyCountChart';
+import { PartyCountChart, PartyCountRankChart } from './teamDetail/partyCountChart';
 import { RankUsageChart } from './teamDetail/rankUsageChart';
 import { CompositionChart } from './teamDetail/compositionChart';
 import { TableFilterPanelComponent } from './teamDetail/tableFilterPanelComponent';
@@ -101,68 +101,6 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
     setCurrentPage(1);
   };
 
-  // const detailedFilteredData = useMemo(() => {
-  //   if (tableFilters.includable.length === 0 && tableFilters.excludable.length === 0) {
-  //     return rankFilteredData;
-  //   }
-
-  //   return rankFilteredData.filter((entry) => {
-  //     let assist_brrowed_id = null;
-
-  //     const teamChars = entry.t.flatMap((team) => [...team.m, ...team.s]).filter(Boolean);
-  //     const assist = teamChars.filter((c) => teamChars.filter((cc) => cc.id == c.id).length > 1);
-
-  //     for (const cond of tableFilters.excludable) {
-  //       const count = teamChars.filter((c) => c.id === cond.id).length;
-
-  //       if (cond.isHardExclude) {
-  //         if (count > 0) return false;
-  //       } else {
-  //         if (count > 1) return false;
-  //         if (count == 1 && assist.length && assist[0].id != cond.id) return false;
-  //         if (count == 1 && assist_brrowed_id != null) return false;
-  //         if (count == 1) assist_brrowed_id = cond.id;
-  //       }
-  //     }
-
-  //     for (const cond of tableFilters.includable) {
-  //       const count = teamChars.filter((c) => c.id === cond.id && cond.starValues.includes(Math.abs(getCharacterStarValue(c)))).length;
-
-  //       const student_count = teamChars.filter((c) => c.id === cond.id).length;
-  //       let isConditionMet = true;
-
-  //       if (cond.mustBeIncluded) {
-  //         if (cond.usage === InclusionUsage.Twice) {
-  //           if (count !== 2) return false;
-  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
-  //           else assist_brrowed_id = cond.id;
-  //         } else if (cond.usage === InclusionUsage.Any && count === 0) return false;
-  //         else if (cond.usage === InclusionUsage.Assist) {
-  //           if (count === 0) return false;
-  //           if (student_count == 2) return false;
-  //           if (assist.length && !assist.map((v) => v.id).includes(cond.id)) return false;
-  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
-  //           assist_brrowed_id = cond.id;
-  //         }
-  //       } else if (student_count) {
-  //         if (student_count > count) return false;
-
-  //         if (cond.usage === InclusionUsage.Twice) {
-  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
-  //           if (count === 2) assist_brrowed_id = cond.id;
-  //         } else if (cond.usage === InclusionUsage.Assist) {
-  //           if (student_count == 2) return false;
-  //           if (assist.length && !assist.map((v) => v.id).includes(cond.id)) return false;
-  //           if (assist_brrowed_id && assist_brrowed_id != cond.id) return false;
-  //           assist_brrowed_id = cond.id;
-  //         }
-  //       }
-  //       if (!isConditionMet) return false;
-  //     }
-  //     return true;
-  //   });
-  // }, [rankFilteredData, tableFilters]);
-
   const { partyCountMin, partyCountMax } = useMemo(() => {
     if (!rankFilteredData.length) return { partyCountMin: 1, partyCountMax: 1 };
     let min = 99;
@@ -239,7 +177,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
         const stars = charStarsMap.get(cond.id) || [];
         const count = stars.filter((star) => cond.starValues.includes(star)).length;
 
-        let isConditionMet = true;
+        const isConditionMet = true;
 
         if (cond.mustBeIncluded) {
           if (cond.usage === InclusionUsage.Twice) {
@@ -325,7 +263,8 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
       entry.t.forEach((team) => [...team.m, ...team.s].forEach((c) => c && uniqueChars.add(c)));
       uniqueChars.forEach((char) => {
         if (!stats.has(char.id)) stats.set(char.id, { total: 0, stars: new Map() });
-        const charStats = stats.get(char.id)!;
+        const charStats = stats.get(char.id);
+        if (!charStats) return;
         charStats.total++;
         const starVal = getCharacterStarValue(char);
         charStats.stars.set(starVal, (charStats.stars.get(starVal) || 0) + 1);
@@ -334,7 +273,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
     return stats;
   }, [rankFilteredData]);
 
-  const isRaid = isTotalAssault(raidInfo);
+  // const isRaid = isTotalAssault(raidInfo);
 
   // Refs
   const rankFilterRef = useRef<HTMLDivElement>(null);
@@ -506,8 +445,9 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
       </div>
 
       <div id={sections[3].id} className="gap-8 mb-6 sm:mb-14 scroll-mt-15" ref={partyCountRef}>
-        <Card title={t('teamUsageCount')} height={'h-[125px]'} defaultExpanded={true} icon={<HiOutlineUsers className="w-4 h-4" />}>
+        <Card title={t('teamUsageCount')} height={'h-[340px]'} defaultExpanded={true} icon={<HiOutlineUsers className="w-4 h-4" />}>
           <PartyCountChart data={rankFilteredData} />
+          <PartyCountRankChart data={rankFilteredData} raidInfo={raidInfo} />
         </Card>
       </div>
 
@@ -577,13 +517,13 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
             handleItemsPerPageChange={handleItemsPerPageChange}
             handleLoadMore={handleLoadMore}
             handleScrollToTop={handleScrollToTableArea}
-            showRank={!isRaid}
-            activeRange={{
-              id: activeRangeId,
-              name: 'Custom',
-              min: currentMin,
-              max: currentMax,
-            }}
+            // showRank={!isRaid}
+            // activeRange={{
+            //   id: activeRangeId,
+            //   name: 'Custom',
+            //   min: currentMin,
+            //   max: currentMax,
+            // }}
             raidInfo={raidInfo}
             server={server}
           />

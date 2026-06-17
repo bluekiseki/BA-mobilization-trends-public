@@ -1,6 +1,7 @@
 // vite-plugin-obfuscator.ts
 import type { Plugin } from 'vite';
 import JavaScriptObfuscator from 'javascript-obfuscator';
+import { collectCrossChunkNames } from './collectCrossChunkNames';
 
 // Gets the option type of JavaScriptObfuscator.
 type ObfuscatorOptions = Parameters<typeof JavaScriptObfuscator.obfuscate>[1];
@@ -24,7 +25,7 @@ export default function vitePluginObfuscator(options?: VitePluginObfuscatorOptio
     name: 'vite-plugin-obfuscator',
 
     // This hook is called after bundling is complete
-    async generateBundle(outputOptions, bundle) {
+    generateBundle(_outputOptions, bundle) {
       for (const fileName in bundle) {
         if (fileFilter.test(fileName)) {
           const file = bundle[fileName];
@@ -32,18 +33,29 @@ export default function vitePluginObfuscator(options?: VitePluginObfuscatorOptio
           if (file.type === 'chunk') {
             console.log(`[vite-plugin-obfuscator] Obfuscating: ${fileName}`);
 
-            try {
-              const obfuscationResult = JavaScriptObfuscator.obfuscate(file.code, obfuscatorOptions);
+            // Prevent renaming of cross-chunk identifiers (imports/exports).
+            // Without this, the obfuscator renames them in the body but not in
+            // the import/export statement, causing ReferenceError at runtime.
+            const crossChunkNames = collectCrossChunkNames(file);
+            const reservedNames = [...(obfuscatorOptions.reservedNames ?? []), ...crossChunkNames.map((name) => `^${name}$`)];
 
-              // Update
+            try {
+              const obfuscationResult = JavaScriptObfuscator.obfuscate(file.code, {
+                ...obfuscatorOptions,
+                reservedNames,
+              });
+
               file.code = obfuscationResult.getObfuscatedCode();
 
-              // Update the source map when it has been created
               if (obfuscationResult.getSourceMap()) {
-                file.map = JSON.parse(obfuscationResult.getSourceMap());
+                const sourceMapStr = obfuscationResult.getSourceMap();
+                if (sourceMapStr) {
+                  file.map = JSON.parse(sourceMapStr) as typeof file.map;
+                }
               }
             } catch (error) {
-              this.warn(`[vite-plugin-obfuscator] Failed to obfuscate ${fileName}: ${error}`);
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              this.warn(`[vite-plugin-obfuscator] Failed to obfuscate ${fileName}: ${errorMsg}`);
             }
           }
         }

@@ -39,7 +39,9 @@ const NUMERIC_FIELDS = [
   'targetGear',
 ];
 
-function getFieldValue(row: Row, field: string): any {
+const SKILL_FIELDS = ['ex', 'normal', 'passive', 'sub'] as const;
+
+function getFieldValue(row: Row, field: string): string | number | null {
   if (field === 'hasPlan') return row.plan ? 1 : 0;
   if (field === 'school') return row.school;
   if (field === 'name') return row.name;
@@ -69,22 +71,23 @@ function getFieldValue(row: Row, field: string): any {
   if (field === 'targetEquipment2') return row.plan.target.equipment[2] || 0;
   if (field === 'targetGear') return row.plan.target.gear || 0;
 
-  if (['ex', 'normal', 'passive', 'sub'].includes(field)) {
-    return (row.plan.current as any)[field] || 0;
+  if (SKILL_FIELDS.includes(field as (typeof SKILL_FIELDS)[number])) {
+    const f = field as (typeof SKILL_FIELDS)[number];
+    return row.plan.current[f] || 0;
   }
 
   return null;
 }
 
-function compareValues(a: any, b: any, field: string): number {
+function compareValues(a: string | number | null, b: string | number | null, field: string): number {
   if (field === 'hasPlan' || field === 'school' || field === 'name' || field === 'acquiredDate') {
     if (typeof a === 'string' && typeof b === 'string') {
       return a.localeCompare(b);
     }
-    return (a || 0) - (b || 0);
+    return ((a as number) || 0) - ((b as number) || 0);
   }
 
-  return (a || 0) - (b || 0);
+  return ((a as number) || 0) - ((b as number) || 0);
 }
 
 export function compareRows(a: Row, b: Row, sortStack: SortField[]): number {

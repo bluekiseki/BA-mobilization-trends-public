@@ -47,7 +47,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
   const draftClear = useDraftUndoRedoStore((s) => s.clear);
 
   const updatePlan = useCallback(
-    (uuid: string, field: string, value: any, saveUndo = true) => {
+    (uuid: string, field: string, value: unknown, saveUndo = true) => {
       if (saveUndo) draftPushUndo(draftPlans);
       // console.log('updateDraft',uuid, field, value)
       updateDraft(uuid, field, value);
@@ -184,11 +184,11 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         return {
           studentId: sid,
           name: student.Name,
-          school: t_club(
+          school: (t_club as (key: string, defaultValue?: string) => string)(
             ((x: string) => {
               if (['Sakugawa', 'ETC', 'Tokiwadai'].includes(x)) return 'ETC';
               return x;
-            })(student.School) as any,
+            })(student.School),
             student.School,
           ),
           portrait: studentPortraits[sid],
@@ -200,7 +200,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
       .filter((row) => {
         if (lower && !row.name.toLowerCase().includes(lower)) return false;
         if (showOnlySelected) {
-          if (!row.plan || row.plan.isSelected === false) return false;
+          if (!row.plan || !row.plan.isSelected) return false;
         }
         return true;
       })
@@ -217,9 +217,10 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         return unsorted;
       }
 
+      const savedMap = savedRowsOrderRef.current;
       return unsorted.sort((a, b) => {
-        const aOrder = savedRowsOrderRef.current!.get(a.studentId) ?? 9999;
-        const bOrder = savedRowsOrderRef.current!.get(b.studentId) ?? 9999;
+        const aOrder = savedMap.get(a.studentId) ?? 9999;
+        const bOrder = savedMap.get(b.studentId) ?? 9999;
         return aOrder - bOrder;
       });
     }
@@ -266,12 +267,12 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
     [updatePlan, draftPlans, draftPushUndo],
   );
 
-  const hGroup = 'text-xs font-bold text-center px-1 py-1 border-r border-b border-gray-200 dark:border-neutral-700 whitespace-nowrap';
-  const hField = 'text-xs font-medium text-center px-0.5 py-0.5 border-r border-b border-gray-200 dark:border-neutral-700 whitespace-nowrap';
-  const td = 'border-r border-b border-gray-100 dark:border-neutral-800 text-center p-0';
+  const hGroup = 'text-xs font-bold text-center px-1 py-1 border-r border-b border-neutral-200 dark:border-neutral-700 whitespace-nowrap';
+  const hField = 'text-xs font-medium text-center px-0.5 py-0.5 border-r border-b border-neutral-200 dark:border-neutral-700 whitespace-nowrap';
+  const td = 'border-r border-b border-neutral-100 dark:border-neutral-800 text-center p-0';
   const inp =
-    'w-12 text-xs text-center bg-transparent border-0 focus:ring-1 focus:ring-blue-400 focus:outline-none rounded py-0.5 dark:text-gray-200 disabled:text-gray-300 dark:disabled:text-neutral-600';
-  const sel = 'text-xs bg-transparent border-0 focus:ring-1 focus:ring-blue-400 rounded dark:text-gray-200 cursor-pointer py-0.5 w-[80px]';
+    'w-12 text-xs text-center bg-transparent border-0 focus:ring-1 focus:ring-blue-400 focus:outline-none rounded py-0.5 dark:text-neutral-200 disabled:text-neutral-300 dark:disabled:text-neutral-600';
+  const sel = 'text-xs bg-transparent border-0 focus:ring-1 focus:ring-blue-400 rounded dark:text-neutral-200 cursor-pointer py-0.5 w-[80px]';
 
   const L = { add: 0, sel: 40, icon: 80, name: 112, school: 232 };
   const hClass = { td, inp, sel, L };
@@ -301,7 +302,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
             <MdSave size={14} />
             {t('messages.save')}
           </button>
-          <button onClick={() => discardDraft()} className="px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white text-xs rounded font-semibold flex items-center gap-1">
+          <button onClick={() => discardDraft()} className="px-3 py-1 bg-neutral-400 hover:bg-neutral-500 text-white text-xs rounded font-semibold flex items-center gap-1">
             <MdClose size={14} />
             {t('messages.cancel')}
           </button>
@@ -356,7 +357,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         <div className="text-sm px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 rounded">
           {t('messages.sortLabel')}{' '}
           {sortStack
-            .map((s, i) => {
+            .map((s) => {
               const sortLabels: Record<string, string> = {
                 hasPlan: t('sortLabels.hasPlan'),
                 isSelected: t('sortLabels.isSelected'),
@@ -394,11 +395,11 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         </div>
       )}
 
-      <div className="text-sm text-gray-600 dark:text-gray-400 px-3 py-2">
-        {t('messages.recruitedStudents')}: <span className="font-semibold text-gray-900 dark:text-gray-100">{rows.filter((r) => r.plan !== null).length}</span>
+      <div className="text-sm text-neutral-600 dark:text-neutral-400 px-3 py-2">
+        {t('messages.recruitedStudents')}: <span className="font-semibold text-neutral-900 dark:text-neutral-100">{rows.filter((r) => r.plan !== null).length}</span>
       </div>
 
-      <div className="w-full overflow-hidden rounded-lg border border-gray-200 dark:border-neutral-700">
+      <div className="w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
         <div ref={scrollContainerRef} className="overflow-x-auto overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)', overscrollBehaviorX: 'contain', transform: 'translateZ(0)' }}>
           <table className="border-collapse text-xs" style={{ minWidth: 'min-content' }}>
             <SpreadsheetHeader hGroup={hGroup} hField={hField} L={L} handleSort={handleSort} getSortIcon={getSortIcon} screenWidth={screenWidth} />

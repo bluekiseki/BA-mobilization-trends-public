@@ -1656,5 +1656,52 @@
     "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 99836 },
     "Platinum": 39311120,
     "TotalParticipants": 339836
+  },
+  {
+    "Id": "E33",
+    "Boss": "EN0006",
+    "Location": "Street",
+    "Type": "Unarmed",
+    "Date": "2026-05-13",
+    "MaxLv": 90,
+    "Cnt": { "All": 265305, "Torment": 29745, "Insane": 41914, "Veryhard": 13970, "Extreme": 80563, "Normal": 4616, "Hardcore": 74962, "Hard": 6695 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 25305 },
+    "Platinum": 106916337,
+    "TotalParticipants": 265305
+  },
+  {
+    "Id": "E33",
+    "Boss": "EN0006",
+    "Location": "Street",
+    "Type": "LightArmor",
+    "Date": "2026-05-13",
+    "MaxLv": 90,
+    "Cnt": { "All": 265305, "Torment": 21332, "Insane": 34039, "Extreme": 87825, "Hardcore": 79833, "Hard": 7509, "Normal": 5218, "Veryhard": 15505 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 25305 },
+    "Platinum": 106916337,
+    "TotalParticipants": 265305
+  },
+  {
+    "Id": "E33",
+    "Boss": "EN0006",
+    "Location": "Street",
+    "Type": "ElasticArmor",
+    "Date": "2026-05-13",
+    "MaxLv": 90,
+    "Cnt": { "All": 265305, "Insane": 74698, "Extreme": 80988, "Hardcore": 71241, "Veryhard": 14375, "Hard": 7187, "Normal": 5507 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 25305 },
+    "Platinum": 106916337,
+    "TotalParticipants": 265305
+  },
+  {
+    "Id": "R89",
+    "Boss": "EN0022",
+    "Location": "Street",
+    "Date": "2026-06-03",
+    "MaxLv": 90,
+    "Cnt": { "All": 324116, "Lunatic": 188, "Torment": 12702, "Insane": 33847, "Extreme": 181913, "Hardcore": 60916, "Veryhard": 12795, "Hard": 15874, "Normal": 5881 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 84116 },
+    "Platinum": 27981655,
+    "TotalParticipants": 324116
   }
 ]

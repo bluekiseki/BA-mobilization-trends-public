@@ -4,7 +4,7 @@ import { isLarger, type GrowthPlan } from './useGlobalStore';
 interface SpreadsheetDraftState {
   draftPlans: GrowthPlan[];
   savedPlans: GrowthPlan[];
-  updateDraft: (uuid: string, field: string, value: any) => void;
+  updateDraft: (uuid: string, field: string, value: unknown) => void;
   addDraftPlan: (studentId: number) => string;
   removeDraftPlan: (uuid: string) => void;
   initializeDraft: (plans: GrowthPlan[], keepPendingChanges?: boolean) => void;
@@ -21,23 +21,24 @@ export const useSpreadsheetDraftStore = create<SpreadsheetDraftState>((set, get)
 
   initializeDraft: (plans: GrowthPlan[], keepPendingChanges = false) => {
     set({
-      draftPlans: JSON.parse(JSON.stringify(plans)),
-      savedPlans: JSON.parse(JSON.stringify(plans)),
+      draftPlans: JSON.parse(JSON.stringify(plans)) as GrowthPlan[],
+      savedPlans: JSON.parse(JSON.stringify(plans)) as GrowthPlan[],
       hasPendingChanges: keepPendingChanges,
     });
   },
 
-  updateDraft: (uuid: string, field: string, value: any) => {
+  updateDraft: (uuid: string, field: string, value: unknown) => {
     set((state) => {
       const newPlans = state.draftPlans.map((p) => {
         if (p.uuid === uuid) {
-          const newPlan = JSON.parse(JSON.stringify(p));
+          const newPlan = JSON.parse(JSON.stringify(p)) as GrowthPlan;
           const [main, sub] = field.split('.');
 
           if (sub) {
-            (newPlan as any)[main][sub] = value;
+            const section = newPlan[main as keyof GrowthPlan] as Record<string, unknown>;
+            section[sub] = value;
           } else {
-            (newPlan as any)[field] = value;
+            (newPlan as Record<string, unknown>)[field] = value;
             if (field === 'studentId') {
               newPlan.current.gear = 0;
               newPlan.target.gear = 0;
@@ -52,13 +53,13 @@ export const useSpreadsheetDraftStore = create<SpreadsheetDraftState>((set, get)
             // Numeric fields: target >= current
             if (currentVal > targetVal) {
               console.log(`[VALIDATION] Field: ${field}, sub: ${sub}, current: ${currentVal}, target: ${targetVal} -> correcting to ${currentVal}`);
-              newPlan.target[sub as keyof typeof newPlan.target] = currentVal;
+              (newPlan.target as Record<string, unknown>)[sub] = currentVal;
             }
           } else if (sub && typeof currentVal === 'object' && typeof targetVal === 'object') {
             // Object fields (equipment, potential, etc.)
-            if (isLarger(Object.values(currentVal), Object.values(targetVal))) {
+            if (isLarger(Object.values(currentVal as Record<string, unknown>), Object.values(targetVal as Record<string, unknown>))) {
               console.log(`[VALIDATION] Field: ${field}, correcting array field`);
-              newPlan.target[sub as keyof typeof newPlan.target] = currentVal;
+              (newPlan.target as Record<string, unknown>)[sub] = currentVal;
             }
           }
 
@@ -95,7 +96,7 @@ export const useSpreadsheetDraftStore = create<SpreadsheetDraftState>((set, get)
   discardDraft: () => {
     const { savedPlans } = get();
     set({
-      draftPlans: JSON.parse(JSON.stringify(savedPlans)),
+      draftPlans: JSON.parse(JSON.stringify(savedPlans)) as GrowthPlan[],
       hasPendingChanges: false,
     });
   },

@@ -39,7 +39,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Break!",
+    "En": "Head Prefect Hina's Summer Vacation!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2021-07-29 12:30:00",
     "CloseTime": "2021-08-12 12:00:00"
@@ -182,7 +182,7 @@
   "822": {
     "Name": "Event_Name_822",
     "Kr": "아트라하시스의 방주 점령전",
-    "Jp": "アトラ・ハシースの箱舟占領戦",
+    "Jp": "アトラ・ハシースの箱舟占領戦 ",
     "En": "The Ark of Atrahasis Conquest",
     "Tw": "阿特拉哈西斯的方舟占領戰",
     "OpenTime": "2023-02-22 11:00:00",
@@ -380,7 +380,7 @@
   "845": {
     "Name": "Event_Name_845",
     "Kr": "Pray-Ball! ~노려라! 만루 홈런~",
-    "Jp": "プレイボール！ ～目指せ！満塁ホームラン～",
+    "Jp": "プレイボール！～目指せ！満塁ホームラン～",
     "En": "Pray-Ball! Swing for the Grand Slam!",
     "Tw": "Pray-Ball！～瞄準滿壘全壘打！～",
     "OpenTime": "2025-03-26 11:00:00",
@@ -452,7 +452,7 @@
   "853": {
     "Name": "Event_Name_853",
     "Kr": "불인의 길 ~패션쇼 경호 임무!의 서~",
-    "Jp": "不忍ノ道 ～ファッションショー警護任務！の巻～",
+    "Jp": "不忍ノ道～ファッションショー警護任務！の巻～",
     "En": "An Unconcealed Path - Episode: Fashion Show Security Duty!",
     "Tw": "不忍之道～時裝秀警備任務！之卷～",
     "OpenTime": "2025-12-24 11:00:00",
@@ -462,17 +462,17 @@
     "Name": "Event_Name_854",
     "Kr": "강철대륙 공략전",
     "Jp": "鋼鉄大陸攻略戦",
-    "En": null,
-    "Tw": null,
+    "En": "Operational Plan: Steel Continent",
+    "Tw": "鋼鐵大陸攻略戰",
     "OpenTime": "2026-01-20 11:00:00",
     "CloseTime": "2026-02-18 10:59:59"
   },
   "855": {
     "Name": "Event_Name_855",
-    "Kr": "???",
+    "Kr": "게임개발부 청소 대작전!",
     "Jp": "ゲーム開発部のお掃除大作戦！",
-    "En": "???",
-    "Tw": "???",
+    "En": "Game Development Department's Cleanup Operation!",
+    "Tw": "遊戲開發部大掃除作戰！",
     "OpenTime": "2026-02-18 11:00:00",
     "CloseTime": "2026-03-04 10:59:59"
   },
@@ -493,6 +493,15 @@
     "Tw": null,
     "OpenTime": "2026-04-21 11:00:00",
     "CloseTime": "2026-05-06 10:59:59"
+  },
+  "858": {
+    "Name": "Event_Name_857",
+    "Kr": "특수작전: 로어추적 편",
+    "Jp": "特殊作戦：ロア追跡編",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-05-27 11:00:00",
+    "CloseTime": "2026-06-10 10:59:59"
   },
   "10801": {
     "Name": "Event_Name_801",
@@ -525,7 +534,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Break!",
+    "En": "Head Prefect Hina's Summer Vacation!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2022-09-07 11:00:00",
     "CloseTime": "2022-09-14 10:59:59"
@@ -830,11 +839,20 @@
   "10845": {
     "Name": "Event_Name_845",
     "Kr": "Pray-Ball! ~노려라! 만루 홈런~",
-    "Jp": "プレイボール！ ～目指せ！満塁ホームラン～",
+    "Jp": "プレイボール！～目指せ！満塁ホームラン～",
     "En": "Pray-Ball! Swing for the Grand Slam!",
     "Tw": "Pray-Ball！～瞄準滿壘全壘打！～",
     "OpenTime": "2026-05-06 11:00:00",
-    "CloseTime": "2026-05-20 10:59:59",
+    "CloseTime": "2026-05-20 10:59:59"
+  },
+  "10847": {
+    "Name": "Event_Name_847",
+    "Kr": "백에서 피어난 한 송이 ~정정당당하게, 수상 승부~",
+    "Jp": "百ヨリ出ズル一輪ノ～いざ尋常に、水上勝負～",
+    "En": "A Flower Blooms Among the Hundred: Fair and Square Aquatic Showdown",
+    "Tw": "百中綻放的一朵～光明正大的水上對決～",
+    "OpenTime": "2026-06-10 11:00:00",
+    "CloseTime": "2026-06-24 10:59:59",
     "Planable": true
   },
   "60001": {
@@ -997,27 +1015,26 @@
     "En": "[S18] Balancing Schale's Books with the General Student Council",
     "Tw": "[S18] 夏萊總結算with聯邦學生會",
     "OpenTime": "2026-05-20 11:00:00",
-    "CloseTime": "2026-05-27 10:59:59",
-    "Planable": false
+    "CloseTime": "2026-05-27 10:59:59"
   },
   "100854": {
     "Name": "Event_Name_854",
-    "Kr": "강철대륙 공략전 -말쿠트전-",
+    "Kr": "강철대륙 공략전 -말쿠트 보스전-",
     "Jp": "鋼鉄大陸攻略戦 -マルクト戦-",
-    "En": null,
-    "Tw": null,
+    "En": "Operational Plan: Steel Continent, Allied Operation: Malkuth",
+    "Tw": "鋼鐵大陸攻略戰，以及聯合作戰：馬爾庫特",
     "OpenTime": "2026-01-29 11:00:00",
     "CloseTime": "2026-02-12 10:59:59",
-    "Planable": false
+    "Planable": true
   },
   "200854": {
     "Name": "Event_Name_854",
-    "Kr": "데카그라마톤 결전",
+    "Kr": "???",
     "Jp": "DECAGRAMMATON決戦",
-    "En": null,
-    "Tw": null,
+    "En": "???",
+    "Tw": "???",
     "OpenTime": "2026-02-13 11:00:00",
     "CloseTime": "2026-02-18 10:59:59",
-    "Planable": false
+    "Planable": true
   }
 }

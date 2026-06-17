@@ -21,7 +21,6 @@ async function main() {
       detection: { order: ['htmlTag'], caches: [] },
       // Update this to the path where your locales will be served
       backend: { loadPath: '/api/locales/{{lng}}/{{ns}}' },
-      showSupportNotice: false,
     });
 
   startTransition(() => {
@@ -36,4 +35,4 @@ async function main() {
   });
 }
 
-main().catch((error) => console.error(error));
+main().catch((error: unknown) => console.error(error));

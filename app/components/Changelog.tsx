@@ -40,7 +40,7 @@ export function Changelog({ changelogData }: ChangelogProps) {
   }, [sortedData]);
 
   return (
-    <section className="bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-neutral-200 dark:border-neutral-700 p-6 transition-colors">
+    <section className="bg-white dark:bg-neutral-800 rounded-sm border border-neutral-200 dark:border-neutral-700 p-6 transition-colors">
       <h2 className="relative inline-block text-xl font-bold mb-4 text-neutral-800 dark:text-white">
         {t('changelog.title')}
         {hasRecentChanges && <div className="absolute -top-1 -right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full" title={t('changelog.newUpdate')} />}

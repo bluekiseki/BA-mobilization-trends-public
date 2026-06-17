@@ -5,6 +5,13 @@ import { Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
 import { FaListUl, FaChevronDown, FaChevronUp, FaTimes, FaPlus } from 'react-icons/fa';
 import { CustomNumberInput } from '../CustomInput';
 
+interface LogEntry {
+  i18nKey?: string;
+  params?: Record<string, string | number>;
+  title?: string;
+  amount: number;
+}
+
 export interface ProbTimelinePoint {
   date: string;
   pyroxene: number;
@@ -13,8 +20,7 @@ export interface ProbTimelinePoint {
   pyroxeneLow: number;
   pyroxeneWorst: number;
   maxCdf: number;
-  logs: { i18nKey?: string; params?: any; title?: string; amount: number }[];
-  [key: string]: any;
+  logs: LogEntry[];
 }
 
 export interface CustomLineConfig {
@@ -71,7 +77,7 @@ function StudentMarkerLabel({ viewBox, students }: { viewBox?: { x?: number; y?:
       {first.portrait ? (
         <image href={first.portrait} x={px} y={py} width={PORTRAIT_SIZE} height={PORTRAIT_SIZE} clipPath={`url(#${clipId})`} />
       ) : (
-        <circle cx={cx} cy={cy} r={PORTRAIT_SIZE / 2} fill="#6366f1" fillOpacity={0.7} />
+        <circle cx={cx} cy={cy} r={PORTRAIT_SIZE / 2} fill="#737373" fillOpacity={0.7} />
       )}
       {extra > 0 && (
         <g>
@@ -93,6 +99,7 @@ const off = 0.5;
 // ---------------------------------------------------------------------------
 export default function PyroTimelineChart({ probTimeline, customLines = [], customPercentiles = [], onAddCustomLine, onRemoveCustomLine, bannerMarkers = [] }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
+  const t_dynamic = t as (key: string, options?: Record<string, string | number>) => string;
   const [showDetails, setShowDetails] = useState(false);
   const [newPercentile, setNewPercentile] = useState<number | null>(null);
 
@@ -108,24 +115,24 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
 
   return (
     <div className="space-y-0">
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden transition-colors relative">
+      <div className="overflow-hidden transition-colors relative">
         {/* Custom probability line minimal UI: Placed at the top right of the chart in a very small, neutral tone without transparency */}
         <div className="absolute top-2 right-4 z-10 flex items-center gap-1.5">
           <div className="flex items-center gap-1 flex-wrap">
             {customPercentiles.map((p) => (
               <span
                 key={p}
-                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-neutral-800/80 border border-slate-200 dark:border-neutral-700 text-[10px] font-medium text-slate-400 dark:text-neutral-500 shadow-sm"
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-[10px] font-medium text-neutral-400 dark:text-neutral-500"
               >
                 {t('chart.upper_x', { x: p })}
-                <button onClick={() => onRemoveCustomLine?.(p)} className="hover:text-rose-400 transition-colors ml-0.5" title={t('chart.remove_line')}>
+                <button onClick={() => onRemoveCustomLine?.(p)} className="hover:text-red-400 transition-colors ml-0.5" title={t('chart.remove_line')}>
                   <FaTimes size={8} />
                 </button>
               </span>
             ))}
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-50 dark:bg-neutral-800/80 border border-slate-200 dark:border-neutral-700 rounded px-1.5 py-0.5 shadow-sm focus-within:border-blue-300 dark:focus-within:border-blue-700 transition-colors">
+          <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-0.5 focus-within:border-blue-300 dark:focus-within:border-blue-700 transition-colors">
             <CustomNumberInput
               // type="number"
               min={0.1}
@@ -134,29 +141,29 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
               value={newPercentile}
               onChange={(e) => setNewPercentile(e)}
               placeholder={t('chart.percentile_placeholder')}
-              className="w-8 bg-transparent text-[10px] text-slate-500 dark:text-neutral-400 placeholder:text-slate-300 dark:placeholder:text-neutral-600 focus:outline-none text-center"
+              className="w-8 bg-transparent text-[10px] text-neutral-500 dark:text-neutral-400 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 focus:outline-none text-center"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddPercentile();
               }}
             />
-            <button onClick={handleAddPercentile} className="text-slate-400 hover:text-blue-500 transition-colors" title={t('chart.add_btn_title')}>
+            <button onClick={handleAddPercentile} className="text-neutral-400 hover:text-blue-500 transition-colors" title={t('chart.add_btn_title')}>
               <FaPlus size={8} />
             </button>
           </div>
         </div>
 
-        <div className="p-4 h-[380px]">
+        <div className="sm:px-4 px-0 p-4 h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={probTimeline} margin={{ top: 42, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={probTimeline} margin={{ top: 42, right: 0, left: -30, bottom: 0 }} style={{ overflow: 'visible' }}>
               <defs>
                 <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
                   <stop offset={off} stopColor="#2563eb" stopOpacity={0.1} />
                   <stop offset={off} stopColor="#ef4444" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-slate-100 dark:text-neutral-800" />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={(v) => v.slice(5).replace('-', '/')} minTickGap={30} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-neutral-100 dark:text-neutral-800" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a3a3a3' }} tickFormatter={(v: string) => v.slice(5).replace('-', '/')} minTickGap={30} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#a3a3a3' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} />
 
               <Tooltip
                 contentStyle={{ borderRadius: '12px', fontSize: '12px', backgroundColor: 'rgba(23, 23, 23, 0.9)', borderColor: '#404040', color: '#fff', backdropFilter: 'blur(4px)' }}
@@ -177,7 +184,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
                   return [valStr, name];
                 }}
               />
-              <Legend iconType="plainline" wrapperStyle={{ fontSize: '11px', paddingTop: '10px', color: '#94a3b8' }} />
+              <Legend iconType="plainline" wrapperStyle={{ fontSize: '11px', paddingTop: '10px', color: '#a3a3a3' }} />
 
               <Area type="monotone" dataKey="pyroxeneHigh" stroke="none" fill="#3b82f6" fillOpacity={0.05} animationDuration={500} legendType="none" />
               <Area type="monotone" dataKey="pyroxeneLow" stroke="none" fill="transparent" animationDuration={500} legendType="none" />
@@ -209,65 +216,107 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
           </ResponsiveContainer>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/30">
+        <div className="border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="w-full px-4 py-3 flex items-center justify-center gap-2 text-xs font-bold text-slate-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+            className="w-full px-4 py-3 flex items-center justify-center gap-2 text-xs font-bold text-neutral-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <FaListUl /> {showDetails ? t('chart.hide_details') : t('chart.show_details')}
             {showDetails ? <FaChevronUp /> : <FaChevronDown />}
           </button>
 
           {showDetails && (
-            <div className="max-h-64 overflow-y-auto custom-scrollbar border-t border-slate-100 dark:border-neutral-800">
-              <table className="w-full text-xs text-left text-slate-600 dark:text-neutral-400">
-                <thead className="bg-slate-100 dark:bg-neutral-800 sticky top-0 shadow-sm">
-                  <tr>
-                    <th className="px-4 py-2 w-24">{t('chart.table_date')}</th>
-                    <th className="px-4 py-2">{t('chart.table_reason')}</th>
-                    <th className="px-4 py-2 text-right w-24">{t('chart.table_delta')}</th>
-                    <th className="px-4 py-2 text-right w-24">{t('chart.table_balance')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {probTimeline.map((pt, i, arr) => {
-                    const prevAvg = i > 0 ? arr[i - 1].pyroxeneAvg : pt.pyroxeneAvg;
-                    const delta = pt.pyroxeneAvg - prevAvg;
-                    const logs = pt.logs || [];
-                    const hasLogs = logs.length > 0;
-                    const hasChange = Math.abs(delta) >= 1;
-                    if (!hasChange && !hasLogs && i !== 0) return null;
+            <div className="max-h-80 overflow-y-auto custom-scrollbar border-t border-neutral-100 dark:border-neutral-800">
+              <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                {probTimeline.map((pt, i, arr) => {
+                  const prevAvg = i > 0 ? arr[i - 1].pyroxeneAvg : pt.pyroxeneAvg;
+                  const netDelta = Math.round(pt.pyroxeneAvg - prevAvg);
+                  const logs = pt.logs || [];
+                  const hasLogs = logs.length > 0;
+                  if (!hasLogs && Math.abs(netDelta) < 1 && i !== 0) return null;
 
+                  const balance = Math.round(pt.pyroxeneAvg);
+                  const dateLabel = pt.date.slice(5).replace('-', '/');
+
+                  if (hasLogs) {
                     return (
-                      <tr key={pt.date} className="border-b border-slate-50 dark:border-neutral-800/50 hover:bg-white dark:hover:bg-neutral-800 transition-colors">
-                        <td className="px-4 py-2 font-mono whitespace-nowrap">{pt.date}</td>
-                        <td className="px-4 py-2">
-                          {hasLogs ? (
-                            <ul className="space-y-0.5">
-                              {logs.map((log, idx) => (
-                                <li key={idx} className="flex justify-between w-full max-w-[200px]">
-                                  <span>{log.i18nKey ? t(log.i18nKey as any, log.params) : log.title}</span>
-                                  <span className={log.amount >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
-                                    {log.amount > 0 ? '+' : ''}
-                                    {log.amount}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <span className="text-slate-400 italic">{i === 0 ? t('chart.start_balance') : t('chart.daily_calc')}</span>
+                      <div key={pt.date} className="px-4 py-3 space-y-2">
+                        {/* Date header row */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 tracking-wide" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                            {dateLabel}
+                          </span>
+                          {netDelta !== 0 && (
+                            <span
+                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${
+                                netDelta > 0 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                              }`}
+                              style={{ fontFamily: 'ui-monospace, monospace' }}
+                            >
+                              {netDelta > 0 ? '+' : ''}
+                              {netDelta.toLocaleString()}
+                            </span>
                           )}
-                        </td>
-                        <td className={`px-4 py-2 text-right font-bold ${delta > 0 ? 'text-emerald-500' : delta < 0 ? 'text-rose-500' : ''}`}>
-                          {delta > 0 ? '+' : ''}
-                          {Math.round(delta).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-2 text-right font-bold text-slate-800 dark:text-neutral-200">{Math.round(pt.pyroxeneAvg).toLocaleString()}</td>
-                      </tr>
+                        </div>
+
+                        {/* Log items */}
+                        <div className="space-y-1 pl-1">
+                          {logs.map((log, li) => {
+                            const desc = log.i18nKey ? (log.params ? t_dynamic(log.i18nKey, log.params) : t_dynamic(log.i18nKey)) : (log.title ?? '');
+                            const amtColor = log.amount > 0 ? 'text-green-600 dark:text-green-400' : log.amount < 0 ? 'text-red-500 dark:text-red-400' : 'text-neutral-400';
+                            return (
+                              <div key={li} className="flex items-baseline justify-between gap-3">
+                                <span className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-snug flex-1 min-w-0 truncate">{desc}</span>
+                                <span className={`text-[11px] font-semibold tabular-nums whitespace-nowrap shrink-0 ${amtColor}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
+                                  {log.amount > 0 ? '+' : ''}
+                                  {log.amount.toLocaleString()}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Balance footer */}
+                        <div className="flex items-center justify-between pt-1.5 border-t border-neutral-100 dark:border-neutral-800">
+                          <span className="text-[10px] text-neutral-400 dark:text-neutral-600 uppercase tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                            {t('chart.table_balance')}
+                          </span>
+                          <span className="text-xs font-bold tabular-nums text-neutral-800 dark:text-neutral-100" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                            {balance.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
                     );
-                  })}
-                </tbody>
-              </table>
+                  }
+
+                  /* No-log row: daily accumulation or start */
+                  const isStart = i === 0;
+                  return (
+                    <div key={pt.date} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 shrink-0" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                          {dateLabel}
+                        </span>
+                        <span className="text-[11px] text-neutral-400 dark:text-neutral-500 italic truncate">{isStart ? t('chart.start_balance') : t('chart.daily_calc')}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {!isStart && netDelta !== 0 && (
+                          <span
+                            className={`text-[11px] font-semibold tabular-nums ${netDelta > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}
+                            style={{ fontFamily: 'ui-monospace, monospace' }}
+                          >
+                            {netDelta > 0 ? '+' : ''}
+                            {netDelta.toLocaleString()}
+                          </span>
+                        )}
+                        <span className="text-[11px] font-bold tabular-nums text-neutral-700 dark:text-neutral-300" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                          {balance.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

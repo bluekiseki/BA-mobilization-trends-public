@@ -26,7 +26,8 @@ export const useUndoRedoStore = create<UndoRedoState>((set, get) => ({
     if (undoStack.length === 0) return null;
 
     const newStack = [...undoStack];
-    const previousState = newStack.pop()!;
+    const previousState = newStack.pop();
+    if (!previousState) return null;
 
     set({
       undoStack: newStack,
@@ -41,7 +42,8 @@ export const useUndoRedoStore = create<UndoRedoState>((set, get) => ({
     if (redoStack.length === 0) return null;
 
     const newStack = [...redoStack];
-    const nextState = newStack.pop()!;
+    const nextState = newStack.pop();
+    if (!nextState) return null;
 
     set({
       redoStack: newStack,

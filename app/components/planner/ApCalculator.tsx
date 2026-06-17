@@ -1,6 +1,6 @@
 // src/components/ApCalculator.tsx
 
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 // import { ChevronIcon } from '../Icon';
@@ -35,6 +35,24 @@ interface DailyBreakdown {
   apPackage: number;
 }
 
+interface SelectConfigItem {
+  label: string;
+  type: 'select';
+  value: number;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: number[];
+}
+
+interface NumberConfigItem {
+  label: string;
+  type: 'number';
+  value: number;
+  onChange: (e: number | null) => void;
+  options?: undefined;
+}
+
+type ConfigGridItem = SelectConfigItem | NumberConfigItem;
+
 const toLocalISOString = (date: Date): string => {
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -51,7 +69,8 @@ const formatDateTimeForInput = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+type DayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const AP_PER_MINUTE = 1 / 6;
 
 export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculate }: ApCalculatorProps) => {
@@ -191,7 +210,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
     setResult({ daily: dailyBreakdown, total: finalTotal });
 
     onCalculate(finalTotal);
-  }, [config, onCalculate]);
+  }, [config]);
 
   useEffect(() => {
     handleCalculate();
@@ -244,21 +263,21 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
 
   const globalDates = getGlobalEventDates()[eventId];
 
-  const inputClass = 'w-full p-1.5 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200';
-  const labelClass = 'text-xs font-semibold dark:text-gray-300';
-  const shortcutBtnClass = 'bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-gray-300 px-2 py-1 rounded-md text-xs';
+  const inputClass = 'w-full p-1.5 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200';
+  const labelClass = 'text-xs font-semibold dark:text-neutral-300';
+  const shortcutBtnClass = 'bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-300 px-2 py-1 rounded-md text-xs';
 
   return (
     <>
       <div className="flex justify-between items-center group">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
           <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="inline w-8 h-8 ml-0.5 object-cover rounded-full" />
           {t('page.apCalculator')}
         </h2>
       </div>
 
       <div data-component-name="ApCalculator" className="mt-4 space-y-4">
-        <h3 className="font-bold text-center text-lg dark:text-gray-200">
+        <h3 className="font-bold text-center text-lg dark:text-neutral-200">
           {t('ui.calculationResult')} {t('ui.total')} <span className="text-blue-600 dark:text-blue-400">{result ? result.total.toLocaleString() : '?'}</span> AP
         </h3>
         <div className="space-y-4">
@@ -299,7 +318,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                 {t('ui.cafeRank')} (Lv.<span className="text-blue-600 dark:text-blue-400">{config.cafeRank}</span>)
               </label>
               <input type="range" min="6" max="10" value={config.cafeRank} onChange={(e) => setNumericConfig('cafeRank', e.target.value)} className="w-full" />
-              <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 px-0.5">
+              <div className="flex justify-between text-xs text-neutral-400 dark:text-neutral-500 px-0.5">
                 {[6, 7, 8, 9, 10].map((n) => (
                   <span key={n}>{n}</span>
                 ))}
@@ -312,46 +331,48 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              {
-                label: t('gameTerm.tacticalChallenge') + ' (x90 AP)',
-                type: 'select',
-                value: config.pvpRefills,
-                onChange: (e: any) => setNumericConfig('pvpRefills', e.target.value, 4),
-                options: [0, 1, 2, 3, 4],
-              },
-              {
-                label: t('ui.hardFarming') + ' (x-20 AP)',
-                type: 'number',
-                value: config.hardStages,
-                onChange: (e: any) => setNumericConfig('hardStages', String(e || 0)),
-              },
-              {
-                label: t('ui.scrimmageCount'),
-                type: 'number',
-                value: config.exchangeRuns,
-                onChange: (e: any) => setNumericConfig('exchangeRuns', String(e || 0)),
-              },
-              {
-                label: t('ui.scrimmageCost'),
-                type: 'select',
-                value: config.exchangeCost,
-                onChange: (e: any) => setNumericConfig('exchangeCost', e.target.value),
-                options: [0, 5, 10, 15],
-              },
-            ].map((item, index) => (
+            {(
+              [
+                {
+                  label: t('gameTerm.tacticalChallenge') + ' (x90 AP)',
+                  type: 'select',
+                  value: config.pvpRefills,
+                  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => setNumericConfig('pvpRefills', e.target.value, 4),
+                  options: [0, 1, 2, 3, 4],
+                },
+                {
+                  label: t('ui.hardFarming') + ' (x-20 AP)',
+                  type: 'number',
+                  value: config.hardStages,
+                  onChange: (e: number | null) => setNumericConfig('hardStages', String(e ?? 0)),
+                },
+                {
+                  label: t('ui.scrimmageCount'),
+                  type: 'number',
+                  value: config.exchangeRuns,
+                  onChange: (e: number | null) => setNumericConfig('exchangeRuns', String(e ?? 0)),
+                },
+                {
+                  label: t('ui.scrimmageCost'),
+                  type: 'select',
+                  value: config.exchangeCost,
+                  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => setNumericConfig('exchangeCost', e.target.value),
+                  options: [0, 5, 10, 15],
+                },
+              ] satisfies ConfigGridItem[]
+            ).map((item, index) => (
               <div key={index} className="space-y-1">
                 <label className={labelClass}>{item.label}</label>
                 {item.type === 'select' ? (
                   <select value={item.value} onChange={item.onChange} className={inputClass + ' bg-white dark:bg-neutral-700'}>
-                    {item.options?.map((opt) => (
+                    {item.options.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
                     ))}
                   </select>
                 ) : (
-                  <CustomNumberInput value={item.value} onChange={(e) => e != null && item.onChange(e)} className={inputClass} />
+                  <CustomNumberInput value={item.value} onChange={item.onChange} className={inputClass} />
                 )}
               </div>
             ))}
@@ -364,13 +385,13 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                 <div className="flex rounded overflow-hidden text-[10px] border dark:border-neutral-600">
                   <button
                     onClick={() => setConfig({ ...config, miscDailySpend: Math.abs(config.miscDailySpend) })}
-                    className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend >= 0 ? 'bg-red-500 text-white' : 'text-gray-400 dark:text-gray-500 dark:bg-neutral-700'}`}
+                    className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend >= 0 ? 'bg-red-500 text-white' : 'text-neutral-400 dark:text-neutral-500 dark:bg-neutral-700'}`}
                   >
                     {t('ui.consumed')}
                   </button>
                   <button
                     onClick={() => setConfig({ ...config, miscDailySpend: -Math.abs(config.miscDailySpend) })}
-                    className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend < 0 ? 'bg-green-500 text-white' : 'text-gray-400 dark:text-gray-500 dark:bg-neutral-700'}`}
+                    className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend < 0 ? 'bg-green-500 text-white' : 'text-neutral-400 dark:text-neutral-500 dark:bg-neutral-700'}`}
                   >
                     {t('ui.gained')}
                   </button>
@@ -451,7 +472,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
               + {t('button.addPackageStartDate')}
             </button>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('ui.packageSubscriptionNotice')}</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{t('ui.packageSubscriptionNotice')}</p>
         </div>
 
         <button onClick={handleCalculate} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg transition-colors">
@@ -461,25 +482,25 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
         {result && (
           <div className="mt-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg dark:text-gray-200">
+              <h3 className="font-bold text-lg dark:text-neutral-200">
                 {t('ui.calculationResult')} {t('ui.total')} <span className="text-blue-600 dark:text-blue-400">{result.total.toLocaleString()}</span> AP
               </h3>
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 dark:text-gray-300 transition-colors"
+                className="text-xs px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 dark:text-neutral-300 transition-colors"
               >
                 {showDetails ? t('button.hideDetails') : t('button.viewDailyDetails')}
               </button>
             </div>
-            <div className="mt-2 rounded-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-700 text-sm">
+            <div className="mt-2 rounded-lg max-h-72 overflow-y-auto divide-y divide-neutral-100 dark:divide-neutral-700 text-sm">
               {Object.entries(result.daily).map(([date, daily]) => {
                 const d = new Date(date);
-                const dayOfWeek = t(('common.' + DAYS[d.getUTCDay()]) as any);
+                const dayOfWeek = t(`common.${DAYS[d.getUTCDay() as DayIndex]}`);
 
                 return (
                   <div key={date} className="py-2 first:pt-0">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold dark:text-gray-200">
+                      <span className="font-bold dark:text-neutral-200">
                         {date.slice(5).replace('-', '/')} ({dayOfWeek})
                       </span>
                       <span className="font-bold text-blue-700 dark:text-blue-400">{Math.round(daily.total).toLocaleString()} AP</span>

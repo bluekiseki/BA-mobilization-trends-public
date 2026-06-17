@@ -19,7 +19,7 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
     <thead className="sticky top-0 z-40">
       {/* Group row */}
       <tr>
-        <th colSpan={5} className={`${hGroup} sticky left-0 z-40 bg-gray-100 dark:bg-neutral-700`} />
+        <th colSpan={5} className={`${hGroup} sticky left-0 z-40 bg-neutral-100 dark:bg-neutral-700`} />
         <th colSpan={5} className={`${hGroup} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300`}>
           {t('headerGroup.basicStatsCurrent')}
         </th>
@@ -45,20 +45,20 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
 
       {/* Field row */}
       <tr>
-        <th className={`${hField} sticky z-40 bg-gray-100 dark:bg-neutral-700`} style={{ left: L.add, width: 40, minWidth: 40, maxWidth: 40 }}>
+        <th className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700`} style={{ left: L.add, width: 40, minWidth: 40, maxWidth: 40 }}>
           {t('headerField.add')}
         </th>
         <th
-          className={`${hField} sticky z-40 bg-gray-100 dark:bg-neutral-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-600`}
+          className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
           style={{ left: L.sel, width: 40, minWidth: 40, maxWidth: 40 }}
           onClick={() => handleSort('isSelected')}
         >
           {t('headerField.select')}
           {getSortIcon('isSelected')}
         </th>
-        <th className={`${hField} sticky z-40 bg-gray-100 dark:bg-neutral-700`} style={{ left: L.icon, width: 32, minWidth: 32, maxWidth: 32 }} />
+        <th className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700`} style={{ left: L.icon, width: 32, minWidth: 32, maxWidth: 32 }} />
         <th
-          className={`${hField} sticky z-40 bg-gray-100 dark:bg-neutral-700 text-left pl-2 truncate cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-600`}
+          className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 text-left pl-2 truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
           style={{ left: L.name, width: screenWidth > 600 ? 120 : 0, minWidth: screenWidth > 600 ? 120 : 0, maxWidth: screenWidth > 600 ? 120 : 0 }}
           onClick={() => handleSort('name')}
         >
@@ -66,7 +66,7 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
           {getSortIcon('name')}
         </th>
         <th
-          className={`${hField} sticky z-40 bg-gray-100 dark:bg-neutral-700 text-left pl-1 truncate cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-600`}
+          className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 text-left pl-1 truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
           style={{ left: L.school, width: screenWidth > 600 ? 70 : 0, minWidth: screenWidth > 600 ? 70 : 0, maxWidth: screenWidth > 600 ? 70 : 0 }}
           onClick={() => handleSort('school')}
         >

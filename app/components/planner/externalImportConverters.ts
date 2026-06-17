@@ -1,5 +1,5 @@
 // app/components/planner/externalImportConverters.ts
-import { equipmentBlueprintId, equipmentReinforcementExp, reportExp, reportItemIds } from '~/data/growthData';
+import { equipmentId, equipmentReinforcementExp, reportExp, reportItemIds } from '~/data/growthData';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 import type { Locale } from '~/utils/i18n/config';
 
@@ -12,14 +12,14 @@ const n = (v: unknown, fallback = 0): number => {
 
 // ── Equipment blueprint reverse map: "Equipment_103006" -> "T7_Shoes" ──────────────────────
 const OUR_BP_TO_JUSTIN163: Record<string, string> = {};
-for (const [typeName, ids] of Object.entries(equipmentBlueprintId)) {
-  ids.forEach((bpId, idx) => {
-    if (bpId) OUR_BP_TO_JUSTIN163[`Equipment_${bpId}`] = `T${idx + 1}_${typeName}`;
+for (const [typeName, ids] of Object.entries(equipmentId)) {
+  ids.forEach((id, idx) => {
+    if (id) OUR_BP_TO_JUSTIN163[`Equipment_${id}`] = `T${idx + 1}_${typeName}`;
   });
 }
 
 // justin163 part name -> our system equipment type
-const JUSTIN163_PART_MAP: Partial<Record<string, keyof typeof equipmentBlueprintId>> = {
+const JUSTIN163_PART_MAP: Partial<Record<string, keyof typeof equipmentId>> = {
   Hat: 'Hat',
   Gloves: 'Gloves',
   Shoes: 'Shoes',
@@ -35,8 +35,8 @@ function parseBlueprintKey(tierStr: string, partName: string): string | null {
   const tier = parseInt(tierStr);
   const ourType = JUSTIN163_PART_MAP[partName];
   if (!ourType) return null;
-  const bpId = equipmentBlueprintId[ourType][tier - 1];
-  return bpId ? `Equipment_${bpId}` : null;
+  const id = equipmentId[ourType][tier - 1];
+  return id ? `Equipment_${id}` : null;
 }
 
 // ── XP / Enhancement stone conversion helper ────────────────────────────────────────────────────
@@ -152,7 +152,66 @@ function parseJustin163Materials(owned: Record<string, string | number>): {
   return { materials, gifts };
 }
 
-// ── Public types & functions ──────────────────────────────────────────────────────────
+// ── Type definitions ──────────────────────────────────────────────────────
+interface Justin163StudentState {
+  level?: unknown;
+  star?: unknown;
+  ue?: unknown;
+  ue_level?: unknown;
+  ex?: unknown;
+  basic?: unknown;
+  passive?: unknown;
+  sub?: unknown;
+  bond?: unknown;
+  gear1?: unknown;
+  gear2?: unknown;
+  gear3?: unknown;
+  bond_gear?: unknown;
+  book_hp?: unknown;
+  book_atk?: unknown;
+  book_heal?: unknown;
+}
+
+interface Justin163ElephData {
+  owned?: unknown;
+  use_eligma?: unknown;
+  cost?: unknown;
+  purchasable?: unknown;
+}
+
+interface Justin163Character {
+  id: string | number;
+  enabled?: boolean;
+  current?: Justin163StudentState;
+  target?: Justin163StudentState;
+  eleph?: Justin163ElephData;
+}
+
+interface Justin163Data {
+  characters: Justin163Character[];
+  owned_materials?: Record<string, string | number>;
+}
+
+interface SchaleDBEntry {
+  l?: number;
+  s?: number;
+  ws?: number;
+  wl?: number;
+  s1?: number;
+  s2?: number;
+  s3?: number;
+  s4?: number;
+  b?: number;
+  e1?: number;
+  e2?: number;
+  e3?: number;
+  e4?: number;
+  pm?: number;
+  pa?: number;
+  ph?: number;
+}
+
+// ── Public types & functions ──────────────────────────────────────────────────────
 export type ImportFormat = 'justin163' | 'schaledb' | 'unknown';
 
 export interface ConvertResult {
@@ -181,17 +240,17 @@ export function detectAndConvert(json: unknown): ConvertResult {
   if (typeof json !== 'object' || json === null) return none;
 
   // justin163: has "characters" array
-  if ('characters' in json && Array.isArray((json as any).characters)) {
-    const { plans, materials, gifts } = fromJustin163(json as any);
+  if ('characters' in json && Array.isArray(json.characters)) {
+    const { plans, materials, gifts } = fromJustin163(json as Justin163Data);
     return { format: 'justin163', plans, materials, gifts };
   }
 
   // SchaleDB: all keys are numeric IDs and have {s, l, ...} structure
-  const keys = Object.keys(json as object);
+  const keys = Object.keys(json);
   if (keys.length > 0 && keys.every((k) => /^\d+$/.test(k))) {
-    const sample = (json as any)[keys[0]];
+    const sample = (json as Record<string, unknown>)[keys[0]];
     if (sample && typeof sample === 'object' && 's' in sample && 'l' in sample) {
-      return { format: 'schaledb', plans: fromSchaleDB(json as any), materials: null, gifts: null };
+      return { format: 'schaledb', plans: fromSchaleDB(json as Record<string, SchaleDBEntry>), materials: null, gifts: null };
     }
   }
 
@@ -199,12 +258,12 @@ export function detectAndConvert(json: unknown): ConvertResult {
 }
 
 // ── Import: justin163 ───────────────────────────────────────────────────────
-function fromJustin163(json: any): {
+function fromJustin163(json: Justin163Data): {
   plans: GrowthPlan[];
   materials: Record<string, number>;
   gifts: Record<string, number>;
 } {
-  const plans = (json.characters as any[])
+  const plans = json.characters
     .filter((c) => c.enabled !== false)
     .map((char): GrowthPlan => {
       const cur = char.current ?? {};
@@ -215,38 +274,57 @@ function fromJustin163(json: any): {
         uuid: makeUuid(char.id),
         studentId: n(char.id),
         current: {
-          level: n(cur.level, 1),
-          star: n(cur.star, 1),
-          uw: n(cur.ue),
-          uwLevel: n(cur.ue_level),
-          ex: n(cur.ex, 1),
-          normal: n(cur.basic, 1),
-          passive: n(cur.passive, 1),
-          sub: n(cur.sub),
-          eleph: n(el.owned),
-          affection: n(cur.bond, 1),
+          level: n(cur instanceof Object && 'level' in cur ? cur.level : 1, 1),
+          star: n(cur instanceof Object && 'star' in cur ? cur.star : 1, 1),
+          uw: n(cur instanceof Object && 'ue' in cur ? cur.ue : 0),
+          uwLevel: n(cur instanceof Object && 'ue_level' in cur ? cur.ue_level : 0),
+          ex: n(cur instanceof Object && 'ex' in cur ? cur.ex : 1, 1),
+          normal: n(cur instanceof Object && 'basic' in cur ? cur.basic : 1, 1),
+          passive: n(cur instanceof Object && 'passive' in cur ? cur.passive : 1, 1),
+          sub: n(cur instanceof Object && 'sub' in cur ? cur.sub : 0),
+          eleph: n(el instanceof Object && 'owned' in el ? el.owned : 0),
+          affection: n(cur instanceof Object && 'bond' in cur ? cur.bond : 1, 1),
           affectionExp: 0,
-          equipment: [n(cur.gear1), n(cur.gear2), n(cur.gear3)],
-          gear: n(cur.bond_gear),
-          potential: { hp: n(cur.book_hp), atk: n(cur.book_atk), heal: n(cur.book_heal) },
+          equipment: [
+            n(cur instanceof Object && 'gear1' in cur ? cur.gear1 : 0),
+            n(cur instanceof Object && 'gear2' in cur ? cur.gear2 : 0),
+            n(cur instanceof Object && 'gear3' in cur ? cur.gear3 : 0),
+          ],
+          gear: n(cur instanceof Object && 'bond_gear' in cur ? cur.bond_gear : 0),
+          potential: {
+            hp: n(cur instanceof Object && 'book_hp' in cur ? cur.book_hp : 0),
+            atk: n(cur instanceof Object && 'book_atk' in cur ? cur.book_atk : 0),
+            heal: n(cur instanceof Object && 'book_heal' in cur ? cur.book_heal : 0),
+          },
         },
         target: {
-          level: n(tgt.level, 1),
-          star: n(tgt.star, 1),
-          uw: n(tgt.ue),
-          uwLevel: n(tgt.ue_level),
-          ex: n(tgt.ex, 1),
-          normal: n(tgt.basic, 1),
-          passive: n(tgt.passive, 1),
-          sub: n(tgt.sub),
-          affection: n(tgt.bond, 1),
-          equipment: [n(tgt.gear1), n(tgt.gear2), n(tgt.gear3)],
-          gear: n(tgt.bond_gear),
-          potential: { hp: n(tgt.book_hp), atk: n(tgt.book_atk), heal: n(tgt.book_heal) },
+          level: n(tgt instanceof Object && 'level' in tgt ? tgt.level : 1, 1),
+          star: n(tgt instanceof Object && 'star' in tgt ? tgt.star : 1, 1),
+          uw: n(tgt instanceof Object && 'ue' in tgt ? tgt.ue : 0),
+          uwLevel: n(tgt instanceof Object && 'ue_level' in tgt ? tgt.ue_level : 0),
+          ex: n(tgt instanceof Object && 'ex' in tgt ? tgt.ex : 1, 1),
+          normal: n(tgt instanceof Object && 'basic' in tgt ? tgt.basic : 1, 1),
+          passive: n(tgt instanceof Object && 'passive' in tgt ? tgt.passive : 1, 1),
+          sub: n(tgt instanceof Object && 'sub' in tgt ? tgt.sub : 0),
+          affection: n(tgt instanceof Object && 'bond' in tgt ? tgt.bond : 1, 1),
+          equipment: [
+            n(tgt instanceof Object && 'gear1' in tgt ? tgt.gear1 : 0),
+            n(tgt instanceof Object && 'gear2' in tgt ? tgt.gear2 : 0),
+            n(tgt instanceof Object && 'gear3' in tgt ? tgt.gear3 : 0),
+          ],
+          gear: n(tgt instanceof Object && 'bond_gear' in tgt ? tgt.bond_gear : 0),
+          potential: {
+            hp: n(tgt instanceof Object && 'book_hp' in tgt ? tgt.book_hp : 0),
+            atk: n(tgt instanceof Object && 'book_atk' in tgt ? tgt.book_atk : 0),
+            heal: n(tgt instanceof Object && 'book_heal' in tgt ? tgt.book_heal : 0),
+          },
         },
         includedInEvents: [],
-        useEligmaForStar: el.use_eligma ?? false,
-        eligmaInfo: { price: n(el.cost, 1), stock: n(el.purchasable, 20) },
+        useEligmaForStar: el instanceof Object && 'use_eligma' in el ? Boolean(el.use_eligma) : false,
+        eligmaInfo: {
+          price: n(el instanceof Object && 'cost' in el ? el.cost : 1, 1),
+          stock: n(el instanceof Object && 'purchasable' in el ? el.purchasable : 20, 20),
+        },
         isSelected: true,
       };
     });
@@ -264,8 +342,8 @@ function fromJustin163(json: any): {
 }
 
 // ── Import: SchaleDB ────────────────────────────────────────────────────────
-function fromSchaleDB(json: any): GrowthPlan[] {
-  return Object.entries(json).map(([id, data]: [string, any]): GrowthPlan => {
+function fromSchaleDB(json: Record<string, SchaleDBEntry>): GrowthPlan[] {
+  return Object.entries(json).map(([id, data]): GrowthPlan => {
     const current = {
       level: n(data.l, 1),
       star: n(data.s, 1),

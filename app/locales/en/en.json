@@ -25,7 +25,7 @@
     "acquire": "Acquire",
     "loop": "Loop",
     "rerun": "Rerun",
-    "fast": "Fast",
+    "fest": "Fest",
     "limited": "Ltd.",
     "clear": "Clear",
     "period": "Period",
@@ -47,7 +47,7 @@
     "dashboard-btn": "Assault Dashboard",
     "dashboard-btn-go": "View Assault Dashboard",
     "changelog": {
-      "title": "Changelog",
+      "title": "Changes",
       "noTranslation": "No translation available",
       "newUpdate": "Recent updates"
     },
@@ -142,7 +142,12 @@
       "jpStats": "JP stats",
       "kivotosPeace": "Kivotos is at peace.",
       "noEvent": "No event scheduled."
-    }
+    },
+    "scroll_to_first_page": "First Page",
+    "scroll_to_prev_page": "Previous Page",
+    "scroll_to_next_page": "Next Page",
+    "scroll_to_last_page": "Last Page",
+    "scroll_to_top": "Scroll to Top"
   },
   "charts": {
     "ranking": {
@@ -361,6 +366,11 @@
     "timeViewUnavailableNotice": "Time view is unavailable due to mixed difficulty records.",
     "byRank": "Rank",
     "rankDistribution": "Rank Distribution",
+    "byDefault": "Default",
+    "byTotalPartyCount": "By party count",
+    "byPartyPosition": "By order",
+    "nPartyCount": "{{n}}pt",
+    "nthPosition": "#{{n}}/{{m}}",
     "select_boss_type_for_stats": "Please select a boss type to view detailed statistics.",
     "recordLookup": "Record Lookup",
     "lookupPlaceholder": "Enter rank, score, or time calculation (e.g., 4:00 - 2:30.5)...",
@@ -413,8 +423,18 @@
       "sort_bestRank": "Best score",
       "ignore_position": "Ignore placement order",
       "placement_variants": "Placement Order Variants",
-      "mulligan_variants": "Starting Hand Variants"
-    }
+      "mulligan_variants": "Starting Hand Variants",
+      "mulligan_view_order": "Pick Order",
+      "mopup_filter": "Mop-up party filter"
+    },
+    "videos": "Videos",
+    "videos_select_boss": "Select a boss type to view videos.",
+    "videos_empty": "No videos available.",
+    "videos_filter_tl": "TL Only",
+    "videos_filter_target_type": "Target Type Only",
+    "videos_missing_note": "Some videos may be missing due to automated processing.",
+    "videos_view_all": "View all analyzed videos",
+    "videos_external_sites": "Recommended external sites:"
   },
   "dashboardIndex": {
     "title": "Dashboard List",
@@ -488,7 +508,7 @@
       "event": "Event",
       "multifloor": "Final Restriction Rls.",
       "campaign": "Campaign",
-      "pickup": "Pickup",
+      "pickup": "Pick-Up",
       "birthday": "Birthday",
       "birthday-suffix": "Birthday",
       "story": "Story",

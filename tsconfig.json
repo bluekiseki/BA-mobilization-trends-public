@@ -1,6 +1,6 @@
 {
   "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"],
-  "exclude": ["**/ql/**/*"],
+  "exclude": ["**/ql/**/*", "app/schemas/*.schema.ts"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2024"],
     "types": ["node", "vite/client"],
@@ -18,6 +18,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "noUncheckedIndexedAccess": false
   }
 }

@@ -8,9 +8,14 @@
 public/dummy_*.json
 # public/**/*.json
 
-pnpm-workspace.yaml
+# pnpm-workspace.yaml
 .env
 codeql-repo
 *.zip
 /ql/
 .wrangler
+.dev.vars
+
+*.onnx
+*.wasm
+public/scanner/*.json

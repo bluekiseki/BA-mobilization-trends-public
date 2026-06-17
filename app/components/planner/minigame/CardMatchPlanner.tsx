@@ -1,13 +1,21 @@
 // src/components/event/CardMatchPlanner.tsx
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { FaFlag } from 'react-icons/fa';
 import { ItemIcon } from '../common/Icon';
+import { SimRunButton } from '../common/SimRunButton';
 import type { EventData, IconData, ConcentrationReward } from '~/types/plannerData';
 import { useTranslation } from 'react-i18next';
-import { ChevronIcon } from '~/components/Icon';
+
 import { getItemSortPriority } from '~/utils/itemSort';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
+import { type CardMatchSimConifg, defaultCardMatchSimConfig } from '~/types/minigame/cardMatch';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
+import { runAsync } from '~/utils/runAsync';
+
+export type { CardMatchSimConifg };
+export { defaultCardMatchSimConfig };
 
 // ----------------------------------------------------------------------
 // Types
@@ -23,21 +31,9 @@ export type CardMatchResult = {
   targetClears: number;
 };
 
-export type CardMatchSimConifg = {
-  startRound: number;
-  targetClears: number;
-  simIterations: number;
-};
-
-export const defaultCardMatchSimConfig = {
-  startRound: 1,
-  targetClears: 10,
-  simIterations: 2000,
-};
-
 interface CardMatchPlannerProps {
   eventId: number;
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency' | 'concentration'>;
   iconData: IconData;
   onCalculate: (result: CardMatchResult | null) => void;
   remainingCurrency: Record<number, number>;
@@ -59,7 +55,7 @@ const simulateAverageFlips = (simCount: number, maxOpenCount: number): number =>
 
   for (let i = 0; i < simCount; i++) {
     // 1. Initialize deck (2 copies each of cards 0-5, total 12)
-    const deck = new Array(12);
+    const deck = new Array<number>(12);
     for (let j = 0; j < 6; j++) {
       deck[j * 2] = j;
       deck[j * 2 + 1] = j;
@@ -69,7 +65,7 @@ const simulateAverageFlips = (simCount: number, maxOpenCount: number): number =>
     // 2. State variables
     const knownLocations: Record<number, number> = {};
     const pendingMatches: number[] = [];
-    let unknownPool = Array.from({ length: 12 }, (_, k) => k);
+    const unknownPool = Array.from({ length: 12 }, (_, k) => k);
 
     let attempts = 0;
     let matchedPairs = 0;
@@ -170,7 +166,7 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
   const { t } = useTranslation('planner', { keyPrefix: 'cardmatch' });
 
   // UI State
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   // const [activeTab, setActiveTab] = useState<'simulation' | 'info'>('simulation');
   // const [viewMode, setViewMode] = useState<'total' | 'average'>('total');
 
@@ -183,8 +179,8 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     setCardMatchDisplayResult: setDisplayResult,
   } = useEventSettings(eventId);
 
-  let { cardMatchSimConfig: config, setCardMatchSimConfig: setConfig } = usePlanForEvent(eventId);
-  if (!config) config = defaultCardMatchSimConfig;
+  const { cardMatchSimConfig, setCardMatchSimConfig: setConfig } = usePlanForEvent(eventId);
+  const config = cardMatchSimConfig ?? defaultCardMatchSimConfig;
 
   const concentrationData = eventData.concentration;
 
@@ -194,7 +190,6 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
 
   const deckRarityCounts = useMemo(() => {
     const counts: Record<number, number> = {};
-    if (!concentrationData) return counts;
 
     concentrationData.card.forEach((card) => {
       if (concentrationData.card.length <= 6) {
@@ -211,16 +206,15 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     const loop: ConcentrationReward[] = [];
     const itemIds = new Set<number>();
 
-    if (concentrationData) {
-      concentrationData.reward.forEach((r) => {
-        if (!byRound[r.Round]) byRound[r.Round] = [];
-        byRound[r.Round].push(r);
-        if (r.IsLoop) loop.push(r);
+    concentrationData.reward.forEach((r) => {
+      if (!byRound[r.Round]) byRound[r.Round] = [];
+      byRound[r.Round].push(r);
+      if (r.IsLoop) loop.push(r);
 
-        // Collect all possible drops
-        r.RewardParcelId.forEach((id) => itemIds.add(id));
-      });
-    }
+      // Collect all possible drops
+      r.RewardParcelId.forEach((id) => itemIds.add(id));
+    });
+
     return {
       rewardsByRound: byRound,
       loopRewards: loop,
@@ -282,7 +276,7 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
   // ----------------------------------------------------------------------
   const runSimulation = useCallback(
     (overrideTargetClears?: number) => {
-      if (!concentrationData || !config) return;
+      if (!config) return;
 
       const targetClears = overrideTargetClears ?? config.targetClears;
       const info = concentrationData.info[0];
@@ -328,14 +322,17 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     [concentrationData, config.targetClears, config.startRound, config.simIterations, calculateRoundReward, onCalculate],
   );
 
+  const handleRunSimulationButton = useCallback(() => {
+    setIsRunning(true);
+    void runAsync(() => runSimulation()).finally(() => setIsRunning(false));
+  }, [runSimulation]);
+
   // ----------------------------------------------------------------------
   // Auto Calculators
   // ----------------------------------------------------------------------
 
   // 1. Consume all entry tickets (Cost Items)
   const handleSetMaxPlayable = () => {
-    if (!concentrationData) return;
-
     const info = concentrationData.info[0];
     const costId = info.CostGoods.ConsumeParcelId[0];
     const costAmount = info.CostGoods.ConsumeParcelAmount[0];
@@ -360,7 +357,6 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
 
   // 2. Fill in missing reward items (Reward Items)
   const handleSetTargetDeficit = () => {
-    if (!concentrationData) return;
     const info = concentrationData.info[0];
     const instantClearRound = info.InstantClearRound || 10;
 
@@ -420,14 +416,12 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
   // Icon Lookups for Buttons
   // ----------------------------------------------------------------------
   const costItemInfo = useMemo(() => {
-    if (!concentrationData) return null;
     const id = concentrationData.info[0].CostGoods.ConsumeParcelId[0];
     // Consumable items are usually type Item(4)
     return { type: 'Item', id };
   }, [concentrationData]);
 
   const mainRewardItemInfo = useMemo(() => {
-    if (!concentrationData || !eventData) return null;
     const costId = concentrationData.info[0].CostGoods.ConsumeParcelId[0];
 
     // Find items among event currencies that are not cost items and exist in the drop list
@@ -448,7 +442,6 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
   }, [concentrationData, eventData, droppableItemIds]);
 
   // const rewardTable = useMemo(() => {
-  //   if (!concentrationData) return null;
   //   const byRound: Record<number, ConcentrationReward[]> = {};
   //   concentrationData.reward.forEach((r) => {
   //     if (!byRound[r.Round]) byRound[r.Round] = [];
@@ -462,12 +455,9 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     if (!displayResult) {
       runSimulation();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { matchRewards, roundRewards } = useMemo(() => {
-    if (!concentrationData) return { matchRewards: [], roundRewards: {} };
-
     const matches: ConcentrationReward[] = [];
     const rounds: Record<number, ConcentrationReward[]> = {};
 
@@ -487,356 +477,351 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     return { matchRewards: matches, roundRewards: rounds };
   }, [concentrationData]);
 
-  if (!concentrationData) return null;
-
   return (
     <>
-      <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100"> {t('page.cardMatchSimulator', 'Card Match')}</h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
-          <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
-        </span>
-      </div>
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100"> {t('page.cardMatchSimulator', 'Card Match')}</h2>
 
-      {!isCollapsed && (
-        <div className="mt-4 ">
-          {/* Tabs */}
-          <div className="flex border-b dark:border-neutral-700 mb-4">
-            <button
-              className={`px-4 py-2 font-bold border-b-2 transition-colors ${activeTab === 'simulation' ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
-              onClick={() => setActiveTab('simulation')}
-            >
-              {t('tab.simulation', 'Simulator')}
-            </button>
-            <button
-              className={`px-4 py-2 font-bold border-b-2 transition-colors ${activeTab === 'info' ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
-              onClick={() => setActiveTab('info')}
-            >
-              {t('tab.rewardInfo', 'Reward Info')}
-            </button>
-          </div>
+      <div className="mt-4 ">
+        {/* Tabs */}
+        <div className="flex border-b dark:border-neutral-700 mb-4">
+          <button
+            className={`px-4 py-2 font-bold border-b-2 transition-colors ${activeTab === 'simulation' ? 'text-blue-600 border-blue-600' : 'text-neutral-500 border-transparent hover:text-neutral-700'}`}
+            onClick={() => setActiveTab('simulation')}
+          >
+            {t('tab.simulation', 'Simulator')}
+          </button>
+          <button
+            className={`px-4 py-2 font-bold border-b-2 transition-colors ${activeTab === 'info' ? 'text-blue-600 border-blue-600' : 'text-neutral-500 border-transparent hover:text-neutral-700'}`}
+            onClick={() => setActiveTab('info')}
+          >
+            {t('tab.rewardInfo', 'Reward Info')}
+          </button>
+        </div>
 
-          {/* ---------------------------------------------------------------------- */}
-          {/* Tab 1: Simulation & Planner */}
-          {/* ---------------------------------------------------------------------- */}
-          {activeTab === 'simulation' && (
-            <div className="space-y-6 animate-fade-in">
-              {/* Algorithm Info */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
-                <div className="flex items-start gap-3">
+        {/* ---------------------------------------------------------------------- */}
+        {/* Tab 1: Simulation & Planner */}
+        {/* ---------------------------------------------------------------------- */}
+        {activeTab === 'simulation' && (
+          <div className="space-y-6 animate-fade-in">
+            {/* Algorithm Info */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
+              <div className="flex items-start gap-3">
+                <div>
+                  <h4 className="font-bold text-blue-800 dark:text-blue-200 text-sm mb-1">{t('cardMatch.algoTitle', 'Simulation Algorithm: Perfect Memory')}</h4>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                    {t(
+                      'cardMatch.algoDesc',
+                      'This simulation assumes the player remembers every flipped card. If a pair location is known, it is matched immediately. This calculates the minimum expected cost for clearing the board.',
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left: Settings */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-neutral-800 dark:text-neutral-200 border-b pb-2 dark:border-neutral-700">{t('ui.settings', 'Settings')}</h3>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-bold text-blue-800 dark:text-blue-200 text-sm mb-1">{t('cardMatch.algoTitle', 'Simulation Algorithm: Perfect Memory')}</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {t(
-                        'cardMatch.algoDesc',
-                        'This simulation assumes the player remembers every flipped card. If a pair location is known, it is matched immediately. This calculates the minimum expected cost for clearing the board.',
+                    <label className="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">{t('label.startRound', 'Start Round')}</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={config.startRound}
+                      //  onChange={e => setConfig(p => ({ ...p, startRound: Math.max(1, parseInt(e.target.value) || 1) }))}
+                      onChange={(e) =>
+                        setConfig({
+                          ...config,
+                          startRound: Math.max(1, parseInt(e.target.value) || 1),
+                        })
+                      }
+                      className="w-full p-2 rounded bg-neutral-50 border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">{t('label.simIterations', 'Sim Iterations')}</label>
+                    <input
+                      type="number"
+                      step={100}
+                      min={100}
+                      value={config.simIterations}
+                      onChange={(e) =>
+                        setConfig({
+                          ...config,
+                          simIterations: parseInt(e.target.value) || 1000,
+                        })
+                      }
+                      className="w-full p-2 rounded bg-neutral-50 border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">{t('label.targetClears', 'Target Clears (Rounds)')}</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      value={config.targetClears}
+                      onChange={(e) =>
+                        setConfig({
+                          ...config,
+                          targetClears: Math.max(0, parseInt(e.target.value) || 0),
+                        })
+                      }
+                      className="grow p-2 rounded bg-neutral-50 border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-100"
+                    />
+                    <SimRunButton
+                      isRunning={isRunning}
+                      onClick={handleRunSimulationButton}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 rounded shadow-sm transition-all active:scale-95"
+                    >
+                      {t('button.run', 'Run Sim')}
+                    </SimRunButton>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Auto Calculators */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-neutral-800 dark:text-neutral-200 border-b pb-2 dark:border-neutral-700">{t('ui.autoCalculate', 'Auto-Set Rounds')}</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Button 1: Use All Cost Item */}
+                  <button
+                    onClick={handleSetMaxPlayable}
+                    className="flex items-center justify-between p-3 rounded border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors text-left group"
+                  >
+                    <div>
+                      <div className="font-bold text-sm text-neutral-800 dark:text-neutral-200">{t('button.consumeAllCost', 'Use All Tickets')}</div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{t('desc.consumeAllCost', 'Set rounds to consume all owned cost items.')}</div>
+                    </div>
+                    <div className="group-hover:scale-110 transition-transform">
+                      {costItemInfo && (
+                        // <ItemIcon
+                        //     type={costItemInfo.type}
+                        //     itemId={String(costItemInfo.id)}
+                        //     size={28}
+                        //     eventData={eventData}
+                        //     iconData={iconData}
+                        // />
+
+                        <img src={`data:image/webp;base64,${iconData.Item?.[costItemInfo.id]}`} className="inline w-14 h-14 ml-0.5 object-cover" />
                       )}
-                    </p>
-                  </div>
+                    </div>
+                  </button>
+
+                  {/* Button 2: Fulfill Deficit (Main Currency) */}
+                  <button
+                    onClick={handleSetTargetDeficit}
+                    className="flex items-center justify-between p-3 rounded border border-neutral-200 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors text-left group"
+                  >
+                    <div>
+                      <div className="font-bold text-sm text-neutral-800 dark:text-neutral-200">{t('button.fulfillDeficit', 'Fulfill Deficits')}</div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{t('desc.fulfillDeficit', 'Set rounds to acquire missing shop items.')}</div>
+                    </div>
+                    <div className="group-hover:scale-110 transition-transform">
+                      {mainRewardItemInfo && (
+                        // <ItemIcon
+                        //     type={mainRewardItemInfo.type}
+                        //     itemId={String(mainRewardItemInfo.id)}
+                        //     size={28}
+                        //     eventData={eventData}
+                        //     iconData={iconData}
+                        // />
+                        <img src={`data:image/webp;base64,${iconData.Item?.[mainRewardItemInfo.id]}`} className="inline w-14 h-14 ml-0.5 object-cover" />
+                      )}
+                    </div>
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* Controls */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left: Settings */}
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-800 dark:text-gray-200 border-b pb-2 dark:border-neutral-700">{t('ui.settings', 'Settings')}</h3>
+            {/* Results Display */}
+            {displayResult && (
+              <div className="mt-8 space-y-4 pt-4 border-t dark:border-neutral-700">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg text-neutral-800 dark:text-neutral-100">{t('ui.simulationResults', 'Simulation Results')}</h3>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">{t('label.startRound', 'Start Round')}</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={config.startRound}
-                        //  onChange={e => setConfig(p => ({ ...p, startRound: Math.max(1, parseInt(e.target.value) || 1) }))}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            startRound: Math.max(1, parseInt(e.target.value) || 1),
-                          })
-                        }
-                        className="w-full p-2 rounded bg-gray-50 border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">{t('label.simIterations', 'Sim Iterations')}</label>
-                      <input
-                        type="number"
-                        step={100}
-                        min={100}
-                        value={config.simIterations}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            simIterations: parseInt(e.target.value) || 1000,
-                          })
-                        }
-                        className="w-full p-2 rounded bg-gray-50 border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">{t('label.targetClears', 'Target Clears (Rounds)')}</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        min={0}
-                        value={config.targetClears}
-                        onChange={(e) =>
-                          setConfig({
-                            ...config,
-                            targetClears: Math.max(0, parseInt(e.target.value) || 0),
-                          })
-                        }
-                        className="grow p-2 rounded bg-gray-50 border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-100"
-                      />
-                      <button onClick={() => runSimulation()} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 rounded shadow-sm transition-all active:scale-95">
-                        {t('button.run', 'Run Sim')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Auto Calculators */}
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-800 dark:text-gray-200 border-b pb-2 dark:border-neutral-700">{t('ui.autoCalculate', 'Auto-Set Rounds')}</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {/* Button 1: Use All Cost Item */}
+                  {/* View Mode Toggle */}
+                  <div className="bg-neutral-100 dark:bg-neutral-700 p-1 rounded-lg flex text-xs font-bold">
                     <button
-                      onClick={handleSetMaxPlayable}
-                      className="flex items-center justify-between p-3 rounded border border-gray-200 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors text-left group"
+                      onClick={() => setViewMode('total')}
+                      className={`px-3 py-1.5 rounded-md transition-all ${viewMode === 'total' ? 'bg-white dark:bg-neutral-600 shadow text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'}`}
                     >
-                      <div>
-                        <div className="font-bold text-sm text-gray-800 dark:text-gray-200">{t('button.consumeAllCost', 'Use All Tickets')}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('desc.consumeAllCost', 'Set rounds to consume all owned cost items.')}</div>
-                      </div>
-                      <div className="group-hover:scale-110 transition-transform">
-                        {costItemInfo && (
-                          // <ItemIcon
-                          //     type={costItemInfo.type}
-                          //     itemId={String(costItemInfo.id)}
-                          //     size={28}
-                          //     eventData={eventData}
-                          //     iconData={iconData}
-                          // />
-
-                          <img src={`data:image/webp;base64,${iconData.Item?.[costItemInfo.id]}`} className="inline w-14 h-14 ml-0.5 object-cover" />
-                        )}
-                      </div>
+                      {t('label.total', 'Total')}
                     </button>
-
-                    {/* Button 2: Fulfill Deficit (Main Currency) */}
                     <button
-                      onClick={handleSetTargetDeficit}
-                      className="flex items-center justify-between p-3 rounded border border-gray-200 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors text-left group"
+                      onClick={() => setViewMode('average')}
+                      className={`px-3 py-1.5 rounded-md transition-all ${viewMode === 'average' ? 'bg-white dark:bg-neutral-600 shadow text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'}`}
                     >
-                      <div>
-                        <div className="font-bold text-sm text-gray-800 dark:text-gray-200">{t('button.fulfillDeficit', 'Fulfill Deficits')}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('desc.fulfillDeficit', 'Set rounds to acquire missing shop items.')}</div>
-                      </div>
-                      <div className="group-hover:scale-110 transition-transform">
-                        {mainRewardItemInfo && (
-                          // <ItemIcon
-                          //     type={mainRewardItemInfo.type}
-                          //     itemId={String(mainRewardItemInfo.id)}
-                          //     size={28}
-                          //     eventData={eventData}
-                          //     iconData={iconData}
-                          // />
-                          <img src={`data:image/webp;base64,${iconData.Item?.[mainRewardItemInfo.id]}`} className="inline w-14 h-14 ml-0.5 object-cover" />
-                        )}
-                      </div>
+                      {t('label.average', 'Avg / Round')}
                     </button>
                   </div>
                 </div>
-              </div>
 
-              {/* Results Display */}
-              {displayResult && (
-                <div className="mt-8 space-y-4 pt-4 border-t dark:border-neutral-700">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100">{t('ui.simulationResults', 'Simulation Results')}</h3>
-
-                    {/* View Mode Toggle */}
-                    <div className="bg-gray-100 dark:bg-neutral-700 p-1 rounded-lg flex text-xs font-bold">
-                      <button
-                        onClick={() => setViewMode('total')}
-                        className={`px-3 py-1.5 rounded-md transition-all ${viewMode === 'total' ? 'bg-white dark:bg-neutral-600 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
-                      >
-                        {t('label.total', 'Total')}
-                      </button>
-                      <button
-                        onClick={() => setViewMode('average')}
-                        className={`px-3 py-1.5 rounded-md transition-all ${viewMode === 'average' ? 'bg-white dark:bg-neutral-600 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
-                      >
-                        {t('label.average', 'Avg / Round')}
-                      </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Cost Display */}
+                  <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+                    <div className="flex justify-between mb-3">
+                      <span className="font-bold text-red-700 dark:text-red-300">{t('label.estimatedCost', 'Estimated Cost')}</span>
+                      <span className="text-xs font-medium text-red-600/70 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
+                        {t('label.avgFlips', 'Avg Flips')}: {displayResult.avgFlipsPerRound.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {Object.entries(displayResult.totalCosts).map(([key, total]) => {
+                        const amount = viewMode === 'average' && displayResult.targetClears > 0 ? total / displayResult.targetClears : total;
+                        return (
+                          <div key={key} className="flex flex-col items-center">
+                            <ItemIcon type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={11} eventData={eventData} iconData={iconData} />
+                            {/* <span className="text-xs font-bold text-red-600 mt-1">
+                                            -{Math.round(amount).toLocaleString()}
+                                        </span> */}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Cost Display */}
-                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
-                      <div className="flex justify-between mb-3">
-                        <span className="font-bold text-red-700 dark:text-red-300">{t('label.estimatedCost', 'Estimated Cost')}</span>
-                        <span className="text-xs font-medium text-red-600/70 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
-                          {t('label.avgFlips', 'Avg Flips')}: {displayResult.avgFlipsPerRound.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                        {Object.entries(displayResult.totalCosts).map(([key, total]) => {
+                  {/* Reward Display */}
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-100 dark:border-green-900/30">
+                    <div className="mb-3 font-bold text-green-700 dark:text-green-300">{t('label.estimatedRewards', 'Estimated Rewards')}</div>
+                    <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
+                      {Object.entries(displayResult.totalRewards)
+                        .sort(([key_a], [key_b]) => getItemSortPriority(key_a, eventData) - getItemSortPriority(key_b, eventData))
+                        .map(([key, total]) => {
+                          if (total <= 0) return null;
                           const amount = viewMode === 'average' && displayResult.targetClears > 0 ? total / displayResult.targetClears : total;
+
+                          if (amount < 0.1) return null;
+
                           return (
                             <div key={key} className="flex flex-col items-center">
                               <ItemIcon type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={11} eventData={eventData} iconData={iconData} />
-                              {/* <span className="text-xs font-bold text-red-600 mt-1">
-                                            -{Math.round(amount).toLocaleString()}
-                                        </span> */}
+                              {/* <span className="text-xs font-bold text-green-600 mt-1">
+                                                +{Math.round(amount).toLocaleString()}
+                                            </span> */}
                             </div>
                           );
                         })}
-                      </div>
-                    </div>
-
-                    {/* Reward Display */}
-                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-100 dark:border-green-900/30">
-                      <div className="mb-3 font-bold text-green-700 dark:text-green-300">{t('label.estimatedRewards', 'Estimated Rewards')}</div>
-                      <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
-                        {Object.entries(displayResult.totalRewards)
-                          .sort(([key_a, a], [key_b, b]) => getItemSortPriority(key_a, eventData) - getItemSortPriority(key_b, eventData))
-                          .map(([key, total]) => {
-                            if (total <= 0) return null;
-                            const amount = viewMode === 'average' && displayResult.targetClears > 0 ? total / displayResult.targetClears : total;
-
-                            if (amount < 0.1) return null;
-
-                            return (
-                              <div key={key} className="flex flex-col items-center">
-                                <ItemIcon type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={11} eventData={eventData} iconData={iconData} />
-                                {/* <span className="text-xs font-bold text-green-600 mt-1">
-                                                +{Math.round(amount).toLocaleString()}
-                                            </span> */}
-                              </div>
-                            );
-                          })}
-                      </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        )}
 
-          {/* ---------------------------------------------------------------------- */}
-          {/* Tab 2: Reward Info */}
-          {/* ---------------------------------------------------------------------- */}
-          {activeTab === 'info' && (
-            <div className="space-y-8 animate-fade-in">
-              {/* 1. Card Flip Rewards Table */}
-              <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-neutral-700">
-                <div className="px-4 py-2 bg-gray-100 dark:bg-neutral-700/50 border-b dark:border-neutral-700 font-bold text-sm flex items-center gap-2">
-                  <span></span> {t('cardMatch.flipRewardTitle', 'Card Match Rewards')}
-                  <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-auto">* {t('cardMatch.flipRewardDesc', 'Obtained every time a pair is matched')}</span>
-                </div>
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-neutral-700 dark:text-gray-400">
-                    <tr>
-                      <th className="px-4 py-3 w-1/3">{t('label.type')}</th>
-                      <th className="px-4 py-3">{t('label.reward')}</th>
+        {/* ---------------------------------------------------------------------- */}
+        {/* Tab 2: Reward Info */}
+        {/* ---------------------------------------------------------------------- */}
+        {activeTab === 'info' && (
+          <div className="space-y-8 animate-fade-in">
+            {/* 1. Card Flip Rewards Table */}
+            <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+              <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700/50 border-b dark:border-neutral-700 font-bold text-sm flex items-center gap-2">
+                <span></span> {t('cardMatch.flipRewardTitle', 'Card Match Rewards')}
+                <span className="text-xs font-normal text-neutral-500 dark:text-neutral-400 ml-auto">* {t('cardMatch.flipRewardDesc', 'Obtained every time a pair is matched')}</span>
+              </div>
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-neutral-700 uppercase bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-400">
+                  <tr>
+                    <th className="px-4 py-3 w-1/3">{t('label.type')}</th>
+                    <th className="px-4 py-3">{t('label.reward')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y dark:divide-neutral-700 bg-white dark:bg-neutral-800">
+                  {matchRewards.map((reward) => (
+                    <tr key={`match-${reward.UniqueId}`} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                      <td className="px-4 py-3 align-middle">
+                        <span
+                          className={`font-bold text-xs px-2 py-1 rounded border ${
+                            reward.Rarity === 3
+                              ? 'text-purple-600 border-purple-200 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300'
+                              : reward.Rarity === 2
+                                ? 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300'
+                                : reward.Rarity === 1
+                                  ? 'text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
+                                  : 'text-neutral-600 border-neutral-200 bg-neutral-50 dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-300'
+                          }`}
+                        >
+                          {reward.Rarity === 3 ? 'SSR' : reward.Rarity === 2 ? 'SR' : reward.Rarity === 1 ? 'R' : 'N'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-1">
+                          {reward.RewardParcelId.map((pid, i) => (
+                            <ItemIcon key={i} type={reward.RewardParcelTypeStr[i]} itemId={String(pid)} amount={reward.RewardParcelAmount[i]} size={10} eventData={eventData} iconData={iconData} />
+                          ))}
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y dark:divide-neutral-700 bg-white dark:bg-neutral-800">
-                    {matchRewards.map((reward) => (
-                      <tr key={`match-${reward.UniqueId}`} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
-                        <td className="px-4 py-3 align-middle">
-                          <span
-                            className={`font-bold text-xs px-2 py-1 rounded border ${
-                              reward.Rarity === 3
-                                ? 'text-purple-600 border-purple-200 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300'
-                                : reward.Rarity === 2
-                                  ? 'text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300'
-                                  : reward.Rarity === 1
-                                    ? 'text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
-                                    : 'text-gray-600 border-gray-200 bg-gray-50 dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-300'
-                            }`}
-                          >
-                            {reward.Rarity === 3 ? 'SSR' : reward.Rarity === 2 ? 'SR' : reward.Rarity === 1 ? 'R' : 'N'}
-                          </span>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 2. Round Clear Rewards Table */}
+            <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+              <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700/50 border-b dark:border-neutral-700 font-bold text-sm flex items-center gap-2">
+                <FaFlag /> {t('cardMatch.clearRewardTitle', 'Round Clear Rewards')}
+                <span className="text-xs font-normal text-neutral-500 dark:text-neutral-400 ml-auto">* {t('cardMatch.clearRewardDesc', 'Obtained when clearing the board')}</span>
+              </div>
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-neutral-700 uppercase bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-400">
+                  <tr>
+                    <th className="px-4 py-3 w-24">{t('label.round')}</th>
+                    <th className="px-4 py-3">{t('label.reward')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y dark:divide-neutral-700 bg-white dark:bg-neutral-800">
+                  {Object.entries(roundRewards).map(([roundStr, rewards]) => {
+                    const round = Number(roundStr);
+                    // Loop round check logic (assuming last items are loops or explicit flag)
+                    const isLoop = rewards.some((r) => r.IsLoop);
+
+                    return (
+                      <tr key={`round-${round}`} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                        <td className="px-4 py-3 font-medium border-r dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/50">
+                          {isLoop ? (
+                            <span className="flex items-center gap-1">
+                              {round}+ <span className="text-[10px] uppercase text-neutral-400">(Loop)</span>
+                            </span>
+                          ) : (
+                            <span>{round}</span>
+                          )}
                         </td>
                         <td className="px-4 py-2">
-                          <div className="flex flex-wrap gap-1">
-                            {reward.RewardParcelId.map((pid, i) => (
-                              <ItemIcon key={i} type={reward.RewardParcelTypeStr[i]} itemId={String(pid)} amount={reward.RewardParcelAmount[i]} size={10} eventData={eventData} iconData={iconData} />
+                          <div className="flex flex-col gap-1">
+                            {rewards.map((reward, rIdx) => (
+                              <div key={rIdx} className="flex flex-wrap gap-1 items-center">
+                                {reward.RewardParcelId.map((pid, i) => (
+                                  <ItemIcon
+                                    key={`${rIdx}-${i}`}
+                                    type={reward.RewardParcelTypeStr[i]}
+                                    itemId={String(pid)}
+                                    amount={reward.RewardParcelAmount[i]}
+                                    size={10}
+                                    eventData={eventData}
+                                    iconData={iconData}
+                                  />
+                                ))}
+                              </div>
                             ))}
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* 2. Round Clear Rewards Table */}
-              <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-neutral-700">
-                <div className="px-4 py-2 bg-gray-100 dark:bg-neutral-700/50 border-b dark:border-neutral-700 font-bold text-sm flex items-center gap-2">
-                  <span>🚩</span> {t('cardMatch.clearRewardTitle', 'Round Clear Rewards')}
-                  <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-auto">* {t('cardMatch.clearRewardDesc', 'Obtained when clearing the board')}</span>
-                </div>
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-neutral-700 dark:text-gray-400">
-                    <tr>
-                      <th className="px-4 py-3 w-24">{t('label.round')}</th>
-                      <th className="px-4 py-3">{t('label.reward')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y dark:divide-neutral-700 bg-white dark:bg-neutral-800">
-                    {Object.entries(roundRewards).map(([roundStr, rewards]) => {
-                      const round = Number(roundStr);
-                      // Loop round check logic (assuming last items are loops or explicit flag)
-                      const isLoop = rewards.some((r) => r.IsLoop);
-
-                      return (
-                        <tr key={`round-${round}`} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
-                          <td className="px-4 py-3 font-medium border-r dark:border-neutral-700 bg-gray-50/50 dark:bg-neutral-800/50">
-                            {isLoop ? (
-                              <span className="flex items-center gap-1">
-                                {round}+ <span className="text-[10px] uppercase text-gray-400">(Loop)</span>
-                              </span>
-                            ) : (
-                              <span>{round}</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2">
-                            <div className="flex flex-col gap-1">
-                              {rewards.map((reward, rIdx) => (
-                                <div key={rIdx} className="flex flex-wrap gap-1 items-center">
-                                  {reward.RewardParcelId.map((pid, i) => (
-                                    <ItemIcon
-                                      key={`${rIdx}-${i}`}
-                                      type={reward.RewardParcelTypeStr[i]}
-                                      itemId={String(pid)}
-                                      amount={reward.RewardParcelAmount[i]}
-                                      size={10}
-                                      eventData={eventData}
-                                      iconData={iconData}
-                                    />
-                                  ))}
-                                </div>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </>
   );
 };

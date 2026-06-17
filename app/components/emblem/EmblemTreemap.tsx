@@ -1,35 +1,40 @@
 import { useMemo } from 'react';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import type { AggregationType, TreemapSourceEntry } from './EmblemCounter';
+import type { TooltipContentProps } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { cdn } from '~/utils/cdn';
+import type { TFunction } from 'i18next';
 
 interface EmblemTreemapProps {
   data: TreemapSourceEntry[];
   totalCount: number;
-  t_s: any;
-  portraitData: Record<string, string>;
+  t_s: TFunction<'club'>;
+  portraitData: Record<number, string>;
   aggregationType: AggregationType;
 }
 
-const CustomTooltip = ({ active, payload, totalCount }: any) => {
+interface CustomTooltipProps extends Partial<TooltipContentProps<number, string>> {
+  totalCount?: number;
+}
+
+const CustomTooltip = ({ active, payload, totalCount = 0 }: CustomTooltipProps) => {
   const { t } = useTranslation('emblemCounter');
   if (active && payload && payload.length) {
-    const item = payload[0].payload;
-    const value = payload[0].value; // Same as item.count
+    const item = payload[0].payload as Record<string, number | string>;
+    const value = Number(payload[0].value ?? 0);
     const path = payload
       .slice(1)
-      .map((p: any) => p.name)
+      .map((p) => String(p.name ?? ''))
       .reverse()
       .join(' > ');
     const percentage = totalCount > 0 ? (value / totalCount) * 100 : 0;
 
-    //  Check if 'count' exists when displaying tooltip for aggregated nodes (e.g., School)
-    const countDisplay = item.count ? item.count.toLocaleString() : value.toLocaleString();
+    const countDisplay = item.count ? Number(item.count).toLocaleString() : value.toLocaleString();
 
     return (
       <div className="bg-white dark:bg-neutral-800 p-3 border border-neutral-300 dark:border-neutral-600 rounded shadow-lg text-sm">
-        <p className="font-bold text-neutral-900 dark:text-neutral-100 mb-1">{item.name}</p>
+        <p className="font-bold text-neutral-900 dark:text-neutral-100 mb-1">{String(item.name ?? '')}</p>
         {path && <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">{path}</p>}
         <p className="text-neutral-700 dark:text-neutral-300">
           {t('count', 'Count')}: <span className="font-medium">{countDisplay}</span>
@@ -66,7 +71,20 @@ const SCHOOL_COLORS = [
   '#A9A9A9',
 ];
 
-const CustomizedContent: React.FC<any> = (props) => {
+interface CustomizedContentProps {
+  depth: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  name: string;
+  schoolColor?: string;
+  iconId?: number;
+  portraitData?: Record<number, string>;
+  children?: unknown;
+}
+
+const CustomizedContent = (props: CustomizedContentProps) => {
   const { depth, x, y, width, height, name, schoolColor, iconId, portraitData, children } = props;
 
   if (width < 2 || height < 2) return null;
@@ -109,10 +127,8 @@ const CustomizedContent: React.FC<any> = (props) => {
       strokeWidth = 0;
   }
 
-  // Determine image rendering based on isLeaf (no child nodes?)
-  const isLeaf = !children || children.length === 0;
+  const isLeaf = !children || (Array.isArray(children) && children.length === 0);
   const portraitBase64 = isLeaf && iconId && portraitData ? portraitData[iconId] : null;
-  // const canRenderImage = portraitBase64 && width > 40 && height > 40;
 
   // (Label position calculation logic follows the user-modified version)
   let labelX = x + 6,
@@ -147,7 +163,7 @@ const CustomizedContent: React.FC<any> = (props) => {
   const initialHref = useHighRes ? highResPath : lowResPath;
 
   // 4. Error Handler (On high-res loading failure)
-  const handleImageError = (e: React.SyntheticEvent<SVGImageElement, Event>) => {
+  const handleImageError = (e: React.SyntheticEvent<SVGImageElement>) => {
     // If current href ends with .png (high-res path) and fallback (lowResPath) exists
     if (e.currentTarget.href.baseVal.endsWith('.webp') && lowResPath) {
       // Replace href with lowResPath (base64)
@@ -256,13 +272,11 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
     for (const item of data) {
       const { school, club, baseName, seasonalName, count, iconId } = item;
 
-      // Translate Name
-      const schoolName = t_s((t as any)(school, { ns: 'term', defaultValue: school }));
-      const clubName = t_s((t as any)(club, { ns: 'term', defaultValue: club }));
-      const baseNameTranslated = t_s((t as any)(baseName, { ns: 'term', defaultValue: baseName }));
-      const seasonalNameTranslated = t_s((t as any)(seasonalName, { ns: 'term', defaultValue: seasonalName }));
+      const schoolName = school;
+      const clubName = club;
+      const baseNameTranslated = baseName;
+      const seasonalNameTranslated = seasonalName;
 
-      // 1. School Node (Get or Create)
       if (!root.has(schoolName)) {
         const schoolColor = SCHOOL_COLORS[schoolIndex % SCHOOL_COLORS.length];
         schoolIndex++;
@@ -275,15 +289,15 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
           topStudentId: null,
         });
       }
-      const schoolNode = root.get(schoolName)!;
-      // Update School Node Aggregation
+      const schoolNode = root.get(schoolName);
+      if (!schoolNode) continue;
+
       schoolNode.totalCount += count;
       if (count > schoolNode.maxCount) {
         schoolNode.maxCount = count;
         schoolNode.topStudentId = iconId;
       }
 
-      // 2. Club Node (Get or Create)
       if (!schoolNode.children.has(clubName)) {
         schoolNode.children.set(clubName, {
           name: clubName,
@@ -293,15 +307,15 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
           topStudentId: null,
         });
       }
-      const clubNode = schoolNode.children.get(clubName)!;
-      // Update Club node aggregation
+      const clubNode = schoolNode.children.get(clubName);
+      if (!clubNode) continue;
+
       clubNode.totalCount += count;
       if (count > clubNode.maxCount) {
         clubNode.maxCount = count;
         clubNode.topStudentId = iconId;
       }
 
-      // 3. Student (Base) Node (Get or Create)
       if (!clubNode.children.has(baseNameTranslated)) {
         clubNode.children.set(baseNameTranslated, {
           name: baseNameTranslated,
@@ -311,7 +325,8 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
           topStudentId: null,
         });
       }
-      const baseNameNode = clubNode.children.get(baseNameTranslated)!;
+      const baseNameNode = clubNode.children.get(baseNameTranslated);
+      if (!baseNameNode) continue;
       // Update Student (Base) node aggregation
       baseNameNode.totalCount += count;
       if (count > baseNameNode.maxCount) {

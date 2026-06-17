@@ -5,18 +5,24 @@ import type { EventData, IconData, Mission, Stage } from '~/types/plannerData';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
 import { solveOptimalRuns } from '~/utils/solveFarmingHeuristic';
+import { solveOpartMaximize } from '~/utils/solveOpartMaximize';
+import { buildFarmingPriorities } from '~/utils/buildFarmingPriorities';
 import { CustomNumberInput } from '../CustomInput';
 import { FaRedoAlt, FaRegStar } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import type { StagePrio, FarmingTab, FarmingResult } from './FarmingPlannerTypes';
 import { RepeatableTab } from './RepeatableTab';
 import { OnetimeTab } from './OnetimeTab';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
+import { ItemIcon } from './common/Icon';
+import { getLocalizeEtcName } from './common/locale';
+import type { Locale } from '~/utils/i18n/config';
 
 export type { FarmingTab, FarmingResult };
 
 interface FarmingPlannerProps {
   eventId: number;
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency' | 'stage'>;
   iconData: IconData;
   allStages: (Stage & { type: 'stage' | 'story' | 'challenge' })[];
   availableAp: number;
@@ -27,11 +33,12 @@ interface FarmingPlannerProps {
 }
 
 export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availableAp, setAvailableAp, neededItems, totalBonus, onCalculate }: FarmingPlannerProps) => {
-  const { runCounts, firstClears, stagePrio, setRunCounts, setFirstClears, setStagePrio } = usePlanForEvent(eventId);
+  const { runCounts, firstClears, stagePrio, priorityItemId, setRunCounts, setFirstClears, setStagePrio, setPriorityItemId } = usePlanForEvent(eventId);
   const farmingStages = useMemo(() => allStages.filter((s) => s.type === 'stage'), [allStages]);
   const oneTimeStages = useMemo(() => allStages.filter((s) => s.type === 'story' || s.type === 'challenge'), [allStages]);
 
-  const { t } = useTranslation('planner');
+  const { t, i18n } = useTranslation('planner');
+  const locale = i18n.language as Locale;
   const { farmingActiveTab: activeTab, setFarmingActiveTab: setActiveTab, showOneTimeRewards, setShowOneTimeRewards, minimizeRepeatableInfo, setMinimizeRepeatableInfo } = useEventSettings(eventId);
 
   const missionsByStageId = useMemo(() => {
@@ -39,10 +46,10 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     if (!eventData.mission) return map;
     eventData.mission.forEach((mission) => {
       if (mission.Description.Kr.includes('초 이내 클리어')) {
-        const stageIdParam = mission?.CompleteConditionParameter?.find((p) => Number(p) > 1000000);
+        const stageIdParam = mission.CompleteConditionParameter.find((p) => Number(p) > 1000000);
         if (stageIdParam) {
           if (!map.has(stageIdParam)) map.set(stageIdParam, []);
-          map.get(stageIdParam)!.push(mission);
+          map.get(stageIdParam)?.push(mission);
         }
       }
     });
@@ -154,7 +161,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
 
   useEffect(() => {
     onCalculate(farmingCalculationResult);
-  }, [farmingCalculationResult, onCalculate]);
+  }, [farmingCalculationResult]);
 
   const handleStagePrioChange = useCallback(
     (stageId: number) => {
@@ -169,7 +176,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
 
   const farmingItem = useMemo(() => {
     const farmingItems = new Set<number>();
-    for (const stage of eventData.stage.stage) {
+    for (const stage of eventData.stage.stage || []) {
       for (const r of stage.EventContentStageReward) {
         if (['GachaGroup', 'Currency'].includes(r.RewardParcelTypeStr)) continue;
         if (r.RewardTagStr != 'Event') continue;
@@ -178,6 +185,23 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     }
     return farmingItems;
   }, [eventData.stage]);
+
+  const eventCurrencyIds = useMemo(() => eventData.currency.map((c) => c.ItemUniqueId), [eventData.currency]);
+
+  const prioritizableItems = useMemo(() => {
+    const seen = new Map<number, { rewardId: number; parcelType: string }>();
+    for (const stage of farmingStages) {
+      for (const r of stage.EventContentStageReward) {
+        if (!['FirstClear', 'ThreeStar'].includes(r.RewardTagStr) && !eventCurrencyIds.includes(r.RewardId) && r.RewardParcelTypeStr !== 'GachaGroup' && r.RewardParcelTypeStr !== 'Currency') {
+          const iconInfo = (eventData.icons as unknown as Record<string, Record<string, { Rarity?: number }>>)?.[r.RewardParcelTypeStr]?.[r.RewardId];
+          if (iconInfo?.Rarity === 3 && !seen.has(r.RewardId)) {
+            seen.set(r.RewardId, { rewardId: r.RewardId, parcelType: r.RewardParcelTypeStr });
+          }
+        }
+      }
+    }
+    return [...seen.values()];
+  }, [farmingStages, eventCurrencyIds, eventData.icons]);
 
   const handleAutoCalculateRuns = useCallback(() => {
     const initialNeeded: Record<number, number> = {};
@@ -213,29 +237,38 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     const numItems = neededItemIds.length;
     const dropMatrix = Array(numStages)
       .fill(0)
-      .map(() => Array(numItems).fill(0));
-    const apCosts = Array(numStages).fill(0);
-    const priorities = Array(numStages).fill(false);
+      .map(() => Array<number>(numItems).fill(0));
+    const apCosts = Array<number>(numStages).fill(0);
     for (let i = 0; i < numStages; i++) {
       const stage = optimizableStages[i];
       apCosts[i] = stage.StageEnterCostAmount;
-      priorities[i] = stagePrio?.[stage.Id] === 'priority';
       for (const reward of stage.EventContentStageReward) {
         if (itemMap.has(reward.RewardId) && (reward.RewardTagStr === 'Event' || reward.RewardTagStr === 'Default')) {
-          const itemIndex = itemMap.get(reward.RewardId)!;
+          const itemIndex = itemMap.get(reward.RewardId);
+          if (itemIndex == undefined) continue;
           const bonus = totalBonus[reward.RewardId] || 0;
           dropMatrix[i][itemIndex] += ((reward.RewardAmount * reward.RewardProb) / 10000) * (1 + bonus / 10000);
         }
       }
     }
-    const additionalRunsArray = solveOptimalRuns({ dropMatrix, apCosts, neededAmounts, priorities });
+    let additionalRunsArray: number[];
+    if (priorityItemId !== null) {
+      const opartDropRates = optimizableStages.map((stage) => {
+        const r = stage.EventContentStageReward.find((r) => r.RewardId === priorityItemId);
+        return r ? (r.RewardAmount * r.RewardProb) / 10000 : 0;
+      });
+      additionalRunsArray = solveOpartMaximize({ dropMatrix, apCosts, neededAmounts, opartDropRates });
+    } else {
+      const priorities = buildFarmingPriorities(optimizableStages, null, stagePrio || null);
+      additionalRunsArray = solveOptimalRuns({ dropMatrix, apCosts, neededAmounts, priorities }).map(Math.round);
+    }
     const additionalRunCounts: Record<number, number> = {};
     for (let i = 0; i < numStages; i++) {
       if (additionalRunsArray[i] > 0) additionalRunCounts[optimizableStages[i].Id] = Math.round(additionalRunsArray[i]);
     }
-    const filtered = runCounts ? Object.fromEntries(Object.entries(runCounts).filter(([key]) => eventData.stage.stage.filter((v) => v.Id === Number(key)).length == 0)) : {};
+    const filtered = runCounts ? Object.fromEntries(Object.entries(runCounts).filter(([key]) => eventData.stage.stage?.filter((v) => v.Id === Number(key)).length == 0)) : {};
     setRunCounts(() => ({ ...filtered, ...additionalRunCounts }));
-  }, [neededItems, farmingStages, stagePrio, totalBonus, runCounts, setRunCounts]);
+  }, [neededItems, farmingStages, stagePrio, priorityItemId, totalBonus, runCounts, setRunCounts]);
 
   const handleRunCountChange = useCallback(
     (stageId: number, value: number) => {
@@ -314,8 +347,8 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
   );
 
   const tabs: { id: FarmingTab; name: string; icon: IconType }[] = [
-    { id: 'repeatable', name: '' + t('label.repeatedFarming'), icon: FaRedoAlt },
-    { id: 'onetime', name: '' + t('label.oneTimeClear'), icon: FaRegStar },
+    { id: 'repeatable', name: t('label.repeatedFarming'), icon: FaRedoAlt },
+    { id: 'onetime', name: t('label.oneTimeClear'), icon: FaRegStar },
   ];
 
   const allFirstClearsState = useMemo(() => {
@@ -338,9 +371,9 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
 
   return (
     <>
-      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('page.eventPlanner')}</h2>
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('page.eventPlanner')}</h2>
 
-      <label htmlFor="ap-input" className="inline-flex text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+      <label htmlFor="ap-input" className="inline-flex text-lg font-bold text-neutral-800 dark:text-neutral-200 mb-2">
         <>
           <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="w-6 h-6 ml-0.5 object-cover rounded-full" />
           {t('ui.totalAp')}
@@ -350,11 +383,49 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
         id="ap-input"
         value={availableAp}
         onChange={(e) => setAvailableAp(e != null ? e : 0)}
-        className="w-full p-2 text-lg rounded border dark:border-neutral-600 bg-transparent dark:text-gray-200 focus:ring-2 focus:ring-sky-500"
+        className="w-full p-2 text-lg rounded border dark:border-neutral-600 bg-transparent dark:text-neutral-200 focus:ring-2 focus:ring-sky-500"
       />
-      <div className={`text-right mt-2 font-semibold ${isApExceeded ? 'text-red-500 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
+      <div className={`text-right mt-2 font-semibold ${isApExceeded ? 'text-red-500 dark:text-red-400' : 'text-neutral-600 dark:text-neutral-400'}`}>
         {t('ui.usedAp')} {totalApUsed.toLocaleString()} / {availableAp.toLocaleString()}
       </div>
+
+      {prioritizableItems.length > 0 && (
+        <div className="mt-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500 mb-1.5">{t('label.optimizationCriteria')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setPriorityItemId(null)}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                priorityItemId === null
+                  ? 'bg-sky-500 dark:bg-sky-600 text-white shadow-sm'
+                  : 'bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-sky-400 dark:hover:border-sky-500'
+              }`}
+            >
+              {t('label.minimizeAp')}
+            </button>
+            {prioritizableItems.map((item) => {
+              const localizeEtc = (eventData.icons as unknown as Record<string, Record<string, { LocalizeEtc?: Parameters<typeof getLocalizeEtcName>[0] }>>)?.[item.parcelType]?.[item.rewardId]
+                ?.LocalizeEtc;
+              const itemName = getLocalizeEtcName(localizeEtc, locale) ?? String(item.rewardId);
+              return (
+                <button
+                  key={item.rewardId}
+                  onClick={() => setPriorityItemId(priorityItemId === item.rewardId ? null : item.rewardId)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    priorityItemId === item.rewardId
+                      ? 'bg-amber-400 dark:bg-amber-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-amber-400 dark:hover:border-amber-500'
+                  }`}
+                >
+                  <ItemIcon type={item.parcelType} itemId={String(item.rewardId)} amount={''} size={6} eventData={eventData} iconData={iconData} />
+                  {itemName}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <button
         data-component-name="FarmingPlanner_run"
         onClick={handleAutoCalculateRuns}
@@ -363,7 +434,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
         {t('button.runAutoFarmCalc')}
       </button>
 
-      <div data-component-name="FarmingPlanner_tab" className="flex border-b border-gray-200 dark:border-neutral-700">
+      <div data-component-name="FarmingPlanner_tab" className="flex border-b border-neutral-200 dark:border-neutral-700">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -371,7 +442,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
             className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 flex flex-row justify-center items-center ${
               activeTab === tab.id
                 ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-neutral-600'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'
             }`}
           >
             <tab.icon className="mr-2" /> {tab.name}

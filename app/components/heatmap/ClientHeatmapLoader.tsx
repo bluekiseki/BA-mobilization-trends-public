@@ -50,14 +50,17 @@ const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
       try {
         const [studentData, labelData] = await Promise.all([
           fetchAndProcessWithCache_1(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res: Response) => res.json().then((data) => data as Promise<Record<string, Student>>)),
-          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as Promise<RaidInfo[]>),
+          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as unknown as Promise<RaidInfo[]>),
           // fetch(cdn('/w/students_portrait.json')).then((res) => res.json())
         ]);
 
         await (async () => {
-          const students_portrait = (await fetch(cdn('/w/students_portrait.json')).then((res) => res.json())) as {
+          const students_portrait: {
             [key: number]: string;
-          };
+          } = await fetch(cdn('/w/students_portrait.json')).then((res) => res.json());
+          // as  {
+          //   [key: number]: string;
+          // };
           setPortraitData(students_portrait);
           Object.entries(studentData).map(([studentId, student]) => {
             student.Portrait = students_portrait[parseInt(studentId)];
@@ -72,7 +75,7 @@ const ClientHeatmapLoader = ({ server }: { server: GameServer }) => {
         setIsStaticDataLoading(false);
       }
     };
-    fetchInitialData();
+    void fetchInitialData();
   }, [fetchAndProcessWithCache_1, fetchRaids, currentLocale, server]);
 
   if (isStaticDataLoading) {

@@ -1,19 +1,38 @@
 import React, { useState, useMemo } from 'react';
+import { PartyCountChart, PARTY_COUNT_COLORS } from './partyCountChart';
 import { useTranslation } from 'react-i18next';
-import { getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
+import { getDifficultyFromScoreAndBoss } from '~/components/raid/Difficulty';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { getBackgroundRatingColor, getCharacterStarValue, type Character, type PortraitData, type ReportEntryRank, type StudentData } from '../common';
 import { formatTimeToTimestamp } from '~/utils/time';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from 'recharts';
+import type { TooltipContentProps } from 'recharts';
 import { useIsDarkState } from '~/store/isDarkState';
 import { StudentIcon } from '../studentIcon';
-import { StarRating } from '~/components/StarRatingProps';
+import { StarRating } from '~/components/StarRating';
 import { IoClose } from 'react-icons/io5';
 import { YouTubeSearchGenerator } from '../YouTubeSearchGenerator';
-const CustomBarLabel = (props: any) => {
-  const { x, y, width, height, value, total } = props;
 
+interface CustomBarLabelProps {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  value?: number;
+  total?: number;
+}
+
+interface BinEntry {
+  count: number;
+  [key: number]: number;
+}
+
+type StarChartEntry = { name: string; [key: string]: number | string };
+
+const ZERO_RUN_COLLAPSE = 50;
+
+const CustomBarLabel = ({ x = 0, y = 0, width = 0, height = 0, value = 0, total }: CustomBarLabelProps) => {
   if (value === 0 || !total || width < 35) {
     return null;
   }
@@ -38,12 +57,44 @@ const CustomBarLabel = (props: any) => {
   );
 };
 
-const HistogramTooltip = (props: any) => {
-  const { active, payload, label } = props;
+const HistogramTooltip = ({ active, payload, label }: Partial<TooltipContentProps<number, string>>) => {
   const { t } = useTranslation('dashboard');
 
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
+    const data = payload[0].payload as { all?: number };
+    const firstKey = String(payload[0].dataKey ?? '');
+    const isPartyCountMode = firstKey.startsWith('tc');
+    const isPositionMode = firstKey.startsWith('pos');
+
+    if (isPartyCountMode || isPositionMode) {
+      const totalInBin = payload.reduce((sum: number, p) => sum + Number(p.value ?? 0), 0);
+      if (totalInBin === 0) return null;
+      return (
+        <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 border dark:border-neutral-600 rounded-md shadow-lg text-sm space-y-1">
+          <p className="font-bold text-center border-b pb-1 mb-1">{label}</p>
+          {payload
+            .filter((p) => Number(p.value) > 0)
+            .map((p) => {
+              const numValue = Number(String(p.dataKey).replace(isPartyCountMode ? 'tc' : 'pos', ''));
+              let n = numValue;
+              let m = n;
+              if (isPositionMode) {
+                m = Math.floor(numValue / 100000);
+                n = numValue % 100000;
+              }
+              const label = isPartyCountMode ? t('nPartyCount', { n }) : t('nthPosition', { n, m });
+              return (
+                <div key={String(p.dataKey ?? '')} className="flex items-center gap-1.5">
+                  <span className="block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.fill }}></span>
+                  <span className="font-medium">{label}</span>
+                  <span className="font-bold">{Number(p.value).toLocaleString()}</span>
+                  <span className="text-neutral-600 dark:text-neutral-400">{`(${((Number(p.value) / totalInBin) * 100).toFixed(1)}%)`}</span>
+                </div>
+              );
+            })}
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 border dark:border-neutral-600 rounded-md shadow-lg text-sm space-y-1">
@@ -51,19 +102,19 @@ const HistogramTooltip = (props: any) => {
         {data.all !== undefined && <p className="font-semibold">{t('tooltipPlayers', { count: data.all.toLocaleString() })}</p>}
         {data.all === undefined &&
           (() => {
-            const totalInBin = payload.reduce((sum: number, p: any) => sum + p.value, 0);
+            const totalInBin = payload.reduce((sum: number, p) => sum + Number(p.value ?? 0), 0);
             if (totalInBin === 0) return null;
 
             return payload
-              .filter((p: any) => p.value > 0)
-              .map((p: any) => (
-                <div key={p.dataKey} className="flex items-center gap-1.5">
+              .filter((p) => Number(p.value) > 0)
+              .map((p) => (
+                <div key={String(p.dataKey ?? '')} className="flex items-center gap-1.5">
                   <span className="block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.fill }}></span>
                   <span>
                     <StarRating n={Number(p.dataKey)} />
                   </span>
-                  <span className="font-bold">{p.value.toLocaleString()}</span>
-                  <span className="text-gray-600 dark:text-gray-400">{`(${((p.value / totalInBin) * 100).toFixed(1)}%)`}</span>
+                  <span className="font-bold">{Number(p.value).toLocaleString()}</span>
+                  <span className="text-neutral-600 dark:text-neutral-400">{`(${((Number(p.value) / totalInBin) * 100).toFixed(1)}%)`}</span>
                 </div>
               ));
           })()}
@@ -75,7 +126,7 @@ const HistogramTooltip = (props: any) => {
 
 export const StarRatingDistributionBarChart: React.FC<{
   studentChartInfo: {
-    data: any[];
+    data: StarChartEntry[];
     total: number;
   };
   studentId: number;
@@ -116,12 +167,12 @@ export const StarRatingDistributionBarChart: React.FC<{
             <YAxis type="category" dataKey="name" hide />
             <Tooltip
               isAnimationActive={false}
-              content={({ payload, label, active }) => {
+              content={({ payload, active }) => {
                 if (active && payload && payload.length) {
                   const data = payload.filter((v) => String(activeIndex) == String(v.dataKey).replace('★', ''))?.[0]; // Data from the current hover bar
                   if (!data) return null;
-                  const value = Number(data.value); // Number of persons of star lavel
-                  const total = data.payload.total; // Total headcount
+                  const value = Number(data.value); // Number of persons of star level
+                  const total = (data.payload as { total?: number }).total; // Total headcount
 
                   if (!total || value === 0) {
                     return null;
@@ -137,8 +188,8 @@ export const StarRatingDistributionBarChart: React.FC<{
                         <span>
                           <StarRating n={Number(String(data.dataKey).replace('★', ''))} />
                         </span>
-                        <span className="font-bold">{`${value.toLocaleString()}`}</span>
-                        <span className="text-gray-600 dark:text-gray-400">{`(${percentage}%)`}</span>
+                        <span className="font-bold">{value.toLocaleString()}</span>
+                        <span className="text-neutral-600 dark:text-neutral-400">{`(${percentage}%)`}</span>
                       </div>
                     </div>
                   );
@@ -150,13 +201,13 @@ export const StarRatingDistributionBarChart: React.FC<{
             />
             {dataKeys
               .sort((x, y) => {
-                let a = parseInt(x, 10);
-                let b = parseInt(y, 10);
-                let a_ = a < 0 ? -a + 1000 : a;
-                let b_ = b < 0 ? -b + 1000 : b;
+                const a = parseInt(x, 10);
+                const b = parseInt(y, 10);
+                const a_ = a < 0 ? -a + 1000 : a;
+                const b_ = b < 0 ? -b + 1000 : b;
                 return a_ - b_;
               })
-              .map((key, index) => {
+              .map((key) => {
                 // Extract the number 8 from '8★'.
                 const star = parseInt(key, 10);
                 return (
@@ -186,7 +237,7 @@ export const StarRatingDistributionBarChart: React.FC<{
 };
 
 export const CompositionDetailView: React.FC<{
-  comp: any;
+  comp: { ids: number[]; [key: string]: unknown };
   entries: ReportEntryRank[];
   studentData: StudentData;
   raidInfo: RaidInfo;
@@ -195,18 +246,29 @@ export const CompositionDetailView: React.FC<{
   id: string;
   portraitData: PortraitData;
   onClose: () => void;
-}> = ({ comp, entries, studentData, raidInfo, boss, server, id, portraitData, onClose }) => {
+  analysisUnit?: 'team' | 'report';
+}> = ({ comp, entries, studentData, raidInfo, boss, server, id, portraitData, onClose, analysisUnit }) => {
   const { t } = useTranslation('dashboard');
   const [selectedStudentId, setSelectedStudentId] = useState<'all' | number>('all');
   const [dataType, setDataType] = useState<'score' | 'time' | 'rank'>('rank');
+  const [partyCountView, setPartyCountView] = useState<'none' | 'totalCount' | 'position'>('none');
+  // const [showCompPartyStats, setShowCompPartyStats] = useState(false);
   const { isDark } = useIsDarkState();
 
   if (entries.length == 0) return null;
 
+  const uniqueIds = useMemo(() => [...new Set(comp.ids)], [comp.ids]);
+
   const isTimeViewable = useMemo(() => {
-    const firstDifficulty = getDifficultyFromScoreAndBoss(entries[0].s, server, id);
-    return entries.every((e) => getDifficultyFromScoreAndBoss(e.s, server, id) === firstDifficulty);
-  }, [entries]);
+    if (entries.length === 0) return false;
+    let minScore = entries[0].s,
+      maxScore = entries[0].s;
+    for (const e of entries) {
+      if (e.s < minScore) minScore = e.s;
+      if (e.s > maxScore) maxScore = e.s;
+    }
+    return getDifficultyFromScoreAndBoss(minScore, server, id) === getDifficultyFromScoreAndBoss(maxScore, server, id);
+  }, [entries, server, id]);
 
   // Best score / Best Calculator
   const { maxScore, minTime, maxDifficulty, bestRank } = useMemo(() => {
@@ -219,34 +281,47 @@ export const CompositionDetailView: React.FC<{
   }, [entries, isTimeViewable, boss, server, id]);
 
   // Calculate histogram and star distribution data
-  const { histogram, starDistributionData, starRatings } = useMemo(() => {
-    if (entries.length === 0) return { histogram: [], starDistributionData: {}, starRatings: [] };
+  const { histogram, starDistributionData, starRatings, teamCounts, partyPositions } = useMemo(() => {
+    if (entries.length === 0) return { histogram: [], starDistributionData: {}, starRatings: [], teamCounts: [], partyPositions: [] };
 
     const availableStars = new Set<number>();
     const studentStarCounts: Map<number, { [starKey: string]: number }> = new Map();
-    comp.ids.forEach((id: number) => studentStarCounts.set(id, {}));
+    uniqueIds.forEach((id: number) => studentStarCounts.set(id, {}));
 
     for (const entry of entries) {
-      const allChars = entry.t.flatMap((team) => [...team.m, ...team.s]).filter((c): c is Character => !!c);
-
-      allChars.forEach((char) => {
-        const star = getCharacterStarValue(char);
-
-        if (typeof star !== 'number' || isNaN(star)) {
-          return;
+      for (const team of entry.t) {
+        for (const char of team.m) {
+          if (!char?.id) continue;
+          const star = getCharacterStarValue(char);
+          if (typeof star !== 'number' || isNaN(star)) continue;
+          availableStars.add(star);
+          const starKey = `${star}★`;
+          const currentStudentCounts: { [key: string]: number } = studentStarCounts.get(char.id) || {};
+          currentStudentCounts[starKey] = (currentStudentCounts[starKey] || 0) + 1;
+          studentStarCounts.set(char.id, currentStudentCounts);
         }
-
-        availableStars.add(star);
-        const starKey = `${star}★`;
-        const currentStudentCounts: { [key: string]: number } = studentStarCounts.get(char.id) || {};
-        currentStudentCounts[starKey] = (currentStudentCounts[starKey] || 0) + 1;
-        studentStarCounts.set(char.id, currentStudentCounts);
-      });
+        for (const char of team.s) {
+          if (!char?.id) continue;
+          const star = getCharacterStarValue(char);
+          if (typeof star !== 'number' || isNaN(star)) continue;
+          availableStars.add(star);
+          const starKey = `${star}★`;
+          const currentStudentCounts: { [key: string]: number } = studentStarCounts.get(char.id) || {};
+          currentStudentCounts[starKey] = (currentStudentCounts[starKey] || 0) + 1;
+          studentStarCounts.set(char.id, currentStudentCounts);
+        }
+      }
     }
     const dynamicStarRatings = Array.from(availableStars).sort((a, b) => a - b);
 
     // 2. Initialize variable for data collection
-    const bins = new Map<number, any>();
+    const bins = new Map<number, BinEntry>();
+    const teamCountBins = new Map<number, Map<number, number>>();
+    const positionBins = new Map<number, Map<number, number>>();
+    const allTeamCounts = new Set<number>();
+    const allPositions = new Set<number>();
+    const compKey = comp.ids.join(',');
+
     const binSize = (() => {
       if (dataType === 'score') {
         const scoreRange = entries[0].s - entries[entries.length - 1].s;
@@ -269,10 +344,39 @@ export const CompositionDetailView: React.FC<{
       })();
 
       const binIndex = Math.floor(value / binSize);
-      const currentBin = bins.get(binIndex) || { count: 0 };
+      const currentBin: BinEntry = bins.get(binIndex) ?? { count: 0 };
 
       if (selectedStudentId === 'all') {
         currentBin.count += 1; // For 'All', just count entries
+
+        if (analysisUnit === 'team') {
+          const tc = entry.t.length;
+          allTeamCounts.add(tc);
+          const tcMap = teamCountBins.get(binIndex) ?? new Map<number, number>();
+          tcMap.set(tc, (tcMap.get(tc) ?? 0) + 1);
+          teamCountBins.set(binIndex, tcMap);
+
+          if (partyCountView === 'position') {
+            for (let i = 0; i < entry.t.length; i++) {
+              const team = entry.t[i];
+              const teamKey = [...team.m, ...team.s]
+                .filter((c): c is Character => !!(c && c.id))
+                .map((c) => c.id)
+                .sort((a, b) => a - b)
+                .join(',');
+              if (teamKey === compKey) {
+                const pos = i + 1;
+                const tc = entry.t.length;
+                const posKey = tc * 100000 + pos;
+                allPositions.add(posKey);
+                const posMap = positionBins.get(binIndex) ?? new Map<number, number>();
+                posMap.set(posKey, (posMap.get(posKey) ?? 0) + 1);
+                positionBins.set(binIndex, posMap);
+                break;
+              }
+            }
+          }
+        }
       } else {
         const studentChars = entry.t.flatMap((team) => [...team.m, ...team.s]).filter((c): c is Character => !!c && c.id === selectedStudentId);
         studentChars.forEach((char) => {
@@ -283,8 +387,51 @@ export const CompositionDetailView: React.FC<{
       }
       bins.set(binIndex, currentBin);
     }
-    // 4. Converting data to Recharts format
+    // Fill all gaps, then collapse consecutive zero runs >= threshold
+    if (bins.size > 1) {
+      const indices = Array.from(bins.keys());
+      const minIdx = Math.min(...indices);
+      const maxIdx = Math.max(...indices);
+      for (let i = minIdx; i <= maxIdx; i++) {
+        if (!bins.has(i)) {
+          bins.set(i, { count: 0 });
+          teamCountBins.set(i, new Map());
+          positionBins.set(i, new Map());
+        }
+      }
+
+      const sortedIndices = Array.from(bins.keys()).sort((a, b) => a - b);
+      const toDelete = new Set<number>();
+      let zeroRun: number[] = [];
+
+      const flushRun = () => {
+        if (zeroRun.length >= ZERO_RUN_COLLAPSE) {
+          for (const idx of zeroRun) toDelete.add(idx);
+        }
+        zeroRun = [];
+      };
+
+      for (const idx of sortedIndices) {
+        const bin = bins.get(idx);
+        if (!bin) continue;
+        if (Object.values(bin).every((v) => v === 0)) {
+          zeroRun.push(idx);
+        } else {
+          flushRun();
+        }
+      }
+      flushRun();
+
+      for (const idx of toDelete) {
+        bins.delete(idx);
+        teamCountBins.delete(idx);
+        positionBins.delete(idx);
+      }
+    }
+
+    // 4. Converting data to Recharts format (sort by binIndex first to guarantee order)
     const histogramData = Array.from(bins.entries())
+      .sort(([a], [b]) => a - b)
       .map(([binIndex, starData]) => {
         const start = binIndex * binSize;
 
@@ -297,6 +444,18 @@ export const CompositionDetailView: React.FC<{
         })();
 
         if (selectedStudentId == 'all') {
+          if (analysisUnit === 'team' && partyCountView === 'totalCount') {
+            const obj: { name: string; [key: string]: number | string } = { name };
+            const tcMap = teamCountBins.get(binIndex) ?? new Map<number, number>();
+            for (const [tc, count] of tcMap) obj[`tc${tc}`] = count;
+            return obj;
+          }
+          if (analysisUnit === 'team' && partyCountView === 'position') {
+            const obj: { name: string; [key: string]: number | string } = { name };
+            const posMap = positionBins.get(binIndex) ?? new Map<number, number>();
+            for (const [posKey, count] of posMap) obj[`pos${posKey}`] = count;
+            return obj;
+          }
           return { name, all: starData.count };
         }
         const binObject: { name: string; [key: number]: number } = { name };
@@ -304,16 +463,9 @@ export const CompositionDetailView: React.FC<{
           binObject[star] = starData[star] || 0;
         });
         return binObject;
-      })
-      .sort((a, b) => {
-        const valA = dataType === 'score' ? parseFloat(a.name) : a.name.split(':').reduce((acc, time) => 60 * acc + +time, 0);
-        const valB = dataType === 'score' ? parseFloat(b.name) : b.name.split(':').reduce((acc, time) => 60 * acc + +time, 0);
-        return valA - valB;
       });
 
-    const finalStudentStarData: {
-      [id: number]: { data: any[]; total: number };
-    } = {};
+    const finalStudentStarData: Record<number, { data: StarChartEntry[]; total: number }> = {};
     studentStarCounts.forEach((counts, id) => {
       // Summing the number of students by star-level
       const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
@@ -335,10 +487,12 @@ export const CompositionDetailView: React.FC<{
       histogram: histogramData,
       starDistributionData: finalStudentStarData,
       starRatings: dynamicStarRatings,
+      teamCounts: Array.from(allTeamCounts).sort((a, b) => a - b),
+      partyPositions: Array.from(allPositions).sort((a, b) => a - b),
     };
-  }, [entries, selectedStudentId, dataType, isTimeViewable, boss, server, id, isDark]);
+  }, [entries, selectedStudentId, dataType, isTimeViewable, boss, server, id, isDark, analysisUnit, partyCountView]);
 
-  const studentsToDisplay = selectedStudentId === 'all' ? comp.ids : [selectedStudentId];
+  const studentsToDisplay = selectedStudentId === 'all' ? uniqueIds : [selectedStudentId];
   return (
     <div data-component-name="CompositionDetailView" className="w-full mt-2 p-2 sm:p-4 space-y-4">
       {/* <div className="flex justify-between items-center">
@@ -378,7 +532,7 @@ export const CompositionDetailView: React.FC<{
         {/* Left: Main info and YouTube search (cleanly separated with vertical layout) */}
         <div className="flex flex-col gap-3">
           {/* 1. Text information area */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-700 dark:text-gray-300">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-700 dark:text-neutral-300">
             <div>
               <span className="font-semibold">{t('maxScore')}: </span>
               <span className="font-medium text-blue-600 dark:text-blue-400">{maxDifficulty.toUpperCase()}</span> {maxScore.toLocaleString()}
@@ -398,7 +552,7 @@ export const CompositionDetailView: React.FC<{
           {/* 2. YouTube Search Generator area */}
           <div className="flex items-center gap-2">
             {/* Guide text */}
-            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{t('searchYouTube.title')}:</span>
+            <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">{t('searchYouTube.title')}:</span>
 
             {/* YouTube search component */}
             <YouTubeSearchGenerator
@@ -415,14 +569,14 @@ export const CompositionDetailView: React.FC<{
             e.stopPropagation();
             onClose();
           }}
-          className="text-xl p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-md shrink-0 flex-none"
+          className="text-xl p-1 text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-md shrink-0 flex-none"
           aria-label="Close"
         >
           <IoClose />
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 p-2 rounded-md bg-gray-50 dark:bg-neutral-700/50">
+      <div className="flex flex-col sm:flex-row gap-4 p-2 rounded-md bg-neutral-50 dark:bg-neutral-700/50">
         <div>
           <label className="text-xs font-bold">{t('viewByStudent')}</label>
 
@@ -432,11 +586,11 @@ export const CompositionDetailView: React.FC<{
                 e.stopPropagation();
                 setSelectedStudentId('all');
               }}
-              className={`px-2.5 py-1 text-xs rounded ${selectedStudentId === 'all' ? 'bg-sky-500 text-white font-bold' : 'bg-gray-200 dark:bg-neutral-600'}`}
+              className={`px-2.5 py-1 text-xs rounded ${selectedStudentId === 'all' ? 'bg-sky-500 text-white font-bold' : 'bg-neutral-200 dark:bg-neutral-600'}`}
             >
               {t('viewAllStudents')}
             </button>
-            {comp.ids.map((sid: number) => (
+            {uniqueIds.map((sid: number) => (
               <button
                 key={sid}
                 onClick={(e) => {
@@ -459,7 +613,7 @@ export const CompositionDetailView: React.FC<{
                 e.stopPropagation();
                 setDataType('rank');
               }}
-              className={`px-2 py-0.5 text-xs rounded ${dataType === 'rank' ? 'bg-sky-500 text-white' : 'bg-gray-200 dark:bg-neutral-600'}`}
+              className={`px-2 py-0.5 text-xs rounded ${dataType === 'rank' ? 'bg-sky-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600'}`}
             >
               {t('byRank')}
             </button>
@@ -468,7 +622,7 @@ export const CompositionDetailView: React.FC<{
                 e.stopPropagation();
                 setDataType('score');
               }}
-              className={`px-2 py-0.5 text-xs rounded ${dataType === 'score' ? 'bg-sky-500 text-white' : 'bg-gray-200 dark:bg-neutral-600'}`}
+              className={`px-2 py-0.5 text-xs rounded ${dataType === 'score' ? 'bg-sky-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600'}`}
             >
               {t('byScore')}
             </button>
@@ -477,7 +631,7 @@ export const CompositionDetailView: React.FC<{
                 e.stopPropagation();
                 setDataType('time');
               }}
-              className={`px-2 py-0.5 text-xs rounded disabled:opacity-50 ${dataType === 'time' ? 'bg-sky-500 text-white' : 'bg-gray-200 dark:bg-neutral-600'}`}
+              className={`px-2 py-0.5 text-xs rounded disabled:opacity-50 ${dataType === 'time' ? 'bg-sky-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600'}`}
               disabled={!isTimeViewable}
             >
               {t('byTime')}
@@ -489,23 +643,49 @@ export const CompositionDetailView: React.FC<{
       {/* Chart Area */}
 
       <div>
-        <h4 className="font-bold text-center mb-2">{dataType === 'score' ? t('scoreDistribution') : dataType === 'time' ? t('timeDistribution') : t('rankDistribution')}</h4>
+        <div className="flex items-center justify-center gap-4 mb-2 flex-wrap">
+          <h4 className="font-bold">{dataType === 'score' ? t('scoreDistribution') : dataType === 'time' ? t('timeDistribution') : t('rankDistribution')}</h4>
+          {analysisUnit === 'team' && selectedStudentId === 'all' && (
+            <div className="flex items-center gap-1 text-xs">
+              {(['none', 'totalCount', 'position'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPartyCountView(mode);
+                  }}
+                  className={`px-2 py-0.5 rounded transition-colors ${partyCountView === mode ? 'bg-sky-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-600 dark:text-neutral-300'}`}
+                >
+                  {t(mode === 'none' ? 'byDefault' : mode === 'totalCount' ? 'byTotalPartyCount' : 'byPartyPosition')}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={histogram} barGap={0}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" fontSize={10} />
             <YAxis />
-            {/* <Legend formatter={(value) => <StarRating n={Number(value)} />} /> */}
-            {starRatings.map((star) => (
-              <Bar key={star} dataKey={star} stackId="a" fill={getBackgroundRatingColor(star, isDark) || '#ccc'} />
-            ))}
-            (selectedStudentId=='all' &&
-            <Bar key={'all'} dataKey={'all'} stackId="a" fill={isDark == 'dark' ? '#ccc' : '#777'} />
-            )
+            {analysisUnit === 'team' && selectedStudentId === 'all' && partyCountView === 'totalCount' ? (
+              teamCounts.map((tc, i) => <Bar key={`tc${tc}`} dataKey={`tc${tc}`} stackId="a" fill={PARTY_COUNT_COLORS[i % PARTY_COUNT_COLORS.length]} isAnimationActive={false} />)
+            ) : analysisUnit === 'team' && selectedStudentId === 'all' && partyCountView === 'position' ? (
+              partyPositions.map((pos, i) => <Bar key={`pos${pos}`} dataKey={`pos${pos}`} stackId="a" fill={PARTY_COUNT_COLORS[i % PARTY_COUNT_COLORS.length]} isAnimationActive={false} />)
+            ) : (
+              <>
+                {starRatings.map((star) => (
+                  <Bar key={star} dataKey={star} stackId="a" fill={getBackgroundRatingColor(star, isDark) || '#ccc'} />
+                ))}
+                {selectedStudentId === 'all' && <Bar key={'all'} dataKey={'all'} stackId="a" fill={isDark == 'dark' ? '#ccc' : '#777'} />}
+              </>
+            )}
             <Tooltip content={<HistogramTooltip />} cursor={{ fill: 'rgba(150, 150, 150, 0.1)' }} />
           </BarChart>
         </ResponsiveContainer>
       </div>
+      {/* Party count / position distribution (team mode only, lazy) */}
+      {analysisUnit === 'team' && <PartyCountChart data={entries} />}
+
       {/* Star Distribution Bar Chart */}
       <div>
         <h4 className="font-bold text-center mb-2">{t('starRatingDistribution')}</h4>

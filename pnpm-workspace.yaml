@@ -1,0 +1,10 @@
+allowBuilds:
+  core-js: true
+  es5-ext: true
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  workerd: true
+
+overrides:
+  kysely: '0.28.17'

@@ -19,13 +19,13 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
   const numStages = apCosts.length;
   const numItems = neededAmounts.length;
 
-  log && console.log('dropMatrix');
-  log && console.log(dropMatrix.map((v) => v.join('\t')).join('\n'));
-  log && console.log('apCosts', apCosts);
-  log && console.log('neededAmounts', neededAmounts);
-  log && console.log('priorities', priorities);
+  if (log) console.log('dropMatrix');
+  if (log) console.log(dropMatrix.map((v) => v.join('\t')).join('\n'));
+  if (log) console.log('apCosts', apCosts);
+  if (log) console.log('neededAmounts', neededAmounts);
+  if (log) console.log('priorities', priorities);
   let remainingNeeded = [...neededAmounts];
-  const totalRuns = Array(numStages).fill(0);
+  const totalRuns = Array<number>(numStages).fill(0);
   /**
    * Core function to calculate the optimal number of runs for a specific stage group and required item amounts.
    * Internally uses the Two-Phase Simplex algorithm to solve the linear programming problem.
@@ -35,8 +35,8 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
    */
   const solvePhase = (stageIndices: number[], needed: number[], log: boolean = false): number[] => {
     // 1. Filter valid variables and constraints
-    log && console.log('solvePhase', 'stageIndices', stageIndices);
-    log && console.log('solvePhase', 'needed', needed);
+    if (log) console.log('solvePhase', 'stageIndices', stageIndices);
+    if (log) console.log('solvePhase', 'needed', needed);
     const decisionVarsIndices = stageIndices.filter((i) => apCosts[i] > 0);
     const constraints: { matrixRow: number[]; rhs: number }[] = [];
     needed.forEach((amount, itemIndex) => {
@@ -47,9 +47,9 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
         });
       }
     });
-    log && console.log('constraints', constraints);
+    if (log) console.log('constraints', constraints);
     if (decisionVarsIndices.length === 0 || constraints.length === 0) {
-      return Array(numStages).fill(0);
+      return Array<number>(numStages).fill(0);
     }
     // 2. Define simplex problem
     // Objective: Minimize total AP (Maximize: -Total AP)
@@ -58,16 +58,16 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
     const rhsVector = constraints.map((c) => c.rhs);
     // 3. Run simplex solver
     const solution = simplexSolver(objectiveCoeffs, constraintMatrix, rhsVector);
-    log && console.log('simplexSolver', objectiveCoeffs, constraintMatrix, rhsVector, solution);
+    if (log) console.log('simplexSolver', objectiveCoeffs, constraintMatrix, rhsVector, solution);
     // 4. Process results
-    const phaseRuns = Array(numStages).fill(0);
+    const phaseRuns = Array<number>(numStages).fill(0);
     if (solution.status === 'optimal') {
       decisionVarsIndices.forEach((originalStageIndex, i) => {
         // Round up fractional results to meet requirements
         phaseRuns[originalStageIndex] = Math.ceil(solution.result[i]);
       });
     } else {
-      log && console.warn(`[solvePhase] No optimal solution found. Status: ${solution.status}`);
+      if (log) console.warn(`[solvePhase] No optimal solution found. Status: ${solution.status}`);
     }
     return phaseRuns;
   };
@@ -75,7 +75,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
   const priorityIndices = priorities.map((p, i) => (p ? i : -1)).filter((i) => i !== -1);
   if (priorityIndices.length > 0) {
     const priorityRuns = solvePhase(priorityIndices, remainingNeeded);
-    log && console.log('priorityRuns', priorityRuns);
+    if (log) console.log('priorityRuns', priorityRuns);
     for (let i = 0; i < numStages; i++) {
       if (priorityRuns[i] > 0) {
         totalRuns[i] += priorityRuns[i];
@@ -91,7 +91,7 @@ export const solveOptimalRuns = ({ dropMatrix, apCosts, neededAmounts, prioritie
   if (remainingNeeded.some((v) => v > 0)) {
     const allIndices = Array.from({ length: numStages }, (_, i) => i);
     const remainingRuns = solvePhase(allIndices, remainingNeeded);
-    log && console.log('remainingRuns', remainingRuns);
+    if (log) console.log('remainingRuns', remainingRuns);
     for (let i = 0; i < numStages; i++) {
       totalRuns[i] += remainingRuns[i];
     }
@@ -135,15 +135,15 @@ function simplexSolver(c: number[], A: number[][], b: number[], log: boolean = f
   // console.log("Constraints RHS: b =", b);
 
   // --- Phase 1: Find initial feasible solution ---
-  log && console.log('\n--- Phase 1: Finding an initial feasible solution ---');
+  if (log) console.log('\n--- Phase 1: Finding an initial feasible solution ---');
 
   // Phase 1 Tableau setup
   // Columns: x_vars(n) + surplus_vars(m) + artificial_vars(m) + RHS(1)
   const num_vars_p1 = n + 2 * m;
-  const tableau_p1 = Array(m + 1)
+  const tableau_p1 = Array<number>(m + 1)
     .fill(0)
-    .map(() => Array(num_vars_p1 + 1).fill(0));
-  let basis: number[] = []; // Basic variable index for each row
+    .map(() => Array<number>(num_vars_p1 + 1).fill(0));
+  const basis: number[] = []; // Basic variable index for each row
 
   // Fill tableau: Ax - s + r = b
   for (let i = 0; i < m; i++) {
@@ -187,18 +187,18 @@ function simplexSolver(c: number[], A: number[][], b: number[], log: boolean = f
   // Check Phase 1 optimum: If objective value &gt; 0, solution is infeasible
   const num_vars_p1_rhs_idx = num_vars_p1;
   if (tableau_p1[m][num_vars_p1_rhs_idx] > TOLERANCE) {
-    log && console.log(`Phase 1 Result: Infeasible. Final objective value is ${tableau_p1[m][num_vars_p1_rhs_idx].toFixed(3)}, which is > 0.`);
+    if (log) console.log(`Phase 1 Result: Infeasible. Final objective value is ${tableau_p1[m][num_vars_p1_rhs_idx].toFixed(3)}, which is > 0.`);
     return { status: 'infeasible', result: [] };
   }
-  log && console.log('Phase 1 Result: Feasible solution found.');
+  if (log) console.log('Phase 1 Result: Feasible solution found.');
 
   // --- Phase 2: Find optimal solution ---
-  log && console.log('\n--- Phase 2: Finding the optimal solution ---');
+  if (log) console.log('\n--- Phase 2: Finding the optimal solution ---');
 
   const num_vars_p2 = n + m;
   const tableau_p2 = Array(m + 1)
     .fill(0)
-    .map(() => Array(num_vars_p2 + 1).fill(0));
+    .map(() => Array<number>(num_vars_p2 + 1).fill(0));
 
   // Copy Phase 1 tableau excluding artificial variable columns
   for (let i = 0; i < m; i++) {
@@ -241,27 +241,27 @@ function simplexSolver(c: number[], A: number[][], b: number[], log: boolean = f
   printTableau(tableau_p2, basis, n, m, 'Final Phase 2 Tableau');
 
   if (!phase2_status) {
-    log && console.log('Phase 2 Result: Unbounded solution.');
+    if (log) console.log('Phase 2 Result: Unbounded solution.');
     return { status: 'unbounded', result: [] };
   }
 
   // Extract optimal solution
-  const result = Array(n).fill(0);
+  const result = Array<number>(n).fill(0);
   for (let i = 0; i < m; i++) {
     if (basis[i] < n) {
       result[basis[i]] = tableau_p2[i][rhs_col_p2];
     }
   }
 
-  log && console.log('\n--- Algorithm Finished ---');
-  log && console.log('Final Status: optimal');
-  log &&
+  if (log) console.log('\n--- Algorithm Finished ---');
+  if (log) console.log('Final Status: optimal');
+  if (log)
     console.log(
       'Optimal Solution (x):',
       result.map((v) => parseFloat(v.toFixed(3))),
     );
   const final_obj_val = -tableau_p2[m][rhs_col_p2]; // Revert sign
-  log && console.log('Optimal Objective Value (z):', parseFloat(final_obj_val.toFixed(3)));
+  if (log) console.log('Optimal Objective Value (z):', parseFloat(final_obj_val.toFixed(3)));
 
   return {
     status: 'optimal',
@@ -296,13 +296,13 @@ function solvePhase(tableau: number[][], basis: number[], n: number, m: number, 
 
     // Optimal solution reached (no more positive coefficients)
     if (pivot_col === -1) {
-      log && console.log(`\n--- Phase ${phase}, Iteration ${iteration}: Optimal condition met for this phase. ---`);
+      if (log) console.log(`\n--- Phase ${phase}, Iteration ${iteration}: Optimal condition met for this phase. ---`);
       return true; // Optimal for this phase
     }
 
     iteration++;
-    log && console.log(`\n--- Phase ${phase}, Iteration ${iteration} ---`);
-    log && console.log(`Selected Pivot Column (Entering Variable): ${getVariableName(pivot_col, n, m)} (index: ${pivot_col})`);
+    if (log) console.log(`\n--- Phase ${phase}, Iteration ${iteration} ---`);
+    if (log) console.log(`Selected Pivot Column (Entering Variable): ${getVariableName(pivot_col, n, m)} (index: ${pivot_col})`);
 
     // 2. Select leaving variable (Pivot Row) (Minimum ratio test)
     let pivot_row = -1;
@@ -320,11 +320,11 @@ function solvePhase(tableau: number[][], basis: number[], n: number, m: number, 
 
     // Unbounded Solution Check
     if (pivot_row === -1) {
-      log && console.log('Unbounded solution detected. All coefficients in pivot column are non-positive.');
+      if (log) console.log('Unbounded solution detected. All coefficients in pivot column are non-positive.');
       return false;
     }
 
-    log && console.log(`Selected Pivot Row (Leaving Variable): ${getVariableName(basis[pivot_row], n, m)} (row index: ${pivot_row})`);
+    if (log) console.log(`Selected Pivot Row (Leaving Variable): ${getVariableName(basis[pivot_row], n, m)} (row index: ${pivot_row})`);
 
     // 3. Pivot operation (Gauss-Jordan elimination)
     const pivot_val = tableau[pivot_row][pivot_col];
@@ -375,14 +375,14 @@ function getVariableName(index: number, n: number, m: number): string {
  * @param title Title of the table to print
  */
 function printTableau(tableau: number[][], basis: number[], n: number, m: number, title: string, log: boolean = false) {
-  log && console.log(`\n--- ${title} ---`);
+  if (log) console.log(`\n--- ${title} ---`);
   const m_rows = tableau.length - 1;
   const n_cols = tableau[0].length - 1;
 
   // Create header
   const header = ['Basis', ...Array.from({ length: n_cols }, (_, j) => getVariableName(j, n, m)), 'RHS'];
 
-  const formattedData: any[] = [];
+  const formattedData: { [key: string]: string | number }[] = [];
 
   // Constraint rows
   for (let i = 0; i < m_rows; i++) {

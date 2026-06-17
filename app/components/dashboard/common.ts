@@ -9,6 +9,7 @@ export interface Character {
   weaponStar: number;
   isAssist: boolean;
   isMulligan?: boolean;
+  mulliganIndex?: number;
   CombatStyleIndex?: 1;
 }
 export interface Team {

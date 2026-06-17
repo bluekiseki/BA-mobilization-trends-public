@@ -6,9 +6,10 @@ import type { EventData, IconData, StudentData } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from './common/locale';
 import { ItemIcon } from './common/Icon';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
 
 interface TotalBonusDisplayProps {
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency' | 'bonus'>;
   iconData: IconData;
   totalBonus: { [itemUniqueId: number]: number };
   allStudents: StudentData; // Added to calculate theoretical max based on SquadType
@@ -21,7 +22,7 @@ export const TotalBonusDisplay = ({ eventData, iconData, totalBonus, allStudents
   // 1. Identification of items that have bonuses in this event
   const bonusItems = useMemo(() => {
     const items = new Set<number>();
-    Object.values(eventData.bonus).forEach((bonus) => {
+    Object.values(eventData.bonus || {}).forEach((bonus) => {
       bonus.EventContentItemType.forEach((itemId) => items.add(itemId));
     });
     return items;
@@ -79,7 +80,7 @@ export const TotalBonusDisplay = ({ eventData, iconData, totalBonus, allStudents
   return (
     <>
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">{t('ui.currentBonus')}</h3>
+        <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">{t('ui.currentBonus')}</h3>
       </div>
       <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2">
         {eventData.currency
@@ -99,10 +100,10 @@ export const TotalBonusDisplay = ({ eventData, iconData, totalBonus, allStudents
                     {/* Current Bonus: Blue color maintained */}
                     <p className="font-bold text-blue-600 dark:text-blue-400 text-base">+{currentVal / 100}%</p>
                     {/* Max Bonus: Gray color, smaller font */}
-                    {maxVal > 0 && <p className="font-medium text-gray-400 dark:text-gray-500 text-xs">/ {maxVal / 100}%</p>}
+                    {maxVal > 0 && <p className="font-medium text-neutral-400 dark:text-neutral-500 text-xs">/ {maxVal / 100}%</p>}
                   </div>
 
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5 truncate" style={{ maxWidth: '90px' }}>
+                  <p className="text-[10px] text-neutral-500 dark:text-neutral-400 -mt-0.5 truncate" style={{ maxWidth: '90px' }}>
                     {getLocalizeEtcName(eventData.icons.Item?.[itemId]?.LocalizeEtc, locale)}
                   </p>
                 </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Student } from '~/types/data';
-import { StarRating } from '../StarRatingProps';
+import { StarRating } from '../StarRating';
 import { useState } from 'react';
 import { useIsDarkState } from '~/store/isDarkState';
 import { useTranslation } from 'react-i18next';
@@ -158,7 +158,7 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
           {processedData
             .map((v, i) => ({ ...v, allRank: i }))
             .sort((a, b) => a.id - b.id)
-            .map((item, index) => (
+            .map((item, _index) => (
               // {processedData.map((v,i)=>({...v, allRank: i})).map((item, index) => (
               <g
                 // key={index}

@@ -7,7 +7,7 @@ import { getLocaleShortName, SUPORTED_LOCALES, SUPORTED_SHORT_LOCALES, type Loca
 import bossData from '~/data/bossdata.json';
 import { useTranslation } from 'react-i18next';
 import { isTotalAssault } from './common';
-import { type_translation } from '../raidToString';
+import { type_translation } from '../raid/raidToString';
 import { getKstTime } from '~/data/globalRaidDates';
 import { cdn } from '~/utils/cdn';
 
@@ -16,7 +16,7 @@ export type DefenseType = 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmo
 
 interface YouTubeSearchGeneratorProps {
   raidInfo: RaidInfo;
-  showType: boolean | DefenseType[];
+  showType: boolean | (DefenseType | undefined)[];
   /** Party member IDs to include in search query. Each inner array is one party. */
   partyStudentIds?: number[][];
 }
@@ -75,7 +75,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
 
   const bossNameData = Object.fromEntries(
     Object.entries(bossData).map(([k, v]) => {
-      return [k, v.name as Record<LocaleShortName, string>];
+      return [k, v.name];
     }),
   );
 
@@ -84,7 +84,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
   const [searchDifficulty, setSearchDifficulty] = useState<string | null>(null);
 
   // Manages a single selected defense type when defense types are provided as an array
-  const [selectedDefenseType, setSelectedDefenseType] = useState<DefenseType | null>(Array.isArray(showType) && showType.length > 0 ? showType[0] : null);
+  const [selectedDefenseType, setSelectedDefenseType] = useState<DefenseType | null>(Array.isArray(showType) && showType.length > 0 && showType[0] !== undefined ? showType[0] : null);
 
   const [includeTerrain, setIncludeTerrain] = useState(true);
   const [includeDefense, setIncludeDefense] = useState(false);
@@ -97,14 +97,14 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
   // Fetch localized student names when partyStudentIds provided and language changes
   useEffect(() => {
     if (!partyStudentIds || partyStudentIds.length === 0) return;
-    const shortLang = getLocaleShortName(searchLang as Locale);
+    const shortLang = getLocaleShortName(searchLang);
     fetch(cdn(`/schaledb.com/${shortLang}.students.min.json`))
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return;
         const map: Record<number, string> = {};
         for (const [id, student] of Object.entries(data as Record<number, Student>)) {
-          map[Number(id)] = (student as Student).Name;
+          map[Number(id)] = student.Name;
         }
         setStudentNameMap(map);
       })
@@ -114,7 +114,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
   // Reset selectedDefenseType when showType props change
   useEffect(() => {
     if (Array.isArray(showType) && showType.length > 0) {
-      setSelectedDefenseType(showType[0]);
+      setSelectedDefenseType(showType[0] || null);
     } else {
       setSelectedDefenseType(null);
     }
@@ -154,7 +154,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
 
   // --- Search Query Generation Logic ---
   const searchQuery = useMemo(() => {
-    const lang = searchLang as Locale;
+    const lang = searchLang;
     const parts: string[] = [];
 
     // 1. Raid Type & Boss Name
@@ -223,7 +223,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
 
   // --- Handlers ---
   const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(searchQuery).then(() => {
+    void navigator.clipboard.writeText(searchQuery).then(() => {
       setCopied(true);
     });
   };
@@ -284,7 +284,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
             </div>
 
             {/* Search Query Preview */}
-            <div className="p-3 mb-4 bg-gray-100 dark:bg-neutral-900 rounded-lg text-center font-mono text-sm text-neutral-700 dark:text-neutral-300 break-all">{searchQuery}</div>
+            <div className="p-3 mb-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg text-center font-mono text-sm text-neutral-700 dark:text-neutral-300 break-all">{searchQuery}</div>
 
             {/* Options Panel */}
             <div className="space-y-4">
@@ -295,7 +295,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
                   {SUPORTED_LOCALES.map((lang) => (
                     <button
                       key={lang}
-                      onClick={() => setSearchLang(lang as Locale)}
+                      onClick={() => setSearchLang(lang)}
                       className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${searchLang === lang ? 'bg-blue-500 text-white shadow-sm' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
                     >
                       {lang.toUpperCase()}
@@ -332,14 +332,14 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
                     {showType.map((type) => (
                       <button
                         key={type}
-                        onClick={() => setSelectedDefenseType(type)}
+                        onClick={() => type && setSelectedDefenseType(type)}
                         className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
                           selectedDefenseType === type
                             ? 'bg-blue-500 text-white shadow-sm'
                             : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
                         }`}
                       >
-                        {defense_type_translation[type]?.[getLocaleShortName(locale)] || type}
+                        {(type && defense_type_translation[type]?.[getLocaleShortName(locale)]) || type}
                       </button>
                     ))}
                   </div>

@@ -11,6 +11,9 @@ export default {
   ssr: true,
   future: {
     v8_middleware: true,
+    v8_splitRouteModules: true,
+    v8_passThroughRequests: true,
+    v8_trailingSlashAwareDataRequests: true,
     // unstable_middleware: true,
     // unstable_optimizeDeps: false,
     // unstable_splitRouteModules: false,

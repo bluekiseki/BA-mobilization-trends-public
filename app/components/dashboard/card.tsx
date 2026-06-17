@@ -25,7 +25,7 @@ export const Card: React.FC<{
         aria-expanded={isExpanded}
         aria-controls="card-content"
       >
-        <h2 className="flex items-center gap-x-2 justify-center text-lg font-semibold text-gray-800 dark:text-gray-100">
+        <h2 className="flex items-center gap-x-2 justify-center text-lg font-semibold text-neutral-800 dark:text-neutral-100">
           <span>{icon ? icon : ''}</span>
           <span>{title}</span>
         </h2>
@@ -37,7 +37,7 @@ export const Card: React.FC<{
 
       {isExpanded && (
         <div id="card-content" className={`transition-all duration-300 ease-in-out ${height ? height : ''}`}>
-          <hr className="hidden  mx-4 border-t border-gray-200 dark:border-neutral-700" />
+          <hr className="hidden  mx-4 border-t border-neutral-200 dark:border-neutral-700" />
 
           <div className={`p-4 pt-4  dark:bg-neutral-900 `}>{children}</div>
         </div>

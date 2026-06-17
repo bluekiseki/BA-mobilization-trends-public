@@ -75,7 +75,7 @@ export default function LocaleSwitcherSelect({ defaultValue, items, label }: Loc
     // document
     if (item.value) document.documentElement.lang = item.value;
 
-    navigate(newPath + search);
+    void navigate(newPath + search);
     // setUserLocale(item.value as Locale);
   };
 

@@ -20,7 +20,7 @@ export function computeSubPoolXp(subPool: FungibleSubPool, record: Record<string
 // Greedy re-allocation (highest denomination first) so accumulated totals are "carried up".
 // e.g. 4 SR reports (2000×4=8000 XP) → 0 SSR + 4 SR  →  but if 5 SR → 1 SSR.
 export function compactSubPool(subPool: FungibleSubPool, needsItems: { key: string; amount: number }[]): { key: string; amount: number }[] {
-  const keys = subPool.keys as readonly string[];
+  const keys = subPool.keys; // as readonly string[];
   const totalXp = needsItems.reduce((sum, { key, amount }) => {
     const idx = keys.indexOf(key);
     return idx >= 0 ? sum + amount * subPool.xpPer[idx] : sum;

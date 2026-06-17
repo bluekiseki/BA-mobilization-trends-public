@@ -5,9 +5,14 @@ import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { formatTimeToTimestamp } from '~/utils/time';
 
-const CustomizedAxisTick = ({ x, y, payload }: any) => {
-  const { value } = payload;
+interface CustomAxisTickProps {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+}
 
+const CustomizedAxisTick = ({ x = 0, y = 0, payload }: CustomAxisTickProps) => {
+  const value = payload?.value ?? '';
   const parts = value.match(/(.*) \((.*)\)/);
 
   if (!parts) {
@@ -51,7 +56,7 @@ export const ScoreDistributionChart: React.FC<{
     const roundToNice = (num: number) => {
       const pow10 = Math.pow(10, Math.floor(Math.log10(num)));
       const multipliers = [1, 2, 5, 10];
-      for (let m of multipliers) {
+      for (const m of multipliers) {
         const nice = m * pow10;
         if (nice >= num) return nice;
       }
@@ -94,14 +99,19 @@ export const ScoreDistributionChart: React.FC<{
           <YAxis stroke="#94a3b8" />
           {/* <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }} /> */}
           <Tooltip
-            content={({ active, payload, label }) => {
+            // @ts-expect-error - Recharts type system doesn't match our custom content signature
+            content={({ active, payload }: { active?: boolean; payload?: Array<{ fill?: string; name?: string; value?: number; payload?: { score?: string; time?: string } }> }) => {
               if (active && payload && payload.length) {
+                const item = payload[0];
+                const score = item?.payload?.score ?? '';
+                const time = item?.payload?.time ?? '';
+                const name = item?.name ?? '';
+                const value = item?.value ?? 0;
                 return (
                   <div className="rounded border bg-white p-3 text-sm shadow-md dark:border-neutral-700 dark:bg-neutral-800">
-                    <p className="font-semibold text-neutral-700 dark:text-neutral-200">{`${payload[0]?.payload?.score}`}</p>
-                    {/* <p className="font-semibold text-neutral-700 dark:text-neutral-200">{`??: ${JSON.stringify(payload[0].payload)}`}</p> */}
-                    <p style={{ color: payload[0].fill }}>{`${payload[0]?.payload?.time}`}</p>
-                    <p style={{ color: payload[0].fill }}>{`${payload[0].name}: ${payload[0].value}`}</p>
+                    <p className="font-semibold text-neutral-700 dark:text-neutral-200">{score}</p>
+                    <p style={{ color: item?.fill ?? '#000' }}>{time}</p>
+                    <p style={{ color: item?.fill ?? '#000' }}>{`${name}: ${value}`}</p>
                   </div>
                 );
               }

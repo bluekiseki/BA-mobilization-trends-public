@@ -12,7 +12,7 @@ interface RankSelectorProps {
 
 export const RankSelector: React.FC<RankSelectorProps> = ({ ranksToPlot, selectedRanks, rankColorMap, onToggleRank }) => {
   return (
-    <div className="w-full bg-gray-50 dark:bg-neutral-900/50 ">
+    <div className="w-full bg-neutral-50 dark:bg-neutral-900/50 ">
       <div className="flex items-center mb-2 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
         <FiCheckSquare className="mr-1.5 text-purple-500" />
         <span>Ranks</span>
@@ -27,7 +27,7 @@ export const RankSelector: React.FC<RankSelectorProps> = ({ ranksToPlot, selecte
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => onToggleRank(rank)}
-                className="w-3.5 h-3.5 rounded border-gray-300 focus:ring-offset-0 focus:ring-1"
+                className="w-3.5 h-3.5 rounded border-neutral-300 focus:ring-offset-0 focus:ring-1"
                 style={{ accentColor: color }}
               />
               <span

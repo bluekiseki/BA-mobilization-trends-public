@@ -11,7 +11,7 @@ interface NumInputProps {
   min: number;
   max: number;
   disabled?: boolean;
-  updatePlan: (uuid: string, field: string, value: any, saveUndo?: boolean) => void;
+  updatePlan: (uuid: string, field: string, value: number, saveUndo?: boolean) => void;
   td: string;
   inp: string;
   cellId?: string;
@@ -21,15 +21,17 @@ function NumInputComponent({ plan, section, field, value, min, max, disabled, up
   const [displayValue, setDisplayValue] = useState(String(value));
 
   useEffect(() => {
-    const actualValue = (plan[section] as any)[field];
-    setDisplayValue(String(actualValue));
+    const actualValue = (plan[section] as Record<string, number | Record<string, number> | [number, number, number]>)[field];
+    if (typeof actualValue === 'number') {
+      setDisplayValue(String(actualValue));
+    }
   }, [plan, section, field]);
 
   const isValidValue = useCallback(
     (newVal: number) => {
       if (section !== 'target') return true;
-      const currentVal = (plan.current as any)[field];
-      return newVal >= currentVal;
+      const currentVal = (plan.current as Record<string, number | Record<string, number> | [number, number, number] | string>)[field];
+      return newVal >= (currentVal as number);
     },
     [plan, section, field],
   );
@@ -179,7 +181,7 @@ interface GearInputProps {
   plan: GrowthPlan;
   section: 'current' | 'target';
   value: number;
-  updatePlan: (uuid: string, field: string, value: any, saveUndo?: boolean) => void;
+  updatePlan: (uuid: string, field: string, value: number, saveUndo?: boolean) => void;
   td: string;
   inp: string;
   cellId?: string;

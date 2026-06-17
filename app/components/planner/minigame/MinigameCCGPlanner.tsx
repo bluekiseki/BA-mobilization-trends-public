@@ -1,18 +1,14 @@
 // app/components/planner/minigame/MinigameCCGPlanner.tsx
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemIcon } from '../common/Icon';
 import { CustomNumberInput } from '~/components/CustomInput';
 import type { EventData, IconData } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
-import { getlocaleMethond } from '../common/locale';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
+import { type CcgRunInput } from '~/types/minigame/ccg';
 
-export interface CcgRunInput {
-  id: string;
-  stage: number;
-  count: number;
-}
+export type { CcgRunInput };
 
 // Result Type Definition
 export type MinigameCCGResult = {
@@ -37,7 +33,6 @@ const getStageLabel = (minPoint: number) => {
 export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'minigame_ccg' });
   const locale = i18n.language as Locale;
-  const locale_key = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En';
 
   const [activeTab, setActiveTab] = useState<'overview' | 'mission' | 'calc'>('overview');
 
@@ -53,36 +48,24 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
   const currentCurrencyAmount = remainingCurrency[entryItemId] || 0;
 
   // --- Store State & Initialization ---
-  const { minigameMissionStatus, setMinigameMissionStatus, minigameCCGConfig, setMinigameCCGConfig } = usePlanForEvent(eventId);
+  const { plan, setMinigameMissionStatus, setMinigameCCGConfig } = usePlanForEvent(eventId);
 
-  // Initialize state if undefined
+  const { minigameCCGConfig, minigameMissionStatus } = plan;
+
+  // Initialize state if undefined — must check plan.* directly since usePlanForEvent applies defaults
   useEffect(() => {
-    if (minigameMissionStatus === undefined) {
+    if (plan.minigameMissionStatus === undefined) {
       setMinigameMissionStatus({});
     }
-    if (minigameCCGConfig === undefined) {
+    if (plan.minigameCCGConfig === undefined) {
       setMinigameCCGConfig([{ id: 'initial', stage: 21, count: 0 }]);
     }
-  }, [minigameMissionStatus, minigameCCGConfig, setMinigameMissionStatus, setMinigameCCGConfig]);
+  }, [plan.minigameMissionStatus, plan.minigameCCGConfig]);
 
-  // Return null while initializing
-  if (minigameMissionStatus === undefined || minigameCCGConfig === undefined) {
-    return null;
-  }
+  const prevResultRef = useRef<string>('');
 
-  const runInputs = minigameCCGConfig;
-
-  // --- Helpers ---
-  const formatMissionDesc = (mission: any): string => {
-    let desc = mission.DescriptionStr[locale_key] || mission.DescriptionStr['Kr'] || mission.DescriptionStr['En'] || '';
-    const count = String(mission.CompleteConditionCount);
-    try {
-      desc = desc.replace('{0}', count);
-    } catch (e) {
-      console.error('Error formatting mission description:', mission, e);
-    }
-    return desc;
-  };
+  const runInputs = minigameCCGConfig ?? [];
+  const missionStatusSafe = minigameMissionStatus ?? {};
 
   // --- Reward Grouping for Overview Table ---
   const rewardsByStage = useMemo(() => {
@@ -103,56 +86,11 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
       }));
   }, [rewardItems]);
 
-  // --- Calculator Logic ---
-  const toggleMission = (missionId: number) => {
-    const newStatus = { ...minigameMissionStatus };
-    if (newStatus[missionId]) delete newStatus[missionId];
-    else newStatus[missionId] = true;
-    setMinigameMissionStatus(newStatus);
-  };
-
-  const toggleAllMissions = (select: boolean) => {
-    if (select) {
-      const allIds = missions.reduce((acc, m) => ({ ...acc, [m.Id]: true }), {});
-      setMinigameMissionStatus(allIds);
-    } else {
-      setMinigameMissionStatus({});
-    }
-  };
-
-  const addRunInput = () => {
-    const newInputs = [...runInputs, { id: crypto.randomUUID(), stage: 21, count: 0 }];
-    setMinigameCCGConfig(newInputs);
-  };
-
-  const removeRunInput = (id: string) => {
-    const newInputs = runInputs.filter((item) => item.id !== id);
-    setMinigameCCGConfig(newInputs);
-  };
-
-  const updateRunInput = (id: string, field: keyof CcgRunInput, value: number) => {
-    const newInputs = runInputs.map((item) => {
-      if (item.id === id) return { ...item, [field]: value };
-      return item;
-    });
-    setMinigameCCGConfig(newInputs);
-  };
-
-  const setMaxRunCount = (id: string) => {
-    const currentTotalCost = runInputs.reduce((sum, item) => {
-      return item.id === id ? sum : sum + item.count * entryCost;
-    }, 0);
-
-    const available = Math.max(0, currentCurrencyAmount - currentTotalCost);
-    const maxRuns = Math.floor(available / entryCost);
-    updateRunInput(id, 'count', maxRuns);
-  };
-
   // 1. Calculate Mission Rewards (Selected Only)
   const missionRewards = useMemo(() => {
     const rewards: Record<string, number> = {};
     missions.forEach((mission) => {
-      if (minigameMissionStatus[mission.Id]) {
+      if (missionStatusSafe[mission.Id]) {
         mission.MissionRewardParcelId.forEach((rid, idx) => {
           const type = mission.MissionRewardParcelTypeStr[idx];
           const amount = mission.MissionRewardAmount[idx];
@@ -162,7 +100,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
       }
     });
     return rewards;
-  }, [missions, minigameMissionStatus]);
+  }, [missions, missionStatusSafe]);
 
   // 2. Calculate Simulation Rewards (Run Inputs Only) - For UI Display
   const calcRewards = useMemo(() => {
@@ -189,24 +127,23 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
   useEffect(() => {
     if (!onCalculate) return;
 
-    // Merge Simulation Rewards + Mission Rewards
     const totalRewards = { ...calcRewards.rewards };
-
     Object.entries(missionRewards).forEach(([key, amount]) => {
       totalRewards[key] = (totalRewards[key] || 0) + amount;
     });
 
     const costKey = `${entryItemTypeStr}_${entryItemId}`;
-
     const result: MinigameCCGResult = {
-      cost: {
-        [costKey]: calcRewards.totalCost,
-      },
-      rewards: totalRewards, // Included both
+      cost: { [costKey]: calcRewards.totalCost },
+      rewards: totalRewards,
     };
 
+    const resultStr = JSON.stringify(result);
+    if (resultStr === prevResultRef.current) return;
+    prevResultRef.current = resultStr;
+
     onCalculate(result);
-  }, [calcRewards, missionRewards, onCalculate, entryItemTypeStr, entryItemId]);
+  }, [calcRewards, missionRewards, entryItemTypeStr, entryItemId]);
 
   const stageOptions = useMemo(() => {
     const opts = [];
@@ -216,27 +153,83 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
     return opts.reverse();
   }, []);
 
+  const formatMissionDesc = (mission: (typeof missions)[0]) => {
+    const localeToKey: Record<string, string> = {
+      ja: 'MissionDescJp',
+      ko: 'MissionDescKr',
+      en: 'MissionDescEn',
+      'zh-Hant': 'MissionDescEn',
+    };
+    const key = localeToKey[locale] || 'MissionDescEn';
+    const value = mission[key as keyof typeof mission];
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value !== null && 'En' in value) {
+      return value.En;
+    }
+    return '';
+  };
+
+  const toggleMission = (missionId: number) => {
+    const updated = { ...missionStatusSafe };
+    updated[missionId] = !updated[missionId];
+    setMinigameMissionStatus(updated);
+  };
+
+  const toggleAllMissions = (checked: boolean) => {
+    const updated: Record<number, boolean> = {};
+    missions.forEach((m) => {
+      updated[m.Id] = checked;
+    });
+    setMinigameMissionStatus(updated);
+  };
+
+  const updateRunInput = (id: string, field: 'stage' | 'count', value: number) => {
+    const updated = runInputs.map((input) => (input.id === id ? { ...input, [field]: value } : input));
+    setMinigameCCGConfig(updated);
+  };
+
+  const setMaxRunCount = (id: string) => {
+    const maxRuns = Math.floor(currentCurrencyAmount / entryCost);
+    updateRunInput(id, 'count', maxRuns);
+  };
+
+  const removeRunInput = (id: string) => {
+    const updated = runInputs.filter((input) => input.id !== id);
+    setMinigameCCGConfig(updated);
+  };
+
+  const addRunInput = () => {
+    const newId = `run-${Date.now()}`;
+    const updated = [...runInputs, { id: newId, stage: 21, count: 0 }];
+    setMinigameCCGConfig(updated);
+  };
+
+  // All hooks must be called before any conditional returns
+  if (minigameMissionStatus === undefined || minigameCCGConfig === undefined) {
+    return null;
+  }
+
   if (!ccgData) return null;
 
   const tabs = [
-    { id: 'overview', name: t('overview', 'Overview') },
-    { id: 'mission', name: t('missions', 'Missions') },
-    { id: 'calc', name: t('calculator', 'Calculator') },
-  ];
+    { id: 'overview' as const, name: t('overview', 'Overview') },
+    { id: 'mission' as const, name: t('missions', 'Missions') },
+    { id: 'calc' as const, name: t('calculator', 'Calculator') },
+  ] as const;
 
   return (
-    <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-sm">
+    <div className="">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('title', "The Justice Task Force's Endless Summer Vacation")} (Beta)</h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('title', "The Justice Task Force's Endless Summer Vacation")} (Beta)</h2>
       </div>
 
       <div className="space-y-4">
-        <div className="flex border-b border-gray-200 dark:border-neutral-700">
+        <div className="flex border-b border-neutral-200 dark:border-neutral-700">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'}`}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-neutral-500 hover:border-neutral-300 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
             >
               {tab.name}
             </button>
@@ -245,11 +238,11 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
 
         {/* OVERVIEW */}
         {activeTab === 'overview' && (
-          <div className="space-y-4 animate-fadeIn text-sm dark:text-gray-300">
+          <div className="space-y-4 animate-fadeIn text-sm dark:text-neutral-300">
             {/* Rules */}
-            <div className="bg-gray-50 dark:bg-neutral-700/50 p-4 rounded-lg">
-              <h3 className="font-bold mb-2 text-base dark:text-gray-100">{t('game_rules', 'Game Rules')}</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-300">
+            <div className="bg-neutral-50 dark:bg-neutral-700/50 p-4 rounded-lg">
+              <h3 className="font-bold mb-2 text-base dark:text-neutral-100">{t('game_rules', 'Game Rules')}</h3>
+              <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-300">
                 <li>{t('desc_1', 'A roguelike deck-builder game.')}</li>
                 <li>{t('desc_2', 'Clear Stage 3-7 to unlock Sweep.')}</li>
                 <li>{t('desc_3', 'Collecting pamphlets upgrades permanent stats.')}</li>
@@ -265,22 +258,22 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
             </div>
 
             {/* Detailed Rewards Table */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-              <h3 className="font-bold p-3 bg-gray-100 dark:bg-neutral-700 border-b border-gray-200 dark:border-neutral-600 text-gray-800 dark:text-gray-100">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+              <h3 className="font-bold p-3 bg-neutral-100 dark:bg-neutral-700 border-b border-neutral-200 dark:border-neutral-600 text-neutral-800 dark:text-neutral-100">
                 {t('stage_rewards', 'Stage Rewards Drop Table')}
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 dark:bg-neutral-700/50 text-gray-700 dark:text-gray-300">
+                  <thead className="bg-neutral-50 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300">
                     <tr>
                       <th className="px-4 py-2 border-b dark:border-neutral-600 w-[20%] whitespace-nowrap">{t('stage', 'Stage')}</th>
                       <th className="px-4 py-2 border-b dark:border-neutral-600">{t('rewards', 'Added Rewards')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-neutral-700">
+                  <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
                     {rewardsByStage.map((row) => (
-                      <tr key={row.minPoint} className="hover:bg-gray-50 dark:hover:bg-neutral-700/30">
-                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-200 border-r dark:border-neutral-700">{row.stageLabel} ~</td>
+                      <tr key={row.minPoint} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/30">
+                        <td className="px-4 py-2 font-medium text-neutral-900 dark:text-neutral-200 border-r dark:border-neutral-700">{row.stageLabel} ~</td>
                         <td className="px-4 py-2">
                           <div className="flex flex-wrap gap-2">
                             {row.items.map((item, idx) => (
@@ -300,7 +293,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                     ))}
                     {rewardsByStage.length === 0 && (
                       <tr>
-                        <td colSpan={2} className="px-4 py-4 text-center text-gray-400">
+                        <td colSpan={2} className="px-4 py-4 text-center text-neutral-400">
                           No reward data available
                         </td>
                       </tr>
@@ -314,16 +307,16 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
 
         {/* MISSIONS */}
         {activeTab === 'mission' && (
-          <div className="p-4 rounded-b-lg bg-gray-50 dark:bg-neutral-700/50 space-y-2 animate-fadeIn">
+          <div className="p-4 rounded-b-lg bg-neutral-50 dark:bg-neutral-700/50 space-y-2 animate-fadeIn">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                 {Object.keys(minigameMissionStatus).length} / {missions.length}
               </span>
               <div className="space-x-2">
                 <button onClick={() => toggleAllMissions(true)} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
                   {t('select_all', 'Select All')}
                 </button>
-                <button onClick={() => toggleAllMissions(false)} className="text-xs bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-500">
+                <button onClick={() => toggleAllMissions(false)} className="text-xs bg-neutral-400 text-white px-2 py-1 rounded hover:bg-neutral-500">
                   {t('deselect_all', 'Deselect All')}
                 </button>
               </div>
@@ -332,17 +325,17 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
             <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
               {missions.map((mission) => {
                 const desc = formatMissionDesc(mission);
-                const isChecked = !!minigameMissionStatus[mission.Id];
+                const isChecked = minigameMissionStatus[mission.Id] ?? false;
 
                 return (
                   <div
                     key={mission.Id}
                     onClick={() => toggleMission(mission.Id)}
-                    className="p-2 rounded-lg flex items-center justify-between bg-white dark:bg-neutral-800 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                    className="p-2 rounded-lg flex items-center justify-between bg-white dark:bg-neutral-800 shadow-sm cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
                   >
                     <label className="flex items-center gap-3 cursor-pointer flex-1">
-                      <input type="checkbox" checked={isChecked} readOnly className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      <span className="font-medium text-sm text-gray-700 dark:text-gray-200 leading-snug">{desc}</span>
+                      <input type="checkbox" checked={isChecked} readOnly className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500" />
+                      <span className="font-medium text-sm text-neutral-700 dark:text-neutral-200 leading-snug">{desc}</span>
                     </label>
                     <div className="flex flex-wrap gap-1 ml-4 justify-end">
                       {mission.MissionRewardParcelId.map((rid, idx) => (
@@ -373,13 +366,13 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
 
             <div className="space-y-2">
               {runInputs.map((input) => (
-                <div key={input.id} className="flex flex-row gap-2 items-end bg-gray-50 dark:bg-neutral-700/50 p-2 rounded-lg border border-gray-100 dark:border-neutral-600">
+                <div key={input.id} className="flex flex-row gap-2 items-end bg-neutral-50 dark:bg-neutral-700/50 p-2 rounded-lg border border-neutral-100 dark:border-neutral-600">
                   <div className="w-[30%] sm:w-auto min-w-[80px]">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1 font-semibold">Stage</label>
+                    <label className="text-xs text-neutral-500 dark:text-neutral-400 block mb-1 font-semibold">Stage</label>
                     <select
                       value={input.stage}
                       onChange={(e) => updateRunInput(input.id, 'stage', Number(e.target.value))}
-                      className="w-full p-1.5 rounded bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-sm focus:ring-1 focus:ring-blue-500"
+                      className="w-full p-1.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm focus:ring-1 focus:ring-blue-500"
                     >
                       {stageOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -390,14 +383,14 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1 font-semibold">Runs</label>
+                    <label className="text-xs text-neutral-500 dark:text-neutral-400 block mb-1 font-semibold">Runs</label>
                     <div className="flex items-center gap-1">
                       <CustomNumberInput
                         value={input.count}
                         onChange={(val) => updateRunInput(input.id, 'count', val || 0)}
                         min={0}
                         max={999}
-                        className="w-full text-center rounded bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 py-1.5 text-sm"
+                        className="w-full text-center rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 py-1.5 text-sm"
                       />
                       <button
                         onClick={() => setMaxRunCount(input.id)}
@@ -412,7 +405,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                   <div className="shrink-0 pb-[3px]">
                     <button
                       onClick={() => removeRunInput(input.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded dark:hover:bg-red-900/30 transition-colors"
+                      className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded dark:hover:bg-red-900/30 transition-colors"
                       title="Remove row"
                     >
                       ✕
@@ -423,27 +416,27 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
 
               <button
                 onClick={addRunInput}
-                className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-neutral-600 text-gray-500 hover:border-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg transition-colors text-sm font-medium"
+                className="w-full py-2 border-2 border-dashed border-neutral-300 dark:border-neutral-600 text-neutral-500 hover:border-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 rounded-lg transition-colors text-sm font-medium"
               >
                 + {t('add_row', 'Add Row')}
               </button>
             </div>
 
-            <div className="flex justify-between items-center text-sm font-medium pt-2 border-t border-gray-200 dark:border-neutral-700">
-              <span className="dark:text-gray-200">Total Runs: {calcRewards.totalRuns}</span>
-              <span className={`flex items-center gap-1 ${currentCurrencyAmount < calcRewards.totalCost ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
+            <div className="flex justify-between items-center text-sm font-medium pt-2 border-t border-neutral-200 dark:border-neutral-700">
+              <span className="dark:text-neutral-200">Total Runs: {calcRewards.totalRuns}</span>
+              <span className={`flex items-center gap-1 ${currentCurrencyAmount < calcRewards.totalCost ? 'text-red-500' : 'text-neutral-700 dark:text-neutral-300'}`}>
                 Cost:
                 <ItemIcon type={entryItemTypeStr} itemId={String(entryItemId)} amount="" size={12} eventData={eventData} iconData={iconData} />
                 {calcRewards.totalCost.toLocaleString()}
-                <span className="text-gray-400 text-xs"> / {currentCurrencyAmount.toLocaleString()}</span>
+                <span className="text-neutral-400 text-xs"> / {currentCurrencyAmount.toLocaleString()}</span>
               </span>
             </div>
 
             {/* Reward Summary (Display: Simulation Only) */}
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
-              <h4 className="text-sm font-bold mb-3 text-gray-800 dark:text-gray-100">Total Estimated Rewards</h4>
+            <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+              <h4 className="text-sm font-bold mb-3 text-neutral-800 dark:text-neutral-100">Total Estimated Rewards</h4>
               {Object.keys(calcRewards.rewards).length === 0 ? (
-                <p className="text-sm text-gray-400 italic text-center py-4 bg-gray-50 dark:bg-neutral-700/30 rounded-lg">No rewards simulated</p>
+                <p className="text-sm text-neutral-400 italic text-center py-4 bg-neutral-50 dark:bg-neutral-700/30 rounded-lg">No rewards simulated</p>
               ) : (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {Object.entries(calcRewards.rewards).map(([key, amount]) => {

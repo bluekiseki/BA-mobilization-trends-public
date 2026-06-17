@@ -1,6 +1,6 @@
 // app/utils/gachaEngine.ts
 import type { BannerPeriod, BannerStrategy, Student } from '~/types/gacha';
-import { canSpook } from './gachaRules';
+import { canSpook, FES_EXCLUSIONS_BY_PICKUP_ID, ARCHIVE_STUDENT_IDS } from './gachaRules';
 
 // ==========================================
 // 1. Constants and Type Definitions
@@ -83,7 +83,7 @@ interface SimState {
   totalCost: number;
 }
 
-interface GachaPools {
+export interface GachaPools {
   grade3: Student[];
   grade2: Student[];
   grade1: Student[];
@@ -120,7 +120,7 @@ const getStudentGrade = (id: number): 1 | 2 | 3 | 0 => {
  * @param bannersMap List of all banners
  * @returns Record<studentId, timestamp>
  */
-const preprocessReleaseDates = (bannersMap: Record<string, BannerPeriod>): Record<number, number> => {
+export const preprocessReleaseDates = (bannersMap: Record<string, BannerPeriod>): Record<number, number> => {
   const releaseMap: Record<number, number> = {};
 
   // 1. Sort banners chronologically (Past -> Future)
@@ -143,7 +143,7 @@ const preprocessReleaseDates = (bannersMap: Record<string, BannerPeriod>): Recor
 /**
  * Creates a recruitment pool for a specific point in time based on estimated release dates
  */
-const createPoolForBanner = (allStudents: Student[], bannerStartTime: string | Date, releaseDateMap: Record<number, number>): GachaPools => {
+export const createPoolForBanner = (allStudents: Student[], bannerStartTime: string | Date, releaseDateMap: Record<number, number>): GachaPools => {
   const targetTime = new Date(bannerStartTime).getTime();
 
   // "Release date is earlier than or equal to banner start date" OR "Not in records, considered an original member (undefined)"
@@ -159,7 +159,7 @@ const createPoolForBanner = (allStudents: Student[], bannerStartTime: string | D
     grade3: validStudents.filter((s) => getStudentGrade(s.id) === 3 && canSpook(s.id, s.isLimited, s.isFes)),
     grade2: validStudents.filter((s) => getStudentGrade(s.id) === 2),
     grade1: validStudents.filter((s) => getStudentGrade(s.id) === 1),
-    fes: validStudents.filter((s) => s.isFes),
+    fes: validStudents.filter((s) => s.isFes && !ARCHIVE_STUDENT_IDS.has(s.id)),
   };
 };
 
@@ -176,21 +176,20 @@ const createPoolForBanner = (allStudents: Student[], bannerStartTime: string | D
 // 3. Core Logic: Gacha execution and acquisition processing
 // ==========================================
 
-const rollSingle = (is10th: boolean, isFes: boolean, pickupId: number, pools: GachaPools, bannerPickupIds: number[]): { id: number; grade: number; isPickup: boolean } => {
+export const rollSingle = (is10th: boolean, isFes: boolean, pickupId: number, pools: GachaPools, bannerPickupIds: number[]): { id: number; grade: number; isPickup: boolean } => {
   const rng = Math.random();
   const rates = isFes ? RATES.FES : RATES.NORMAL;
 
   if (rng < rates.R3) {
     if (rng < rates.PICKUP) return { id: pickupId, grade: 3, isPickup: true };
-    // In general cases, the permanent pool includes everyone except the current pickup student.
-    // let validSpooks = pools.grade3.filter((s) => pickupId != s.id);
-    let validSpooks = [...pools.grade3.map((v) => v.id), ...bannerPickupIds].filter((id) => pickupId != id);
+    // FES banner: other pickup students belong only to the FES spook pool, not the normal pool.
+    // Normal banner: other pickup students can appear as normal spooks.
+    const validSpooks = isFes ? pools.grade3.map((v) => v.id).filter((id) => id !== pickupId) : [...pools.grade3.map((v) => v.id), ...bannerPickupIds].filter((id) => id !== pickupId);
     if (isFes) {
-      // In FES cases, FES characters do not appear in the permanent pool.
-      let validSpooks = pools.grade3.filter((s) => !bannerPickupIds.includes(s.id));
       const fesSpookChance = rates.PICKUP + (RATES.FES.FES_SPOOK || 0);
       if (rng < fesSpookChance) {
-        const fesPool = pools.fes.filter((s) => s.id !== pickupId);
+        const excludedIds = [...new Set(bannerPickupIds.flatMap((id) => FES_EXCLUSIONS_BY_PICKUP_ID[id] ?? []))];
+        const fesPool = pools.fes.filter((s) => s.id !== pickupId && !excludedIds.includes(s.id));
         const target = fesPool[Math.floor(Math.random() * fesPool.length)] || validSpooks[0];
         return { id: target.id, grade: 3, isPickup: false };
       }
@@ -207,7 +206,7 @@ const rollSingle = (is10th: boolean, isFes: boolean, pickupId: number, pools: Ga
 };
 
 // To handle recall pickups, returns true if it is the first acquisition.
-const recordResult = (state: SimState, id: number, grade: number, isPickup: boolean, isSpark: boolean = false, isRecall: false | 'ACQUIRED' | 'NOT_ACQUIRED' = false) => {
+const recordResult = (state: SimState, id: number, grade: number, isPickup: boolean, /*isSpark: boolean = false,*/ isRecall: false | 'ACQUIRED' | 'NOT_ACQUIRED' = false) => {
   // For recall pickups, since there is no PICKUP_NEW_BONUS, a duplicate effect is applied.
   const isDupe = state.owned.has(id);
   if (!isDupe) {
@@ -241,7 +240,7 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
   let currentFreePulls = banner.freePulls || 0;
   const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
   let recallFlag: false | 'ACQUIRED' | 'NOT_ACQUIRED' = banner.isRecall ? 'NOT_ACQUIRED' : false;
-  let pickuphistory = [];
+  const pickuphistory = [];
 
   const targets = Object.values(strat.studentConfigs)
     .filter((c) => c.mode !== 'skip')
@@ -286,7 +285,7 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
       for (let i = 0; i < 10; i++) {
         const result = rollSingle(i == 9, banner.isFes, currentTargetId, pools, bannerPickupIds);
         pickuphistory.push({ currentTargetId, result });
-        if (recordResult(state, result.id, result.grade, result.isPickup, false, recallFlag) && recallFlag == 'NOT_ACQUIRED') {
+        if (recordResult(state, result.id, result.grade, result.isPickup, recallFlag) && recallFlag == 'NOT_ACQUIRED') {
           recallFlag = 'ACQUIRED';
         }
         // if(currentTargetId==10021 && result.isPickup) console.log('result.isPickup', state.eleph.get(10021), result, )
@@ -309,7 +308,7 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
     const fillerTargetId = bannerPickupIds[0] || (targets[0] ? targets[0].studentId : 0);
     for (let i = 0; i < 10; i++) {
       const result = rollSingle(i === 9, banner.isFes, fillerTargetId, pools, bannerPickupIds);
-      if (recordResult(state, result.id, result.grade, result.isPickup, false, recallFlag) && recallFlag == 'NOT_ACQUIRED') {
+      if (recordResult(state, result.id, result.grade, result.isPickup, recallFlag) && recallFlag == 'NOT_ACQUIRED') {
         recallFlag = 'ACQUIRED';
       }
     }
@@ -322,10 +321,10 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
       allTargets.find((t) => t.mode === 'must' && !state.owned.has(t.studentId)) ||
       allTargets.find((t) => t.mode === 'opportunistic' && !state.owned.has(t.studentId)) ||
       allTargets.find((t) => t.intentionalSpark) ||
-      allTargets.find((t) => true);
+      allTargets.find((_t) => true);
 
     if (sparkTarget) {
-      if (recordResult(state, sparkTarget.studentId, 3, true, true, recallFlag) && recallFlag == 'NOT_ACQUIRED') {
+      if (recordResult(state, sparkTarget.studentId, 3, true, recallFlag) && recallFlag == 'NOT_ACQUIRED') {
         recallFlag = 'ACQUIRED';
       }
     }
@@ -333,7 +332,210 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
 };
 
 // ==========================================
-// 5. Main Entry Point (runGlobalSimulation)
+// 5. Distribution + Result Assembly (exported for worker use)
+// ==========================================
+
+export const createDistribution = (data: number[], binSize: number, total?: number): DistributionData[] => {
+  const sortedData = [...data].sort((a, b) => a - b);
+  if (sortedData.length === 0) return [];
+  const n = total ?? sortedData.length;
+  const maxVal = sortedData[sortedData.length - 1];
+  const binCount = Math.floor(maxVal / binSize) + 2;
+  const dist: DistributionData[] = [];
+  let cumulativeCount = 0;
+  let idx = 0;
+  for (let i = 0; i < binCount; i++) {
+    const end = (i + 1) * binSize;
+    let count = 0;
+    while (idx < sortedData.length && sortedData[idx] < end) {
+      count++;
+      idx++;
+    }
+    cumulativeCount += count;
+    dist.push({ binStart: i * binSize, binEnd: end, count, pdf: (count / n) * 100, cdf: (cumulativeCount / n) * 100 });
+  }
+  return dist;
+};
+
+export interface SimRawAccumulator {
+  resultsPulls: number[];
+  resultsCost: number[];
+  bannerCumulativeCosts: Record<string, number[]>;
+  bannerStatsSum: Record<string, { pulls: number; cost: number }>;
+  studentAcquired: Record<number, number>;
+  studentElephTotal: Record<number, number>;
+  studentElephDist: Record<number, Record<number, number>>;
+  totalEligmaSum: number;
+  successCount: number;
+}
+
+export interface WasmPayload {
+  strategiesJson: string;
+  bannerPoolsJson: string;
+  activeBannerIds: string[];
+}
+
+export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Record<string, BannerPeriod>, allStudents: Student[]): WasmPayload => {
+  const activeStrategies = strategies.filter((s) => s.isActive);
+  const releaseDateMap = preprocessReleaseDates(bannersMap);
+
+  const bannerPoolsForWasm: Record<
+    string,
+    {
+      isFes: boolean;
+      isRecall: boolean;
+      freePulls: number;
+      grade3: number[];
+      grade2: number[];
+      grade1: number[];
+      fes: number[];
+      bannerPickupIds: number[];
+      fesExcludedIds: number[];
+    }
+  > = {};
+
+  for (const strat of activeStrategies) {
+    const banner = bannersMap[strat.bannerId];
+    if (!banner) continue;
+    const pools = createPoolForBanner(allStudents, banner.startTime, releaseDateMap);
+    const pickupIds = banner.pickupStudents.map((s) => s.id);
+    const fesExcludedIds = [...new Set(pickupIds.flatMap((id) => FES_EXCLUSIONS_BY_PICKUP_ID[id] ?? []))];
+    bannerPoolsForWasm[strat.bannerId] = {
+      isFes: banner.isFes,
+      isRecall: banner.isRecall ?? false,
+      freePulls: banner.freePulls ?? 0,
+      grade3: pools.grade3.map((s) => s.id),
+      grade2: pools.grade2.map((s) => s.id),
+      grade1: pools.grade1.map((s) => s.id),
+      fes: pools.fes.map((s) => s.id),
+      bannerPickupIds: pickupIds,
+      fesExcludedIds,
+    };
+  }
+
+  const strategiesForWasm = activeStrategies.map((s) => ({
+    bannerId: s.bannerId,
+    maxSparks: s.maxSparks ?? 1,
+    minPulls: s.minPulls ?? 0,
+    targets: Object.values(s.studentConfigs)
+      .filter((c) => c.mode !== 'skip')
+      .sort((a, b) => a.priority - b.priority)
+      .map((c) => ({
+        studentId: c.studentId,
+        mode: c.mode === 'must' ? 'must' : 'opportunistic',
+        opportunisticThreshold: c.opportunisticThreshold ?? 50,
+        intentionalSpark: c.intentionalSpark ?? false,
+        intentionalSparkThreshold: c.intentionalSparkThreshold ?? 20,
+      })),
+  }));
+
+  return {
+    strategiesJson: JSON.stringify(strategiesForWasm),
+    bannerPoolsJson: JSON.stringify(bannerPoolsForWasm),
+    activeBannerIds: activeStrategies.map((s) => s.bannerId),
+  };
+};
+
+export const mergeSimAccumulator = (base: SimRawAccumulator, other: SimRawAccumulator): void => {
+  for (let i = 0; i < other.resultsCost.length; i++) base.resultsCost.push(other.resultsCost[i]);
+  for (let i = 0; i < other.resultsPulls.length; i++) base.resultsPulls.push(other.resultsPulls[i]);
+  base.successCount += other.successCount;
+  base.totalEligmaSum += other.totalEligmaSum;
+  for (const [bid, costs] of Object.entries(other.bannerCumulativeCosts)) {
+    if (!base.bannerCumulativeCosts[bid]) base.bannerCumulativeCosts[bid] = [];
+    for (let i = 0; i < costs.length; i++) base.bannerCumulativeCosts[bid].push(costs[i]);
+  }
+  for (const [bid, s] of Object.entries(other.bannerStatsSum)) {
+    if (base.bannerStatsSum[bid]) {
+      base.bannerStatsSum[bid].pulls += s.pulls;
+      base.bannerStatsSum[bid].cost += s.cost;
+    } else {
+      base.bannerStatsSum[bid] = { pulls: s.pulls, cost: s.cost };
+    }
+  }
+  for (const [idStr, cnt] of Object.entries(other.studentAcquired)) {
+    const id = Number(idStr);
+    base.studentAcquired[id] = (base.studentAcquired[id] ?? 0) + cnt;
+  }
+  for (const [idStr, total] of Object.entries(other.studentElephTotal)) {
+    const id = Number(idStr);
+    base.studentElephTotal[id] = (base.studentElephTotal[id] ?? 0) + total;
+  }
+  for (const [idStr, dist] of Object.entries(other.studentElephDist)) {
+    const id = Number(idStr);
+    if (!base.studentElephDist[id]) base.studentElephDist[id] = {};
+    for (const [amtStr, cnt] of Object.entries(dist)) {
+      const amt = Number(amtStr);
+      base.studentElephDist[id][amt] = (base.studentElephDist[id][amt] ?? 0) + cnt;
+    }
+  }
+};
+
+export const buildGlobalResultFromRaw = (acc: SimRawAccumulator, simCount: number, allStudents: Student[], bannersMap: Record<string, BannerPeriod>): GlobalAggregatedResult => {
+  const distPulls = createDistribution(acc.resultsPulls, 10, simCount);
+  const distCost = createDistribution(acc.resultsCost, 1200, simCount);
+
+  const distCostMap: Record<string, DistributionData[]> = {};
+  for (const [bannerId, costs] of Object.entries(acc.bannerCumulativeCosts)) {
+    distCostMap[bannerId] = createDistribution(costs, 1200, simCount);
+  }
+
+  const bannerStats = Object.keys(acc.bannerStatsSum)
+    .map((bid) => {
+      const banner = bannersMap[bid];
+      if (!banner) return null;
+      return {
+        bannerId: bid,
+        bannerLabel: banner.pickupStudents.map((s) => s.name).join('/'),
+        avgPulls: simCount > 0 ? acc.bannerStatsSum[bid].pulls / simCount : 0,
+        avgCost: simCount > 0 ? acc.bannerStatsSum[bid].cost / simCount : 0,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  const studentStats: Record<number, StudentSimulationStat> = {};
+  for (const student of allStudents) {
+    const id = student.id;
+    const acquiredCount = acc.studentAcquired[id] ?? 0;
+    const totalEleph = acc.studentElephTotal[id] ?? 0;
+    const elephCountsRaw = acc.studentElephDist[id] ?? {};
+
+    const elephDist = Object.entries(elephCountsRaw)
+      .map(([amt, cnt]) => ({ amount: Number(amt), probability: (100 * cnt) / simCount }))
+      .sort((a, b) => a.amount - b.amount);
+
+    if (!elephCountsRaw[0]) elephDist.unshift({ amount: 0, probability: 0 });
+
+    const totalCnt = Object.values(elephCountsRaw).reduce((s, c) => s + c, 0);
+    elephDist[0].probability += (100 * (simCount - totalCnt)) / simCount;
+
+    studentStats[id] = {
+      studentId: id,
+      name: student.name,
+      isLimited: student.isLimited,
+      isFes: student.isFes,
+      obtainRate: simCount > 0 ? (acquiredCount / simCount) * 100 : 0,
+      avgEleph: simCount > 0 ? totalEleph / simCount : 0,
+      elephDistribution: elephDist,
+    };
+  }
+
+  return {
+    simCount,
+    successRate: simCount > 0 ? (acc.successCount / simCount) * 100 : 0,
+    avgTotalPulls: simCount > 0 ? acc.resultsPulls.reduce((a, b) => a + b, 0) / simCount : 0,
+    avgTotalCost: simCount > 0 ? acc.resultsCost.reduce((a, b) => a + b, 0) / simCount : 0,
+    avgTotalEligma: simCount > 0 ? acc.totalEligmaSum / simCount : 0,
+    distPulls,
+    distCost,
+    distCostMap,
+    bannerStats,
+    studentStats,
+  };
+};
+
+// ==========================================
+// 6. Main Entry Point (runGlobalSimulation)
 // ==========================================
 
 export const runGlobalSimulation = (
@@ -456,106 +658,20 @@ export const runGlobalSimulation = (
     });
   }
 
-  // ==========================================
-  // 6. Result data processing (including distribution per banner)
-  // ==========================================
-
-  // Helper function for generating distributions
-  const createDistribution = (data: number[], binSize: number): DistributionData[] => {
-    const sortedData = [...data].sort((a, b) => a - b);
-    if (sortedData.length === 0) return [];
-
-    // Generate bins from 0 to max value
-    const maxVal = sortedData[sortedData.length - 1];
-    const binCount = Math.floor(maxVal / binSize) + 2;
-
-    const dist: DistributionData[] = [];
-    let cumulativeCount = 0;
-
-    for (let i = 0; i < binCount; i++) {
-      const start = i * binSize;
-      const end = start + binSize;
-
-      // Count of data points in the current interval
-      // (For performance, index sweeping could replace filtering, but filter is fine since binCount is low)
-      const count = sortedData.filter((p) => p >= start && p < end).length;
-      cumulativeCount += count;
-
-      dist.push({
-        binStart: start,
-        binEnd: end,
-        count,
-        pdf: (count / simCount) * 100,
-        cdf: (cumulativeCount / simCount) * 100,
-      });
-    }
-    return dist;
-  };
-
-  const distPulls = createDistribution(resultsPulls, 10);
-  const distCost = createDistribution(resultsCost, 1200);
-
-  // Generate cumulative cost distribution per banner
-  const distCostMap: Record<string, DistributionData[]> = {};
-  for (const [bannerId, costs] of Object.entries(bannerCumulativeCosts)) {
-    // Generate distribution in units of 1200 Pyroxenes
-    distCostMap[bannerId] = createDistribution(costs, 1200);
-  }
-
-  const bannerStats = Object.keys(bannerStatsSum)
-    .map((bid) => {
-      const banner = bannersMap[bid];
-      if (!banner) return null;
-      return {
-        bannerId: bid,
-        bannerLabel: banner.pickupStudents.map((s) => s.name).join('/'),
-        avgPulls: bannerStatsSum[bid].pulls / simCount,
-        avgCost: bannerStatsSum[bid].cost / simCount,
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null);
-
-  const studentStats: Record<number, StudentSimulationStat> = {};
-  for (const [idStr, raw] of Object.entries(studentRawStats)) {
-    const id = Number(idStr);
-    // if (id==20050) console.log('idStr, raw', idStr, raw)
-    const student = allStudents.find((s) => s.id === id);
-    if (!student) continue;
-
-    const elephDist = Array.from(raw.elephCounts.entries())
-      .map(([amt, cnt]) => ({ amount: amt, probability: (100 * cnt) / simCount }))
-      .sort((a, b) => a.amount - b.amount);
-
-    // Add amt == 0 entry if it doesn't exist
-    if (!raw.elephCounts.has(0)) elephDist.unshift({ amount: 0, probability: 0 });
-
-    // Probability sum correction
-    // const totalProbability = elephDist.reduce((sum, item) => sum + item.probability, 0);
-    const totalCnt = Array.from(raw.elephCounts.values()).reduce((sum, cnt) => sum + cnt, 0);
-    // if (id==20050)  console.log({ simCount, totalCnt }, elephDist[0].probability, (simCount - totalCnt) / simCount)
-    elephDist[0].probability += (100 * (simCount - totalCnt)) / simCount;
-
-    studentStats[id] = {
-      studentId: id,
-      name: student.name,
-      isLimited: student.isLimited,
-      isFes: student.isFes,
-      obtainRate: (raw.acquiredCount / simCount) * 100,
-      avgEleph: raw.totalEleph / simCount,
-      elephDistribution: elephDist,
-    };
-  }
-
-  return {
+  return buildGlobalResultFromRaw(
+    {
+      resultsPulls,
+      resultsCost,
+      bannerCumulativeCosts,
+      bannerStatsSum,
+      studentAcquired: Object.fromEntries(Object.entries(studentRawStats).map(([id, r]) => [Number(id), r.acquiredCount])),
+      studentElephTotal: Object.fromEntries(Object.entries(studentRawStats).map(([id, r]) => [Number(id), r.totalEleph])),
+      studentElephDist: Object.fromEntries(Object.entries(studentRawStats).map(([id, r]) => [Number(id), Object.fromEntries(r.elephCounts)])),
+      totalEligmaSum,
+      successCount,
+    },
     simCount,
-    successRate: (successCount / simCount) * 100,
-    avgTotalPulls: resultsPulls.reduce((a, b) => a + b, 0) / simCount,
-    avgTotalCost: resultsCost.reduce((a, b) => a + b, 0) / simCount,
-    avgTotalEligma: totalEligmaSum / simCount,
-    distPulls,
-    distCost,
-    distCostMap,
-    bannerStats,
-    studentStats,
-  };
+    allStudents,
+    bannersMap,
+  );
 };

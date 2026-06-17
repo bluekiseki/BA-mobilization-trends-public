@@ -15,20 +15,20 @@ import { getLocale, i18nextMiddleware } from './middleware/i18next';
 import { useTranslation } from 'react-i18next';
 import { getLocaleFromHeaders } from './utils/i18n/service';
 import { PostHogProvider } from 'posthog-js/react';
-import { domain, cdn as cdn_domain, vercelDomain } from './data/livedataServer.json';
-const DynamicDevtoolsdetector = lazy(() => import('./components/devtools-detector'));
+import { domain, cdn as cdn_domain } from './data/livedataServer.json';
+const DynamicDevtoolsdetector = lazy(() => import('./components/common/devtools-detector.client'));
 import { env } from 'cloudflare:workers'; // for cloudflare
 // import { env } from 'node:process';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { HelpSidebar } from './components/common/HelpSidebar';
-const DynamicBanner = lazy(() => import('~/components/FeatureBanner/FeatureBanner'));
+import { ClientOnly } from './components/common/ClientOnly';
+// const DynamicBanner = lazy(() => import('~/components/FeatureBanner/FeatureBanner'));
+import { useAuthStore, type UserProfile } from './store/authStore';
+import { useSyncStore } from './store/syncStore';
+import { useSyncWatcher } from './store/planner/useSyncWatcher';
 
-export async function loader({ context, request, params }: Route.LoaderArgs) {
+export function loader({ context, request, params }: Route.LoaderArgs) {
   const url = new URL(request.url);
-
-  if (url.hostname === vercelDomain) {
-    throw redirect(`https://${domain}` + url.pathname + url.search, 301);
-  }
 
   // /zh-Tw/** → /zh-Hant/**
   if (url.pathname === '/zh-TW' || url.pathname.startsWith('/zh-TW/')) {
@@ -37,19 +37,57 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   }
 
   const publicEnv = {
-    VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY,
-    VITE_PUBLIC_POSTHOG_HOST: env.VITE_PUBLIC_POSTHOG_HOST,
-    VITE_WEB3FORMS_ACCESS_KEY: env.VITE_WEB3FORMS_ACCESS_KEY,
+    VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY ?? '',
+    VITE_PUBLIC_POSTHOG_HOST: env.VITE_PUBLIC_POSTHOG_HOST ?? '',
+    VITE_WEB3FORMS_ACCESS_KEY: env.VITE_WEB3FORMS_ACCESS_KEY ?? '',
+    VITE_TURNSTILE_SITE_KEY: env.VITE_TURNSTILE_SITE_KEY ?? '',
   };
 
-  let locale = getLocale(context) as Locale;
+  const locale = getLocale(context) as Locale;
   const reqLocale = getLocaleFromHeaders(request);
-  return data({ context, locale, reqLocale, params, env: publicEnv } /*{ headers: { 'Set-Cookie': await localeCookie.serialize(locale) } }*/);
+
+  // Session is injected via <script id="__ba_session__"> in injectSessionData from workers/app.ts
+  // Loader does not read the session to keep the cache key user-independent
+  return data({ context, locale, reqLocale, params, env: publicEnv });
 }
 
 export const middleware = [i18nextMiddleware];
 
 export const links: Route.LinksFunction = () => [];
+
+interface PostHogEnv {
+  VITE_PUBLIC_POSTHOG_KEY?: string;
+  VITE_PUBLIC_POSTHOG_HOST?: string;
+}
+
+function PostHogConditional({ children, envData }: { children: React.ReactNode; envData: PostHogEnv | null }) {
+  if (import.meta.env.MODE === 'development') return <>{children}</>;
+  const e = envData || (import.meta.env as PostHogEnv);
+  if (!e.VITE_PUBLIC_POSTHOG_KEY || !e.VITE_PUBLIC_POSTHOG_HOST) return <>{children}</>;
+  return (
+    <PostHogProvider
+      apiKey={e.VITE_PUBLIC_POSTHOG_KEY}
+      options={{
+        api_host: e.VITE_PUBLIC_POSTHOG_HOST,
+        ui_host: 'https://us.posthog.com',
+        defaults: '2025-05-24',
+        capture_exceptions: true,
+        capture_performance: true,
+        cookieless_mode: 'always',
+        loaded: (ph) => {
+          void fetch(`${e.VITE_PUBLIC_POSTHOG_HOST}/api/geoip`)
+            .then((res) => res.json())
+            .then((json: unknown) => {
+              const parsed = json as { data?: Record<string, unknown> };
+              if (parsed.data) ph.register(parsed.data);
+            });
+        },
+      }}
+    >
+      {children}
+    </PostHogProvider>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>();
@@ -94,7 +132,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* for fonts */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="preconnect" href={`https://${cdn_domain}`} />
-        <link rel="preconnect" href={`${(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST}`} />
+        <link rel="preconnect" href={(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST || ''} />
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Medium.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Bold.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
         <script id="website-ld" type="application/ld+json">
@@ -115,31 +153,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <I18nextProvider i18n={i18n} defaultNS={'translation'}> */}
         <ScrollRestoration />
         <Scripts />
-        <PostHogProvider
-          apiKey={(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_KEY}
-          options={{
-            api_host: (data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST,
-            ui_host: 'https://us.posthog.com',
-            defaults: '2025-05-24',
-            capture_exceptions: true,
-            capture_performance: true,
-            // debug: import.meta.env.MODE === "development",
-            cookieless_mode: 'always', // Banner required,
-            loaded: (ph) => {
-              fetch(`${(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST}/api/geoip`)
-                .then((res) => res.json() as any)
-                .then(({ data }) => ph.register(data));
-            },
-          }}
-        >
+        <PostHogConditional envData={data?.env}>
           <ThemeProvider>
-            <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-bluearchive">
+            <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-ba">
               <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
                 <Navigation reqLocale={data?.reqLocale || DEFAULT_LOCALE} />
               </nav>
-              <Suspense fallback={null}>
+              {/* <Suspense fallback={null}>
                 <DynamicBanner />
-              </Suspense>
+              </Suspense> */}
 
               <main className="max-w-7xl mx-auto" style={{ minHeight: 'calc(100vh - 170px)' }}>
                 {children}
@@ -184,7 +206,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
             <HelpSidebar />
           </ThemeProvider>
-        </PostHogProvider>
+        </PostHogConditional>
 
         {/* </I18nextProvider> */}
         <NoScript />
@@ -192,9 +214,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <>
             {/* <SpeedInsights /> */}
             {/* <Analytics /> */}
-            <Suspense fallback={null}>
-              <DynamicDevtoolsdetector />
-            </Suspense>
+            <ClientOnly>
+              <Suspense fallback={null}>
+                <DynamicDevtoolsdetector />
+              </Suspense>
+            </ClientOnly>
           </>
         )}
       </body>
@@ -204,10 +228,62 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData: { locale } }: Route.ComponentProps) {
-  let { i18n } = useTranslation();
+  const { i18n } = useTranslation();
+
   useEffect(() => {
-    if (i18n.language !== locale) i18n.changeLanguage(locale);
+    if (i18n.language !== locale) void i18n.changeLanguage(locale);
   }, [locale, i18n]);
+
+  // Session initialization: reads data injected into <script id="__ba_session__"> by workers/app.ts
+  // Execute only when activeProfileId does not exist yet (prevents reset on page navigation)
+  useEffect(() => {
+    if (useAuthStore.getState().activeProfileId) return; // Already initialized
+
+    const el = document.getElementById('__ba_session__');
+    if (!el?.textContent) return;
+
+    try {
+      interface RawProfile {
+        id: string;
+        name: string;
+        server: string;
+        is_default: number;
+        sort_order: number;
+        created_at: number;
+        updated_at: number;
+      }
+
+      const { user, profiles: rawProfiles } = JSON.parse(el.textContent) as {
+        user: { id: string; username: string; email?: string };
+        profiles: RawProfile[];
+      };
+      if (!user) return;
+
+      const profiles = rawProfiles.map((p) => ({
+        id: p.id,
+        name: p.name,
+        server: p.server as UserProfile['server'],
+        isDefault: p.is_default === 1,
+        sortOrder: p.sort_order,
+        createdAt: String(p.created_at),
+        updatedAt: String(p.updated_at),
+      }));
+      useAuthStore.getState().setUser({ ...user, profiles });
+
+      const savedProfileId = localStorage.getItem('yuzu_activeProfileId');
+      const savedProfile = savedProfileId ? profiles.find((p) => p.id === savedProfileId) : null;
+      const defaultProfile = savedProfile ?? profiles.find((p) => p.isDefault) ?? profiles[0];
+      if (!defaultProfile) return;
+      useAuthStore.getState().setActiveProfile(defaultProfile.id);
+      useSyncStore.getState().setCurrentProfileId(defaultProfile.id);
+      void useSyncStore.getState().pullAll(defaultProfile.id);
+    } catch {
+      // Session parsing failure is non-fatal (treated as non-logged-in state)
+    }
+  }, []);
+
+  useSyncWatcher();
+
   return <Outlet />;
 }
 

@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { data, Link, useLoaderData, useNavigate, type LoaderFunctionArgs } from 'react-router';
 import { GAMESERVER_LIST, type GameServer, type RaidFullInfo } from '~/types/data';
 import { useTranslation } from 'react-i18next';
-import { getMostDifficultLevel, type_translation_sorted, typecolor } from '~/components/raidToString';
+import { getMostDifficultLevel, type_translation_sorted, typecolor } from '~/components/raid/raidToString';
 import { useSearchMatcher } from '~/utils/useSearchMatcher';
-import { getLocaleShortName, type Locale, type LocaleShortName } from '~/utils/i18n/config';
+import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { loadRaidFullInfos } from '~/utils/loadRaidInfo';
-import { TerrainIconGameStyle, type Terrain } from '~/components/teran';
+import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
 import { isTotalAssault } from '~/components/dashboard/common';
@@ -17,7 +17,7 @@ import { getInstance } from '~/middleware/i18next';
 import { localeLink } from '~/utils/localeLink';
 import bossData from '~/data/bossdata.json';
 // import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
-// import { getBracketFromTotalScore } from '~/components/Difficulty';
+// import { getBracketFromTotalScore } from '~/components/raid/Difficulty';
 // import { formatTimeToTimestamp } from '~/utils/time';
 import { HiUserGroup } from 'react-icons/hi';
 // import { FaTrophy } from 'react-icons/fa6';
@@ -25,6 +25,7 @@ import { HiUserGroup } from 'react-icons/hi';
 import { BsPinAngleFill } from 'react-icons/bs';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { getCurrentGlobalraid, getKstTime } from '~/data/globalRaidDates';
+import { PageHeader } from '~/components/common/PageHeader';
 // import { usePageHelp } from '~/utils/usePageHelp';
 
 // Define types: Total Assault is RaidInfo, Joint Firing Drill is RaidInfo array.
@@ -32,18 +33,18 @@ type GroupedRaidInfo = RaidFullInfo | RaidFullInfo[];
 
 const bossNameData = Object.fromEntries(
   Object.entries(bossData).map(([k, v]) => {
-    return [k, v.name as Record<LocaleShortName, string>];
+    return [k, v.name];
   }),
 );
 
-export async function loader({ context, params, request }: LoaderFunctionArgs) {
+export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
   if (!server || !GAMESERVER_LIST.includes(server as GameServer)) {
     throw new Response('Not Found', { status: 404 });
   }
 
   // const locale = getLocaleFromHeaders(request);
-  let i18n = getInstance(context);
+  const i18n = getInstance(context);
   const locale = i18n.language as Locale;
   // const raidInfos = loadRaidInfos(server as GameServer, locale);
   const raidInfos = loadRaidFullInfos(server as GameServer);
@@ -53,7 +54,10 @@ export async function loader({ context, params, request }: LoaderFunctionArgs) {
     if (!raidGroups.has(raid.Id)) {
       raidGroups.set(raid.Id, []);
     }
-    raidGroups.get(raid.Id)!.push(raid);
+    const group = raidGroups.get(raid.Id);
+    if (group) {
+      group.push(raid);
+    }
   }
 
   const groupedRaidInfos: GroupedRaidInfo[] = Array.from(raidGroups.values()).map((group) => {
@@ -104,7 +108,7 @@ export function links() {
   return [...createLinkHreflang('/dashboard')];
 }
 
-export function headers({ loaderHeaders, parentHeaders }: Route.HeadersArgs) {
+export function headers() {
   if (process.env.NODE_ENV === 'production')
     return {
       'Cache-Control': CACHE_CONTROL_CONFIG,
@@ -148,7 +152,7 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
       {/* Main: Boss Name */}
       <div className={`flex justify-between items-end ${isGrand ? 'mb-4' : 'mb-3'}`}>
         <h3 className="text-xl font-black text-neutral-800 dark:text-neutral-100 truncate pr-2 tracking-tight leading-none">
-          <span className="text-xs font-light text-gray-400 mr-1.5 relative -top-1.25">S{id.substring(1)}</span>
+          <span className="text-xs font-light text-neutral-400 mr-1.5 relative -top-1.25">S{id.substring(1)}</span>
           {bossNameData[Boss]?.[getLocaleShortName(locale)] || Boss}
         </h3>
         <div className="shrink-0 text-xs text-neutral-400 dark:text-neutral-500 mb-0.5">
@@ -163,18 +167,19 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
             {raidInfos.map((raid) => {
               const diff = getMostDifficultLevel(raid);
               const count = diff ? raid.Cnt[diff] : 0;
+              if (!raid.Type) return null;
               return (
                 <button
                   key={raid.Type}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    navigate(localeLink(locale, `/dashboard/${region}/${raid.Id}?tab=${raid.Type}`));
+                    void navigate(localeLink(locale, `/dashboard/${region}/${raid.Id}?tab=${raid.Type}`));
                   }}
                   className="flex items-center gap-1.5 leading-none hover:scale-101"
                 >
-                  <div className="flex items-center px-1 py-0.5 rounded-[2px] text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type!] }}>
-                    <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type!][getLocaleShortName(locale)]}</span>
+                  <div className="flex items-center px-1 py-0.5 rounded-[2px] text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
+                    <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type][getLocaleShortName(locale)]}</span>
                     <span className="text-xs font-normal">{diff}</span>
                   </div>
                   <span className="text-xs text-neutral-600 dark:text-neutral-300 tabular-nums font-normal">{count?.toLocaleString()}</span>
@@ -240,7 +245,7 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
       {/* Main: Boss Name */}
       <div className="flex justify-between items-end mb-3">
         <h3 className="text-xl font-black text-neutral-800 dark:text-neutral-100 truncate pr-2 tracking-tight leading-none">
-          <span className="text-xs font-light text-gray-400 mr-1.5 relative -top-1.25">S{id.substring(1)}</span>
+          <span className="text-xs font-light text-neutral-400 mr-1.5 relative -top-1.25">S{id.substring(1)}</span>
           {Boss}
         </h3>
       </div>
@@ -259,15 +264,18 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
         ) : (
           /* Case 2: Grand Assault (Show Defense Types) */
           <div className="flex flex-wrap gap-x-2.5 gap-y-1.5">
-            {raidInfos.map((raid) => (
-              <div key={raid.Type} className="flex items-center gap-1.5 leading-none">
-                {}
-                <div className="flex items-center px-1 py-0.5 rounded-[2px] text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type!] }}>
-                  <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type!][getLocaleShortName(locale)]}</span>
-                  <span className="text-xs font-normal">{getMostDifficultLevel(raid)}</span>
+            {raidInfos.map((raid) => {
+              if (!raid.Type) return null;
+              return (
+                <div key={raid.Type} className="flex items-center gap-1.5 leading-none">
+                  {}
+                  <div className="flex items-center px-1 py-0.5 rounded-[2px] text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
+                    <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type][getLocaleShortName(locale)]}</span>
+                    <span className="text-xs font-normal">{getMostDifficultLevel(raid)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -304,23 +312,27 @@ export default function DashboardIndex() {
     return match(localeName, query) || match(primary.Boss, query) || match(primary.Id, query);
   });
 
+  const liveRaidMatches =
+    !query.trim() ||
+    (LiveRaidInfos &&
+      LiveRaidInfos.length > 0 &&
+      LiveRaidInfos.some((raid) => {
+        const localeName = bossNameData[raid.Boss]?.[getLocaleShortName(locale)] || raid.Boss;
+        return match(localeName, query) || match(raid.Boss, query) || match(raid.Id, query);
+      }));
+
   return (
     <div className="bg-neutral-50 dark:bg-neutral-900 min-h-screen p-4 sm:p-6 lg:p-8 py-6">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-6 text-center">
-          <h1 className="text-2xl font-extrabold text-neutral-900 dark:text-white">
-            {t('dashboardList')} ({server.toUpperCase()})
-          </h1>
-          <p className="text-sm mt-2 text-neutral-600 dark:text-neutral-300">{t_index('description')}</p>
-        </header>
+        <PageHeader title={`${t('dashboardList')} (${server.toUpperCase()})`} description={t_index('description')} />
 
-        <div className="mb-6 flex justify-center gap-2">
+        <div className="mb-6 flex gap-2">
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t_index('searchPlaceholder')}
-            className="w-full max-w-xs px-3 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors"
+            className="flex-1 px-3 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors"
           />
           <div className="flex shrink-0 rounded overflow-hidden border border-neutral-200 dark:border-neutral-700 text-xs font-medium">
             {(['all', 'raid', 'eraid'] as const).map((opt) => (
@@ -350,7 +362,7 @@ export default function DashboardIndex() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {server === 'jp' && LiveRaidInfos && LiveRaidInfos.length > 0 && <LiveShortcutCard raidInfos={LiveRaidInfos as RaidFullInfo[]} locale={locale} />}
+          {typeFilter === 'all' && server === 'jp' && LiveRaidInfos && LiveRaidInfos.length > 0 && liveRaidMatches && <LiveShortcutCard raidInfos={LiveRaidInfos as RaidFullInfo[]} locale={locale} />}
 
           {filteredRaids.map((raidGroup) => {
             const raidInfos = Array.isArray(raidGroup) ? raidGroup : [raidGroup];

@@ -71,7 +71,7 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({ data, filename =
         if (!confirm(t_c('dataWarning'))) return;
         handleDownload();
       }}
-      className="p-1  hover:text-slate-600 dark:hover:text-slate-300 rounded-full transition-colors cursor-pointer"
+      className="p-1  hover:text-neutral-600 dark:hover:text-neutral-300 rounded-full transition-colors cursor-pointer"
       aria-label="Download data as CSV"
       title="Download data as CSV"
     >

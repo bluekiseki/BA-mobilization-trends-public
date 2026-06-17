@@ -1,6 +1,5 @@
 import { cdn as domain } from '~/data/livedataServer.json';
 
-export const cdn = (path: string) => (import.meta.env.DEV ? path : `https://${domain}/assets/${path.replace(/^\//, '')}`);
+const useCdn = !import.meta.env.DEV || import.meta.env.VITE_USE_CDN === 'true';
 
-// for test
-// export const cdn = (path: string) =>  `https://${domain}/assets/${path.replace(/^\//, '')}`;
+export const cdn = (path: string) => (useCdn ? `https://${domain}/assets/${path.replace(/^\//, '')}` : path);

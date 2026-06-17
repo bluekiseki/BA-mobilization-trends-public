@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, ReferenceLine, Customized, useXAxisScale, useYAxisScale } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, ReferenceLine, useXAxisScale, useYAxisScale, type TooltipContentProps } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { HiArrowsUpDown } from 'react-icons/hi2';
@@ -10,8 +10,8 @@ import { useIsDarkState } from '~/store/isDarkState';
 
 // Common & Utils
 import { getBackgroundRatingColor } from '../dashboard/common';
-import { StarRating } from '../StarRatingProps';
-import { raidToString } from '../raidToString';
+import { StarRating } from '../StarRating';
+import { raidToString } from '../raid/raidToString';
 import type { Locale } from '~/utils/i18n/config';
 
 interface RaidUsageData {
@@ -64,7 +64,8 @@ export const RaidUsageStackChart: React.FC = () => {
     }
 
     const xLabels = getFilteredRaidInfoByDifficulty();
-    const raidInfoMap = new Map<string, any>();
+    type RaidInfo = { Boss?: string; Location?: string; Date?: string };
+    const raidInfoMap = new Map<string, RaidInfo>();
 
     if (xLabels && xLabels.length > 0) {
       xLabels.forEach((info) => {
@@ -83,13 +84,10 @@ export const RaidUsageStackChart: React.FC = () => {
 
     raidLabels.forEach((label: string) => {
       const matchedInfo = raidInfoMap.get(label);
-      const bossName = matchedInfo ? matchedInfo.Boss : '';
-      const teran = matchedInfo ? matchedInfo.Location : '';
+      const bossName = matchedInfo?.Boss ?? '';
+      const teran = matchedInfo?.Location ?? '';
 
-      let dateLabel = '';
-      if (matchedInfo && matchedInfo.Date) {
-        dateLabel = `${matchedInfo.Date}`;
-      }
+      const dateLabel = matchedInfo?.Date ?? '';
 
       tempMap.set(label, {
         raidId: label,
@@ -131,7 +129,7 @@ export const RaidUsageStackChart: React.FC = () => {
     }
 
     const flattenedData = processed.map((row) => {
-      const newRow: any = { ...row };
+      const newRow: RaidUsageData & Record<number, number> = { ...row };
       Object.entries(row.breakdown).forEach(([s, val]) => {
         const starKey = Number(s);
         newRow[starKey] = val;
@@ -155,7 +153,14 @@ export const RaidUsageStackChart: React.FC = () => {
 
   // --- Renderers ---
 
-  const CustomYAxisTick = ({ x, y, payload }: any) => {
+  interface CustomYAxisTickProps {
+    x?: number;
+    y?: number;
+    payload?: { value: string };
+  }
+
+  const CustomYAxisTick: React.FC<CustomYAxisTickProps> = ({ x = 0, y = 0, payload }: CustomYAxisTickProps) => {
+    if (!payload) return null;
     const entry = processedData.find((d) => d.raidId === payload.value);
     if (!entry) return null;
 
@@ -182,10 +187,18 @@ export const RaidUsageStackChart: React.FC = () => {
     );
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface TooltipPayloadEntry {
+    dataKey?: string | number;
+    value?: number;
+    color?: string;
+    payload?: RaidUsageData & Record<number, number>;
+  }
+
+  const CustomTooltip = ({ active, payload }: Partial<TooltipContentProps<number, string>> & { payload?: TooltipPayloadEntry[] }) => {
     if (active && payload && payload.length) {
-      const dataRow = payload[0].payload;
-      const total = dataRow.totalCount;
+      const dataRow = payload[0]?.payload as (RaidUsageData & Record<number, number>) | undefined;
+      if (!dataRow) return null;
+      const total = dataRow.totalCount ?? 0;
 
       return (
         <div className="rounded border bg-white p-3 text-sm shadow-xl dark:border-neutral-700 dark:bg-neutral-800 z-50">
@@ -198,17 +211,18 @@ export const RaidUsageStackChart: React.FC = () => {
             <span>{dataRow.displayName}</span>
           </div>
 
-          {payload.map((entry: any, index: number) => {
+          {payload.map((entry, index) => {
             const star = entry.dataKey;
 
             if (star === '_anchor') return null;
 
-            const val = entry.value;
+            const val = Number(entry.value ?? 0);
+            const color = entry.color ?? '#8884d8';
 
             return (
               <div key={index} className="flex items-center gap-3 mb-1 min-w-[120px]">
                 <div className="flex items-center gap-1 w-16">
-                  <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: entry.color }}></span>
+                  <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }}></span>
                   <span className="text-neutral-600 dark:text-neutral-300">
                     <StarRating n={Math.abs(Number(star))} />
                   </span>
@@ -224,8 +238,15 @@ export const RaidUsageStackChart: React.FC = () => {
     return null;
   };
 
-  const renderCustomizedLabel = (props: any) => {
-    const { x, y, width, height, value } = props;
+  interface CustomLabelProps {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    value?: number;
+  }
+
+  const CustomLabel: React.FC<CustomLabelProps> = ({ x = 0, y = 0, width, height = 0, value }) => {
     if (!width || width < 50 || !value) return null;
 
     return (
@@ -327,13 +348,13 @@ export const RaidUsageStackChart: React.FC = () => {
 
           {starKeys.map((star) => (
             <Bar key={star} dataKey={star} stackId="a" fill={getBackgroundRatingColor(star, isDark) || '#8884d8'} animationDuration={500}>
-              <LabelList dataKey={star} content={renderCustomizedLabel} />
+              <LabelList dataKey={star} content={<CustomLabel />} />
             </Bar>
           ))}
 
           <ReferenceLine x={100} stroke={isDark == 'dark' ? 'white' : 'black'} strokeDasharray="3 3" />
 
-          <Customized component={TotalCountLabels} />
+          <TotalCountLabels />
         </BarChart>
       </ResponsiveContainer>
     </div>

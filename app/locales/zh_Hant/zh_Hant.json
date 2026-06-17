@@ -25,7 +25,7 @@
     "acquire": "獲得",
     "loop": "循環",
     "rerun": "重跑",
-    "fast": "加速",
+    "fest": "加速",
     "limited": "限時",
     "clear": "清除",
     "period": "期間",
@@ -143,7 +143,12 @@
       "jpStats": "JP 統計",
       "kivotosPeace": "奇普托斯目前處於和平狀態。",
       "noEvent": "目前沒有進行中的活動。"
-    }
+    },
+    "scroll_to_first_page": "第一頁",
+    "scroll_to_prev_page": "上一頁",
+    "scroll_to_next_page": "下一頁",
+    "scroll_to_last_page": "最後一頁",
+    "scroll_to_top": "滾動至頂部"
   },
   "charts": {
     "ranking": {
@@ -360,6 +365,11 @@
     "timeViewUnavailableNotice": "時間視圖因混合難度記錄而無法使用。",
     "byRank": "排名",
     "rankDistribution": "排名分佈",
+    "byDefault": "預設",
+    "byTotalPartyCount": "依隊伍數",
+    "byPartyPosition": "依隊伍順序",
+    "nPartyCount": "{{n}}隊",
+    "nthPosition": "第{{n}}/{{m}}位",
     "select_boss_type_for_stats": "請選擇一個BOSS類型以查看統計資料。",
     "recordLookup": "記錄查詢",
     "lookupPlaceholder": "輸入排名、分數或時間計算（例如，4:00 - 2:30.5）...",
@@ -412,8 +422,18 @@
       "sort_bestRank": "最高分數排序",
       "ignore_position": "忽略配置",
       "placement_variants": "Placement Order Variants",
-      "mulligan_variants": "Starting Hand Variants"
-    }
+      "mulligan_variants": "Starting Hand Variants",
+      "mulligan_view_order": "選取順序",
+      "mopup_filter": "Mop-up party filter"
+    },
+    "videos": "影片",
+    "videos_select_boss": "選擇Boss類型以查看影片。",
+    "videos_empty": "沒有可用影片。",
+    "videos_filter_tl": "僅TL",
+    "videos_filter_target_type": "僅目標類型",
+    "videos_missing_note": "由於自動處理，部分影片可能缺失。",
+    "videos_view_all": "查看全部已分析影片",
+    "videos_external_sites": "推薦的外部網站："
   },
   "dashboardIndex": {
     "title": "儀表板列表",

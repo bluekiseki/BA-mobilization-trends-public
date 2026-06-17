@@ -1,10 +1,10 @@
-import type { EventData, GachaElement, IconData } from '~/types/plannerData';
+import type { EventData, GachaElement, IconData, IconInfo, GachaGroupInfo } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 
 // Define expected content structure for the recursive calculation result
 interface FinalExpectedContent {
   expectedAmount: number;
-  itemInfo: any; // Type this more strictly if possible (IconInfo)
+  itemInfo: IconInfo | GachaGroupInfo | undefined;
   iconSrc: string | undefined;
   type: string;
   id: string;
@@ -67,8 +67,8 @@ export const calculateExpectedContents = (
     } else {
       // Base case: This is a final item (Item, Currency, etc.)
       const itemKey = `${containedItemType}_${containedItemId}`;
-      const containedItemInfo = (eventDataIcons as any)[containedItemType]?.[containedItemId];
-      const containedIconSrc = (iconData as any)[containedItemType]?.[containedItemId];
+      const containedItemInfo = eventDataIcons[containedItemType as keyof typeof eventDataIcons]?.[containedItemId];
+      const containedIconSrc = (iconData[containedItemType] as Record<string, string> | undefined)?.[containedItemId];
       const finalExpectedAmount = totalExpectedCount * expectedAmountPerOpen;
 
       if (finalExpectedAmount > 0) {
@@ -81,7 +81,7 @@ export const calculateExpectedContents = (
             iconSrc: containedIconSrc,
             type: containedItemType,
             id: containedItemId,
-            rarity: containedItemInfo?.Rarity ?? 0,
+            rarity: (containedItemInfo as IconInfo)?.Rarity ?? 0,
           };
         }
       }

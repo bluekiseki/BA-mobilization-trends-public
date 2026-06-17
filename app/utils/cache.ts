@@ -14,8 +14,9 @@ export const useDataCache = <T>() => {
   const dataCache = useRef<Map<string, Promise<T>>>(new Map());
 
   const fetchAndProcessWithCache = useCallback(async (url: string, processor: (res: Response) => Promise<T>, doXor: boolean = true): Promise<T> => {
-    if (dataCache.current.has(url)) {
-      return dataCache.current.get(url)!;
+    const cached = dataCache.current.get(url);
+    if (cached !== undefined) {
+      return cached;
     }
     const promise = (async () => {
       try {

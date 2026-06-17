@@ -1,5 +1,6 @@
 // app/components/planner/RepeatableTab.tsx
 import { useTranslation } from 'react-i18next';
+import { FaLightbulb, FaTrophy } from 'react-icons/fa';
 import type { Locale } from '~/utils/i18n/config';
 import type { EventData, IconData, Mission, Stage } from '~/types/plannerData';
 import Tooltip from 'rc-tooltip';
@@ -9,6 +10,7 @@ import { CustomCheckbox } from '../CustomCheckbox';
 import { ItemIcon } from './common/Icon';
 import type { StagePrio } from './FarmingPlannerTypes';
 import type { JSX } from 'react';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
 
 interface RepeatableTabProps {
   farmingStages: (Stage & { type: 'stage' | 'story' | 'challenge' })[];
@@ -28,7 +30,7 @@ interface RepeatableTabProps {
   handleSetMaxRuns: (stageId: number) => void;
   handleBatchTogglePrio: (start: number, end: number) => void;
   allFirstClearsState: 'unchecked' | 'checked' | 'indeterminate';
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency'>;
   iconData: IconData;
 }
 
@@ -60,7 +62,7 @@ export const RepeatableTab = ({
   const prioButtonInfo: Record<StagePrio, { text: string; className: string }> = {
     include: { text: t('common.include'), className: 'bg-green-500 hover:bg-green-600' },
     priority: { text: t('common.priority'), className: 'bg-blue-500 hover:bg-blue-600' },
-    exclude: { text: t('common.exclude'), className: 'bg-gray-400 hover:bg-gray-500' },
+    exclude: { text: t('common.exclude'), className: 'bg-neutral-400 hover:bg-neutral-500' },
   };
 
   return (
@@ -76,7 +78,7 @@ export const RepeatableTab = ({
           </button>
           {!minimizeRepeatableInfo && (
             <>
-              <span className="text-gray-300 dark:text-neutral-600 mx-1">|</span>
+              <span className="text-neutral-300 dark:text-neutral-600 mx-1">|</span>
               <button onClick={() => setShowOneTimeRewards(!showOneTimeRewards)} className="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                 {showOneTimeRewards ? t('button.hideOneTimeRewards') : t('button.showOneTimeRewards')}
               </button>
@@ -87,27 +89,27 @@ export const RepeatableTab = ({
         {/* Right: Batch operation buttons */}
         <div className="flex flex-wrap items-center gap-2 justify-end">
           <div className="flex items-center gap-2" role="group">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mr-1">{t('button.quickExclude')}</span>
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mr-1">{t('button.quickExclude')}</span>
             <button
               onClick={() => handleBatchTogglePrio(1, 4)}
-              className="bg-gray-500 hover:bg-gray-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold py-1 px-2 rounded-md text-xs"
+              className="bg-neutral-500 hover:bg-neutral-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold py-1 px-2 rounded-md text-xs"
             >
               1-4
             </button>
             <button
               onClick={() => handleBatchTogglePrio(5, 8)}
-              className="bg-gray-500 hover:bg-gray-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold py-1 px-2 rounded-md text-xs"
+              className="bg-neutral-500 hover:bg-neutral-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold py-1 px-2 rounded-md text-xs"
             >
               5-8
             </button>
             <button
               onClick={() => handleBatchTogglePrio(9, 12)}
-              className="bg-gray-500 hover:bg-gray-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold py-1 px-2 rounded-md text-xs"
+              className="bg-neutral-500 hover:bg-neutral-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold py-1 px-2 rounded-md text-xs"
             >
               9-12
             </button>
           </div>
-          <div className="h-4 border-l border-gray-300 dark:border-neutral-600 mx-1"></div>
+          <div className="h-4 border-l border-neutral-300 dark:border-neutral-600 mx-1"></div>
           <label
             className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-1 px-3 rounded-md text-sm cursor-pointer"
             data-component-name="FarmingPlanner_f1"
@@ -162,7 +164,7 @@ export const RepeatableTab = ({
                   {eventRewards.map((r, i) => {
                     const baseAmount = (r.RewardAmount * r.RewardProb) / 10000;
                     const bonusPercent = totalBonus[r.RewardId] || 0;
-                    let amountString = `${baseAmount}+${0}`;
+                    let amountString = `${baseAmount}+0`;
                     if (bonusPercent > 0) {
                       const bonusPart = Math.ceil((baseAmount * bonusPercent) / 10000);
                       amountString = `${baseAmount}+${bonusPart}`;
@@ -197,7 +199,7 @@ export const RepeatableTab = ({
                     value={runCounts[s.Id] || 0}
                     onChange={(e) => handleRunCountChange(s.Id, e || 0)}
                     placeholder={t('common.count')}
-                    className="w-14 py-1 text-base scale-[0.75] rounded bg-gray-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-gray-200"
+                    className="w-14 py-1 text-base scale-[0.75] rounded bg-neutral-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-neutral-200"
                   />
                   <button onClick={() => handleSetMaxRuns(s.Id)} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold px-2 py-1 rounded-md text-xs">
                     M
@@ -217,7 +219,7 @@ export const RepeatableTab = ({
                       .pop()
                       ?.replace('Stage', t('common.stage') + ' ')}
                   </h4>
-                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                     <span className="shrink-0">{s.StageEnterCostAmount}AP</span>
                     <span className="shrink-0">Lv.{s.RecommandLevel}</span>
                     <span className="shrink-0">
@@ -231,7 +233,9 @@ export const RepeatableTab = ({
                         styles={{ root: { maxWidth: '20rem' } }}
                         overlay={<span>{locale === 'ko' ? s.StageHintStr.DescriptionKr : s.StageHintStr.DescriptionJp}</span>}
                       >
-                        <span className="font-bold text-blue-500 dark:text-blue-400 cursor-help shrink-0">💡 {t('common.hint')}</span>
+                        <span className="font-bold text-blue-500 dark:text-blue-400 cursor-help shrink-0">
+                          <FaLightbulb className="inline mr-1" /> {t('common.hint')}
+                        </span>
                       </Tooltip>
                     )}
                     {associatedMissions && (
@@ -246,20 +250,22 @@ export const RepeatableTab = ({
                           </div>
                         }
                       >
-                        <span className="font-bold text-yellow-600 dark:text-yellow-500 cursor-help shrink-0">🏆 {t('common.mission')}</span>
+                        <span className="font-bold text-yellow-600 dark:text-yellow-500 cursor-help shrink-0">
+                          <FaTrophy className="inline mr-1 text-yellow-500" /> {t('common.mission')}
+                        </span>
                       </Tooltip>
                     )}
                     <label
-                      className="flex items-center space-x-1.5 cursor-pointer p-1 rounded hover:bg-gray-200 dark:hover:bg-neutral-700 shrink-0 sm:w-full"
+                      className="flex items-center space-x-1.5 cursor-pointer p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 shrink-0 sm:w-full"
                       title={t('button.includeOneTimeRewards')}
                     >
                       <input
                         type="checkbox"
-                        checked={!!firstClears[s.Id]}
+                        checked={firstClears[s.Id]}
                         onChange={() => handleFirstClearToggle(s.Id)}
-                        className="h-4 w-4 rounded border-gray-300 dark:border-neutral-600 bg-transparent"
+                        className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600 bg-transparent"
                       />
-                      <span className="text-gray-700 dark:text-gray-300 whitespace-nowrap overflow-hidden text-ellipsis">{t('button.includeOneTimeRewards')}</span>
+                      <span className="text-neutral-700 dark:text-neutral-300 whitespace-nowrap overflow-hidden text-ellipsis">{t('button.includeOneTimeRewards')}</span>
                     </label>
                   </div>
                 </div>
@@ -293,7 +299,7 @@ export const RepeatableTab = ({
                           if (isOneTimeReward && !showOneTimeRewards) return;
 
                           let label: string | null = null;
-                          let labelColor = 'bg-gray-700';
+                          let labelColor = 'bg-neutral-700';
                           switch (r.RewardTagStr) {
                             case 'FirstClear':
                               label = 'First';
@@ -395,7 +401,7 @@ export const RepeatableTab = ({
                     value={runCounts[s.Id] || 0}
                     onChange={(e) => handleRunCountChange(s.Id, e || 0)}
                     placeholder={t('common.count')}
-                    className="grow sm:grow-0 w-14 py-1 text-base scale-[0.75] rounded bg-gray-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-gray-200"
+                    className="grow sm:grow-0 w-14 py-1 text-base scale-[0.75] rounded bg-neutral-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-neutral-200"
                   />
                   <button onClick={() => handleSetMaxRuns(s.Id)} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold px-2.5 py-1 rounded-md text-xs">
                     MAX

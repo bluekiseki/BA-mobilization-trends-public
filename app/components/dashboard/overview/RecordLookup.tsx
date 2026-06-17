@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTimeToTimestamp } from '~/utils/time';
-import { getDifficultyFromScoreAndBoss, type DifficultyName, getBracketFromTotalScore, getBracketColorFromTotalScore, getDifficultyInfoFromScoreAndBoss } from '~/components/Difficulty';
+import { getDifficultyFromScoreAndBoss, type DifficultyName, getBracketFromTotalScore, getBracketColorFromTotalScore, getDifficultyInfoFromScoreAndBoss } from '~/components/raid/Difficulty';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { calculateScoreFromTime, calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
@@ -35,8 +35,8 @@ const getDifficultyName = (score: number, server: GameServer, id: string): Diffi
 const SearchResultCard: React.FC<{
   result: SearchResult;
   isTotalChart: boolean;
-  t: TFunction<'dashboard', undefined>;
-}> = React.memo(({ result, isTotalChart, t }) => {
+  // t: TFunction<'dashboard'>;
+}> = React.memo(({ result, isTotalChart }) => {
   const color = isTotalChart ? getBracketColorFromTotalScore(result.score || 0) : result.difficulty ? DIFFICULTY_COLORS[result.difficulty] || '#9ca3af' : '#9ca3af';
 
   const contextText = isTotalChart ? result.bracket : result.difficulty;
@@ -87,7 +87,7 @@ interface UseRecordSearchProps {
   raidInfo: RaidInfo;
   server: GameServer;
   // t: (key: string, options?: any) => string;
-  t: TFunction<'dashboard', undefined>;
+  t: TFunction<'dashboard'>;
 }
 
 const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
@@ -100,7 +100,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
       rank,
       score,
       time: isTotalChart ? undefined : formatTimeToTimestamp(calculateTimeFromScore(score, raidInfo.Boss, server, raidInfo.Id) || 0),
-      difficulty: isTotalChart ? undefined : (context as DifficultyName), // context is DifficultyName
+      difficulty: isTotalChart ? undefined : context /* as DifficultyName*/, // context is DifficultyName
       bracket: isTotalChart ? context : undefined, // context is BracketName
     };
   };
@@ -303,7 +303,7 @@ export const RecordLookup: React.FC<RecordLookupProps> = React.memo(({ scores, r
       const index = fullDifficultyOrder.indexOf(rankOneDifficulty);
       if (index !== -1) maxAchievedIndex = index;
     }
-    return fullDifficultyOrder.slice(maxAchievedIndex) as DifficultyName[];
+    return fullDifficultyOrder.slice(maxAchievedIndex); // as DifficultyName[];
   }, [scores, fullDifficultyOrder]);
 
   const isSearchQuery = isTotalChart || /[\d:.\s+]/.test(searchTerm);
@@ -360,7 +360,7 @@ export const RecordLookup: React.FC<RecordLookupProps> = React.memo(({ scores, r
             ))}
 
           <div className="relative grow flex items-center min-w-[150px]">
-            <div className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 pointer-events-none">
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 pointer-events-none">
               <FiSearch size={18} />
             </div>
 
@@ -379,18 +379,18 @@ export const RecordLookup: React.FC<RecordLookupProps> = React.memo(({ scores, r
           <div className="absolute w-full mt-1 bg-white dark:bg-neutral-800 rounded-lg shadow-lg border dark:border-neutral-700 z-10 max-h-100 overflow-y-auto">
             {isSearchQuery ? (
               searchResults.length > 0 ? (
-                searchResults.map((res, i) => <SearchResultCard key={i} result={res} isTotalChart={isTotalChart} t={t} />)
+                searchResults.map((res, i) => <SearchResultCard key={i} result={res} isTotalChart={isTotalChart} /*t={t}*/ />)
               ) : (
-                <p className="p-3 text-center text-sm text-gray-500">{t('noResults')}</p>
+                <p className="p-3 text-center text-sm text-neutral-500">{t('noResults')}</p>
               )
             ) : availableFilterOptions.length > 0 ? (
               availableFilterOptions.map((diff) => (
-                <button key={diff} onClick={() => toggleFilter(diff)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-700">
+                <button key={diff} onClick={() => toggleFilter(diff)} className="w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700">
                   {diff}
                 </button>
               ))
             ) : (
-              <p className="p-3 text-center text-sm text-gray-500">{t('noMoreFilters')}</p>
+              <p className="p-3 text-center text-sm text-neutral-500">{t('noMoreFilters')}</p>
             )}
           </div>
         )}

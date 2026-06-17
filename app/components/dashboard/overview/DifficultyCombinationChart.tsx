@@ -21,8 +21,9 @@ interface GrandAssaultTotalScoreAnalysisProps {
 }
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { getDifficultyFromScoreAndBoss, getBracketFromTotalScore, getBracketColorFromTotalScore } from '~/components/Difficulty';
+import { ResponsiveContainer, PieChart, Pie, Sector } from 'recharts';
+import type { PieLabelRenderProps, PieSectorShapeProps } from 'recharts';
+import { getDifficultyFromScoreAndBoss, getBracketFromTotalScore, getBracketColorFromTotalScore } from '~/components/raid/Difficulty';
 import type { FullData, GameServer, RaidInfo } from '~/types/data';
 import ReactDOMServer from 'react-dom/server';
 import { TIER_COLORS, TIER_ORDER } from '~/data/raidInfo';
@@ -42,10 +43,10 @@ interface ChartData {
   percent?: number;
   color?: string;
   fill?: string;
-  [key: string]: any;
+  score?: number;
 }
 
-const CustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }: any) => {
+const CustomizedLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, percent = 0, name, value = 0 }: Partial<PieLabelRenderProps>) => {
   if (percent < 2) return null;
 
   const RADIAN = Math.PI / 180;
@@ -69,16 +70,16 @@ const TooltipContent = ({ data }: { data: ChartData }) => {
   const { t } = useTranslation('dashboard');
 
   const name = data.name;
-  const value = data.value.toLocaleString() as any;
+  const value = data.value.toLocaleString() as unknown;
   const percent = data.percent;
   return (
     <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm p-3 border rounded-lg shadow-lg text-sm">
       <div className="flex items-center mb-1">
         <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: data.color || data.fill }} />
-        <p className="font-bold text-gray-800 dark:text-gray-100">{name}</p>
+        <p className="font-bold text-neutral-800 dark:text-neutral-100">{name}</p>
       </div>
-      <p className="text-gray-700 dark:text-gray-300">{t('tooltipPlayers', { count: value })}</p>
-      {percent !== undefined && <p className="text-gray-600 dark:text-gray-400">{t('tooltipRatio', { percent: percent.toFixed(1) })}</p>}
+      <p className="text-neutral-700 dark:text-neutral-300">{t('tooltipPlayers', { count: value })}</p>
+      {percent !== undefined && <p className="text-neutral-600 dark:text-neutral-400">{t('tooltipRatio', { percent: percent.toFixed(1) })}</p>}
     </div>
   );
 };
@@ -198,7 +199,7 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
     return { tier: donutTierData, group: donutGroupData };
   }, [donutTierData, donutGroupData]);
 
-  const handleMouseEnter = (data: ChartData, event: React.MouseEvent) => {
+  const handleMouseEnter = (data: ChartData, _event: React.MouseEvent) => {
     const tooltipNode = tooltipRef.current;
     if (!tooltipNode) return;
     const htmlContent = ReactDOMServer.renderToStaticMarkup(<TooltipContent data={data} />);
@@ -248,21 +249,21 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
     <div className="p-0 bg-neutral-50 dark:bg-neutral-900 space-y-8" onMouseLeave={handleMouseLeave}>
       <Card title={t('donutChartTitle')} className="space-y-4">
         <h3 className="text-sm mb-2">{t('donutChartSubtitle')}</h3>
-        <div className="p-2 bg-gray-50 dark:bg-neutral-800/50 border dark:border-neutral-700 rounded-lg flex justify-between items-center">
+        <div className="p-2 bg-neutral-50 dark:bg-neutral-800/50 border dark:border-neutral-700 rounded-lg flex justify-between items-center">
           <div>
             <label className="text-sm font-bold">{t('groupingCriteria')}</label>
             <div className="flex gap-2 mt-1">
-              {/* <button onClick={() => setDonutFilter(p => ({ ...p, grouping: 'actual' }))} className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'actual' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-700'}`}>{t('actualCombination')}</button> */}
+              {/* <button onClick={() => setDonutFilter(p => ({ ...p, grouping: 'actual' }))} className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'actual' ? 'bg-blue-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700'}`}>{t('actualCombination')}</button> */}
               <button
                 onClick={() => setDonutFilter((p) => ({ ...p, grouping: 'bracket' }))}
-                className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'bracket' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-neutral-700'}`}
+                className={`px-2 py-1 text-xs rounded ${donutFilter.grouping === 'bracket' ? 'bg-blue-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700'}`}
               >
                 {t('scoreCutBracket')}
               </button>
             </div>
           </div>
           {donutFilter.selectedTier && (
-            <button onClick={() => setDonutFilter((p) => ({ ...p, selectedTier: null }))} className="px-3 py-1 text-sm bg-gray-300 dark:bg-neutral-600 rounded">
+            <button onClick={() => setDonutFilter((p) => ({ ...p, selectedTier: null }))} className="px-3 py-1 text-sm bg-neutral-300 dark:bg-neutral-600 rounded">
               {t('viewAll')}
             </button>
           )}
@@ -287,35 +288,47 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
                 }
                 labelLine={false}
                 label={<CustomizedLabel />}
-              >
-                {donutData.tier.map((entry) => (
-                  <Cell
-                    key={`cell-tier-${entry.name}`}
-                    fill={TIER_COLORS[entry.name]}
-                    className={`
-                                    cursor-pointer
-                                    transition-opacity
-                                    duration-300
-                                    ${donutFilter.selectedTier && donutFilter.selectedTier !== entry.name ? 'opacity-30' : 'opacity-100'}
-                                    `}
-                    onMouseEnter={(e) => handleMouseEnter(entry, e)}
-                    onMouseLeave={handleMouseLeave}
-                    onTouchStart={(e) => handleTouchStart(entry, e)}
-                  />
-                ))}
-              </Pie>
-              <Pie data={donutData.group} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="90%" innerRadius="61%" labelLine={false} label={<CustomizedLabel />}>
-                {donutData.group.map((entry) => (
-                  <Cell
-                    key={`cell-group-${entry.name}`}
-                    fill={entry.color}
-                    className="cursor-pointer"
-                    onMouseEnter={(e) => handleMouseEnter(entry, e)}
-                    onMouseLeave={handleMouseLeave}
-                    onTouchStart={(e) => handleTouchStart(entry, e)}
-                  />
-                ))}
-              </Pie>
+                shape={(props: PieSectorShapeProps) => {
+                  const entry = donutData.tier[props.index];
+                  if (!entry) return <Sector {...props} />;
+                  const fill = TIER_COLORS[entry.name];
+                  return (
+                    <Sector
+                      {...props}
+                      fill={fill}
+                      className={`cursor-pointer transition-opacity duration-300 ${donutFilter.selectedTier && donutFilter.selectedTier !== entry.name ? 'opacity-30' : 'opacity-100'}`}
+                      onMouseEnter={(e) => handleMouseEnter(entry, e)}
+                      onMouseLeave={handleMouseLeave}
+                      onTouchStart={(e) => handleTouchStart(entry, e)}
+                    />
+                  );
+                }}
+              />
+              <Pie
+                data={donutData.group}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius="90%"
+                innerRadius="61%"
+                labelLine={false}
+                label={<CustomizedLabel />}
+                shape={(props: PieSectorShapeProps) => {
+                  const entry = donutData.group[props.index];
+                  if (!entry) return <Sector {...props} />;
+                  return (
+                    <Sector
+                      {...props}
+                      fill={entry.color}
+                      className="cursor-pointer"
+                      onMouseEnter={(e) => handleMouseEnter(entry, e)}
+                      onMouseLeave={handleMouseLeave}
+                      onTouchStart={(e) => handleTouchStart(entry, e)}
+                    />
+                  );
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
 
@@ -334,10 +347,10 @@ export default function GrandAssaultTotalScoreAnalysis({ fullData, raidInfos, ti
 
         <div className="flex flex-wrap justify-center gap-2">
           {donutData.group.map((item) => (
-            <div key={item.name} className="p-1 px-1.5 rounded-lg bg-gray-100 dark:bg-neutral-800 text-xs flex items-center gap-2">
+            <div key={item.name} className="p-1 px-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-xs flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
               <span className="font-semibold">{item.name}</span>
-              <span className="font-mono text-gray-600 dark:text-gray-400">{item.value.toLocaleString()}</span>
+              <span className="font-mono text-neutral-600 dark:text-neutral-400">{item.value.toLocaleString()}</span>
             </div>
           ))}
         </div>

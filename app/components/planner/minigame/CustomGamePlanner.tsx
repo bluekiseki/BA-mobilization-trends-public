@@ -3,9 +3,12 @@ import { ItemIcon } from '../common/Icon';
 import type { EventData, IconData, IconInfos } from '~/types/plannerData';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useTranslation } from 'react-i18next';
-import { ChevronIcon } from '~/components/Icon';
+
 import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from '../common/locale';
+import { type CustomGameItem } from '~/types/minigame/customGame';
+
+export type { CustomGameItem };
 
 export type CustomGameResult = {
   cost: { key: string; amount: number } | null;
@@ -20,12 +23,6 @@ interface CustomGamePlannerProps {
   remainingCurrency: Record<number, number>;
 }
 
-export interface CustomGameItem {
-  type: string;
-  id: string;
-  amount: number;
-}
-
 type CustomGameSelectorType = 'cost' | 'reward' | 'oneTimeReward';
 export interface CustomGameSelecting {
   type: CustomGameSelectorType;
@@ -33,25 +30,26 @@ export interface CustomGameSelecting {
 }
 
 export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: CustomGamePlannerProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   const [isSelecting, setIsSelecting] = useState<{
     type: 'cost' | 'reward' | 'oneTimeReward';
     index?: number;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { plan, setCustomGameCost: setCost, setCustomGameRewards: setRewards, setCustomGameOneTimeRewards: setOneTimeRewards, setCustomGamePlays: setPlays } = usePlanForEvent(eventId);
-
-  const { customGamePlays: plays, customGameCost: cost, customGameRewards: rewards, customGameOneTimeRewards: oneTimeRewards } = plan;
+  const {
+    customGamePlays: plays,
+    customGameCost: cost,
+    customGameRewards: rewards,
+    customGameOneTimeRewards: oneTimeRewards,
+    setCustomGameCost: setCost,
+    setCustomGameRewards: setRewards,
+    setCustomGameOneTimeRewards: setOneTimeRewards,
+    setCustomGamePlays: setPlays,
+  } = usePlanForEvent(eventId);
 
   const { t } = useTranslation('planner');
   const { t: t_c, i18n } = useTranslation('common');
   const locale = i18n.language as Locale;
-
-  if (plays === undefined || cost === undefined || rewards === undefined || oneTimeRewards === undefined) {
-    return null;
-  }
 
   const farmingItemsForCost = useMemo(() => {
     const farmingItemIds = new Set<number>();
@@ -86,7 +84,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
     const items: { type: string; id: string }[] = [];
     if (eventData.icons) {
       for (const type in eventData.icons) {
-        for (const id in (eventData.icons as any)[type]) {
+        for (const id in eventData.icons[type as keyof typeof eventData.icons]) {
           items.push({ type, id });
         }
       }
@@ -194,7 +192,8 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
   const handleSetMaxPlays = () => {
     if (!cost || rewards.length === 0) return;
     let maxRequiredPlays = 0;
-    for (let [itemIdStr, deficit] of Object.entries(remainingCurrency)) {
+    for (const [itemIdStr, initialDeficit] of Object.entries(remainingCurrency)) {
+      let deficit = initialDeficit;
       const neededItemId = Number(itemIdStr);
       const rewardInfo = rewards.find((r) => r.type === 'Item' && Number(r.id) === neededItemId);
       if (rewardInfo) deficit -= rewardInfo.amount * plays;
@@ -241,131 +240,124 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
 
   return (
     <>
-      <div className="flex justify-between items-center cursor-pointer group" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('customGamePlanner.title')}</h2>
-        <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
-          <ChevronIcon className={isCollapsed ? 'rotate-180' : ''} />
-        </span>
-      </div>
-      {!isCollapsed && (
-        <div className="mt-4 space-y-4">
-          <div className="p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-lg space-y-3">
-            <div>
-              <label className="text-sm font-bold dark:text-gray-300">{t('customGamePlanner.setCostPerExchange')}</label>
-              <div className="flex items-center gap-2 mt-1">
-                <button
-                  onClick={() => setIsSelecting({ type: 'cost' })}
-                  className="w-16 h-16 bg-white dark:bg-neutral-700 border-2 border-dashed dark:border-neutral-600 rounded-md flex items-center justify-center"
-                >
-                  {cost ? (
-                    <ItemIcon type={cost.type} itemId={cost.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
-                  ) : (
-                    <span className="text-2xl text-gray-400 dark:text-gray-500">+</span>
-                  )}
-                </button>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder={t('customGamePlanner.amountPlaceholder')}
-                  value={cost?.amount || ''}
-                  onChange={(e) => setCost(((c) => (c ? { ...c, amount: parseFloat(e.target.value) || 0 } : null))(cost))}
-                  className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-bold dark:text-gray-300">{t('customGamePlanner.setRewardPerExchange')}</label>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                {rewards.map((reward, index) => (
-                  <div key={index} className="flex items-center gap-1 p-1 bg-white border rounded-md">
-                    <ItemIcon type={reward.type} itemId={reward.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder={t('customGamePlanner.amountPlaceholder')}
-                      value={reward.amount}
-                      onChange={(e) =>
-                        setRewards(
-                          ((r) => {
-                            const nr = [...r];
-                            nr[index].amount = parseFloat(e.target.value) || 0;
-                            return nr;
-                          })(rewards),
-                        )
-                      }
-                      className="w-16 p-1 text-sm rounded border"
-                    />
-                    <button onClick={() => setRewards(((r) => r.filter((_, i) => i !== index))(rewards))} className="text-red-500 font-bold text-lg">
-                      ×
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => setIsSelecting({ type: 'reward' })}
-                  className="w-12 h-12 bg-white dark:bg-neutral-700 border-2 border-dashed dark:border-neutral-600 rounded-md flex items-center justify-center text-2xl text-gray-400 dark:text-gray-500"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-bold">{t('ui.oneTimeReward')}</label>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                {oneTimeRewards.map((reward, index) => (
-                  <div key={index} className="flex items-center gap-1 p-1 bg-white dark:bg-neutral-700/50 border dark:border-neutral-600 rounded-md">
-                    <ItemIcon type={reward.type} itemId={reward.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
-
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder={t('customGamePlanner.amountPlaceholder')}
-                      value={reward.amount}
-                      onChange={(e) =>
-                        setOneTimeRewards(
-                          ((r) => {
-                            const nr = [...r];
-                            nr[index].amount = parseFloat(e.target.value) || 0;
-                            return nr;
-                          })(oneTimeRewards),
-                        )
-                      }
-                      className="w-16 p-1 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
-                    />
-                    <button onClick={() => setOneTimeRewards(((r) => r.filter((_, i) => i !== index))(oneTimeRewards))} className="text-red-500 font-bold text-lg">
-                      ×
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => setIsSelecting({ type: 'oneTimeReward' })}
-                  className="w-12 h-12 bg-white dark:bg-neutral-700 border-2 border-dashed dark:border-neutral-600 rounded-md flex items-center justify-center text-2xl text-gray-400 dark:text-gray-500"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
-            <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('customGamePlanner.planSettingsTotalExchanges')}</h3>
-            <div className="flex items-center gap-2">
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('customGamePlanner.title')}</h2>
+      <div className="mt-4 space-y-4">
+        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg space-y-3">
+          <div>
+            <label className="text-sm font-bold dark:text-neutral-300">{t('customGamePlanner.setCostPerExchange')}</label>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={() => setIsSelecting({ type: 'cost' })}
+                className="w-16 h-16 bg-white dark:bg-neutral-700 border-2 border-dashed dark:border-neutral-600 rounded-md flex items-center justify-center"
+              >
+                {cost ? (
+                  <ItemIcon type={cost.type} itemId={cost.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
+                ) : (
+                  <span className="text-2xl text-neutral-400 dark:text-neutral-500">+</span>
+                )}
+              </button>
               <input
                 type="number"
-                placeholder={t('customGamePlanner.exchangeCountPlaceholder')}
-                value={plays || ''}
-                onChange={(e) => setPlays(parseInt(e.target.value) || 0)}
-                className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-gray-200"
+                step="any"
+                placeholder={t('customGamePlanner.amountPlaceholder')}
+                value={cost?.amount || ''}
+                onChange={(e) => setCost(((c) => (c ? { ...c, amount: parseFloat(e.target.value) || 0 } : null))(cost))}
+                className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
               />
-              <button onClick={handleSetMaxPlays} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0">
-                {t('customGamePlanner.setToMax')}
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-bold dark:text-neutral-300">{t('customGamePlanner.setRewardPerExchange')}</label>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              {rewards.map((reward, index) => (
+                <div key={index} className="flex items-center gap-1 p-1 bg-white border rounded-md">
+                  <ItemIcon type={reward.type} itemId={reward.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder={t('customGamePlanner.amountPlaceholder')}
+                    value={reward.amount}
+                    onChange={(e) =>
+                      setRewards(
+                        ((r) => {
+                          const nr = [...r];
+                          nr[index].amount = parseFloat(e.target.value) || 0;
+                          return nr;
+                        })(rewards),
+                      )
+                    }
+                    className="w-16 p-1 text-sm rounded border"
+                  />
+                  <button onClick={() => setRewards(((r) => r.filter((_, i) => i !== index))(rewards))} className="text-red-500 font-bold text-lg">
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => setIsSelecting({ type: 'reward' })}
+                className="w-12 h-12 bg-white dark:bg-neutral-700 border-2 border-dashed dark:border-neutral-600 rounded-md flex items-center justify-center text-2xl text-neutral-400 dark:text-neutral-500"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-bold">{t('ui.oneTimeReward')}</label>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              {oneTimeRewards.map((reward, index) => (
+                <div key={index} className="flex items-center gap-1 p-1 bg-white dark:bg-neutral-700/50 border dark:border-neutral-600 rounded-md">
+                  <ItemIcon type={reward.type} itemId={reward.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
+
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder={t('customGamePlanner.amountPlaceholder')}
+                    value={reward.amount}
+                    onChange={(e) =>
+                      setOneTimeRewards(
+                        ((r) => {
+                          const nr = [...r];
+                          nr[index].amount = parseFloat(e.target.value) || 0;
+                          return nr;
+                        })(oneTimeRewards),
+                      )
+                    }
+                    className="w-16 p-1 text-sm rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
+                  />
+                  <button onClick={() => setOneTimeRewards(((r) => r.filter((_, i) => i !== index))(oneTimeRewards))} className="text-red-500 font-bold text-lg">
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => setIsSelecting({ type: 'oneTimeReward' })}
+                className="w-12 h-12 bg-white dark:bg-neutral-700 border-2 border-dashed dark:border-neutral-600 rounded-md flex items-center justify-center text-2xl text-neutral-400 dark:text-neutral-500"
+              >
+                +
               </button>
             </div>
           </div>
         </div>
-      )}
+        <div className="p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg">
+          <h3 className="font-bold text-sm mb-2 dark:text-yellow-200">{t('customGamePlanner.planSettingsTotalExchanges')}</h3>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder={t('customGamePlanner.exchangeCountPlaceholder')}
+              value={plays || ''}
+              onChange={(e) => setPlays(parseInt(e.target.value) || 0)}
+              className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
+            />
+            <button onClick={handleSetMaxPlays} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0">
+              {t('customGamePlanner.setToMax')}
+            </button>
+          </div>
+        </div>
+      </div>
       {isSelecting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-51 p-4">
           <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg w-full max-w-2xl flex flex-col">
-            <h3 className="font-bold text-lg mb-2 dark:text-gray-100">{isSelecting.type === 'cost' ? t('ui.selectCostItem') : t('ui.selectRewardItemAll')}</h3>
+            <h3 className="font-bold text-lg mb-2 dark:text-neutral-100">{isSelecting.type === 'cost' ? t('ui.selectCostItem') : t('ui.selectRewardItemAll')}</h3>
 
             {/* Search input window */}
             <input
@@ -373,7 +365,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
               placeholder={t('ui.searchItem')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full p-2 mb-2 border rounded-md bg-transparent dark:border-neutral-600 dark:text-gray-200"
+              className="w-full p-2 mb-2 border rounded-md bg-transparent dark:border-neutral-600 dark:text-neutral-200"
               autoFocus
             />
 
@@ -384,9 +376,9 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
                   <ItemIcon type={item.type} itemId={item.id} amount={0} size={10} eventData={eventData} iconData={iconData} />
                 </div>
               ))}
-              {displayedItems.length === 0 && <div className="w-full text-center text-gray-500 py-4">{t('ui.searchNoResult')}</div>}
+              {displayedItems.length === 0 && <div className="w-full text-center text-neutral-500 py-4">{t('ui.searchNoResult')}</div>}
             </div>
-            <button onClick={handleCloseModal} className="w-full mt-4 bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 py-2 rounded-md">
+            <button onClick={handleCloseModal} className="w-full mt-4 bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 py-2 rounded-md">
               {t_c('close')}
             </button>
           </div>

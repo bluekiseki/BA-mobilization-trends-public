@@ -5,12 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { WithNonNullable } from '~/utils/WithNonNullable';
 
 export type TotalBonusMap = { [itemUniqueId: number]: number };
 
 interface BonusSelectorProps {
   eventId: number;
-  eventData: EventData;
+  eventData: WithNonNullable<EventData, 'currency' | 'bonus'>; //NonNullable<EventData["currency"|"bonus"]>;
   iconData: IconData;
   allStudents: StudentData;
   studentPortraits: StudentPortraitData;
@@ -52,10 +53,10 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
       .map((id) => {
         const studentInfo = allStudents[Number(id)];
         const bonusInfo = bonusData[id];
-        const totalBonusValue = bonusInfo.BonusPercentage.reduce((sum, current) => sum + current, 0);
+        const totalBonusValue = bonusInfo?.BonusPercentage.reduce((sum, current) => sum + current, 0);
         return {
           id,
-          name: studentInfo?.Name || `${id}`,
+          name: studentInfo?.Name || id,
           portrait: studentPortraits[Number(id)],
           totalBonusValue,
         };
@@ -78,14 +79,14 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
 
   const totalBonus = useMemo(() => {
     const finalBonusMap: TotalBonusMap = {};
-    if (!eventData) return finalBonusMap;
+    // if (!eventData) return finalBonusMap;
 
     eventData.currency.forEach((currency) => {
       const itemType = currency.EventContentItemType;
       const itemUniqueId = currency.ItemUniqueId;
       const relevantStudents = selectedStudents
         .map((id) => {
-          const bonusInfo = eventData.bonus[id as keyof typeof eventData.bonus];
+          const bonusInfo = eventData.bonus[id];
           const studentInfo = allStudents[Number(id)];
           if (!bonusInfo) return null;
           const typeIndex = bonusInfo.EventContentItemType.indexOf(itemType);
@@ -184,7 +185,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
         onClick={() => onSelectStudent(student.id)}
         title={student.name}
         className={`w-14 cursor-pointer relative rounded-sm overflow-hidden transition-all duration-200 flex flex-col group
-          ${isSelected ? 'ring-2 dark:ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm shadow-blue-500/50' : 'ring-1 ring-gray-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800 opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
+          ${isSelected ? 'ring-2 dark:ring-1 ring-blue-500 dark:ring-blue-400 shadow-sm shadow-blue-500/50' : 'ring-1 ring-neutral-200 dark:ring-neutral-700 bg-white dark:bg-neutral-800 opacity-60 hover:opacity-100 hover:-translate-y-1'}`}
       >
         {isSelected && (
           <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800">
@@ -198,7 +199,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
           className={`p-0.5 text-center grow flex flex-col justify-center
             ${isSelected ? 'bg-white dark:bg-neutral-800' : ''}`}
         >
-          <div className={`mt-0.5 text-[10px] leading-tight flex flex-col items-center gap-0.5 ${isSelected ? 'dark:text-blue-100' : 'text-gray-600 dark:text-gray-400'}`}>
+          <div className={`mt-0.5 text-[10px] leading-tight flex flex-col items-center gap-0.5 ${isSelected ? 'dark:text-blue-100' : 'text-neutral-600 dark:text-neutral-400'}`}>
             {bonusInfo.EventContentItemType.map((type, index) => {
               const item = eventData.currency.find((c) => c.EventContentItemType === type);
               if (!item) return null;
@@ -224,7 +225,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
       {/* Header: Title on left, controls on right. */}
       <div className="flex flex-wrap justify-between items-center cursor-pointer group pt-6 gap-3">
         {/* 1. Title (Always left-aligned) */}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">{t('ui.bonusStudent')}</h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 shrink-0">{t('ui.bonusStudent')}</h2>
 
         {/* Wrapper for all controls, aligned to the right */}
         <div className="flex flex-wrap justify-end items-center gap-2">
@@ -237,7 +238,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
                 onClick={() => handleToggleFilter(currency.itemType)}
                 title={String(currency.itemUniqueId)}
                 className={`relative w-9 h-9 p-1 rounded-md transition-all transform hover:scale-110 ${
-                  isActive ? 'bg-white dark:bg-neutral-700 ring-2 dark:ring-1 ring-blue-500' : 'bg-gray-200 dark:bg-neutral-800 opacity-60 hover:opacity-100'
+                  isActive ? 'bg-white dark:bg-neutral-700 ring-2 dark:ring-1 ring-blue-500' : 'bg-neutral-200 dark:bg-neutral-800 opacity-60 hover:opacity-100'
                 }`}
               >
                 <img src={`data:image/webp;base64,${currency.icon}`} className="w-full h-full object-contain" alt={String(currency.itemUniqueId)} />
@@ -253,7 +254,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
           })}
 
           {/* Visual Separator */}
-          <div className="border-l border-gray-300 dark:border-neutral-600 h-9 mx-1"></div>
+          <div className="border-l border-neutral-300 dark:border-neutral-600 h-9 mx-1"></div>
 
           {/* 3. Split View Toggle */}
           <button
@@ -261,14 +262,14 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
             className={`font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9 ${
               isSplitView
                 ? 'bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white'
-                : 'bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-gray-700 dark:text-gray-300'
+                : 'bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300'
             }`}
           >
             {t('button.splitView')}
           </button>
 
           {/* Visual Separator */}
-          <div className="border-l border-gray-300 dark:border-neutral-600 h-9 mx-1"></div>
+          <div className="border-l border-neutral-300 dark:border-neutral-600 h-9 mx-1"></div>
 
           {/* 4. Action Buttons */}
           <button
@@ -283,14 +284,14 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
             className={`font-bold text-xs py-1 px-3 rounded-md transition-all h-9 ${
               growthPlans.length
                 ? 'bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white hover:scale-105 active:scale-95'
-                : 'bg-gray-300 dark:bg-neutral-600 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50'
+                : 'bg-neutral-300 dark:bg-neutral-600 text-neutral-500 dark:text-neutral-400 cursor-not-allowed opacity-50'
             }`}
           >
             {t('button.selectFromMyPool')}
           </button>
           <button
             onClick={handleDeselectAll}
-            className="bg-gray-400 hover:bg-gray-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9"
+            className="bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9"
           >
             {t('button.deselectAll')}
           </button>
@@ -307,7 +308,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
                   Striker
                 </span>
                 <div className="flex-1 border-t" style={{ borderColor: '#cc1a2540' }}></div>
-                <span className="text-xs text-gray-400 dark:text-gray-500">{strikerStudents.length}</span>
+                <span className="text-xs text-neutral-400 dark:text-neutral-500">{strikerStudents.length}</span>
               </div>
               <div className="flex flex-wrap gap-3 justify-center">{strikerStudents.map(renderStudentCard)}</div>
             </div>
@@ -319,7 +320,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
                   Special
                 </span>
                 <div className="flex-1 border-t" style={{ borderColor: '#006bff40' }}></div>
-                <span className="text-xs text-gray-400 dark:text-gray-500">{specialStudents.length}</span>
+                <span className="text-xs text-neutral-400 dark:text-neutral-500">{specialStudents.length}</span>
               </div>
               <div className="flex flex-wrap gap-3 justify-center">{specialStudents.map(renderStudentCard)}</div>
             </div>

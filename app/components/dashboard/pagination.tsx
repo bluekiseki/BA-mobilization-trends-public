@@ -32,10 +32,10 @@ export const Pagination: React.FC<{
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     handlePageSubmit();
-    (e.target as HTMLFormElement).querySelector('input')?.blur();
+    e.target.querySelector('input')?.blur();
   };
 
   const buttonClasses =

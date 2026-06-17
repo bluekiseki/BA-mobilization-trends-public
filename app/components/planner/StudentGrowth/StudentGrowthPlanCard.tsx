@@ -4,7 +4,9 @@ import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore';
 import type { EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
-import eventList from '~/data/jp/eventList.json';
+import eventListJsonRaw from '~/data/jp/eventList.json';
+import type { EventListData } from '~/types/eventList';
+const eventList = eventListJsonRaw as unknown as EventListData;
 
 // Sub-components
 import { GrowthAccordion } from './GrowthAccordion';
@@ -19,7 +21,7 @@ import { MAX_LEVEL, uwMaxLevelMap } from './const';
 // Icons
 import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo, FiDollarSign } from 'react-icons/fi';
 import { IoSync } from 'react-icons/io5';
-import { StarRating } from '~/components/StarRatingProps';
+import { StarRating } from '~/components/StarRating';
 import { getStarValue } from '~/components/dashboard/common';
 import { getGiftAffectionList } from './giftAffectionList';
 
@@ -229,7 +231,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       cur: (
         <div className="flex items-center gap-1.5">
           <span>Lv.{plan.current.level}</span>
-          <span className="text-gray-300 dark:text-neutral-450">/</span>
+          <span className="text-neutral-300 dark:text-neutral-450">/</span>
           <div className="-mt-0.5">
             <StarRating n={getStarValue(plan.current.star, plan.current.uw)} />
           </div>
@@ -238,7 +240,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       tar: (
         <div className="flex items-center gap-1.5">
           <span>Lv.{plan.target.level}</span>
-          <span className="text-gray-300 dark:text-neutral-450">/</span>
+          <span className="text-neutral-300 dark:text-neutral-450">/</span>
           <div className="-mt-0.5">
             <StarRating n={getStarValue(plan.target.star, plan.target.uw)} />
           </div>
@@ -259,7 +261,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
   const sortedEvents = useMemo(
     () =>
       Object.entries(eventList)
-        .filter(([id, details]) => (details as any)['Planable'] != false)
+        .filter(([, details]) => details.Planable != false)
         .map(([id, details]) => ({ id: Number(id), name: `${Number(id) > 10000 ? `[${t('common.rerun')}] ` : ''}${details.Kr}` }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [],
@@ -278,7 +280,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       icon: <FiChevronsDown size={14} />,
       label: t('growthCard.btnMinAll', 'Min All'),
       desc: t('growthCard.tooltipMinAll'),
-      colorClass: 'text-gray-600 bg-gray-50 hover:bg-gray-100 border-gray-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-300',
+      colorClass: 'text-neutral-600 bg-neutral-50 hover:bg-neutral-100 border-neutral-200 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300',
     },
     {
       action: 'reset' as const,
@@ -304,13 +306,13 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
   ];
 
   return (
-    <div className="flex flex-col bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-800 overflow-hidden transition-all duration-200">
+    <div className="flex flex-col bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden transition-all duration-200">
       {/* 1. macOS Style Top Header (Compact) */}
       <div className="relative">
         {/* Top accent border: uses the provided bulletColor */}
         <div className="absolute top-0 left-0 right-0 h-[3px] z-10" style={{ backgroundColor: bulletColor || '#3b82f6' }} />
 
-        <div className="flex items-center justify-between px-3 pt-3 pb-2 bg-gray-50/50 dark:bg-neutral-800/30">
+        <div className="flex items-center justify-between px-3 pt-3 pb-2 bg-neutral-50/50 dark:bg-neutral-800/30">
           {/* Left: macOS Signal Colors with Permanent Icons */}
           <div className="flex items-center gap-2">
             {/* Delete Button (Yellow/Amber) */}
@@ -336,12 +338,12 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               onClick={() => setShowCostHints((v) => !v)}
               title={showCostHints ? t('growthCard.hideCostHints', 'Hide cost hints') : t('growthCard.showCostHints', 'Show cost hints')}
               className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                showCostHints ? 'bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-400 dark:bg-neutral-700 dark:text-neutral-500'
+                showCostHints ? 'bg-blue-100 text-blue-500 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-neutral-100 text-neutral-400 dark:bg-neutral-700 dark:text-neutral-500'
               }`}
             >
               <FiDollarSign size={11} />
             </button>
-            {plan.studentId && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-200/50 dark:bg-neutral-700 text-gray-500 dark:text-neutral-400">ID: {plan.studentId}</div>}
+            {plan.studentId && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-200/50 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">ID: {plan.studentId}</div>}
           </div>
         </div>
       </div>
@@ -352,11 +354,11 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
           {/* Portrait: Keep portrait image small to save space */}
           <div className="shrink-0">
             {plan.studentId && studentPortraits[plan.studentId] ? (
-              <div className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-50 dark:ring-neutral-800 shrink-0 overflow-hidden" style={{ backgroundColor: bulletColor || '#f3f4f6' }}>
+              <div className="w-10 h-10 rounded-full object-cover ring-2 ring-neutral-50 dark:ring-neutral-800 shrink-0 overflow-hidden" style={{ backgroundColor: bulletColor || '#f3f4f6' }}>
                 <img src={`data:image/webp;base64,${studentPortraits[plan.studentId]}`} className="w-full h-full object-cover" alt="" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 animate-pulse" />
+              <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
             )}
           </div>
 
@@ -366,7 +368,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               students={allStudents}
               selectedStudentId={plan.studentId}
               setSelectedStudentId={(id) => {
-                updatePlan(plan.uuid, 'studentId', Number(id));
+                updatePlan(plan.uuid, 'studentId', id);
                 const newStudent = allStudents[id];
                 if (newStudent && !('Name' in (newStudent.Gear ?? {}))) {
                   updatePlan(plan.uuid, 'current.gear', 0);
@@ -382,12 +384,12 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
 
         {/* 3. Global Actions (Horizontal Split-Chips) */}
         {studentInfo && (
-          <div className="mt-4 pt-3 border-t border-dashed border-gray-100 dark:border-neutral-800">
+          <div className="mt-4 pt-3 border-t border-dashed border-neutral-100 dark:border-neutral-800">
             {/* Header Label */}
             <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('growthCard.globalActions', 'Quick Actions')}</span>
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">{t('growthCard.globalActions', 'Quick Actions')}</span>
               {activeHelp && (
-                <button onClick={() => setActiveHelp(null)} className="text-[10px] text-gray-400 hover:text-gray-600 underline decoration-dotted">
+                <button onClick={() => setActiveHelp(null)} className="text-[10px] text-neutral-400 hover:text-neutral-600 underline decoration-dotted">
                   {t('common.closeHelp', 'Close Help')}
                 </button>
               )}
@@ -406,7 +408,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                       ${
                         isActive
                           ? 'border-blue-300 ring-1 ring-blue-300/50 bg-blue-50/30 dark:border-blue-700 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800'
+                          : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800'
                       }
                     `}
                   >
@@ -414,9 +416,9 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                     <button
                       onClick={() => handleGlobalAction(btn.action)}
                       className={`
-                        flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-l-md hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors
+                        flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-l-md hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors
                      
-                          text-gray-600 dark:text-gray-300
+                          text-neutral-600 dark:text-neutral-300
                         
                       `}
                     >
@@ -425,7 +427,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                     </button>
 
                     {/* Separator */}
-                    <div className="w-px h-3.5 bg-gray-200 dark:bg-neutral-700" />
+                    <div className="w-px h-3.5 bg-neutral-200 dark:bg-neutral-700" />
 
                     {/* Help Part (Right) */}
                     <button
@@ -434,8 +436,8 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                         setActiveHelp(isActive ? null : btn.action);
                       }}
                       className={`
-                        px-1.5 py-1.5 transition-colors text-gray-400 hover:text-blue-500 cursor-help
-                        ${isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-200' : 'hover:bg-gray-50 dark:hover:bg-neutral-700'}
+                        px-1.5 py-1.5 transition-colors text-neutral-400 hover:text-blue-500 cursor-help
+                        ${isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-200' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700'}
                       `}
                       title={btn.desc}
                     >
@@ -448,10 +450,10 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
 
             {/* Description Panel (Shows only when activeHelp is set) */}
             {activeHelp && (
-              <div className="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-neutral-800/50 border border-gray-100 dark:border-neutral-700/50 rounded-md p-2.5 animate-in fade-in slide-in-from-top-1 duration-200 flex gap-2 items-start">
+              <div className="mt-2 text-xs text-neutral-600 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-700/50 rounded-md p-2.5 animate-in fade-in slide-in-from-top-1 duration-200 flex gap-2 items-start">
                 <FiInfo className="shrink-0 mt-0.5 text-blue-500" size={14} />
                 <div>
-                  <span className="font-semibold text-gray-800 dark:text-gray-200 mr-1">{globalActions.find((a) => a.action === activeHelp)?.label}:</span>
+                  <span className="font-semibold text-neutral-800 dark:text-neutral-200 mr-1">{globalActions.find((a) => a.action === activeHelp)?.label}:</span>
                   <span className="leading-relaxed opacity-90">{globalActions.find((a) => a.action === activeHelp)?.desc}</span>
                 </div>
               </div>
@@ -461,7 +463,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       </div>
 
       {/* 2. Content: Scrollable Area */}
-      <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-gray-50 dark:divide-neutral-800 bg-white dark:bg-neutral-900 custom-scrollbar border-t border-gray-100 dark:border-neutral-800">
+      <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-neutral-50 dark:divide-neutral-800 bg-white dark:bg-neutral-900 custom-scrollbar border-t border-neutral-100 dark:border-neutral-800">
         {studentInfo ? (
           <>
             <GrowthAccordion
@@ -478,7 +480,6 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                 handlePlanChange={handlePlanChange}
                 handleRankChange={handleRankChange}
                 rankOptions={rankOptions}
-                handleBatchUpdate={handleBatchUpdate}
                 iconData={showCostHints ? iconData : undefined}
                 eventData={showCostHints ? eventData : undefined}
               />
@@ -545,12 +546,12 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                   studentPortraits={studentPortraits}
                 />
               ) : (
-                <div className="p-6 text-center text-xs text-gray-400">Loading Affection Data...</div>
+                <div className="p-6 text-center text-xs text-neutral-400">Loading Affection Data...</div>
               )}
             </GrowthAccordion>
           </>
         ) : (
-          <div className="py-20 flex flex-col items-center justify-center text-gray-400 opacity-60">
+          <div className="py-20 flex flex-col items-center justify-center text-neutral-400 opacity-60">
             <FiSearch size={32} className="mb-2" />
             <span className="text-sm font-light">{t('growthCard.selectStudentPrompt')}</span>
           </div>
@@ -558,11 +559,11 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
       </div>
 
       {/* 3. Footer: Event Tags */}
-      <div className="relative bg-gray-50 dark:bg-neutral-950/50 border-t border-gray-200 dark:border-neutral-800 p-2 z-10">
+      <div className="relative bg-neutral-50 dark:bg-neutral-950/50 border-t border-neutral-200 dark:border-neutral-800 p-2 z-10">
         <div className="mt-2 relative">
-          <h4 className="font-bold text-xs text-gray-400 uppercase tracking-wider ml-2 mb-2">{t('growthCard.includeInEventsQuestion')}</h4>
+          <h4 className="font-bold text-xs text-neutral-400 uppercase tracking-wider ml-2 mb-2">{t('growthCard.includeInEventsQuestion')}</h4>
           <div className="relative group">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" size={14} />
             <input
               type="text"
               placeholder={t('growthCard.searchEvents', 'Add Event...')}
@@ -570,11 +571,11 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="w-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+              className="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
             />
           </div>
           {isSearchFocused && searchTerm && filteredEvents.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 animate-in slide-in-from-bottom-2 fade-in">
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 animate-in slide-in-from-bottom-2 fade-in">
               {filteredEvents.map((e) => (
                 <button
                   key={e.id}
@@ -582,7 +583,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                     toggleEventInclusion(plan.uuid, e.id);
                     setSearchTerm('');
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-neutral-700 border-b border-gray-50 dark:border-neutral-700/50 last:border-0 truncate transition-colors flex items-center gap-2"
+                  className="w-full text-left px-4 py-2.5 text-xs hover:bg-neutral-50 dark:hover:bg-neutral-700 border-b border-neutral-50 dark:border-neutral-700/50 last:border-0 truncate transition-colors flex items-center gap-2"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                   {e.name}
@@ -595,10 +596,10 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
           {plan.includedInEvents.map((id) => (
             <span
               key={id}
-              className="inline-flex items-center gap-1.5 bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-neutral-700 px-2.5 py-1 rounded-full text-[11px] shadow-sm"
+              className="inline-flex items-center gap-1.5 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 px-2.5 py-1 rounded-full text-[11px] shadow-sm"
             >
               <span className="truncate max-w-[120px]">{sortedEvents.find((e) => e.id === id)?.name || id}</span>
-              <button onClick={() => toggleEventInclusion(plan.uuid, id)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full p-0.5 transition-colors">
+              <button onClick={() => toggleEventInclusion(plan.uuid, id)} className="text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full p-0.5 transition-colors">
                 <FiX size={10} />
               </button>
             </span>

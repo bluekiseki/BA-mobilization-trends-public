@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { ItemIcon } from './common/Icon';
 import { useTranslation } from 'react-i18next';
-import type { EventData, IconData, TransactionEntry } from '~/types/plannerData';
+import type { EventData, IconData, TransactionEntry, StudentData, StudentPortraitData } from '~/types/plannerData';
 import { getItemSortPriority } from '~/utils/itemSort';
 import { FUNGIBLE_POOLS, compactSubPool } from '~/utils/groupMaterialNeeds';
 import type { TFunction } from 'i18next';
@@ -14,12 +14,14 @@ interface FinalResultsDisplayProps {
   };
   eventData: EventData;
   iconData: IconData;
+  allStudents?: StudentData;
+  studentPortraits?: StudentPortraitData;
 }
 
 type SortMode = 'priority' | 'id';
 type ItemEntry = [string, { amount: number; isBonusApplied: boolean }];
 
-const getTransactionSourceName = (source: string, t: TFunction<'planner', undefined>) => {
+const getTransactionSourceName = (source: string, t: TFunction<'planner'>) => {
   const keyMap: Record<string, string> = {
     shop_cost: 'source.shopCost',
     shop_reward: 'source.shopReward',
@@ -48,8 +50,11 @@ const getTransactionSourceName = (source: string, t: TFunction<'planner', undefi
     minigame_ccg_reward: 'source.minigameCCGReward',
     clueSearch_cost: 'source.clueSearchCost',
     clueSearch_reward: 'source.clueSearchReward',
+    interactiveWorldRaid_cost: 'source.interactiveWorldRaidCost',
+    interactiveWorldRaid_reward: 'source.interactiveWorldRaidReward',
   };
-  return t(keyMap[source] || (source as any));
+  const t_dynamic = t as (key: string) => string;
+  return t_dynamic(keyMap[source] || source);
 };
 
 // Carry-up: re-compact fungible items using greedy allocation; non-fungible pass through.
@@ -60,8 +65,13 @@ function applyCarryUp(items: ItemEntry[]): ItemEntry[] {
 
   for (const subPools of Object.values(FUNGIBLE_POOLS)) {
     for (const subPool of subPools) {
-      const keys = subPool.keys as readonly string[];
-      const spItems = keys.filter((k) => itemMap.has(k)).map((k) => ({ key: k, amount: Math.abs(itemMap.get(k)!.amount) }));
+      const keys = subPool.keys;
+      const spItems = keys
+        .filter((k) => itemMap.has(k))
+        .map((k) => {
+          const data = itemMap.get(k);
+          return { key: k, amount: Math.abs(data?.amount ?? 0) };
+        });
       if (spItems.length === 0) continue;
 
       const compacted = compactSubPool(subPool, spItems);
@@ -93,7 +103,7 @@ function sortEntries(items: ItemEntry[], mode: SortMode, eventData: EventData, d
   });
 }
 
-export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }: FinalResultsDisplayProps) => {
+export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, allStudents, studentPortraits }: FinalResultsDisplayProps) => {
   const { t } = useTranslation('planner');
   const { t: t_c } = useTranslation('common');
 
@@ -118,7 +128,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
     return (
       <>
         <h2 className="text-xl font-bold mb-3">{t('ui.finalResultPreview')}</h2>
-        <div className="text-center h-45 text-gray-500 dark:text-gray-400 py-4">{t('ui.previewDescription')}</div>
+        <div className="text-center h-45 text-neutral-500 dark:text-neutral-400 py-4">{t('ui.previewDescription')}</div>
       </>
     );
   }
@@ -142,12 +152,12 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
       {/* Controls */}
       <div className="flex items-center gap-2 mb-3">
         {/* Sort toggle */}
-        <div className="flex items-center rounded-lg overflow-hidden border border-gray-200 dark:border-neutral-700 text-[11px]">
+        <div className="flex items-center rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 text-[11px]">
           {(['priority', 'id'] as SortMode[]).map((mode) => (
             <button
               key={mode}
               onClick={() => setSortMode(mode)}
-              className={`px-2 py-1 transition-colors ${sortMode === mode ? 'bg-blue-500 text-white font-semibold' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-700'}`}
+              className={`px-2 py-1 transition-colors ${sortMode === mode ? 'bg-blue-500 text-white font-semibold' : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
             >
               {mode === 'priority' ? t('ui.sortByPriority', 'Priority') : 'ID'}
             </button>
@@ -160,7 +170,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
           className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] transition-colors ${
             carryUp
               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold'
-              : 'border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-gray-400 hover:border-gray-400'
+              : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-neutral-400'
           }`}
           title={t('ui.carryUpTooltip', 'Carry up: consolidate lower-tier items into higher-tier equivalents')}
         >
@@ -178,12 +188,21 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
                   {isExpanded.gained ? t_c('close') : t_c('open')}
                 </button>
               </div>
-              <div className={`flex gap-2 border-t border-gray-200 dark:border-neutral-700 pt-2 ${isExpanded.gained ? 'flex-wrap bg-white dark:bg-neutral-800' : 'overflow-x-auto pb-2'}`}>
+              <div className={`flex gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-2 ${isExpanded.gained ? 'flex-wrap bg-white dark:bg-neutral-800' : 'overflow-x-auto pb-2'}`}>
                 {gainedItems.map(([key, data]) => {
                   const [type, id] = key.split('_');
                   return (
                     <div key={key} className="relative shrink-0">
-                      <ItemIcon type={type} itemId={id} amount={Math.round(data.amount)} size={10} eventData={eventData} iconData={iconData} />
+                      <ItemIcon
+                        type={type}
+                        itemId={id}
+                        amount={Math.round(data.amount)}
+                        size={10}
+                        eventData={eventData}
+                        iconData={iconData}
+                        allStudents={allStudents}
+                        studentPortraits={studentPortraits}
+                      />
                       {data.isBonusApplied && (
                         <span
                           className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-neutral-800"
@@ -207,12 +226,21 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
                   {isExpanded.spent ? t_c('close') : t_c('open')}
                 </button>
               </div>
-              <div className={`flex gap-2 border-t border-gray-200 dark:border-neutral-700 pt-2 ${isExpanded.spent ? 'flex-wrap' : 'overflow-x-auto pb-2'}`}>
+              <div className={`flex gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-2 ${isExpanded.spent ? 'flex-wrap' : 'overflow-x-auto pb-2'}`}>
                 {spentItems.map(([key, data]) => {
                   const [type, id] = key.split('_');
                   return (
                     <div key={key} className="shrink-0">
-                      <ItemIcon type={type} itemId={id} amount={Math.round(-data.amount)} size={10} eventData={eventData} iconData={iconData} />
+                      <ItemIcon
+                        type={type}
+                        itemId={id}
+                        amount={Math.round(-data.amount)}
+                        size={10}
+                        eventData={eventData}
+                        iconData={iconData}
+                        allStudents={allStudents}
+                        studentPortraits={studentPortraits}
+                      />
                     </div>
                   );
                 })}
@@ -238,7 +266,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
 
             return (
               <div key={`${transaction.source}-${index}`}>
-                <h3 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-2 border-b dark:border-neutral-700 pb-1">{getTransactionSourceName(transaction.source, t)}</h3>
+                <h3 className="text-base font-bold text-neutral-800 dark:text-neutral-200 mb-2 border-b dark:border-neutral-700 pb-1">{getTransactionSourceName(transaction.source, t)}</h3>
 
                 {gainedTxItems.length > 0 && (
                   <div className="flex flex-wrap gap-x-3 gap-y-2 pt-2 pb-1 border-t-3 border-green-500/30">
@@ -248,7 +276,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
                       if (roundedAmount === 0) return null;
                       return (
                         <div key={key} className="relative shrink-0">
-                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} />
+                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
                           {data.isBonusApplied && (
                             <span
                               className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-neutral-800"
@@ -271,7 +299,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData }
                       if (roundedAmount === 0) return null;
                       return (
                         <div key={key} className="relative shrink-0">
-                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} />
+                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
                         </div>
                       );
                     })}

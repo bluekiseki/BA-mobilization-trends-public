@@ -1,14 +1,14 @@
 // app/components/live/RankScatterChart.tsx
 import { Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Line, ComposedChart, ReferenceArea, ReferenceLine } from 'recharts';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { difficultyInfo, generateScoreBrackets, getDifficultyFromScoreAndBoss } from '~/components/Difficulty';
+import { difficultyInfo, generateScoreBrackets, getDifficultyFromScoreAndBoss, type DifficultyName } from '~/components/raid/Difficulty';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { formatTimeToTimestamp } from '~/utils/time';
 import type { GameServer, RaidInfo } from '~/types/data';
 import type { ReportEntry } from '../dashboard/common';
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
 import type { LastData, LastERaidData, LastRaidData } from '~/types/livetype';
-import { type_translation } from '../raidToString';
+import { type_translation } from '../raid/raidToString';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { FaChartLine } from 'react-icons/fa'; // Icon used as an emoji replacement
@@ -34,6 +34,30 @@ interface RemappedDataPoint {
   originalTime?: number;
   rank: number;
   difficulty: string;
+}
+
+interface TrajectoryDataPoint {
+  hour_remaining: number;
+  avg: number;
+  min: number;
+  max: number;
+  rank: number;
+  score: number;
+}
+
+interface PredictionData {
+  target_rank: number;
+  time_axis?: unknown;
+  type?: string;
+  statistics?: unknown;
+  trajectories?: unknown;
+}
+
+interface PivotedDataEntry {
+  rank: number;
+  originalScores: Record<string, number>;
+  originalTimes: Record<string, number>;
+  [difficulty: string]: number | null | Record<string, number>;
 }
 
 const getBracketFromTotalScore = (score: number, brackets: { name: string; minScore: number }[]) => {
@@ -62,7 +86,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
 
   const fetchRaids = useDataCache<RaidInfo[]>();
   useEffect(() => {
-    fetchRaids(cdn(`/w/${server}/${currentLocaleShort}.raid_info.bin`), (res) => res.json() as Promise<RaidInfo[]>)
+    fetchRaids(cdn(`/w/${server}/${currentLocaleShort}.raid_info.bin`), (res) => res.json())
       .then((data) => {
         if (data) setAllRaidInfos(data);
       })
@@ -94,7 +118,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
   const SCORE_BRACKETS = useMemo(() => generateScoreBrackets(difficultyInfo), []);
   const isTotalChart = !isRaid && activeTab === 'total';
 
-  const predictionData = useMemo(() => {
+  const predictionData = useMemo((): PredictionData => {
     return isRaid ? total_assault_trajectories : elimination_raid_trajectories;
   }, [isRaid]);
 
@@ -103,14 +127,16 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
       const rawId = id.replace('live_', '');
       const numId = rawId.replace(/^[RE]/, '');
 
-      const matchedRaids = allRaidInfos.filter((r) => r.Id.toString() === rawId || r.Id.toString() === numId);
+      const matchedRaids = allRaidInfos.filter((r) => r.Id === rawId || r.Id === numId);
 
       if (matchedRaids.length === 0) return id;
 
       if (isRaid) {
         const raid = matchedRaids[0];
         const typeStr = raid.Type && type_translation[raid.Type as keyof typeof type_translation]?.[currentLocaleShort];
-        return typeStr ? `${raid.Boss} (${typeStr})` : raid.Boss;
+        const seasonPrefix = `S${numId}`;
+        const bossStr = typeStr ? `${raid.Boss} (${typeStr})` : raid.Boss;
+        return `${seasonPrefix} ${bossStr} · ${raid.Date}`;
       } else {
         const currentTarget = targetTab || activeTab;
         if (currentTarget === 'total') {
@@ -163,41 +189,42 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
   const currentPrediction = useMemo(() => {
     if (!showPredictionCut || !predictionData) return null;
 
-    const d = predictionData as any;
-    const targetRank = d.target_rank || 20000;
+    const targetRank = predictionData.target_rank || 20000;
 
     const raidInfoAny = raidInfos?.[0];
-    const endTimeStr = Number(getKstTime(raidInfoAny.Date)) + 3600_000 * 24 * LIVE_RAID_DURATION - 3600_000 * 7;
+    const endTimeStr = getKstTime(raidInfoAny.Date) + 3600_000 * 24 * LIVE_RAID_DURATION - 3600_000 * 7;
     const endDt = endTimeStr ? endTimeStr : Date.now();
 
-    const currentDt = getKstTime(lastData.time, '+00:00') || Number(Date.now());
-    // console.log('--', lastData.time, new Date(getKstTime(lastData.time, '+00:00')))
+    const currentDt = getKstTime(lastData.time, '+00:00') || Date.now();
     const hoursRemaining = Math.max(0, (endDt - currentDt) / 3600000) + 0;
-
-    // console.log('Time:',{hoursRemaining,currentDt: new Date(currentDt),endDt: new Date(endDt), endTimeStr, date: raidInfoAny.Date })
 
     if (hoursRemaining === 0) {
       return { mode: predictionMode, hour: 0, avg: targetRank, min: targetRank, max: targetRank, rank: targetRank };
     }
 
-    let targetDataArray: any[] = [];
+    let targetDataArray: TrajectoryDataPoint[] = [];
     if (predictionMode === 'stats') {
       if (isRaid) {
-        targetDataArray = d.statistics || [];
+        const stats = predictionData.statistics;
+        targetDataArray = Array.isArray(stats) ? (stats as TrajectoryDataPoint[]) : [];
       } else {
         const statsKey = activeTab === 'total' ? 'total' : 'boss';
-        targetDataArray = d.statistics?.[statsKey] || [];
+        const statsValue = (predictionData.statistics as Record<string, unknown>)?.[statsKey];
+        targetDataArray = Array.isArray(statsValue) ? (statsValue as TrajectoryDataPoint[]) : [];
       }
     } else {
       if (!compareRaidId) return null;
       if (isRaid) {
-        targetDataArray = d.trajectories?.[compareRaidId] || [];
+        const trajValue = (predictionData.trajectories as Record<string, unknown>)?.[compareRaidId];
+        targetDataArray = Array.isArray(trajValue) ? (trajValue as TrajectoryDataPoint[]) : [];
       } else {
         const lastUnderscoreIdx = compareRaidId.lastIndexOf('_');
         const baseId = compareRaidId.substring(0, lastUnderscoreIdx);
         const targetTab = compareRaidId.substring(lastUnderscoreIdx + 1);
 
-        targetDataArray = d.trajectories?.[baseId]?.[targetTab] || [];
+        const trajValue = (predictionData.trajectories as Record<string, unknown>)?.[baseId];
+        const nestedValue = trajValue && typeof trajValue === 'object' && !Array.isArray(trajValue) ? (trajValue as Record<string, unknown>)[targetTab] : undefined;
+        targetDataArray = Array.isArray(nestedValue) ? (nestedValue as TrajectoryDataPoint[]) : [];
       }
     }
 
@@ -258,7 +285,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
       currentRaidInfo = raidInfos?.[0];
     } else {
       rankData = (lastData.data as LastERaidData)[activeTab].d.filter((v) => v.r <= 20000);
-      currentRaidInfo = raidInfos.find((r) => r.Id.toString().endsWith(activeTab.slice(-1))) || raidInfos?.[0];
+      currentRaidInfo = raidInfos.find((r) => r.Id.endsWith(activeTab.slice(-1))) || raidInfos?.[0];
     }
 
     if (axisType === 'score' || isTotalChart) {
@@ -268,15 +295,12 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
       const PANEL_WIDTH = 10000;
       const PANEL_GAP = 2000;
 
-      const groupedData = rankData.reduce(
-        (acc, entry) => {
-          const groupName = isTotalChart ? getBracketFromTotalScore(entry.s, SCORE_BRACKETS) : getDifficultyFromScoreAndBoss(entry.s, server, raidInfos[0].Id);
-          if (!acc[groupName]) acc[groupName] = [];
-          acc[groupName].push(entry);
-          return acc;
-        },
-        {} as Record<string, ReportEntry[]>,
-      );
+      const groupedData = rankData.reduce<Record<string, ReportEntry[]>>((acc, entry) => {
+        const groupName = isTotalChart ? getBracketFromTotalScore(entry.s, SCORE_BRACKETS) : getDifficultyFromScoreAndBoss(entry.s, server, raidInfos[0].Id);
+        if (!acc[groupName]) acc[groupName] = [];
+        acc[groupName].push(entry);
+        return acc;
+      }, {});
 
       const groupOrder = (isTotalChart ? SCORE_BRACKETS.map((b) => b.name) : ['Lunatic', 'Torment', 'Insane', 'Extreme', 'Hardcore', 'Veryhard', 'Hard', 'Normal']).reverse();
 
@@ -311,7 +335,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
       const payload = (
         isTotalChart ? SCORE_BRACKETS.map((b) => ({ value: b.name, color: b.fill, type: 'circle' })) : Object.entries(DIFFICULTY_COLORS).map(([value, color]) => ({ value, color, type: 'circle' }))
       ).filter((p) => groupedData[p.value]);
-      return { chartData: remappedData, customTicks: ticks, xDomain: ['dataMin', 'dataMax'] as [any, any], legendPayload: payload };
+      return { chartData: remappedData, customTicks: ticks, xDomain: ['dataMin', 'dataMax'] as const, legendPayload: payload };
     } else {
       const timeDataTmp = rankData.map((entry) => ({
         displayValue: calculateTimeFromScore(entry.s, currentRaidInfo.Boss, server, currentRaidInfo.Id) || 0,
@@ -324,14 +348,13 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
         (p, i) =>
           (p.displayValue > 0 && p.rank % 1000 == 0) ||
           p.rank == 1 ||
-          getDifficultyFromScoreAndBoss(p.originalScore, server, raidInfos[0].Id) != getDifficultyFromScoreAndBoss(timeDataTmp[i - 1].originalScore, server, raidInfos[0].Id),
+          (i > 0 && getDifficultyFromScoreAndBoss(p.originalScore, server, raidInfos[0].Id) != getDifficultyFromScoreAndBoss(timeDataTmp[i - 1].originalScore, server, raidInfos[0].Id)),
       );
 
       const existingDifficulties = [...new Set(timeData.map((d) => d.difficulty))];
-      const payload = Object.entries(DIFFICULTY_COLORS)
-        .filter(([diff]) => existingDifficulties.includes(diff as any))
-        .map(([value, color]) => ({ value, color, type: 'circle' }));
-      return { chartData: timeData, customTicks: undefined, xDomain: ['dataMin', 'dataMax'] as [any, any], legendPayload: payload };
+      const difficultyNames = Object.keys(DIFFICULTY_COLORS) as DifficultyName[];
+      const payload = difficultyNames.filter((diff) => existingDifficulties.includes(diff)).map((diff) => ({ value: diff, color: DIFFICULTY_COLORS[diff], type: 'circle' as const }));
+      return { chartData: timeData, customTicks: undefined, xDomain: ['dataMin', 'dataMax'] as const, legendPayload: payload };
     }
   }, [lastData, activeTab, axisType, server, raidInfos, SCORE_BRACKETS, isRaid, isTotalChart]);
 
@@ -398,7 +421,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
       avg: currentPrediction.avg ? getIntersectionData(currentPrediction.avg) : null,
       min: currentPrediction.min ? getIntersectionData(currentPrediction.min) : null,
       max: currentPrediction.max ? getIntersectionData(currentPrediction.max) : null,
-      compare: currentPrediction.score || currentPrediction.rank ? getIntersectionData(currentPrediction.rank || currentPrediction.score) : null,
+      compare: currentPrediction.score || currentPrediction.rank ? getIntersectionData(currentPrediction.rank ?? currentPrediction.score) : null,
     };
   }, [currentPrediction, chartData]);
 
@@ -422,22 +445,24 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
     });
   }, []);
 
-  const pivotedData = useMemo(() => {
+  const pivotedData = useMemo((): PivotedDataEntry[] => {
     if (!chartData || chartData.length === 0) return [];
-    const dataMap = new Map<number, any>();
+    const dataMap = new Map<number, PivotedDataEntry>();
     const allDifficulties = legendPayload.map((p) => p.value);
 
     chartData.forEach((point) => {
       if (!dataMap.has(point.rank)) {
-        const initialEntry: any = { rank: point.rank, originalScores: {}, originalTimes: {} };
+        const initialEntry: PivotedDataEntry = { rank: point.rank, originalScores: {}, originalTimes: {} };
         allDifficulties.forEach((diff) => {
           initialEntry[diff] = null;
         });
         dataMap.set(point.rank, initialEntry);
       }
       const entry = dataMap.get(point.rank);
-      entry[point.difficulty] = point.displayValue;
-      entry.originalScores[point.difficulty] = point.originalScore;
+      if (entry) {
+        entry[point.difficulty] = point.displayValue;
+        entry.originalScores[point.difficulty] = point.originalScore;
+      }
     });
 
     return Array.from(dataMap.values()).sort((a, b) => a.rank - b.rank);
@@ -452,7 +477,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
             type="checkbox"
             checked={showPredictionCut}
             onChange={(e) => setShowPredictionCut(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            className="w-4 h-4 rounded border-neutral-300 text-purple-600 focus:ring-purple-500"
           />
           <FaChartLine className="text-purple-600 dark:text-purple-400 shrink-0" />
           {t('show_prediction_cutoff')}
@@ -501,14 +526,14 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600'}`}
+              className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'}`}
             >
               {tab.name}
             </button>
           ))}
         </nav>
         {(isRaid || activeTab !== 'total') && (
-          <div className="flex gap-1 rounded-lg bg-gray-200 dark:bg-neutral-700 p-1 text-xs font-semibold">
+          <div className="flex gap-1 rounded-lg bg-neutral-200 dark:bg-neutral-700 p-1 text-xs font-semibold">
             <button onClick={() => setAxisType('score')} className={`px-3 py-1 rounded-md transition-colors ${axisType === 'score' ? 'bg-white dark:bg-neutral-900 shadow-sm' : ''}`}>
               Score
             </button>
@@ -535,15 +560,15 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
 
       <ResponsiveContainer width="100%" height={500}>
         <ComposedChart data={pivotedData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-          <XAxis type="number" dataKey="rank" fontSize={14} reversed={true} tickFormatter={(r) => r.toLocaleString()} />
+          <XAxis type="number" dataKey="rank" fontSize={14} reversed={true} tickFormatter={(r: number) => r.toLocaleString()} />
           <YAxis
             domain={xDomain}
             width={35}
             fontSize={14}
             ticks={customTicks?.map((t) => t.value)}
-            tickFormatter={(value) => {
+            tickFormatter={(value: number) => {
               if (axisType === 'score' || (!isRaid && activeTab === 'total')) {
-                return customTicks ? customTicks.find((t) => t.value == value)?.label || '' : value;
+                return customTicks?.find((t) => t.value === value)?.label ?? String(value);
               }
               return formatTimeToTimestamp(value).split('.')[0];
             }}
@@ -552,15 +577,17 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
             cursor={{ strokeDasharray: '3 3' }}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
-                const hoveredSeries = payload.find((p) => p.dataKey !== 'range' && p.dataKey !== 'avg' && p.dataKey !== 'compare');
+                const hoveredSeries = payload.find((p) => String(p.dataKey) !== 'range' && String(p.dataKey) !== 'avg' && String(p.dataKey) !== 'compare');
                 if (!hoveredSeries) return null;
 
-                const dataKey = hoveredSeries.dataKey as string;
-                const fullDataPoint = hoveredSeries.payload;
-                const originalScore = fullDataPoint.originalScores[dataKey] || '';
+                const dataKey = String(hoveredSeries.dataKey ?? '');
+                const fullDataPoint = hoveredSeries.payload as PivotedDataEntry | undefined;
+                if (!fullDataPoint) return null;
+
+                const originalScore = fullDataPoint.originalScores[dataKey] ?? 0;
                 const rank = fullDataPoint.rank;
-                const id = raidInfos.find((r) => r.Id.toString())?.Id || '';
-                const time = formatTimeToTimestamp(calculateTimeFromScore(originalScore, raidInfos[0].Boss || '', server, id) || 0);
+                const id = raidInfos.find((r) => r.Id)?.Id || '';
+                const time = formatTimeToTimestamp(calculateTimeFromScore(originalScore, raidInfos[0]?.Boss || '', server, id) || 0);
 
                 return (
                   <div className="p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-md border dark:border-neutral-700 text-sm shadow-md">
@@ -568,7 +595,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
                       <strong>Rank:</strong> {rank.toLocaleString()}
                     </p>
                     <p>
-                      <strong>Score:</strong> {originalScore?.toLocaleString()}
+                      <strong>Score:</strong> {originalScore.toLocaleString()}
                     </p>
                     {!isTotalChart && (
                       <p>

@@ -26,9 +26,9 @@ export const useHelpKey = (key: string | string[], enabled = true) => {
       if (isValidKey) {
         // Open sidebar & schedule highlight after page navigation
         setTimeout(() => {
-          setHighlightedTour({ key: state.tourKey!, index: state.tourIndex || 0 });
+          setHighlightedTour({ key: state.tourKey || '', index: state.tourIndex || 0 });
           openSidebar();
-          navigate(location.pathname, { replace: true, state: {} });
+          void navigate(location.pathname, { replace: true, state: {} });
         }, 150);
       }
     }

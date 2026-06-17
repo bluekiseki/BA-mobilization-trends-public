@@ -9,7 +9,7 @@ interface UseSpreadsheetKeydownOptions {
   deps: unknown[];
 }
 
-export function useSpreadsheetKeydown({ cellId, maxValue, minValue, onMax, onCopyFromAbove, onUndo, deps }: UseSpreadsheetKeydownOptions) {
+export function useSpreadsheetKeydown({ cellId, maxValue, minValue, onMax, onCopyFromAbove, deps }: UseSpreadsheetKeydownOptions) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'm') {

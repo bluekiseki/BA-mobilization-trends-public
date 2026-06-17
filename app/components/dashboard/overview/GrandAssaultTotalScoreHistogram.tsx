@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import type { TooltipContentProps, BarShapeProps } from 'recharts';
 import { CustomNumberInput } from '~/components/CustomInput';
-import { getBracketFromTotalScore, getDifficultyFromScore, SCORE_BRACKETS } from '~/components/Difficulty';
+import { getBracketFromTotalScore, getDifficultyFromScore, SCORE_BRACKETS } from '~/components/raid/Difficulty';
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
 import type { PlayerAnalysisData } from './DifficultyCombinationChart';
 
@@ -146,10 +147,10 @@ export default function HistogramAnalysis({ allPlayers, tierCounter }: Histogram
     setBracketVisibility(Object.keys(bracketVisibility).reduce((acc, key) => ({ ...acc, [key]: false }), {}));
   };
 
-  const HistogramTooltip = ({ active, payload }: any) => {
+  const HistogramTooltip = ({ active, payload }: Partial<TooltipContentProps<number, string>>) => {
     if (active && payload && payload.length) {
       const { t } = useTranslation('dashboard');
-      const data = payload[0].payload;
+      const data = payload[0].payload as { binStart: number; binEnd: number; count: number; cumulativeRankRange: string; bracket: string; color: string };
       const scoreRange = `${data.binStart.toLocaleString()} ~ ${data.binEnd.toLocaleString()}`;
       return (
         <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 border dark:border-neutral-700 rounded-lg shadow-lg text-sm z-50">
@@ -189,11 +190,16 @@ export default function HistogramAnalysis({ allPlayers, tierCounter }: Histogram
           <XAxis dataKey="binStart" angle={-45} textAnchor="end" height={60} tickMargin={10} tickFormatter={(value) => `${(value / 1_000_000).toFixed(1)}M`} style={{ fontSize: '10px' }} />
           <YAxis allowDecimals={false} width={40} style={{ fontSize: '10px' }} />
           <Tooltip content={<HistogramTooltip />} cursor={{ fill: 'rgba(150, 150, 150, 0.1)' }} />
-          <Bar dataKey="count" name={t('playerCount')} radius={[2, 2, 0, 0]}>
-            {histogramData.map((entry) => (
-              <Cell key={`cell-${entry.binStart}`} fill={entry.color} />
-            ))}
-          </Bar>
+          <Bar
+            dataKey="count"
+            name={t('playerCount')}
+            radius={[2, 2, 0, 0]}
+            shape={(props: BarShapeProps) => {
+              const entry = props.payload as { color?: string };
+              const fill = entry?.color || '#8884d8';
+              return <rect x={props.x ?? 0} y={props.y ?? 0} width={props.width ?? 0} height={props.height ?? 0} fill={fill} rx={2} ry={2} />;
+            }}
+          />
         </BarChart>
       </ResponsiveContainer>
 

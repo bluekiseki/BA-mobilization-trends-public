@@ -1316,5 +1316,44 @@
     "Alias": "\u51f1\u5766\u6fa4-\u5e02\u5340",
     "MaxLv": 90,
     "Cnt": { "All": 31394, "Lunatic": 1440, "Torment": 29954 }
+  },
+  {
+    "Id": "E33",
+    "Boss": "\u9ed1\u5f71",
+    "Location": "\u5e02\u5340",
+    "Type": "Unarmed",
+    "Date": "2026-05-13",
+    "Alias": "\u9ed1\u5f71-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 29859, "Torment": 29745, "Insane": 114 }
+  },
+  {
+    "Id": "E33",
+    "Boss": "\u9ed1\u5f71",
+    "Location": "\u5e02\u5340",
+    "Type": "LightArmor",
+    "Date": "2026-05-13",
+    "Alias": "\u9ed1\u5f71-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 28979, "Torment": 21332, "Insane": 7647 }
+  },
+  {
+    "Id": "E33",
+    "Boss": "\u9ed1\u5f71",
+    "Location": "\u5e02\u5340",
+    "Type": "ElasticArmor",
+    "Date": "2026-05-13",
+    "Alias": "\u9ed1\u5f71-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 29773, "Insane": 29773 }
+  },
+  {
+    "Id": "R89",
+    "Boss": "Drumbarka",
+    "Location": "\u5e02\u5340",
+    "Date": "2026-06-03",
+    "Alias": "Drumbarka-\u5e02\u5340",
+    "MaxLv": 90,
+    "Cnt": { "All": 46737, "Lunatic": 188, "Torment": 12702, "Insane": 33847 }
   }
 ]
