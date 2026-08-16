@@ -1,4 +1,4 @@
-// app/locales/ko/index.ts
+// app/locales/zh_Hant/index.ts
 import type { ResourceLanguage } from 'i18next';
 import { common, charts, raidInfo, dashboard, dashboardIndex, liveDashboard, emblemCounter, calendar } from './zh_Hant.json'; // import your namespaced locales
 import auth from './auth.json';
@@ -8,6 +8,9 @@ import planner from './planner.json';
 import jukebox from './jukebox.json';
 import help from './help.json';
 import notices from './notices.json';
+import network from './network.json';
+import resources from './resources.json';
+import mypage from './mypage.json';
 
 export default {
   // translation: {},
@@ -22,9 +25,12 @@ export default {
   planner,
   emblemCounter,
   calendar,
+  network,
   club,
   stat,
   jukebox,
   help,
   notices,
+  resources,
+  mypage,
 } satisfies ResourceLanguage;

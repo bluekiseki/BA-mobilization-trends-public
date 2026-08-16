@@ -87,8 +87,13 @@ export default async function handleRequest(request: Request, responseStatusCode
   let shellRendered = false;
   const userAgent = request.headers.get('user-agent');
 
+  const instance = getInstance(loadContext);
+
+  // Namespace tracking and SSR resource seeding are intentionally disabled. Locale
+  // namespaces are loaded from the CDN so they can be cached independently of HTML.
+
   const body = await renderToReadableStream(
-    <I18nextProvider i18n={getInstance(loadContext)}>
+    <I18nextProvider i18n={instance}>
       <ServerRouter context={routerContext} url={request.url} />
     </I18nextProvider>,
     {

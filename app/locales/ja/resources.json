@@ -1,0 +1,173 @@
+{
+  "header": {
+    "title": "成長リソースプランナー",
+    "description": "生徒のアップグレード目標に向けてエレフ、エリグマ、コイン収入を予測します"
+  },
+  "horizon": {
+    "oneMonth": "1ヶ月",
+    "threeMonths": "3ヶ月",
+    "fourMonths": "4ヶ月",
+    "sixMonths": "6ヶ月",
+    "oneYear": "1年"
+  },
+  "tabs": {
+    "overview": "概要",
+    "resources": "リソース",
+    "income": "収入と支出",
+    "incomeShort": "設定",
+    "students": "生徒の目標",
+    "studentsShort": "目標"
+  },
+  "incomeTabHint": "上で追跡するリソースを選択して、収入、購入、農業計画を構成してください。",
+  "planStatus": {
+    "title": "プラン状態",
+    "summary": "{{atRisk}}件 リスク中 · {{covered}}件 エリグマが必要 · {{onTrack}}件 順調",
+    "summaryWithDeadline": "{{atRisk}}件 リスク中 · {{covered}}件 エリグマが必要 · {{onTrack}}件 順調 · {{noDeadline}}件 期限なし",
+    "openButton": "生徒の目標",
+    "sectionTitle": "生徒の目標",
+    "emptyState": "生徒の目標を追加して、自然なエレフ収入が十分か、エリグマが必要かを確認してください。",
+    "statusAtRisk": "リスク中",
+    "statusCovered": "エリグマでカバー",
+    "statusOnTrack": "順調",
+    "statusNoDeadline": "期限なし",
+    "noDeadlineDate": "期限なし",
+    "needsFromEligma": "エリグマから必要",
+    "costsEligma": "エリグマコスト",
+    "naturalEleph": "自然エレフ",
+    "eligmaShort": "{{amount}} エリグマ不足",
+    "eligmaLeft": "{{amount}} エリグマ残り",
+    "resourceRisks": "リソースリスク",
+    "tacticalCoin": "戦術チャレンジコイン",
+    "apPurchaseDays_one": "{{count}}日間のAP購入",
+    "apPurchaseDays_other": "{{count}}日間のAP購入",
+    "apPlanGains": "APプラン獲得",
+    "lowestBalance": "最低残高",
+    "shortOn": "{{date}}に不足"
+  },
+  "studentGoals": {
+    "byStudent": "生徒別",
+    "bySchedule": "スケジュール別",
+    "activePlans": "アクティブプランがある生徒",
+    "noStudentSelected": "生徒が選択されていません",
+    "selectStudentHint": "上の追跡アイテムから生徒のエレフを選択して、目標を表示・編集してください。"
+  },
+  "trackedItems": {
+    "title": "追跡アイテム",
+    "searchPlaceholder": "アイテムまたは生徒のあだ名を検索...",
+    "noResults": "検索結果がありません",
+    "activeTarget": "選択済み",
+    "noGoalsSet": "設定されたコンテンツの目標がありません。生徒の目標セクションで目標を追加してください。",
+    "displayByGrowthPlan": "育成プラン別に表示",
+    "greyOutUnplannedStudents": "育成プランのない生徒をグレー表示",
+    "studentCount_one": "人",
+    "studentCount_other": "人"
+  },
+  "income": {
+    "sectionTitle": "収入源 · {{section}}",
+    "defaultDailyCoins": "デフォルト日次コイン",
+    "coinsPerDay": "コイン/日",
+    "perPeriodOverride": "期間別上書き:",
+    "removeOverride": "上書きを削除",
+    "override": "上書き",
+    "noDefaultSet": "デフォルト設定なし — この期間は追跡していません。",
+    "usingDefaultConfig": "デフォルト設定を使用中。",
+    "defaultAllPeriods": "デフォルト (全期間)",
+    "clear": "クリア",
+    "weeklyMax": "週間最大",
+    "dailyMode": "日次",
+    "weeklyIncome": "週間収入",
+    "permitsPerWeek": "許可証/週",
+    "dailyInputHint": "日次入力: 下のスケジュールカレンダーを使用して日次金額を入力してください。",
+    "defaultMaxFloor": "デフォルト最大階層",
+    "noMfPeriods": "スケジュールに能力解放WB期間がありません。"
+  },
+  "elephCard": {
+    "contentMode": "コンテンツ",
+    "dateMode": "日付",
+    "timingStart": "開始",
+    "timingEnd": "終了",
+    "selectContent": "— コンテンツを選択 —",
+    "finalGoal": "最終目標",
+    "by": "期限",
+    "noGoalsSet": "目標が設定されていません",
+    "goalsCount_one": "{{count}}個の目標 · 合計{{eleph}}エレフ",
+    "goalsCount_other": "{{count}}個の目標 · 合計{{eleph}}エレフ",
+    "setGoalsBelow": "下に目標を設定",
+    "current": "現在",
+    "target": "目標",
+    "remove": "削除",
+    "intermediateGoals": "中間目標",
+    "addGoal": "目標を追加",
+    "noGoalsYet": "まだ目標がありません。エレフ支出を計画するために目標を追加してください。",
+    "currentEleph": "現在のエレフ",
+    "gachaAvg": "ガチャ平均",
+    "gachaAvgValue": "~{{value}} 合計"
+  },
+  "pvp": {
+    "rankingTier": "ランキングティア",
+    "defenseWins": "防衛勝利/日 (0–10)",
+    "plusCoinsPerDay": "+{{coins}} コイン/日",
+    "extraWeeklyIncome": "追加週間収入",
+    "miscSources": "その他の収入源",
+    "daily": "日次:",
+    "weekly": "週次:",
+    "coins": "コイン"
+  },
+  "raid": {
+    "killDifficulty": "撃破難易度",
+    "trophy": "トロフィー",
+    "normal": "通常:",
+    "premium": "プレミアム:",
+    "eligmaLabel": "エリグマ:"
+  },
+  "panel": {
+    "title": "リソース",
+    "startingInventory": "初期保有量",
+    "gachaSimulation": "ガチャシミュレーション",
+    "noSimDataPre": "シミュレーションデータなし。",
+    "noSimDataPost": "をまず実行してください。",
+    "runSim": "シミュレーション",
+    "planAt": "計画基準",
+    "avg": "平均",
+    "eventIncome": "イベント収入 (イベントプランナーより)",
+    "noEventDataPre": "イベント収入の連携なし。",
+    "goToEventPlanner": "イベントプランナーで設定",
+    "noEventDataPost": "するとイベントドロップが含まれます。",
+    "total": "合計",
+    "coinShopNote": "コインショップ、専門家許可証の購入、およびハードステージ運用は以下のスケジュールセクションで設定されます。"
+  },
+  "schedule": {
+    "title": "支出スケジュール",
+    "previousMonth": "前の月",
+    "nextMonth": "次の月",
+    "returnToCurrentMonth": "現在の計画月に戻る",
+    "dragHint": "日付セルを横方向にドラッグするか、スケジュールバーをタップして範囲を選択できます。ドラッグは横方向に開始する必要があります。<br/><kbd>←</kbd> / <kbd>→</kbd> キーまたは画面のボタンで月を切り替えられます。<br/>月間ショップ購入は、各月の選択範囲のうち最も早い日に記録されます。"
+  },
+  "stageFarming": {
+    "runsPerDay": "回/日",
+    "apply": "適用",
+    "remove": "削除",
+    "runsScheduled_one": "{{count}}回の実行予定",
+    "runsScheduled_other": "{{count}}回の実行予定"
+  },
+  "purchasePanel": {
+    "shopNotOpen": "ショップはまだ開いていません · {{date}}から利用可能",
+    "targetReached": "目標達成",
+    "apply": "適用",
+    "cancel": "キャンセル"
+  },
+  "eventLabels": {
+    "title": "{{title}}",
+    "raidBoss": "総力戦 {{boss}}",
+    "eraidBoss": "大決戦 {{boss}}",
+    "mfBoss": "制約解除決戦 {{boss}}",
+    "jfdSeason": "合同火力演習 S{{season}}",
+    "shopRefresh": "ショップ更新 ×{{count}}",
+    "purchaseFrom": "{{item}} 交換",
+    "growthSpendStudent": "{{students}} - {{item}} 目標達成消費",
+    "growthSpendEleph": "{{item}} 目標達成消費",
+    "growthSpendDefault": "成長支出",
+    "elephGoalReached": "{{studentName}} - エレフ (目標達成)",
+    "goalLabel": "(目標)"
+  }
+}

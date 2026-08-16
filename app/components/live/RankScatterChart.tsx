@@ -16,8 +16,6 @@ import { FaChartLine } from 'react-icons/fa'; // Icon used as an emoji replaceme
 import { useDataCache } from '~/utils/cache'; // Updated import path
 import { cdn } from '~/utils/cdn'; // Updated import path
 
-import elimination_raid_trajectories from '~/data/jp/trajectory/elimination_raid_trajectories.json';
-import total_assault_trajectories from '~/data/jp/trajectory/total_assault_trajectories.json';
 import { LIVE_RAID_DURATION } from '~/data/liveRaid';
 import { getKstTime } from '~/data/globalRaidDates';
 
@@ -26,6 +24,10 @@ interface RankScatterChartProps {
   readonly lastData: LastData;
   readonly raidInfos: RaidInfo[];
   readonly server: GameServer;
+  // Fetched server-side via R2 binding (see live/index.tsx loader) instead of a static
+  // import, so this ~940KB historical dataset doesn't bloat the SSR Worker bundle.
+  readonly totalAssaultTrajectories: PredictionData | null;
+  readonly eliminationRaidTrajectories: PredictionData | null;
 }
 type ChartTab = 'total' | 'boss1' | 'boss2' | 'boss3';
 interface RemappedDataPoint {
@@ -45,7 +47,7 @@ interface TrajectoryDataPoint {
   score: number;
 }
 
-interface PredictionData {
+export interface PredictionData {
   target_rank: number;
   time_axis?: unknown;
   type?: string;
@@ -67,7 +69,7 @@ const getBracketFromTotalScore = (score: number, brackets: { name: string; minSc
   return brackets[index]?.name;
 };
 
-export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, raidInfos, server }) => {
+export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, raidInfos, server, totalAssaultTrajectories, eliminationRaidTrajectories }) => {
   // console.log('[RankScatterChart]', { isRaid, lastData, raidInfos, server });
   const [activeTab, setActiveTab] = useState<ChartTab>('total');
   const [axisType, setAxisType] = useState<'score' | 'time'>('score');
@@ -118,9 +120,9 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
   const SCORE_BRACKETS = useMemo(() => generateScoreBrackets(difficultyInfo), []);
   const isTotalChart = !isRaid && activeTab === 'total';
 
-  const predictionData = useMemo((): PredictionData => {
-    return isRaid ? total_assault_trajectories : elimination_raid_trajectories;
-  }, [isRaid]);
+  const predictionData = useMemo((): PredictionData | null => {
+    return isRaid ? totalAssaultTrajectories : eliminationRaidTrajectories;
+  }, [isRaid, totalAssaultTrajectories, eliminationRaidTrajectories]);
 
   const getDisplayName = useCallback(
     (id: string, targetTab?: string) => {

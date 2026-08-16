@@ -40,10 +40,12 @@ export interface ChartData {
 
 export interface Student {
   Name: string;
+  StarGrade: number;
+  IsLimited?: (0 | 1 | 2 | 3)[];
   SearchTags: string[];
-  Position: "Back'| 'Front'| 'Middle";
+  Position: 'Back' | 'Front' | 'Middle';
   SquadType: 'Main' | 'Support';
-  TacticRole: "DamageDealer'| 'Healer'| 'Supporter'| 'Tanker'| 'Vehicle";
+  TacticRole: 'DamageDealer' | 'Healer' | 'Supporter' | 'Tanker' | 'Vehicle';
   School: string;
   BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic' | 'Chemical';
   Portrait?: string;

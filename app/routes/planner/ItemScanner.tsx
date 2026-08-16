@@ -6,24 +6,26 @@ import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 import type { Route } from './+types/ItemScanner';
 
 const ItemScannerPage = lazy(() =>
-  import('~/components/planner/ItemScanner/ItemScannerPage').then((m) => ({
+  import('~/components/scanner/ItemScanner/ItemScannerPage').then((m) => ({
     default: m.ItemScannerPage,
   })),
 );
 
 export function links() {
-  return [...createLinkHreflang(`/planner/item-scanner`)];
+  return [...createLinkHreflang(`/scanner/item`)];
 }
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   return data({
     siteTitle: i18n.t('common:title'),
+    title: i18n.t('planner:page.itemScanner'),
+    description: i18n.t('planner:page.description.itemScanner'),
   });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(`Item Scanner | ${loaderData.siteTitle}`, 'Scan inventory screenshots to automatically update your material inventory.');
+  return createMetaDescriptor(`${loaderData.title} | ${loaderData.siteTitle}`, loaderData.description, '/img/scanner.webp');
 }
 
 export default function ItemScannerRoute() {

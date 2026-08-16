@@ -2,6 +2,7 @@ import { redirect } from 'react-router';
 import type { Route } from './+types/magic-link-redirect';
 import { localeLink } from '~/utils/localeLink';
 import { env } from 'cloudflare:workers';
+import { createInternalSessionRequest } from '~/utils/internalSessionRequest';
 
 interface SessionResponse {
   user: { id: string };
@@ -11,7 +12,7 @@ interface SessionResponse {
 export async function loader({ request, params }: Route.LoaderArgs) {
   const cacheHeaders = { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' };
   try {
-    const sessionResp = await env.AUTH_WORKER.fetch(new Request(new URL('/__internal/session', request.url), { headers: request.headers }));
+    const sessionResp = await env.AUTH_WORKER.fetch(createInternalSessionRequest(request, params.locale));
     if (sessionResp.status !== 200) return redirect(localeLink(params.locale, '/login'), { headers: cacheHeaders });
 
     const session: SessionResponse = await sessionResp.json();

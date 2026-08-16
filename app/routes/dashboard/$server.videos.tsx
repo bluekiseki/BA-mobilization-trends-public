@@ -1,18 +1,40 @@
 import { useEffect, useState, useMemo } from 'react';
+import { data, type LoaderFunctionArgs, useLoaderData, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { GameServer, RaidInfo, Student } from '~/types/data';
+import { GAMESERVER_LIST } from '~/types/data';
 import { loadRaidInfos } from '~/utils/loadRaidInfo';
 import type { PortraitData, StudentData } from '~/components/dashboard/common';
-import { useParams } from 'react-router';
 import { cdn } from '~/utils/cdn';
 import { VideoPageView } from '~/components/dashboard/video/VideoPageView';
 import { getLiveRaidInfo } from '~/data/liveRaid';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { HiOutlineChevronLeft } from 'react-icons/hi2';
+import { type_translation, typecolor } from '~/components/raid/raidToString';
 import { useDataCacheJson } from '~/utils/useDataCacheJson';
+import { getInstance } from '~/middleware/i18next';
+import { createMetaDescriptor } from '~/components/head';
+import type { Route } from './+types/$server.videos';
+
+export function loader({ context, params }: LoaderFunctionArgs) {
+  const { server } = params;
+  if (!server || !GAMESERVER_LIST.includes(server as GameServer)) {
+    throw new Response('Not Found', { status: 404 });
+  }
+  const i18n = getInstance(context);
+  return data({
+    title: i18n.t('dashboard:videos'),
+    siteTitle: i18n.t('common:title'),
+  });
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  return createMetaDescriptor(`${loaderData.title} | ${loaderData.siteTitle}`, loaderData.title, '/img/3.webp');
+}
 
 export default function RaidVideosPage() {
   const { server } = useParams<{ server: string }>();
+  const { title } = useLoaderData<typeof loader>();
   const { t } = useTranslation('dashboard');
   const { t: t_c, i18n } = useTranslation('common');
   const locale = i18n.language as Locale;
@@ -30,13 +52,25 @@ export default function RaidVideosPage() {
     const allData = loadRaidInfos(server as GameServer, locale);
     const liveData = getLiveRaidInfo(locale);
 
-    // Combine all raids
-    const merged: RaidInfo[] = [...liveData, ...allData];
+    // Once a raid concludes, its finalized (and properly localized) entry lands in allData
+    // while the temporary placeholder stays in liveData. Put allData first so the finalized
+    // entry wins the dedupe below instead of the untranslated live placeholder.
+    const merged: RaidInfo[] = [...allData, ...liveData];
+
+    // Dedupe by Id+Type so a raid still tracked in liveData after its official data has
+    // landed doesn't produce duplicate boss-type entries.
+    const seenIdType = new Set<string>();
+    const deduped = merged.filter((raid) => {
+      const key = `${raid.Id}::${raid.Type ?? ''}`;
+      if (seenIdType.has(key)) return false;
+      seenIdType.add(key);
+      return true;
+    });
 
     // Sort by date descending (most recent first) - this groups same Id raids together
-    merged.sort((a, b) => new Date(b.Date).getTime() - new Date(a.Date).getTime());
+    deduped.sort((a, b) => new Date(b.Date).getTime() - new Date(a.Date).getTime());
 
-    return merged;
+    return deduped;
   }, [server, locale]);
 
   // Get unique raid IDs for dropdown display (only first of each Id)
@@ -87,7 +121,7 @@ export default function RaidVideosPage() {
           <a href={`/dashboard/${server}`} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors">
             <HiOutlineChevronLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
           </a>
-          <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">{t('videos')} (Experimental)</h1>
+          <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">{title} (Experimental)</h1>
         </div>
 
         {/* Raid Selector */}
@@ -116,22 +150,31 @@ export default function RaidVideosPage() {
         {/* Boss Type Selector (Grand Assault only) */}
         {selectedId && isGrandAssault && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {raidInfos.map((r) => (
-              <button
-                key={r.Type}
-                onClick={() => setSelectedType(selectedType === r.Type ? null : r.Type || '')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedType === r.Type ? 'bg-blue-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
-                }`}
-              >
-                {r.Type}
-              </button>
-            ))}
+            {raidInfos.map((r) => {
+              const typeColor = r.Type ? typecolor[r.Type] : undefined;
+              const typeLabel = r.Type ? (type_translation[r.Type as keyof typeof type_translation]?.[getLocaleShortName(locale)] ?? r.Type) : r.Type;
+              const isSelected = selectedType === r.Type;
+              return (
+                <button
+                  key={r.Type}
+                  onClick={() => setSelectedType(isSelected ? null : r.Type || '')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isSelected ? 'text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
+                  }`}
+                  style={isSelected && typeColor ? { backgroundColor: typeColor } : undefined}
+                >
+                  {typeLabel}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-4">{t('videos_missing_note')}</p>
+      <ul className="text-xs text-neutral-400 dark:text-neutral-500 mb-4 space-y-1 list-disc list-inside">
+        <li>{t('videos_missing_note')}</li>
+        <li>{t('video_extraction_note')}</li>
+      </ul>
       <hr className="my-4" />
 
       {/* Content */}

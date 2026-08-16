@@ -3,20 +3,33 @@ import type { MetaDescriptor } from 'react-router';
 import type { Locale } from '~/utils/i18n/config';
 import { domain } from '~/data/livedataServer.json';
 
-export const createMetaDescriptor = (title: string, description: string, iamge: string = '/example.webp') => {
+export const createMetaDescriptor = (title: string, description: string, image: string = '/example.webp', url?: string) => {
+  const absoluteImage = image.startsWith('http') ? image : `https://${domain}${image}`;
+
   return [
     { title },
     { property: 'og:title', content: title },
-    { property: 'twitter:title', content: title },
+    { name: 'twitter:title', content: title },
 
     { name: 'description', content: description },
     { property: 'og:description', content: description },
-    { property: 'twitter:description', content: description },
+    { name: 'twitter:description', content: description },
 
-    { property: 'og:image', content: iamge },
-    { property: 'twitter:image', content: iamge },
-    { property: 'twitter:card', content: iamge },
+    { property: 'og:image', content: absoluteImage },
+    { name: 'twitter:image', content: absoluteImage },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    ...(url
+      ? [
+          { property: 'og:url', content: url },
+          { property: 'og:type', content: 'website' },
+        ]
+      : []),
   ] as MetaDescriptor[];
+};
+
+export const createLocalizedUrl = (locale: Locale, path: string) => {
+  const localePrefix = locale === 'en' ? '' : `/${locale}`;
+  return `https://${domain}${localePrefix}${path}`;
 };
 
 interface LinkHreflang {
@@ -25,32 +38,31 @@ interface LinkHreflang {
   href: string;
 }
 export const createLinkHreflang: (path: string) => LinkHreflang[] = (path: string) => {
-  const domain_name = `https://${domain}`;
   return [
     {
       rel: 'alternate',
       hrefLang: 'en',
-      href: `${domain_name}${path}`,
+      href: createLocalizedUrl('en', path),
     },
     {
       rel: 'alternate',
       hrefLang: 'ko',
-      href: `${domain_name}/ko${path}`,
+      href: createLocalizedUrl('ko', path),
     },
     {
       rel: 'alternate',
       hrefLang: 'ja',
-      href: `${domain_name}/ja${path}`,
+      href: createLocalizedUrl('ja', path),
     },
     {
       rel: 'alternate',
       hrefLang: 'zh-Hant',
-      href: `${domain_name}/zh-Hant${path}`,
+      href: createLocalizedUrl('zh-Hant', path),
     },
     {
       rel: 'alternate',
       hrefLang: 'x-default',
-      href: `${domain_name}${path}`,
+      href: createLocalizedUrl('en', path),
     },
   ];
 };
@@ -62,7 +74,6 @@ export const Title = () => {
   return (
     <>
       <meta property="og:site_name" content={t('title')} />
-      <meta property="og:url" content={`https://${domain}`} />
     </>
   );
 };

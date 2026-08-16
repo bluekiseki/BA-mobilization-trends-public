@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import 'rc-slider/assets/index.css';
 import type { GameServer, RaidInfo, Student } from '~/types/data';
 import { GAMESERVER_LIST } from '~/types/data';
-import { difficultyInfo, type DifficultySelect } from '~/components/raid/Difficulty';
+import { difficultyInfo, type DifficultyName } from '~/components/raid/Difficulty';
 import { useTranslation } from 'react-i18next';
 import { ToggleButtonGroup } from '~/components/ToggleButtonGroup';
 import TooltipSlider from '~/components/HandleTooltip';
@@ -17,7 +17,7 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 
 import { RankingChart } from '~/components/ranking/chart';
-import { PlayIcon, StopIcon } from '~/components/Icon';
+import { PlayIcon, StopIcon, ChevronIcon } from '~/components/Icon';
 import { PageHeader } from '~/components/common/PageHeader';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
@@ -135,8 +135,9 @@ export default function RankingChartPage() {
     const s = r.startsWith('R') ? Number(r.substring(1)) * 4 - 211 : Number(r.substring(1)) * 4 + 10;
     return s;
   }, []);
-  const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 134]); // Stores [min, max] range
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultySelect>('All'); // Stores [min, max] range
+  const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 134]);
+  const [selectedDifficulties, setSelectedDifficulties] = useState<Set<string>>(new Set(['All']));
+  const [isDifficultyDropdownOpen, setIsDifficultyDropdownOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const currentLocale = useTranslation().i18n.language as Locale;
   const { t, i18n } = useTranslation('charts', { keyPrefix: 'ranking' });
@@ -149,12 +150,30 @@ export default function RankingChartPage() {
 
   // Create a ref for the SVG container
   const containerRef = useRef<HTMLDivElement>(null);
+  const difficultyDropdownRef = useRef<HTMLDivElement>(null);
   // State to hold the dynamic width of the SVG container
   const [svgWidth, setSvgWidth] = useState(800); // window.innerWidth - 50
 
   const fetchData = useDataCache<RawRatingData>();
   const fetchStudents = useDataCache<Record<string, Student>>();
   const fetchRaids = useDataCache<RaidInfo[]>();
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (difficultyDropdownRef.current && !difficultyDropdownRef.current.contains(event.target as Node)) {
+        setIsDifficultyDropdownOpen(false);
+      }
+    };
+
+    if (isDifficultyDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDifficultyDropdownOpen]);
 
   useEffect(() => {
     // Function to get the current container width
@@ -239,6 +258,9 @@ export default function RankingChartPage() {
 
     const displayValue = displayMode === 'average';
 
+    // Determine which difficulties to include
+    const difficultiesToInclude = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
+
     for (const key in rawRatingData) {
       const [raidStr, studentStr, rankStr, difficultyIndex] = key.split('|');
       const student = parseInt(studentStr, 10);
@@ -247,12 +269,13 @@ export default function RankingChartPage() {
       const raidIdNum = parseInt(raidStr, 10);
       const difficulty = difficultyInfo[parseInt(difficultyIndex)].name;
 
-      if (displayValue) {
-        if (selectedDifficulty == 'All') count /= raidInfo[raidIdNum].Cnt.All;
-        else count /= raidInfo[raidIdNum].Cnt[selectedDifficulty] || raidInfo[raidIdNum].Cnt.All;
-      }
+      // Filter by difficulty before calculating the per-difficulty average.
+      if (!difficultiesToInclude.has(difficulty)) continue;
 
-      if (selectedDifficulty != 'All' && selectedDifficulty != difficulty) continue;
+      if (displayValue) {
+        const participantCount = raidInfo[raidIdNum].Cnt[difficulty];
+        count /= participantCount || raidInfo[raidIdNum].Cnt.All;
+      }
 
       // Filter by raid ID range
       const raidIdMatch = raidIdNum >= startId && raidIdNum <= endId;
@@ -314,16 +337,20 @@ export default function RankingChartPage() {
         });
       return { ...item, processedRatings };
     });
-  }, [rawRatingData, allStudents, selectedRaidIds, displayMode, selectedSquadType, selectedTacticRole, selectedDifficulty, raidInfo, selectedStudentType, studentMap, isRelativeMode, svgWidth]);
+  }, [rawRatingData, allStudents, selectedRaidIds, displayMode, selectedSquadType, selectedTacticRole, selectedDifficulties, raidInfo, selectedStudentType, studentMap, isRelativeMode, svgWidth]);
 
   // Create marks for the slider
   // const raidIds = Object.keys(raidInfo).map(Number).filter(id => !isNaN(id));
 
+  const difficultiesToShow = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
+
   const filteredRaidInfoByDifficulty = raidInfo
     .map((raid, index) => ({ ...raid, index }))
     .filter((raid) => {
-      if (selectedDifficulty == 'All') return true;
-      return selectedDifficulty in raid.Cnt;
+      for (const difficulty of difficultiesToShow) {
+        if (difficulty in raid.Cnt) return true;
+      }
+      return false;
     });
 
   const toFilteredRaidId = (origID: number) => {
@@ -449,27 +476,65 @@ export default function RankingChartPage() {
               </div>
 
               <div className="flex items-center space-x-2 py-0.5">
-                <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                  {t('control.difficulty')}
-                </label>
-                <select
-                  id="squad-type-select"
-                  value={selectedDifficulty}
-                  onChange={(e) => {
-                    const difficultySelect = e.target.value as DifficultySelect;
-                    setSelectedDifficulty(difficultySelect);
-                  }}
-                  className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
-                >
-                  <option value="All">{t('control.squad_type_all')}</option>
-                  {difficultyInfo
-                    .filter((v) => v.name != 'Extreme')
-                    .map(({ name }) => (
-                      <option value={name} key={name}>
-                        {t_raids(name)}
-                      </option>
-                    ))}
-                </select>
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.difficulty')}</label>
+                <div className="relative" ref={difficultyDropdownRef}>
+                  <button
+                    onClick={() => setIsDifficultyDropdownOpen(!isDifficultyDropdownOpen)}
+                    className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white bg-transparent min-w-32 text-left flex justify-between items-center"
+                  >
+                    <span>
+                      {selectedDifficulties.has('All')
+                        ? t('control.squad_type_all')
+                        : Array.from(selectedDifficulties)
+                            .map((d) => t_raids(d as DifficultyName))
+                            .join(', ')}
+                    </span>
+                    <ChevronIcon className={`w-3! h-3! transition-transform ${isDifficultyDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isDifficultyDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md shadow-lg z-10 p-2 min-w-40">
+                      <label className="flex items-center space-x-2 p-1 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-600 rounded">
+                        <input
+                          type="checkbox"
+                          checked={selectedDifficulties.has('All')}
+                          onChange={() => {
+                            if (selectedDifficulties.has('All')) {
+                              const newSet = new Set(selectedDifficulties);
+                              newSet.delete('All');
+                              setSelectedDifficulties(newSet.size === 0 ? new Set(['All']) : newSet);
+                            } else {
+                              setSelectedDifficulties(new Set(['All']));
+                            }
+                          }}
+                          className="w-4 h-4 border border-neutral-300 rounded dark:border-neutral-600"
+                        />
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">{t('control.squad_type_all')}</span>
+                      </label>
+                      {difficultyInfo
+                        .filter((v) => v.name !== 'Extreme')
+                        .map(({ name }) => (
+                          <label key={name} className="flex items-center space-x-2 p-1 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-600 rounded">
+                            <input
+                              type="checkbox"
+                              checked={selectedDifficulties.has(name) && !selectedDifficulties.has('All')}
+                              onChange={() => {
+                                const newSet = new Set(selectedDifficulties);
+                                if (newSet.has('All')) newSet.delete('All');
+                                if (newSet.has(name)) {
+                                  newSet.delete(name);
+                                } else {
+                                  newSet.add(name);
+                                }
+                                setSelectedDifficulties(newSet.size === 0 ? new Set(['All']) : newSet);
+                              }}
+                              className="w-4 h-4 border border-neutral-300 rounded dark:border-neutral-600"
+                            />
+                            <span className="text-sm text-neutral-700 dark:text-neutral-300">{t_raids(name)}</span>
+                          </label>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center space-x-2 py-0.5">

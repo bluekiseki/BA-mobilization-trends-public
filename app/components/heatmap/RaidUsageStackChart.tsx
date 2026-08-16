@@ -13,6 +13,7 @@ import { getBackgroundRatingColor } from '../dashboard/common';
 import { StarRating } from '../StarRating';
 import { raidToString } from '../raid/raidToString';
 import type { Locale } from '~/utils/i18n/config';
+import { difficultyInfo, type DifficultySelect } from '../raid/Difficulty';
 
 interface RaidUsageData {
   raidId: string;
@@ -36,11 +37,14 @@ export const RaidUsageStackChart: React.FC = () => {
   const { t: t_chart } = useTranslation('charts', {
     keyPrefix: 'ranking.control',
   });
+  const { t: t_raids } = useTranslation('raidInfo');
 
-  const { chartDataByZ, getFilteredRaidInfoByDifficulty } = useChartControlsStore(
+  const { chartDataByZ, getFilteredRaidInfoByDifficulty, difficulty, setDifficulty } = useChartControlsStore(
     useShallow((state) => ({
       chartDataByZ: state.chartDataByZ,
       getFilteredRaidInfoByDifficulty: state.getFilteredRaidInfoByDifficulty,
+      difficulty: state.difficulty,
+      setDifficulty: state.setDifficulty,
     })),
   );
 
@@ -333,6 +337,19 @@ export const RaidUsageStackChart: React.FC = () => {
               </button>
             ))}
           </div>
+
+          <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value as DifficultySelect)}
+            className="h-8 px-2 rounded-md bg-neutral-100 dark:bg-neutral-700 text-xs font-medium text-neutral-500 dark:text-neutral-400 border-0 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="All">{t_raids('allDifficulties')}</option>
+            {difficultyInfo.map(({ name }) => (
+              <option value={name} key={name}>
+                {t_raids(name)}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

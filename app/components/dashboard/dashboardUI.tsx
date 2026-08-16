@@ -1,8 +1,12 @@
 // export default DashboardUI;
 
 import { useState, useMemo, useRef, useEffect, startTransition } from 'react';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card } from '~/components/dashboard/card';
+import { StudentNetworkGraphClient } from '~/components/network/StudentNetworkGraphClient';
+import { loadIndex, buildSeasonItems } from '~/components/network/useNetworkData';
+import type { SeasonItem } from '~/components/network/types';
 import {
   getCharacterStarValue,
   InclusionUsage,
@@ -27,6 +31,8 @@ import { TableFilterPanelComponent } from './teamDetail/tableFilterPanelComponen
 import { RankingsTableComponent } from './teamDetail/rankingsTableComponent';
 import { HiOutlineBars3, HiOutlineChartBar, HiOutlineChartPie, HiOutlineTableCells, HiOutlineUserGroup, HiOutlineUsers, HiOutlineVariable, HiOutlineXMark } from 'react-icons/hi2';
 import { useLocalStorage } from '~/utils/useLocalStorage';
+import { localeLink } from '~/utils/localeLink';
+import type { Locale } from '~/utils/i18n/config';
 
 const RANK_RANGES: RankRange[] = [
   { id: 'IN100', name: 'IN 100', min: 1, max: 100 },
@@ -47,6 +53,12 @@ interface DashboardUIProps {
 
 // --- MAIN UI COMPONENT ---
 function DashboardUI({ dashboardData: allData, studentData, portraitData, raidInfo, server }: DashboardUIProps) {
+  const [networkSeasons, setNetworkSeasons] = useState<SeasonItem[]>([]);
+  useEffect(() => {
+    if (server !== 'jp') return;
+    void loadIndex().then((index) => setNetworkSeasons(buildSeasonItems(index)));
+  }, [server]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   // const [tableFilters, setTableFilters] = useState<TableFilters>({
@@ -60,7 +72,10 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
 
   const [displayData, setDisplayData] = useState<ReportEntryRank[]>([]);
 
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
+  const { t: t_network } = useTranslation('network');
+  const { t: t_common } = useTranslation('common');
+  const locale = i18n.language as Locale;
 
   // --- Rank Range Initialization Logic ---
   const rank_ranges: RankRange[] = [];
@@ -389,7 +404,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
         <button
           onClick={() => setIsNavOpen(true)}
           className="p-4 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 rounded-full shadow-lg ring-1 ring-black/5 dark:ring-white/10 hover:bg-neutral-50 dark:hover:bg-neutral-700 active:scale-95 transition-all"
-          aria-label={t('openNavigation', 'open')}
+          aria-label={t_common('open')}
         >
           <HiOutlineBars3 className="w-6 h-6" />
         </button>
@@ -407,11 +422,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
       >
         <div className="flex justify-between items-center p-4 border-b border-neutral-200 dark:border-neutral-700">
           <h3 className="text-lg font-semibold">{t('quickNavigation')}</h3>
-          <button
-            onClick={() => setIsNavOpen(false)}
-            className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full"
-            aria-label={t('closeNavigation', 'close')}
-          >
+          <button onClick={() => setIsNavOpen(false)} className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full" aria-label={t_common('close')}>
             <HiOutlineXMark className="w-6 h-6" />
           </button>
         </div>
@@ -528,6 +539,29 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
             server={server}
           />
         </Card>
+
+        {server === 'jp' && (
+          <Card
+            title={t_network('title')}
+            defaultExpanded={false}
+            headerActions={
+              <Link
+                to={localeLink(locale, `/charts/jp/network?raid=${encodeURIComponent(raidInfo.Type ? `${raidInfo.Id}-${raidInfo.Type}` : raidInfo.Id)}`)}
+                className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                {t_network('fullPage')}
+              </Link>
+            }
+          >
+            {networkSeasons.length > 0 ? (
+              <div className="border-t border-neutral-200 dark:border-neutral-700">
+                <StudentNetworkGraphClient embedded={true} seasons={networkSeasons} initialSeasonId={raidInfo.Type ? `${raidInfo.Id}-${raidInfo.Type}` : raidInfo.Id} simplified={true} height={560} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-24 text-sm text-neutral-400">{t_common('loading_txt')}</div>
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -37,5 +37,10 @@
   "versionId": "VERSION ID: {{id}}",
   "changeRecorded": "Data change recorded.",
   "notFound": "Notice not found.",
-  "viewAll": "View all notices"
+  "viewAll": "View all notices",
+  "viewDiff": "Compare Changes",
+  "viewFull": "View Full Content",
+  "titleChanged": "Title changed",
+  "diffStatsLines": "lines",
+  "diffStatsChars": "chars"
 }

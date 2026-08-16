@@ -522,3 +522,29 @@ studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
 10091,Kazusa (Band),2026-06-17 11:00,2026-06-24 10:59,true,true,false
 10092,Yoshimi (Band),2026-06-17 11:00,2026-06-24 10:59,true,true,false
 10120,Natsu (Band),2026-06-17 11:00,2026-06-24 10:59,true,false,false
+10143,Shun (Swimsuit),2026-06-24 11:00,2026-07-08 10:59,false,false,false
+10145,Kisaki (Swimsuit),2026-06-24 11:00,2026-07-08 10:59,false,false,false
+10117,Hikari,2026-07-08 11:00,2026-07-22 10:59,true,true,false
+10118,Nozomi,2026-07-08 11:00,2026-07-22 10:59,true,true,false
+10101,Saori (Swimsuit),2026-07-08 11:00,2026-07-22 10:59,true,true,false
+10102,Hiyori (Swimsuit),2026-07-08 11:00,2026-07-22 10:59,true,true,false
+20049,Misaki (Swimsuit),2026-07-08 11:00,2026-07-22 10:59,true,false,false
+10033,Wakamo,2026-07-08 11:00,2026-07-15 10:59,true,true,false,recall
+10045,Hoshino (Swimsuit),2026-07-08 11:00,2026-07-15 10:59,true,true,false,recall
+10059,Mika,2026-07-08 11:00,2026-07-15 10:59,true,true,false,recall
+10086,Hina (Dress),2026-07-08 11:00,2026-07-15 10:59,true,true,false,recall
+10074,Hanako (Swimsuit),2026-07-08 11:00,2026-07-15 10:59,true,true,false,recall
+20033,Makoto,2026-07-22 11:00,2026-07-29 10:59,true,true,false
+10087,Ako (Dress),2026-07-22 11:00,2026-07-29 10:59,true,true,false
+20040,Satsuki,2026-07-22 11:00,2026-07-29 10:59,true,false,false
+10107,Chiaki,2026-07-22 11:00,2026-07-29 10:59,true,false,false
+10146,Makoto (Swimsuit),2026-07-29 11:00,2026-08-05 10:59,false,true,false
+10147,Satsuki (Swimsuit),2026-07-29 11:00,2026-08-05 10:59,false,true,false
+10148,Iroha (Swimsuit),2026-08-05 11:00,2026-08-12 10:59,false,true,true
+20060,Ibuki (Swimsuit),2026-08-05 11:00,2026-08-12 10:59,false,true,true
+20041,Rio,2026-08-05 11:00,2026-08-12 10:59,true,true,true
+10111,Neru (School Uniform),2026-08-05 11:00,2026-08-12 10:59,true,true,true
+10113,Sena (Casual),2026-08-12 11:00,2026-08-26 10:59,false,false,false
+10114,Juri (Part-Timer),2026-08-12 11:00,2026-08-26 10:59,false,false,false
+10119,Nagusa,2026-08-12 11:00,2026-08-26 10:59,false,false,false
+20046,Niya,2026-08-12 11:00,2026-08-26 10:59,false,false,false

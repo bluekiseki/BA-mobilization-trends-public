@@ -17,7 +17,7 @@ export interface Student extends StudentBase {
   SkillMaterialAmount: number[][];
   StarGrade: number;
   Skills: Skills;
-  Equipment: ['Hat' | 'Shoes' | 'Gloves', 'Hairpin' | 'Bag' | 'Badge', 'Watch' | 'Charm' | 'Necklace:'];
+  Equipment: ['Hat' | 'Shoes' | 'Gloves', 'Hairpin' | 'Bag' | 'Badge', 'Watch' | 'Charm' | 'Necklace'];
   FavorItemTags: string[];
   FavorItemUniqueTags: string[];
   ArmorType: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
@@ -34,6 +34,9 @@ export interface Student extends StudentBase {
         TierUpMaterialAmount: number[][];
       };
   WeaponType: 'AR' | 'FT' | 'GL' | 'HG' | 'MG' | 'MT' | 'RG' | 'RL' | 'SG' | 'SMG' | 'SR';
+  // Only the terrain-adaptation-bonus fields are typed here (used by the student scanner's
+  // matching pipeline); the raw SchaleDB data also carries Name/Desc/AttackPower/etc.
+  Weapon?: { AdaptationType?: 'Street' | 'Outdoor' | 'Indoor'; AdaptationValue?: number } | null;
   StyleId?: number;
 }
 
@@ -117,6 +120,7 @@ export interface EventData {
     world_raid_stage_reward: Record<string, WorldRaidStageReward[]>;
   };
   minigame_road_puzzle?: RoadPuzzleData;
+  minigame_janken?: MinigameJanken;
 }
 
 export interface RoadPuzzleData {
@@ -250,7 +254,7 @@ interface ShopItem {
 }
 
 // Goods and rewards information for store items
-interface GoodsInfo {
+export interface GoodsInfo {
   ConsumeParcelId: number[];
   ConsumeParcelAmount: number[];
   ConsumeParcelTypeStr: string[];
@@ -576,6 +580,7 @@ export interface MinigameMission {
     Kr: string;
     Jp: string;
     En: string;
+    Tw: string;
   };
   CategoryStr: string;
 }
@@ -661,6 +666,61 @@ export interface MinigameDefenseStage {
 export interface MinigameDefense {
   info: MinigameDefenseInfo[];
   stage: MinigameDefenseStage[];
+}
+
+// MinigameJanken Types
+export interface MinigameJankenInfo {
+  CostParcelId: number;
+  CostParcelType: number;
+  CostParcelTypeStr: string;
+  ChallengeMultipleUnlockScore: number;
+  MultipleMax: number;
+  ScoreMaxStack: number;
+  EquipmentMaxTier: number;
+  CostParcelEquipUpgradeId: number;
+  CostParcelEquipUpgradeType: number;
+  CostParcelEquipUpgradeTypeStr?: string;
+  NeedItemAmountT2: number;
+  NeedItemAmountT3: number;
+  NeedItemAmountT4: number;
+  NeedItemAmountT5: number;
+}
+
+export interface MinigameJankenStage {
+  Id: number;
+  Name: string;
+  StageNumber: number;
+  StageDisplay: number;
+  JankenStageType: number; // 1: Story, 2: Normal, 3: Challenge
+  StageEnterCostId: number;
+  StageEnterCostAmount: number;
+  StageEnterCostType: number;
+  EventContentStageRewardId: number;
+  EventContentStageReward?: StageReward[];
+  StarGoal: number[];
+  StarGoalAmount: number[];
+  PrevStageId: number;
+}
+
+export interface MinigameJankenRewardScore {
+  Id: number;
+  ScoreRewardId: number[];
+  StackedScore: number[];
+}
+
+export interface MinigameJankenRewardScoreItem {
+  Id: number;
+  ParcelUniqueId: number[];
+  Amount: number[];
+  ParcelType: number[];
+  ParcelTypeStr: string[];
+}
+
+export interface MinigameJanken {
+  info: MinigameJankenInfo[];
+  stage: MinigameJankenStage[];
+  reward_score: MinigameJankenRewardScore[];
+  reward_score_item: MinigameJankenRewardScoreItem[];
 }
 
 // ClueSearch Types
@@ -827,6 +887,17 @@ export interface CampaignStage {
  * Value: CampaignStage
  */
 export type CampaignData = Record<string, CampaignStage>;
+
+export interface ContentItem {
+  id: string;
+  type: 'raid' | 'eraid' | 'multifloor';
+  prefix: string;
+  season: number;
+  typeLabel: string;
+  bossTitle: string;
+  date: string;
+  endDate?: string;
+}
 
 // ===================================================================
 // InteractiveWorldRaid Types

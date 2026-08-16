@@ -12,6 +12,7 @@ import { ccgRunInputSchema } from '~/types/minigame/ccg';
 import { customGameItemSchema } from '~/types/minigame/customGame';
 import { interactiveWorldRaidConfigSchema } from '~/types/minigame/interactiveWorldRaid';
 import { roadPuzzleConfigSchema } from '~/types/minigame/roadPuzzle';
+import { jankenConfigSchema } from '~/types/minigame/janken';
 
 export const stagePrioSchema = z.enum(['include', 'exclude', 'priority']);
 export type StagePrio = z.infer<typeof stagePrioSchema>;
@@ -57,6 +58,15 @@ export const eventPlanSchema = z.object({
   fieldEventConfig: fieldEventConfigSchema.optional(),
   interactiveWorldRaidConfig: interactiveWorldRaidConfigSchema.optional(),
   roadPuzzleConfig: roadPuzzleConfigSchema.optional(),
+  minigameJankenConfig: jankenConfigSchema.optional(),
+  cachedTotalItems: z
+    .object({
+      savedAt: z.number(),
+      gained: z.record(z.string(), z.object({ amount: z.number(), isBonusApplied: z.boolean() })),
+      spent: z.record(z.string(), z.object({ amount: z.number(), isBonusApplied: z.boolean() })),
+      availableAp: z.number().default(0),
+    })
+    .optional(),
 });
 
 export type EventPlan = z.infer<typeof eventPlanSchema>;

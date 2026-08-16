@@ -1,0 +1,57 @@
+{
+  "title": "Student Mobilization Network Analysis",
+  "description": "Explore which students are frequently used together and identify central picks in raid team compositions.",
+  "loadingAssets": "Loading initial assets...",
+  "fullPage": "Full page →",
+  "sidebarTabs": {
+    "filter": "Filter",
+    "search": "Search",
+    "rankings": "Rank",
+    "detail": "Detail"
+  },
+  "controls": {
+    "range": "Range",
+    "from": "From",
+    "to": "To",
+    "seasonsInRange": "{{count}} seasons in range",
+    "type": "Type",
+    "rankCutoff": "Rank cutoff",
+    "topRank": "Top {{value}}",
+    "display": "Display",
+    "minEdgeWeight": "Min edge weight: {{value}}",
+    "maxStudents": "Max students: {{value}}",
+    "topNPerNode": "Top N links per node",
+    "on": "On",
+    "off": "Off"
+  },
+  "ranking": {
+    "noData": "No data",
+    "pageRank": "PageRank",
+    "pageRankDesc": "PageRank: centrality weighted by the importance of co-occurring students, not just raw count. Higher-ranked neighbors boost the score.",
+    "betweenness": "Betweenness",
+    "betweennessDesc": "Betweenness: how often a student lies on the shortest path between two others. High value → key bridge in team compositions. Removal likely to fragment connections.",
+    "strength": "Strength",
+    "strengthDesc": "Total co-occurrence count across all other students. The most direct measure of overall usage frequency.",
+    "degree": "Degree",
+    "degreeDesc": "Number of unique students co-occurred with. High degree → appears across many different team compositions. Good indicator of versatility."
+  },
+  "nodeDetail": {
+    "clickToSeeDetails": "Click a node to see details",
+    "appearances": "{{count}} mobilizations",
+    "coOccurrences": "Co-mobilizations",
+    "noConnections": "No connections in current view",
+    "viewProfile": "Student info & participation"
+  },
+  "canvas": {
+    "recentSeasons": "recent 14 seasons combined",
+    "nodesStat": "{{nodes}} students · {{edges}} connections",
+    "focus": "Focus:",
+    "instructionsHint": "Click a node to focus · Drag to move · Scroll to zoom",
+    "selectSeasons": "Select seasons from the Filter tab to begin.",
+    "noMatches": "No data matches the current filters."
+  },
+  "search": {
+    "placeholder": "Search student...",
+    "noResults": "No results"
+  }
+}

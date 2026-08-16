@@ -1,0 +1,173 @@
+{
+  "header": {
+    "title": "成長資源計劃工具",
+    "description": "預測向學生升級目標傾斜的艾蕾芙、艾麗格瑪和硬幣收入"
+  },
+  "horizon": {
+    "oneMonth": "1 個月",
+    "threeMonths": "3 個月",
+    "fourMonths": "4 個月",
+    "sixMonths": "6 個月",
+    "oneYear": "1 年"
+  },
+  "tabs": {
+    "overview": "概述",
+    "resources": "資源",
+    "income": "收入與支出",
+    "incomeShort": "設定",
+    "students": "學生目標",
+    "studentsShort": "目標"
+  },
+  "incomeTabHint": "選擇上面要追蹤的資源，以配置收入、購買和農業計劃。",
+  "planStatus": {
+    "title": "計劃狀態",
+    "summary": "{{atRisk}} 項風險 · {{covered}} 項需要艾麗格瑪 · {{onTrack}} 項正常",
+    "summaryWithDeadline": "{{atRisk}} 項風險 · {{covered}} 項需要艾麗格瑪 · {{onTrack}} 項正常 · {{noDeadline}} 項無期限",
+    "openButton": "學生目標",
+    "sectionTitle": "學生目標",
+    "emptyState": "新增學生目標以查看自然艾蕾芙收入是否充足或需要艾麗格瑪。",
+    "statusAtRisk": "風險",
+    "statusCovered": "艾麗格瑪涵蓋",
+    "statusOnTrack": "正常",
+    "statusNoDeadline": "無期限",
+    "noDeadlineDate": "無期限",
+    "needsFromEligma": "從艾麗格瑪需要",
+    "costsEligma": "艾麗格瑪成本",
+    "naturalEleph": "自然艾蕾芙",
+    "eligmaShort": "{{amount}} 艾麗格瑪不足",
+    "eligmaLeft": "{{amount}} 艾麗格瑪剩餘",
+    "resourceRisks": "資源風險",
+    "tacticalCoin": "戰術挑戰硬幣",
+    "apPurchaseDays_one": "{{count}} 天內的 AP 購買",
+    "apPurchaseDays_other": "{{count}} 天內的 AP 購買",
+    "apPlanGains": "AP 計劃收益",
+    "lowestBalance": "最低餘額",
+    "shortOn": "在 {{date}} 缺少"
+  },
+  "studentGoals": {
+    "byStudent": "按學生",
+    "bySchedule": "按時間表",
+    "activePlans": "具有活躍計劃的學生",
+    "noStudentSelected": "未選擇學生",
+    "selectStudentHint": "從上面的追蹤項目中選擇學生的艾蕾芙以查看和編輯目標。"
+  },
+  "trackedItems": {
+    "title": "追蹤項目",
+    "searchPlaceholder": "搜尋項目或學生別名...",
+    "noResults": "無搜尋結果",
+    "activeTarget": "已選擇",
+    "noGoalsSet": "未設定內容目標。請在學生目標部分新增目標。",
+    "displayByGrowthPlan": "依成長計劃顯示",
+    "greyOutUnplannedStudents": "將沒有成長計劃的學生顯示為灰色",
+    "studentCount_one": "人",
+    "studentCount_other": "人"
+  },
+  "income": {
+    "sectionTitle": "收入來源 · {{section}}",
+    "defaultDailyCoins": "預設每日硬幣",
+    "coinsPerDay": "硬幣/天",
+    "perPeriodOverride": "按期間覆蓋:",
+    "removeOverride": "移除覆蓋",
+    "override": "覆蓋",
+    "noDefaultSet": "未設定預設值 — 未追蹤此期間。",
+    "usingDefaultConfig": "使用預設設定中。",
+    "defaultAllPeriods": "預設 (所有期間)",
+    "clear": "清除",
+    "weeklyMax": "每週最大",
+    "dailyMode": "每日",
+    "weeklyIncome": "每週收入",
+    "permitsPerWeek": "許可證/週",
+    "dailyInputHint": "每日輸入：使用下面的日程表日曆輸入每日金額。",
+    "defaultMaxFloor": "預設最大層數",
+    "noMfPeriods": "日程中沒有能力而發WB期間。"
+  },
+  "elephCard": {
+    "contentMode": "內容",
+    "dateMode": "日期",
+    "timingStart": "開始",
+    "timingEnd": "結束",
+    "selectContent": "— 選擇內容 —",
+    "finalGoal": "最終目標",
+    "by": "期限",
+    "noGoalsSet": "未設定目標",
+    "goalsCount_one": "{{count}} 個目標 · 共 {{eleph}} 艾蕾芙",
+    "goalsCount_other": "{{count}} 個目標 · 共 {{eleph}} 艾蕾芙",
+    "setGoalsBelow": "在下方設定目標",
+    "current": "當前",
+    "target": "目標",
+    "remove": "移除",
+    "intermediateGoals": "中間目標",
+    "addGoal": "新增目標",
+    "noGoalsYet": "還沒有目標。新增目標以規劃艾蕾芙支出。",
+    "currentEleph": "當前艾蕾芙",
+    "gachaAvg": "抽卡平均",
+    "gachaAvgValue": "~{{value}} 總計"
+  },
+  "pvp": {
+    "rankingTier": "排名級別",
+    "defenseWins": "防守勝利/天 (0–10)",
+    "plusCoinsPerDay": "+{{coins}} 硬幣/天",
+    "extraWeeklyIncome": "額外每週收入",
+    "miscSources": "其他來源",
+    "daily": "每日:",
+    "weekly": "每週:",
+    "coins": "硬幣"
+  },
+  "raid": {
+    "killDifficulty": "擊敗難度",
+    "trophy": "獎盃",
+    "normal": "普通:",
+    "premium": "高級:",
+    "eligmaLabel": "艾麗格瑪:"
+  },
+  "panel": {
+    "title": "資源",
+    "startingInventory": "初始持有量",
+    "gachaSimulation": "抽卡模擬",
+    "noSimDataPre": "沒有模擬資料。",
+    "noSimDataPost": "請先執行。",
+    "runSim": "模擬",
+    "planAt": "計劃於",
+    "avg": "平均",
+    "eventIncome": "事件收入 (來自事件計劃工具)",
+    "noEventDataPre": "無事件收入連結。",
+    "goToEventPlanner": "設定活動規劃器",
+    "noEventDataPost": "以加入活動獎勵。",
+    "total": "總計",
+    "coinShopNote": "硬幣商店、專家許可證購買和硬體副本運作在下方的日程表部分配置。"
+  },
+  "schedule": {
+    "title": "支出日程",
+    "previousMonth": "上個月",
+    "nextMonth": "下個月",
+    "returnToCurrentMonth": "返回當前計劃月",
+    "dragHint": "橫向拖動日期格，或點擊日程條以選擇範圍。拖動須先往橫向移動才能被識別。<br/>可使用 <kbd>←</kbd> / <kbd>→</kbd> 鍵或畫面按鈕切換月份。<br/>月度商店購買記錄在每月所選範圍中最早的日期。"
+  },
+  "stageFarming": {
+    "runsPerDay": "次/天",
+    "apply": "套用",
+    "remove": "移除",
+    "runsScheduled_one": "已排程 {{count}} 次運行",
+    "runsScheduled_other": "已排程 {{count}} 次運行"
+  },
+  "purchasePanel": {
+    "shopNotOpen": "商店尚未開放 · 從 {{date}} 開始可用",
+    "targetReached": "已達目標",
+    "apply": "套用",
+    "cancel": "取消"
+  },
+  "eventLabels": {
+    "title": "{{title}}",
+    "raidBoss": "總力戰 {{boss}}",
+    "eraidBoss": "大決戰 {{boss}}",
+    "mfBoss": "制約解除決戰 {{boss}}",
+    "jfdSeason": "綜合戰術考試 S{{season}}",
+    "shopRefresh": "商店重置 ×{{count}}",
+    "purchaseFrom": "{{item}} 兌換",
+    "growthSpendStudent": "{{students}} - {{item}} 目標達成消耗",
+    "growthSpendEleph": "{{item}} 目標達成消耗",
+    "growthSpendDefault": "成長支出",
+    "elephGoalReached": "{{studentName}} - 艾蕾芙 (目標達成)",
+    "goalLabel": "(目標)"
+  }
+}

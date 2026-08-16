@@ -33,4 +33,6 @@ season,startTime,endTime,boss1,boss2,boss3,difficulty1,difficulty2,difficulty3
 32,2026-04-08 11:00:00,2026-04-15 03:59:59,Perorozilla_Outdoor_HeavyArmor,Perorozilla_Outdoor_Unarmed,Perorozilla_Outdoor_ElasticArmor,Torment,Torment,Insane
 33,2026-05-13 11:00:00,2026-05-20 03:59:59,EN0006_Street_Unarmed,EN0006_Street_LightArmor,EN0006_Street_ElasticArmor,Torment,Torment,Insane
 34,2026-06-17 11:00:00,2026-06-24 03:59:59,HoverCraft_Outdoor_Unarmed,HoverCraft_Outdoor_ElasticArmor,HoverCraft_Outdoor_LightArmor,Torment,Torment,Insane
-35,2026-07-15 11:00:00,2026-07-22 03:59:59,???,???,???,Insane,Torment,Torment
+35,2026-07-15 11:00:00,2026-07-22 03:59:59,HOD_Indoor_HeavyArmor,HOD_Indoor_ElasticArmor,HOD_Indoor_LightArmor,Torment,Torment,Insane
+36,2026-08-19 11:00:00,2026-08-26 03:59:59,Binah_Outdoor_LightArmor,Binah_Outdoor_HeavyArmor,Binah_Outdoor_ElasticArmor,Torment,Torment,Insane
+37,2026-09-16 11:00:00,2026-09-23 03:59:59,???,???,???,Torment,Torment,Insane

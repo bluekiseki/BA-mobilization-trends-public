@@ -288,7 +288,8 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
               outerRadius="39%"
               innerRadius="20%"
               onClick={(_, i) => handleFilter('tier', displayData.tier[i].name)}
-              shape={(props, index) => {
+              shape={(props) => {
+                const { index } = props as { index: number };
                 const entry = displayData.tier[index];
                 if (!entry) return <Sector {...props} />;
                 const fill = tierColors[entry.name] ?? '#8884d8';
@@ -316,7 +317,8 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
               labelLine={false}
               label={<CustomizedLabel />}
               onClick={(_, i) => handleFilter('difficulty', displayData.difficulty[i].name)}
-              shape={(props, index) => {
+              shape={(props) => {
+                const { index } = props as { index: number };
                 const entry = displayData.difficulty[index];
                 if (!entry) return <Sector {...props} />;
                 const fill = difficultyColors[entry.name] ?? '#82ca9d';
@@ -346,7 +348,8 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
                 const timeBinName = (labelProps as PieLabelRenderProps & { timeBinName?: string }).timeBinName;
                 return <CustomizedLabel {...labelProps} name={timeBinName} />;
               }}
-              shape={(props, index) => {
+              shape={(props) => {
+                const { index } = props as { index: number };
                 const entry = displayData.timeBin[index];
                 if (!entry) return <Sector {...props} />;
                 const fill = difficultyColors[entry.difficultyName as keyof typeof difficultyColors];

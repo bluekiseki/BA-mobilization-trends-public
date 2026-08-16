@@ -37,5 +37,10 @@
   "versionId": "VERSION ID: {{id}}",
   "changeRecorded": "已記錄資料變更。",
   "notFound": "找不到公告。",
-  "viewAll": "查看所有公告"
+  "viewAll": "查看所有公告",
+  "viewDiff": "比較變更",
+  "viewFull": "查看完整內容",
+  "titleChanged": "標題已變更",
+  "diffStatsLines": "行",
+  "diffStatsChars": "字"
 }

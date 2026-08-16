@@ -1,5 +1,5 @@
 // app/root.tsx
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, data, redirect } from 'react-router';
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, useLocation, data, redirect } from 'react-router';
 
 import type { Route } from './+types/root';
 import './app.css';
@@ -14,16 +14,19 @@ import { DEFAULT_LOCALE, type Locale } from './utils/i18n/config';
 import { getLocale, i18nextMiddleware } from './middleware/i18next';
 import { useTranslation } from 'react-i18next';
 import { getLocaleFromHeaders } from './utils/i18n/service';
-import { PostHogProvider } from 'posthog-js/react';
 import { domain, cdn as cdn_domain } from './data/livedataServer.json';
 const DynamicDevtoolsdetector = lazy(() => import('./components/common/devtools-detector.client'));
+const DynamicHelpSidebar = lazy(() => import('./components/common/HelpSidebar').then((m) => ({ default: m.HelpSidebar })));
+// posthog-js is a browser-only analytics SDK; keeping it behind a .client.tsx boundary
+// excludes it from the SSR Worker bundle entirely (see PostHogInit.client.tsx).
+const DynamicPostHogInit = lazy(() => import('./components/analytics/PostHogInit.client').then((m) => ({ default: m.PostHogInit })));
 import { env } from 'cloudflare:workers'; // for cloudflare
 // import { env } from 'node:process';
 import { FaExternalLinkAlt } from 'react-icons/fa';
-import { HelpSidebar } from './components/common/HelpSidebar';
 import { ClientOnly } from './components/common/ClientOnly';
+import { useHelpStore } from './store/helpStore';
 // const DynamicBanner = lazy(() => import('~/components/FeatureBanner/FeatureBanner'));
-import { useAuthStore, type UserProfile } from './store/authStore';
+import { getActiveProfileStorageKey, useAuthStore, type UserProfile } from './store/authStore';
 import { useSyncStore } from './store/syncStore';
 import { useSyncWatcher } from './store/planner/useSyncWatcher';
 
@@ -38,6 +41,8 @@ export function loader({ context, request, params }: Route.LoaderArgs) {
 
   const publicEnv = {
     VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY ?? '',
+    VITE_PUBLIC_POSTHOG_DIRECT_HOST: env.VITE_PUBLIC_POSTHOG_DIRECT_HOST ?? '',
+    VITE_PUBLIC_POSTHOG_UI_HOST: env.VITE_PUBLIC_POSTHOG_UI_HOST ?? '',
     VITE_PUBLIC_POSTHOG_HOST: env.VITE_PUBLIC_POSTHOG_HOST ?? '',
     VITE_WEB3FORMS_ACCESS_KEY: env.VITE_WEB3FORMS_ACCESS_KEY ?? '',
     VITE_TURNSTILE_SITE_KEY: env.VITE_TURNSTILE_SITE_KEY ?? '',
@@ -55,43 +60,14 @@ export const middleware = [i18nextMiddleware];
 
 export const links: Route.LinksFunction = () => [];
 
-interface PostHogEnv {
-  VITE_PUBLIC_POSTHOG_KEY?: string;
-  VITE_PUBLIC_POSTHOG_HOST?: string;
-}
-
-function PostHogConditional({ children, envData }: { children: React.ReactNode; envData: PostHogEnv | null }) {
-  if (import.meta.env.MODE === 'development') return <>{children}</>;
-  const e = envData || (import.meta.env as PostHogEnv);
-  if (!e.VITE_PUBLIC_POSTHOG_KEY || !e.VITE_PUBLIC_POSTHOG_HOST) return <>{children}</>;
-  return (
-    <PostHogProvider
-      apiKey={e.VITE_PUBLIC_POSTHOG_KEY}
-      options={{
-        api_host: e.VITE_PUBLIC_POSTHOG_HOST,
-        ui_host: 'https://us.posthog.com',
-        defaults: '2025-05-24',
-        capture_exceptions: true,
-        capture_performance: true,
-        cookieless_mode: 'always',
-        loaded: (ph) => {
-          void fetch(`${e.VITE_PUBLIC_POSTHOG_HOST}/api/geoip`)
-            .then((res) => res.json())
-            .then((json: unknown) => {
-              const parsed = json as { data?: Record<string, unknown> };
-              if (parsed.data) ph.register(parsed.data);
-            });
-        },
-      }}
-    >
-      {children}
-    </PostHogProvider>
-  );
-}
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>();
   const locale = data?.locale || DEFAULT_LOCALE;
+  const { pathname } = useLocation();
+  const isFullWidth = /\/charts\/[^/]+\/network(\/|$)/.test(pathname);
+  // Only mount HelpSidebar (and its 'help' namespace useTranslation call) once the user
+  // actually opens it, so help.json isn't fetched on every page load by default.
+  const isHelpOpen = useHelpStore((s) => s.isOpen);
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -132,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* for fonts */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="preconnect" href={`https://${cdn_domain}`} />
-        <link rel="preconnect" href={(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_HOST || ''} />
+        <link rel="preconnect" href={(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_DIRECT_HOST || ''} />
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Medium.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Bold.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
         <script id="website-ld" type="application/ld+json">
@@ -153,60 +129,62 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* <I18nextProvider i18n={i18n} defaultNS={'translation'}> */}
         <ScrollRestoration />
         <Scripts />
-        <PostHogConditional envData={data?.env}>
-          <ThemeProvider>
-            <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-ba">
-              <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
-                <Navigation reqLocale={data?.reqLocale || DEFAULT_LOCALE} />
-              </nav>
-              {/* <Suspense fallback={null}>
+        <ThemeProvider>
+          <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-ba">
+            <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
+              <Navigation reqLocale={data?.reqLocale || DEFAULT_LOCALE} />
+            </nav>
+            {/* <Suspense fallback={null}>
                 <DynamicBanner />
               </Suspense> */}
 
-              <main className="max-w-7xl mx-auto" style={{ minHeight: 'calc(100vh - 170px)' }}>
-                {children}
-              </main>
+            <main className={isFullWidth ? '' : 'max-w-7xl mx-auto'} style={{ minHeight: 'calc(100vh - 170px)' }}>
+              {children}
+            </main>
 
-              <footer className="mt-auto py-4 px-2 text-center text-neutral-500 dark:text-neutral-400 text-sm border-t border-neutral-200 dark:border-neutral-700 transition-colors duration-300 space-y-0.5">
-                <p>
-                  This is just a non-commercial fan site of mobile game{' '}
-                  <b className="italic hover:underline">
-                    <i>Blue Archive</i>
-                  </b>
-                  ,
-                </p>
-                <p>
-                  And all copyright of{' '}
-                  <a href="https://bluearchive.jp/" target="_blank" rel="noopener noreferrer">
-                    <b className="italic hover:underline">Blue Archive</b>
-                  </a>{' '}
-                  belongs to{' '}
-                  <a href="https://www.nexon.com" target="_blank" rel="noopener noreferrer">
-                    <span className="italic hover:underline">NEXON Korea Corp.</span>
-                  </a>{' '}
-                  &{' '}
-                  <a href="https://www.nexongames.co.kr/" target="_blank" rel="noopener noreferrer">
-                    <span className="italic hover:underline">NEXON GAMES Co., Ltd.</span>
-                  </a>{' '}
-                  &{' '}
-                  <a href="https://www.yo-star.com" target="_blank" rel="noopener noreferrer">
-                    <span className="italic hover:underline">YOSTAR, Inc.</span>
-                  </a>{' '}
-                </p>
-                <p>
-                  <a className="" href="/source">
-                    <span className="inline-flex items-center gap-1.5 hover:underline">
-                      Data Sources & Bug Reports
-                      <FaExternalLinkAlt className="text-xs" />
-                    </span>
-                  </a>
-                </p>
-              </footer>
-            </div>
+            <footer className="mt-auto py-4 px-2 text-center text-neutral-500 dark:text-neutral-400 text-sm border-t border-neutral-200 dark:border-neutral-700 transition-colors duration-300 space-y-0.5">
+              <p>
+                This is just a non-commercial fan site of mobile game{' '}
+                <b className="italic hover:underline">
+                  <i>Blue Archive</i>
+                </b>
+                ,
+              </p>
+              <p>
+                And all copyright of{' '}
+                <a href="https://bluearchive.jp/" target="_blank" rel="noopener noreferrer">
+                  <b className="italic hover:underline">Blue Archive</b>
+                </a>{' '}
+                belongs to{' '}
+                <a href="https://www.nexon.com" target="_blank" rel="noopener noreferrer">
+                  <span className="italic hover:underline">NEXON Korea Corp.</span>
+                </a>{' '}
+                &{' '}
+                <a href="https://www.nexongames.co.kr/" target="_blank" rel="noopener noreferrer">
+                  <span className="italic hover:underline">NEXON GAMES Co., Ltd.</span>
+                </a>{' '}
+                &{' '}
+                <a href="https://www.yo-star.com" target="_blank" rel="noopener noreferrer">
+                  <span className="italic hover:underline">YOSTAR, Inc.</span>
+                </a>{' '}
+              </p>
+              <p>
+                <a className="" href="/source">
+                  <span className="inline-flex items-center gap-1.5 hover:underline">
+                    Data Sources & Bug Reports
+                    <FaExternalLinkAlt className="text-xs" />
+                  </span>
+                </a>
+              </p>
+            </footer>
+          </div>
 
-            <HelpSidebar />
-          </ThemeProvider>
-        </PostHogConditional>
+          {isHelpOpen && (
+            <Suspense fallback={null}>
+              <DynamicHelpSidebar />
+            </Suspense>
+          )}
+        </ThemeProvider>
 
         {/* </I18nextProvider> */}
         <NoScript />
@@ -217,6 +195,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <ClientOnly>
               <Suspense fallback={null}>
                 <DynamicDevtoolsdetector />
+                <DynamicPostHogInit envData={data?.env} />
               </Suspense>
             </ClientOnly>
           </>
@@ -270,11 +249,13 @@ export default function App({ loaderData: { locale } }: Route.ComponentProps) {
       }));
       useAuthStore.getState().setUser({ ...user, profiles });
 
-      const savedProfileId = localStorage.getItem('yuzu_activeProfileId');
+      const storageKey = getActiveProfileStorageKey(user.id);
+      const savedProfileId = localStorage.getItem(storageKey) ?? localStorage.getItem('yuzu_activeProfileId');
       const savedProfile = savedProfileId ? profiles.find((p) => p.id === savedProfileId) : null;
       const defaultProfile = savedProfile ?? profiles.find((p) => p.isDefault) ?? profiles[0];
       if (!defaultProfile) return;
       useAuthStore.getState().setActiveProfile(defaultProfile.id);
+      localStorage.removeItem('yuzu_activeProfileId');
       useSyncStore.getState().setCurrentProfileId(defaultProfile.id);
       void useSyncStore.getState().pullAll(defaultProfile.id);
     } catch {

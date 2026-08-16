@@ -20,7 +20,7 @@ interface Props {
 
 export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTerm, showOnlySelected }: Props) {
   const [isMobile, setIsMobile] = useState(false);
-  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
+  const [screenWidth, setScreenWidth] = useState(0);
   const [sortStack, setSortStack] = useState<{ field: string; direction: 'asc' | 'desc' }[]>([]);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -288,7 +288,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
 
       {hasPendingChanges && (
         <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-200 rounded">
-          <span className="text-sm font-semibold">{t('messages.unsavedChanges')}</span>
+          <span className="min-w-0 text-sm font-semibold">{t('messages.unsavedChanges')}</span>
           <button
             onClick={() =>
               saveDraft((plans) => {
@@ -297,12 +297,12 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
                 draftClear();
               })
             }
-            className="ml-auto px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold flex items-center gap-1"
+            className="ml-auto shrink-0 whitespace-nowrap px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold flex items-center gap-1"
           >
             <MdSave size={14} />
             {t('messages.save')}
           </button>
-          <button onClick={() => discardDraft()} className="px-3 py-1 bg-neutral-400 hover:bg-neutral-500 text-white text-xs rounded font-semibold flex items-center gap-1">
+          <button onClick={() => discardDraft()} className="shrink-0 whitespace-nowrap px-3 py-1 bg-neutral-400 hover:bg-neutral-500 text-white text-xs rounded font-semibold flex items-center gap-1">
             <MdClose size={14} />
             {t('messages.cancel')}
           </button>
@@ -324,6 +324,10 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
             <div className="flex items-start gap-2">
               <kbd className="px-1.5 py-0.5 bg-white dark:bg-neutral-800 border border-current rounded text-xs min-w-fit">Enter</kbd>
               <span>{t('messages.shortcutNextRow')}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-neutral-800 border border-current rounded text-xs min-w-fit">↑↓←→</kbd>
+              <span>{t('messages.shortcutArrow')}</span>
             </div>
             <div className="flex items-start gap-2">
               <kbd className="px-1.5 py-0.5 bg-white dark:bg-neutral-800 border border-current rounded text-xs min-w-fit">Tab</kbd>
@@ -399,7 +403,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         {t('messages.recruitedStudents')}: <span className="font-semibold text-neutral-900 dark:text-neutral-100">{rows.filter((r) => r.plan !== null).length}</span>
       </div>
 
-      <div className="w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="-mx-4 w-[calc(100%+2rem)] overflow-hidden border-y border-neutral-200 dark:border-neutral-700 sm:mx-0 sm:w-full sm:rounded-lg sm:border">
         <div ref={scrollContainerRef} className="overflow-x-auto overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)', overscrollBehaviorX: 'contain', transform: 'translateZ(0)' }}>
           <table className="border-collapse text-xs" style={{ minWidth: 'min-content' }}>
             <SpreadsheetHeader hGroup={hGroup} hField={hField} L={L} handleSort={handleSort} getSortIcon={getSortIcon} screenWidth={screenWidth} />

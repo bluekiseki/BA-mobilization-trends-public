@@ -52,6 +52,8 @@ export const eventConvertor = {
   51: 853,
   52: 854,
   53: 856,
+  54: 859,
+  55: 860,
 };
 
 // --- ICON COMPONENTS ---
@@ -139,6 +141,8 @@ export const mainStoryChapters: Record<string, { key: string; date: string }> = 
   '2부 Vol.0 1장': { key: 'part2_vol0_ch1', date: '2026/04/22' },
   '2부 Ex. 로어추적 편 1장': { key: 'part2_ex_lore_ch1', date: '2026/04/22' },
   '2부 Ex. 로어추적 편 2장': { key: 'part2_ex_lore_ch2', date: '2026/05/27' },
+  '2부 Vol.1 1장': { key: 'part2_vol1_ch1', date: '2026/08/12' },
+  '2부 Vol.1 2장': { key: 'part2_vol1_ch2', date: '2026/08/19' },
 };
 
 export const otherStoryTitles = {

@@ -14,12 +14,13 @@ interface SpreadsheetHeaderProps {
 
 export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, screenWidth }: SpreadsheetHeaderProps) {
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
+  const showIdentityColumns = screenWidth > 600;
 
   return (
     <thead className="sticky top-0 z-40">
       {/* Group row */}
       <tr>
-        <th colSpan={5} className={`${hGroup} sticky left-0 z-40 bg-neutral-100 dark:bg-neutral-700`} />
+        <th colSpan={showIdentityColumns ? 5 : 3} className={`${hGroup} sticky left-0 z-40 bg-neutral-100 dark:bg-neutral-700`} />
         <th colSpan={5} className={`${hGroup} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300`}>
           {t('headerGroup.basicStatsCurrent')}
         </th>
@@ -57,22 +58,26 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
           {getSortIcon('isSelected')}
         </th>
         <th className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700`} style={{ left: L.icon, width: 32, minWidth: 32, maxWidth: 32 }} />
-        <th
-          className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 text-left pl-2 truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
-          style={{ left: L.name, width: screenWidth > 600 ? 120 : 0, minWidth: screenWidth > 600 ? 120 : 0, maxWidth: screenWidth > 600 ? 120 : 0 }}
-          onClick={() => handleSort('name')}
-        >
-          {t('headerField.name')}
-          {getSortIcon('name')}
-        </th>
-        <th
-          className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 text-left pl-1 truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
-          style={{ left: L.school, width: screenWidth > 600 ? 70 : 0, minWidth: screenWidth > 600 ? 70 : 0, maxWidth: screenWidth > 600 ? 70 : 0 }}
-          onClick={() => handleSort('school')}
-        >
-          {t('headerField.school')}
-          {getSortIcon('school')}
-        </th>
+        {showIdentityColumns && (
+          <>
+            <th
+              className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 text-left pl-2 truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
+              style={{ left: L.name, width: 120, minWidth: 120, maxWidth: 120 }}
+              onClick={() => handleSort('name')}
+            >
+              {t('headerField.name')}
+              {getSortIcon('name')}
+            </th>
+            <th
+              className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 text-left pl-1 truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
+              style={{ left: L.school, width: 70, minWidth: 70, maxWidth: 70 }}
+              onClick={() => handleSort('school')}
+            >
+              {t('headerField.school')}
+              {getSortIcon('school')}
+            </th>
+          </>
+        )}
         <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('level')}>
           {t('headerField.level')}
           {getSortIcon('level')}

@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import { useResourcePlanStore } from '~/store/planner/useResourcePlanStore';
+import type { ContentItem, EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
 import eventListJsonRaw from '~/data/jp/eventList.json';
 import type { EventListData } from '~/types/eventList';
 const eventList = eventListJsonRaw as unknown as EventListData;
@@ -19,7 +20,7 @@ import StudentSearchDropdown from '~/components/StudentSearchDropdown';
 import { MAX_LEVEL, uwMaxLevelMap } from './const';
 
 // Icons
-import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo, FiDollarSign } from 'react-icons/fi';
+import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo, FiDollarSign, FiPlus } from 'react-icons/fi';
 import { IoSync } from 'react-icons/io5';
 import { StarRating } from '~/components/StarRating';
 import { getStarValue } from '~/components/dashboard/common';
@@ -31,18 +32,251 @@ interface StudentGrowthPlanCardProps {
   allStudents: StudentData;
   studentPortraits: StudentPortraitData;
   studentOptions: [string, Student][];
+  contentItems?: ContentItem[];
   eventData?: EventData;
   iconData?: IconData;
   iconInfos?: IconInfos;
   onClose: () => void;
 }
 
+// Linear star-value helpers (same as StudentElephCard)
+const ALL_STAR_VALUES_CARD = [1, 2, 3, 4, 5, 7, 8, 9, 10] as const;
+function toSV(star: number, uw: number): number {
+  return uw === 0 ? star : uw + 6;
+}
+function fromSV(n: number): { star: number; uw: number } {
+  return n <= 5 ? { star: n, uw: 0 } : { star: 5, uw: n - 6 };
+}
+
+// --- FinalGoalDeadlineRowCard: sets deadline for the final (plan.target) goal ---
+type FinalGoalScheduleCard = { date?: string; contentRef?: { id: string } };
+
+interface FinalGoalDeadlineRowCardProps {
+  schedule: FinalGoalScheduleCard | undefined;
+  contentItems: ContentItem[];
+  onChange: (schedule: FinalGoalScheduleCard | null) => void;
+}
+
+function FinalGoalDeadlineRowCard({ schedule, contentItems, onChange }: FinalGoalDeadlineRowCardProps) {
+  const [mode, setMode] = useState<'event' | 'date'>(() => (schedule?.contentRef ? 'event' : 'date'));
+
+  const handleSwitchMode = (m: 'event' | 'date') => {
+    setMode(m);
+    onChange(null);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden text-[10px] shrink-0">
+        {(['event', 'date'] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => handleSwitchMode(m)}
+            className={`px-1.5 py-0.5 transition-colors ${mode === m ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
+          >
+            {m === 'event' ? 'Content' : 'Date'}
+          </button>
+        ))}
+      </div>
+      {mode === 'event' ? (
+        <select
+          value={schedule?.contentRef?.id ?? ''}
+          onChange={(e) => onChange(e.target.value ? { contentRef: { id: e.target.value } } : null)}
+          className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+        >
+          <option value="">— None —</option>
+          {contentItems.map((ci) => (
+            <option key={ci.id} value={ci.id}>
+              {ci.prefix}
+              {ci.season} {ci.bossTitle} ({ci.date})
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type="date"
+          value={schedule?.date ?? ''}
+          onChange={(e) => onChange(e.target.value ? { date: e.target.value } : null)}
+          className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+        />
+      )}
+    </div>
+  );
+}
+
+// --- PendingGoalRowCard: draft goal committed only when date/contentRef is set ---
+interface PendingGoalRowCardProps {
+  minStar: number;
+  maxStar: number;
+  defaultStar: number;
+  defaultUw: number;
+  contentItems: ContentItem[];
+  starBtnCls: (active: boolean) => string;
+  onAdd: (goal: Omit<import('~/types/resourcePlan').StudentTargetGoal, 'id'>) => void;
+  onCancel: () => void;
+}
+
+function PendingGoalRowCard({ minStar, maxStar, defaultStar, defaultUw, contentItems, starBtnCls, onAdd, onCancel }: PendingGoalRowCardProps) {
+  const [star, setStar] = useState(defaultStar);
+  const [uw, setUw] = useState(defaultUw);
+  const [mode, setMode] = useState<'event' | 'date'>('event');
+  const goalSV = toSV(star, uw);
+  const visibleSVs = ALL_STAR_VALUES_CARD.filter((n) => n >= minStar && n <= maxStar);
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 w-10 shrink-0">Target</span>
+        <div className="flex flex-wrap gap-0.5 flex-1">
+          {visibleSVs.map((n) => (
+            <button
+              key={n}
+              onClick={() => {
+                const { star: s, uw: u } = fromSV(n);
+                setStar(s);
+                setUw(u);
+              }}
+              className={starBtnCls(goalSV === n)}
+            >
+              <StarRating n={n} />
+            </button>
+          ))}
+        </div>
+        <button onClick={onCancel} className="text-neutral-300 hover:text-red-500 dark:text-neutral-600 dark:hover:text-red-400 transition-colors shrink-0">
+          <FiTrash2 size={11} />
+        </button>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="flex rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden text-[10px] shrink-0">
+          {(['event', 'date'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-1.5 py-0.5 transition-colors ${mode === m ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
+            >
+              {m === 'event' ? 'Content' : 'Date'}
+            </button>
+          ))}
+        </div>
+        {mode === 'event' ? (
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) onAdd({ targetStar: star, targetUw: uw, contentRef: { id: e.target.value } });
+            }}
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+          >
+            <option value="">— Select content —</option>
+            {contentItems.map((ci) => (
+              <option key={ci.id} value={ci.id}>
+                {ci.prefix}
+                {ci.season} {ci.bossTitle} ({ci.date})
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="date"
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+            onChange={(e) => {
+              if (e.target.value) onAdd({ targetStar: star, targetUw: uw, date: e.target.value });
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --- GoalRow subcomponent (must be a proper component to allow useState) ---
+interface GoalRowCardProps {
+  goal: import('~/types/resourcePlan').StudentTargetGoal;
+  visibleSVs: readonly number[];
+  contentItems: ContentItem[];
+  starBtnCls: (active: boolean) => string;
+  onUpdate: (patch: Partial<import('~/types/resourcePlan').StudentTargetGoal>) => void;
+  onRemove: () => void;
+}
+
+function GoalRowCard({ goal, visibleSVs, contentItems, starBtnCls, onUpdate, onRemove }: GoalRowCardProps) {
+  const goalSV = toSV(goal.targetStar, goal.targetUw);
+  const [goalMode, setGoalMode] = useState<'event' | 'date'>(() => (goal.contentRef ? 'event' : 'date'));
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 w-10 shrink-0">Target</span>
+        <div className="flex flex-wrap gap-0.5 flex-1">
+          {visibleSVs.map((n) => (
+            <button
+              key={n}
+              onClick={() => {
+                const { star, uw } = fromSV(n);
+                onUpdate({ targetStar: star, targetUw: uw });
+              }}
+              className={starBtnCls(goalSV === n)}
+            >
+              <StarRating n={n} />
+            </button>
+          ))}
+        </div>
+        <button onClick={onRemove} className="text-neutral-300 hover:text-red-500 dark:text-neutral-600 dark:hover:text-red-400 transition-colors shrink-0">
+          <FiTrash2 size={11} />
+        </button>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <div className="flex rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden text-[10px] shrink-0">
+          {(['event', 'date'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => {
+                setGoalMode(m);
+                if (m === 'event') onUpdate({ date: undefined });
+                else onUpdate({ contentRef: undefined });
+              }}
+              className={`px-1.5 py-0.5 transition-colors ${
+                goalMode === m ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-white dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+              }`}
+            >
+              {m === 'event' ? 'Content' : 'Date'}
+            </button>
+          ))}
+        </div>
+        {goalMode === 'event' ? (
+          <select
+            value={goal.contentRef?.id ?? ''}
+            onChange={(e) => onUpdate({ contentRef: e.target.value ? { id: e.target.value } : undefined })}
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+          >
+            <option value="">— Select content —</option>
+            {contentItems.map((ci) => (
+              <option key={ci.id} value={ci.id}>
+                {ci.prefix}
+                {ci.season} {ci.bossTitle} ({ci.date})
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="date"
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+            value={goal.date ?? ''}
+            onChange={(e) => onUpdate({ date: e.target.value || undefined })}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // --- Main Component ---
-export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eventData, iconData, onClose }: StudentGrowthPlanCardProps) => {
+export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, contentItems = [], eventData, iconData, onClose }: StudentGrowthPlanCardProps) => {
   const { updatePlan, removePlan, toggleEventInclusion } = useGlobalStore();
+  const { targetGoals, addTargetGoal, updateTargetGoal, removeTargetGoal, setFinalGoal } = useResourcePlanStore();
   const { t } = useTranslation(['planner', 'common']);
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false, skills: false, equipment: false, potential: false, affection: false });
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false, skills: false, equipment: false, potential: false, affection: false, targets: false });
+  const [showTargetPending, setShowTargetPending] = useState(false);
   const [activeHelp, setActiveHelp] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -549,6 +783,124 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, eve
                 <div className="p-6 text-center text-xs text-neutral-400">Loading Affection Data...</div>
               )}
             </GrowthAccordion>
+
+            {plan.studentId != null &&
+              (() => {
+                const studentId = plan.studentId;
+                const allGoals = targetGoals[studentId] ?? [];
+                const finalGoal = allGoals.find((g) => g.id === 'final');
+                const goals = allGoals.filter((g) => g.id !== 'final');
+                const minStar = toSV(plan.current.star, plan.current.uw);
+                const targetSV = toSV(plan.target.star, plan.target.uw);
+                const visibleSVs = ALL_STAR_VALUES_CARD.filter((n) => n >= minStar && n <= targetSV);
+                const starBtnCls = (active: boolean) =>
+                  `p-0.5 rounded transition-colors ${active ? 'bg-neutral-200 dark:bg-neutral-700 ring-1 ring-amber-400' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'}`;
+                const sortedGoals = [...goals].sort((a, b) => {
+                  const dA = a.date ?? contentItems.find((c) => c.id === a.contentRef?.id)?.date ?? '';
+                  const dB = b.date ?? contentItems.find((c) => c.id === b.contentRef?.id)?.date ?? '';
+                  return dA.localeCompare(dB);
+                });
+
+                return (
+                  <GrowthAccordion
+                    title="Targets"
+                    isOpen={openSections.targets}
+                    onToggle={() => setOpenSections((p) => ({ ...p, targets: !p.targets }))}
+                    currentSummary={`${goals.length} mid · ${finalGoal ? '1' : '0'} final`}
+                    targetSummary=""
+                    onTargetMax={() => {}}
+                    onResetTarget={() => {}}
+                    onFullMax={() => {}}
+                    onFullReset={() => {}}
+                  >
+                    <div className="space-y-2 p-3">
+                      {/* Final Goal */}
+                      <div className="space-y-1.5 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-neutral-400 dark:text-neutral-500 w-16 shrink-0">Final Goal</span>
+                          <div className="flex flex-wrap gap-0.5">
+                            {visibleSVs.map((n) => (
+                              <button
+                                key={n}
+                                onClick={() => {
+                                  const { star, uw } = fromSV(n);
+                                  updatePlan(plan.uuid, 'target.star', star);
+                                  updatePlan(plan.uuid, 'target.uw', uw);
+                                }}
+                                className={starBtnCls(toSV(plan.target.star, plan.target.uw) === n)}
+                              >
+                                <StarRating n={n} />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <FinalGoalDeadlineRowCard
+                          schedule={finalGoal}
+                          contentItems={contentItems}
+                          onChange={(s) => setFinalGoal(studentId, s ? { targetStar: plan.target.star, targetUw: plan.target.uw, ...s } : null)}
+                        />
+                      </div>
+                      {/* Intermediate Goals */}
+                      <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium pt-1">Intermediate Goals</p>
+                      {sortedGoals.length === 0 && !showTargetPending && <p className="text-[11px] text-neutral-400 dark:text-neutral-500 italic">No intermediate goals yet.</p>}
+
+                      {(sortedGoals.length > 0 || showTargetPending) && (
+                        <div className="relative">
+                          <div className="absolute left-2.5 top-2 bottom-2 w-px bg-neutral-200 dark:bg-neutral-700" />
+                          {sortedGoals.map((goal) => (
+                            <div key={goal.id} className="flex mb-2.5">
+                              <div className="w-5 shrink-0 flex justify-center pt-1.5 relative z-10">
+                                <div className="w-2 h-2 rounded-full bg-neutral-400 dark:bg-neutral-500 ring-2 ring-white dark:ring-neutral-900" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <GoalRowCard
+                                  goal={goal}
+                                  visibleSVs={visibleSVs}
+                                  contentItems={contentItems}
+                                  starBtnCls={starBtnCls}
+                                  onUpdate={(patch) => updateTargetGoal(studentId, goal.id, patch)}
+                                  onRemove={() => removeTargetGoal(studentId, goal.id)}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                          {showTargetPending && (
+                            <div className="flex">
+                              <div className="w-5 shrink-0 flex justify-center pt-1.5 relative z-10">
+                                <div className="w-2 h-2 rounded-full border-2 border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <PendingGoalRowCard
+                                  minStar={minStar}
+                                  maxStar={targetSV}
+                                  defaultStar={plan.target.star}
+                                  defaultUw={plan.target.uw}
+                                  contentItems={contentItems}
+                                  starBtnCls={starBtnCls}
+                                  onAdd={(goal) => {
+                                    addTargetGoal(studentId, goal);
+                                    setShowTargetPending(false);
+                                  }}
+                                  onCancel={() => setShowTargetPending(false)}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {!showTargetPending && (
+                        <button
+                          onClick={() => setShowTargetPending(true)}
+                          className="flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                        >
+                          <FiPlus size={10} />
+                          Add goal
+                        </button>
+                      )}
+                    </div>
+                  </GrowthAccordion>
+                );
+              })()}
           </>
         ) : (
           <div className="py-20 flex flex-col items-center justify-center text-neutral-400 opacity-60">

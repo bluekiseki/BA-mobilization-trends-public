@@ -15,7 +15,8 @@ const EXTERNAL_SITES = [
 
 const getYouTubeId = (url: string) => url.match(/[?&]v=([^&]+)/)?.[1] ?? null;
 
-function parseGrade(grade: string): { num: number; isUE: boolean } {
+function parseGrade(grade: string | null): { num: number; isUE: boolean } {
+  if (!grade) return { num: 0, isUE: false };
   if (grade.startsWith('ue')) return { num: Number(grade.slice(2)), isUE: true };
   const m = grade.match(/^(\d+)/);
   return { num: m ? Number(m[1]) : Number(grade), isUE: false };
@@ -74,7 +75,9 @@ export const VideoMatchSection: React.FC<{
                   </a>
 
                   {/* Channel */}
-                  <p className="text-[10px] text-neutral-400 dark:text-neutral-500 truncate">{video.channel_name}</p>
+                  <p className="text-[10px] text-neutral-400 dark:text-neutral-500 truncate" title={video.channel_name}>
+                    {video.channel_name}
+                  </p>
 
                   {/* Student grades per party */}
                   <div className="space-y-1 pt-0.5">

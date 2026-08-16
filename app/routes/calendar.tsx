@@ -2,14 +2,15 @@
 import { useEffect, useState } from 'react';
 import { useLoaderData, useNavigate, type LoaderFunctionArgs } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { type loadScheduleData, type ScheduleItem } from '~/utils/calender.data';
+import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 
 import { useGanttController } from '~/components/gantt/useGanttController';
+import { useLazySchedule } from '~/components/gantt/useLazySchedule';
 import { GanttChart } from '~/components/gantt/GanttChart';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
 import { PageHeader } from '~/components/common/PageHeader';
 import type { AppHandle } from '~/types/link';
 import type { GameServer } from '~/types/data';
@@ -17,36 +18,72 @@ import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/calendar';
 import { FiClock } from 'react-icons/fi';
 import { localeLink } from '~/utils/localeLink';
+import { getItemTitle } from '~/utils/scheduleDisplay';
 
-// --- 1. Loader: Used only for metadata and parameter validation (heavy data fetching removed) ---
-export function loader({ context, params }: LoaderFunctionArgs) {
-  const server: GameServer = (params.server || 'jp') as GameServer;
-  if (server !== 'jp' && server !== 'kr') {
-    throw new Response('Not Found: Invalid server parameter.', { status: 404 });
-  }
+const SEO_TRACKS = ['event', 'pickup', 'raid', 'multifloor'] as const;
 
+interface CalendarSummaryItem {
+  id: string;
+  title: string;
+  studentIds?: number[];
+  typeLabel: string;
+  dateLabel: string;
+  prediction: boolean;
+}
+
+// --- 1. Loader: Validates params and loads locale-independent v2 calendar data ---
+export function loader({ context, request }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
+  const requestedServer = new URL(request.url).searchParams.get('server');
+  const defaultServer: GameServer = locale === 'ja' ? 'jp' : 'kr';
+  const server: GameServer = requestedServer === 'jp' || requestedServer === 'kr' ? requestedServer : defaultServer;
 
-  // loadScheduleData call removed (called via API from the client)
+  const now = Date.now();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  // Full calendar page only needs a window around "now" up front — the rest loads lazily as the user scrolls (see useLazySchedule).
+  // Kept wide enough that jumpToNow's center-viewport scroll doesn't land within the lazy-load edge threshold on first paint.
+  const calendarV2 = loadScheduleDataV2({ server, tracksToLoad: 'all', dateRangeMs: { start: now - 120 * MS_PER_DAY, end: now + 240 * MS_PER_DAY } });
+  const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'long', day: 'numeric' });
+  const upcomingItems: CalendarSummaryItem[] = SEO_TRACKS.flatMap((track) => calendarV2.tracks[track] ?? [])
+    .filter((item) => new Date(item.endTime).getTime() >= now)
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+    .slice(0, 12)
+    .map((item) => {
+      const isPickup = item.type === 'pickup';
+      const typeLabel =
+        item.type === 'raid' ? i18n.t('common:raid') : item.type === 'eraid' ? i18n.t('common:eraid') : item.type === 'jointFiringDrill' ? i18n.t('common:jfd') : i18n.t(`calendar:track.${item.type}`);
+      return {
+        id: item.id,
+        title: isPickup ? i18n.t('calendar:track.pickup') : getItemTitle(item, locale, i18n),
+        studentIds: isPickup ? item.details?.students?.map((student) => student.id) : undefined,
+        typeLabel,
+        dateLabel: dateFormatter.format(new Date(item.startTime)),
+        prediction: item.details?.prediction === true,
+      };
+    });
 
   return {
     server,
     locale,
     title: i18n.t('calendar:title'),
+    metaTitle: i18n.t('calendar:metaTitle'),
     description: i18n.t('calendar:description.main'),
+    canonicalUrl: createLocalizedUrl(locale, '/calendar'),
+    siteTitle: i18n.t('common:title'),
+    calendarV2,
+    upcomingItems,
   };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title, loaderData.description);
+  return createMetaDescriptor(`${loaderData.metaTitle} | ${loaderData.siteTitle}`, loaderData.description, '/img/1.webp', loaderData.canonicalUrl);
 }
 
 export const handle: AppHandle = {
-  preload: (data: unknown, routeMatch) => {
+  preload: (data: unknown) => {
     const d = data as Record<string, unknown> | undefined;
 
-    const { server, server: loadedServer } = routeMatch?.params || {};
     const locale = d?.locale as Locale;
     return [
       {
@@ -62,26 +99,30 @@ export const handle: AppHandle = {
         crossOrigin: 'anonymous',
       },
       {
-        rel: 'preload',
-        href: `/api/calendar?type=all&server=${loadedServer}&lang=${locale}`,
-        as: 'fetch',
-        crossOrigin: 'anonymous',
+        rel: 'canonical',
+        href: createLocalizedUrl(locale, '/calendar'),
       },
-      ...createLinkHreflang(`/calendar/${server}`),
+      ...createLinkHreflang('/calendar'),
     ];
   },
 };
 
 // --- 2. Main Component ---
 export default function SchedulePageGantt() {
-  const { server: loadedServer } = useLoaderData<typeof loader>(); // Removed tracks and timeRange
+  const { server: loadedServer, calendarV2, upcomingItems } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('calendar');
+  useTranslation('jukebox'); // ensure jukebox namespace is loaded for main story items
   const locale = i18n.language as Locale;
+  const serverLabel = loadedServer === 'kr' ? 'GL/KR' : 'JP';
 
-  // State management for overall calendar data retrieved from the API
-  const [calendarData, setCalendarData] = useState<Awaited<ReturnType<typeof loadScheduleData>> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Loader only sends a window around "now" — fetch more as the user scrolls toward an edge.
+  const { data: scheduleData, checkEdges } = useLazySchedule({
+    server: loadedServer,
+    apiType: 'all',
+    initialData: calendarV2,
+    resetKey: loadedServer,
+  });
 
   // 1. Data Fetching (Student info and portraits)
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
@@ -98,28 +139,13 @@ export default function SchedulePageGantt() {
       .catch(console.error);
   }, [locale]);
 
-  // Call the full calendar data API (recall on server/language change)
+  const [birthdayTrackItems, setBirthdayTrackItems] = useState<ScheduleItemV2[]>([]);
   useEffect(() => {
-    setIsLoading(true);
-    fetch(`/api/calendar?type=all&server=${loadedServer}&lang=${locale}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch full calendar data');
-        return res.json();
-      })
-      .then((json) => {
-        setCalendarData((json as { data: Awaited<ReturnType<typeof loadScheduleData>> }).data);
-      })
-      .catch((err: unknown) => console.error('Full calendar data error:', err))
-      .finally(() => setIsLoading(false));
-  }, [loadedServer, locale]);
+    if (!studentData || !scheduleData.timeRange.min) return;
 
-  const [birthdayTrackItems, setBirthdayTrackItems] = useState<ScheduleItem[]>([]);
-  useEffect(() => {
-    if (!studentData || !calendarData?.timeRange?.min) return;
-
-    const items: ScheduleItem[] = [];
-    const startYear = new Date(calendarData.timeRange.min).getFullYear();
-    const endYear = new Date(calendarData.timeRange.max).getFullYear();
+    const items: ScheduleItemV2[] = [];
+    const startYear = new Date(scheduleData.timeRange.min).getFullYear();
+    const endYear = new Date(scheduleData.timeRange.max).getFullYear();
     const MS_PER_HOUR = 1000 * 60 * 60;
 
     Object.values(studentData).forEach((student) => {
@@ -127,38 +153,40 @@ export default function SchedulePageGantt() {
       const [m, d] = student.BirthDay.split('/').map(Number);
       for (let y = startYear; y <= endYear; y++) {
         const date = new Date(y, m - 1, d);
-        if (date.getTime() >= calendarData.timeRange.min && date.getTime() <= calendarData.timeRange.max) {
+        if (scheduleData.timeRange.min && date.getTime() >= scheduleData.timeRange.min && date.getTime() <= scheduleData.timeRange.max) {
           items.push({
             id: `bday-${student.Id}-${y}`,
             type: 'birthday',
             startTime: date.toISOString(),
             endTime: new Date(date.getTime() + MS_PER_HOUR * 24).toISOString(),
-            textColor: 'text-neutral-900',
-            title: student.Name,
             details: { isPointEvent: true, studentId: student.Id },
           });
         }
       }
     });
     setBirthdayTrackItems(items);
-  }, [studentData, calendarData?.timeRange]);
+  }, [studentData, scheduleData.timeRange]);
 
-  // 4. Gantt Controller Integration (optional chaining applied for initialization after data load)
+  // 4. Gantt Controller Integration
   const ganttController = useGanttController({
-    timeRange: calendarData?.timeRange || { min: 0, max: 1 },
+    timeRange: scheduleData.timeRange,
     server: loadedServer,
   });
 
+  useEffect(() => {
+    checkEdges(ganttController.scrollLeft, ganttController.viewportWidth, ganttController.pixelsPerHour);
+  }, [ganttController.scrollLeft, ganttController.viewportWidth, ganttController.pixelsPerHour, checkEdges]);
+
   // 5. Server Change Handler
   const handleServerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    void navigate(localeLink(locale, `/calendar/${e.target.value}`));
+    void navigate(`${localeLink(locale, '/calendar')}?server=${e.target.value}`);
   };
 
   return (
     <div className="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white min-h-screen flex flex-col">
       <div className="px-4 py-6 sm:px-8 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm top-0 z-40">
         <div className="max-w-7xl mx-auto">
-          <PageHeader title={`${t('title')} (${loadedServer})`} description={`${t('description.main')} / ${t('description.prediction')}`} />
+          <PageHeader title={`${t('title')} (${serverLabel})`} description={`${t('description.main')} / ${t('description.prediction')}`} />
           <div className="flex items-center gap-3 mt-3">
             <div className="relative">
               <select
@@ -191,25 +219,44 @@ export default function SchedulePageGantt() {
       {/* Chart Section */}
       <div className="flex-1 w-full max-w-[100vw] overflow-hidden">
         <div className="py-4">
-          {!calendarData ? (
-            <div className="flex justify-center items-center h-64 text-neutral-500 animate-pulse">{t('loading', 'Loading calendar data...')}</div>
-          ) : (
-            <div className={`transition-opacity duration-200 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-              <GanttChart
-                mode="full"
-                data={{
-                  tracks: calendarData.tracks,
-                  timeRange: calendarData.timeRange,
-                  studentData,
-                  studentPortraits,
-                  birthdayTrackItems,
-                }}
-                controller={ganttController}
-              />
-            </div>
-          )}
+          <GanttChart
+            mode="full"
+            data={{
+              tracks: scheduleData.tracks,
+              timeRange: scheduleData.timeRange,
+              studentData,
+              studentPortraits,
+              birthdayTrackItems,
+            }}
+            controller={ganttController}
+          />
         </div>
       </div>
+      {upcomingItems.length > 0 && (
+        <div className="px-4 pb-6 sm:px-8">
+          <details className="border-t border-neutral-200 pt-3 text-sm dark:border-neutral-800">
+            <summary className="cursor-pointer select-none font-medium text-neutral-600 dark:text-neutral-300">
+              {t('upcomingTitle')} <span className="text-xs text-neutral-500 dark:text-neutral-400">({serverLabel})</span>
+            </summary>
+            <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+              {upcomingItems.map((item) => {
+                const localizedStudentNames = item.studentIds?.map((studentId) => studentData?.[studentId]?.Name).filter((name): name is string => Boolean(name)) ?? [];
+                const displayTitle = item.studentIds && localizedStudentNames.length === item.studentIds.length ? localizedStudentNames.join(', ') : item.title;
+
+                return (
+                  <li key={item.id} className="flex min-w-0 items-baseline gap-2">
+                    <time className="shrink-0 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{item.dateLabel}</time>
+                    <span className="truncate text-neutral-700 dark:text-neutral-300" title={displayTitle}>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-500">[{item.typeLabel}]</span> {displayTitle}
+                      {item.prediction ? ` ${t('predictionLabel')}` : ''}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </details>
+        </div>
+      )}
     </div>
   );
 }

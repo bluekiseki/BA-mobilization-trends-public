@@ -1,40 +1,87 @@
 import * as ort from 'onnxruntime-web';
 import type { CellBbox, IconEntry } from './types';
-import { cdn } from '~/utils/cdn';
+
+export interface EmbeddingsPayload {
+  dim: number;
+  keys: string[];
+  data: string;
+}
 
 const EMBED_SIZE = 224;
 const MEAN = [0.485, 0.456, 0.406];
 const STD = [0.229, 0.224, 0.225];
 const SIMILARITY_THRESHOLD = 0.55;
+const TOP_K = 8;
+const PALETTE_WEIGHT = 0.22;
 
 let session: ort.InferenceSession | null = null;
 let keys: string[] = [];
 let embedMat: Float32Array | null = null;
 let dim = 0;
 let iconMap: Map<string, IconEntry> = new Map();
+let colorFeatures: Map<string, Float32Array> | null = null;
+let paletteGroups: Map<string, number[]> | null = null;
+let initialized = false;
 
-export async function initClassifier(providers: string[], icons: IconEntry[], onProgress: (msg: string) => void): Promise<void> {
-  onProgress('Loading embedding model…');
-  session = await ort.InferenceSession.create(cdn('/scanner/models/embed_model.onnx'), {
-    executionProviders: providers,
-  });
+export function isClassifierLoaded(): boolean {
+  return initialized;
+}
 
-  onProgress('Loading reference embeddings…');
-  const resp: { dim: number; keys: string[]; data: string } = await (await fetch(cdn('/scanner/embeddings.json'))).json();
-  const { dim: d, keys: k, data } = resp;
-  dim = d;
-  keys = k;
+// Shared by item scanner and the student scanner (equipment-slot classification reuses this
+// same embedding model — see app/scanner-student/pipeline/equipment.ts). Both features have
+// their own top-level `loaded` flag scoped to their own modelLoader, so without this guard,
+// loading one feature's models after the other's were already loaded in the same tab would
+// re-create the ONNX session and rebuild all icon color features from scratch — wasteful, and
+// onnxruntime-web's WASM backend is documented as unable to run two sessions at once, so
+// creating a second session while the first is still live can hang instead of just being slow.
+export async function initClassifier(
+  providers: string[],
+  icons: IconEntry[],
+  onProgress: (msg: string) => void,
+  modelBytes: Uint8Array,
+  embedResp: EmbeddingsPayload,
+  onColorProgress?: (done: number, total: number) => void,
+): Promise<void> {
+  if (initialized) {
+    onProgress('Embedding model already loaded');
+    return;
+  }
 
-  const bin = atob(data);
+  // Icon map only depends on the `icons` param, so it can be built before the
+  // network/CPU work below — paletteGroups construction after that work needs it.
+  iconMap = new Map(icons.map((ic) => [ic.inventoryKey, ic]));
+
+  // modelBytes and embedResp are already-fetched by modelLoader.client.ts (in parallel with
+  // everything else), so the only remaining work here is the (local, CPU-bound) session
+  // compile and color-feature build — run them concurrently since neither depends on the
+  // other's output.
+  onProgress('Loading embedding model and palette color features…');
+  const [sess, features] = await Promise.all([ort.InferenceSession.create(modelBytes, { executionProviders: providers }), buildColorFeatures(icons, onColorProgress)]);
+
+  session = sess;
+  dim = embedResp.dim;
+  keys = embedResp.keys;
+
+  const bin = atob(embedResp.data);
   const buf = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
   embedMat = new Float32Array(buf.buffer);
 
-  iconMap = new Map(icons.map((ic) => [ic.inventoryKey, ic]));
+  colorFeatures = features;
+  const groups = new Map<string, number[]>();
+  keys.forEach((key, idx) => {
+    const group = paletteGroup(iconMap.get(key));
+    if (!group) return;
+    const members = groups.get(group) ?? [];
+    members.push(idx);
+    groups.set(group, members);
+  });
+  paletteGroups = groups;
+  initialized = true;
 }
 
 export async function classifyBatch(bitmap: ImageBitmap, cells: CellBbox[]): Promise<Array<{ icon: IconEntry | null; similarity: number }>> {
-  if (!session || !embedMat) throw new Error('Classifier not initialized');
+  if (!session || !embedMat || !colorFeatures || !paletteGroups) throw new Error('Classifier not initialized');
 
   const canvas = new OffscreenCanvas(EMBED_SIZE, EMBED_SIZE);
   const ctx = canvas.getContext('2d');
@@ -51,7 +98,9 @@ export async function classifyBatch(bitmap: ImageBitmap, cells: CellBbox[]): Pro
     const feat = (out['embedding']?.data ?? out[Object.keys(out)[0]].data) as Float32Array;
 
     const embedding = l2normalize(feat);
-    const { idx, sim } = cosineSim(embedding, embedMat, dim);
+    const queryColor = colorFeature(imgData, EMBED_SIZE);
+    const candidates = cosineTopK(embedding, embedMat, dim, TOP_K);
+    const { idx, sim } = rerankPaletteCandidates(candidates, embedding, queryColor, keys, iconMap, colorFeatures, paletteGroups, embedMat, dim);
 
     if (sim < SIMILARITY_THRESHOLD) {
       results.push({ icon: null, similarity: sim });
@@ -59,7 +108,11 @@ export async function classifyBatch(bitmap: ImageBitmap, cells: CellBbox[]): Pro
     }
 
     const key = keys[idx];
-    results.push({ icon: iconMap.get(key) ?? null, similarity: sim });
+    const icon = iconMap.get(key);
+    if (!icon) {
+      console.warn(`[Scanner] Unrecognized item: key=${key}, sim=${(sim * 100).toFixed(1)}%, exists in icon_img=${icon !== undefined}`);
+    }
+    results.push({ icon: icon ?? null, similarity: sim });
   }
   return results;
 }
@@ -84,18 +137,167 @@ function l2normalize(vec: Float32Array): Float32Array {
   return out;
 }
 
-function cosineSim(query: Float32Array, mat: Float32Array, d: number): { idx: number; sim: number } {
+function cosineTopK(query: Float32Array, mat: Float32Array, d: number, k: number): Array<{ idx: number; sim: number }> {
   const n = mat.length / d;
-  let bestIdx = -1,
-    bestSim = -Infinity;
+  const top: Array<{ idx: number; sim: number }> = [];
   for (let i = 0; i < n; i++) {
     let dot = 0;
     const offset = i * d;
-    for (let k = 0; k < d; k++) dot += query[k] * mat[offset + k];
-    if (dot > bestSim) {
-      bestSim = dot;
-      bestIdx = i;
+    for (let d_idx = 0; d_idx < d; d_idx++) dot += query[d_idx] * mat[offset + d_idx];
+    if (top.length < k || dot > top[top.length - 1].sim) {
+      top.push({ idx: i, sim: dot });
+      top.sort((a, b) => b.sim - a.sim);
+      if (top.length > k) top.pop();
     }
   }
-  return { idx: bestIdx, sim: bestSim };
+  return top;
+}
+
+function paletteGroup(icon: IconEntry | undefined): string | null {
+  if (!icon) return null;
+  const key = icon.inventoryKey;
+  if (key.startsWith('Item_')) {
+    const id = parseInt(key.split('_')[1]);
+    if (id >= 10 && id <= 13) return 'item-report';
+    if (id >= 3000 && id <= 4999 && id % 10 <= 3) {
+      return `item-${Math.floor(id / 10)}`;
+    }
+  }
+  if (key.startsWith('Equipment_')) {
+    const id = parseInt(key.split('_')[1]);
+    if (id >= 1 && id <= 4) return 'equipment-exp';
+  }
+  return null;
+}
+
+function rerankPaletteCandidates(
+  candidates: Array<{ idx: number; sim: number }>,
+  embedding: Float32Array,
+  queryColor: Float32Array,
+  keys: string[],
+  iconMap: Map<string, IconEntry>,
+  colorFeatures: Map<string, Float32Array>,
+  paletteGroups: Map<string, number[]>,
+  embedMat: Float32Array,
+  dim: number,
+): { idx: number; sim: number } {
+  const best = candidates[0];
+  const group = paletteGroup(iconMap.get(keys[best.idx]));
+  if (!group) return best;
+
+  const family = paletteGroups.get(group) ?? [];
+  if (family.length < 2) return best;
+
+  let winner = best;
+  let bestScore = -Infinity;
+  for (const idx of family) {
+    const sim = cosineAt(embedding, embedMat, dim, idx);
+    const referenceColor = colorFeatures.get(keys[idx]);
+    const paletteSim = referenceColor ? cosineColor(queryColor, referenceColor) : 0;
+    const score = sim * (1 - PALETTE_WEIGHT) + paletteSim * PALETTE_WEIGHT;
+    if (score > bestScore) {
+      winner = { idx, sim };
+      bestScore = score;
+    }
+  }
+  return winner;
+}
+
+function cosineAt(query: Float32Array, mat: Float32Array, dim: number, idx: number): number {
+  let dot = 0;
+  const offset = idx * dim;
+  for (let d = 0; d < dim; d++) dot += query[d] * mat[offset + d];
+  return dot;
+}
+
+const COLOR_FEATURE_CHUNK_SIZE = 32;
+
+// icon.dataUrl is already an in-memory base64 string, so decode it directly instead
+// of round-tripping through fetch()/Response — that avoided overhead adds up over
+// hundreds of icons.
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(',');
+  const mime = /data:(.*);base64/.exec(header)?.[1] ?? 'image/webp';
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+async function buildColorFeatures(icons: IconEntry[], onChunkProgress?: (done: number, total: number) => void): Promise<Map<string, Float32Array>> {
+  const features = new Map<string, Float32Array>();
+  const canvas = new OffscreenCanvas(EMBED_SIZE, EMBED_SIZE);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return features;
+
+  for (let start = 0; start < icons.length; start += COLOR_FEATURE_CHUNK_SIZE) {
+    const chunk = icons.slice(start, start + COLOR_FEATURE_CHUNK_SIZE);
+
+    // Decode this chunk's bitmaps concurrently — createImageBitmap decoding happens
+    // off the main thread in most browsers, so batching lets it overlap.
+    const bitmaps = await Promise.all(
+      chunk.map(async (icon) => {
+        if (!icon.dataUrl) return null;
+        try {
+          return await createImageBitmap(dataUrlToBlob(icon.dataUrl));
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    // Canvas reads/writes must stay serialized — only one shared OffscreenCanvas.
+    for (let i = 0; i < chunk.length; i++) {
+      const bitmap = bitmaps[i];
+      if (!bitmap) continue;
+      ctx.clearRect(0, 0, EMBED_SIZE, EMBED_SIZE);
+      ctx.drawImage(bitmap, 0, 0, EMBED_SIZE, EMBED_SIZE);
+      const imgData = ctx.getImageData(0, 0, EMBED_SIZE, EMBED_SIZE).data;
+      features.set(chunk[i].inventoryKey, colorFeature(imgData, EMBED_SIZE));
+      bitmap.close();
+    }
+
+    onChunkProgress?.(Math.min(start + COLOR_FEATURE_CHUNK_SIZE, icons.length), icons.length);
+    // Yield back to the event loop between chunks so the tab stays responsive
+    // (repaints, input) instead of blocking for the entire ~769-icon pass.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  return features;
+}
+
+function colorFeature(data: Uint8ClampedArray, size: number): Float32Array {
+  const bins = new Float32Array(27);
+  const start = Math.floor(size * 0.12);
+  const end = Math.ceil(size * 0.88);
+  for (let y = start; y < end; y++) {
+    for (let x = start; x < end; x++) {
+      const i = (y * size + x) * 4;
+      if (data[i + 3] < 32) continue;
+      const r = data[i] / 255;
+      const g = data[i + 1] / 255;
+      const b = data[i + 2] / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const delta = max - min;
+      const sat = max === 0 ? 0 : delta / max;
+      if (sat < 0.12) {
+        bins[24 + Math.min(2, Math.floor(max * 3))]++;
+        continue;
+      }
+      let hue = 0;
+      if (max === r) hue = ((g - b) / delta + 6) % 6;
+      else if (max === g) hue = (b - r) / delta + 2;
+      else hue = (r - g) / delta + 4;
+      const hueBin = Math.min(11, Math.floor(hue * 2));
+      const satBand = sat < 0.45 ? 0 : 1;
+      bins[hueBin * 2 + satBand]++;
+    }
+  }
+  return l2normalize(bins);
+}
+
+function cosineColor(a: Float32Array, b: Float32Array): number {
+  let dot = 0;
+  for (let i = 0; i < a.length; i++) dot += a[i] * b[i];
+  return dot;
 }

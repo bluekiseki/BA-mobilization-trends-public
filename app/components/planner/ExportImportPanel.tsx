@@ -7,6 +7,8 @@ import { useEventPlanStore, type EventPlan } from '~/store/planner/useEventPlanS
 import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore';
 import { useEquipmentPlanStore } from '~/store/planner/useEquipmentPlanStore';
 import { detectAndConvert, tryParseInput, toJustin163, FORMAT_LABEL, AI_CONVERT_PROMPT } from './externalImportConverters';
+import { downloadFile } from '~/utils/downloadFile';
+
 const EXPORT_VERSION = '2.0.1';
 
 const FullPlannerSchema = z.looseObject({
@@ -38,16 +40,6 @@ interface EquipmentPlanUpdate {
   campaignSource?: 'kr' | 'jp';
 }
 
-const triggerDownload = (content: string, filename: string): void => {
-  const blob = new Blob([content], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
 export const exportPlannerData = (): void => {
   const { growthPlans, ownedGifts, materialInventory } = useGlobalStore.getState();
   const eventPlans = useEventPlanStore.getState().plans;
@@ -67,7 +59,7 @@ export const exportPlannerData = (): void => {
     timestamp: new Date().toISOString(),
     version: EXPORT_VERSION,
   };
-  triggerDownload(JSON.stringify(state, null, 2), `BA_Planner_${new Date().toISOString().slice(0, 10)}.json`);
+  downloadFile(JSON.stringify(state, null, 2), `BA_Planner_${new Date().toISOString().slice(0, 10)}.json`);
 };
 
 export const importPlannerData = (file: File): Promise<void> =>
@@ -199,7 +191,7 @@ export const ExportImportPanel: FC = () => {
     if (exportFormat === 'own') {
       exportPlannerData();
     } else {
-      triggerDownload(buildJustin163Json(), `BA_Justin163_${new Date().toISOString().slice(0, 10)}.json`);
+      downloadFile(buildJustin163Json(), `BA_Justin163_${new Date().toISOString().slice(0, 10)}.json`);
     }
   };
 
@@ -377,8 +369,8 @@ export const ExportImportPanel: FC = () => {
                 />
               </label>
               <button
-                onClick={() => inputText.trim() && triggerDownload(inputText, 'BA_Planner_Data.json')}
-                disabled={!inputText.trim()}
+                onClick={() => inputText.trim() && downloadFile(inputText, 'BA_Planner_Data.json')}
+                disabled={!inputText.trim() || detection?.type === 'INVALID'}
                 className={`${secondaryBtnClass} disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {t('dataExchange.saveToFile')}

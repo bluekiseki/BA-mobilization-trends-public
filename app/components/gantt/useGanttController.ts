@@ -1,10 +1,12 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Locale } from '~/utils/i18n/config';
-import { MS_PER_HOUR } from './constants';
+import { MS_PER_HOUR, BASE_PIXELS_PER_HOUR } from './constants';
 import type { GameServer } from '~/types/data';
 
-const BASE_PIXELS_PER_HOUR = 1.2;
+// useLayoutEffect warns when it runs during SSR (it never actually runs server-side); fall back to
+// useEffect there so this hook can be used in SSR routes without console noise.
+const useIsomorphicLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
 
 interface MarkerWeekly {
   left: number;
@@ -123,6 +125,13 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
   }, [scrollToTime]);
 
   // --- Markers ---
+  // These gridlines intentionally align to the *viewer's own* local calendar (local midnight/4am),
+  // using local-time Date methods (setHours, setDate, getDay, ...) — not a fixed server timezone.
+  // SSR (Cloudflare Workers, always UTC) and the browser (the viewer's real local zone) will
+  // therefore legitimately disagree on the exact values. That's expected, not a bug: GanttChart
+  // marks these specific elements with suppressHydrationWarning so React shows the server's guess
+  // immediately (real SSR content, no blank flash) and quietly swaps in the client's correct
+  // local-time value on the next render, instead of discarding/regenerating the whole subtree.
   const markers = useMemo(() => {
     if (!timeRange.min) return { daily: [], weekly: [], monthly: [] };
     const daily: number[] = [];
@@ -169,7 +178,7 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     }
 
     return { daily, weekly, monthly };
-  }, [timeRange.min, timeRange.max, locale, server, locale, calculateLeftPx]);
+  }, [timeRange.min, timeRange.max, locale, server, calculateLeftPx]);
 
   // --- Effects ---
 
@@ -198,39 +207,42 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     return () => el.removeEventListener('scroll', handleScroll);
   }, [timeRange.min, timeRange.max, locale, pixelsPerHour]); // Dependency required because offset calculation changes as pixelsPerHour changes
 
-  // 2. Data Update & Initialization Logic
-  useEffect(() => {
+  // 2a. One-time initial positioning (layout effect — before paint, avoids a flash of scrollLeft=0 /
+  // an unmeasured empty chart). Guarded to only ever run once: this is the only case where blocking
+  // the frame is worth it. Runs once per real mount; the `[]` deps are intentional (see effect 2c
+  // below for how the chart stays positioned when timeRange changes afterward, e.g. lazy-loaded scroll extension).
+  useIsomorphicLayoutEffect(() => {
     const el = scrollContainerRef.current;
-    if (!el || !timeRange.min) return;
+    if (!el || !timeRange.min || isInitialized.current) return;
 
-    // Update NOW marker position
+    setViewportWidth(el.clientWidth);
     const now = Date.now();
     setNowMarkerLeft(calculateLeftPx(new Date(now).toISOString()));
+    scrollToTime(initialTime ?? now, false);
+    isInitialized.current = true;
+  }, [timeRange.min]);
 
-    // Resize Observer
+  // 2b. Ongoing viewport width tracking (doesn't need to block paint).
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) setViewportWidth(entry.contentRect.width);
     });
     resizeObserver.observe(el);
+    return () => resizeObserver.disconnect();
+  }, []);
 
-    // ★ Position restoration logic
-    // Scenario A: First load (isInitialized is false) -> Move to initialTime or Now
-    // Scenario B: Server changed (timeRange updated) -> Move to lastViewedTimeRef if it exists
-
-    if (!isInitialized.current) {
-      // [Initial Entry]
-      const targetTime = initialTime ?? now;
-      scrollToTime(targetTime, false);
-      isInitialized.current = true;
-    } else if (lastViewedTimeRef.current) {
-      // If there is a previously viewed time, move to that position within the new timeRange
-      // (Jump immediately without animation so it appears to the user as if only the data has changed)
+  // 2c. Re-center after timeRange changes post-init (server switch, or useLazySchedule extending the
+  // range while scrolling) — a regular effect is fine here since the chart is already visible and
+  // correctly positioned; this just keeps the absolute time under the viewport stable.
+  useEffect(() => {
+    if (!isInitialized.current || !timeRange.min) return;
+    setNowMarkerLeft(calculateLeftPx(new Date(Date.now()).toISOString()));
+    if (lastViewedTimeRef.current) {
       scrollToTime(lastViewedTimeRef.current, false);
     }
-
-    return () => resizeObserver.disconnect();
-  }, [timeRange.min, timeRange.max, locale, calculateLeftPx, scrollToTime, initialTime]);
-  // This effect runs to readjust the position when timeRange.min changes (server change)
+  }, [timeRange.min, timeRange.max, locale, calculateLeftPx, scrollToTime]);
 
   return {
     scrollContainerRef,

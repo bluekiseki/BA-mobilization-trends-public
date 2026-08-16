@@ -34,7 +34,7 @@ export function getRawIconImg(): IconData {
 }
 
 export async function loadIcons(): Promise<{ icons: IconEntry[]; iconMap: Map<string, IconEntry> }> {
-  const [infoResp, imgResp] = await Promise.all([fetch(cdn('/scanner/icon_info.json')), fetch(cdn('/scanner/icon_img.json'))]);
+  const [infoResp, imgResp] = await Promise.all([fetch(cdn('/ew/icon_info.json')), fetch(cdn('/ew/icon_img.json'))]);
   _rawIconInfo = await infoResp.json();
   _rawIconImg = await imgResp.json();
 

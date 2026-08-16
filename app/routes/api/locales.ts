@@ -1,6 +1,6 @@
 // app/routes/locales.ts
 import { data } from 'react-router';
-import { cacheHeader } from 'pretty-cache-header';
+import { cacheHeader } from '~/utils/cacheControl';
 import { z } from 'zod';
 import resources from '~/locales';
 import type { Route } from './+types/locales';

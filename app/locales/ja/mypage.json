@@ -1,0 +1,128 @@
+{
+  "raids": {
+    "title": "クリア記録",
+    "description": "総力戦、大決戦、総合戦術試験、制約解除決戦のクリア記録を保存します。",
+    "noGuide": "攻略なしでクリア",
+    "server": "サーバー",
+    "floor": "層",
+    "notes": "メモ",
+    "rankText": "{{rank}}位",
+    "importSuccess": "{{count}}件の記録を読み込みました。",
+    "action": {
+      "import": "JSONをインポート",
+      "export": "JSONをエクスポート",
+      "addRecord": "記録を追加",
+      "editRecord": "記録を編集",
+      "deleteRecord": "記録を削除"
+    },
+    "warning": {
+      "deviceOnly": "現在このデバイスにのみ保存されています。",
+      "syncSuffix": "すると他のデバイスと同期されます。"
+    },
+    "tabs": {
+      "records": "記録",
+      "stats": "統計"
+    },
+    "filters": {
+      "showing": "{{visible}} / {{total}} 表示中",
+      "sort": "並び替え",
+      "sortByDateDesc": "日付順",
+      "sortByDateAsc": "日付逆順",
+      "sortByAddedDesc": "登録順",
+      "sortByAddedAsc": "登録逆順"
+    },
+    "error": {
+      "invalidFormat": "レイド記録のフォーマットが正しくありません。",
+      "importFailed": "JSONファイルの読み込みに失敗しました。",
+      "noRaidSelected": "レイドを選択してください。",
+      "scoreInvalid": "スコアは0以上の整数である必要があります。",
+      "scoreOptionalInvalid": "スコアは空欄または0以上の整数である必要があります。",
+      "rankInvalid": "ランクは空欄または1以上の整数である必要があります。",
+      "floorInvalid": "層数は1〜124の間である必要があります。",
+      "guideLinkInvalid": "攻略リンクはhttp://またはhttps://から始まる必要があります。",
+      "armorGuideLinkInvalid": "属性攻略リンクはhttp://またはhttps://から始まる必要があります。",
+      "assistDuplicate": "このレイドですでに助っ人として使用している生徒です。",
+      "assistDuplicateArmor": "この属性ですでに助っ人として使用している生徒です。",
+      "studentDuplicate": "同じ生徒を複数編成することはできません。",
+      "studentDuplicateWithoutAssist": "同じ生徒は助っ人として借りない限り、重複して編成できません。"
+    },
+    "table": {
+      "empty": "まだ記録がありません。"
+    },
+    "modal": {
+      "add": "クリア記録を追加",
+      "edit": "クリア記録を編集",
+      "raid": "レイド",
+      "trophy": "トロフィー",
+      "clearTime": "クリア時間",
+      "clearTimePlaceholder": "選択",
+      "totalScore": "合計スコア",
+      "clearTimeLabel": "クリア時間 {{time}}",
+      "difficultyCombo": "難易度コンボ",
+      "rankPlaceholder": "未入力",
+      "armorScore": "属性スコア",
+      "armorDifficulty": "属性難易度",
+      "party": "パーティ{{n}}",
+      "jfdStage": "第{{n}}ステージ",
+      "deleteParty": "パーティ削除",
+      "addParty": "パーティ追加",
+      "armorGuideLink": "属性攻略リンク",
+      "armorNotes": "属性メモ",
+      "guideLink": "参考攻略リンク"
+    },
+    "slotPicker": {
+      "starGrade": "星",
+      "clearSlot": "スロットをクリア",
+      "assistConflict": "すでに助っ人として使用中",
+      "mulligan": "手札",
+      "expandOptional": "▼ 装備・スキル入力 (任意)",
+      "collapseOptional": "▲ 装備・スキルを折りたたむ",
+      "noEquip": "なし",
+      "notesPlaceholder": "(任意)",
+      "confirmAndNext": "確認して次のスロット",
+      "nextParty": "次のパーティへ"
+    },
+    "stats": {
+      "totalRecords": "保存記録",
+      "uniqueStudents": "登場生徒数",
+      "assistCount": "助っ人使用回数",
+      "noData": "データがありません。",
+      "content": "コンテンツ",
+      "boss": "ボス",
+      "armor": "属性",
+      "rankValue": "{{rank}}位",
+      "starLabel": "{{n}}★",
+      "weaponLabel": "武{{n}}",
+      "floorLabel": "{{floor}}層",
+      "starDist": "星分布",
+      "levelDist": "レベル分布",
+      "assistTimes": "助っ人 {{count}}回",
+      "studentDeployment": "生徒投入記録",
+      "totalDeployments": "合計{{count}}回投入",
+      "scoreLabel": "スコア {{score}}",
+      "rankLabel": "ランク {{rank}}",
+      "scoreChart": {
+        "title": "総力戦 / 大決戦 結果推移",
+        "desc": "スコアとランクを切り替えて確認し、トロフィーは点の色で区別します。",
+        "emptyScore": "選択した条件に合うスコア記録がありません。",
+        "emptyRank": "選択した条件に合うランク記録がありません。"
+      },
+      "jfdChart": {
+        "title": "総合戦術試験 スコア推移",
+        "desc": "総合戦術試験は別グラフで確認します。",
+        "empty": "総合戦術試験の記録がありません。"
+      },
+      "usageChart": {
+        "title": "最も多く一緒に戦った生徒",
+        "desc": "コンテンツの種類と助っ人の有無を組み合わせて確認します。",
+        "empty": "選択した条件に合う生徒使用記録がありません。"
+      },
+      "restrictionChart": {
+        "title": "制約解除決戦 クリア推移",
+        "desc": "層数またはクリア時間を選択して推移を確認します。",
+        "empty": "選択した条件に合う制約解除決戦の記録がありません。"
+      },
+      "countTimes": "{{count}}回"
+    }
+  }
+}

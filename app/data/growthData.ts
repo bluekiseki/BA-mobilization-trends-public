@@ -410,6 +410,7 @@ export const TIER_MAX_LEVEL: Record<number, number> = {
 export const equipmentReinforcementExp = { 0: 90, 1: 360, 2: 1440, 3: 5760 }; // T1, T2, T3, T4 enhancement stones
 
 export const equipmentTierUpgradeCost = {
+  1: { credits: 0, blueprints: [{ tier: 1, amount: 1 }] },
   2: { credits: 1500, blueprints: [{ tier: 2, amount: 15 }] },
   3: { credits: 10000, blueprints: [{ tier: 3, amount: 20 }] },
   4: {

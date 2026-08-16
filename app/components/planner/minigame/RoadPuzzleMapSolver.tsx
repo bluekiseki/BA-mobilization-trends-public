@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { NumberInput } from '~/components/planner/common/NumberInput';
 import type { MapData } from '~/data/roadPuzzleMaps';
 import { solveRoadPuzzle, type SolveResult } from '~/utils/solveRoadPuzzle';
 import { useIsDarkState } from '~/store/isDarkState';
@@ -34,7 +35,7 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
 
   useEffect(() => {
     if (!autoSolve) return;
-    const r = solveRoadPuzzle(mapData.grid, mapData.rowOffset, inventory, mapData.goalEntry);
+    const r = solveRoadPuzzle(mapData.grid, mapData.rowOffset, inventory, mapData.goalEntry, mapData.startEntry);
     setResult(r);
   }, [autoSolve, inventory, mapData]);
 
@@ -69,14 +70,9 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
             {tileTypes.map((type) => (
               <div key={type}>
                 <label className={`block text-xs font-semibold mb-0.5 ${TILE_TYPE_COLORS[type as 1]}`}>{tileTypeName(type)}</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={gameInventory[type] ?? 0}
-                  value={inventory[type] ?? 0}
-                  onChange={(e) => setByInventory(type, parseInt(e.target.value) || 0)}
-                  className="w-20 p-1 text-sm border rounded dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
-                />
+                <div className="w-32">
+                  <NumberInput value={inventory[type] ?? 0} onChange={(value) => setByInventory(type, value)} min={0} max={gameInventory[type] ?? 0} narrowButtonType="all" />
+                </div>
               </div>
             ))}
           </div>
@@ -87,14 +83,15 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
             {tileTypes.map((type) => (
               <div key={type}>
                 <label className={`block text-xs font-semibold mb-0.5 ${TILE_TYPE_COLORS[type as 1]}`}>{tileTypeName(type)}</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={gameInventory[type] ?? 0}
-                  value={(gameInventory[type] ?? 0) - (inventory[type] ?? 0)}
-                  onChange={(e) => setByUndrawn(type, parseInt(e.target.value) || 0)}
-                  className="w-20 p-1 text-sm border rounded dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
-                />
+                <div className="w-32">
+                  <NumberInput
+                    value={(gameInventory[type] ?? 0) - (inventory[type] ?? 0)}
+                    onChange={(value) => setByUndrawn(type, value)}
+                    min={0}
+                    max={gameInventory[type] ?? 0}
+                    narrowButtonType="all"
+                  />
+                </div>
               </div>
             ))}
           </div>

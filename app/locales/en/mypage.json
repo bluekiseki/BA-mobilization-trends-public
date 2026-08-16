@@ -1,0 +1,128 @@
+{
+  "raids": {
+    "title": "My Clear Records",
+    "description": "Save your clear records for Total Assault, Grand Assault, Joint Firing Drill, and Final Restriction Rls.",
+    "noGuide": "Cleared without guide",
+    "server": "Server",
+    "floor": "Floor",
+    "notes": "Notes",
+    "rankText": "#{{rank}}",
+    "importSuccess": "Loaded {{count}} records.",
+    "action": {
+      "import": "Import JSON",
+      "export": "Export JSON",
+      "addRecord": "Add Record",
+      "editRecord": "Edit Record",
+      "deleteRecord": "Delete Record"
+    },
+    "warning": {
+      "deviceOnly": "Currently saved on this device only.",
+      "syncSuffix": " to sync across devices."
+    },
+    "tabs": {
+      "records": "Records",
+      "stats": "Stats"
+    },
+    "filters": {
+      "showing": "{{visible}} / {{total}} shown",
+      "sort": "Sort",
+      "sortByDateDesc": "Date (newest)",
+      "sortByDateAsc": "Date (oldest)",
+      "sortByAddedDesc": "Added (newest)",
+      "sortByAddedAsc": "Added (oldest)"
+    },
+    "error": {
+      "invalidFormat": "Invalid raid record format.",
+      "importFailed": "Failed to load the JSON file.",
+      "noRaidSelected": "Please select a raid.",
+      "scoreInvalid": "Score must be a non-negative integer.",
+      "scoreOptionalInvalid": "Score must be empty or a non-negative integer.",
+      "rankInvalid": "Rank must be empty or a positive integer.",
+      "floorInvalid": "Final Restriction Rls. floor must be between 1 and 124.",
+      "guideLinkInvalid": "Guide link must start with http:// or https://.",
+      "armorGuideLinkInvalid": "Armor guide link must start with http:// or https://.",
+      "assistDuplicate": "This student is already used as an assist in this raid.",
+      "assistDuplicateArmor": "This student is already used as an assist for this armor type.",
+      "studentDuplicate": "The same student cannot be placed twice.",
+      "studentDuplicateWithoutAssist": "The same student cannot be placed again unless borrowed as an assist."
+    },
+    "table": {
+      "empty": "No records saved yet."
+    },
+    "modal": {
+      "add": "Add Clear Record",
+      "edit": "Edit Clear Record",
+      "raid": "Raid",
+      "trophy": "Trophy",
+      "clearTime": "Clear Time",
+      "clearTimePlaceholder": "Select",
+      "totalScore": "Total Score",
+      "clearTimeLabel": "Clear Time {{time}}",
+      "difficultyCombo": "Difficulty Combo",
+      "rankPlaceholder": "Not entered",
+      "armorScore": "Armor Score",
+      "armorDifficulty": "Armor Difficulty",
+      "party": "Party {{n}}",
+      "jfdStage": "Stage {{n}}",
+      "deleteParty": "Delete Party",
+      "addParty": "Add Party",
+      "armorGuideLink": "Armor Guide Link",
+      "armorNotes": "Armor Notes",
+      "guideLink": "Guide Reference Link"
+    },
+    "slotPicker": {
+      "starGrade": "Stars",
+      "clearSlot": "Clear slot",
+      "assistConflict": "Already used as assist",
+      "mulligan": "Mulligan",
+      "expandOptional": "▼ Enter Equipment & Skills (optional)",
+      "collapseOptional": "▲ Collapse Equipment & Skills",
+      "noEquip": "None",
+      "notesPlaceholder": "(optional)",
+      "confirmAndNext": "Confirm & Next Slot",
+      "nextParty": "Move to Next Party"
+    },
+    "stats": {
+      "totalRecords": "Records",
+      "uniqueStudents": "Students Used",
+      "assistCount": "Assist Uses",
+      "noData": "No data available.",
+      "content": "Content",
+      "boss": "Boss",
+      "armor": "Armor",
+      "rankValue": "#{{rank}}",
+      "starLabel": "{{n}}★",
+      "weaponLabel": "WP{{n}}",
+      "floorLabel": "Floor {{floor}}",
+      "starDist": "Star Distribution",
+      "levelDist": "Level Distribution",
+      "assistTimes": "Assist ×{{count}}",
+      "studentDeployment": "Student Deployment",
+      "totalDeployments": "{{count}} deployments",
+      "scoreLabel": "Score {{score}}",
+      "rankLabel": "Rank {{rank}}",
+      "scoreChart": {
+        "title": "Total / Grand Assault Score Trend",
+        "desc": "Toggle between score and rank; trophy tier shown by dot color.",
+        "emptyScore": "No score records match the selected filters.",
+        "emptyRank": "No rank records match the selected filters."
+      },
+      "jfdChart": {
+        "title": "Joint Firing Drill Score Trend",
+        "desc": "JFD records are shown in a separate chart.",
+        "empty": "No Joint Firing Drill records found."
+      },
+      "usageChart": {
+        "title": "Most Deployed Students",
+        "desc": "Filter by content type and assist status.",
+        "empty": "No student usage records match the selected filters."
+      },
+      "restrictionChart": {
+        "title": "Final Restriction Rls. Progress",
+        "desc": "View progress by floor or clear time.",
+        "empty": "No Final Restriction Rls. records match the selected filters."
+      },
+      "countTimes": "×{{count}}"
+    }
+  }
+}

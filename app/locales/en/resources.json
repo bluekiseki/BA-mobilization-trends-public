@@ -1,0 +1,173 @@
+{
+  "header": {
+    "title": "Growth Resource Planner",
+    "description": "Forecast eleph, eligma, and coin income toward your student upgrade goals"
+  },
+  "horizon": {
+    "oneMonth": "1 month",
+    "threeMonths": "3 months",
+    "fourMonths": "4 months",
+    "sixMonths": "6 months",
+    "oneYear": "1 year"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "resources": "Resources",
+    "income": "Sources & Spending",
+    "incomeShort": "Setup",
+    "students": "Student Goals",
+    "studentsShort": "Goals"
+  },
+  "incomeTabHint": "Select a tracked resource above to configure income, purchases, and farming plans.",
+  "planStatus": {
+    "title": "Plan status",
+    "summary": "{{atRisk}} at risk · {{covered}} need eligma · {{onTrack}} on track",
+    "summaryWithDeadline": "{{atRisk}} at risk · {{covered}} need eligma · {{onTrack}} on track · {{noDeadline}} no deadline",
+    "openButton": "Student Goals",
+    "sectionTitle": "Student goals",
+    "emptyState": "Add student goals to see whether natural eleph income is enough or eligma is needed.",
+    "statusAtRisk": "At risk",
+    "statusCovered": "Eligma covers it",
+    "statusOnTrack": "On track",
+    "statusNoDeadline": "No deadline",
+    "noDeadlineDate": "No deadline",
+    "needsFromEligma": "Needs from eligma",
+    "costsEligma": "Costs eligma",
+    "naturalEleph": "Natural eleph",
+    "eligmaShort": "{{amount}} eligma short",
+    "eligmaLeft": "{{amount}} eligma left",
+    "resourceRisks": "Resource risks",
+    "tacticalCoin": "Tactical Challenge Coin",
+    "apPurchaseDays_one": "AP purchases across {{count}} day",
+    "apPurchaseDays_other": "AP purchases across {{count}} days",
+    "apPlanGains": "AP plan gains",
+    "lowestBalance": "Lowest balance",
+    "shortOn": "Short on {{date}}"
+  },
+  "studentGoals": {
+    "byStudent": "By Student",
+    "bySchedule": "By Schedule",
+    "activePlans": "Students with active plans",
+    "noStudentSelected": "No student selected",
+    "selectStudentHint": "Select a student's eleph from the tracked items above to view and edit goals."
+  },
+  "trackedItems": {
+    "title": "Tracked Items",
+    "searchPlaceholder": "Search items or student aliases...",
+    "noResults": "No results",
+    "activeTarget": "Active target",
+    "noGoalsSet": "No content goals set. Add goals via Student Goals below.",
+    "displayByGrowthPlan": "Display by growth plan",
+    "greyOutUnplannedStudents": "Gray out students without growth plans",
+    "studentCount_one": "student",
+    "studentCount_other": "students"
+  },
+  "income": {
+    "sectionTitle": "Income sources · {{section}}",
+    "defaultDailyCoins": "Default daily coins",
+    "coinsPerDay": "coins/day",
+    "perPeriodOverride": "Per-period override:",
+    "removeOverride": "Remove override",
+    "override": "Override",
+    "noDefaultSet": "No default set — not tracking this period.",
+    "usingDefaultConfig": "Using default config.",
+    "defaultAllPeriods": "Default (all periods)",
+    "clear": "Clear",
+    "weeklyMax": "Weekly max",
+    "dailyMode": "Daily",
+    "weeklyIncome": "Weekly income",
+    "permitsPerWeek": "permits/week",
+    "dailyInputHint": "Daily input: use the Schedule calendar below to enter daily amounts.",
+    "defaultMaxFloor": "Default max floor",
+    "noMfPeriods": "No Talents Unlock WB periods in schedule."
+  },
+  "elephCard": {
+    "contentMode": "Content",
+    "dateMode": "Date",
+    "timingStart": "Start",
+    "timingEnd": "End",
+    "selectContent": "— Select content —",
+    "finalGoal": "Final Goal",
+    "by": "By",
+    "noGoalsSet": "No goals set",
+    "goalsCount_one": "{{count}} goal · {{eleph}} eleph total",
+    "goalsCount_other": "{{count}} goals · {{eleph}} eleph total",
+    "setGoalsBelow": "Set goals below",
+    "current": "Current",
+    "target": "Target",
+    "remove": "Remove",
+    "intermediateGoals": "Intermediate Goals",
+    "addGoal": "Add goal",
+    "noGoalsYet": "No goals yet. Add a goal to plan eleph spending.",
+    "currentEleph": "Current eleph",
+    "gachaAvg": "Gacha avg",
+    "gachaAvgValue": "~{{value}} total"
+  },
+  "pvp": {
+    "rankingTier": "Ranking tier",
+    "defenseWins": "Defense wins/day (0–10)",
+    "plusCoinsPerDay": "+{{coins}} coins/day",
+    "extraWeeklyIncome": "Extra weekly income",
+    "miscSources": "misc sources",
+    "daily": "Daily:",
+    "weekly": "Weekly:",
+    "coins": "coins"
+  },
+  "raid": {
+    "killDifficulty": "Kill difficulty",
+    "trophy": "Trophy",
+    "normal": "Normal:",
+    "premium": "Premium:",
+    "eligmaLabel": "Eligma:"
+  },
+  "panel": {
+    "title": "Resources",
+    "startingInventory": "Starting inventory",
+    "gachaSimulation": "Gacha simulation",
+    "noSimDataPre": "No simulation data.",
+    "noSimDataPost": "first.",
+    "runSim": "Run a simulation",
+    "planAt": "Plan at",
+    "avg": "Avg",
+    "eventIncome": "Event Income (from Event Planner)",
+    "noEventDataPre": "No event income linked.",
+    "goToEventPlanner": "Set up the Event Planner",
+    "noEventDataPost": "to include event drops.",
+    "total": "Total",
+    "coinShopNote": "Coin shop, Expert Permit purchases, and hard stage runs configured in Schedule section below."
+  },
+  "schedule": {
+    "title": "Spending schedule",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "returnToCurrentMonth": "Return to current plan month",
+    "dragHint": "Drag date cells horizontally or tap a schedule bar to select a range. Drag must start in the horizontal direction to be recognized.<br/>Use <kbd>←</kbd> / <kbd>→</kbd> keys or the on-screen buttons to switch months.<br/>Monthly shop purchases are recorded on the earliest selected day within each month."
+  },
+  "stageFarming": {
+    "runsPerDay": "runs/day",
+    "apply": "Apply",
+    "remove": "Remove",
+    "runsScheduled_one": "{{count}} run scheduled",
+    "runsScheduled_other": "{{count}} runs scheduled"
+  },
+  "purchasePanel": {
+    "shopNotOpen": "Shop not yet open · available from {{date}}",
+    "targetReached": "Target reached",
+    "apply": "Apply",
+    "cancel": "Cancel"
+  },
+  "eventLabels": {
+    "title": "{{title}}",
+    "raidBoss": "Total Assault {{boss}}",
+    "eraidBoss": "Grand Assault {{boss}}",
+    "mfBoss": "Final Restriction Rls. {{boss}}",
+    "jfdSeason": "Joint Firing Drill S{{season}}",
+    "shopRefresh": "Shop refresh ×{{count}}",
+    "purchaseFrom": "{{item}} exchange",
+    "growthSpendStudent": "{{students}} - {{item}} goal spend",
+    "growthSpendEleph": "{{item}} — goal spend",
+    "growthSpendDefault": "Growth spend",
+    "elephGoalReached": "{{studentName}} - Eleph (Goal reached)",
+    "goalLabel": "(Goal)"
+  }
+}

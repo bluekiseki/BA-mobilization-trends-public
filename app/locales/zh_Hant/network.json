@@ -1,0 +1,57 @@
+{
+  "title": "學生出撃網絡分析",
+  "description": "以網路圖查看在突襲隊伍中常一起編成的學生關係與核心學生。",
+  "loadingAssets": "正在加載初始資源...",
+  "fullPage": "完整頁面 →",
+  "sidebarTabs": {
+    "filter": "篩選",
+    "search": "搜尋",
+    "rankings": "排名",
+    "detail": "詳細"
+  },
+  "controls": {
+    "range": "範圍",
+    "from": "開始",
+    "to": "結束",
+    "seasonsInRange": "{{count}}個季節範圍",
+    "type": "類型",
+    "rankCutoff": "排名截斷",
+    "topRank": "前 {{value}}",
+    "display": "顯示",
+    "minEdgeWeight": "最小邊權重: {{value}}",
+    "maxStudents": "最多學生: {{value}}",
+    "topNPerNode": "每個節點的前N個鏈接",
+    "on": "開",
+    "off": "關"
+  },
+  "ranking": {
+    "noData": "無數據",
+    "pageRank": "頁面排名",
+    "pageRankDesc": "頁面排名不只計算共同出擊次數，還將共同出擊學生的重要度納入考量來衡量中心度。連接的學生排名越高，得分越高。",
+    "betweenness": "介中心性",
+    "betweennessDesc": "介中心性：某學生出現在其他兩位學生最短路徑上的頻率。分數越高，代表在隊伍組成中扮演核心橋樑角色，移除後網路容易分裂。",
+    "strength": "連結強度",
+    "strengthDesc": "與所有其他學生共同出擊次數的總和。最直接反映使用頻率的指標。",
+    "degree": "度數",
+    "degreeDesc": "曾共同出擊的獨特學生數量。度數越高，代表出現在越多不同的隊伍組成中，可視為泛用性的衡量指標。"
+  },
+  "nodeDetail": {
+    "clickToSeeDetails": "點擊節點查看詳細信息",
+    "appearances": "{{count}}次出擊",
+    "coOccurrences": "共同出擊",
+    "noConnections": "當前視圖中沒有連接",
+    "viewProfile": "學生資訊及出戰現況"
+  },
+  "canvas": {
+    "recentSeasons": "最近14個季節的組合",
+    "nodesStat": "{{nodes}}名學生 · {{edges}}個連接",
+    "focus": "焦點:",
+    "instructionsHint": "點擊節點聚焦 · 拖動移動 · 滾動縮放",
+    "selectSeasons": "從篩選選項卡中選擇季節開始。",
+    "noMatches": "沒有與當前篩選器匹配的數據。"
+  },
+  "search": {
+    "placeholder": "搜尋學生...",
+    "noResults": "無結果"
+  }
+}

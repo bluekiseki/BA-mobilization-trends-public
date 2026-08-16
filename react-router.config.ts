@@ -9,14 +9,6 @@ declare module 'react-router' {
 
 export default {
   ssr: true,
-  future: {
-    v8_middleware: true,
-    v8_splitRouteModules: true,
-    v8_passThroughRequests: true,
-    v8_trailingSlashAwareDataRequests: true,
-    // unstable_middleware: true,
-    // unstable_optimizeDeps: false,
-    // unstable_splitRouteModules: false,
-    v8_viteEnvironmentApi: true, // for cloudflare worker
-  },
+  splitRouteModules: true,
+  future: {},
 } satisfies Config;

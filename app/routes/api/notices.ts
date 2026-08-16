@@ -1,23 +1,8 @@
 import { type LoaderFunctionArgs } from 'react-router';
 import { env } from 'cloudflare:workers';
 import { vaildClient } from '~/utils/vaildClient';
-
-interface PostRow {
-  post_id: number;
-  region: string;
-  category: string;
-  type: string;
-  thumbnail: string;
-  url: string;
-  first_crawled_at: string;
-  title: string;
-  api_modify_date: string;
-  api_create_date: string;
-}
-
-interface CountRow {
-  total: number;
-}
+import { queryNotices } from '~/utils/notices-query.server';
+import { NOTICES_CACHE_CONTROL } from '~/utils/cacheControl';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (!vaildClient(request)) {
@@ -32,74 +17,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const region = url.searchParams.get('region') || 'ALL';
   const sort = url.searchParams.get('sort') || 'new';
-  const typeParam = url.searchParams.get('type') || 'ALL';
-
-  const limit = Number(url.searchParams.get('limit')) || 20;
+  const type = url.searchParams.get('type') || 'ALL';
+  const limit = Math.min(Number(url.searchParams.get('limit')) || 20, 20);
   const page = Number(url.searchParams.get('page')) || 1;
-  const offset = (page - 1) * limit;
   const withTotal = url.searchParams.get('with_total') === 'true';
 
-  // 1. Prepare arrays to separate dynamic filter conditions and binding values
-  const conditions = [];
-  const bindValues: string[] = []; // Values to be mapped to '?'
-
-  // 2. Parameter binding processing (SQL Injection protection)
-  if (region !== 'ALL') {
-    conditions.push(`p.region = ?`);
-    bindValues.push(region);
-  }
-
-  // typeParam is compared with hardcoded values in code and is safe, but handled as a condition for consistency
-  if (typeParam === 'VIDEO') {
-    conditions.push(`p.type = 'VIDEO'`);
-  } else if (typeParam === 'ETC') {
-    conditions.push(`p.type != 'VIDEO'`);
-  }
-
-  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
-
-  // Sort criteria is a conditional string set by us, not external input, so there is no injection risk
-  const orderBy = sort === 'new' ? 'pv.api_create_date' : 'pv.api_modify_date';
-
-  const query = `
-    SELECT
-        p.post_id, p.region, p.category, p.type, p.thumbnail, p.url, p.first_crawled_at,
-        pv.title, pv.api_modify_date, pv.api_create_date
-    FROM posts p
-    JOIN post_versions pv ON p.post_id = pv.post_id
-    WHERE pv.is_latest = 1
-    ${whereClause}
-    ORDER BY ${orderBy} DESC
-    LIMIT ? OFFSET ?;
-  `;
-
-  const countQuery = `
-    SELECT COUNT(*) as total
-    FROM post_versions pv
-    JOIN posts p ON p.post_id = pv.post_id
-    WHERE pv.is_latest = 1 ${whereClause};
-  `;
-
   try {
-    if (withTotal) {
-      const [dataResult, countResult] = await Promise.all([
-        db
-          .prepare(query)
-          .bind(...bindValues, limit, offset)
-          .all<PostRow>(),
-        db
-          .prepare(countQuery)
-          .bind(...bindValues)
-          .first<CountRow>(),
-      ]);
-      return Response.json({ data: dataResult.results, total: countResult?.total ?? 0, page, limit });
-    }
-
-    const dataResult = await db
-      .prepare(query)
-      .bind(...bindValues, limit, offset)
-      .all<PostRow>();
-    return Response.json({ data: dataResult.results, page, limit });
+    const result = await queryNotices(db, { region, sort, type, page, limit, withTotal });
+    return Response.json(result, { headers: { 'Cache-Control': NOTICES_CACHE_CONTROL } });
   } catch (error) {
     console.error(error);
     return Response.json({ error: 'DB Error' }, { status: 500 });

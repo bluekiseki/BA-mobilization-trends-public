@@ -4,7 +4,7 @@ import type { LastData, TimelineData } from '~/types/livetype';
 import type { Student } from '~/types/data';
 import { isTotalAssault, type PortraitData } from '~/components/dashboard/common';
 import { useDataCacheJson } from '~/utils/useDataCacheJson';
-import RankScatterChart from '~/components/live/RankScatterChart';
+import RankScatterChart, { type PredictionData } from '~/components/live/RankScatterChart';
 import ScoreTimelineChart from '~/components/live/ScoreTimelineChart';
 import TierAnalysisDashboard from '~/components/live/TierAnalysisDashboard';
 import Top10Rankings from '~/components/live/Top10Rankings';
@@ -17,13 +17,18 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 import { getMostDifficultLevel } from '~/components/raid/raidToString';
 import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
-import { lastdataURL, timelineURL } from '~/data/livedataServer.json';
+import { lastdataURL, timelineURL, issuesURL } from '~/data/livedataServer.json';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types';
 import { cdn } from '~/utils/cdn';
 import { env } from 'cloudflare:workers';
 import { YouTubeSearchGenerator } from '~/components/dashboard/YouTubeSearchGenerator';
 import type { AppHandle } from '~/types/link';
+import ContactButton from '~/components/ContactButton';
+import BugReportModal from '~/components/common/BugReportModal';
+import { LiveVideoSection } from '~/components/live/LiveVideoSection';
+import { PlatinumCutWidget } from '~/components/live/PlatinumCutWidget';
+import { ScoreTimeConverter } from '~/components/live/ScoreTimeConverter';
 
 const RANKS_TO_PLOT = [
   1,
@@ -100,9 +105,31 @@ export async function loader({ context }: LoaderFunctionArgs) {
     return res.json() as unknown as T;
   };
 
+  // Historical trajectory datasets used by RankScatterChart/PlatinumCutWidget (~940KB
+  // combined). They live in public/data/jp/trajectory/ so the existing "Deploy Assets to
+  // R2" CI workflow keeps them synced to the yuzutrends-cdn bucket automatically on every
+  // push - no manual upload step needed for future updates. Fetched via the CDN_BUCKET R2
+  // binding (zero-latency) rather than an external HTTP fetch. Non-critical to the page,
+  // so a miss just means those charts render without the overlay/prediction.
+  const fetchTrajectory = async (filename: string): Promise<unknown> => {
+    try {
+      const r2Object = await env.CDN_BUCKET.get(`assets/data/jp/trajectory/${filename}`);
+      return r2Object ? await r2Object.json() : null;
+    } catch {
+      return null;
+    }
+  };
+
   try {
     // Using a common function to call both data points in parallel cleanly!
-    const [lastData, timelineData] = await Promise.all([fetchWithR2Fallback<LastData>('lastdata.json', lastdataURL), fetchWithR2Fallback<TimelineData>('timeline.json', timelineURL)]);
+    const [lastData, timelineData, totalAssaultTrajectories, eliminationRaidTrajectories] = await Promise.all([
+      fetchWithR2Fallback<LastData>('lastdata.json', lastdataURL),
+      fetchWithR2Fallback<TimelineData>('timeline.json', timelineURL),
+      fetchTrajectory('total_assault_trajectories.json'),
+      fetchTrajectory('elimination_raid_trajectories.json'),
+    ]);
+
+    const isDataStale = new Date(lastData.time.replace(' ', 'T') + 'Z') < new Date(raidInfos[0].Date.replace(' ', 'T') + 'Z');
 
     // Pass data to components in JSON format.
     return data({
@@ -115,6 +142,9 @@ export async function loader({ context }: LoaderFunctionArgs) {
 
       lastData,
       timelineData,
+      totalAssaultTrajectories,
+      eliminationRaidTrajectories,
+      dataAvailable: !isDataStale,
     });
   } catch (error) {
     console.error('Error in live dashboard loader:', error);
@@ -155,7 +185,7 @@ export const handle: AppHandle = {
 };
 
 export default function LiveDashboardPage() {
-  const { lastData: lastData, timelineData: timelineData, raidInfos } = useLoaderData<typeof loader>();
+  const { lastData: lastData, timelineData: timelineData, raidInfos, dataAvailable, totalAssaultTrajectories, eliminationRaidTrajectories } = useLoaderData<typeof loader>();
   // const [lastData, setLastData] = useState<LastData>(lastData_f as LastData);
   // const [timelineData, setTimelineData] = useState<TimelineData>(timelineData_f as any);
 
@@ -167,6 +197,7 @@ export default function LiveDashboardPage() {
   const { t: t_c } = useTranslation('common');
   const locale = i18n.language as Locale;
   const [isReady, setIsReady] = useState(false);
+  const [isBugModalOpen, setIsBugModalOpen] = useState(false);
 
   useEffect(() => {
     console.log('useeffet');
@@ -210,54 +241,82 @@ export default function LiveDashboardPage() {
           <YouTubeSearchGenerator raidInfo={raidInfos[0]} showType={raidInfos.every((v) => v.Type != undefined) ? raidInfos.map((v) => v.Type) : false} />
         </div>
 
-        <div className="mt-6 text-center">
-          <p className="pb-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Last Update: <span className="font-medium text-neutral-800 dark:text-neutral-300">{formatDateToDayString(new Date(lastData.time.replace(' ', 'T') + 'Z'), raidInfos[0])}</span>
-          </p>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            {t('service_discontinuation_notice')} {t('irregular_update_notice')}
-          </p>
-          {/* for yesod */}
-          {/* <p className="text-sm font-medium text-red-500 dark:text-red-400">
-                        The clear times above Insane are estimates.
-                    </p> */}
-        </div>
+        {dataAvailable && (
+          <div className="mt-6 text-center">
+            <p className="pb-1 text-sm text-neutral-500 dark:text-neutral-400">
+              Last Update: <span className="font-medium text-neutral-800 dark:text-neutral-300">{formatDateToDayString(new Date(lastData.time.replace(' ', 'T') + 'Z'), raidInfos[0])}</span>
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              {t('service_discontinuation_notice')} {t('irregular_update_notice')}
+            </p>
+          </div>
+        )}
       </header>
 
       <section>
-        <h2 className="text-2xl font-bold mb-4">Overview</h2>
-        <TierAnalysisDashboard timelineData={timelineData} raidInfos={raidInfos} isRaid={isRaid} />
+        <h2 className="text-2xl font-bold mb-4">{t('score_time_converter_title')}</h2>
+        <ScoreTimeConverter raidInfo={raidInfos[0]} server={server} />
       </section>
 
-      {/* Clear Distribution Chart*/}
+      {!dataAvailable && (
+        <div className="py-10 text-center border-t border-neutral-200 dark:border-neutral-700">
+          <p className="text-neutral-700 dark:text-neutral-300">{t('data_unavailable_reason')}</p>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-400">{t('data_unavailable_status')}</p>
+          <div className="mt-4 flex justify-center items-center gap-3">
+            <ContactButton>
+              <span className="px-4 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded cursor-pointer transition-colors whitespace-nowrap">
+                {t('data_unavailable_contact_email')}
+              </span>
+            </ContactButton>
+            <button
+              onClick={() => setIsBugModalOpen(true)}
+              className="px-4 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors whitespace-nowrap"
+            >
+              {t('data_unavailable_contact_anon')}
+            </button>
+          </div>
+        </div>
+      )}
+      {!dataAvailable && <PlatinumCutWidget raidInfos={raidInfos} isRaid={isRaid} totalAssaultTrajectories={totalAssaultTrajectories} eliminationRaidTrajectories={eliminationRaidTrajectories} />}
+      {!dataAvailable && <LiveVideoSection raidInfos={raidInfos} studentData={studentData} portraitData={portraitData} />}
+      {isBugModalOpen && <BugReportModal onClose={() => setIsBugModalOpen(false)} issuesURL={issuesURL} />}
 
-      {isReady && (
+      {dataAvailable && (
         <>
           <section>
-            <h2 className="text-2xl font-bold mb-4">{t('platinum_tier_distribution')}</h2>
-            <RankScatterChart isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} />
+            <h2 className="text-2xl font-bold mb-4">Overview</h2>
+            <TierAnalysisDashboard timelineData={timelineData} raidInfos={raidInfos} isRaid={isRaid} />
           </section>
 
-          <section>
-            <Top10Rankings isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
-          </section>
+          {isReady && (
+            <>
+              <section>
+                <h2 className="text-2xl font-bold mb-4">{t('platinum_tier_distribution')}</h2>
+                <RankScatterChart
+                  isRaid={isRaid}
+                  lastData={lastData}
+                  raidInfos={raidInfos}
+                  server={server}
+                  totalAssaultTrajectories={totalAssaultTrajectories as PredictionData | null}
+                  eliminationRaidTrajectories={eliminationRaidTrajectories as PredictionData | null}
+                />
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-4">{t('ranking_cutoff_fluctuation')}</h2>
+              <section>
+                <Top10Rankings isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
+              </section>
 
-            <ScoreTimelineChart
-              isRaid={isRaid}
-              timelineData={timelineData}
-              ranksToPlot={RANKS_TO_PLOT}
-              // ranksToPlot={[1, 5000, 10000, 20000]}
-              raidInfos={raidInfos}
-            />
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold mb-4">{t('ranking_cutoff_fluctuation')}</h2>
+                <ScoreTimelineChart isRaid={isRaid} timelineData={timelineData} ranksToPlot={RANKS_TO_PLOT} raidInfos={raidInfos} />
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-4">{t('highscore_change_by_difficulty')}</h2>
-            <MaxScoreTimelineChart isRaid={isRaid} timelineData={timelineData} raidInfos={raidInfos} server={server} />
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold mb-4">{t('highscore_change_by_difficulty')}</h2>
+                <MaxScoreTimelineChart isRaid={isRaid} timelineData={timelineData} raidInfos={raidInfos} server={server} />
+              </section>
+            </>
+          )}
         </>
       )}
     </main>

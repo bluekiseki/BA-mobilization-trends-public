@@ -22,7 +22,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡．庫帕拉",
+    "Tw": "革命的伊凡·庫帕拉",
     "OpenTime": "2021-04-29 12:30:00",
     "CloseTime": "2021-05-13 12:00:00"
   },
@@ -84,7 +84,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♥ Valentine Patrol",
+    "En": "Schale's Happy ♡ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2022-01-26 12:30:00",
     "CloseTime": "2022-02-09 12:00:00"
@@ -263,7 +263,7 @@
   "832": {
     "Name": "Event_Name_832",
     "Kr": "전뇌신춘행진곡",
-    "Jp": "（電脳）新春行進曲",
+    "Jp": "電脳新春行進曲",
     "En": "Cyber New Year March",
     "Tw": "電腦新春行進曲",
     "OpenTime": "2023-12-27 11:00:00",
@@ -452,7 +452,7 @@
   "853": {
     "Name": "Event_Name_853",
     "Kr": "불인의 길 ~패션쇼 경호 임무!의 서~",
-    "Jp": "不忍ノ道～ファッションショー警護任務！の巻～",
+    "Jp": "不忍ノ道 ～ファッションショー警護任務！の巻～",
     "En": "An Unconcealed Path - Episode: Fashion Show Security Duty!",
     "Tw": "不忍之道～時裝秀警備任務！之卷～",
     "OpenTime": "2025-12-24 11:00:00",
@@ -472,7 +472,7 @@
     "Kr": "게임개발부 청소 대작전!",
     "Jp": "ゲーム開発部のお掃除大作戦！",
     "En": "Game Development Department's Cleanup Operation!",
-    "Tw": "遊戲開發部大掃除作戰！",
+    "Tw": "遊戲開發部清掃大作戰！",
     "OpenTime": "2026-02-18 11:00:00",
     "CloseTime": "2026-03-04 10:59:59"
   },
@@ -480,8 +480,8 @@
     "Name": "Event_Name_856",
     "Kr": "키보토스・미확인 미스테리 ~미지의 생물, 츠치노코를 찾아서~",
     "Jp": "キヴォトス・未確認ミステリー～邪を払うツチノコ大調査～",
-    "En": null,
-    "Tw": null,
+    "En": "Kivotos' Unsolved Mystery: In Search of Tsuchinoko, the Unknown Creature",
+    "Tw": "奇普托斯・未確認謎團～追尋未知生物槌之子～",
     "OpenTime": "2026-03-18 11:00:00",
     "CloseTime": "2026-04-01 10:59:59"
   },
@@ -503,6 +503,24 @@
     "OpenTime": "2026-05-27 11:00:00",
     "CloseTime": "2026-06-10 10:59:59"
   },
+  "859": {
+    "Name": "Event_Name_859",
+    "Kr": "람과천청",
+    "Jp": "嵐過天晴",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-06-24 11:00:00",
+    "CloseTime": "2026-07-08 10:59:59"
+  },
+  "860": {
+    "Name": "Event_Name_860",
+    "Kr": "출항! 만마선 ~마코토 의장님의 화려한 피서~",
+    "Jp": "出航！万魔船　マコト議長の華麗なる避暑",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-07-29 11:00:00",
+    "CloseTime": "2026-08-12 10:59:59"
+  },
   "10801": {
     "Name": "Event_Name_801",
     "Kr": "벚꽃만발 축제대소동!",
@@ -517,7 +535,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡．庫帕拉",
+    "Tw": "革命的伊凡·庫帕拉",
     "OpenTime": "2022-03-09 11:30:00",
     "CloseTime": "2022-03-16 10:59:59"
   },
@@ -579,7 +597,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♥ Valentine Patrol",
+    "En": "Schale's Happy ♡ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2023-01-11 11:00:00",
     "CloseTime": "2023-01-24 10:59:59"
@@ -731,7 +749,7 @@
   "10832": {
     "Name": "Event_Name_832",
     "Kr": "전뇌신춘행진곡",
-    "Jp": "（電脳）新春行進曲",
+    "Jp": "電脳新春行進曲",
     "En": "Cyber New Year March",
     "Tw": "電腦新春行進曲",
     "OpenTime": "2025-02-12 11:00:00",
@@ -836,6 +854,16 @@
     "OpenTime": "2026-04-01 11:00:00",
     "CloseTime": "2026-04-15 10:59:59"
   },
+  "10844": {
+    "Name": "Event_Name_844",
+    "Kr": "팬데믹 해저드 ~기적의 팬케이크~",
+    "Jp": "パンデミック・ハザード～奇跡の一枚～",
+    "En": "Pandemic Hazard: Miraculous Pancake",
+    "Tw": "瘟疫危機～奇蹟的鬆餅～",
+    "OpenTime": "2026-08-12 11:00:00",
+    "CloseTime": "2026-08-26 10:59:59",
+    "Planable": true
+  },
   "10845": {
     "Name": "Event_Name_845",
     "Kr": "Pray-Ball! ~노려라! 만루 홈런~",
@@ -845,6 +873,15 @@
     "OpenTime": "2026-05-06 11:00:00",
     "CloseTime": "2026-05-20 10:59:59"
   },
+  "10846": {
+    "Name": "Event_Name_846",
+    "Kr": "하이랜더 철도 폭주 사건 ~그리고 기차는 없었다~",
+    "Jp": "ハイランダー鉄道爆走事件 〜そして列車はなくなった〜",
+    "En": "Highlander Railroad Runaway Incident: And the Train Disappeared",
+    "Tw": "高地人鐵道暴走事件～於是列車消失了～",
+    "OpenTime": "2026-07-08 11:00:00",
+    "CloseTime": "2026-07-22 10:59:59"
+  },
   "10847": {
     "Name": "Event_Name_847",
     "Kr": "백에서 피어난 한 송이 ~정정당당하게, 수상 승부~",
@@ -852,8 +889,7 @@
     "En": "A Flower Blooms Among the Hundred: Fair and Square Aquatic Showdown",
     "Tw": "百中綻放的一朵～光明正大的水上對決～",
     "OpenTime": "2026-06-10 11:00:00",
-    "CloseTime": "2026-06-24 10:59:59",
-    "Planable": true
+    "CloseTime": "2026-06-24 10:59:59"
   },
   "60001": {
     "Name": "Event_Name_60000",
@@ -1017,22 +1053,31 @@
     "OpenTime": "2026-05-20 11:00:00",
     "CloseTime": "2026-05-27 10:59:59"
   },
+  "60019": {
+    "Name": "Event_Name_60000",
+    "Kr": "샬레 총결산 with 총학생회 (19차)",
+    "Jp": "[S19] シャーレの総決算with連邦生徒会",
+    "En": "[S19] Balancing Schale's Books with the General Student Council",
+    "Tw": "[S19] 夏萊總結算with聯邦學生會",
+    "OpenTime": "2026-07-22 11:00:00",
+    "CloseTime": "2026-07-29 10:59:59"
+  },
   "100854": {
     "Name": "Event_Name_854",
     "Kr": "강철대륙 공략전 -말쿠트 보스전-",
     "Jp": "鋼鉄大陸攻略戦 -マルクト戦-",
     "En": "Operational Plan: Steel Continent, Allied Operation: Malkuth",
-    "Tw": "鋼鐵大陸攻略戰，以及聯合作戰：馬爾庫特",
+    "Tw": "鐵大陸攻略戰，以及聯合作戰：馬爾庫特",
     "OpenTime": "2026-01-29 11:00:00",
     "CloseTime": "2026-02-12 10:59:59",
     "Planable": true
   },
   "200854": {
     "Name": "Event_Name_854",
-    "Kr": "???",
+    "Kr": "데카그라마톤 결전",
     "Jp": "DECAGRAMMATON決戦",
-    "En": "???",
-    "Tw": "???",
+    "En": "Allied Operation: Decagrammaton Showdown",
+    "Tw": "聯合作戰 : 十字神名決戰",
     "OpenTime": "2026-02-13 11:00:00",
     "CloseTime": "2026-02-18 10:59:59",
     "Planable": true

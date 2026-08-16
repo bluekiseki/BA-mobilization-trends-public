@@ -15,9 +15,14 @@ type BossDataMap = Record<string, BossDataEntry>;
 export const LIVE_RAID_DURATION = 7;
 
 export const LiveRaidInfos = [
-  { Id: 'E34', Boss: 'HoverCraft', Location: 'Outdoor', Type: 'Unarmed', Date: '2026-06-17 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
-  { Id: 'E34', Boss: 'HoverCraft', Location: 'Outdoor', Type: 'ElasticArmor', Date: '2026-06-17 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
-  { Id: 'E34', Boss: 'HoverCraft', Location: 'Outdoor', Type: 'LightArmor', Date: '2026-06-17 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },
+  { Id: 'R91', Boss: 'Hieronymus_Street', Location: 'Street', Date: '2026-08-05 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+  // { Id: 'E35', Boss: 'HOD_Indoor', Location: 'Indoor', Type: 'HeavyArmor', Date: '2026-07-15 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E35', Boss: 'HOD_Indoor', Location: 'Indoor', Type: 'ElasticArmor', Date: '2026-07-15 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E35', Boss: 'HOD_Indoor', Location: 'Indoor', Type: 'LightArmor', Date: '2026-07-15 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },
+  // { Id: 'R90', Boss: 'EN0005', Location: 'Indoor', Date: '2026-07-01 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+  // { Id: 'E34', Boss: 'HoverCraft', Location: 'Outdoor', Type: 'Unarmed', Date: '2026-06-17 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E34', Boss: 'HoverCraft', Location: 'Outdoor', Type: 'ElasticArmor', Date: '2026-06-17 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  // { Id: 'E34', Boss: 'HoverCraft', Location: 'Outdoor', Type: 'LightArmor', Date: '2026-06-17 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },
   // { Id: 'R89', Boss: 'EN0022', Location: 'Street', Date: '2026-06-03 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
   // { Id: 'E33', Boss: 'EN0006', Location: 'Street', Type: 'Unarmed', Date: '2026-05-13 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
   // { Id: 'E33', Boss: 'EN0006', Location: 'Street', Type: 'LightArmor', Date: '2026-05-13 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },

@@ -6,14 +6,16 @@ import { MagicLinkForm } from '~/components/auth/MagicLinkForm';
 import { SignupForm } from '~/components/auth/SignupForm';
 import { GithubButton } from '~/components/auth/GithubButton';
 import { localeLink } from '~/utils/localeLink';
+import { magicLinkLogin } from '~/data/livedataServer.json';
 import { env } from 'cloudflare:workers';
 import { ClientOnly } from '~/components/common/ClientOnly';
 import { getInstance } from '~/middleware/i18next';
 import { createMetaDescriptor, createLinkHreflang } from '~/components/head';
+import { createInternalSessionRequest } from '~/utils/internalSessionRequest';
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   try {
-    const resp = await env.AUTH_WORKER.fetch(new Request(new URL('/__internal/session', request.url), { headers: request.headers }));
+    const resp = await env.AUTH_WORKER.fetch(createInternalSessionRequest(request, params.locale));
     if (resp.status === 200) return redirect(localeLink(params.locale, '/settings'));
   } catch {}
   const i18n = getInstance(context);
@@ -47,7 +49,9 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-1">{t('common.createAccount')}</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">{t('common.createAccount')}</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('signup.benefits.dataSync')}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{t('signup.benefits.noLoginNote')}</p>
         </div>
 
         <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
@@ -87,33 +91,36 @@ export default function SignupPage() {
             </div>
 
             {/* Method tabs */}
-            <div className="flex border-b border-neutral-200 dark:border-neutral-700">
-              {(
-                [
-                  ['password', t('signup.tabs.password')],
-                  ['magic', t('signup.tabs.emailLink')],
-                ] as [Tab, string][]
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={`flex-1 py-3 text-sm font-medium transition border-b-2 -mb-px ${
-                    tab === key
-                      ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
-                      : 'text-neutral-500 dark:text-neutral-400 border-transparent hover:text-neutral-800 dark:hover:text-neutral-200'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {magicLinkLogin && (
+              <div className="flex border-b border-neutral-200 dark:border-neutral-700">
+                {(
+                  [
+                    ['password', t('signup.tabs.password')],
+                    ['magic', t('signup.tabs.emailLink')],
+                  ] as [Tab, string][]
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={`flex-1 py-3 text-sm font-medium transition border-b-2 -mb-px ${
+                      tab === key
+                        ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                        : 'text-neutral-500 dark:text-neutral-400 border-transparent hover:text-neutral-800 dark:hover:text-neutral-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            {tab === 'password' && (
+            {magicLinkLogin && tab === 'magic' ? (
+              <MagicLinkForm consentGiven={consentGiven} />
+            ) : (
               <ClientOnly>
                 <SignupForm consentGiven={consentGiven} />
               </ClientOnly>
             )}
-            {tab === 'magic' && <MagicLinkForm consentGiven={consentGiven} />}
 
             <Divider />
 

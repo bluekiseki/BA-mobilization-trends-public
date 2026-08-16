@@ -28,12 +28,15 @@ import { ClueSearchPlanner, type ClueSearchResult } from '../minigame/ClueSearch
 import { FieldEventPlanner, type FieldEventResult } from '../minigame/FieldEventPlanner';
 import { InteractiveWorldRaidPlanner, type InteractiveWorldRaidResult } from '../minigame/InteractiveWorldRaidPlanner';
 import { RoadPuzzlePlanner, type RoadPuzzleResult } from '../minigame/RoadPuzzlePlanner';
+import { MinigameJankenPlanner, type MinigameJankenResult } from '../minigame/MinigameJankenPlanner';
 import type { WithNonNullable } from '~/utils/WithNonNullable';
 import { calcTieredCost } from '~/components/planner/common/shopTieredCost';
 import { GrFormNextLink } from 'react-icons/gr';
+import { ResourceEfficiencyPanel } from '~/components/planner/ResourceEfficiencyPanel';
+import { hasAnySelectableResourceSource } from '~/utils/resourceApCost';
 
 // --- Type definitions ---
-type MainTabId = 'bonus' | 'goals' | 'interactive_world_raid' | 'minigame' | 'farming' | 'ap';
+export type MainTabId = 'bonus' | 'goals' | 'interactive_world_raid' | 'minigame' | 'farming' | 'ap' | 'resource_efficiency';
 type SubTabId =
   | 'shop'
   | 'growth'
@@ -53,6 +56,7 @@ type SubTabId =
   | 'clue_search'
   | 'field_event'
   | 'road_puzzle'
+  | 'minigame_janken'
   | 'ap_calc'
   | 'currency_input';
 
@@ -123,6 +127,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
   const [minigameDefenseResult, setMinigameDefenseResult] = useState<MinigameDefenseResult | null>(null);
   const [interactiveWorldRaidResult, setInteractiveWorldRaidResult] = useState<InteractiveWorldRaidResult | null>(null);
   const [roadPuzzleResult, setRoadPuzzleResult] = useState<RoadPuzzleResult | null>(null);
+  const [minigameJankenResult, setMinigameJankenResult] = useState<MinigameJankenResult | null>(null);
 
   const [totalRewardResult, setTotalRewardResult] = useState<TotalRewardResult | null>(null);
   const [totalBonus, setTotalBonus] = useState<TotalBonusMap>({});
@@ -134,7 +139,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
   // tab
 
   // Misc
-  const { plan: shopPlan } = usePlanForEvent(eventId);
+  const { plan: shopPlan, setCachedTotalItems } = usePlanForEvent(eventId);
   const { purchaseCounts, alreadyPurchasedCounts } = shopPlan;
 
   const TABS: {
@@ -202,6 +207,9 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     if (eventData.minigame_road_puzzle) {
       minigameSubTabs.push({ id: 'road_puzzle', name: t('minigame.minigame_road') });
     }
+    if (eventData.minigame_janken) {
+      minigameSubTabs.push({ id: 'minigame_janken', name: t('minigame.minigame_janken') });
+    }
     minigameSubTabs.push({ id: 'custom', name: t('placeholder.customExchange') });
 
     if (minigameSubTabs.length > 0) {
@@ -219,6 +227,14 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
 
     if (eventData.stage?.stage) {
       allTabs.push({ id: 'farming', name: `${n++}. ${t('ui.farmingRun')}`, subTabs: [{ id: 'stages', name: t('ui.stageFarming') }] });
+    }
+
+    // Cheap presence check only — NOT listSelectableResourceKeys (which runs the full extraction, including
+    // Monte-Carlo-simulation-based sources that can take seconds). This tab's visibility shouldn't cost
+    // anything; the actual computation stays deferred to ResourceEfficiencyPanel itself, which only mounts
+    // once this tab is actually opened.
+    if (hasAnySelectableResourceSource(eventData)) {
+      allTabs.push({ id: 'resource_efficiency', name: `${n++}. ${t('ui.resourceEfficiency')}` });
     }
 
     return allTabs;
@@ -351,7 +367,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
         costItems[compositeKey] = { amount, isBonusApplied: false };
 
         totalItems[compositeKey] = {
-          amount: (totalItems[compositeKey].amount || 0) + amount,
+          amount: (totalItems[compositeKey]?.amount || 0) + amount,
           isBonusApplied: false,
         };
       });
@@ -367,7 +383,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
         rewardItems[compositeKey] = { amount, isBonusApplied: false };
 
         totalItems[compositeKey] = {
-          amount: (totalItems[compositeKey].amount || 0) + amount,
+          amount: (totalItems[compositeKey]?.amount || 0) + amount,
           isBonusApplied: false,
         };
       });
@@ -478,13 +494,15 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     if (fortuneGachaResult) {
       const { cost, rewards } = fortuneGachaResult;
 
+      console.log('fortuneGachaResult', fortuneGachaResult);
+
       // Cost
       const costItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
       const costAmount = -cost.amount;
       costItems[cost.key] = { amount: costAmount, isBonusApplied: false };
 
       totalItems[cost.key] = {
-        amount: (totalItems[cost.key].amount || 0) + costAmount,
+        amount: (totalItems[cost.key]?.amount || 0) + costAmount,
         isBonusApplied: false,
       };
       transactions.push({ source: 'fortuneGacha_cost', items: costItems });
@@ -495,7 +513,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
         rewardItems[rewardKey] = { amount, isBonusApplied: false };
 
         totalItems[rewardKey] = {
-          amount: (totalItems[rewardKey].amount || 0) + amount,
+          amount: (totalItems[rewardKey]?.amount || 0) + amount,
           isBonusApplied: false,
         };
       }
@@ -763,6 +781,28 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       }
     }
 
+    // Minigame Janken
+    if (minigameJankenResult) {
+      const costItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+      for (const [key, amount] of Object.entries(minigameJankenResult.cost)) {
+        const costAmount = -amount;
+        costItems[key] = { amount: costAmount, isBonusApplied: false };
+        totalItems[key] = { amount: (totalItems[key]?.amount || 0) + costAmount, isBonusApplied: false };
+      }
+      if (Object.keys(costItems).length > 0) {
+        transactions.push({ source: 'minigame_janken_cost', items: costItems });
+      }
+
+      const rewardItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+      for (const [key, amount] of Object.entries(minigameJankenResult.rewards)) {
+        rewardItems[key] = { amount, isBonusApplied: false };
+        totalItems[key] = { amount: (totalItems[key]?.amount || 0) + amount, isBonusApplied: false };
+      }
+      if (Object.keys(rewardItems).length > 0) {
+        transactions.push({ source: 'minigame_janken_reward', items: rewardItems });
+      }
+    }
+
     // 16. Interactive World Raid
     if (interactiveWorldRaidResult) {
       const costItems2: Record<string, { amount: number; isBonusApplied: boolean }> = {};
@@ -860,6 +900,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     fieldEventResult,
     interactiveWorldRaidResult,
     roadPuzzleResult,
+    minigameJankenResult,
   ]);
 
   const finalCurrencyBalance = useMemo(() => {
@@ -882,6 +923,19 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     }
     return balance;
   }, [ownedCurrency, acquiredItemsResult]);
+
+  useEffect(() => {
+    const { totalItems } = acquiredItemsResult;
+    const gained: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+    const spent: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+    for (const [key, data] of Object.entries(totalItems)) {
+      if (data.amount > 0) gained[key] = data;
+      else if (data.amount < 0) spent[key] = { ...data, amount: -data.amount };
+    }
+    if (Object.keys(gained).length > 0 || Object.keys(spent).length > 0 || availableAp > 0) {
+      setCachedTotalItems({ savedAt: Date.now(), gained, spent, availableAp });
+    }
+  }, [acquiredItemsResult, availableAp]);
 
   const handleMainTabClick = (tabId: MainTabId) => {
     setActiveMainTab(tabId);
@@ -1062,6 +1116,9 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 {activeSubTab === 'road_puzzle' && eventData.minigame_road_puzzle && (
                   <RoadPuzzlePlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setRoadPuzzleResult} />
                 )}
+                {activeSubTab === 'minigame_janken' && eventData.minigame_janken && (
+                  <MinigameJankenPlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setMinigameJankenResult} remainingCurrency={finalCurrencyBalance} />
+                )}
                 {activeSubTab === 'custom' && (
                   <CustomGamePlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setCustomGameResult} remainingCurrency={finalCurrencyBalance} />
                 )}
@@ -1106,6 +1163,21 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 neededItems={finalCurrencyBalance}
                 totalBonus={totalBonus}
                 onCalculate={setFarmingResult}
+              />
+            )}
+
+            {/* RESOURCE EFFICIENCY TAB */}
+            {activeMainTab === 'resource_efficiency' && (
+              <ResourceEfficiencyPanel
+                eventId={eventId}
+                eventData={eventData}
+                allStages={allStages}
+                iconData={iconData}
+                allStudents={allStudents}
+                studentPortraits={studentPortraits}
+                availableAp={availableAp}
+                totalBonus={totalBonus}
+                onNavigateToTab={eventData.bonus ? handleMainTabClick : undefined}
               />
             )}
 

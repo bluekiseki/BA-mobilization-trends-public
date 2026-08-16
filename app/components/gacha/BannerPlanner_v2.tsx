@@ -20,7 +20,7 @@ interface Props {
   gachaSimResult?: GlobalAggregatedResult | null;
 }
 
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 const fmt = (n: number) => Math.round(n).toLocaleString();
 
 type ModeKey = 'skip' | 'must' | 'opportunistic';
@@ -100,12 +100,14 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
   // All pickup student IDs across all banners (for non-pickup detection)
   const handleModeChange = (banner: BannerPeriod, strat: BannerStrategy, studentId: number, newMode: ModeKey) => {
     const needMaxSparks = Object.entries(strat.studentConfigs).filter(([id, cfg]) => (studentId === Number(id) ? newMode : cfg.mode) === 'must').length;
+    const needMaxHalfCharges = needMaxSparks * 2; // 1 spark == 200 pulls == 2 half-charges
     const autoEnable = newMode !== 'skip' && !strat.isActive;
-    if (autoEnable || needMaxSparks > strat.maxSparks) {
+    if (autoEnable || needMaxSparks > strat.maxSparks || needMaxHalfCharges > strat.maxHalfCharges) {
       onUpdateStrategy(banner.id, {
         ...strat,
         isActive: autoEnable ? true : strat.isActive,
         maxSparks: Math.max(strat.maxSparks, needMaxSparks),
+        maxHalfCharges: Math.max(strat.maxHalfCharges, needMaxHalfCharges),
         studentConfigs: {
           ...strat.studentConfigs,
           [studentId]: { ...strat.studentConfigs[studentId], mode: newMode },
@@ -235,7 +237,9 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                 {/* Banner info */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-neutral-900 dark:text-neutral-100 truncate">{banner.pickupStudents.map((s) => s.name).join(' · ')}</span>
+                    <span className="font-bold text-neutral-900 dark:text-neutral-100 truncate" title={banner.pickupStudents.map((s) => s.name).join(' · ')}>
+                      {banner.pickupStudents.map((s) => s.name).join(' · ')}
+                    </span>
                     {banner.isLimitedBanner && !banner.isFes && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#f6e94b', color: '#3a3304' }}>
                         {t('badge.limited')}
@@ -250,6 +254,9 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-green-300 dark:border-green-700 text-green-700 dark:text-green-400">
                         {t('free_pulls_label', { count: banner.freePulls })}
                       </span>
+                    )}
+                    {banner.useChargeSystem && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400">{t('badge.charge_system')}</span>
                     )}
                   </div>
                   <div className="mt-0.5 flex items-center gap-2 flex-wrap text-xs text-neutral-500 dark:text-neutral-400" style={monoStyle}>
@@ -282,7 +289,9 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
               {isParticipating && (
                 <div className="px-3 pb-2 -mt-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2 text-xs" style={monoStyle}>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-400 mr-1">{t('max_pity_label', { count: strat.maxSparks })}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-neutral-400 mr-1">
+                      {t('max_pity_label', { count: banner.useChargeSystem ? strat.maxHalfCharges / 2 : strat.maxSparks })}
+                    </span>
                     {activeStudents.map((s) => {
                       const cfg = strat.studentConfigs[s.id];
                       return (
@@ -334,33 +343,63 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                       <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1.5" style={monoStyle}>
                         {t('settings.max_budget')}
                       </div>
-                      <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
-                        {Array.from({ length: Math.max(2, banner.pickupStudents.length) }, (_, i) => i + 1).map((n) => (
-                          <button
-                            key={n}
-                            type="button"
-                            onClick={() => onUpdateStrategy(banner.id, { maxSparks: n })}
-                            className={`rounded-md py-1.5 text-xs font-bold transition ${strat.maxSparks === n ? 'text-[#06262f]' : 'text-neutral-500'}`}
-                            style={strat.maxSparks === n ? { background: '#77e0ff' } : {}}
+                      {banner.useChargeSystem ? (
+                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
+                          {Array.from({ length: Math.max(4, banner.pickupStudents.length * 2) }, (_, i) => i + 1).map((n) => (
+                            <button
+                              key={n}
+                              type="button"
+                              onClick={() => onUpdateStrategy(banner.id, { maxHalfCharges: n })}
+                              className={`rounded-md py-1.5 text-xs font-bold transition ${strat.maxHalfCharges === n ? 'text-[#06262f]' : 'text-neutral-500'}`}
+                              style={strat.maxHalfCharges === n ? { background: '#77e0ff' } : {}}
+                            >
+                              {t('pity_format', { pity: n / 2, pulls: n * 100 })}
+                            </button>
+                          ))}
+                          <div
+                            className="rounded-md px-2 py-1.5 flex items-center justify-center gap-2 text-xs font-bold transition"
+                            style={strat.maxHalfCharges > Math.max(4, banner.pickupStudents.length * 2) ? { background: '#77e0ff', color: '#06262f' } : { color: '#737373' }}
                           >
-                            {t('pity_format', { pity: n, pulls: n * 200 })}
-                          </button>
-                        ))}
-                        <div
-                          className="col-span-2 rounded-md px-2 py-1.5 flex items-center gap-1.5 text-xs font-bold transition"
-                          style={strat.maxSparks > Math.max(2, banner.pickupStudents.length) ? { background: '#77e0ff', color: '#06262f' } : { color: '#737373' }}
-                        >
-                          <span>{t('settings.manual_sparks')}</span>
-                          <span className="opacity-40 select-none">+</span>
-                          <CustomNumberInput
-                            min={0}
-                            className="w-12 bg-transparent outline-none font-bold"
-                            style={monoStyle}
-                            value={strat.maxSparks || 0}
-                            onChange={(val) => onUpdateStrategy(banner.id, { maxSparks: Math.max(0, val || 0) })}
-                          />
+                            <span className="whitespace-nowrap">{t('settings.manual_sparks')}</span>
+                            <CustomNumberInput
+                              min={0}
+                              aria-label={t('settings.manual_sparks')}
+                              className="w-12 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center font-bold text-neutral-800 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                              style={monoStyle}
+                              value={strat.maxHalfCharges || 0}
+                              onChange={(val) => onUpdateStrategy(banner.id, { maxHalfCharges: Math.max(0, val || 0) })}
+                            />
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
+                          {Array.from({ length: Math.max(2, banner.pickupStudents.length) }, (_, i) => i + 1).map((n) => (
+                            <button
+                              key={n}
+                              type="button"
+                              onClick={() => onUpdateStrategy(banner.id, { maxSparks: n })}
+                              className={`rounded-md py-1.5 text-xs font-bold transition ${strat.maxSparks === n ? 'text-[#06262f]' : 'text-neutral-500'}`}
+                              style={strat.maxSparks === n ? { background: '#77e0ff' } : {}}
+                            >
+                              {t('pity_format', { pity: n, pulls: n * 200 })}
+                            </button>
+                          ))}
+                          <div
+                            className="rounded-md px-2 py-1.5 flex items-center justify-center gap-2 text-xs font-bold transition"
+                            style={strat.maxSparks > Math.max(2, banner.pickupStudents.length) ? { background: '#77e0ff', color: '#06262f' } : { color: '#737373' }}
+                          >
+                            <span className="whitespace-nowrap">{t('settings.manual_sparks')}</span>
+                            <CustomNumberInput
+                              min={0}
+                              aria-label={t('settings.manual_sparks')}
+                              className="w-12 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center font-bold text-neutral-800 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                              style={monoStyle}
+                              value={strat.maxSparks || 0}
+                              onChange={(val) => onUpdateStrategy(banner.id, { maxSparks: Math.max(0, val || 0) })}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1.5" style={monoStyle}>
@@ -378,6 +417,35 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                       </div>
                     </div>
                   </div>
+
+                  {/* Claim "Recruitment Count Bonus" — new recruit charge system only, at banner level (mirrors
+                      above, but keyed to ticket milestones instead of pity checkpoints). */}
+                  {banner.useChargeSystem && (
+                    <div className="space-y-1">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs text-neutral-600 dark:text-neutral-300">
+                        <input
+                          type="checkbox"
+                          className="rounded border-neutral-300 w-3 h-3 accent-ba-btn-blue"
+                          checked={strat.claimRecruitBonus ?? false}
+                          onChange={(e) => onUpdateStrategy(banner.id, { claimRecruitBonus: e.target.checked })}
+                        />
+                        {t('recruit_bonus_claim.label')}
+                      </label>
+                      {(strat.claimRecruitBonus ?? false) && (
+                        <div className="flex items-center gap-1 pl-5 text-xs">
+                          <span className="text-neutral-400">↳</span>
+                          <span className="text-neutral-400">{t('recruit_bonus_claim.remains_le')}</span>
+                          <CustomNumberInput
+                            min={0}
+                            className="w-12 border border-neutral-300 dark:border-neutral-600 rounded bg-transparent outline-none focus:border-ba-btn-blue"
+                            value={strat.recruitBonusThreshold ?? 10}
+                            onChange={(val) => onUpdateStrategy(banner.id, { recruitBonusThreshold: Math.max(0, val ?? 10) })}
+                          />
+                          <span className="text-neutral-400">{t('recruit_bonus_claim.proceed_if_remains')}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Per-student strategy — sorted by priority */}
                   <div className="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -426,17 +494,19 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                           </div>
                           <ModeSegment value={config.mode} onChange={(newMode) => handleModeChange(banner, strat, student.id, newMode)} />
                           {config.mode === 'opportunistic' && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                              <span>{t('condition.label')}</span>
+                            <div className="mt-2 items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                              <span>{banner.useChargeSystem ? t('condition.label_charge') : t('condition.label')}</span>
                               <CustomNumberInput
-                                className="w-12 border border-neutral-300 dark:border-neutral-600 rounded bg-transparent outline-none focus:border-amber-400"
+                                className="inline-block w-12 border border-neutral-300 dark:border-neutral-600 rounded bg-transparent outline-none focus:border-amber-400"
                                 value={config.opportunisticThreshold}
                                 onChange={(val) => onUpdateStudentConfig(banner.id, student.id, { opportunisticThreshold: val || 0 })}
                               />
-                              <span>{t('condition.try_pulls')}</span>
+                              <span>{banner.useChargeSystem ? t('condition.try_pulls_charge') : t('condition.try_pulls')}</span>
                             </div>
                           )}
-                          {isTargeting && (
+                          {/* "Intentional spark" has no equivalent under the new recruit charge system —
+                              its checkpoints (100/200 pulls) trigger automatically. */}
+                          {isTargeting && !banner.useChargeSystem && (
                             <div className="mt-2 space-y-1">
                               <label className="flex items-center gap-1.5 cursor-pointer text-xs text-neutral-600 dark:text-neutral-300">
                                 <input
@@ -450,6 +520,7 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                               {config.intentionalSpark && (
                                 <div className="flex items-center gap-1 pl-5 text-xs">
                                   <span className="text-neutral-400">↳</span>
+                                  <span className="text-neutral-400">{t('intentional_spark.after_obtain')}</span>
                                   <CustomNumberInput
                                     min={10}
                                     max={190}
@@ -482,6 +553,12 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                               {t('unit_pulls')})
                             </span>
                           </span>
+                        </div>
+                      )}
+                      {/* Recruit count bonus progress — reward table applied via getRecruitCountReward */}
+                      {banner.useChargeSystem && bannerSim && (
+                        <div className="text-[10px] text-neutral-400" style={monoStyle}>
+                          {t('recruit_count_bonus_note', { count: Math.round(bannerSim.avgPulls) })}
                         </div>
                       )}
                       {/* Per-pickup student obtain rates */}

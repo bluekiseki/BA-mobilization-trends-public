@@ -252,5 +252,31 @@
   { "Id": "E33", "Boss": "Kurokage", "Location": "Street", "Type": "Unarmed", "Date": "2026-05-13", "Alias": "S.Kurokage", "MaxLv": 90, "Cnt": { "All": 29859, "Torment": 29745, "Insane": 114 } },
   { "Id": "E33", "Boss": "Kurokage", "Location": "Street", "Type": "LightArmor", "Date": "2026-05-13", "Alias": "S.Kurokage", "MaxLv": 90, "Cnt": { "All": 28979, "Torment": 21332, "Insane": 7647 } },
   { "Id": "E33", "Boss": "Kurokage", "Location": "Street", "Type": "ElasticArmor", "Date": "2026-05-13", "Alias": "S.Kurokage", "MaxLv": 90, "Cnt": { "All": 29773, "Insane": 29773 } },
-  { "Id": "R89", "Boss": "Drumbarka", "Location": "Street", "Date": "2026-06-03", "Alias": "S.Drumbarka", "MaxLv": 90, "Cnt": { "All": 46737, "Lunatic": 188, "Torment": 12702, "Insane": 33847 } }
+  { "Id": "R89", "Boss": "Drumbarka", "Location": "Street", "Date": "2026-06-03", "Alias": "S.Drumbarka", "MaxLv": 90, "Cnt": { "All": 46737, "Lunatic": 188, "Torment": 12702, "Insane": 33847 } },
+  {
+    "Id": "E34",
+    "Boss": "HoverCraft",
+    "Location": "Outdoor",
+    "Type": "Unarmed",
+    "Date": "2026-06-17",
+    "Alias": "O.HoverCraft",
+    "MaxLv": 90,
+    "Cnt": { "All": 29939, "Torment": 28681, "Insane": 1258 }
+  },
+  {
+    "Id": "E34",
+    "Boss": "HoverCraft",
+    "Location": "Outdoor",
+    "Type": "ElasticArmor",
+    "Date": "2026-06-17",
+    "Alias": "O.HoverCraft",
+    "MaxLv": 90,
+    "Cnt": { "All": 29913, "Torment": 28611, "Insane": 1302 }
+  },
+  { "Id": "E34", "Boss": "HoverCraft", "Location": "Outdoor", "Type": "LightArmor", "Date": "2026-06-17", "Alias": "O.HoverCraft", "MaxLv": 90, "Cnt": { "All": 29960, "Insane": 29960 } },
+  { "Id": "R90", "Boss": "Gregrios", "Location": "Indoor", "Date": "2026-07-01", "Alias": "I.Gregrios", "MaxLv": 90, "Cnt": { "All": 29460, "Lunatic": 8111, "Torment": 21349 } },
+  { "Id": "E35", "Boss": "HOD", "Location": "Indoor", "Type": "HeavyArmor", "Date": "2026-07-15", "Alias": "I.HOD", "MaxLv": 90, "Cnt": { "All": 33951, "Torment": 33707, "Insane": 244 } },
+  { "Id": "E35", "Boss": "HOD", "Location": "Indoor", "Type": "ElasticArmor", "Date": "2026-07-15", "Alias": "I.HOD", "MaxLv": 90, "Cnt": { "All": 33585, "Torment": 26647, "Insane": 6938 } },
+  { "Id": "E35", "Boss": "HOD", "Location": "Indoor", "Type": "LightArmor", "Date": "2026-07-15", "Alias": "I.HOD", "MaxLv": 90, "Cnt": { "All": 33829, "Insane": 33829 } },
+  { "Id": "R91", "Boss": "Hieronymus", "Location": "Indoor", "Date": "2026-08-05", "Alias": "I.Hieronymus", "MaxLv": 90, "Cnt": { "All": 48000, "Lunatic": 1757, "Torment": 46243 } }
 ]

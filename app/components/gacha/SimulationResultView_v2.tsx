@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { FaGem, FaChartBar, FaSyncAlt, FaSearch, FaTimes, FaChevronDown } from 'react-icons/fa';
+import { FaGem, FaChartBar, FaSyncAlt, FaCoins, FaSearch, FaTimes, FaChevronDown } from 'react-icons/fa';
 import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
 import type { BannerStrategy } from '~/types/gacha';
 import { useSearchMatcher } from '~/utils/useSearchMatcher';
@@ -28,9 +28,9 @@ interface Props {
   allStudents: { id: number; starGrade?: number }[];
 }
 
-type UnitType = 'pyroxenes' | 'pulls';
+type UnitType = 'pyroxenes' | 'pulls' | 'eligma';
 
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 const fmt = (n: number) => Math.round(n).toLocaleString();
 
 function RingGauge({ value, color, size = 84 }: { value: number; color: string; size?: number }) {
@@ -50,6 +50,7 @@ function RingGauge({ value, color, size = 84 }: { value: number; color: string; 
 
 export default function SimulationResultView_v2({ result, initialPyroxenes, portraitMap, pyroxeneIcon, elephIconMap = {}, bankruptcyRate, strategies, allStudents }: Props) {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
+  const { t: tGacha } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: tUi } = useTranslation('planner', { keyPrefix: 'ui' });
   const matcher = useSearchMatcher(i18n.language as Locale);
   type StudentFilterKey = 'pickup' | 'fes' | 'star3' | 'star2' | 'star1';
@@ -68,12 +69,19 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
 
   if (!result) return null;
 
-  const activeDist = unit === 'pyroxenes' ? result.distCost : result.distPulls;
+  // elephIconMap holds the full Item icon map keyed by numeric id (despite its name), not just per-student
+  // eleph icons — Item_23 is eligma (see app/utils/itemType.ts's isEligma check), Item_6999 is the 10-pull ticket.
+  const eligmaIcon = elephIconMap['23'];
+  const ticket10Icon = elephIconMap['6999'];
+
+  const chartTitle = unit === 'pyroxenes' ? t('chart.title_pyroxenes') : unit === 'pulls' ? t('chart.title_pulls') : t('chart.title_eligma');
+
+  const activeDist = unit === 'pyroxenes' ? result.distCost : unit === 'pulls' ? result.distPulls : result.distEligma;
   const chartData = activeDist.map((d) => ({
     ...d,
-    label: unit === 'pyroxenes' ? `${(d.binStart / 1000).toFixed(1)}k` : t('chart.unit_count', { count: d.binStart }),
+    label: unit === 'pyroxenes' ? `${(d.binStart / 1000).toFixed(1)}k` : unit === 'pulls' ? t('chart.unit_count', { count: d.binStart }) : d.binStart.toLocaleString(),
     // rangeLabel: unit === 'pyroxenes' ? `${d.binStart.toLocaleString()} ~ ${d.binEnd.toLocaleString()}` : t('chart.range_count', { start: d.binStart, end: d.binEnd }),
-    rangeLabel: unit === 'pyroxenes' ? d.binStart.toLocaleString() : t('chart.unit_count', { count: d.binStart }),
+    rangeLabel: unit === 'pyroxenes' ? d.binStart.toLocaleString() : unit === 'pulls' ? t('chart.unit_count', { count: d.binStart }) : d.binStart.toLocaleString(),
   }));
 
   const simpleBudgetOverrate = (() => {
@@ -160,6 +168,7 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
                   {isSafe ? t('summary.safety.safe') : t('summary.safety.unsafe')}
                 </span>
               </div>
+              <p className="mt-1 text-[10px] leading-snug text-neutral-500 dark:text-neutral-400">{tGacha('failure_out_of_100', { count: Math.round(effectiveBankruptcyRate) })}</p>
             </div>
 
             {/* Secondary stats */}
@@ -187,12 +196,12 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
       <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
         <div className="px-5 pt-5 pb-3">
           <div className="mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-bold text-neutral-700 dark:text-neutral-200 flex items-center gap-2 text-sm">
-                <FaChartBar />
-                {unit === 'pyroxenes' ? t('chart.title_pyroxenes') : t('chart.title_pulls')}
-              </h3>
-              <div className="bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg flex gap-0.5 shrink-0">
+            <h3 className="font-bold text-neutral-700 dark:text-neutral-200 flex items-center gap-2 text-sm mb-2">
+              <FaChartBar className="shrink-0" />
+              {chartTitle}
+            </h3>
+            <div className="mb-2">
+              <div className="bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg inline-flex gap-0.5">
                 <button
                   onClick={() => setUnit('pyroxenes')}
                   className={`px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold transition-all ${unit === 'pyroxenes' ? 'text-[#06262f]' : 'text-neutral-500 dark:text-neutral-400'}`}
@@ -212,7 +221,28 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
                   className={`px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold transition-all ${unit === 'pulls' ? 'text-[#06262f]' : 'text-neutral-500 dark:text-neutral-400'}`}
                   style={unit === 'pulls' ? { background: '#77e0ff' } : {}}
                 >
-                  <FaSyncAlt size={9} /> {t('unit_toggle.pulls')}
+                  {ticket10Icon ? (
+                    <span className="shrink-0 inline-flex items-center justify-center" style={{ width: 14, height: 14 }}>
+                      <img src={`data:image/webp;base64,${ticket10Icon}`} className="max-w-full max-h-full object-cover" />
+                    </span>
+                  ) : (
+                    <FaSyncAlt size={9} />
+                  )}{' '}
+                  {t('unit_toggle.pulls')}
+                </button>
+                <button
+                  onClick={() => setUnit('eligma')}
+                  className={`px-2 py-1 rounded-md flex items-center gap-1 text-[10px] font-bold transition-all ${unit === 'eligma' ? 'text-[#06262f]' : 'text-neutral-500 dark:text-neutral-400'}`}
+                  style={unit === 'eligma' ? { background: '#77e0ff' } : {}}
+                >
+                  {eligmaIcon ? (
+                    <span className="shrink-0 inline-flex items-center justify-center" style={{ width: 14, height: 14 }}>
+                      <img src={`data:image/webp;base64,${eligmaIcon}`} className="max-w-full max-h-full object-cover" />
+                    </span>
+                  ) : (
+                    <FaCoins size={9} />
+                  )}{' '}
+                  {t('unit_toggle.eligma')}
                 </button>
               </div>
             </div>
@@ -296,7 +326,11 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
         <div className="grid grid-cols-4 divide-x divide-neutral-100 dark:divide-neutral-800 border-t border-neutral-100 dark:border-neutral-800">
           {(
             [
-              { label: t('average_label'), val: unit === 'pyroxenes' ? result.avgTotalCost : result.avgTotalPulls, c: '#a3a3a3' },
+              {
+                label: t('average_label'),
+                val: unit === 'pyroxenes' ? result.avgTotalCost : unit === 'pulls' ? result.avgTotalPulls : result.avgTotalEligma,
+                c: '#a3a3a3',
+              },
               { label: t('median_label'), val: p50bin?.binStart ?? null, c: '#77e0ff' },
               { label: t('pessimistic_label'), val: p90bin?.binStart ?? null, c: '#d97706' },
               { label: t('worst_label'), val: p995bin?.binStart ?? null, c: '#dc2626' },
@@ -437,7 +471,7 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
                                   src={`data:image/webp;base64,${elephIconMap[String(stat.studentId)]}`}
                                   width={12}
                                   height={12}
-                                  className="absolute -bottom-0.5 -right-0.5 rounded-full border border-white dark:border-neutral-900 object-contain"
+                                  className="absolute -bottom-0.5 -right-0.5 rounded-full border border-white dark:border-neutral-900 object-cover"
                                 />
                               )}
                             </div>
@@ -481,7 +515,7 @@ export default function SimulationResultView_v2({ result, initialPyroxenes, port
                             src={`data:image/webp;base64,${elephIconMap[String(selected.studentId)]}`}
                             width={14}
                             height={14}
-                            className="absolute -bottom-0.5 -right-0.5 rounded-full border border-white dark:border-neutral-900 object-contain"
+                            className="absolute -bottom-0.5 -right-0.5 rounded-full border border-white dark:border-neutral-900 object-cover"
                           />
                         )}
                       </div>

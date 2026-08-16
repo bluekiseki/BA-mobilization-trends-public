@@ -5,6 +5,7 @@ import { useSyncStore } from '~/store/syncStore';
 import { LuChevronDown, LuLogOut, LuPlus, LuSettings } from 'react-icons/lu';
 import { Link } from 'react-router';
 import { NewProfileModal } from './NewProfileModal';
+import { getProfileServerLabel } from '~/utils/profileServer';
 
 export function ProfileSwitcher() {
   const { t } = useTranslation('auth');
@@ -21,8 +22,7 @@ export function ProfileSwitcher() {
     try {
       await fetch('/api/auth/sign-out', { method: 'POST' });
       useAuthStore.getState().logout();
-      useSyncStore.getState().reset();
-      useSyncStore.getState().setCurrentProfileId(null);
+      useSyncStore.getState().clearAccountData();
       window.location.href = '/';
     } catch (err) {
       console.error('Logout failed:', err);
@@ -35,11 +35,9 @@ export function ProfileSwitcher() {
       return;
     }
     setSwitching(profileId);
-    const hadServerData = useSyncStore.getState().lastSyncedAt !== null;
     useSyncStore.getState().setCurrentProfileId(profileId);
     useAuthStore.getState().setActiveProfile(profileId);
     useSyncStore.getState().reset();
-    if (hadServerData) useSyncStore.getState().clearPlannerStores();
     await useSyncStore.getState().pullAll(profileId);
     setSwitching(null);
     setIsOpen(false);
@@ -74,7 +72,7 @@ export function ProfileSwitcher() {
                   } disabled:opacity-50`}
                 >
                   {switching === profile.id ? t('settings.profiles.loadingProfile') : profile.name}
-                  <span className="text-xs text-neutral-500 ml-2">({profile.server === 'global' ? 'GL' : profile.server.toUpperCase()})</span>
+                  <span className="text-xs text-neutral-500 ml-2">({getProfileServerLabel(profile.server)})</span>
                 </button>
               ))}
 

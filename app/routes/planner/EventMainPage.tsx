@@ -8,8 +8,8 @@ import eventListJsonRaw from '~/data/jp/eventList.json';
 import type { EventEntry, EventListData } from '~/types/eventList';
 const eventList = eventListJsonRaw as unknown as EventListData;
 
-import { type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { DEFAULT_LOCALE, type Locale } from '~/utils/i18n/config';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
 import { getGlobalEventDates } from '~/data/globalEventDates';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/EventMainPage';
@@ -22,10 +22,14 @@ import { PageHeader } from '~/components/common/PageHeader';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName } from '~/utils/i18n/config';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
-import { loadScheduleData, type ScheduleItem, type ScheduleTrack } from '~/utils/calender.data';
+import { type ScheduleTrack } from '~/utils/calender.data';
+import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
 import { RemainingTime } from '~/components/RemainingTime';
 import { PickupStudentIcon } from '~/components/planner/PickupStudentIcon';
 import { ExportImportPanel } from '~/components/planner/ExportImportPanel';
+import { EventTotalItemsPreview } from '~/components/planner/EventTotalItemsPreview';
+import { useEventPlanStore } from '~/store/planner/useEventPlanStore';
+import type { AppHandle } from '~/types/link';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -33,9 +37,9 @@ export function loader({ context }: LoaderFunctionArgs) {
   const now = new Date();
 
   const pickupTracks: ScheduleTrack[] = ['pickup'];
-  const calendarData = {
-    jp: loadScheduleData({ server: 'jp', locale, i18n, tracksToLoad: pickupTracks }),
-    kr: loadScheduleData({ server: 'kr', locale, i18n, tracksToLoad: pickupTracks }),
+  const pickupScheduleData = {
+    jp: loadScheduleDataV2({ server: 'jp', tracksToLoad: pickupTracks }),
+    kr: loadScheduleDataV2({ server: 'kr', tracksToLoad: pickupTracks }),
   };
 
   let jpEvent: StatusEvent | null = null;
@@ -79,7 +83,7 @@ export function loader({ context }: LoaderFunctionArgs) {
     locale,
     jpEvent,
     glEvent,
-    calendarData,
+    pickupScheduleData,
     siteTitle: i18n.t('common:title'),
     title: i18n.t('planner:page.eventPlanner'),
     description: i18n.t('planner:page.plannerescription'),
@@ -87,12 +91,24 @@ export function loader({ context }: LoaderFunctionArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp');
+  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp', createLocalizedUrl(loaderData.locale, '/planner/event'));
 }
 
 export function links() {
   return [...createLinkHreflang('/planner/event')];
 }
+
+export const handle: AppHandle = {
+  preload: (data) => {
+    const locale = (data as { locale?: Locale })?.locale || DEFAULT_LOCALE;
+    return [
+      {
+        rel: 'canonical',
+        href: createLocalizedUrl(locale, '/planner/event'),
+      },
+    ];
+  },
+};
 
 export function headers({}: Route.HeadersArgs) {
   if (process.env.NODE_ENV === 'production') return { 'Cache-Control': CACHE_CONTROL_CONFIG };
@@ -117,13 +133,15 @@ export const EventMainPage = () => {
   const t = tRaw as unknown as (key: string) => string;
   const { t: tc } = useTranslation('common');
   const locale = i18n.language as Locale;
-  const { jpEvent, glEvent, calendarData } = useLoaderData<typeof loader>();
+  const { jpEvent, glEvent, pickupScheduleData } = useLoaderData<typeof loader>();
+  const plans = useEventPlanStore((state) => state.plans);
 
   // ── UI controls ────────────────────────────────────────────────────────────
   const [pickupMode, setPickupMode] = useState<PickupMode>(() => (locale === 'ja' ? 'jp' : 'kr'));
   // desc (reverse order): upcoming first, then recent→old past
   // asc (chronological order): old→recent past first, then upcoming
   const [sortOrder, setSortOrder] = useState<SortOrder>(() => (locale === 'ja' ? 'desc' : 'asc'));
+  const [showGains, setShowGains] = useState(false);
 
   // ── Pickup data (lazy — portraits only) ───────────────────────────────────
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
@@ -189,14 +207,34 @@ export const EventMainPage = () => {
   const isJpActive = (id: number) => jpEvent?.status === 'active' && jpEvent.id === id;
   const isGlActive = (id: number) => glEvent?.status === 'active' && glEvent.id === id;
 
+  // ── Gains aggregate (all events with cached data) ──────────────────────────
+  const aggregatedItems = useMemo(() => {
+    if (!showGains) return null;
+    const gained: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+    const spent: Record<string, { amount: number; isBonusApplied: boolean }> = {};
+    let availableAp = 0;
+    allEvents.forEach((event) => {
+      const cached = plans[event.id]?.cachedTotalItems;
+      if (!cached) return;
+      Object.entries(cached.gained).forEach(([key, data]) => {
+        gained[key] = { amount: (gained[key]?.amount ?? 0) + data.amount, isBonusApplied: data.isBonusApplied || (gained[key]?.isBonusApplied ?? false) };
+      });
+      Object.entries(cached.spent).forEach(([key, data]) => {
+        spent[key] = { amount: (spent[key]?.amount ?? 0) + data.amount, isBonusApplied: data.isBonusApplied || (spent[key]?.isBonusApplied ?? false) };
+      });
+      availableAp += cached.availableAp;
+    });
+    return Object.keys(gained).length > 0 || Object.keys(spent).length > 0 || availableAp > 0 ? { gained, spent, availableAp } : null;
+  }, [showGains, plans, allEvents]);
+
   // ── Pickup lookup ──────────────────────────────────────────────────────────
   const calPickups = useMemo(() => {
     if (pickupMode === 'none') return [];
-    return calendarData[pickupMode].tracks.pickup ?? [];
-  }, [calendarData, pickupMode]);
+    return pickupScheduleData[pickupMode].tracks.pickup ?? [];
+  }, [pickupScheduleData, pickupMode]);
 
   const getPickupsForEvent = useCallback(
-    (eventId: number, jpOpenTime: Date, jpCloseTime: Date): ScheduleItem[] => {
+    (eventId: number, jpOpenTime: Date, jpCloseTime: Date): ScheduleItemV2[] => {
       let openMs: number;
       let closeMs: number;
       if (pickupMode === 'kr') {
@@ -295,8 +333,15 @@ export const EventMainPage = () => {
           </div>
         </Link>
 
+        {/* Cached gains/losses from event plan */}
+        {showGains &&
+          (() => {
+            const items = plans[event.id]?.cachedTotalItems;
+            return items && <EventTotalItemsPreview cachedTotalItems={items} />;
+          })()}
+
         {/* Pickup students — each pickup on its own row when dates differ */}
-        {pickupMode !== 'none' && pickupLoading && pickups.length > 0 && (
+        {!showGains && pickupMode !== 'none' && pickupLoading && pickups.length > 0 && (
           <div className="mt-1.5 space-y-1.5">
             {pickups.map((pickup) => {
               const count = pickup.details?.students?.length ?? 3;
@@ -317,7 +362,7 @@ export const EventMainPage = () => {
             })}
           </div>
         )}
-        {pickupMode !== 'none' && !pickupLoading && pickups.length > 0 && (
+        {!showGains && pickupMode !== 'none' && !pickupLoading && pickups.length > 0 && (
           <div className="mt-1.5 space-y-1.5">
             {pickups.map((pickup) => {
               const students = pickup.details?.students ?? [];
@@ -394,15 +439,40 @@ export const EventMainPage = () => {
             {pickupLoading && <span className="text-xs text-neutral-400 dark:text-neutral-500 self-center animate-pulse ml-1">{t('ui.loadingData')}</span>}
           </div>
 
-          {/* Sort order toggle */}
-          <button
-            onClick={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
-            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
-          >
-            {sortOrder === 'desc' ? <FaSortAmountDown className="w-3 h-3" /> : <FaSortAmountUp className="w-3 h-3" />}
-            {sortOrder === 'desc' ? t('ui.sortDescLabel') : t('ui.sortAscLabel')}
-          </button>
+          <div className="flex items-center gap-1.5 ml-auto">
+            {/* Gains mode toggle */}
+            <button
+              onClick={() => setShowGains((v) => !v)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded transition-colors ${
+                showGains ? 'bg-blue-600 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+              }`}
+            >
+              <input type="checkbox" checked={showGains} readOnly tabIndex={-1} className="pointer-events-none w-3 h-3 shrink-0" />
+              {t('ui.gainsMode')}
+            </button>
+
+            {/* Sort order toggle */}
+            <button
+              onClick={() => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
+              className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+            >
+              {sortOrder === 'desc' ? <FaSortAmountDown className="w-3 h-3" /> : <FaSortAmountUp className="w-3 h-3" />}
+              {sortOrder === 'desc' ? t('ui.sortDescLabel') : t('ui.sortAscLabel')}
+            </button>
+          </div>
         </div>
+
+        {/* Gains aggregate summary */}
+        {showGains && (
+          <div className="mb-6 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3">
+            <h2 className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-2">{t('ui.gainsTotal')}</h2>
+            {aggregatedItems ? (
+              <EventTotalItemsPreview cachedTotalItems={{ savedAt: 0, ...aggregatedItems }} />
+            ) : (
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('ui.gainsNoData')}</p>
+            )}
+          </div>
+        )}
 
         {/* "Load more" at top in asc mode */}
         {sortOrder === 'asc' && showMorePast && (

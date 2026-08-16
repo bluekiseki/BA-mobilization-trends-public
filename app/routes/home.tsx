@@ -27,7 +27,9 @@ const eventListJson = eventListJsonRaw as unknown as EventListData;
 import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
 import { getKstTime } from '~/data/globalRaidDates';
 import { loadRaidFullInfos } from '~/utils/loadRaidInfo';
-import { parseCsvString } from '~/utils/calender.data';
+import { parseCsvString, type ScheduleTrack } from '~/utils/calender.data';
+import { loadScheduleDataV2 } from '~/utils/calender.data.v2';
+import { MS_PER_HOUR } from '~/components/gantt/constants';
 import { typecolor, type_translation_sorted } from '~/components/raid/raidToString';
 import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
 import bossData from '~/data/bossdata.json';
@@ -38,6 +40,7 @@ import jpEraidCsvRaw from '~/data/jp/schedule/eraid.csv?raw';
 
 type BossDataMap = Record<string, { name: Record<string, string | null> }>;
 
+import { MonthEndResetBanner } from '~/components/home/MonthEndResetBanner';
 import { Changelog } from '~/components/Changelog';
 import changelogJson from '~/data/changelog.json';
 
@@ -121,26 +124,30 @@ export function loader({ context }: LoaderFunctionArgs) {
   const localeShort = getLocaleShortName(locale);
   const now = new Date();
   const nowMs = now.getTime();
+  const calendarWidgetTracks: ScheduleTrack[] = ['raid', 'event', 'campaign', 'pickup'];
+  // Home widget only needs a window around "now" — the rest loads lazily as the user scrolls (see useLazySchedule).
+  // Kept wide enough that jumpToNow's center-viewport scroll doesn't land within the lazy-load edge threshold on first paint.
+  const MS_PER_DAY = 24 * MS_PER_HOUR;
+  const calendarWidgetDateRangeMs = { start: nowMs - 40 * MS_PER_DAY, end: nowMs + 40 * MS_PER_DAY };
 
   // ── JP Event ──────────────────────────────────────────────────────────────
   let jpEvent: StatusEvent | null = null;
   {
-    const events = Object.entries(eventListJson)
-      .filter(([, d]) => d.Planable !== false)
-      .map(([id, d]) => ({
-        id: Number(id),
-        name: (d[getlocaleMethond('', 'Jp', locale) as keyof EventEntry] as string | undefined) || d.Jp || `Event ${id}`,
-        openTime: new Date(formatInTimeZone(d.OpenTime ?? '')),
-        closeTime: new Date(formatInTimeZone(d.CloseTime ?? '')),
-      }));
+    const events = Object.entries(eventListJson).map(([id, d]) => ({
+      id: Number(id),
+      name: (d[getlocaleMethond('', 'Jp', locale) as keyof EventEntry] as string | undefined) || d.Jp || `Event ${id}`,
+      openTime: new Date(formatInTimeZone(d.OpenTime ?? '')),
+      closeTime: new Date(formatInTimeZone(d.CloseTime ?? '')),
+      planable: d.Planable !== false,
+    }));
 
     const current = events.find((e) => now >= e.openTime && now <= e.closeTime);
     if (current) {
-      jpEvent = { id: current.id % 100000, name: current.name, status: 'active', dateIso: current.closeTime.toISOString() };
+      jpEvent = { id: current.id % 100000, name: current.name, status: 'active', dateIso: current.closeTime.toISOString(), planable: current.planable };
     } else {
       const upcoming = events.filter((e) => e.openTime > now).sort((a, b) => a.openTime.getTime() - b.openTime.getTime())[0];
       if (upcoming) {
-        jpEvent = { id: upcoming.id % 100000, name: upcoming.name, status: 'upcoming', dateIso: upcoming.openTime.toISOString() };
+        jpEvent = { id: upcoming.id % 100000, name: upcoming.name, status: 'upcoming', dateIso: upcoming.openTime.toISOString(), planable: upcoming.planable };
       }
     }
   }
@@ -331,6 +338,10 @@ export function loader({ context }: LoaderFunctionArgs) {
     glEvent,
     jpRaid,
     glRaid,
+    calendarWidgets: {
+      jp: loadScheduleDataV2({ server: 'jp', tracksToLoad: calendarWidgetTracks, dateRangeMs: calendarWidgetDateRangeMs }),
+      kr: loadScheduleDataV2({ server: 'kr', tracksToLoad: calendarWidgetTracks, dateRangeMs: calendarWidgetDateRangeMs }),
+    },
     siteTitle: i18n.t('common:title'),
     description: i18n.t('common:description'),
   });
@@ -348,7 +359,6 @@ export const handle: AppHandle = {
   preload: (data: unknown) => {
     const d = data as Record<string, unknown> | undefined;
     const locale = typeof d?.locale === 'string' && SUPORTED_LOCALES.includes(d.locale as Locale) ? (d.locale as Locale) : DEFAULT_LOCALE;
-    const calendarServer = locale === 'ja' ? 'jp' : 'kr';
     const newsServer = LOCALE_DEFAULT_REGION[locale];
     return [
       {
@@ -362,12 +372,6 @@ export const handle: AppHandle = {
         href: cdn(`/w/students_portrait.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
-        href: `/api/calendar?type=widget&server=${calendarServer}&lang=${locale}`,
-        as: 'fetch',
-        crossOrigin: 'use-credentials',
       },
       {
         rel: 'preload',
@@ -437,7 +441,7 @@ function RaidCard({ raid, server, locale }: { raid: StatusRaid | null; server: '
   // No link for JP upcoming, or when live/dashboard data is not yet available
   if (server === 'JP' && (raid.status === 'upcoming' || raid.noLink)) {
     return (
-      <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm p-3.5 flex flex-col gap-2 min-h-24 cursor-default">{inner}</div>
+      <div className="rounded-sm border border-neutral-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm p-3.5 flex flex-col gap-2 min-h-24 cursor-default">{inner}</div>
     );
   }
 
@@ -595,7 +599,11 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
   const { t: tCommon } = useTranslation('common');
   const { t: tDashboard } = useTranslation('dashboard');
   const { t: tCharts } = useTranslation('charts');
-  const { t: tPlanner } = useTranslation('planner');
+  // Card titles/descriptions live under common:navigation / common:homeFeatures (not the
+  // planner namespace) so this feature-card grid doesn't drag in the whole planner.json
+  // (~76KB, used by dozens of unrelated planner/gacha/scanner/minigame components).
+  const { t: tNav } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: tHomeFeatures } = useTranslation('common', { keyPrefix: 'homeFeatures' });
   const { t: tEmblem } = useTranslation('emblemCounter');
 
   const s = server.toUpperCase();
@@ -628,26 +636,26 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
     {
       to: localeLink(locale, '/planner/event'),
       img: isDark ? '/img/p_dark.webp' : '/img/p.webp',
-      title: tPlanner('page.eventPlanner'),
-      desc: tPlanner('page.plannerescription'),
+      title: tNav('eventPlanner'),
+      desc: tHomeFeatures('eventPlannerDesc'),
     },
     {
       to: localeLink(locale, '/planner/gacha'),
       img: isDark ? '/img/gacha_dark.webp' : '/img/gacha.webp',
-      title: `${tPlanner('gacha.title', 'Pyroxene Planner')} (BETA)`,
-      desc: tPlanner('gacha.intro.summary', 'Calculate income & Simulate gacha'),
+      title: `${tNav('gachaPlanner', 'Pyroxene Planner')} (BETA)`,
+      desc: tHomeFeatures('gachaPlannerDesc', 'Calculate income & Simulate gacha'),
     },
     {
       to: localeLink(locale, '/planner/students'),
       img: isDark ? '/img/growth_dark.webp' : '/img/growth.webp',
-      title: tPlanner('page.studentGrowthPlanner'),
-      desc: tPlanner('page.description.studentGrowthPlanner'),
+      title: tNav('studentGrowthPlanner'),
+      desc: tHomeFeatures('studentGrowthPlannerDesc'),
     },
     {
       to: localeLink(locale, '/planner/equipment'),
       img: isDark ? '/img/equipment_dark.webp' : '/img/equipment.webp',
-      title: `${tPlanner('page.equipmentFarmingPlanner')} (BETA)`,
-      desc: tPlanner('page.description.equipmentFarmingPlanner'),
+      title: `${tNav('equipmentFarmingPlanner')} (BETA)`,
+      desc: tHomeFeatures('equipmentFarmingPlannerDesc'),
     },
     {
       to: localeLink(locale, '/charts/favor'),
@@ -658,20 +666,26 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
     {
       to: localeLink(locale, '/utils/favor'),
       img: isDark ? '/img/favorcalc_dark.webp' : '/img/favorcalc.webp',
-      title: tPlanner('page.favorCalculator'),
-      desc: tPlanner('page.description.favorCalculator'),
+      title: tNav('favorCalculator'),
+      desc: tHomeFeatures('favorCalculatorDesc'),
     },
     {
       to: localeLink(locale, '/utils/jukebox'),
       img: isDark ? '/img/j_dark.webp' : '/img/j.webp',
-      title: tPlanner('page.jukebox'),
-      desc: tPlanner('page.jukeboxdescription'),
+      title: tNav('jukebox'),
+      desc: tHomeFeatures('jukeboxDesc'),
     },
     {
-      to: localeLink(locale, '/planner/item-scanner'),
+      to: localeLink(locale, '/scanner/item'),
       img: isDark ? '/img/scanner_dark.webp' : '/img/scanner.webp',
-      title: tPlanner('page.itemScanner'),
-      desc: tPlanner('page.description.itemScanner'),
+      title: tNav('itemScanner'),
+      desc: tHomeFeatures('itemScannerDesc'),
+    },
+    {
+      to: localeLink(locale, '/scanner/student'),
+      img: '/img/student-scanner.webp',
+      title: tNav('studentScanner'),
+      desc: tHomeFeatures('studentScannerDesc'),
     },
   ];
 
@@ -754,7 +768,7 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function HomeV2() {
-  const { locale, jpEvent, glEvent, jpRaid, glRaid } = useLoaderData<typeof loader>();
+  const { locale, jpEvent, glEvent, jpRaid, glRaid, calendarWidgets } = useLoaderData<typeof loader>();
   const { t } = useTranslation('common');
   const { isDark } = useIsDarkState();
   const [calendarServer, setCalendarServer] = useState<GameServer>(locale === 'ja' ? 'jp' : 'kr');
@@ -776,7 +790,9 @@ export default function HomeV2() {
 
       <div className="m-auto max-w-7xl px-4 pb-20 -mt-1 space-y-12">
         {/* Status Grid */}
-        <section>
+        <section className="pt-1">
+          {/* Month-end shop reset warning — client-side only */}
+          <MonthEndResetBanner />
           {/* <h2 className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mb-2.5">{t('home.currentStatus')}</h2> */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             <RaidCard raid={jpRaid} server="JP" locale={locale} />
@@ -809,7 +825,7 @@ export default function HomeV2() {
               ))}
             </div>
           </div>
-          <CalendarWidget key={`${locale}-${calendarServer}`} server={calendarServer} />
+          <CalendarWidget key={`${locale}-${calendarServer}`} server={calendarServer} scheduleData={calendarWidgets[calendarServer]} />
         </section>
 
         {/* Tool Links */}

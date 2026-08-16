@@ -11,6 +11,7 @@ import { ItemIcon } from './common/Icon';
 import type { StagePrio } from './FarmingPlannerTypes';
 import type { JSX } from 'react';
 import type { WithNonNullable } from '~/utils/WithNonNullable';
+import { applyRepeatableEventBonus } from '~/utils/eventBonus';
 
 interface RepeatableTabProps {
   farmingStages: (Stage & { type: 'stage' | 'story' | 'challenge' })[];
@@ -134,7 +135,7 @@ export const RepeatableTab = ({
                 return {
                   id: r.RewardId,
                   type: r.RewardParcelTypeStr,
-                  amount: Math.ceil((((r.RewardAmount * r.RewardProb) / 10000) * bonusPercent) / 10_000),
+                  amount: applyRepeatableEventBonus((r.RewardAmount * r.RewardProb) / 10000, bonusPercent) - (r.RewardAmount * r.RewardProb) / 10000,
                 };
               }
               return null;
@@ -166,7 +167,7 @@ export const RepeatableTab = ({
                     const bonusPercent = totalBonus[r.RewardId] || 0;
                     let amountString = `${baseAmount}+0`;
                     if (bonusPercent > 0) {
-                      const bonusPart = Math.ceil((baseAmount * bonusPercent) / 10000);
+                      const bonusPart = applyRepeatableEventBonus(baseAmount, bonusPercent) - baseAmount;
                       amountString = `${baseAmount}+${bonusPart}`;
                     }
                     return (

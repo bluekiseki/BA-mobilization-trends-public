@@ -478,8 +478,15 @@ export const ItemIcon = ({
       >
         <div className="absolute inset-0 rounded-md" style={{ backgroundColor }} />
 
+        {/* <div className="absolute inset-0 flex items-center justify-center">
+          <img src={iconSrc.startsWith('blob:') ? iconSrc : `data:image/webp;base64,${iconSrc}`} alt={(itemInfo as IconInfo).LocalizeEtc?.['NameKr']} className="h-full object-contain" />
+        </div> */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <img src={iconSrc.startsWith('blob:') ? iconSrc : `data:image/webp;base64,${iconSrc}`} alt={(itemInfo as IconInfo).LocalizeEtc?.['NameKr']} className="max-w-full max-h-full object-cover" />
+          <img
+            src={iconSrc.startsWith('blob:') ? iconSrc : `data:image/webp;base64,${iconSrc}`}
+            alt={(itemInfo as IconInfo).LocalizeEtc?.['NameKr']}
+            className="w-auto max-w-none h-full object-contain"
+          />
         </div>
 
         {label && <span className={`absolute top-0 left-0 ${labelColor} text-white text-[10px] font-bold px-1 py-0.5 rounded-br-md rounded-tl-md leading-none z-10`}>{label}</span>}

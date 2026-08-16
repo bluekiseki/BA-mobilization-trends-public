@@ -17,6 +17,10 @@
     "load_more": "載入更多",
     "raid": "總力戰",
     "eraid": "大決戰",
+    "raidAndEraid": "總力戰·大決戰",
+    "event": "事件",
+    "campaign": "戰役",
+    "multifloor": "制約解除決戰",
     "dataWarning": "本網站提供的數據均經由其他來源處理而來，在處理過程中可能因錯誤而包含不準確之處。本網站營運者對於使用這些數據所產生的任何問題概不承擔任何責任。請自行斟酌使用這些資訊。",
     "viewMore": "查看更多",
     "viewSimple": "簡易檢視",
@@ -30,6 +34,9 @@
     "clear": "清除",
     "period": "期間",
     "jfd": "綜合戰術考試",
+    "tacticalChallenge": "戰術大賽",
+    "finalRestrictionWB": "能力而發WB",
+    "expertPermit": "精通證書",
     "pred": "pred",
     "title": "柚子 Trends",
     "site-title": "柚子 Trends",
@@ -49,7 +56,9 @@
     "changelog": {
       "title": "更新日誌",
       "noTranslation": "無可用翻譯",
-      "newUpdate": "最新更新"
+      "newUpdate": "最新更新",
+      "feedbackPrompt": "歡迎提交錯誤報告和功能建議。",
+      "sendFeedback": "傳送回饋"
     },
     "currentLocale": "zh_Hant",
     "navigation": {
@@ -68,7 +77,26 @@
       "darkMode": "暗色模式",
       "systemTheme": "系統設定",
       "language": "語言",
-      "serverSettings": "伺服器設定"
+      "serverSettings": "伺服器設定",
+      "jukebox": "BGM 播放器",
+      "notices": "公告存檔",
+      "itemScanner": "物品掃描器",
+      "studentScanner": "學生培養掃描器",
+      "eventPlanner": "活動刷取規劃器",
+      "gachaPlanner": "青輝石與招募規劃",
+      "studentGrowthPlanner": "學生成長規劃器",
+      "equipmentFarmingPlanner": "裝備刷取規劃器",
+      "favorCalculator": "羈絆等級計算機"
+    },
+    "homeFeatures": {
+      "eventPlannerDesc": "學生成長所需物品的消耗與活動中獲得物品的模擬",
+      "gachaPlannerDesc": "基於未來視日程計算預期青輝石收入，制定目標學生的招募策略，並模擬抽卡成功率。",
+      "studentGrowthPlannerDesc": "在一個地方管理所有學生的成長計劃，並計算所需的材料。",
+      "equipmentFarmingPlannerDesc": "根據您的學生成長需求優化裝備刷取。",
+      "favorCalculatorDesc": "計算達到目標羈絆等級所需的禮物。",
+      "jukeboxDesc": "檢查編號 BGM 的使用情況",
+      "itemScannerDesc": "掃描庫存截圖以自動輸入您擁有的素材。",
+      "studentScannerDesc": "掃描您左右滑動學生個人資料畫面的螢幕錄影，自動輸入學生的培養資訊。"
     },
     "LocaleSwitcher": {
       "en": "英文",
@@ -142,7 +170,8 @@
       "birthdaySoon": "生日快樂！",
       "jpStats": "JP 統計",
       "kivotosPeace": "奇普托斯目前處於和平狀態。",
-      "noEvent": "目前沒有進行中的活動。"
+      "noEvent": "目前沒有進行中的活動。",
+      "monthEndReset": "商店月末重置"
     },
     "scroll_to_first_page": "第一頁",
     "scroll_to_prev_page": "上一頁",
@@ -239,6 +268,7 @@
   },
   "raidInfo": {
     "All": "All",
+    "allDifficulties": "全部難度",
     "Lunatic": "Lunatic",
     "Torment": "Torment",
     "Insane": "Insane",
@@ -252,6 +282,8 @@
     "title": "總力戰&大決戰儀表板",
     "shorttitle": "儀表板",
     "description1": "查看每場出擊的統計資料",
+    "detailMetaTitle": "{{server}} {{season}} {{boss}} {{location}} {{raidType}} 攻略與統計",
+    "detailMetaDescription": "《蔚藍檔案》{{server}}伺服器 {{season}} {{boss}} {{location}} {{raidType}}的分數分佈、難度通關狀況、頂尖隊伍與學生使用率統計。",
     "rankRange": "排名範圍",
     "subtitle": "出擊儀表板 Perorodzilla 2025.09",
     "scoreDistribution": "分數分佈",
@@ -330,7 +362,7 @@
     "unitSecond": "秒",
     "tooltipTime": "時間: {{time}}",
     "tooltipDifficulty": "難度: {{difficulty}}",
-    "scoreCondition": "分數 <= {{score}}",
+    "scoreCondition": "分數 ≤ {{score}}",
     "tooltipCumulativeRank": "累計排名: ~{{rank}}",
     "clearTime": "清除時間",
     "hideSettings": "隱藏設定",
@@ -426,14 +458,23 @@
       "mulligan_view_order": "選取順序",
       "mopup_filter": "Mop-up party filter"
     },
-    "videos": "影片",
+    "videos": "攻略影片",
     "videos_select_boss": "選擇Boss類型以查看影片。",
     "videos_empty": "沒有可用影片。",
+    "videos_sort_score_desc": "分數由高到低",
+    "videos_sort_score_asc": "分數由低到高",
+    "videos_sort_upload_desc": "上傳日期最新",
+    "videos_sort_upload_asc": "上傳日期最舊",
+    "videos_score_min_placeholder": "最小",
+    "videos_score_max_placeholder": "最大",
     "videos_filter_tl": "僅TL",
     "videos_filter_target_type": "僅目標類型",
     "videos_missing_note": "由於自動處理，部分影片可能缺失。",
     "videos_view_all": "查看全部已分析影片",
-    "videos_external_sites": "推薦的外部網站："
+    "videos_external_sites": "推薦的外部網站：",
+    "video_source_cv": "從縮圖自動提取",
+    "video_source_text": "從影片說明提取",
+    "video_extraction_note": "學生編成資料從縮圖圖像識別(cv)或影片說明文字(text)自動提取，可能存在誤差。"
   },
   "dashboardIndex": {
     "title": "儀表板列表",
@@ -463,7 +504,24 @@
     "platinum_prediction_avg": "第{{rank}}名",
     "compare_cutoff": "{{name}} 檔線 (第{{rank}}名)",
     "total_combined": "{{types}}",
-    "predicted_score": "{{score}}点"
+    "predicted_score": "{{score}}点",
+    "data_unavailable_reason": "由於官方未提供API，本功能一直依賴外部供應商非官方提供的資料運營。",
+    "data_unavailable_status": "因資料提供者的情況，供應已中斷，目前無法使用。若您能提供資料或協助提供，歡迎與我們聯絡。",
+    "data_unavailable_contact_email": "透過電子郵件聯絡",
+    "data_unavailable_contact_anon": "匿名提交",
+    "platinum_cut_est": "白金檔線預測（統計依據）",
+    "hours_remaining_suffix": "剩餘",
+    "video_fallback_title": "攻略影片",
+    "video_fallback_note_crawl": "影片爬取目前仍為手動進行，更新頻率最長為1至2天一次。",
+    "video_fallback_note_live_only": "僅顯示目前進行中的戰役影片。更多影片：",
+    "score_time_converter_title": "分數・時間轉換器",
+    "score_time_converter_placeholder": "輸入分數（例如 41230000）或時間（例如 3:45）",
+    "score_time_converter_error_invalid_time": "時間格式不正確。請使用 mm:ss 格式（例如 3:45）。",
+    "score_time_converter_error_negative_time": "時間必須為正數。",
+    "score_time_converter_error_no_valid_score": "此時間沒有對應的有效分數。",
+    "score_time_converter_error_invalid_score": "請輸入數字分數，或 mm:ss 格式的時間。",
+    "score_time_converter_error_negative_score": "分數必須為正數。",
+    "score_time_converter_error_no_time": "無法計算此分數對應的時間。"
   },
   "emblemCounter": {
     "title": "好感度排名狀態",
@@ -497,8 +555,11 @@
   },
   "calendar": {
     "title": "日曆和未來預測",
+    "metaTitle": "蔚藍檔案未來日程表・招募與活動行事曆",
+    "upcomingTitle": "主要預定日程",
+    "predictionLabel": "（預測）",
     "description": {
-      "main": "Blue Archive 主要活動時間表以甘特圖顯示。",
+      "main": "持續更新《蔚藍檔案》日服與國際服招募、活動、總力戰及大決戰日程的未來行事曆。",
       "prediction": "條紋項目是基於先例的預測。未來可能會變更。"
     },
     "distribute": "(分布: {{name}})",

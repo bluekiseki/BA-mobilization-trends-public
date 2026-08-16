@@ -243,15 +243,12 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
                       <div key={pt.date} className="px-4 py-3 space-y-2">
                         {/* Date header row */}
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 tracking-wide" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                            {dateLabel}
-                          </span>
+                          <span className="text-[11px] font-bold text-neutral-500 dark:text-neutral-400 tracking-wide">{dateLabel}</span>
                           {netDelta !== 0 && (
                             <span
                               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${
                                 netDelta > 0 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                               }`}
-                              style={{ fontFamily: 'ui-monospace, monospace' }}
                             >
                               {netDelta > 0 ? '+' : ''}
                               {netDelta.toLocaleString()}
@@ -267,7 +264,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
                             return (
                               <div key={li} className="flex items-baseline justify-between gap-3">
                                 <span className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-snug flex-1 min-w-0 truncate">{desc}</span>
-                                <span className={`text-[11px] font-semibold tabular-nums whitespace-nowrap shrink-0 ${amtColor}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
+                                <span className={`text-[11px] font-semibold tabular-nums whitespace-nowrap shrink-0 ${amtColor}`}>
                                   {log.amount > 0 ? '+' : ''}
                                   {log.amount.toLocaleString()}
                                 </span>
@@ -278,12 +275,8 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
 
                         {/* Balance footer */}
                         <div className="flex items-center justify-between pt-1.5 border-t border-neutral-100 dark:border-neutral-800">
-                          <span className="text-[10px] text-neutral-400 dark:text-neutral-600 uppercase tracking-wider" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                            {t('chart.table_balance')}
-                          </span>
-                          <span className="text-xs font-bold tabular-nums text-neutral-800 dark:text-neutral-100" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                            {balance.toLocaleString()}
-                          </span>
+                          <span className="text-[10px] text-neutral-400 dark:text-neutral-600 uppercase tracking-wider">{t('chart.table_balance')}</span>
+                          <span className="text-xs font-bold tabular-nums text-neutral-800 dark:text-neutral-100">{balance.toLocaleString()}</span>
                         </div>
                       </div>
                     );
@@ -294,24 +287,17 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
                   return (
                     <div key={pt.date} className="px-4 py-2.5 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 shrink-0" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                          {dateLabel}
-                        </span>
+                        <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-600 shrink-0">{dateLabel}</span>
                         <span className="text-[11px] text-neutral-400 dark:text-neutral-500 italic truncate">{isStart ? t('chart.start_balance') : t('chart.daily_calc')}</span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         {!isStart && netDelta !== 0 && (
-                          <span
-                            className={`text-[11px] font-semibold tabular-nums ${netDelta > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}
-                            style={{ fontFamily: 'ui-monospace, monospace' }}
-                          >
+                          <span className={`text-[11px] font-semibold tabular-nums ${netDelta > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                             {netDelta > 0 ? '+' : ''}
                             {netDelta.toLocaleString()}
                           </span>
                         )}
-                        <span className="text-[11px] font-bold tabular-nums text-neutral-700 dark:text-neutral-300" style={{ fontFamily: 'ui-monospace, monospace' }}>
-                          {balance.toLocaleString()}
-                        </span>
+                        <span className="text-[11px] font-bold tabular-nums text-neutral-700 dark:text-neutral-300">{balance.toLocaleString()}</span>
                       </div>
                     </div>
                   );

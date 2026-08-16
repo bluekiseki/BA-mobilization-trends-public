@@ -44,6 +44,7 @@ const helpWhitelist = [
   /^(?:\/(?:ko|ja|zh-Hant))?\/dashboard\/(kr|jp)\/\w/,
   /^(?:\/(?:ko|ja|zh-Hant))?\/charts/,
   /^(?:\/(?:ko|ja|zh-Hant))?\/planner\//,
+  /^(?:\/(?:ko|ja|zh-Hant))?\/scanner\//,
   /^(?:\/(?:ko|ja|zh-Hant))?\/utils\/jukebox/,
   // /^(?:\/(?:ko|ja|zh-Hant))?\/live/,
 ];
@@ -256,17 +257,20 @@ const MoreDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; i
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t: t_c } = useTranslation('common');
-  const { t: t_j } = useTranslation('jukebox');
-  const { t: t_n } = useTranslation('notices');
+  // Nav labels live under common:navigation (not the jukebox/notices/planner namespaces they
+  // link to) so opening the nav doesn't drag in those whole namespaces just for one label each.
+  const { t: t_nav } = useTranslation('common', { keyPrefix: 'navigation' });
 
   useOutsideClick(ref, () => setIsOpen(false));
 
-  const calendarPath = locale === 'ja' ? '/calendar/jp' : '/calendar/kr';
+  const calendarPath = '/calendar';
 
   const moreItems = [
-    { key: 'jukebox', to: '/utils/jukebox', label: t_j('title'), regex: /\/utils\/jukebox/ },
-    { key: 'notices', to: '/notices', label: t_n('title'), regex: /\/notices/ },
-    { key: 'calendar', to: calendarPath, label: t_c('home.schedule'), regex: /\/calendar\// },
+    { key: 'jukebox', to: '/utils/jukebox', label: t_nav('jukebox'), regex: /\/utils\/jukebox/ },
+    { key: 'notices', to: '/notices', label: t_nav('notices'), regex: /\/notices/ },
+    { key: 'calendar', to: calendarPath, label: t_c('home.schedule'), regex: /\/calendar(?:\/|$)/ },
+    { key: 'item-scanner', to: '/scanner/item', label: t_nav('itemScanner'), regex: /\/scanner\/item(?:\/|$)/ },
+    { key: 'student-scanner', to: '/scanner/student', label: t_nav('studentScanner'), regex: /\/scanner\/student(?:\/|$)/ },
   ];
 
   return (
@@ -303,16 +307,15 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
-  const { t: t_p } = useTranslation('planner');
 
   useOutsideClick(ref, () => setIsOpen(false));
 
   const plannerItems = [
-    { key: 'event', to: '/planner/event', label: t_p('page.eventPlanner') },
-    { key: 'gacha', to: '/planner/gacha', label: t_p('gacha.title', 'Pyroxene Planner') },
-    { key: 'students', to: '/planner/students', label: t_p('page.studentGrowthPlanner') },
-    { key: 'equipment', to: '/planner/equipment', label: t_p('page.equipmentFarmingPlanner') },
-    { key: 'favor', to: '/utils/favor', label: t_p('page.favorCalculator') },
+    { key: 'event', to: '/planner/event', label: t('eventPlanner') },
+    { key: 'gacha', to: '/planner/gacha', label: t('gachaPlanner') },
+    { key: 'students', to: '/planner/students', label: t('studentGrowthPlanner') },
+    { key: 'equipment', to: '/planner/equipment', label: t('equipmentFarmingPlanner') },
+    { key: 'favor', to: '/utils/favor', label: t('favorCalculator') },
   ];
 
   return (
@@ -347,16 +350,14 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
 
 const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
-  const { t: t_p } = useTranslation('planner');
   const isPlannerActive = /\/planner\/|\/utils\/favor/.test(pathname);
 
   const plannerItems = [
-    { key: 'event', to: '/planner/event', label: t_p('page.eventPlanner') },
-    { key: 'gacha', to: '/planner/gacha', label: t_p('gacha.title', 'Pyroxene Planner') },
-    { key: 'students', to: '/planner/students', label: t_p('page.studentGrowthPlanner') },
-    { key: 'equipment', to: '/planner/equipment', label: t_p('page.equipmentFarmingPlanner') },
-    { key: 'favor', to: '/utils/favor', label: t_p('page.favorCalculator') },
-    { key: 'scanner', to: '/planner/item-scanner', label: t_p('page.itemScanner') },
+    { key: 'event', to: '/planner/event', label: t('eventPlanner') },
+    { key: 'gacha', to: '/planner/gacha', label: t('gachaPlanner') },
+    { key: 'students', to: '/planner/students', label: t('studentGrowthPlanner') },
+    { key: 'equipment', to: '/planner/equipment', label: t('equipmentFarmingPlanner') },
+    { key: 'favor', to: '/utils/favor', label: t('favorCalculator') },
   ];
 
   return (
@@ -383,16 +384,17 @@ const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pat
 
 const MobileMoreGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
   const { t: t_c } = useTranslation('common');
-  const { t: t_j } = useTranslation('jukebox');
-  const { t: t_n } = useTranslation('notices');
-  const isMoreActive = /\/utils\/jukebox|\/notices|\/calendar\//.test(pathname);
+  const { t: t_nav } = useTranslation('common', { keyPrefix: 'navigation' });
+  const isMoreActive = /\/utils\/jukebox|\/notices|\/calendar(?:\/|$)|\/scanner\//.test(pathname);
 
-  const calendarPath = locale === 'ja' ? '/calendar/jp' : '/calendar/kr';
+  const calendarPath = '/calendar';
 
   const moreItems = [
-    { key: 'jukebox', to: '/utils/jukebox', label: t_j('title') },
-    { key: 'notices', to: '/notices', label: t_n('title') },
+    { key: 'jukebox', to: '/utils/jukebox', label: t_nav('jukebox') },
+    { key: 'notices', to: '/notices', label: t_nav('notices') },
     { key: 'calendar', to: calendarPath, label: t_c('home.schedule') },
+    { key: 'item-scanner', to: '/scanner/item', label: t_nav('itemScanner') },
+    { key: 'student-scanner', to: '/scanner/student', label: t_nav('studentScanner') },
   ];
 
   return (
@@ -445,6 +447,10 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
   if (pathname.match(/^(|\/ko|\/ja|\/zh\-Hant)\/dashboard\/(jp|kr)\/\w\d+/)) {
     currentServer = null;
   }
+  // Network graph is JP-only; no server switcher shown
+  if (pathname.match(/^(|\/ko|\/ja|\/zh\-Hant)\/charts\/(jp|kr)\/network/)) {
+    currentServer = null;
+  }
 
   const isHelpAvailable = helpWhitelist.some((pattern) => pattern.test(pathname));
   const isPlannerActive = /\/planner\/|\/utils\/favor/.test(pathname);
@@ -481,7 +487,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
               );
             })}
             <PlannerDropdown locale={locale} isActive={isPlannerActive} activeLinkStyle={activeLinkStyle} />
-            <MoreDropdown locale={locale} isActive={/\/utils\/jukebox|\/notices|\/calendar\//.test(pathname)} activeLinkStyle={activeLinkStyle} />
+            <MoreDropdown locale={locale} isActive={/\/utils\/jukebox|\/notices|\/calendar(?:\/|$)|\/scanner\//.test(pathname)} activeLinkStyle={activeLinkStyle} />
           </nav>
 
           {/* Right: Utilities (Icons common to desktop & mobile) */}

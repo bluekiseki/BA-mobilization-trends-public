@@ -432,11 +432,14 @@ export default function IncomePlannerPanel({
       mergedAccRef.current = {
         resultsPulls: [],
         resultsCost: [],
+        resultsEligma: [],
         bannerCumulativeCosts: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
+        bannerCumulativeEligma: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
         bannerStatsSum: Object.fromEntries(activeBannerIds.map((id) => [id, { pulls: 0, cost: 0 }])),
         studentAcquired: {},
         studentElephTotal: {},
         studentElephDist: {},
+        bannerStudentElephDist: Object.fromEntries(activeBannerIds.map((id) => [id, {}])),
         totalEligmaSum: 0,
         successCount: 0,
       };

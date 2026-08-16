@@ -81,7 +81,8 @@ type Rem = [number, number, number];
 
 // inventory: tileType → available count (undefined = no limit)
 // goalEntryOverride: explicit door side for G (auto-detected when omitted)
-export function solveRoadPuzzle(grid: Grid, rowOffset: 0 | 1 = 0, inventory?: Record<number, number>, goalEntryOverride?: number): SolveResult {
+// startEntryOverride: restrict the first move out of S to a single side (all 6 sides tried when omitted)
+export function solveRoadPuzzle(grid: Grid, rowOffset: 0 | 1 = 0, inventory?: Record<number, number>, goalEntryOverride?: number, startEntryOverride?: number): SolveResult {
   const rows = grid.length;
   const cols = rows > 0 ? grid[0].length : 0;
 
@@ -292,6 +293,7 @@ export function solveRoadPuzzle(grid: Grid, rowOffset: 0 | 1 = 0, inventory?: Re
   }
 
   for (let side = 1; side <= 6; side++) {
+    if (startEntryOverride && side !== startEntryOverride) continue;
     const [nc, nr] = nb(startCol, startRow, side);
     if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
     if (grid[nr][nc].type === 'x') continue;

@@ -34,6 +34,42 @@ export function useSpreadsheetKeydown({ cellId, maxValue, minValue, onMax, onCop
             }
           }
         }, 0);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const input = e.target as HTMLInputElement;
+        const tr = input.closest('tr');
+        const nextTr = tr?.nextElementSibling as HTMLElement | null;
+        if (nextTr && cellId) {
+          const columnName = cellId.replace(/^row-\d+-/, '');
+          nextTr.querySelector<HTMLInputElement>(`[data-cell-id*="-${columnName}"] input`)?.focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const input = e.target as HTMLInputElement;
+        const tr = input.closest('tr');
+        const prevTr = tr?.previousElementSibling as HTMLElement | null;
+        if (prevTr && cellId) {
+          const columnName = cellId.replace(/^row-\d+-/, '');
+          prevTr.querySelector<HTMLInputElement>(`[data-cell-id*="-${columnName}"] input`)?.focus();
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const input = e.target as HTMLInputElement;
+        const tr = input.closest('tr');
+        if (tr) {
+          const inputs = Array.from(tr.querySelectorAll<HTMLInputElement>('[data-cell-id] input'));
+          const idx = inputs.indexOf(input);
+          if (idx !== -1 && idx < inputs.length - 1) inputs[idx + 1].focus();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const input = e.target as HTMLInputElement;
+        const tr = input.closest('tr');
+        if (tr) {
+          const inputs = Array.from(tr.querySelectorAll<HTMLInputElement>('[data-cell-id] input'));
+          const idx = inputs.indexOf(input);
+          if (idx > 0) inputs[idx - 1].focus();
+        }
       } else if (e.metaKey && e.key === 'd') {
         e.preventDefault();
         const input = e.target as HTMLInputElement;

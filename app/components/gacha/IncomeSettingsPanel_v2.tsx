@@ -1,5 +1,5 @@
 // app/components/gacha/IncomeSettingsPanel_v2.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaGem, FaTicketAlt, FaCrown, FaShieldAlt, FaTrophy, FaPlus, FaTrash, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
 import Tooltip from 'rc-tooltip';
@@ -23,7 +23,7 @@ interface Props {
   ticket10Icon?: string | null;
 }
 
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 
 function RowLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -58,6 +58,14 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, pyroxeneIcon
   const [newCustomDate, setNewCustomDate] = useState('');
   const [newCustomTitle, setNewCustomTitle] = useState('');
   const [newCustomAmount, setNewCustomAmount] = useState<number | ''>('');
+  const [needsSafariDateHint, setNeedsSafariDateHint] = useState(false);
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent;
+    const isSafari = /Safari/.test(userAgent) && /AppleWebKit/.test(userAgent) && !/(CriOS|FxiOS|EdgiOS)/.test(userAgent);
+    const isAppleMobile = /iPhone|iPad|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setNeedsSafariDateHint(isSafari && isAppleMobile);
+  }, []);
 
   const set = (patch: Partial<PyroxeneConfig & { customIncomes?: CustomIncome[] }>) => setConfig((prev) => ({ ...prev, ...patch }));
 
@@ -201,12 +209,18 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, pyroxeneIcon
           <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-900 mb-2">
             {/* Row 1: date + description (full width) */}
             <div className="flex items-stretch border-b border-neutral-200 dark:border-neutral-700">
-              <input
-                type="date"
-                className="border-r border-neutral-200 dark:border-neutral-700 px-2.5 py-2 bg-transparent text-neutral-600 dark:text-neutral-400 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors shrink-0 w-30"
-                value={newCustomDate}
-                onChange={(e) => setNewCustomDate(e.target.value)}
-              />
+              <div className="relative w-32 shrink-0 border-r border-neutral-200 dark:border-neutral-700">
+                <input
+                  type="date"
+                  aria-label="YYYY-MM-DD"
+                  className="h-full w-full px-2.5 py-2 bg-transparent text-neutral-600 dark:text-neutral-400 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
+                  value={newCustomDate}
+                  onChange={(e) => setNewCustomDate(e.target.value)}
+                />
+                {needsSafariDateHint && !newCustomDate && (
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 bg-white pr-1 text-[11px] text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">YYYY-MM-DD</span>
+                )}
+              </div>
               <input
                 type="text"
                 placeholder={t('settings.custom_income_desc')}

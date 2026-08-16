@@ -1703,5 +1703,99 @@
     "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 84116 },
     "Platinum": 27981655,
     "TotalParticipants": 324116
+  },
+  {
+    "Id": "E34",
+    "Boss": "HoverCraft",
+    "Location": "Outdoor",
+    "Type": "Unarmed",
+    "Date": "2026-06-17",
+    "MaxLv": 90,
+    "Cnt": { "All": 297631, "Torment": 28681, "Insane": 30135, "Extreme": 97606, "Hardcore": 90386, "Hard": 9292, "Normal": 5719, "Veryhard": 19912 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 57631 },
+    "Platinum": 106649793,
+    "TotalParticipants": 297631
+  },
+  {
+    "Id": "E34",
+    "Boss": "HoverCraft",
+    "Location": "Outdoor",
+    "Type": "ElasticArmor",
+    "Date": "2026-06-17",
+    "MaxLv": 90,
+    "Cnt": { "All": 297631, "Torment": 28611, "Insane": 27862, "Extreme": 88349, "Hardcore": 89975, "Normal": 5820, "Veryhard": 23282, "Hard": 10652 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 57631 },
+    "Platinum": 106649793,
+    "TotalParticipants": 297631
+  },
+  {
+    "Id": "E34",
+    "Boss": "HoverCraft",
+    "Location": "Outdoor",
+    "Type": "LightArmor",
+    "Date": "2026-06-17",
+    "MaxLv": 90,
+    "Cnt": { "All": 297631, "Insane": 61533, "Extreme": 93939, "Hardcore": 90687, "Veryhard": 22133, "Hard": 11081, "Normal": 7503 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 57631 },
+    "Platinum": 106649793,
+    "TotalParticipants": 297631
+  },
+  {
+    "Id": "R90",
+    "Boss": "EN0005",
+    "Location": "Indoor",
+    "Date": "2026-07-01",
+    "MaxLv": 90,
+    "Cnt": { "All": 336967, "Lunatic": 8111, "Torment": 21349, "Insane": 37198, "Extreme": 115828, "Hardcore": 93838, "Veryhard": 25092, "Hard": 25231, "Normal": 10320 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 96967 },
+    "Platinum": 40017200,
+    "TotalParticipants": 336967
+  },
+  {
+    "Id": "E35",
+    "Boss": "HOD",
+    "Location": "Indoor",
+    "Type": "HeavyArmor",
+    "Date": "2026-07-15",
+    "MaxLv": 90,
+    "Cnt": { "All": 281427, "Torment": 33707, "Insane": 55365, "Extreme": 80197, "Hard": 7754, "Hardcore": 70004, "Veryhard": 14267, "Normal": 6145 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 41427 },
+    "Platinum": 107450496,
+    "TotalParticipants": 281427
+  },
+  {
+    "Id": "E35",
+    "Boss": "HOD",
+    "Location": "Indoor",
+    "Type": "ElasticArmor",
+    "Date": "2026-07-15",
+    "MaxLv": 90,
+    "Cnt": { "All": 281427, "Torment": 26647, "Insane": 51346, "Extreme": 77865, "Hardcore": 77144, "Veryhard": 15552, "Hard": 8366, "Normal": 6214 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 41427 },
+    "Platinum": 107450496,
+    "TotalParticipants": 281427
+  },
+  {
+    "Id": "E35",
+    "Boss": "HOD",
+    "Location": "Indoor",
+    "Type": "LightArmor",
+    "Date": "2026-07-15",
+    "MaxLv": 90,
+    "Cnt": { "All": 281427, "Insane": 84292, "Extreme": 81784, "Hardcore": 74596, "Veryhard": 15139, "Normal": 8070, "Hard": 8353 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 41427 },
+    "Platinum": 107450496,
+    "TotalParticipants": 281427
+  },
+  {
+    "Id": "R91",
+    "Boss": "Hieronymus",
+    "Location": "Street",
+    "Date": "2026-08-05",
+    "MaxLv": 90,
+    "Cnt": { "All": 387343, "Lunatic": 1757, "Torment": 58308, "Insane": 79834, "Extreme": 112845, "Hardcore": 86031, "Veryhard": 21215, "Hard": 19657, "Normal": 7696 },
+    "Tier": { "4": 20000, "3": 100000, "2": 120000, "1": 147343 },
+    "Platinum": 40082080,
+    "TotalParticipants": 387343
   }
 ]

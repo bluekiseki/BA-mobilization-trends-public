@@ -51,7 +51,7 @@ export const calcEquipmentSlotNeeds = (currentTier: number, targetTier: number, 
       totalExp += equipmentLevelUpCost[lv].exp;
       needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + equipmentLevelUpCost[lv].credits;
     }
-    const upgradeCost = equipmentTierUpgradeCost[(tier + 1) as keyof typeof equipmentTierUpgradeCost];
+    const upgradeCost = equipmentTierUpgradeCost[tier as keyof typeof equipmentTierUpgradeCost];
     if (upgradeCost) {
       needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + upgradeCost.credits;
       upgradeCost.blueprints.forEach((bp) => {

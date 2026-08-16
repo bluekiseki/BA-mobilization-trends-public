@@ -95,7 +95,6 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
 
           <Card title={t('histogramTitle')} defaultExpanded={true} className="space-y-4">
             <RaidClearStatusGraph key={activeTab} scores={scores} tierCounter={fullData.tier_counter} boss={currentRaidInfo.Boss} server={server} id={currentRaidInfo.Id} />
-            <hr className="border-neutral-300 dark:border-neutral-700 my-10 transition-colors duration-300" />
           </Card>
         </>
       )}

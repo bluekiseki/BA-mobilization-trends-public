@@ -2,7 +2,7 @@ import type { UIMatch } from 'react-router';
 
 // Standard <link> Tag Properties
 export interface CollectedLink {
-  rel: 'preload' | 'prefetch' | 'stylesheet' | 'modulepreload' | 'alternate';
+  rel: 'preload' | 'prefetch' | 'stylesheet' | 'modulepreload' | 'alternate' | 'canonical';
   href: string;
   as?: 'image' | 'style' | 'script' | 'font' | 'fetch';
   type?: string;

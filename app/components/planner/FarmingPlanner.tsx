@@ -17,6 +17,7 @@ import type { WithNonNullable } from '~/utils/WithNonNullable';
 import { ItemIcon } from './common/Icon';
 import { getLocalizeEtcName } from './common/locale';
 import type { Locale } from '~/utils/i18n/config';
+import { applyRepeatableEventBonus } from '~/utils/eventBonus';
 
 export type { FarmingTab, FarmingResult };
 
@@ -78,47 +79,6 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     }
   }, [eventId, farmingStages, setStagePrio, stagePrio]);
 
-  useEffect(() => {
-    if (!eventData) {
-      onCalculate(null);
-      return;
-    }
-    const totalItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
-    let totalApUsed = 0;
-    const eventItemIds = eventData.currency.map((c) => c.ItemUniqueId);
-    allStages.forEach((stage) => {
-      const runs = runCounts?.[stage.Id] || 0;
-      const isFirstClearedInCalc = firstClears?.[stage.Id];
-      if (runs > 0) totalApUsed += runs * stage.StageEnterCostAmount;
-      stage.EventContentStageReward.forEach((reward) => {
-        const key = `${reward.RewardParcelTypeStr}_${reward.RewardId}`;
-        let amount = 0;
-        let isBonusApplied = false;
-        if (['Event', 'Default', 'Rare'].includes(reward.RewardTagStr)) {
-          if (runs > 0) {
-            const baseAmount = (runs * reward.RewardAmount * reward.RewardProb) / 10000;
-            if (eventItemIds.includes(reward.RewardId) && stage.type == 'stage') {
-              const bonusPercent = totalBonus[reward.RewardId] || 0;
-              amount += baseAmount * (1 + bonusPercent / 10000);
-              isBonusApplied = true;
-            } else {
-              amount += baseAmount;
-            }
-          }
-        } else {
-          if (isFirstClearedInCalc) amount += (reward.RewardAmount * reward.RewardProb) / 10000;
-        }
-        if (amount > 0) {
-          totalItems[key] = {
-            amount: (totalItems[key]?.amount || 0) + amount,
-            isBonusApplied: totalItems[key]?.isBonusApplied || false || isBonusApplied,
-          };
-        }
-      });
-    });
-    onCalculate({ totalItems, totalApUsed: Math.round(totalApUsed) });
-  }, [runCounts, firstClears, allStages, totalBonus, eventData, onCalculate]);
-
   const farmingCalculationResult = useMemo(() => {
     const totalItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
     let totalApUsed = 0;
@@ -133,14 +93,14 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
         const key = `${reward.RewardParcelTypeStr}_${reward.RewardId}`;
         let amount = 0;
         let isBonusApplied = false;
-        const baseAmount = runs * reward.RewardAmount * (reward.RewardProb / 10000);
+        const baseAmountPerRun = reward.RewardAmount * (reward.RewardProb / 10000);
         if (['Event', 'Default', 'Rare'].includes(reward.RewardTagStr) && runs > 0) {
           if (eventItemIds.includes(reward.RewardId) && stage.type == 'stage') {
             const bonusPercent = totalBonus[reward.RewardId] || 0;
-            amount += Math.ceil(baseAmount * (1 + bonusPercent / 10000));
+            amount += applyRepeatableEventBonus(baseAmountPerRun, bonusPercent) * runs;
             isBonusApplied = true;
           } else {
-            amount += baseAmount;
+            amount += baseAmountPerRun * runs;
           }
         }
         if (!['Event', 'Default', 'Rare'].includes(reward.RewardTagStr)) {
@@ -224,7 +184,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
         for (const reward of stage.EventContentStageReward) {
           if (initialNeeded[reward.RewardId] !== undefined && (reward.RewardTagStr === 'Event' || reward.RewardTagStr === 'Default')) {
             const bonus = totalBonus[reward.RewardId] || 0;
-            const effectiveDrop = reward.RewardAmount * (reward.RewardProb / 10000) * (1 + bonus / 10000);
+            const effectiveDrop = applyRepeatableEventBonus(reward.RewardAmount * (reward.RewardProb / 10000), bonus);
             farmedByCurrentRuns[reward.RewardId] = (farmedByCurrentRuns[reward.RewardId] || 0) + effectiveDrop * runs;
           }
         }
@@ -247,7 +207,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
           const itemIndex = itemMap.get(reward.RewardId);
           if (itemIndex == undefined) continue;
           const bonus = totalBonus[reward.RewardId] || 0;
-          dropMatrix[i][itemIndex] += ((reward.RewardAmount * reward.RewardProb) / 10000) * (1 + bonus / 10000);
+          dropMatrix[i][itemIndex] += applyRepeatableEventBonus((reward.RewardAmount * reward.RewardProb) / 10000, bonus);
         }
       }
     }

@@ -2,6 +2,9 @@
 
 // export const PIXELS_PER_HOUR = 1.4;
 export const MS_PER_HOUR = 1000 * 60 * 60;
+// Default zoom level's px/hour. Also embedded as a literal in GanttChart's pre-hydration positioning
+// script (dangerouslySetInnerHTML) — that raw script string can't import this, so keep both in sync.
+export const BASE_PIXELS_PER_HOUR = 1.2;
 export const PREDICTION_STRIPE_CLASS = 'bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.1),rgba(255,255,255,0.1)_10px,transparent_10px,transparent_20px)]';
 
 // Modern Flat Colors (Desaturated & Mature)

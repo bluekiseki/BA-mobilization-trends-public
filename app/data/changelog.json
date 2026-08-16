@@ -1,5 +1,219 @@
 [
   {
+    "date": "2026-08-16",
+    "changes": {
+      "en": ["[Report] [Issue #9] Event Planner: Fixed repeatable event bonus rewards not being rounded up for each run"],
+      "ko": ["[제보] [Issue #9] 이벤트 플래너: 반복 보상의 이벤트 보너스가 매 회차 올림되지 않던 문제 수정"],
+      "ja": ["[報告] [Issue #9] イベントプランナー: 周回報酬のイベントボーナスが1回ごとに切り上げられず計算されていた問題を修正"]
+    },
+    "to": ["/planner/event"]
+  },
+  {
+    "date": "2026-08-15",
+    "changes": {
+      "en": ["Improved calendar loading speed", "Reduced translation-related requests to optimize cloud infrastructure costs"],
+      "ko": ["캘린더 로딩 속도 개선", "번역 데이터 관련 요청을 줄여 클라우드 인프라 비용 최적화"],
+      "ja": ["カレンダーの読み込み速度を改善", "翻訳データ関連のリクエストを削減し、クラウドインフラのコストを最適化"]
+    },
+    "to": ["/calendar", null]
+  },
+  {
+    "date": "2026-08-14",
+    "changes": {
+      "en": [
+        "Item Scanner: Expanded supported item types, including Phrenapates' Credit Card, selectable items, and Exclusive Weapon enhancement materials",
+        "Item Scanner: Improved recognition of similarly shaped items with different colors",
+        "Added Student Scanner"
+      ],
+      "ko": ["아이템 스캐너: 어른의 카드, 선택 아이템, 고유무기 강화 재료 등 인식 가능한 아이템 종류 확대", "아이템 스캐너: 외형이 비슷하고 색상이 다른 아이템의 인식률 개선", "학생 스캐너 추가"],
+      "ja": [
+        "アイテムスキャナー: 大人のカード、選択アイテム、固有武器の強化素材など、認識可能なアイテムの種類を拡充",
+        "アイテムスキャナー: 見た目が似ていて色が異なるアイテムの認識精度を改善",
+        "生徒スキャナーを追加"
+      ]
+    },
+    "to": ["/scanner/item", "/scanner/item", "/scanner/student"]
+  },
+  {
+    "date": "2026-08-13",
+    "changes": {
+      "en": [
+        "Notice Archive: List filters and page are now remembered when you go back from a notice",
+        "Notice Archive: Fixed 'Recently Modified' sort not working correctly for some notices",
+        "Notice Archive: Added a diff view to see exactly what changed between notice versions"
+      ],
+      "ko": [
+        "공지사항 아카이브: 목록에서 선택한 필터·페이지가 상세보기에서 돌아와도 유지되도록 개선",
+        "공지사항 아카이브: 일부 공지에서 '최근 수정순' 정렬이 제대로 안 되던 문제 수정",
+        "공지사항 아카이브: 이전 버전과 비교해 무엇이 바뀌었는지 보여주는 diff 보기 추가"
+      ],
+      "ja": [
+        "お知らせアーカイブ: 一覧のフィルター・ページが詳細画面から戻っても維持されるように改善",
+        "お知らせアーカイブ: 一部のお知らせで「更新順」の並び替えが正しく機能しなかった問題を修正",
+        "お知らせアーカイブ: 前のバージョンとの変更点を確認できるdiff表示を追加"
+      ]
+    },
+    "to": ["/notices", "/notices", "/notices"]
+  },
+  {
+    "date": "2026-08-12",
+    "changes": {
+      "en": [
+        "Profiles: Fixed profile creation for NA, TW, Asia, and Global servers and added server changes in Settings",
+        "Profiles: New and initial signup profiles now select the default server based on the current language",
+        "Raid History: When logged in, the server for the selected profile is now automatically selected in the record list and new records",
+        "Raid History: Parties with no students are no longer saved",
+        "Raid History: The same student can no longer be added twice to one party, even as an assist, and students already in that party no longer appear in search",
+        "Raid History: Fixed the screen zooming in when selecting an input field on mobile and updated the trophy selection UI",
+        "Gacha Planner: Replaced the 150-day median balance with the plan margin at 90% probability and made the failure probability easier to understand",
+        "[Report] Gacha Planner: Fixed Balancing Schale's Books events (600xx) incorrectly granting 1,800 Pyroxenes",
+        "[Report] Raid Ranking: Fixed difficulty-filtered average usage counts being calculated from all participants instead of participants at the selected difficulty"
+      ],
+      "ko": [
+        "프로필: NA·TW·아시아·글로벌 서버에서 프로필을 생성할 수 없던 문제 수정 및 설정 페이지에 서버 변경 기능 추가",
+        "프로필: 새 프로필과 최초 가입 프로필의 기본 서버가 현재 언어에 따라 선택되도록 변경",
+        "클리어 기록: 로그인하면 현재 선택한 프로필의 서버가 기록 목록과 새 기록에서 자동으로 선택되도록 변경",
+        "클리어 기록: 학생을 한 명도 넣지 않은 파티는 저장되지 않도록 수정",
+        "클리어 기록: 조력자라도 같은 파티에 같은 학생을 두 번 넣을 수 없도록 하고 이미 파티에 넣은 학생은 검색 결과에서 제외",
+        "클리어 기록: 모바일에서 입력칸을 선택할 때 화면이 확대되는 문제를 수정하고 트로피 선택 UI 변경",
+        "모집/가챠 플래너: 150일 후 중앙값 대신 90% 확률 기준 계획 여유분을 표시하고 실패 확률을 직관적으로 안내",
+        "[제보] 모집/가챠 플래너: 샬레 총결산 이벤트(600xx)에 청휘석 1,800개가 잘못 반영되던 문제 수정",
+        "[제보] 총력전 순위: 난이도 필터 선택 시 평균 사용 횟수가 전체 참가자 수 기준으로 계산되던 문제 수정"
+      ],
+      "ja": [
+        "プロフィール: NA・TW・アジア・グローバルサーバーでプロフィールを作成できない問題を修正し、設定ページにサーバー変更機能を追加",
+        "プロフィール: 新規プロフィールと初回登録プロフィールのデフォルトサーバーを現在の言語に応じて選択するよう変更",
+        "クリア履歴: ログイン時、現在選択しているプロフィールのサーバーが履歴一覧と新規履歴で自動的に選択されるよう変更",
+        "クリア履歴: 生徒を一人も入れていないパーティーは保存されないよう修正",
+        "クリア履歴: 助っ人でも同じパーティーに同じ生徒を二人入れられないようにし、編成済みの生徒を検索結果から除外",
+        "クリア履歴: モバイルで入力欄を選択した際に画面が拡大される問題を修正し、トロフィー選択UIを変更",
+        "ガチャプランナー: 150日後の中央値に代えて90%確率基準の計画余裕分を表示し、失敗確率をより直感的に案内",
+        "[報告] ガチャプランナー: シャーレの総決算イベント(600xx)に青輝石1,800個が誤って反映されていた問題を修正",
+        "[報告] 総力戦ランキング: 難易度フィルター選択時、平均使用回数が全参加者数を基準に計算されていた問題を修正"
+      ]
+    },
+    "to": ["/settings", "/settings", "/my/raids", "/my/raids", "/my/raids", "/my/raids", "/planner/gacha", "/planner/gacha", "/charts/jp/ranking"]
+  },
+  {
+    "date": "2026-08-10",
+    "changes": {
+      "en": [
+        "Live Dashboard: Added Score / Time Converter",
+        "Live Dashboard: Clear video cards now also show clear time",
+        "[Issue #8] Gacha Planner: Fixed non-pickup FES student rate being inflated at the soft pity (half-ceiling)",
+        "[Issue #7] Gacha Planner: Fixed a co-pickup student's off-rate ★3 chance being doubled on multi-pickup banners"
+      ],
+      "ko": [
+        "실시간 대시보드: 점수·시간 변환기 추가",
+        "실시간 대시보드: 공략영상 카드에 클리어 시간도 함께 표시",
+        "[Issue #8] 모집/가챠 플래너: 반천장에서 모집 대상이 아닌 페스 학생 확률이 비정상적으로 높아지던 문제 수정",
+        "[Issue #7] 모집/가챠 플래너: 복수 픽업 배너에서 동시 픽업 학생이 일반 3성으로 획득될 확률이 2배로 뜨던 문제 수정"
+      ],
+      "ja": [
+        "ライブダッシュボード: 「スコア・タイム変換」機能を追加",
+        "ライブダッシュボード: 攻略動画カードにクリアタイムも表示",
+        "[Issue #8] ガチャプランナー: 半天井でピックアップ対象外のフェス学生の確率が異常に高くなっていた問題を修正",
+        "[Issue #7] ガチャプランナー: 複数ピックアップバナーで同時ピックアップ学生の対象外確率が2倍になっていた問題を修正"
+      ]
+    },
+    "to": ["/live", "/live", "/planner/gacha", "/planner/gacha"]
+  },
+  {
+    "date": "2026-08-06",
+    "changes": {
+      "en": ["Event Planner: Added Resource Efficiency tab", "[Suggested] Raid Ranking page: Added difficulty selection"],
+      "ko": ["이벤트 플래너: 재화 효율 탭 추가", "[건의] 총력전 순위 페이지: 난이도 선택 기능 추가"],
+      "ja": ["イベントプランナー: リソース効率タブを追加", "[要望] 総力戦ランキングページ: 難易度選択機能を追加"]
+    },
+    "to": ["/planner/event", "/charts/jp/ranking"]
+  },
+  {
+    "date": "2026-08-01",
+    "changes": {
+      "en": [
+        "Added Hermit Crab Janken Tournament Planner [beta]",
+        "Gacha Planner: Added strategy option to intentionally aim for the Recruit Count Bonus",
+        "Gacha Planner: Added Eligma distribution to the simulation result chart"
+      ],
+      "ko": ["천하게일・무술대회 플래너 [beta] 추가", "모집/가챠 플래너: 모집 보상을 의도적으로 노리는 전략 옵션 추가", "모집/가챠 플래너: 시뮬레이션 결과 차트에 엘리그마 획득 분포 추가"],
+      "ja": [
+        "天下一蟹・武術大会プランナー [beta] 追加",
+        "ガチャプランナー: 募集回数特典を意図的に狙う戦略オプションを追加",
+        "ガチャプランナー: シミュレーション結果チャートに神名のカケラ獲得分布を追加"
+      ]
+    },
+    "to": ["/planner/event/860", "/planner/gacha", "/planner/gacha"]
+  },
+  {
+    "date": "2026-07-28",
+    "changes": {
+      "en": ["Gacha Planner: Recruit Count Bonus (ticket/eligma) reflected for the Call Charge system"],
+      "ko": ["모집/가챠 플래너: 호출 충전 방식에서 모집 횟수 특전(티켓·엘리그마) 반영"],
+      "ja": ["ガチャプランナー: 呼び出しチャージ方式で募集回数特典(チケット・エリグマ)反映"]
+    },
+    "to": ["/planner/gacha"]
+  },
+  {
+    "date": "2026-07-27",
+    "changes": {
+      "en": ["Gacha Planner: Added Call Charge system — JS engine only, Recruit Count Bonus not yet implemented"],
+      "ko": ["모집/가챠 플래너: 호출 충전 방식 지원 — JS 엔진에만 구현, 모집 횟수 특전 미반영"],
+      "ja": ["ガチャプランナー: 呼び出しチャージ方式に対応 — JSエンジンのみ実装、募集回数特典は未実装"]
+    },
+    "to": ["/planner/gacha"]
+  },
+  {
+    "date": "2026-07-07",
+    "changes": {
+      "en": ["Live Dashboard: improved handling when real-time data is unavailable", "Added Raid Clear History page — track personal clear records and view statistics"],
+      "ko": ["실시간 대시보드: 실시간 데이터가 없는 경우 처리 추가", "클리어 기록 페이지 추가 — 개인 클리어 기록 저장 및 통계 확인"],
+      "ja": ["ライブダッシュボード: リアルタイムデータが存在しない場合の処理を追加", "クリア記録ページを追加 — 個人のクリア記録を保存し、統計を確認"]
+    },
+    "to": ["/live", "/my/raids"]
+  },
+  {
+    "date": "2026-07-01",
+    "changes": {
+      "en": [
+        "Added Resource Planner [beta] — plan Tactical Competition coins, student Elephs, and Eligmas (data may be unstable)",
+        "Student Growth Planner: improved student card readability and fixed an issue where the Skill Unlock tab was inaccessible",
+        "Added JP Grand Assault E34 Hovercraft top-ranking team data (from Plana Stats)",
+        "Added JP Grand Assault E34 Hovercraft overall score data",
+        "Moved difficulty filter in 'Recruitment Statistics' to a more visible location",
+        "Added shop reset warning notice on Main Page (shown starting 24h before reset)",
+        "Added Student Deployment Network Analysis (JP) page",
+        "Improved game item icon display for better visibility",
+        "Fixed mobile layout in Notice Archive — corrected broken table/image proportions and excessive side margins",
+        "Fixed Equipment/Growth Planner calculating materials for one tier above the selected target gear level"
+      ],
+      "ko": [
+        "성장 자원 플래너 [beta] 추가 — 전술대항전 코인, 학생 엘리프, 엘리그마 계획용. 데이터 불안정",
+        "학생 성장 플래너: 학생 카드 가독성 개선, 능력해방 탭 진입 불가 문제 수정",
+        "JP 대결전 E34 호버크레프트 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 대결전 E34 호버크레프트 전체 분포 데이터 추가",
+        "'채용 통계'에서 난이도별 필터를 잘 보이는 위치로 이동",
+        "상점 초기화 경고 안내문 메인 페이지에 추가 (초기화 24시간 전부터 표시)",
+        "학생 출전 네트워크 분석(JP) 페이지 추가",
+        "아이템 아이콘 표시 개선 — 더 잘 보이도록",
+        "공지사항 아카이브 모바일 레이아웃 수정 — 표·이미지 비율 깨짐 및 좌우 여백 과다 현상 해결",
+        "장비 플래너·학생 성장 플래너에서 선택한 목표 장비보다 한 티어 높은 장비로 재화를 계산하는 오류 수정"
+      ],
+      "ja": [
+        "リソースプランナー [beta] を追加 — 戦術対抗戦コイン・生徒エレフ・エリグマの計画用（データが不安定な場合あり）",
+        "生徒育成プランナー: 生徒カードの視認性を改善、スキル解放タブに入れない問題を修正",
+        "JP 大決戦E34 ホバークラフト 上位編成データをの追加 (from Plana Stats)",
+        "JP 大決戦E34 ホバークラフト 全体スコア分布データをの追加",
+        "「募集統計」の難易度別フィルターをより見やすい位置に移動",
+        "ショップリセット警告をメインページに追加（リセット24時間前から表示）",
+        "生徒出撃ネットワーク分析(JP)ページを追加",
+        "アイテムアイコンの表示を改善 — より見やすく",
+        "お知らせアーカイブのモバイルレイアウトを修正 — 表・画像の比率崩れと左右余白の過多を解消",
+        "装備プランナー・生徒育成プランナーで選択した目標装備より1ティア上の装備として素材を計算する不具合を修正"
+      ]
+    },
+    "to": ["/planner/resources", "/planner/students", "/dashboard/jp/E34?view=detail", "/dashboard/jp/E34", "/charts/jp/heatmap", "/", "/charts/jp/network", null, "/notices", "/planner/equipment"]
+  },
+  {
     "date": "2026-06-16",
     "changes": {
       "en": [
@@ -66,7 +280,7 @@
       "ko": [
         "이벤트 메인 페이지 개편 — 이벤트 목록에 모집 정보 추가",
         "일부 번역 표현 자연스럽게 수정",
-        "청휘석 및 가챠 플래너에서 청휘석 획득 수치 조정 (제약해제결전, 미니스토리)",
+        "청휘석 및 모집/가챠 플래너에서 청휘석 획득 수치 조정 (제약해제결전, 미니스토리)",
         "학생 검색창(드롭다운 메뉴)과 대시보드 필터에서 방향키·엔터로 항목 선택 가능",
         "BGM 플레이어 검색 개선 — 초성 검색 지원"
       ],
@@ -116,8 +330,8 @@
       "ko": [
         "장비 플래너 404 에러 해결 (CDN에서 파일 누락)",
         "라이브 대시보드 등수 커트라인 변화 차트 Y축 표시 오류 수정",
-        "가차 플래너 시뮬레이션 차트 개선 — 청휘석 필요량 분포 구간을 시작값 기준으로 표시",
-        "가차 플래너에서 기간이 지난 모집을 한 번에 비활성화하는 버튼 추가"
+        "모집/가챠 플래너 시뮬레이션 차트 개선 — 청휘석 필요량 분포 구간을 시작값 기준으로 표시",
+        "모집/가챠 플래너에서 기간이 지난 모집을 한 번에 비활성화하는 버튼 추가"
       ],
       "ja": [
         "装備プランナーの404エラーを修正（CDN上のファイル不足）",
@@ -148,9 +362,9 @@
         "Fixed performance issues in certain pages with slow load times"
       ],
       "ko": [
-        "가차 플래너 성능 개선 - WASM 멀티스레딩 적용 (80% 속도 증가)",
-        "가차 플래너 페스 학생 확률 계산 오류 수정",
-        "가차 시뮬레이터 UI 개선",
+        "모집/가챠 플래너 성능 개선 - WASM 멀티스레딩 적용 (80% 속도 증가)",
+        "모집/가챠 플래너 페스 학생 확률 계산 오류 수정",
+        "모집 시뮬레이터 UI 개선",
         "디자인 일관성 개선 (색상, 헤더 등)",
         "일부 페이지의 느린 로딩 성능 문제 개선"
       ],
@@ -207,7 +421,7 @@
       "ko": ["아이템 스캐너 (BETA) 기능 추가"],
       "ja": ["アイテムスキャナー (BETA) 機能の追加"]
     },
-    "to": ["/planner/item-scanner"]
+    "to": ["/scanner/item"]
   },
   {
     "date": "2026-05-21",
@@ -316,7 +530,7 @@
         "이벤트 누적 보상 UI 개선",
         "이벤트 보너스 학생 선택을 역할군별로 분류하여 개선",
         "최신 총력전에 대해 유튜브 썸네일 및 영상 설명을 활용한 관련 영상 분석 정보(BETA) 추가",
-        "가차 플래너의 성공 확률 설명 및 UX 개선",
+        "모집/가챠 플래너의 성공 확률 설명 및 UX 개선",
         "학생 플래너를 넓은 화면에 최적화하여 개선",
         "BGM 플레이어 UI 개선으로 클릭 횟수 감소"
       ],
@@ -448,7 +662,7 @@
         "Web3Forms를 이용한 제보하기 기능 추가",
         "총력전 대시보드: 파티 필터 선택 내용 보존 기능 추가",
         "총력전 대시보드: '조력자 대여 가능' 설정 시 계산 오류 수정",
-        "가챠 플래너: 하프 월간 패키지(반정액) 청휘석 개수 오류 수정",
+        "모집/가챠 플래너: 하프 월간 패키지(반정액) 청휘석 개수 오류 수정",
         "캘린더: 학생별 상세 차트 바로가기 링크 추가"
       ],
       "en": [
@@ -516,7 +730,7 @@
     "date": "2026-02-15",
     "changes": {
       "en": ["Added 'Pyroxene & Gacha Planner' (BETA)", "Added 'Relationship Rank Calculator'"],
-      "ko": ["'청휘석 및 가챠 플래너' (BETA) 추가", "'인연랭크 계산기' 추가"],
+      "ko": ["'청휘석 및 모집/가챠 플래너' (BETA) 추가", "'인연랭크 계산기' 추가"],
       "ja": ["「青輝石・ガチャ計画」(BETA) を追加", "「絆ランク計算機」を追加"]
     },
     "to": ["/planner/gacha", "utils/favor"]
@@ -577,20 +791,20 @@
     "date": "2026-01-02",
     "changes": {
       "en": [
-        "Added Chinese (Traditional) localization (Issue #4, PR #5)",
+        "[Issue #4, PR #5] Added Chinese (Traditional) localization",
         "Improved filters on the Assault dashboard",
         "Added statistics for frequently used compositions and starting hand settings in the Assault dashboard"
       ],
-      "ko": ["중국어(번체) 번역 추가 (Issue #4, PR #5)", "총력전·대결전 대시보드의 필터 개선", "총력전·대결전 대시보드에서 많이 출전한 편성과 손패 설정 통계 제공"],
-      "ja": ["中国語（繁体字）ローカライズを追加（Issue #4, PR #5）", "総力戦·大決戦ダッシュボードのフィルターを改善", "総力戦·大決戦ダッシュボードにて、使用率の高い編成と初手設定の統計を追加"],
-      "zh-Hant": ["新增繁體中文翻譯。（Issue #4, PR #5）", "改善總力戰儀表板的篩選功能", "在總力戰儀表板中提供熱門隊伍編成與起手手牌設定統計"]
+      "ko": ["[Issue #4, PR #5] 중국어(번체) 번역 추가", "총력전·대결전 대시보드의 필터 개선", "총력전·대결전 대시보드에서 많이 출전한 편성과 손패 설정 통계 제공"],
+      "ja": ["[Issue #4, PR #5] 中国語（繁体字）ローカライズを追加", "総力戦·大決戦ダッシュボードのフィルターを改善", "総力戦·大決戦ダッシュボードにて、使用率の高い編成と初手設定の統計を追加"],
+      "zh-Hant": ["[Issue #4, PR #5] 新增繁體中文翻譯。", "改善總力戰儀表板的篩選功能", "在總力戰儀表板中提供熱門隊伍編成與起手手牌設定統計"]
     }
   },
   {
     "date": "2025-12-19",
     "changes": {
       "en": [
-        "Fix: Resolved issue where pre-farmed AP was counted twice in the AP calculation (Issue #3)",
+        "[Issue #3] Fix: Resolved issue where pre-farmed AP was counted twice in the AP calculation",
         "Added Summer Sky's Promise event mini-game calculator",
         "Live Dashboard Grand Assault S29 (BETA) ended",
         "Added Favor Rank Status",
@@ -598,7 +812,7 @@
         "Added JP Grand Assault S29 overall score data"
       ],
       "ko": [
-        "수정: AP 계산에서 미리 파밍한 AP가 중복 계산되는 문제 해결 (Issue #3)",
+        "[Issue #3] 수정: AP 계산에서 미리 파밍한 AP가 중복 계산되는 문제 해결",
         "여름 하늘의 프로미스 이벤트 미니게임 계산기 추가",
         "라이브 대시보드 대결전 S29 (BETA) 종료",
         "인연 칭호 설정 현황 추가",
@@ -606,7 +820,7 @@
         "JP 대결전 S28 전체 분포 데이터 추가"
       ],
       "ja": [
-        "修正: 事前にファーミングしたAPがAP計算で重複して計算される問題を解決 (Issue #3)",
+        "[Issue #3] 修正: 事前にファーミングしたAPがAP計算で重複して計算される問題を解決",
         "追加: 夏空のやくそくイベントミニゲーム計算機の追加",
         "リアルタイムダッシュボード 大決戦S29 (BETA) 終了",
         "絆ランク称号の状況追加",
@@ -639,9 +853,9 @@
   {
     "date": "2025-11-24",
     "changes": {
-      "en": ["Fixed: Missing natural AP in the AP supply calculation (Issue #1)", "Fixed: Incorrect student ID for Mari (Idol) in the calendar schedule (Issue #2)"],
-      "ko": ["수정: AP 공급 계산에서 자연 회복 AP 누락 문제 해결 (Issue #1)", "수정: 캘린더 스케줄에서 마리(아이돌) 학생 ID 오류 해결 (Issue #2)"],
-      "ja": ["修正: AP供給計算で自然回復APが欠落していた問題を修正 (Issue #1)", "修正: カレンダーのスケジュールでマリ（アイドル）の学生ID誤りを修正 (Issue #2)"]
+      "en": ["[Issue #1] Fixed: Missing natural AP in the AP supply calculation", "[Issue #2] Fixed: Incorrect student ID for Mari (Idol) in the calendar schedule"],
+      "ko": ["[Issue #1] 수정: AP 공급 계산에서 자연 회복 AP 누락 문제 해결", "[Issue #2] 수정: 캘린더 스케줄에서 마리(아이돌) 학생 ID 오류 해결"],
+      "ja": ["[Issue #1] 修正: AP供給計算で自然回復APが欠落していた問題を修正", "[Issue #2] 修正: カレンダーのスケジュールでマリ（アイドル）の学生ID誤りを修正"]
     }
   },
   {

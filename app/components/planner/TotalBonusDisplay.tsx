@@ -57,16 +57,16 @@ export const TotalBonusDisplay = ({ eventData, iconData, totalBonus, allStudents
         .filter((s): s is NonNullable<typeof s> => s !== null);
 
       // Separate into Main (Striker) and Support (Special)
-      const strikers = relevantStudents.filter((s) => s.squadType === 'Main');
-      const specials = relevantStudents.filter((s) => s.squadType === 'Support');
+      const m = relevantStudents.filter((s) => s.squadType === 'Main');
+      const s = relevantStudents.filter((s) => s.squadType === 'Support');
 
       // Sort descending by bonus value
-      strikers.sort((a, b) => b.bonusValue - a.bonusValue);
-      specials.sort((a, b) => b.bonusValue - a.bonusValue);
+      m.sort((a, b) => b.bonusValue - a.bonusValue);
+      s.sort((a, b) => b.bonusValue - a.bonusValue);
 
       // Sum: Top 4 Strikers + Top 2 Specials
-      const topStrikers = strikers.slice(0, 4);
-      const topSpecials = specials.slice(0, 2);
+      const topStrikers = m.slice(0, 4);
+      const topSpecials = s.slice(0, 2);
 
       const totalStrikersBonus = topStrikers.reduce((sum, s) => sum + s.bonusValue, 0);
       const totalSpecialsBonus = topSpecials.reduce((sum, s) => sum + s.bonusValue, 0);

@@ -1,7 +1,7 @@
 // src/components/EventInfo.tsx
 
 import { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import eventListJson from '~/data/jp/eventList.json';
 import type { EventListData } from '~/types/eventList';
 import { getlocaleMethond } from './common/locale';
@@ -53,12 +53,12 @@ export function eventTagTranslation(tag: string, t: TFunction<'planner'>) {
   else if (tag == 'ClueSearch') return `${t('ui.minigame')} - ${t('minigame.clue_search')}`;
   else if (tag == 'MiniGameRoad') return `${t('ui.minigame')} - ${t('minigame.minigame_road')}`;
   else if (tag == 'MiniGameShooting') return `${t('ui.minigame')} - ${t('minigame.minigame_shooting')}`;
+  else if (tag == 'MinigameJanken') return `${t('ui.minigame')} - ${t('minigame.minigame_janken')}`;
   else if (tag == 'InteractiveWorldRaid') return t('minigame.interactive_world_raid');
   return tag;
 }
 
 export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeStr }: EventInfoProps) => {
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation('planner');
   const { t: t_c } = useTranslation('common');
   const { t: t_d } = useTranslation('dashboard');
@@ -111,14 +111,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
     };
   }, [eventId, sortedEvents, name]);
 
-  const handleEventChange = (id: number) => {
-    if (id) {
-      void navigate(localeLink(locale, `/planner/event/${id}`));
-    }
-  };
-
-  const handleSelectEvent = (id: number) => {
-    handleEventChange(id);
+  const handleSelectEvent = () => {
     setIsPickerOpen(false);
     setSearchTerm('');
   };
@@ -128,7 +121,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
       <time dateTime={s} suppressHydrationWarning>
         {formatInTimeZone(s).toLocaleString()}
       </time>{' '}
-      {locale == 'en' ? '-' : '~'}{' '}
+      {locale == 'en' ? '—' : '~'}{' '}
       <time dateTime={e} suppressHydrationWarning>
         {formatInTimeZone(e).toLocaleString()}
       </time>
@@ -209,7 +202,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
           ${isPickerOpen ? 'bottom-0 translate-y-0 sm:bottom-auto sm:translate-y-[-50%]' : 'translate-y-full sm:translate-y-[-40%] sm:opacity-0 sm:hidden'}
         `}
       >
-        <div className="flex flex-col max-h-[80vh]">
+        <div className="flex flex-col h-[80vh]">
           <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700 p-4">
             <h2 className="text-lg font-semibold flex items-center gap-2 whitespace-nowrap">
               <HiArrowsRightLeft className="h-4 w-4" />
@@ -253,13 +246,16 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
 
                 return (
                   <li key={event.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectEvent(event.id % 100000)}
+                    <Link
+                      to={localeLink(locale, `/planner/event/${event.id % 100000}`)}
+                      onClick={handleSelectEvent}
                       className={`flex w-full flex-col rounded-md p-3 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 group ${event.id % 100000 === eventId ? 'bg-neutral-100 dark:bg-neutral-700' : ''}`}
                     >
                       <div className="flex items-center gap-2 max-w-full">
-                        <span className={`truncate flex-1 text-neutral-900 dark:text-neutral-100 ${event.id % 100000 === eventId ? 'font-bold' : 'font-medium'}`}>
+                        <span
+                          className={`truncate flex-1 text-neutral-900 dark:text-neutral-100 ${event.id % 100000 === eventId ? 'font-bold' : 'font-medium'}`}
+                          title={(((event.id / 10000) | 0) == 1 ? `[${t('common.rerun')}] ` : '') + event.name}
+                        >
                           {(((event.id / 10000) | 0) == 1 ? `[${t('common.rerun')}] ` : '') + event.name}
                         </span>
                       </div>
@@ -286,7 +282,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
                           </span>
                         )}
                       </span>
-                    </button>
+                    </Link>
                   </li>
                 );
               })

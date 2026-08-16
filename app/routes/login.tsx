@@ -1,19 +1,23 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { redirect, Link, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { Route } from './+types/login';
 import { LoginForm } from '~/components/auth/LoginForm';
 import { MagicLinkForm } from '~/components/auth/MagicLinkForm';
 import { GithubButton } from '~/components/auth/GithubButton';
-import { PasskeyLoginButton } from '~/components/auth/PasskeyLoginButton';
 import { localeLink } from '~/utils/localeLink';
+import { magicLinkLogin } from '~/data/livedataServer.json';
 import { env } from 'cloudflare:workers';
 import { getInstance } from '~/middleware/i18next';
 import { createMetaDescriptor, createLinkHreflang } from '~/components/head';
+import { createInternalSessionRequest } from '~/utils/internalSessionRequest';
+
+// WebAuthn only works client-side, so this is excluded from the SSR bundle entirely.
+const PasskeyLoginButton = lazy(() => import('~/components/auth/PasskeyLoginButton.client').then((m) => ({ default: m.PasskeyLoginButton })));
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   try {
-    const resp = await env.AUTH_WORKER.fetch(new Request(new URL('/__internal/session', request.url), { headers: request.headers }));
+    const resp = await env.AUTH_WORKER.fetch(createInternalSessionRequest(request, params.locale));
     if (resp.status === 200) return redirect(localeLink(params.locale, '/settings'));
   } catch {}
   const i18n = getInstance(context);
@@ -47,15 +51,17 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-          <MethodTabs method={method} onChange={setMethod} />
+          {magicLinkLogin && <MethodTabs method={method} onChange={setMethod} />}
 
           <div className="p-6 space-y-5">
-            {method === 'password' ? <LoginForm /> : <MagicLinkForm />}
+            {magicLinkLogin && method === 'magic-link' ? <MagicLinkForm /> : <LoginForm />}
 
             <Divider />
 
             <GithubButton />
-            <PasskeyLoginButton />
+            <Suspense fallback={null}>
+              <PasskeyLoginButton enableAutofill={!magicLinkLogin || method === 'password'} />
+            </Suspense>
 
             <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
               {t('common.noAccount')}{' '}
@@ -63,6 +69,7 @@ export default function LoginPage() {
                 {t('common.signUp')}
               </Link>
             </p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 text-center">{t('signup.benefits.noLoginNote')}</p>
           </div>
         </div>
       </div>

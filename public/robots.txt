@@ -1,10 +1,12 @@
 User-agent: *
 Content-Signal: ai-train=no, search=yes, ai-input=no
+Sitemap: https://yuzutrends.app/sitemap.xml
 Disallow: /
 Allow: /$
 Allow: /charts/
 Allow: /dashboard/
 Allow: /planner/
+Allow: /scanner/
 Allow: /utils/
 Allow: /calendar/
 Allow: /notices$
@@ -14,6 +16,7 @@ Allow: /ko$
 Allow: /ko/charts/
 Allow: /ko/dashboard/
 Allow: /ko/planner/
+Allow: /ko/scanner/
 Allow: /ko/utils/
 Allow: /ko/calendar/
 Allow: /ko/notices$
@@ -23,6 +26,7 @@ Allow: /ja$
 Allow: /ja/charts/
 Allow: /ja/dashboard/
 Allow: /ja/planner/
+Allow: /ja/scanner/
 Allow: /ja/utils/
 Allow: /ja/calendar/
 Allow: /ja/notices$
@@ -32,6 +36,7 @@ Allow: /zh-Hant$
 Allow: /zh-Hant/charts/
 Allow: /zh-Hant/dashboard/
 Allow: /zh-Hant/planner/
+Allow: /zh-Hant/scanner/
 Allow: /zh-Hant/utils/
 Allow: /zh-Hant/calendar/
 Allow: /zh-Hant/notices$

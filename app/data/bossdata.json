@@ -209,6 +209,16 @@
     "teran": "Street",
     "armorType": "HeavyArmor"
   },
+  "HOD_Indoor": {
+    "name": {
+      "ko": "호드",
+      "ja": "ホド",
+      "en": "HOD",
+      "zh_Hant": "霍德"
+    },
+    "teran": "Indoor",
+    "armorType": "HeavyArmor"
+  },
   "EN0006": {
     "name": {
       "ko": "쿠로카게",

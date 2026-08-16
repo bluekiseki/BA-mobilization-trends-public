@@ -55,6 +55,7 @@ interface GlobalState {
   resetOwnedGifts: () => void;
   togglePlanSelection: (uuid: string) => void;
   selectAllPlans: (selected: boolean) => void;
+  addPlanForStudent: (studentId: number, currentStar?: number, targetStar?: number) => string;
   materialInventory: Record<string, number>;
   updateMaterialInventory: (key: string, amount: number) => void;
   resetMaterialInventory: () => void;
@@ -117,6 +118,37 @@ export const useGlobalStore = create<GlobalState>()(
             price: 1,
             stock: 20,
           },
+          isSelected: true,
+        };
+        set({ growthPlans: [...get().growthPlans, newPlan] });
+        return newPlan.uuid;
+      },
+      addPlanForStudent: (studentId, currentStar = 1, targetStar = 5) => {
+        const existing = get().growthPlans.find((p) => p.studentId === studentId);
+        if (existing) return existing.uuid;
+        const newPlan: GrowthPlan = {
+          uuid: `${Date.now()}-${(Math.random() * 1e9) | 0}`,
+          studentId,
+          current: {
+            level: 1,
+            star: currentStar,
+            uw: 0,
+            uwLevel: 1,
+            ex: 1,
+            normal: 1,
+            passive: 1,
+            sub: 1,
+            eleph: 0,
+            affection: 1,
+            affectionExp: 0,
+            equipment: [0, 0, 0],
+            gear: 0,
+            potential: { hp: 0, atk: 0, heal: 0 },
+          },
+          target: { level: 1, star: targetStar, uw: 0, uwLevel: 1, ex: 1, normal: 1, passive: 1, sub: 1, affection: 1, equipment: [0, 0, 0], gear: 0, potential: { hp: 0, atk: 0, heal: 0 } },
+          includedInEvents: [],
+          useEligmaForStar: false,
+          eligmaInfo: { price: 1, stock: 20 },
           isSelected: true,
         };
         set({ growthPlans: [...get().growthPlans, newPlan] });

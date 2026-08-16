@@ -129,7 +129,7 @@ describe('All map solver', () => {
         console.log(`${name}: no data (skipped)`);
         return;
       }
-      const result = solveRoadPuzzle(mapData.grid, mapData.rowOffset, undefined, mapData.goalEntry);
+      const result = solveRoadPuzzle(mapData.grid, mapData.rowOffset, undefined, mapData.goalEntry, mapData.startEntry);
       if (result.found) {
         console.log(`${name}: tiles=${result.minTiles} path=${result.path.length} counts=${JSON.stringify(result.tileCounts)}`);
       } else {

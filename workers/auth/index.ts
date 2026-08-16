@@ -1,5 +1,6 @@
 import { getOrCreateAuth, checkRateLimit } from './auth';
 import { getOrCreateYogaServer } from './graphql';
+import { getDefaultProfileServer, getSupportedProfileLocale } from '../../app/utils/profileServer';
 import { validatePassword } from './password-validate';
 import { hashPassword } from 'better-auth/crypto';
 
@@ -145,6 +146,27 @@ function safeJsonScript(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
 }
 
+function getRequestedLocale(request: Request): string {
+  const urlLocale = getSupportedProfileLocale(new URL(request.url).searchParams.get('locale') ?? undefined);
+  if (urlLocale) return urlLocale;
+
+  const localeCookie = request.headers
+    .get('cookie')
+    ?.split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('lng='))
+    ?.slice(4);
+  const cookieLocale = getSupportedProfileLocale(localeCookie ? decodeURIComponent(localeCookie) : undefined);
+  if (cookieLocale) return cookieLocale;
+
+  const headerLocales =
+    request.headers
+      .get('accept-language')
+      ?.split(',')
+      .map((value) => value.split(';')[0]?.trim()) ?? [];
+  return headerLocales.map((locale) => getSupportedProfileLocale(locale)).find((locale) => locale !== undefined) ?? 'en';
+}
+
 async function handleInternalSession(request: Request, env: Env): Promise<Response> {
   const auth = getOrCreateAuth(env);
   const session = await auth.api.getSession({ headers: request.headers });
@@ -156,17 +178,18 @@ async function handleInternalSession(request: Request, env: Env): Promise<Respon
   if (profiles.length === 0) {
     const profileId = crypto.randomUUID();
     const now = Math.floor(Date.now() / 1000);
+    const defaultServer = getDefaultProfileServer(getRequestedLocale(request));
     const result = await env.ba_user
       .prepare(
         `INSERT INTO user_profiles (id, user_id, name, server, is_default, sort_order, created_at, updated_at)
-         SELECT ?, ?, 'Default', 'jp', 1, 0, ?, ?
+         SELECT ?, ?, 'Default', ?, 1, 0, ?, ?
          WHERE NOT EXISTS (SELECT 1 FROM user_profiles WHERE user_id = ?)`,
       )
-      .bind(profileId, session.user.id, now, now, session.user.id)
+      .bind(profileId, session.user.id, defaultServer, now, now, session.user.id)
       .run();
 
     if (result.meta.changes > 0) {
-      profiles = [{ id: profileId, user_id: session.user.id, name: 'Default', server: 'jp', is_default: 1, sort_order: 0, created_at: now, updated_at: now }];
+      profiles = [{ id: profileId, user_id: session.user.id, name: 'Default', server: defaultServer, is_default: 1, sort_order: 0, created_at: now, updated_at: now }];
     } else {
       const retry = await env.ba_user.prepare('SELECT * FROM user_profiles WHERE user_id = ? ORDER BY sort_order').bind(session.user.id).all();
       profiles = retry.results ?? [];

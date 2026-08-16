@@ -3,19 +3,20 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaSpinner } from 'react-icons/fa';
 
-import { parseAndGroupBanners, getAllStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
+import { parseAndGroupBanners, getAllStudents, normalizePortraitMap, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import type { Student } from '~/types/gacha';
 import { PageHeader } from '~/components/common/PageHeader';
 import IncomePlannerPanel_v2, { type CustomIncome } from '~/components/gacha/IncomePlannerPanel_v2';
 import BannerPlanner_v2 from '~/components/gacha/BannerPlanner_v2';
 import PyroTimelineChart, { type ProbTimelinePoint, type CustomLineConfig, type BannerStudentMarker } from '~/components/gacha/PyroTimelineChart';
 
-import { loadScheduleData, type ScheduleItem } from '~/utils/calender.data';
+import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
+import { getItemTitle } from '~/utils/scheduleDisplay';
 import { getInstance } from '~/middleware/i18next';
 import type { GameServer } from '~/types/data';
 import { data, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import type { Locale } from '~/utils/i18n/config';
-import { calculatePyroxeneTimeline, getCdfByBinValue, getBinStartByCdf, PYROXENE_PER_EVENT, PYROXENE_PER_MAIN_STORY, type PlannerSchedule, type SimulationStats } from '~/utils/pyroxeneCalc';
+import { calculatePyroxeneTimeline, getCdfByBinValue, getBinStartByCdf, getEventPyroxeneReward, PYROXENE_PER_MAIN_STORY, type PlannerSchedule, type SimulationStats } from '~/utils/pyroxeneCalc';
 import type { GlobalAggregatedResult, DistributionData } from '~/utils/gachaEngine';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
@@ -26,6 +27,7 @@ import PlannerGuide, { GUIDE_STORAGE_KEY } from '~/components/gacha/PlannerGuide
 import { useSyncStore } from '~/store/syncStore';
 import { localeLink } from '~/utils/localeLink';
 import type { AppHandle } from '~/types/link';
+import { useGachaResultStore } from '~/store/planner/useGachaResultStore';
 
 export interface PyroxeneConfig {
   currentPyroxene: number;
@@ -69,14 +71,8 @@ export function loader({ request, context }: LoaderFunctionArgs) {
   const server = (url.searchParams.get('server') as GameServer) || 'kr';
 
   const i18n = getInstance(context);
-  const locale = (i18n.language as Locale) || 'ko';
 
-  const scheduleData = loadScheduleData({
-    server: server,
-    locale,
-    i18n,
-    tracksToLoad: 'all',
-  });
+  const scheduleData = loadScheduleDataV2({ server, tracksToLoad: 'all' });
 
   return data({
     siteTitle: i18n.t('common:title'),
@@ -120,11 +116,12 @@ const GACHA_PREFS_DEFAULT = {
 
 function isStrategyModified(s: BannerStrategy): boolean {
   if (s.isActive) return true;
-  if (s.maxSparks !== 1 || s.minPulls !== 0 || s.maxPulls !== 200 || s.freePulls !== 0) return true;
+  if (s.maxSparks !== 1 || (s.maxHalfCharges ?? 2) !== 2 || s.minPulls !== 0 || s.maxPulls !== 200 || s.freePulls !== 0) return true;
+  if (s.claimRecruitBonus ?? false) return true;
   return Object.values(s.studentConfigs).some((cfg) => cfg.mode !== 'skip');
 }
 
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 
 function SectionDivider({ label, right }: { label: string; right?: React.ReactNode }) {
   return (
@@ -153,7 +150,8 @@ export default function GachaMain() {
   const { scheduleData } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: t_planner } = useTranslation('planner');
-  const { t: t_cal } = useTranslation('calendar');
+  useTranslation('calendar'); // Load schedule labels for mini stories and joint firing drills.
+  useTranslation('jukebox'); // Load main story title translations for the income timeline.
   const locale = i18n.language as Locale;
 
   const syncPush = useSyncStore((s) => s.push);
@@ -196,7 +194,12 @@ export default function GachaMain() {
 
   const [_error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [gachaSimResult, setGachaSimResult] = useState<GlobalAggregatedResult | null>(null);
+  const [gachaSimResult, setGachaSimResultLocal] = useState<GlobalAggregatedResult | null>(null);
+  const { setResult: setGachaResultStore } = useGachaResultStore();
+  const setGachaSimResult = (result: GlobalAggregatedResult | null) => {
+    setGachaSimResultLocal(result);
+    setGachaResultStore(result);
+  };
 
   const [apOverrides, setApOverrides] = useState<Record<string, number>>({});
 
@@ -207,31 +210,22 @@ export default function GachaMain() {
     const result: PlannerSchedule[] = [];
     const toYMD = (dateStr: string) => (dateStr ? dateStr.split('T')[0] : '');
 
-    const t_cal_dynamic = t_cal as (key: string) => string;
-    const mapItems = (items: ScheduleItem[], type: PlannerSchedule['type']) => {
+    const mapItems = (items: ScheduleItemV2[], type: PlannerSchedule['type']) => {
       if (!items) return;
       items.forEach((item) => {
-        if (type === 'Campaign') {
-          if (item.type === 'campaign' && item.details?.campaignType) {
-            const rawTitle = t_cal_dynamic(`campaign.${item.details.campaignType.toLowerCase()}`);
-            const multiplier = item.title.split(' x')[1];
-            item.title = multiplier ? `${rawTitle} x${multiplier}` : rawTitle;
-          }
-        }
+        const title = getItemTitle(item, locale, i18n);
         let amount: undefined | number = undefined;
         let isApEvent: boolean | undefined = undefined;
         if (type === 'Event') {
           const event_season = Number(item.id.split('-')[1]);
-          amount = event_season in PYROXENE_PER_EVENT ? PYROXENE_PER_EVENT[event_season] : 1800;
+          amount = getEventPyroxeneReward(event_season);
           isApEvent = (event_season >= 800 && event_season <= 899) || (event_season >= 10800 && event_season <= 10899);
         }
         if (type === 'MainStory') {
-          amount = item.title.trim() in PYROXENE_PER_MAIN_STORY ? PYROXENE_PER_MAIN_STORY[item.title.trim()] : 100;
+          amount = title.trim() in PYROXENE_PER_MAIN_STORY ? PYROXENE_PER_MAIN_STORY[title.trim()] : 100;
         }
         const campaignType = type === 'Campaign' ? item.details?.campaignType : undefined;
-        const multiplierStr = type === 'Campaign' ? item.title.split(' x')[1] : undefined;
-        const multiplier = multiplierStr ? Number(multiplierStr) : undefined;
-        result.push({ id: item.id, name: item.title, start: toYMD(item.startTime), end: toYMD(item.endTime), type, amount, campaignType, multiplier, isApEvent });
+        result.push({ id: item.id, name: title, start: toYMD(item.startTime), end: toYMD(item.endTime), type, amount, campaignType, multiplier: item.details?.multiplier, isApEvent });
       });
     };
 
@@ -255,7 +249,7 @@ export default function GachaMain() {
     if (tracks['maintenance']) mapItems(tracks['maintenance'], 'Maintenance');
 
     return result;
-  }, [scheduleData, t_cal]);
+  }, [scheduleData, locale, i18n]);
 
   const { timeline: baseTimeline, stats } = useMemo(() => {
     return calculatePyroxeneTimeline(incomeConfig, plannerSchedules, {
@@ -373,8 +367,8 @@ export default function GachaMain() {
         ]);
         if (!studentRes.ok) throw new Error(t('errors.load_students'));
         const rawStudentData: SchaleStudent[] | Record<string, SchaleStudent> = await studentRes.json();
-        const rawPortraitData: Record<number, string> = portraitRes.ok ? await portraitRes.json() : {};
-        setPortraitMap(rawPortraitData);
+        const rawPortraitData: Record<string, string> = portraitRes.ok ? await portraitRes.json() : {};
+        setPortraitMap(normalizePortraitMap(rawPortraitData));
         if (iconImgRes.ok) {
           const iconImgData: Record<string, Record<string, string>> = await iconImgRes.json();
           if (iconImgExtraRes.ok) {
@@ -395,7 +389,7 @@ export default function GachaMain() {
         });
         const loadedBanners = parseAndGroupBanners(server, studentMap);
         setBanners(loadedBanners);
-        setAllStudents(getAllStudents(studentMap) as unknown as Student[]);
+        setAllStudents(withPickupFallbackStudents(getAllStudents(studentMap), loadedBanners) as unknown as Student[]);
         setStrategies(() => {
           let saved = savedStrategiesRef.current;
           if (Object.keys(saved).length === 0) {
@@ -416,7 +410,19 @@ export default function GachaMain() {
               b.pickupStudents.forEach((s, idx) => {
                 configs[s.id] = { studentId: s.id, priority: idx + 1, mode: 'skip', opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 };
               });
-              next[b.id] = { bannerId: b.id, isActive: false, maxSparks: 1, minPulls: 0, studentConfigs: configs, freePulls: 0, maxPulls: 200, isFes: false };
+              next[b.id] = {
+                bannerId: b.id,
+                isActive: false,
+                maxSparks: 1,
+                maxHalfCharges: 2,
+                minPulls: 0,
+                studentConfigs: configs,
+                freePulls: 0,
+                maxPulls: 200,
+                isFes: false,
+                claimRecruitBonus: false,
+                recruitBonusThreshold: 10,
+              };
             }
           });
           return next;
@@ -450,9 +456,10 @@ export default function GachaMain() {
 
   // ── Derived KPI values ──
   const activeStrategyCount = Object.values(strategies).filter((s) => s.isActive).length;
-  const lastPoint = probTimeline.length > 0 ? probTimeline[probTimeline.length - 1] : null;
-  const finalBalance = lastPoint?.pyroxeneAvg ?? null;
-  const fmt = (n: number) => Math.round(n).toLocaleString();
+  const p90Balance = gachaSimResult && probTimeline.length > 0 ? Math.min(...probTimeline.map((point) => point.pyroxeneLow)) : null;
+  const failedUsersPerHundred = bankruptcyRate === null ? null : Math.round(bankruptcyRate);
+  const numberLocale = locale.replace('_', '-');
+  const fmt = (n: number) => Math.round(n).toLocaleString(numberLocale);
 
   return (
     <div className="py-4 sm:py-6 px-2 sm:px-4 min-h-screen">
@@ -511,17 +518,21 @@ export default function GachaMain() {
             {t('current_balance_input')}
           </div>
           <input
-            type="number"
-            min={0}
-            step={100}
-            value={incomeConfig.currentPyroxene}
-            onChange={(e) => setIncomeConfig((prev) => ({ ...prev, currentPyroxene: Math.max(0, Number(e.target.value) || 0) }))}
-            className="text-[26px] font-black tabular-nums leading-none bg-transparent border-none outline-none w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            style={{ ...monoStyle, color: '#77e0ff' }}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            aria-label={t('current_balance_input')}
+            value={fmt(incomeConfig.currentPyroxene)}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/[^0-9]/g, '');
+              setIncomeConfig((prev) => ({ ...prev, currentPyroxene: digits ? Number(digits) : 0 }));
+            }}
+            className="min-w-0 w-full text-[26px] font-black tabular-nums leading-none bg-transparent border-none outline-none"
+            style={{ ...monoStyle, color: '#77e0ff', fontSize: '26px', WebkitTextSizeAdjust: '100%' }}
           />
         </div>
 
-        {/* Balance P50 after 150 days */}
+        {/* P90 balance at the tightest point in the plan */}
         <div className="px-4 py-3">
           <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1 flex items-center gap-1" style={monoStyle}>
             {pyroxeneIcon && (
@@ -529,10 +540,14 @@ export default function GachaMain() {
                 <img src={`data:image/webp;base64,${pyroxeneIcon}`} className="max-w-full max-h-full object-cover" />
               </span>
             )}
-            {t('balance_p50', { days: SIMULATION_DAYS })}
+            {t('balance_p90')}
           </div>
-          <div className="text-[26px] font-black tabular-nums leading-none text-neutral-800 dark:text-neutral-100" style={monoStyle}>
-            {finalBalance !== null ? fmt(finalBalance) : '—'}
+          <div
+            className={`flex items-baseline gap-1.5 ${p90Balance === null ? 'text-neutral-400 dark:text-neutral-500' : p90Balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
+            style={monoStyle}
+          >
+            <span className="text-[26px] font-black tabular-nums leading-none">{p90Balance !== null ? `${p90Balance < 0 ? '-' : '+'}${fmt(Math.abs(p90Balance))}` : '—'}</span>
+            {p90Balance !== null && <span className="text-[11px] font-bold">{t(p90Balance < 0 ? 'balance_shortfall' : 'balance_surplus')}</span>}
           </div>
         </div>
 
@@ -554,6 +569,7 @@ export default function GachaMain() {
           <div className="text-[26px] font-black tabular-nums leading-none" style={{ ...monoStyle, color: bankruptcyRate !== null ? bankruptcyColor(bankruptcyRate) : '#a3a3a3' }}>
             {bankruptcyRate !== null ? `${(100 - bankruptcyRate).toFixed(1)}%` : '—'}
           </div>
+          {failedUsersPerHundred !== null && <div className="mt-1.5 text-[11px] leading-tight text-neutral-500 dark:text-neutral-400">{t('failure_out_of_100', { count: failedUsersPerHundred })}</div>}
         </div>
       </div>
 

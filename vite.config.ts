@@ -2,7 +2,6 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import vitePluginObfuscator from './plugin/vite-plugin-obfuscator';
-import { cloudflareDevProxy } from '@react-router/dev/vite/cloudflare';
 import { defineConfig } from 'vite';
 // import tsconfigPaths from 'vite-tsconfig-paths';
 import { domain } from './app/data/livedataServer.json';
@@ -61,15 +60,13 @@ export default defineConfig(({ isSsrBuild, command }) => ({
       viteEnvironment: { name: 'ssr' },
       ...(command === 'serve' ? { auxiliaryWorkers: [{ configPath: './wrangler.auth.jsonc' }] } : {}),
     }), // for cloudflare
-    cloudflareDevProxy({
-      configPath: 'wrangler.jsonc', // (If the filename is wrangler.json, please use that)
-    }),
     tailwindcss(),
     reactRouter(),
     // tsconfigPaths(),
     // visualizer({
-    //   open: true, // When the build is completed, the report automatically appears in the browser.
-    //   filename: 'bundle-report.html',
+    //   open: false,
+    //   gzipSize: true,
+    //   filename: isSsrBuild ? 'bundle-report-server.html' : 'bundle-report-client.html',
     // }),
     removeWasmPlugin(),
 
@@ -105,9 +102,6 @@ export default defineConfig(({ isSsrBuild, command }) => ({
         },
       }),
   ],
-  ssr: {
-    noExternal: ['posthog-js', '@posthog/react'],
-  },
   build: {
     // target: "esnext",
     sourcemap: false,
@@ -143,6 +137,6 @@ export default defineConfig(({ isSsrBuild, command }) => ({
     tsconfigPaths: true,
   },
   optimizeDeps: {
-    exclude: ['onnxruntime-web'],
+    exclude: ['onnxruntime-web', 'isbot'],
   },
 }));

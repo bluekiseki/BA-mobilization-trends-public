@@ -141,10 +141,21 @@ export const FavorPlannerPage = () => {
   }, [locale]);
 
   // Handlers
-  const handleStudentSelect = useCallback((studentId: number) => {
-    setSelectedStudentId(studentId);
-    setLocalPlan(DEFAULT_PLAN_TEMPLATE); // Reset to default on new selection
-  }, []);
+  const handleStudentSelect = useCallback(
+    (studentId: number) => {
+      setSelectedStudentId(studentId);
+      const existingPlan = growthPlans.find((p) => p.studentId === studentId);
+      setLocalPlan(
+        existingPlan
+          ? {
+              current: { affection: existingPlan.current.affection, affectionExp: existingPlan.current.affectionExp },
+              target: { affection: existingPlan.target.affection },
+            }
+          : DEFAULT_PLAN_TEMPLATE,
+      );
+    },
+    [growthPlans],
+  );
 
   const handlePlanChange = useCallback((field: string, value: string | number | boolean) => {
     setLocalPlan((prev) => {

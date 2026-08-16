@@ -8,8 +8,15 @@ export const StudentIcon: React.FC<{
   character?: Character;
   student?: Student;
   portraitData: PortraitData;
-}> = React.memo(({ character, student, portraitData }) => {
+  grayscale?: boolean;
+  teamMemberCount?: 6 | 10;
+  size?: 'default' | 'responsive';
+}> = React.memo(({ character, student, portraitData, grayscale = false, teamMemberCount = 6, size = 'default' }) => {
   const imageUrl = character ? (portraitData[character?.id] ? `data:image/webp;base64,${portraitData[character?.id]}` : null) : null;
+  const isBackHalfMulligan = typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= (teamMemberCount === 10 ? 5 : 3);
+  const isFrontHalfMulligan = character?.isMulligan || (typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= 0 && character.mulliganIndex < (teamMemberCount === 10 ? 5 : 3));
+  const outerSizeClassName = size === 'responsive' ? 'basis-12 min-w-12 sm:basis-14 sm:min-w-10 xl:basis-16 xl:min-w-16' : 'basis-14 min-w-10';
+  const innerSizeClassName = size === 'responsive' ? 'max-w-12 max-h-12 sm:max-w-14 sm:max-h-14 xl:max-w-16 xl:max-h-16' : 'max-w-14 max-h-14';
 
   const [showTooltip, setShowTooltip] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +36,7 @@ export const StudentIcon: React.FC<{
   return (
     <div
       ref={ref}
-      className="relative w-full flex flex-col items-center grow-0 shrink basis-14 min-w-10 shadow-xl/10 rounded-sm"
+      className={`relative w-full flex flex-col items-center grow-0 shrink rounded-sm ${outerSizeClassName}`}
       // onClick={() => setShowTooltip(!showTooltip)}
       onMouseEnter={() => setShowTooltip(true)}
       onFocus={() => setShowTooltip(true)}
@@ -37,16 +44,16 @@ export const StudentIcon: React.FC<{
       onBlur={() => setShowTooltip(false)}
     >
       <div
-        className={`relative w-full aspect-square rounded-sm max-w-14 max-h-14 ${
-          typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= 3
+        className={`relative w-full aspect-square rounded-sm ${innerSizeClassName} ${
+          isBackHalfMulligan
             ? 'ring-2 dark:ring-1 ring-blue-400 dark:ring-[#71fdff]'
-            : character?.isMulligan || (typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= 0 && character.mulliganIndex < 3)
+            : isFrontHalfMulligan
               ? 'ring-2 dark:ring-1 ring-yellow-500 dark:ring-yellow-200'
               : 'border-0 border-neutral-400 dark:border-neutral-500'
-        } z-5 overflow-hidden`}
+        } z-5 overflow-hidden ${grayscale ? 'grayscale opacity-50' : ''}`}
         style={{}}
       >
-        <img src={imageUrl ? imageUrl : Transparent_Image} alt={student?.Name} className={`w-full h-full mb-0.5 rounded-sm bg-sky-50 dark:bg-neutral-700`} />
+        <img src={imageUrl ? imageUrl : Transparent_Image} alt={student?.Name} className="w-full h-full mb-0.5 rounded-sm bg-neutral-50 dark:bg-neutral-700" />
         <div
           className="h-1 w-full absolute bottom-0 "
           style={{
@@ -103,9 +110,9 @@ export const StudentIcon: React.FC<{
             lineHeight: 1,
             padding: '2px 2.5px',
             borderRadius: '2px',
-            color: character.mulliganIndex >= 3 ? '#153f5b' : '#80522d',
-            backgroundColor: character.mulliganIndex >= 3 ? '#5cc8fa' : '#fff26a',
-            border: `1px solid ${character.mulliganIndex >= 3 ? '#377dcf' : '#ec9c4e'}`,
+            color: isBackHalfMulligan ? '#153f5b' : '#80522d',
+            backgroundColor: isBackHalfMulligan ? '#5cc8fa' : '#fff26a',
+            border: `1px solid ${isBackHalfMulligan ? '#377dcf' : '#ec9c4e'}`,
             boxShadow: '0 1px 2px rgba(0,0,0,0.35)',
           }}
         >
@@ -113,7 +120,7 @@ export const StudentIcon: React.FC<{
         </div>
       )}
       {showTooltip && student?.Name && (
-        <div className="absolute bottom-full left-1/2 z-100 mb-2 w-max -translate-x-1/2 rounded bg-neutral-800 px-2 py-1 text-xs text-white shadow-lg dark:bg-black">
+        <div className="absolute bottom-full left-1/2 z-100 mb-2 w-max -translate-x-1/2 rounded bg-neutral-800 px-2 py-1 text-xs text-white dark:bg-black">
           {student.Name}
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-neutral-800 dark:border-t-black"></div>
         </div>

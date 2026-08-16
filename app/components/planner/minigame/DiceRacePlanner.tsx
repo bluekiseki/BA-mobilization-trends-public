@@ -30,7 +30,7 @@ export type DiceRaceResult = {
   rewards: Record<string, number>;
 };
 
-const runSimulation = (
+export const runSimulation = (
   diceRaceData: EventData['dice_race'],
   simConfig: DiceRaceSimConfig,
   eventData: WithNonNullable<EventData, 'currency' | 'dice_race'>, // currency data for checking fixed dice

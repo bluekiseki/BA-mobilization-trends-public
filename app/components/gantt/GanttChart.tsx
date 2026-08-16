@@ -2,9 +2,9 @@ import { useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
-import type { ScheduleItem } from '~/utils/calender.data';
+import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
 import type { Locale } from '~/utils/i18n/config';
-import { MS_PER_HOUR, CAMPAIGN_COLORS } from './constants';
+import { MS_PER_HOUR, BASE_PIXELS_PER_HOUR, CAMPAIGN_COLORS } from './constants';
 import { GanttTrack } from './GanttRenderers';
 import type { GanttControllerReturn } from './useGanttController';
 
@@ -24,11 +24,11 @@ interface MonthlyMarker {
 export interface GanttChartProps {
   // 1. Data Props
   data: {
-    tracks: Record<string, ScheduleItem[]>;
+    tracks: Record<string, ScheduleItemV2[]>;
     timeRange: { min: number; max: number };
     studentData: Record<number, Student> | null;
     studentPortraits: StudentPortraitData | null;
-    birthdayTrackItems: ScheduleItem[];
+    birthdayTrackItems: ScheduleItemV2[];
   };
 
   // 2. Controller Props (Spread Object)
@@ -106,14 +106,21 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
       <div ref={scrollContainerRef} className="w-full overflow-x-auto border-y border-neutral-200 dark:border-neutral-800 select-none custom-scrollbar touch-[pan-x_pan-y] overscroll-x-none">
         <div className="relative" style={{ width: `${totalWidth}px` }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverInfo(null)}>
           {/* Grid Layer */}
+          {/* Markers align to the viewer's own local calendar day (see useGanttController), so the
+              server (UTC) and client (viewer's timezone) legitimately compute different positions/
+              labels here — suppressHydrationWarning lets React show the server's guess immediately
+              and quietly swap in the client's correct value, instead of discarding this whole layer. */}
           <div className="absolute inset-0 pointer-events-none">
             {markers.daily.map((left, i) => (
-              <div key={`d-${i}`} className="absolute top-0 h-full border-l border-dashed border-neutral-200 dark:border-neutral-800" style={{ left }} />
+              <div key={`d-${i}`} className="absolute top-0 h-full border-l border-dashed border-neutral-200 dark:border-neutral-800" style={{ left }} suppressHydrationWarning />
             ))}
 
             {markers.weekly.map((m: WeeklyMarker) => (
-              <div key={m.date} className="absolute top-0 h-full border-l border-neutral-300 dark:border-neutral-600 z-0" style={{ left: m.left }}>
-                <span className="sticky top-8 -ml-1 text-[10px] font-bold text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-black/80 px-1 rounded shadow-xs truncate max-w-[80px]">
+              <div key={m.date} className="absolute top-0 h-full border-l border-neutral-300 dark:border-neutral-600 z-0" style={{ left: m.left }} suppressHydrationWarning>
+                <span
+                  className="sticky top-8 -ml-1 text-[10px] font-bold text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-black/80 px-1 rounded shadow-xs truncate max-w-[80px]"
+                  suppressHydrationWarning
+                >
                   {m.label}
                 </span>
               </div>
@@ -121,8 +128,15 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
 
             {/* 3. Monthly Markers */}
             {markers.monthly.map((m: MonthlyMarker) => (
-              <div key={m.date} className={`absolute top-0 h-full border-l-2 ${m.isYearMarker ? 'border-neutral-500' : 'border-neutral-400 dark:border-neutral-500'} z-0`} style={{ left: m.left }}>
-                <span className="sticky top-0 -ml-1 text-xs font-black p-1 text-neutral-900 dark:text-neutral-100 bg-white/90 dark:bg-black/90 rounded-br shadow-sm">{m.label}</span>
+              <div
+                key={m.date}
+                className={`absolute top-0 h-full border-l-2 ${m.isYearMarker ? 'border-neutral-500' : 'border-neutral-400 dark:border-neutral-500'} z-0`}
+                style={{ left: m.left }}
+                suppressHydrationWarning
+              >
+                <span className="sticky top-0 -ml-1 text-xs font-black p-1 text-neutral-900 dark:text-neutral-100 bg-white/90 dark:bg-black/90 rounded-br shadow-sm" suppressHydrationWarning>
+                  {m.label}
+                </span>
               </div>
             ))}
 
@@ -153,6 +167,27 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
           </div>
         </div>
       </div>
+      {/* Sets the initial scroll position (centered on "now") synchronously as the browser parses
+          this HTML — before React hydrates. Hydration is gated behind an async i18n init (see
+          entry.client.tsx), so without this the raw SSR markup would sit unscrolled at the left
+          edge (timeRange.min) for however long that takes, then jump once React attaches. Mirrors
+          the dark-mode flash-prevention script in root.tsx. BASE_PIXELS_PER_HOUR must match
+          ./constants.ts (can't import it into a raw script string). */}
+      {timeRange.min > 0 && (
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              var el = document.currentScript.previousElementSibling;
+              if (!el) return;
+              var min = ${JSON.stringify(timeRange.min)};
+              var pxPerHour = ${JSON.stringify(BASE_PIXELS_PER_HOUR)};
+              var targetPx = ((Date.now() - min) / 3600000) * pxPerHour;
+              el.scrollLeft = Math.max(0, targetPx - el.clientWidth / 2);
+            })();`,
+          }}
+        />
+      )}
     </div>
   );
 }

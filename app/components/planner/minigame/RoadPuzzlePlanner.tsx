@@ -58,7 +58,7 @@ function normalizeAdditionalReward(r: RoadPuzzleAdditionalRewardItem): Normalize
   };
 }
 
-function buildRoundInfos(roadPuzzleData: NonNullable<EventData['minigame_road_puzzle']>): RoundInfo[] {
+export function buildRoundInfos(roadPuzzleData: NonNullable<EventData['minigame_road_puzzle']>): RoundInfo[] {
   const { road_round, map, rail_tile, reward, additional_reward } = roadPuzzleData;
 
   // Build tileId → RailTileType map
@@ -128,7 +128,7 @@ function buildRoundInfos(roadPuzzleData: NonNullable<EventData['minigame_road_pu
   });
 }
 
-interface MapStats {
+export interface MapStats {
   avg: number;
   min: number;
   max: number;
@@ -137,6 +137,69 @@ interface MapStats {
 
 interface McResult {
   perMap: Record<string, MapStats>;
+}
+
+// Simulates drawing tiles WITHOUT replacement from a map's fixed rail-tile pool until the accumulated
+// inventory becomes solvable (checked via the same `solveRoadPuzzle` pathfinder RoadPuzzleMapSolver.tsx
+// uses) — the player can't freely choose which tile to place next, so the true expected AP cost is this
+// draw count, not the map's unconstrained `minTiles` (a free-choice lower bound that undercounts the real
+// cost). Skips solver checks until draws >= minTilesNeeded (a guaranteed lower bound) to save calls, and
+// memoizes solver results by inventory composition since many trials revisit the same inventory.
+export function simulateRoadPuzzleMapDraws(mapName: string, pool: Record<number, number>, minTilesNeeded: number, trials: number): MapStats {
+  const mapData = ROAD_PUZZLE_MAPS[mapName];
+  if (!mapData) return { avg: 0, min: 0, max: 0, stddev: 0 };
+
+  const poolTypes = Object.keys(pool)
+    .map(Number)
+    .filter((t) => pool[t] > 0);
+  const totalPoolSize = poolTypes.reduce((s, t) => s + pool[t], 0);
+  if (totalPoolSize === 0) return { avg: 0, min: 0, max: 0, stddev: 0 };
+
+  const memo = new Map<string, boolean>();
+  const checkSolvable = (inv: Record<number, number>) => {
+    const key = `${inv[1] ?? 0},${inv[2] ?? 0},${inv[3] ?? 0}`;
+    if (memo.has(key)) return memo.get(key) ?? false;
+    const found = solveRoadPuzzle(mapData.grid, mapData.rowOffset, inv, mapData.goalEntry, mapData.startEntry).found;
+    memo.set(key, found);
+    return found;
+  };
+
+  const trialDraws: number[] = new Array<number>(trials);
+  let total = 0;
+  let minDraws = Infinity;
+  let maxDraws = 0;
+
+  for (let i = 0; i < trials; i++) {
+    const inv: Record<number, number> = {};
+    const remaining = { ...pool };
+    let poolLeft = totalPoolSize;
+    let draws = 0;
+
+    while (poolLeft > 0) {
+      let r = Math.random() * poolLeft;
+      let chosenType = poolTypes[poolTypes.length - 1];
+      for (const t of poolTypes) {
+        r -= remaining[t];
+        if (r < 0) {
+          chosenType = t;
+          break;
+        }
+      }
+      remaining[chosenType]--;
+      poolLeft--;
+      inv[chosenType] = (inv[chosenType] ?? 0) + 1;
+      draws++;
+      if (draws >= minTilesNeeded && checkSolvable(inv)) break;
+    }
+    trialDraws[i] = draws;
+    total += draws;
+    if (draws < minDraws) minDraws = draws;
+    if (draws > maxDraws) maxDraws = draws;
+  }
+
+  const avg = total / trials;
+  const variance = trialDraws.reduce((s, d) => s + (d - avg) ** 2, 0) / trials;
+  return { avg, min: minDraws, max: maxDraws, stddev: Math.sqrt(variance) };
 }
 
 export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }: RoadPuzzlePlannerProps) => {
@@ -200,7 +263,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
       for (const m of roundInfo.maps) {
         const mapData = ROAD_PUZZLE_MAPS[m.name];
         if (mapData) {
-          results[m.name] = solveRoadPuzzle(mapData.grid, mapData.rowOffset, undefined, mapData.goalEntry);
+          results[m.name] = solveRoadPuzzle(mapData.grid, mapData.rowOffset, undefined, mapData.goalEntry, mapData.startEntry);
         }
       }
     }
@@ -232,84 +295,14 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
   const handleRunMC = useCallback(() => {
     setIsSimulating(true);
     void runAsync(() => {
-      const N = simCount;
-
-      // Simulate drawing tiles without replacement from the map's card pool until solvable.
-      // Skip solver checks until draws >= unconstrained minTiles (guaranteed lower bound).
-      // Memoize by inventory composition to avoid redundant solver calls across trials.
-      function simulateMap(mapName: string, pool: Record<number, number>, minTilesNeeded: number): MapStats {
-        const mapData = ROAD_PUZZLE_MAPS[mapName];
-        if (!mapData) return { avg: 0, min: 0, max: 0, stddev: 0 };
-
-        const poolTypes = Object.keys(pool)
-          .map(Number)
-          .filter((t) => pool[t] > 0);
-        const totalPoolSize = poolTypes.reduce((s, t) => s + pool[t], 0);
-        if (totalPoolSize === 0) return { avg: 0, min: 0, max: 0, stddev: 0 };
-
-        const memo = new Map<string, boolean>();
-        const checkSolvable = (inv: Record<number, number>) => {
-          const key = `${inv[1] ?? 0},${inv[2] ?? 0},${inv[3] ?? 0}`;
-          if (memo.has(key)) return memo.get(key) ?? false;
-          // console.log(`[checkSolvable] memo mapName=${mapName}`, memo, inv)
-          const found = solveRoadPuzzle(mapData.grid, mapData.rowOffset, inv, mapData.goalEntry).found;
-          memo.set(key, found);
-          return found;
-        };
-
-        const trials: number[] = new Array<number>(N);
-        let total = 0;
-        let minDraws = Infinity;
-        let maxDraws = 0;
-
-        for (let i = 0; i < N; i++) {
-          const inv: Record<number, number> = {};
-          const remaining = { ...pool };
-          let poolLeft = totalPoolSize;
-          let draws = 0;
-
-          while (poolLeft > 0) {
-            let r = Math.random() * poolLeft;
-            let chosenType = poolTypes[poolTypes.length - 1];
-            for (const t of poolTypes) {
-              r -= remaining[t];
-              if (r < 0) {
-                chosenType = t;
-                break;
-              }
-            }
-            remaining[chosenType]--;
-            poolLeft--;
-            inv[chosenType] = (inv[chosenType] ?? 0) + 1;
-            draws++;
-            if (draws >= minTilesNeeded && checkSolvable(inv)) break;
-
-            // console.log('{inv, draws}', inv, {draws}, checkSolvable(inv))
-            // if (checkSolvable(inv)) break;
-          }
-          trials[i] = draws;
-          total += draws;
-          if (draws < minDraws) minDraws = draws;
-          if (draws > maxDraws) maxDraws = draws;
-        }
-
-        const avg = total / N;
-        const variance = trials.reduce((s, d) => s + (d - avg) ** 2, 0) / N;
-        return { avg, min: minDraws, max: maxDraws, stddev: Math.sqrt(variance) };
-      }
-
       // Simulate ALL maps across all rounds — independent of the user's selected range.
       const perMap: Record<string, MapStats> = {};
       for (const roundInfo of roundInfos) {
         for (const m of roundInfo.maps) {
-          // const start_0 = performance.now();
           if (perMap[m.name] !== undefined) continue;
           const solveResult = autoSolveResults[m.name];
           if (!solveResult?.found) continue;
-          // const start = performance.now();
-          perMap[m.name] = simulateMap(m.name, m.toPlace, solveResult.minTiles);
-          // const end = performance.now();
-          // console.log('m', m, `time: ${end - start} ms / ${start_0 - start}`, solveResult.minTiles);
+          perMap[m.name] = simulateRoadPuzzleMapDraws(m.name, m.toPlace, solveResult.minTiles, simCount);
         }
       }
 

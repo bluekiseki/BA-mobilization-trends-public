@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { RiCharacterRecognitionLine, RiKeyboardLine } from 'react-icons/ri';
 import { CustomNumberInput } from '~/components/CustomInput';
 import { equipmentBlueprintId, equipmentId } from '~/data/growthData';
@@ -36,8 +36,11 @@ interface EquipmentInventoryMatrixProps {
 
 export const EquipmentInventoryMatrix: React.FC<EquipmentInventoryMatrixProps> = ({ allFarmableItems, inventory, setInventoryItem, demandMap, onClearAll, iconData }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, i18n } = useTranslation('planner');
   const locale = i18n.language as Locale;
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnTo)}`;
   const farmableSet = useMemo(() => new Set(allFarmableItems), [allFarmableItems]);
 
   // console.log('normalizeBluprintToEquipment',allFarmableItems)
@@ -77,7 +80,7 @@ export const EquipmentInventoryMatrix: React.FC<EquipmentInventoryMatrixProps> =
       <div className="flex justify-between items-center px-3 py-1 gap-2">
         <button
           onClick={() => {
-            void navigate(localeLink(locale, '/planner/item-scanner'));
+            void navigate(itemScannerLink);
           }}
           className="text-[10px] px-2.5 py-1 rounded border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors flex items-center gap-1"
           title="Scan inventory screenshots to auto-input equipment materials"

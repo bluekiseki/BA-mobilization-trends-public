@@ -17,6 +17,10 @@
     "load_more": "Load More",
     "raid": "Total Assault",
     "eraid": "Grand Assault",
+    "raidAndEraid": "Assaults",
+    "event": "Event",
+    "campaign": "Campaign",
+    "multifloor": "Final Restriction Rls.",
     "dataWarning": "The data provided on this site has been processed from another sources and may contain inaccuracies due to errors during processing. The site operator assumes no liability for any issues arising from the use of this data. Please use this information at your own discretion.",
     "viewMore": "View More",
     "viewSimple": "View Simple",
@@ -30,6 +34,9 @@
     "clear": "Clear",
     "period": "Period",
     "jfd": "Joint Firing Drill",
+    "tacticalChallenge": "Tactical Challenge",
+    "finalRestrictionWB": "Talents Unlock WB",
+    "expertPermit": "Expert Permit",
     "pred": "pred",
     "title": "Yuzu Trends",
     "site-title": "Yuzu Trends",
@@ -49,7 +56,9 @@
     "changelog": {
       "title": "Changes",
       "noTranslation": "No translation available",
-      "newUpdate": "Recent updates"
+      "newUpdate": "Recent updates",
+      "feedbackPrompt": "We welcome bug reports and feature requests.",
+      "sendFeedback": "Send feedback"
     },
     "currentLocale": "en",
     "navigation": {
@@ -68,7 +77,26 @@
       "darkMode": "Dark Mode",
       "systemTheme": "System Default",
       "language": "Language",
-      "serverSettings": "Server Settings"
+      "serverSettings": "Server Settings",
+      "jukebox": "BGM Player",
+      "notices": "Notice Archive",
+      "itemScanner": "Item Scanner",
+      "studentScanner": "Student Growth Scanner",
+      "eventPlanner": "Event Farming Planner",
+      "gachaPlanner": "Pyroxene & Recruit/Gacha Planner",
+      "studentGrowthPlanner": "Student Growth Planner",
+      "equipmentFarmingPlanner": "Equipment Farming Planner",
+      "favorCalculator": "Relationship Rank Calculator"
+    },
+    "homeFeatures": {
+      "eventPlannerDesc": "Consumption of items for student growth and simulation of acquiring items at events",
+      "gachaPlannerDesc": "Calculate expected Pyroxene income based on future schedules, set Pick-Up strategies, and simulate your gacha success rates.",
+      "studentGrowthPlannerDesc": "Manage growth plans for all students in one place and calculate the required materials.",
+      "equipmentFarmingPlannerDesc": "Optimize equipment farming based on your student growth needs.",
+      "favorCalculatorDesc": "Calculate the gifts needed to reach your target relationship rank.",
+      "jukeboxDesc": "Check the usage of numbered BGM",
+      "itemScannerDesc": "Scan inventory screenshots to automatically input your owned materials.",
+      "studentScannerDesc": "Scan a screen recording of you swiping through each student's profile screen to update your growth planner."
     },
     "LocaleSwitcher": {
       "en": "English",
@@ -141,7 +169,8 @@
       "birthdaySoon": "Happy Birthday!",
       "jpStats": "JP stats",
       "kivotosPeace": "Kivotos is at peace.",
-      "noEvent": "No event scheduled."
+      "noEvent": "No event scheduled.",
+      "monthEndReset": "Monthly shop reset"
     },
     "scroll_to_first_page": "First Page",
     "scroll_to_prev_page": "Previous Page",
@@ -240,6 +269,7 @@
   },
   "raidInfo": {
     "All": "All",
+    "allDifficulties": "All Difficulties",
     "Lunatic": "Lunatic",
     "Torment": "Torment",
     "Insane": "Insane",
@@ -253,6 +283,8 @@
     "title": "Assault Dashboard",
     "shorttitle": "Dashboard",
     "description1": "View statistics for each Assault",
+    "detailMetaTitle": "{{server}} {{season}} {{boss}} {{location}} {{raidType}} Stats and Teams",
+    "detailMetaDescription": "Blue Archive {{server}} {{season}} {{boss}} {{location}} {{raidType}} score distribution, clear statistics, top teams, and student usage rates.",
     "rankRange": "Rank Range",
     "subtitle": "Assault Dashboard Perorodzilla 2025.09",
     "scoreDistribution": "Score Distribution",
@@ -331,7 +363,7 @@
     "unitSecond": "s",
     "tooltipTime": "Time: {{time}}",
     "tooltipDifficulty": "Difficulty: {{difficulty}}",
-    "scoreCondition": "Score <= {{score}}",
+    "scoreCondition": "Score ≤ {{score}}",
     "tooltipCumulativeRank": "Cumulative Rank: ~{{rank}}",
     "clearTime": "Clear Time",
     "hideSettings": "Hide Settings",
@@ -427,14 +459,23 @@
       "mulligan_view_order": "Pick Order",
       "mopup_filter": "Mop-up party filter"
     },
-    "videos": "Videos",
+    "videos": "Clear Videos",
     "videos_select_boss": "Select a boss type to view videos.",
     "videos_empty": "No videos available.",
+    "videos_sort_score_desc": "Score (High to Low)",
+    "videos_sort_score_asc": "Score (Low to High)",
+    "videos_sort_upload_desc": "Upload Date (Newest)",
+    "videos_sort_upload_asc": "Upload Date (Oldest)",
+    "videos_score_min_placeholder": "Min",
+    "videos_score_max_placeholder": "Max",
     "videos_filter_tl": "TL Only",
     "videos_filter_target_type": "Target Type Only",
     "videos_missing_note": "Some videos may be missing due to automated processing.",
     "videos_view_all": "View all analyzed videos",
-    "videos_external_sites": "Recommended external sites:"
+    "videos_external_sites": "Recommended external sites:",
+    "video_source_cv": "Auto-extracted from thumbnail",
+    "video_source_text": "Extracted from video description",
+    "video_extraction_note": "Student compositions are auto-extracted: from video thumbnails via image recognition (cv), or from video description text (text). Data may be inaccurate."
   },
   "dashboardIndex": {
     "title": "Dashboard List",
@@ -464,7 +505,24 @@
     "platinum_prediction_avg": "Rank {{rank}}",
     "compare_cutoff": "{{name}} Cutoff (Rank {{rank}})",
     "total_combined": "{{types}}",
-    "predicted_score": "{{score}}pt"
+    "predicted_score": "{{score}}pt",
+    "data_unavailable_reason": "Since no official API is provided, this feature has been operated using data supplied unofficially by a third party.",
+    "data_unavailable_status": "Supply has been suspended due to the data provider's circumstances and is currently unavailable. If you can provide data or help with doing so, please reach out.",
+    "data_unavailable_contact_email": "Contact via Email",
+    "data_unavailable_contact_anon": "Submit Anonymously",
+    "platinum_cut_est": "Platinum Cut Est. (stats-based)",
+    "hours_remaining_suffix": "remaining",
+    "video_fallback_title": "Clear Videos",
+    "video_fallback_note_crawl": "Video crawling is still manual — updates at most every 1–2 days.",
+    "video_fallback_note_live_only": "Showing only the current raid. For more:",
+    "score_time_converter_title": "Score / Time Converter",
+    "score_time_converter_placeholder": "Enter a score (e.g. 41230000) or a time (e.g. 3:45)",
+    "score_time_converter_error_invalid_time": "Invalid time format. Use mm:ss (e.g. 3:45).",
+    "score_time_converter_error_negative_time": "Time must be positive.",
+    "score_time_converter_error_no_valid_score": "No difficulty has a valid score for this time.",
+    "score_time_converter_error_invalid_score": "Enter a valid score (numbers only) or a time in mm:ss format.",
+    "score_time_converter_error_negative_score": "Score must be a positive number.",
+    "score_time_converter_error_no_time": "Could not calculate a time for this score."
   },
   "emblemCounter": {
     "title": "Favor Rank Status",
@@ -497,9 +555,12 @@
     "emblemSummary": "Total {{counts}} occurrences, Rate: {{rate}}%"
   },
   "calendar": {
-    "title": "Calendar and future predictions",
+    "title": "Calendar and Future Predictions",
+    "metaTitle": "Blue Archive Future Schedule Calendar · Pick-Ups and Events",
+    "upcomingTitle": "Upcoming Schedule",
+    "predictionLabel": "(prediction)",
     "description": {
-      "main": "Blue Archive major event schedules displayed in a Gantt chart.",
+      "main": "A continuously updated Blue Archive calendar for Japan and Global server Pick-Ups, events, Total Assaults, and Grand Assaults.",
       "prediction": "Striped items are predictions based on precedent. It may change in the future."
     },
     "distribute": "(Distro: {{name}})",

@@ -1,11 +1,23 @@
 import { createSchema, createYoga } from 'graphql-yoga';
 import { validateProfileDataValue } from '../../app/schemas/profileDataValidation';
+import { toGraphQLProfileServer } from '../../app/utils/profileServer';
 
 type D1Database = Cloudflare.Env['ba_user'];
 
 type ServerCtx = { userDb: D1Database };
 type UserCtx = { userId: string | null };
 type GqlContext = ServerCtx & UserCtx;
+type ProfileSource = {
+  server: string;
+  isDefault?: boolean;
+  is_default?: number;
+  sortOrder?: number;
+  sort_order?: number;
+  createdAt?: Date | number | string;
+  created_at?: number;
+  updatedAt?: Date | number | string;
+  updated_at?: number;
+};
 
 let yogaInstance: ReturnType<typeof createYoga<ServerCtx, UserCtx>> | null = null;
 
@@ -75,6 +87,7 @@ function createGraphQLSchema() {
         key: String!
         value: JSON
         schemaVersion: Int!
+        revision: Int!
       }
 
       type Query {
@@ -87,11 +100,18 @@ function createGraphQLSchema() {
         createProfile(input: CreateProfileInput!): Profile!
         updateProfile(id: ID!, input: UpdateProfileInput!): Profile!
         deleteProfile(id: ID!): Boolean!
-        upsertProfileData(profileId: ID!, key: String!, value: JSON!, schemaVersion: Int): Boolean!
+        upsertProfileData(profileId: ID!, key: String!, value: JSON!, schemaVersion: Int, baseRevision: Int): Boolean!
         upsertProfileDataBatch(profileId: ID!, data: ProfileDataInput!): Boolean!
       }
     `,
     resolvers: {
+      Profile: {
+        server: (profile: ProfileSource) => toGraphQLProfileServer(profile.server),
+        isDefault: (profile: ProfileSource) => profile.isDefault ?? profile.is_default === 1,
+        sortOrder: (profile: ProfileSource) => profile.sortOrder ?? profile.sort_order ?? 0,
+        createdAt: (profile: ProfileSource) => profile.createdAt ?? profile.created_at,
+        updatedAt: (profile: ProfileSource) => profile.updatedAt ?? profile.updated_at,
+      },
       Query: {
         me: async (_: unknown, __: unknown, context: GqlContext) => {
           const { userId, userDb } = context;
@@ -119,11 +139,15 @@ function createGraphQLSchema() {
             throw new Error('Unauthorized');
           }
 
-          const rows = await userDb.prepare('SELECT key, value, schema_version FROM profile_data WHERE profile_id = ?').bind(id).all<{ key: string; value: string; schema_version: number }>();
+          const rows = await userDb
+            .prepare('SELECT key, value, schema_version, revision FROM profile_data WHERE profile_id = ?')
+            .bind(id)
+            .all<{ key: string; value: string; schema_version: number; revision: number }>();
 
           return (rows.results || []).map((row) => ({
             key: row.key,
             schemaVersion: row.schema_version,
+            revision: row.revision,
             value: (() => {
               try {
                 return JSON.parse(row.value) as unknown;
@@ -221,9 +245,7 @@ function createGraphQLSchema() {
             .bind(...values)
             .run();
 
-          const updated = await userDb.prepare('SELECT * FROM user_profiles WHERE id = ?').bind(id).first();
-
-          return { ...updated, isDefault: updated?.is_default === 1 };
+          return userDb.prepare('SELECT * FROM user_profiles WHERE id = ?').bind(id).first<ProfileSource>();
         },
 
         deleteProfile: async (_: unknown, { id }: { id: string }, context: GqlContext) => {
@@ -240,7 +262,11 @@ function createGraphQLSchema() {
           return true;
         },
 
-        upsertProfileData: async (_: unknown, { profileId, key, value, schemaVersion = 1 }: { profileId: string; key: string; value: unknown; schemaVersion?: number }, context: GqlContext) => {
+        upsertProfileData: async (
+          _: unknown,
+          { profileId, key, value, schemaVersion = 1, baseRevision }: { profileId: string; key: string; value: unknown; schemaVersion?: number; baseRevision?: number },
+          context: GqlContext,
+        ) => {
           const { userId, userDb } = context;
           if (!userId) throw new Error('Unauthorized');
 
@@ -255,8 +281,41 @@ function createGraphQLSchema() {
           const now = Math.floor(Date.now() / 1000);
           const jsonValue = typeof value === 'string' ? value : JSON.stringify(value);
 
+          if (baseRevision !== undefined) {
+            const existing = await userDb.prepare('SELECT revision FROM profile_data WHERE profile_id = ? AND key = ?').bind(profileId, key).first<{ revision: number }>();
+
+            if (!existing) {
+              if (baseRevision !== 0) throw new Error('SYNC_CONFLICT');
+              try {
+                await userDb
+                  .prepare('INSERT INTO profile_data (profile_id, key, value, schema_version, updated_at, revision) VALUES (?, ?, ?, ?, ?, 1)')
+                  .bind(profileId, key, jsonValue, schemaVersion, now)
+                  .run();
+              } catch {
+                throw new Error('SYNC_CONFLICT');
+              }
+              return true;
+            }
+
+            const result = await userDb
+              .prepare('UPDATE profile_data SET value = ?, schema_version = ?, updated_at = ?, revision = revision + 1 WHERE profile_id = ? AND key = ? AND revision = ?')
+              .bind(jsonValue, schemaVersion, now, profileId, key, baseRevision)
+              .run();
+
+            if (result.meta.changes !== 1) throw new Error('SYNC_CONFLICT');
+            return true;
+          }
+
           await userDb
-            .prepare('INSERT OR REPLACE INTO profile_data (profile_id, key, value, schema_version, updated_at) VALUES (?, ?, ?, ?, ?)')
+            .prepare(
+              `INSERT INTO profile_data (profile_id, key, value, schema_version, updated_at, revision)
+               VALUES (?, ?, ?, ?, ?, 1)
+               ON CONFLICT(profile_id, key) DO UPDATE SET
+                 value = excluded.value,
+                 schema_version = excluded.schema_version,
+                 updated_at = excluded.updated_at,
+                 revision = profile_data.revision + 1`,
+            )
             .bind(profileId, key, jsonValue, schemaVersion, now)
             .run();
 
@@ -279,7 +338,18 @@ function createGraphQLSchema() {
             if (value === undefined || value === null) continue;
             validateProfileDataValue(key, value);
             const jsonValue = typeof value === 'string' ? value : JSON.stringify(value);
-            await userDb.prepare('INSERT OR REPLACE INTO profile_data (profile_id, key, value, schema_version, updated_at) VALUES (?, ?, ?, 1, ?)').bind(profileId, key, jsonValue, now).run();
+            await userDb
+              .prepare(
+                `INSERT INTO profile_data (profile_id, key, value, schema_version, updated_at, revision)
+                 VALUES (?, ?, ?, 1, ?, 1)
+                 ON CONFLICT(profile_id, key) DO UPDATE SET
+                   value = excluded.value,
+                   schema_version = excluded.schema_version,
+                   updated_at = excluded.updated_at,
+                   revision = profile_data.revision + 1`,
+              )
+              .bind(profileId, key, jsonValue, now)
+              .run();
           }
 
           return true;

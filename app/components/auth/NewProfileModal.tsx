@@ -2,30 +2,24 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 import { gqlFetch } from '~/utils/gqlFetch';
-import { useAuthStore } from '~/store/authStore';
+import { GLKR_PROFILE_SERVER_OPTIONS, useAuthStore } from '~/store/authStore';
 import { useSyncStore } from '~/store/syncStore';
 import type { UserProfile } from '~/store/authStore';
+import { getDefaultProfileServer, toGraphQLProfileServer } from '~/utils/profileServer';
 
 type Server = UserProfile['server'];
 type ServerGroup = 'JP' | 'GLKR';
-
-const GLKR_SERVERS: { value: Extract<Server, 'kr' | 'tw' | 'asia' | 'global' | 'na'>; label: string }[] = [
-  { value: 'kr', label: 'KR' },
-  { value: 'tw', label: 'TW' },
-  { value: 'asia', label: 'ASIA' },
-  { value: 'global', label: 'GL' },
-  { value: 'na', label: 'NA' },
-];
 
 interface Props {
   onClose: () => void;
 }
 
 export function NewProfileModal({ onClose }: Props) {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
+  const defaultServer = getDefaultProfileServer(i18n.language);
   const [name, setName] = useState('');
-  const [group, setGroup] = useState<ServerGroup>('JP');
-  const [glkrServer, setGlkrServer] = useState<(typeof GLKR_SERVERS)[number]['value']>('kr');
+  const [group, setGroup] = useState<ServerGroup>(defaultServer === 'jp' ? 'JP' : 'GLKR');
+  const [glkrServer, setGlkrServer] = useState<(typeof GLKR_PROFILE_SERVER_OPTIONS)[number]['value']>(defaultServer === 'jp' ? 'kr' : defaultServer);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -51,7 +45,7 @@ export function NewProfileModal({ onClose }: Props) {
             id name server isDefault sortOrder createdAt updatedAt
           }
         }`,
-        { input: { name: name.trim(), server: selectedServer.toUpperCase() } },
+        { input: { name: name.trim(), server: toGraphQLProfileServer(selectedServer) } },
       );
 
       const newProfile: UserProfile = {
@@ -129,7 +123,7 @@ export function NewProfileModal({ onClose }: Props) {
 
             {group === 'GLKR' && (
               <div className="flex gap-1.5">
-                {GLKR_SERVERS.map(({ value, label }) => (
+                {GLKR_PROFILE_SERVER_OPTIONS.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"

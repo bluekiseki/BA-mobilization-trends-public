@@ -47,6 +47,8 @@ export interface BannerPeriod {
   isRerunBanner: boolean;
   isRecall: boolean; // Archive pickup. In this case, 100 new Elephs are not granted.
   freePulls: number; // Automatically calculated (0 or 100)
+  /** Whether this banner uses the "recruit charge" pity system (post Makoto (Swimsuit) patch) instead of the legacy spark-point system. */
+  useChargeSystem: boolean;
 
   pickupStudents: Student[];
 }
@@ -89,7 +91,8 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
     const isRecall = ['recall', 'encore'].includes((row.bannerType || '').trim());
     const groupKey = `${startDateKey}_${endDateKey}_${isRecall}`;
 
-    const studentId = Number(row.studentId);
+    // Predicted/unconfirmed banners use an "x" prefix (e.g. "x10146") until the real ID is confirmed.
+    const studentId = Number(row.studentId.trim().replace(/^x/i, ''));
 
     // Convert CSV text to boolean
     const isFes = row.fest?.toLowerCase() === 'true';
@@ -122,6 +125,7 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
         isRerunBanner: true, // Default: true, changed to false if a new character is found
         isRecall: isRecall,
         freePulls: 0,
+        useChargeSystem: false, // Determined after all banners are parsed (see cutoff calculation below)
         pickupStudents: [],
       });
     }
@@ -179,7 +183,32 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
     }
   }
 
+  // 4. Determine the "recruit charge" pity system cutoff (replaces the legacy spark-point system).
+  // Effective from each region's earliest banner featuring Makoto (Swimsuit) (studentId 10146,
+  // may appear as the predicted "x10146" before the real ID is confirmed).
+  const CHARGE_SYSTEM_TRIGGER_ID = 10146;
+  const cutoffTime = sortedBanners.filter((b) => b.pickupStudents.some((s) => s.id === CHARGE_SYSTEM_TRIGGER_ID)).reduce((min, b) => Math.min(min, new Date(b.startTime).getTime()), Infinity);
+
+  sortedBanners.forEach((b) => {
+    b.useChargeSystem = new Date(b.startTime).getTime() >= cutoffTime;
+  });
+
   return sortedBanners;
+};
+
+/**
+ * Predicted/unconfirmed future banners key their portrait art by the raw CSV id (e.g. "x10148") until the
+ * real id is confirmed, while parseAndGroupBanners normalizes Student.id to the plain number (10148) for
+ * gameplay logic. Mirror those entries under the normalized numeric key too, so portrait lookups by the
+ * normalized id (used everywhere else in the app) still resolve.
+ */
+export const normalizePortraitMap = (raw: Record<string, string>): Record<string, string> => {
+  const normalized = { ...raw };
+  for (const key of Object.keys(raw)) {
+    const match = /^x(\d+)$/i.exec(key);
+    if (match && !(match[1] in normalized)) normalized[match[1]] = raw[key];
+  }
+  return normalized;
 };
 
 /**
@@ -201,4 +230,25 @@ export const getAllStudents = (schaleStudentData: Record<string, SchaleStudent> 
     starGrade: s.StarGrade,
     // imgUrl: `https://schale.gg/images/student/icon/${s.Id}.webp`,
   }));
+};
+
+/**
+ * Predicted/unrevealed future pickup students (e.g. an upcoming costume banner) may not exist in the
+ * SchaleDB roster yet, so getAllStudents() alone omits them — silently dropping their eligma/eleph stats
+ * from studentStats once they're actually simulated as a pickup (the engine itself handles raw ids fine;
+ * only the final per-student stats map, which iterates the student list, misses them). Fill in any pickup
+ * student not already present in the base roster using the CSV-derived data already parsed for their banner.
+ */
+export const withPickupFallbackStudents = (baseStudents: Student[], banners: BannerPeriod[]): Student[] => {
+  const known = new Set(baseStudents.map((s) => s.id));
+  const merged = [...baseStudents];
+  for (const banner of banners) {
+    for (const student of banner.pickupStudents) {
+      if (!known.has(student.id)) {
+        known.add(student.id);
+        merged.push(student);
+      }
+    }
+  }
+  return merged;
 };

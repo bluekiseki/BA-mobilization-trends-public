@@ -4,7 +4,7 @@ import { FaExclamationTriangle, FaChevronDown, FaChevronUp } from 'react-icons/f
 
 export const GUIDE_STORAGE_KEY = 'gacha_guide_hidden';
 
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 
 const NOTE_KEYS = ['note2', 'note3', 'note4', 'note5', 'note6', 'note7', 'note8', 'note9'] as const;
 
@@ -83,7 +83,7 @@ export default function PlannerGuide({ collapsed, onToggle }: Props) {
                 rel="noopener noreferrer"
                 className="text-blue-600 dark:text-blue-400 hover:underline"
               >
-                Google Spreadsheet
+                {t('notes.note1_link')}
               </a>
               {t('notes.note1_post')}
             </span>

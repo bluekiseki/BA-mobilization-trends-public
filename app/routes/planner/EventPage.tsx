@@ -8,7 +8,7 @@ import type { EventData, EventSeason, IconData, IconInfos, StudentData, StudentP
 import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_LOCALE, getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
 import eventList from '~/data/jp/eventList.json';
 import { getlocaleMethond } from '~/components/planner/common/locale';
 import type { Route } from './+types/EventPage';
@@ -36,31 +36,30 @@ const fetchEventSeasonData = async (eventId: number) => {
 export async function loader({ context, params }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
-  const evnetSeasonData = await fetchEventSeasonData(Number(params.eventId));
+  const eventId = Number(params.eventId);
+  const evnetSeasonData = await fetchEventSeasonData(eventId);
   if (evnetSeasonData == null) {
     throw new Response('Not Found: Invalid server parameter.', { status: 404 });
   }
+
+  const eventEntry = eventList[String(eventId < 60000 ? eventId % 10000 : eventId) as keyof typeof eventList] ?? eventList[String(eventId % 10000) as keyof typeof eventList];
+  const localeKey = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En' | 'Tw';
+  const localizedName = eventEntry?.[localeKey] || eventEntry?.Jp || 'No event information';
+  const eventName = `${eventId > 10000 && eventId < 60000 ? `[${i18n.t('planner:common.rerun')}] ` : ''}${localizedName}`;
+
   return data({
     locale,
     siteTitle: i18n.t('common:title'),
-    // title: i18n.t("dashboardIndex:title"),
-    description: i18n.t('planner:page.plannerescription'),
-    rerun: i18n.t('planner:common.rerun'),
-    evnetSeasonData: evnetSeasonData, //await fetchEventSeasonData(Number(params.eventId)),
+    eventName,
+    title: i18n.t('planner:page.eventDetailTitle', { eventName }),
+    description: i18n.t('planner:page.eventDetailDescription', { eventName }),
+    canonicalUrl: createLocalizedUrl(locale, `/planner/event/${eventId}`),
+    evnetSeasonData,
   });
 }
 
-export function meta({ loaderData, params }: Route.MetaArgs) {
-  const { eventId: eventIdStr } = params;
-  const eventId = Number(eventIdStr);
-  const locale_key = getlocaleMethond('', 'Jp', loaderData.locale) as 'Jp' | 'Kr' | 'En';
-  const format_name =
-    (eventId > 10000 && eventId < 60000 ? `[${loaderData.rerun}] ` : '') +
-    (eventList[String(eventId < 60000 ? eventId % 10000 : eventId) as keyof typeof eventList][locale_key] ||
-      eventList[String(eventId % 10000) as keyof typeof eventList]['Jp'] ||
-      'No event information');
-
-  return createMetaDescriptor(format_name + ' | ' + loaderData.siteTitle, loaderData.description, '/img/p.webp');
+export function meta({ loaderData }: Route.MetaArgs) {
+  return createMetaDescriptor(`${loaderData.title} | ${loaderData.siteTitle}`, loaderData.description, '/img/p.webp', loaderData.canonicalUrl);
 }
 
 export const handle: AppHandle = {
@@ -80,6 +79,14 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
+      ...(eventId
+        ? [
+            {
+              rel: 'canonical' as const,
+              href: createLocalizedUrl(locale, `/planner/event/${eventId}`),
+            },
+          ]
+        : []),
       ...(eventId ? createLinkHreflang(`/planner/event/${eventId}`) : []),
     ];
   },

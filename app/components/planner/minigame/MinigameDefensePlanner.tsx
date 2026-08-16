@@ -427,7 +427,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
               >
                 <FaCheckDouble />
-                {t_planner('label.clearAll', 'Clear All')}
+                {t_planner('mission.clearAll')}
               </button>
             </div>
             <div className="divide-y dark:divide-neutral-700">

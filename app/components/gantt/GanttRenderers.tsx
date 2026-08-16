@@ -5,12 +5,15 @@ import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 import { FaShield } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
+import { MdLooks3, MdLooks4 } from 'react-icons/md';
 
 import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
-import type { PickupStudentInfo, ScheduleItem, ScheduleItemDetails } from '~/utils/calender.data';
+import type { PickupStudentInfo } from '~/utils/calender.data';
+import type { ScheduleItemV2, ScheduleItemDetailsV2 } from '~/utils/calender.data.v2';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
+import { getMLText, getArmorDisplayName, getItemTitle, getItemLabel } from '~/utils/scheduleDisplay';
 
 import { TRACK_COLORS, CAMPAIGN_COLORS, STRIPE_PATTERN_STYLE, MS_PER_HOUR } from './constants';
 
@@ -19,7 +22,7 @@ type CalcLeftFunc = (start: string) => number;
 type CalcWidthFunc = (start: string, end: string) => number;
 
 interface GanttRenderProps {
-  item: ScheduleItem;
+  item: ScheduleItemV2;
   calculateLeftPx: CalcLeftFunc;
   calculateWidthPx: CalcWidthFunc;
   studentData: Record<number, Student> | null;
@@ -32,7 +35,7 @@ interface GanttRenderProps {
 
 interface GanttTrackProps {
   title: string;
-  items: ScheduleItem[];
+  items: ScheduleItemV2[];
   calculateLeftPx: CalcLeftFunc;
   calculateWidthPx: CalcWidthFunc;
   studentData: Record<number, Student> | null;
@@ -79,35 +82,27 @@ const getDynamicStyle = (id: string) => {
   };
 };
 
-function ArmorIcon({ armorType, difficulty }: { armorType: string; difficulty?: string | null }) {
-  const color = ARMOR_COLORS[armorType] || '#94a3b8';
+function ArmorIcon({ armorType, difficulty, armorName }: { armorType: string | undefined; difficulty?: string | null; armorName?: string }) {
+  const color = (armorType && ARMOR_COLORS[armorType]) || '#94a3b8';
   const difficultyInitial = difficulty ? difficulty.substring(0, 1).toUpperCase() : null;
+  const TooltipComponent = ((Tooltip as unknown as Record<string, unknown>).default as typeof Tooltip) || Tooltip;
+
   return (
-    <span className="relative inline-flex items-center justify-center w-4 h-4  rounded-full ml-0 shrink-0" title={armorType}>
-      <FaShield style={{ color }} className="w-3.5 h-3.5" />
-      {difficultyInitial && (
-        <span className="absolute text-[8px] font-black text-white drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" style={{ lineHeight: 1 }}>
-          {difficultyInitial}
-        </span>
-      )}
-    </span>
+    <TooltipComponent placement="top" overlay={<span className="text-xs">{armorName}</span>} mouseEnterDelay={0.05}>
+      <span className="relative inline-flex items-center justify-center w-4 h-4  rounded-full ml-0 shrink-0" title={armorName}>
+        <FaShield style={{ color }} className="w-3.5 h-3.5" />
+        {difficultyInitial && (
+          <span className="absolute text-[8px] font-black text-white drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" style={{ lineHeight: 1 }}>
+            {difficultyInitial}
+          </span>
+        )}
+      </span>
+    </TooltipComponent>
   );
 }
-interface GanttRenderProps {
-  item: ScheduleItem;
-  calculateLeftPx: CalcLeftFunc;
-  calculateWidthPx: CalcWidthFunc;
-  studentData: Record<number, Student> | null;
-  studentPortraits: StudentPortraitData | null;
-  lane: number;
-  laneHeight: number;
-  colorMap?: Record<string, string>;
-  colorKey?: string;
-}
-
 interface GanttTrackProps {
   title: string;
-  items: ScheduleItem[];
+  items: ScheduleItemV2[];
   calculateLeftPx: CalcLeftFunc;
   calculateWidthPx: CalcWidthFunc;
   studentData: Record<number, Student> | null;
@@ -155,21 +150,28 @@ export function GanttTrack({ title, items, scrollLeft, viewportWidth, laneHeight
   const trackMinHeight = Math.max(maxLanes * effectiveLaneHeight, effectiveLaneHeight);
 
   // Virtualization
+  // viewportWidth is 0 during SSR and for a brief moment before the client's first layout measurement
+  // (see useGanttController). Filtering with a 0-width window would hide every item — render
+  // everything unfiltered in that case so SSR output (and the first paint) has real content, and only
+  // start culling once we actually know how wide the viewport is.
   const buffer = viewportWidth;
   const visibleStart = scrollLeft - buffer;
   const visibleEnd = scrollLeft + viewportWidth + buffer;
 
-  const visibleItems = scheduledItems.filter((item) => {
-    const itemLeft = rest.calculateLeftPx(item.startTime);
-    let itemWidth = 0;
-    if (item.details?.isPointEvent) {
-      itemWidth = 100;
-    } else {
-      itemWidth = Math.max(rest.calculateWidthPx(item.startTime, item.endTime), 40);
-    }
-    const itemRight = itemLeft + itemWidth;
-    return itemRight > visibleStart && itemLeft < visibleEnd;
-  });
+  const visibleItems =
+    viewportWidth === 0
+      ? scheduledItems
+      : scheduledItems.filter((item) => {
+          const itemLeft = rest.calculateLeftPx(item.startTime);
+          let itemWidth = 0;
+          if (item.details?.isPointEvent) {
+            itemWidth = 100;
+          } else {
+            itemWidth = Math.max(rest.calculateWidthPx(item.startTime, item.endTime), 40);
+          }
+          const itemRight = itemLeft + itemWidth;
+          return itemRight > visibleStart && itemLeft < visibleEnd;
+        });
 
   if (items.length === 0) return null;
 
@@ -199,36 +201,31 @@ export function GanttTrack({ title, items, scrollLeft, viewportWidth, laneHeight
 }
 // --- 1. Gantt Bar ---
 export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortraits, lane, laneHeight, colorMap, colorKey }: GanttRenderProps) {
-  const { t: t_cal_orig } = useTranslation('calendar');
-  const t_cal = t_cal_orig as (key: string) => string;
-  const locale = useTranslation().i18n.language as Locale;
+  const { t: t_c, i18n } = useTranslation('common');
+  const locale = i18n.language as Locale;
 
   const width = Math.max(calculateWidthPx(item.startTime, item.endTime), 2);
   const left = calculateLeftPx(item.startTime);
   const isPrediction = item.details?.prediction === true;
 
   let bgClass = TRACK_COLORS[item.type] || 'bg-neutral-500';
-  if (colorMap && colorKey && item.details?.[colorKey as keyof ScheduleItemDetails]) {
-    const colorKeyValue = item.details[colorKey as keyof ScheduleItemDetails];
+  if (colorMap && colorKey && item.details?.[colorKey as keyof ScheduleItemDetailsV2]) {
+    const colorKeyValue = item.details[colorKey as keyof ScheduleItemDetailsV2];
     if (typeof colorKeyValue === 'string' || typeof colorKeyValue === 'number') {
       bgClass = colorMap[String(colorKeyValue)] || CAMPAIGN_COLORS.default;
     }
   }
 
-  const textColorClass = item.textColor || 'text-white';
-
   const portrait = item.details?.studentId && studentPortraits ? studentPortraits[item.details.studentId] : null;
 
-  let displayTitle = item.title;
-  if (item.type === 'campaign' && item.details?.campaignType) {
-    const rawTitle = t_cal(`campaign.${item.details.campaignType.toLowerCase()}`);
-    const multiplier = item.title.split(' x')[1];
-    displayTitle = multiplier ? `${rawTitle} x${multiplier}` : rawTitle;
-  }
+  const displayTitle = getItemTitle(item, locale, i18n);
+  const label = getItemLabel(item, i18n);
 
   const showTime = ['raid', 'eraid', 'event', 'jointFiringDrill', 'multifloor'].includes(item.type);
   const timeRangeStr = showTime ? `${formatDateTimeShort(item.startTime)} ~ ${formatDateTimeShort(item.endTime)}` : null;
   const isEraid = item.type === 'eraid' && item.details?.bosses && item.details.bosses.length > 0;
+
+  const TooltipComponent = ((Tooltip as unknown as Record<string, unknown>).default as typeof Tooltip) || Tooltip;
 
   const containerStyle = `
     absolute z-10 transition-all hover:z-30 hover:shadow-md rounded-[2px] group overflow-visible
@@ -246,16 +243,16 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
       {isPrediction && <div className="absolute inset-0 z-1 rounded-[2px] pointer-events-none" style={STRIPE_PATTERN_STYLE} />}
 
       {}
-      <div className={`relative z-10 h-full w-full ${textColorClass}`}>
+      <div className="relative z-10 h-full w-full text-white">
         {/* Sticky Container */}
         <div className="sticky left-0 top-0 h-full w-fit flex items-center pr-4 max-w-full">
-          {item.label && (
+          {label && (
             <div
               className={`
                 absolute top-[-14px] left-0 h-[14px] px-2 flex items-center justify-center whitespace-nowrap
                 text-[9px] font-black uppercase tracking-wider
                 rounded-t-[3px] border-b-0 shadow-sm z-50 pointer-events-none
-                ${bgClass} ${textColorClass}
+                ${bgClass} text-white
               `}
               style={{
                 ...dynamicStyles,
@@ -265,7 +262,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
               }}
             >
-              <span className="opacity-90 drop-shadow-sm">{item.label}</span>
+              <span className="opacity-90 drop-shadow-sm">{label}</span>
             </div>
           )}
 
@@ -294,29 +291,58 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
 
           <div className={`flex flex-col justify-center min-w-0 z-10 pl-1 ${portrait ? '-ml-1' : ''}`}>
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold leading-none whitespace-nowrap drop-shadow-sm">{displayTitle}</span>
+              <span className="text-[11px] font-bold leading-none whitespace-nowrap drop-shadow-sm" title={displayTitle}>
+                {displayTitle}
+              </span>
               {}
-              {isPrediction && <span className="text-[9px] opacity-80 font-normal border border-white/40 rounded px-0.5 ml-0.5">?</span>}
+              {isPrediction && (
+                <TooltipComponent placement="top" overlay={<span className="text-xs">{t_c('pred')}</span>} mouseEnterDelay={0.05}>
+                  <span className="cursor-help">
+                    <span className="text-[9px] opacity-80 font-normal border border-white/40 rounded px-0.5 ml-0.5" title={t_c('pred')}>
+                      ?
+                    </span>
+                  </span>
+                </TooltipComponent>
+              )}
 
               {(item.details?.terrain || item.details?.armorType) && !isEraid && (
                 <div className="flex items-center gap-0.5 opacity-90">
                   {item.details?.terrain && <TerrainIconGameStyle terrain={item.details.terrain as Terrain} size="0.7em" />}
-                  {item.details?.armorType && <ArmorIcon armorType={item.details.armorType} difficulty={item.details?.maxDifficulty} />}
+                  {item.details?.armorType && <ArmorIcon armorType={item.details.armorType} difficulty={item.details?.maxDifficulty} armorName={getArmorDisplayName(item.details.armorType, locale)} />}
+                  {item.details?.jfd3rd && (
+                    <TooltipComponent placement="top" overlay={<span className="text-xs">{getMLText(item.details.jfd3rd, locale)}</span>} mouseEnterDelay={0.05}>
+                      <span className="cursor-help">
+                        <MdLooks3 className="w-4 h-4" />
+                      </span>
+                    </TooltipComponent>
+                  )}
+                  {item.details?.jfd4th && (
+                    <TooltipComponent placement="top" overlay={<span className="text-xs">{getMLText(item.details.jfd4th, locale)}</span>} mouseEnterDelay={0.05}>
+                      <span className="cursor-help">
+                        <MdLooks4 className="w-4 h-4" />
+                      </span>
+                    </TooltipComponent>
+                  )}
                 </div>
               )}
-              {}
               {isEraid && (
                 <div className="flex items-center gap-1">
                   {item.details?.terrain && <TerrainIconGameStyle terrain={item.details.terrain as Terrain} size="0.7em" />}
-                  {item.details?.bosses?.map((boss: { armorType: string; armorName: string; difficulty: string }, idx: number) => (
+                  {item.details?.bosses?.map((boss, idx) => (
                     <div key={idx} className="flex items-center scale-90">
-                      <ArmorIcon armorType={boss.armorType} difficulty={boss.difficulty} />
+                      <ArmorIcon armorType={boss.armorType} difficulty={boss.difficulty} armorName={getArmorDisplayName(boss.armorType, locale)} />
                     </div>
                   ))}
                 </div>
               )}
             </div>
-            {timeRangeStr && <span className="text-[8px] leading-none opacity-80 font-mono my-[2px] tracking-tight whitespace-nowrap">{timeRangeStr}</span>}
+            {timeRangeStr && (
+              // formatDateTimeShort renders in the viewer's own local time, which legitimately differs
+              // from the server's (UTC) — see the note on markers in useGanttController.ts.
+              <span className="text-[8px] leading-none opacity-80 font-mono my-[2px] tracking-tight whitespace-nowrap" title={timeRangeStr} suppressHydrationWarning>
+                {timeRangeStr}
+              </span>
+            )}
           </div>
         </div>
 
@@ -464,8 +490,14 @@ export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studen
         </div>
 
         {width > 120 && (
-          <span className="ml-auto sticky right-2 text-[9px] text-white/90 font-medium pr-1 drop-shadow-md whitespace-nowrap">
-            {isPrediction && '(?)'} {formatDateTimeShort(item.startTime)} ~ {formatDateTimeShort(item.endTime)}
+          // formatDateTimeShort renders in the viewer's own local time, which legitimately differs
+          // from the server's (UTC) — see the note on markers in useGanttController.ts.
+          <span
+            className="ml-auto sticky right-2 text-[9px] text-white/90 font-medium pr-1 drop-shadow-md whitespace-nowrap"
+            title={`${isPrediction && '(?)'} ${formatDateTimeShort(item.startTime)} — ${formatDateTimeShort(item.endTime)}`}
+            suppressHydrationWarning
+          >
+            {isPrediction && '(?)'} {formatDateTimeShort(item.startTime)} — {formatDateTimeShort(item.endTime)}
           </span>
         )}
       </div>
@@ -473,25 +505,27 @@ export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studen
   );
 }
 
-export function GanttMarker({ item, calculateLeftPx, lane, laneHeight }: GanttRenderProps) {
-  const { t: t_cal_orig } = useTranslation('calendar');
-  const t_cal = t_cal_orig as (key: string) => string;
+export function GanttMarker({ item, calculateLeftPx, lane, laneHeight, studentData }: GanttRenderProps) {
+  const { i18n } = useTranslation('common');
+  const locale = i18n.language as Locale;
   const left = calculateLeftPx(item.startTime);
   const colorClass = TRACK_COLORS[item.type] || 'bg-neutral-500';
 
-  const textColorClass = item.textColor || 'text-white';
-
+  const isBirthday = item.type === 'birthday';
+  const textColorClass = isBirthday ? 'text-neutral-900' : 'text-white';
   const bgColorClass = colorClass.replace(/text-[\w-]+/g, '').trim();
+
+  const displayText = isBirthday ? (item.details?.studentId ? (studentData?.[item.details.studentId]?.Name ?? String(item.details.studentId)) : item.id) : getItemTitle(item, locale, i18n);
 
   return (
     <div className="absolute z-20 flex flex-col items-center group -translate-x-1/2 pointer-events-none hover:pointer-events-auto" style={{ left, top: lane * laneHeight, height: laneHeight }}>
       <div
         className={`
           px-1.5 py-0.5 rounded-[2px] text-[10px] font-bold shadow-sm whitespace-nowrap mb-0.5
-          ${bgColorClass} ${textColorClass} 
+          ${bgColorClass} ${textColorClass}
         `}
       >
-        {item.type === 'shop-reset' ? t_cal(item.title) : item.title}
+        {displayText}
       </div>
 
       <div className={`w-[2px] grow ${bgColorClass} opacity-60 group-hover:opacity-100 transition-opacity`} />

@@ -1355,5 +1355,83 @@
     "Alias": "Drumbarka-\u5e02\u5340",
     "MaxLv": 90,
     "Cnt": { "All": 46737, "Lunatic": 188, "Torment": 12702, "Insane": 33847 }
+  },
+  {
+    "Id": "E34",
+    "Boss": "\u6c23\u588a\u8239",
+    "Location": "\u5ba4\u5916",
+    "Type": "Unarmed",
+    "Date": "2026-06-17",
+    "Alias": "\u6c23\u588a\u8239-\u5ba4\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 29939, "Torment": 28681, "Insane": 1258 }
+  },
+  {
+    "Id": "E34",
+    "Boss": "\u6c23\u588a\u8239",
+    "Location": "\u5ba4\u5916",
+    "Type": "ElasticArmor",
+    "Date": "2026-06-17",
+    "Alias": "\u6c23\u588a\u8239-\u5ba4\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 29913, "Torment": 28611, "Insane": 1302 }
+  },
+  {
+    "Id": "E34",
+    "Boss": "\u6c23\u588a\u8239",
+    "Location": "\u5ba4\u5916",
+    "Type": "LightArmor",
+    "Date": "2026-06-17",
+    "Alias": "\u6c23\u588a\u8239-\u5ba4\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 29960, "Insane": 29960 }
+  },
+  {
+    "Id": "R90",
+    "Boss": "\u845b\u5229\u679c",
+    "Location": "\u5ba4\u5167",
+    "Date": "2026-07-01",
+    "Alias": "\u845b\u5229\u679c-\u5ba4\u5167",
+    "MaxLv": 90,
+    "Cnt": { "All": 29460, "Lunatic": 8111, "Torment": 21349 }
+  },
+  {
+    "Id": "E35",
+    "Boss": "\u970d\u5fb7",
+    "Location": "\u5ba4\u5167",
+    "Type": "HeavyArmor",
+    "Date": "2026-07-15",
+    "Alias": "\u970d\u5fb7-\u5ba4\u5167",
+    "MaxLv": 90,
+    "Cnt": { "All": 33951, "Torment": 33707, "Insane": 244 }
+  },
+  {
+    "Id": "E35",
+    "Boss": "\u970d\u5fb7",
+    "Location": "\u5ba4\u5167",
+    "Type": "ElasticArmor",
+    "Date": "2026-07-15",
+    "Alias": "\u970d\u5fb7-\u5ba4\u5167",
+    "MaxLv": 90,
+    "Cnt": { "All": 33585, "Torment": 26647, "Insane": 6938 }
+  },
+  {
+    "Id": "E35",
+    "Boss": "\u970d\u5fb7",
+    "Location": "\u5ba4\u5167",
+    "Type": "LightArmor",
+    "Date": "2026-07-15",
+    "Alias": "\u970d\u5fb7-\u5ba4\u5167",
+    "MaxLv": 90,
+    "Cnt": { "All": 33829, "Insane": 33829 }
+  },
+  {
+    "Id": "R91",
+    "Boss": "\u8036\u7f85\u5c3c\u59c6\u65af",
+    "Location": "\u5ba4\u5167",
+    "Date": "2026-08-05",
+    "Alias": "\u8036\u7f85\u5c3c\u59c6\u65af-\u5ba4\u5167",
+    "MaxLv": 90,
+    "Cnt": { "All": 48000, "Lunatic": 1757, "Torment": 46243 }
   }
 ]

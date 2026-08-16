@@ -14,6 +14,7 @@ import { useEventSettings } from '~/store/planner/useSettingsStore';
 import 'rc-tooltip/assets/bootstrap.css';
 import Tooltip from 'rc-tooltip';
 import { CustomNumberInput } from '~/components/CustomInput';
+import { applyRepeatableEventBonus } from '~/utils/eventBonus';
 
 // --- React Component ---
 export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency, totalBonus }: DreamMakerPlannerProps) => {
@@ -107,7 +108,7 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
 
       const baseDropAmount = rewardInfo.RewardAmount * (rewardInfo.RewardProb / 10000); // Base amount per run
       const bonusPercent = totalBonus[minigameEntryCurrencyId] || 0;
-      const effectiveDropAmount = baseDropAmount * (1 + bonusPercent / 10000); // Effective amount per run including bonus
+      const effectiveDropAmount = applyRepeatableEventBonus(baseDropAmount, bonusPercent); // Effective amount per run including bonus
 
       if (effectiveDropAmount > 0) {
         const apPerItem = stage.StageEnterCostAmount / effectiveDropAmount; // AP cost per 1 item

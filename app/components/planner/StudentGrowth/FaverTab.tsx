@@ -15,7 +15,7 @@ import { ItemIcon } from '../common/Icon';
 import { CustomNumberInput } from '~/components/CustomInput';
 import { NumberInput } from '../common/NumberInput';
 import { HighFlowerBouquetItemIds, LowFlowerBouquetItemIds } from './const';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
 
@@ -191,7 +191,12 @@ const GiftItem = React.memo(
       </div>
     );
   },
-  (prev, next) => prev.ownedCount === next.ownedCount && prev.gift.id === next.gift.id && prev.deficitExp === next.deficitExp && prev.isSelected === next.isSelected,
+  (prev, next) =>
+    prev.ownedCount === next.ownedCount &&
+    prev.gift.id === next.gift.id &&
+    prev.gift.affectionPoints === next.gift.affectionPoints &&
+    prev.deficitExp === next.deficitExp &&
+    prev.isSelected === next.isSelected,
 );
 GiftItem.displayName = 'GiftItem';
 
@@ -201,6 +206,9 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
   const { t, i18n } = useTranslation('planner');
   const locale = i18n.language as Locale;
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnTo)}`;
   const { ownedGifts, updateOwnedGifts } = useGlobalStore();
 
   const [simulateCrafting, setSimulateCrafting] = useState(false);
@@ -490,7 +498,7 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
           <div className="flex gap-1 ml-auto">
             {/* Auto-input via Item Scanner */}
             <button
-              onClick={() => void navigate(localeLink(locale, '/planner/item-scanner'))}
+              onClick={() => void navigate(itemScannerLink)}
               className="px-2.5 py-1 rounded-sm text-xs font-bold transition-all flex items-center gap-1 bg-white text-neutral-500 ring-1 ring-neutral-100 hover:bg-blue-50 hover:text-blue-600 dark:bg-neutral-800 dark:text-neutral-400 dark:ring-neutral-700 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
               title="Scan inventory screenshots to auto-input gift materials"
             >

@@ -45,24 +45,35 @@ self.onmessage = async (e: MessageEvent<SimWorkerInMsg>) => {
       const chunk = JSON.parse(raw) as {
         costs: number[];
         pulls: number[];
+        eligma: number[];
         successCount: number;
         totalEligmaSum: number;
         bannerCosts: Record<string, number[]>;
+        bannerEligma: Record<string, number[]>;
         studentAcquired: Record<string, number>;
         studentElephTotal: Record<string, number>;
         studentElephDist: Record<string, Record<string, number>>;
+        bannerStudentElephDist: Record<string, Record<string, Record<string, number>>>;
       };
 
       const chunkAcc: SimRawAccumulator = {
         resultsCost: chunk.costs,
         resultsPulls: chunk.pulls,
+        resultsEligma: chunk.eligma ?? [],
         successCount: chunk.successCount,
         totalEligmaSum: chunk.totalEligmaSum,
         bannerCumulativeCosts: chunk.bannerCosts,
+        bannerCumulativeEligma: chunk.bannerEligma ?? {},
         bannerStatsSum: Object.fromEntries(Object.entries(chunk.bannerCosts).map(([bid, costs]) => [bid, { pulls: 0, cost: costs.reduce((s, c) => s + c, 0) }])),
         studentAcquired: Object.fromEntries(Object.entries(chunk.studentAcquired).map(([k, v]) => [Number(k), v])),
         studentElephTotal: Object.fromEntries(Object.entries(chunk.studentElephTotal).map(([k, v]) => [Number(k), v])),
         studentElephDist: Object.fromEntries(Object.entries(chunk.studentElephDist).map(([k, dist]) => [Number(k), Object.fromEntries(Object.entries(dist).map(([a, c]) => [Number(a), c]))])),
+        bannerStudentElephDist: Object.fromEntries(
+          Object.entries(chunk.bannerStudentElephDist ?? {}).map(([bid, studentDists]) => [
+            bid,
+            Object.fromEntries(Object.entries(studentDists).map(([sid, dist]) => [Number(sid), Object.fromEntries(Object.entries(dist).map(([a, c]) => [Number(a), c]))])),
+          ]),
+        ),
       };
 
       seed += BigInt(chunkCount);

@@ -6,11 +6,12 @@ import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { CustomNumberInput } from '~/components/CustomInput';
 import { groupMaterialNeeds, isInventoryMaterial, FUNGIBLE_POOLS, computeSubPoolXp } from '~/utils/groupMaterialNeeds';
 import { NeedsGrid, CATEGORY_I18N, getItemRarity } from './MaterialNeedsSection';
-import type { EventData, IconData, IconInfos } from '~/types/plannerData';
-import { useNavigate } from 'react-router';
+import type { EventData, IconData } from '~/types/plannerData';
+import { useLocation, useNavigate } from 'react-router';
 import { equipmentBlueprintId } from '~/data/growthData';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
+import { getItemName } from '~/components/planner/common/locale';
 import type { TFunction } from 'i18next';
 
 // ── Long-press hook ──────────────────────────────────────────────────────────
@@ -116,19 +117,6 @@ const SortBar = ({ sortBy, onChange, t }: { sortBy: 'rarity' | 'id'; onChange: (
   </div>
 );
 
-// ── Item name lookup ────────────────────────────────────────────────────────
-const getItemName = (key: string, icons: IconInfos | undefined, lang: string): string => {
-  const [type, id] = key.split('_');
-  const info = (icons?.[type as keyof IconInfos] as Record<string, { LocalizeEtc?: { NameEn: string; NameKr: string; NameJp: string; NameTw: string } }> | undefined)?.[id];
-  const loc = info?.LocalizeEtc;
-
-  if (!loc) return key;
-  if (lang.startsWith('ko')) return loc.NameKr || loc.NameJp;
-  if (lang.startsWith('ja')) return loc.NameJp || loc.NameJp;
-  if (lang.startsWith('zh')) return loc.NameTw || loc.NameJp;
-  return loc.NameEn || loc.NameJp;
-};
-
 type Tab = 'needs' | 'inventory';
 
 interface UnifiedMaterialModalProps {
@@ -143,6 +131,7 @@ interface UnifiedMaterialModalProps {
 
 export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventData, iconData, title, initialTab = 'needs' }: UnifiedMaterialModalProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [filterAll, setFilterAll] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -169,6 +158,8 @@ export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventDa
   const { materialInventory, updateMaterialInventory, resetMaterialInventory } = useGlobalStore();
   const { t, i18n } = useTranslation('planner');
   const locale = i18n.language as Locale;
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnTo)}`;
   const tStr = t as (k: string) => string;
 
   const allItemKeys = useMemo(() => {
@@ -209,7 +200,11 @@ export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventDa
     return baseGroups
       .map(({ categoryKey, items }) => ({
         categoryKey,
-        items: items.filter((item) => getItemName(item.key, eventData.icons, i18n.language).toLowerCase().includes(q)),
+        items: items.filter((item) =>
+          getItemName(item.key, eventData.icons, i18n.language as Locale)
+            .toLowerCase()
+            .includes(q),
+        ),
       }))
       .filter(({ items }) => items.length > 0);
   }, [baseGroups, searchQuery, eventData.icons, i18n.language]);
@@ -299,7 +294,7 @@ export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventDa
               <button
                 onClick={() => {
                   onClose();
-                  void navigate(localeLink(locale, '/planner/item-scanner'));
+                  void navigate(itemScannerLink);
                 }}
                 className="text-xs px-2.5 py-1 rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors flex items-center gap-1"
                 title="Scan inventory screenshots to auto-input materials"

@@ -78,16 +78,13 @@ export const getRawTsvData = async (server: GameServer, selectedStudentId: numbe
   const mainDataUrl = cdn(`/w/map/${server}/${selectedStudentId}.bin`);
 
   const mainDataText = await fetchAndProcessWithCache(mainDataUrl, (res) => res.text());
-  const rawTsvData: RawDataRow[] = tsvParseRows(
-    mainDataText,
-    (row): RawDataRow => ({
-      x: +row[0],
-      y: +row[1],
-      z: +row[2],
-      w: +row[3],
-      difficulty: difficultyInfo[+row[4]].name,
-    }),
-  );
+  const rawTsvData: RawDataRow[] = tsvParseRows(mainDataText, (row): RawDataRow => ({
+    x: +row[0],
+    y: +row[1],
+    z: +row[2],
+    w: +row[3],
+    difficulty: difficultyInfo[+row[4]].name,
+  }));
   return rawTsvData;
 };
 

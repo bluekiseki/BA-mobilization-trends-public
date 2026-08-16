@@ -22,7 +22,7 @@ const formatTimeFromUnits = (units: number): string => {
   const totalSeconds = units / 100;
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toFixed(2).padStart(2, '0')}`;
+  return `${minutes}:${seconds.toFixed(2).padStart(5, '0')}`;
 };
 
 // Helper function to find a "nice" clean number for the bin size (e.g., multiples of 6000 for 1 minute, or 1000 for 10s)
@@ -94,50 +94,40 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
     if (!timeDataByDifficulty || Object.keys(timeDataByDifficulty).length === 0) return;
 
     const rankRange_max = rankRange.max || 20000;
-    const binAllCnt = (window.innerWidth - 50) / 10;
+    const pixelsPerBin = window.innerWidth < 640 ? 3 : 10;
+    const binAllCnt = (window.innerWidth - 50) / pixelsPerBin;
     const itemAllCnt = rankRange_max - rankRange.min + 1;
     let [startRank, endRank] = [1, 1];
-    let flag: 'before' | 'do' | 'after' = 'before';
 
-    // console.log('useEffect(() => {', flag);
-
-    // Create a new object based on previous configuration values
-    const newSettings = { ...difficultySettings }; // as DifficultySettings;
+    const newSettings = { ...difficultySettings };
     let hasChanges = false;
 
     for (const { name } of difficultyInfo) {
       const diffArray = timeDataByDifficulty[name]?.filter((_v, i) => startRank + i <= rankRange_max) || [];
-      if (!diffArray.length && flag != 'before') flag = 'after';
-      else flag = 'do';
 
-      // console.log('useEffect(() => {', name, flag, timeDataByDifficulty[name]);
-      if (flag) {
-        const itemDiffCnt = diffArray.length || 0;
+      if (diffArray.length > 0) {
+        const itemDiffCnt = diffArray.length;
         endRank += itemDiffCnt - 1;
         if (rankRange.max && endRank > rankRange.max) endRank = rankRange.max;
         const dinDiffCnt = (binAllCnt * itemDiffCnt) / itemAllCnt;
 
-        const scoreDiffp9 = diffArray[parseInt(String(itemDiffCnt * 0.9))];
+        const scoreDiffp9 = diffArray[Math.floor(itemDiffCnt * 0.9)];
         const scoreDiffp0 = diffArray[0];
         const scoreDiffRange = (scoreDiffp9 - scoreDiffp0) / 0.9;
 
-        const calculatedBinSize = scoreDiffRange / dinDiffCnt;
-        const calculatedTimeout = scoreDiffp0 + scoreDiffRange;
-        const rawBinSize = scoreDiffRange / dinDiffCnt;
-        const cleanBinSize = getCleanBinSize(rawBinSize);
+        const cleanBinSize = getCleanBinSize(scoreDiffRange / dinDiffCnt);
+        const timeout = scoreDiffp0 + scoreDiffRange;
 
-        // Execute update logic only when values differ from existing ones
-        if (newSettings[name]?.binSize !== calculatedBinSize || newSettings[name]?.timeout !== calculatedTimeout) {
+        if (newSettings[name]?.binSize !== cleanBinSize || newSettings[name]?.timeout !== timeout) {
           newSettings[name] = {
-            ...newSettings[name], // Settings to maintain (e.g., isVisible)
-            binSize: cleanBinSize || 200, // Guard against NaN/Infinity
-            timeout: scoreDiffp0 + scoreDiffRange,
+            ...newSettings[name],
+            binSize: cleanBinSize || 200,
+            timeout,
             showTimeout: true,
           };
           hasChanges = true;
         }
 
-        if (endRank === rankRange.max) flag = 'after';
         startRank = endRank = endRank + 1;
       } else {
         if (newSettings[name]?.binSize !== 200 || newSettings[name]?.timeout !== 36000) {
@@ -257,17 +247,19 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
         <div className="font-bold"></div>
         {/* Setting Panel toggle button */}
         <button onClick={() => setIsSettingsVisible(!isSettingsVisible)} className="text-sm px-3 py-1 rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600">
-          {t('clearTime')} {isSettingsVisible ? t('hideSettings') : t('showSettings')}
+          {isSettingsVisible ? t('hideSettings') : t('showSettings')}
         </button>
       </div>
 
       <div>
         <h3 className="text-xl font-bold text-center mb-2">{t('clearTimeDistribution')}</h3>
-        {histogramData.length > 0 ? (
-          <ScoreHistogram data={histogramData} calculateScoreFromTime={(s: number, d: DifficultyName) => calculateScoreFromTime(s, d, boss, server, id) || 0} />
-        ) : (
-          <div className="text-center text-neutral-500 py-10">{t('noData')}</div>
-        )}
+        <div className="-mx-4 sm:mx-0">
+          {histogramData.length > 0 ? (
+            <ScoreHistogram data={histogramData} calculateScoreFromTime={(s: number, d: DifficultyName) => calculateScoreFromTime(s, d, boss, server, id) || 0} />
+          ) : (
+            <div className="text-center text-neutral-500 py-10">{t('noData')}</div>
+          )}
+        </div>
       </div>
 
       {isSettingsVisible && (

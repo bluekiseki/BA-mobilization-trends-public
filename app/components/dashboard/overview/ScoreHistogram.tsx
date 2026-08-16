@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { TooltipContentProps, BarShapeProps } from 'recharts';
 import type { DifficultyName } from '~/components/raid/Difficulty';
 
@@ -39,13 +39,12 @@ const ScoreHistogram: React.FC<ScoreHistogramProps> = ({ data, calculateScoreFro
       const dataPoint = payload[0].payload as HistogramDataPoint;
       const labelStr = String(label ?? '');
       return (
-        <div className="bg-white/80 dark:bg-neutral-800/80">
-          <p className="label font-bold">{t('tooltipTime', { time: labelStr.split('|')[1] })}</p>
-          <p className="intro">{t('tooltipPlayers', { count: Number(payload[0].value ?? 0).toLocaleString() })}</p>
-          <p className="desc">{t('tooltipDifficulty', { difficulty: dataPoint.difficulty })}</p>
-          {/* <p>Score: to {calculateScoreFromTime((dataPoint.minTime || 0) / 100, dataPoint.difficulty).toLocaleString()}</p> */}
-          <p>{t('scoreCondition', { score: calculateScoreFromTime((dataPoint.minTime || 0) / 100, dataPoint.difficulty).toLocaleString() })}</p>
-          <p className="desc">
+        <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 border dark:border-neutral-700 rounded-lg text-sm">
+          <p className="font-bold mb-1">{t('tooltipTime', { time: labelStr.split('|')[1] })}</p>
+          <p className="text-neutral-600 dark:text-neutral-300">{t('tooltipPlayers', { count: Number(payload[0].value ?? 0).toLocaleString() })}</p>
+          <p className="text-neutral-600 dark:text-neutral-300">{t('tooltipDifficulty', { difficulty: dataPoint.difficulty })}</p>
+          <p className="text-neutral-600 dark:text-neutral-300">{t('scoreCondition', { score: calculateScoreFromTime((dataPoint.minTime || 0) / 100, dataPoint.difficulty).toLocaleString() })}</p>
+          <p className="text-xs text-neutral-500 mt-1">
             {t('tooltipCumulativeRank', {
               rank: dataPoint.cumulativeCount.toLocaleString(),
             })}
@@ -56,36 +55,38 @@ const ScoreHistogram: React.FC<ScoreHistogramProps> = ({ data, calculateScoreFro
     return null;
   };
 
+  const tickInterval = Math.max(0, Math.ceil(data.length / 10) - 1);
+
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
+    <ResponsiveContainer width="100%" height={500}>
+      <BarChart data={data} barCategoryGap={0} margin={{ top: 10, right: 10, left: 4, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
           dataKey="uniqueName"
           angle={-45}
           textAnchor="end"
-          height={80}
-          tickMargin={15}
-          dy={15}
-          interval="preserveStartEnd"
+          height={60}
+          tickMargin={5}
+          interval={tickInterval}
           allowDuplicatedCategory={true}
-          // tickFormatter={(value, index) => data[index].name}
-          tickFormatter={(value) => String(value).split('|')[1]}
-          style={{
-            fontSize: '10px',
+          tickFormatter={(value) => {
+            const name = String(value).split('|')[1] ?? '';
+            const start = name.startsWith('>') ? name : (name.split('-')[0] ?? name);
+            return start.replace(/\.\d+$/, '');
           }}
+          style={{ fontSize: '11px' }}
         />
-        <YAxis allowDecimals={false} />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend />
-        {/* payload={legendPayload}  */}
+        <YAxis allowDecimals={false} width={36} tickFormatter={(v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(v))} />
+        <Tooltip content={<CustomTooltip />} allowEscapeViewBox={{ x: true, y: true }} wrapperStyle={{ zIndex: 50 }} />
         <Bar
           dataKey="count"
           name={t('playerCount')}
           shape={(props: BarShapeProps) => {
             const entry = props.payload as { difficulty?: DifficultyName };
             const fill = entry?.difficulty ? difficultyColors[entry.difficulty] || '#8884d8' : '#8884d8';
-            return <rect x={props.x ?? 0} y={props.y ?? 0} width={props.width ?? 0} height={props.height ?? 0} fill={fill} />;
+            const x1 = Math.floor(props.x ?? 0);
+            const x2 = Math.ceil((props.x ?? 0) + (props.width ?? 0));
+            return <rect x={x1} y={Math.floor(props.y ?? 0)} width={x2 - x1} height={Math.ceil(props.height ?? 0)} fill={fill} />;
           }}
         />
       </BarChart>

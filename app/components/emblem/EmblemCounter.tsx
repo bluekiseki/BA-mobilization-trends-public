@@ -546,7 +546,7 @@ export function EmblemCounter({}) {
                   return (
                     <tr key={item.name} className=" dark:bg-neutral-800 border-b dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/30">
                       <td className="px-2 py-2 font-medium align-middle text-center">{r + 1}</td>
-                      {/* Image cell with flex-shrink-0 */}
+                      {/* Image cell with shrink-0 */}
                       <td className="py-1 px-0.5 align-middle">
                         {item.iconId && portraitData[item.iconId] ? (
                           <img src={`data:image/webp;base64,${portraitData[item.iconId]}`} alt="" className="w-10 h-10 rounded-full object-cover block" loading="lazy" />

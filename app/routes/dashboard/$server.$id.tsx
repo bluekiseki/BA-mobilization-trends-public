@@ -7,14 +7,14 @@ import { GAMESERVER_LIST, type FullData, type GameServer, type Student } from '~
 import { loadRaidInfosById } from '~/utils/loadRaidInfo';
 import { isTotalAssault, type PortraitData, type ReportEntry, type ReportEntryRank, type StudentData } from '~/components/dashboard/common';
 // import type { loader as rootLorder } from '~/root';
-import { HiOutlineChartPie, HiOutlineUsers } from 'react-icons/hi2'; // Icon example
+import { HiOutlineChartPie, HiOutlineUsers, HiArrowRight } from 'react-icons/hi2'; // Icon example
 
 // Import UI components
 import RaidHeader from '~/components/dashboard/RaidHeader';
 import { getMostDifficultLevel, type_translation, typecolor } from '~/components/raid/raidToString';
 import DashboardUI from '~/components/dashboard/dashboardUI';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
 import type { AppHandle } from '~/types/link';
 import { useDataCacheJson } from '~/utils/useDataCacheJson';
 import OverviewDashboardUI from '~/components/dashboard/OverviewDashboardUI';
@@ -24,22 +24,10 @@ import type { Route } from './+types/$server.$id';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { useHelpKey } from '~/utils/usePageHelp';
+import { localeLink } from '~/utils/localeLink';
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const raidInfo = loaderData.raidInfos[0]; //loadRaidInfo(server, locale, params.id || '', params.type || '')
-  if (raidInfo) {
-    const raid = raidInfo;
-    // const bosaType = raid.Type ? type_translation[raid.Type][loaderData.locale] : undefined
-    const raidType = loaderData.raidType;
-    return createMetaDescriptor(
-      // `${raid.Id.replace(/\w/, 'S')} ${raidType} ${raid.Boss} ${raid.Location}${/*bosaType ? ' ' + bosaType :*/ ''} ${loaderData.title}` + ' - ' + loaderData.siteTitle,
-      `${raid.Id.replace(/\w/, 'S')} ${raid.Boss} ${raid.Location} - ${raidType} ${loaderData.title}` + ' | ' + loaderData.siteTitle,
-      loaderData.description,
-      '/img/3.webp',
-    );
-  }
-
-  return [];
+  return createMetaDescriptor(`${loaderData.metaTitle} | ${loaderData.siteTitle}`, loaderData.metaDescription, '/img/3.webp', loaderData.canonicalUrl);
 }
 
 export const handle: AppHandle = {
@@ -83,6 +71,10 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
+      {
+        rel: 'canonical',
+        href: createLocalizedUrl(locale, `/dashboard/${server}/${id}`),
+      },
       ...createLinkHreflang(`/dashboard/${server}/${id}`),
     ];
   },
@@ -125,7 +117,7 @@ export function loader({ context, params, request }: LoaderFunctionArgs) {
       if (upperRaidInfos && upperRaidInfos.length > 0) {
         // Use URL object to maintain existing query parameters (e.g., ?view=detail&tab=All).
         const url = new URL(request.url);
-        return redirect(`/dashboard/${server}/${upperId}${url.search}`);
+        return redirect(`${localeLink(locale, `/dashboard/${server}/${upperId}`)}${url.search}`, 301);
       }
     }
 
@@ -134,13 +126,22 @@ export function loader({ context, params, request }: LoaderFunctionArgs) {
   }
 
   const isRaid = isTotalAssault(raidInfos[0]);
+  const raid = raidInfos[0];
+  const raidType = isRaid ? i18n.t('common:raid') : i18n.t('common:eraid');
+  const metaVariables = {
+    server: server.toUpperCase(),
+    season: raid.Id,
+    boss: raid.Boss,
+    location: raid.Location,
+    raidType,
+  };
 
   return data({
     locale,
-    title: i18n.t('dashboard:shorttitle'),
-    description: i18n.t('dashboard:description1'),
+    metaTitle: i18n.t('dashboard:detailMetaTitle', metaVariables),
+    metaDescription: i18n.t('dashboard:detailMetaDescription', metaVariables),
+    canonicalUrl: createLocalizedUrl(locale, `/dashboard/${server}/${id}`),
     siteTitle: i18n.t('common:title'),
-    raidType: isRaid ? i18n.t('common:raid') : i18n.t('common:eraid'),
     raidInfos,
     server: server as GameServer,
     isGrandAssault: raidInfos.length > 1,
@@ -461,22 +462,18 @@ export default function RaidDetailsPage() {
                     {/* </Card> */}
                   </div>
 
-                  {/* Show button only when not on 'All' tab */}
+                  {/* Hidden on Grand Assault 'All' tab — no specific boss selected */}
                   {activeTab !== 'All' && !overviewLoading && (
-                    <>
-                      <div className="text-center mb-12">
-                        <button
-                          onClick={handleGoToDetail}
-                          className="inline-flex items-center gap-2.5 py-3 px-6 text-white font-semibold rounded-lg shadow-md hover:opacity-80  transition-all"
-                          style={{
-                            backgroundColor: activeTab !== t_c('raid') ? typecolor[activeTab as keyof typeof typecolor] || '#0ea5e9' : undefined,
-                          }}
-                        >
-                          <HiOutlineUsers className="w-5 h-5" />
-                          {t('goToDetailView', { type: translatedTypeName })}
-                        </button>
-                      </div>
-                    </>
+                    <div className="text-center mb-8">
+                      <button
+                        onClick={handleGoToDetail}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline transition-all"
+                        style={typecolor[activeTab as keyof typeof typecolor] ? { color: typecolor[activeTab as keyof typeof typecolor] } : undefined}
+                      >
+                        {t('goToDetailView', { type: translatedTypeName })}
+                        <HiArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </>
               ) : overviewLoading ? (

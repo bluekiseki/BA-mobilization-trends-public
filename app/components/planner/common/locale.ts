@@ -1,4 +1,4 @@
-import type { LocalizeEtc } from '~/types/plannerData';
+import type { IconInfos, LocalizeEtc } from '~/types/plannerData';
 import { type Locale } from '~/utils/i18n/config';
 
 export const getlocaleMethond = (txt: string, type: 'Ja' | 'jp' | 'Jp', locale: Locale) => {
@@ -26,4 +26,13 @@ export const getLocalizeEtcName = (localizeEtc: LocalizeEtc | undefined, locale:
     case 'zh-Hant':
       return localizeEtc.NameTw || localizeEtc.NameEn || localizeEtc.NameJp;
   }
+};
+
+// Resolve a display name for an item key (e.g. 'Item_3000', 'Currency_1') using icon data.
+// Returns the key itself if no name is found.
+export const getItemName = (key: string, icons: IconInfos | null | undefined, locale: Locale): string => {
+  const i = key.lastIndexOf('_');
+  if (i < 0) return key;
+  const group = icons?.[key.slice(0, i) as keyof IconInfos] as Record<string, { LocalizeEtc?: LocalizeEtc }> | undefined;
+  return getLocalizeEtcName(group?.[key.slice(i + 1)]?.LocalizeEtc, locale) || key;
 };

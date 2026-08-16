@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { parseAndGroupBanners, getAllStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
-import { rollSingle, createPoolForBanner, preprocessReleaseDates, type GachaPools } from '~/utils/gachaEngine';
+import { parseAndGroupBanners, getAllStudents, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
+import { rollSingle, createPoolForBanner, preprocessReleaseDates, calcPullRewards, calcDupeReward, type GachaPools } from '~/utils/gachaEngine';
 import { FES_EXCLUSIONS_BY_PICKUP_ID } from '~/utils/gachaRules';
 import type { Student } from '~/types/gacha';
 import { cdn } from '~/utils/cdn';
 import GachaWorker from '~/workers/gacha-engine.worker?worker';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
+import { PageHeader } from '~/components/common/PageHeader';
 
 interface ChunkStats {
   grade1: number;
@@ -18,9 +19,7 @@ interface ChunkStats {
 }
 
 type WorkerOutMsg =
-  | { type: 'progress'; chunkStats: ChunkStats; completed: number; total: number }
-  | { type: 'done'; chunkStats: ChunkStats; completed: number; total: number }
-  | { type: 'error'; message: string };
+  { type: 'progress'; chunkStats: ChunkStats; completed: number; total: number } | { type: 'done'; chunkStats: ChunkStats; completed: number; total: number } | { type: 'error'; message: string };
 
 interface PullResult {
   studentId: number;
@@ -58,7 +57,7 @@ const EMPTY_STATS = (): CumulativeStats => ({
 const GRADE_STYLE: Record<number, string> = {
   1: 'bg-blue-400',
   2: 'bg-yellow-400',
-  3: 'bg-gradient-to-br from-blue-500 via-blue-300 to-blue-400',
+  3: 'bg-gradient-to-br from-violet-600 via-violet-400 to-purple-500',
 };
 
 function formatDuration(ms: number): string {
@@ -97,7 +96,7 @@ function StatCard({ label, count, total, expected }: { label: string; count: num
 
 type GradeTab = 1 | 2 | 3;
 
-function StudentCountTable({ counts, total }: { counts: Record<number, StudentCount>; total: number }) {
+function StudentCountTable({ counts, total, grade }: { counts: Record<number, StudentCount>; total: number; grade: 1 | 2 | 3 }) {
   const sorted = Object.entries(counts)
     .map(([id, v]) => ({ id: Number(id), ...v }))
     .sort((a, b) => b.count - a.count);
@@ -111,20 +110,29 @@ function StudentCountTable({ counts, total }: { counts: Record<number, StudentCo
           <th className="py-1 text-left font-medium">Student</th>
           <th className="py-1 text-right font-medium">Count</th>
           <th className="py-1 text-right font-medium">Rate</th>
+          <th className="py-1 text-right font-medium">Eleph</th>
+          <th className="py-1 text-right font-medium">Eligma</th>
         </tr>
       </thead>
       <tbody>
-        {sorted.map(({ id, name, count, isPickup, isFes }) => (
-          <tr key={id} className="border-b dark:border-neutral-700 last:border-0">
-            <td className="py-1 flex items-center gap-1">
-              {isPickup && <span className="text-yellow-400 text-xs">★</span>}
-              {isFes && !isPickup && <span className="text-pink-400 text-xs">F</span>}
-              {name}
-            </td>
-            <td className="py-1 text-right">{count}</td>
-            <td className="py-1 text-right tabular-nums">{pct(count, total)}%</td>
-          </tr>
-        ))}
+        {sorted.map(({ id, name, count, isPickup, isFes }) => {
+          const items = calcPullRewards(count, grade, isPickup, id);
+          const eleph = items[`Item_${id}`] ?? 0;
+          const eligma = items['Item_23'] ?? 0;
+          return (
+            <tr key={id} className="border-b dark:border-neutral-700 last:border-0">
+              <td className="py-1 flex items-center gap-1">
+                {isPickup && <span className="text-yellow-400 text-xs">★</span>}
+                {isFes && !isPickup && <span className="text-pink-400 text-xs">F</span>}
+                {name}
+              </td>
+              <td className="py-1 text-right tabular-nums">{count}</td>
+              <td className="py-1 text-right tabular-nums">{pct(count, total)}%</td>
+              <td className="py-1 text-right tabular-nums">{eleph > 0 ? eleph.toLocaleString() : '-'}</td>
+              <td className="py-1 text-right tabular-nums">{eligma > 0 ? eligma.toLocaleString() : '-'}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -141,7 +149,10 @@ export default function DebugGachaPage() {
   const [activeTab, setActiveTab] = useState<GradeTab>(3);
   const [selectedPickupId, setSelectedPickupId] = useState<number | null>(null);
   const [customCount, setCustomCount] = useState<string>('100000000');
+  // "Recruit charge" pity counter (new system) — only meaningful for useChargeSystem banners; reset alongside stats.
+  const [charge, setCharge] = useState(0);
   const [useWasm, setUseWasm] = useState(false);
+  const [showBatches, setShowBatches] = useState(false);
   const [wasmProgress, setWasmProgress] = useState<{ completed: number; total: number } | null>(null);
   const [timingResult, setTimingResult] = useState<{ totalPulls: number; elapsedMs: number } | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -164,7 +175,7 @@ export default function DebugGachaPage() {
         }
 
         const parsedBanners = parseAndGroupBanners('KR', studentMap);
-        const students = getAllStudents(studentMap) as unknown as Student[];
+        const students = withPickupFallbackStudents(getAllStudents(studentMap), parsedBanners) as unknown as Student[];
 
         const portraitRes = await fetch(cdn('/w/students_portrait.json'));
         const portraitData: Record<number, string> = await portraitRes.json();
@@ -198,6 +209,26 @@ export default function DebugGachaPage() {
 
   const studentMap = useMemo(() => new Map(allStudents.map((s) => [s.id, s])), [allStudents]);
 
+  const rewardTotals = useMemo(() => {
+    const eligmaByGrade: Record<1 | 2 | 3, number> = { 1: 0, 2: 0, 3: 0 };
+    const elephByGrade: Record<1 | 2 | 3, { id: number; name: string; eleph: number }[]> = { 1: [], 2: [], 3: [] };
+    for (const g of [1, 2, 3] as const) {
+      for (const [idStr, { name, count, isPickup }] of Object.entries(stats.studentCounts[g])) {
+        const id = Number(idStr);
+        const items = calcPullRewards(count, g, isPickup, id);
+        eligmaByGrade[g] += items['Item_23'] ?? 0;
+        const eleph = items[`Item_${id}`] ?? 0;
+        if (eleph > 0) elephByGrade[g].push({ id, name, eleph });
+      }
+      elephByGrade[g].sort((a, b) => b.eleph - a.eleph);
+    }
+    return {
+      eligmaByGrade,
+      totalEligma: eligmaByGrade[1] + eligmaByGrade[2] + eligmaByGrade[3],
+      elephByGrade,
+    };
+  }, [stats.studentCounts]);
+
   const CHUNK_SIZE = 100000;
 
   const doPulls = (count: number) => {
@@ -207,6 +238,8 @@ export default function DebugGachaPage() {
     const startTime = performance.now();
 
     const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
+    const useCharge = banner.useChargeSystem;
+    let currentCharge = charge;
     let remaining = count;
     let currentStats: CumulativeStats = {
       ...stats,
@@ -227,7 +260,13 @@ export default function DebugGachaPage() {
       for (let b = 0; b < chunkCount / 10; b++) {
         const batch: PullResult[] = [];
         for (let i = 0; i < 10; i++) {
-          const result = rollSingle(i === 9, banner.isFes, selectedPickupId, pools, bannerPickupIds);
+          let forced: 'pickup' | 'random3star' | undefined;
+          if (useCharge) {
+            currentCharge += 1;
+            forced = currentCharge === 200 ? 'pickup' : currentCharge === 100 ? (Math.random() < 0.5 ? 'pickup' : 'random3star') : undefined;
+          }
+          const result = rollSingle(i === 9, banner.isFes, selectedPickupId, pools, bannerPickupIds, forced);
+          if (useCharge && result.isPickup) currentCharge = 0;
           const student = studentMap.get(result.id);
           const pull: PullResult = {
             studentId: result.id,
@@ -263,6 +302,7 @@ export default function DebugGachaPage() {
       currentStats = newStats;
       setBatches((prev) => [...prev, ...newBatches]);
       setStats({ ...newStats });
+      if (useCharge) setCharge(currentCharge);
 
       if (remaining > 0) {
         setTimeout(runChunk, 0);
@@ -280,6 +320,7 @@ export default function DebugGachaPage() {
     setStats(EMPTY_STATS());
     setWasmProgress(null);
     setTimingResult(null);
+    setCharge(0);
   };
 
   const mergeWasmChunk = (prev: CumulativeStats, chunk: ChunkStats, pickupId: number): CumulativeStats => {
@@ -375,9 +416,13 @@ export default function DebugGachaPage() {
   const expectedR3 = selectedBanner?.isFes ? 6 : 3;
   const expectedPickup = 0.7;
 
+  if (banners.length === 0) {
+    return <div className="p-6 text-neutral-500 text-sm">Loading...</div>;
+  }
+
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-xl font-bold">Gacha Engine Debug</h1>
+      <PageHeader title="Gacha Engine Debug" eyebrow="Debug" />
 
       <div>
         <label className="block text-sm font-medium mb-1">Select Banner</label>
@@ -440,7 +485,14 @@ export default function DebugGachaPage() {
           Rust⚡
         </button>
         {useWasm && <span className="text-xs text-neutral-400">Bulk simulation — envelope grid disabled</span>}
+        {selectedBanner?.useChargeSystem && useWasm && <span className="text-xs text-amber-600 dark:text-amber-400">Recruit charge system not reflected in Rust/WASM yet — use JS</span>}
       </div>
+
+      {selectedBanner?.useChargeSystem && (
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
+          Charge: <span className="font-bold text-neutral-800 dark:text-neutral-100">{charge}</span> / 200
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         <button
@@ -449,6 +501,13 @@ export default function DebugGachaPage() {
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
         >
           ×10
+        </button>
+        <button
+          onClick={() => (useWasm ? doWasmPulls : doPulls)(100)}
+          disabled={loading || !pools}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+        >
+          +100
         </button>
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(200)}
@@ -545,6 +604,40 @@ export default function DebugGachaPage() {
             <StatCard label="Pickup" count={stats.pickup} total={stats.total} expected={expectedPickup} />
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-xs border dark:border-neutral-700 rounded-lg max-h-64 overflow-y-auto">
+              <div className="py-1.5 px-3 font-medium bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 sticky top-0">Eleph (per student)</div>
+              {([3, 2, 1] as const).map((g) => {
+                const students = rewardTotals.elephByGrade[g];
+                if (students.length === 0) return null;
+                return (
+                  <div key={g} className="border-t dark:border-neutral-700 first:border-0">
+                    <div className="py-1 px-3 text-neutral-500 bg-neutral-50/50 dark:bg-neutral-800/50">★{g}</div>
+                    {students.map(({ id, name, eleph }) => (
+                      <div key={id} className="flex justify-between py-0.5 px-3 border-t dark:border-neutral-700/50">
+                        <span>{name}</span>
+                        <span className="tabular-nums">{eleph.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-xs border dark:border-neutral-700 rounded-lg overflow-hidden">
+              <div className="py-1.5 px-3 font-medium bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">Eligma (shared)</div>
+              {([3, 2, 1] as const).map((g) => (
+                <div key={g} className="flex justify-between py-1.5 px-3 border-t dark:border-neutral-700">
+                  <span>★{g}</span>
+                  <span className="tabular-nums">{rewardTotals.eligmaByGrade[g].toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="flex justify-between py-1.5 px-3 border-t dark:border-neutral-700 font-semibold bg-neutral-50 dark:bg-neutral-800">
+                <span>Total</span>
+                <span className="tabular-nums">{rewardTotals.totalEligma.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
           <div>
             <div className="flex gap-1 mb-2">
               {([3, 2, 1] as GradeTab[]).map((g) => (
@@ -566,13 +659,20 @@ export default function DebugGachaPage() {
               ))}
             </div>
             <div className="border dark:border-neutral-700 rounded-lg p-3 max-h-64 overflow-y-auto">
-              <StudentCountTable counts={stats.studentCounts[activeTab]} total={stats.total} />
+              <StudentCountTable counts={stats.studentCounts[activeTab]} total={stats.total} grade={activeTab} />
             </div>
           </div>
         </div>
       )}
 
+      {!useWasm && batches.length > 0 && (
+        <button onClick={() => setShowBatches((v) => !v)} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
+          {showBatches ? 'Hide' : 'Show'} pull envelopes ({batches.length * 10} pulls)
+        </button>
+      )}
+
       {!useWasm &&
+        showBatches &&
         batches.length > 0 &&
         (() => {
           const MAX_VISIBLE = 50;
@@ -585,13 +685,41 @@ export default function DebugGachaPage() {
                   {hidden * 10} pulls hidden (total {batches.length * 10} pulls)
                 </p>
               )}
-              {visible.map((batch, bIdx) => (
-                <div key={bIdx} className="grid grid-cols-5 gap-2">
-                  {batch.map((pull, pIdx) => (
-                    <EnvelopeCard key={pIdx} pull={pull} portraits={portraits} />
-                  ))}
-                </div>
-              ))}
+              {visible.map((batch, bIdx) => {
+                const elephByStudent: Record<number, { name: string; amount: number }> = {};
+                let totalEligma = 0;
+                for (const pull of batch) {
+                  const items = calcDupeReward(pull.grade as 1 | 2 | 3, pull.isPickup, pull.studentId);
+                  const eleph = items[`Item_${pull.studentId}`] ?? 0;
+                  const eligma = items['Item_23'] ?? 0;
+                  if (eleph > 0) {
+                    const prev = elephByStudent[pull.studentId];
+                    elephByStudent[pull.studentId] = { name: pull.studentName, amount: (prev?.amount ?? 0) + eleph };
+                  }
+                  totalEligma += eligma;
+                }
+                const elephEntries = Object.entries(elephByStudent);
+                const hasRewards = elephEntries.length > 0 || totalEligma > 0;
+                return (
+                  <div key={bIdx} className="space-y-1">
+                    <div className="grid grid-cols-5 gap-2">
+                      {batch.map((pull, pIdx) => (
+                        <EnvelopeCard key={pIdx} pull={pull} portraits={portraits} />
+                      ))}
+                    </div>
+                    {hasRewards && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 justify-end text-xs text-neutral-400 tabular-nums">
+                        {elephEntries.map(([id, { name, amount }]) => (
+                          <span key={id}>
+                            {name} Eleph +{amount}
+                          </span>
+                        ))}
+                        {totalEligma > 0 && <span>Eligma +{totalEligma}</span>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })()}

@@ -95,6 +95,7 @@
   "Debuff_ElectricShockDamagedIncrease": "Shock DMG Taken",
   "Debuff_PoisonDamagedIncrease": "Poison DMG Taken",
   "Debuff_ElectroPulse": "Electromagnetic Pulse",
+  "Debuff_EN0022_Dummy": "Adhesive Fluid",
   "CC_Fear": "Fear",
   "CC_Stunned": "Stun",
   "CC_Provoke": "Taunt",
@@ -162,5 +163,18 @@
   "Special_CH0228_Ex": "Sales",
   "Special_CH0337_Ex": "Marked",
   "Special_CH0172_Ex": "Reconnaissance",
-  "Special_CH0174_Ex": "Marked"
+  "Special_CH0174_Ex": "Marked",
+  "Special_CH0076_Ex": "Keychain",
+  "Special_CH0247_ExtraPassive": "Unforgiving",
+  "Special_CH0355_01_03_ExtraPassive": "Flower Bud",
+  "Special_Ayane_Original_GearPublic": "Supply Drop",
+  "Special_CH0156_GearPublic": "HE Shell Loaded",
+  "Special_CH0344_ExtraPassive": "Charisma",
+  "Special_CH0345_ExtraPassive_01": "Sunscreen",
+  "Special_CH0345_ExtraPassive_02": "UV Protection",
+  "Special_CH0346_Ex": "Suitcase",
+  "Special_CH0346_ExtraPassive": "Partner",
+  "Special_CH0347_Ex_01": "Seashell Flower",
+  "Special_CH0347_Ex_02": "Seashells",
+  "Special_CH0347_Ex_03": "Friend"
 }

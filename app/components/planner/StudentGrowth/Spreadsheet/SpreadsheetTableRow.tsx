@@ -41,6 +41,7 @@ function SpreadsheetTableRowComponent({
   const rowBg = isAdded ? 'bg-white dark:bg-neutral-900' : 'bg-neutral-50 dark:bg-neutral-950';
   const cellId = useCallback((col: string) => `row-${rowIndex}-${col}`, [rowIndex]);
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
+  const showIdentityColumns = screenWidth > 600;
 
   function starUwToIndex(star: number, uw: number): number {
     return uw > 0 ? 4 + uw : Math.max(0, star - 1);
@@ -77,20 +78,25 @@ function SpreadsheetTableRowComponent({
         )}
       </td>
 
-      <td
-        className={`${td} sticky z-10 bg-inherit pl-2 text-left font-medium truncate ${isAdded ? 'text-neutral-800 dark:text-neutral-100' : 'text-neutral-400 dark:text-neutral-500'}`}
-        style={{ left: L.name, width: screenWidth > 600 ? 120 : 0, minWidth: screenWidth > 600 ? 120 : 0, maxWidth: screenWidth > 600 ? 120 : 0 }}
-        title={row.name}
-      >
-        {row.name}
-      </td>
+      {showIdentityColumns && (
+        <>
+          <td
+            className={`${td} sticky z-10 bg-inherit pl-2 text-left font-medium truncate ${isAdded ? 'text-neutral-800 dark:text-neutral-100' : 'text-neutral-400 dark:text-neutral-500'}`}
+            style={{ left: L.name, width: 120, minWidth: 120, maxWidth: 120 }}
+            title={row.name}
+          >
+            {row.name}
+          </td>
 
-      <td
-        className={`${td} sticky z-10 bg-inherit pl-1 text-left truncate text-neutral-500 dark:text-neutral-400 whitespace-nowrap`}
-        style={{ left: L.school, width: screenWidth > 600 ? 70 : 0, minWidth: screenWidth > 600 ? 70 : 0, maxWidth: screenWidth > 600 ? 70 : 0 }}
-      >
-        {row.school}
-      </td>
+          <td
+            className={`${td} sticky z-10 bg-inherit pl-1 text-left truncate text-neutral-500 dark:text-neutral-400 whitespace-nowrap`}
+            style={{ left: L.school, width: 70, minWidth: 70, maxWidth: 70 }}
+            title={row.school}
+          >
+            {row.school}
+          </td>
+        </>
+      )}
 
       {plan ? (
         <>

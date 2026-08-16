@@ -15,17 +15,19 @@ interface Props {
   className?: string;
 }
 
-let zxcvbnReady: Promise<typeof import('@zxcvbn-ts/core').zxcvbn> | null = null;
+type ZxcvbnCheck = (password: string, userInputs?: (string | number)[]) => { score: number };
+
+let zxcvbnReady: Promise<ZxcvbnCheck> | null = null;
 
 function loadZxcvbn() {
   if (!zxcvbnReady) {
-    zxcvbnReady = Promise.all([import('@zxcvbn-ts/core'), import('@zxcvbn-ts/language-common'), import('@zxcvbn-ts/language-en')]).then(([{ zxcvbn, zxcvbnOptions }, common, en]) => {
-      zxcvbnOptions.setOptions({
+    zxcvbnReady = Promise.all([import('@zxcvbn-ts/core'), import('@zxcvbn-ts/language-common'), import('@zxcvbn-ts/language-en')]).then(([{ ZxcvbnFactory }, common, en]) => {
+      const factory = new ZxcvbnFactory({
         translations: en.translations,
         graphs: common.adjacencyGraphs,
         dictionary: { ...common.dictionary, ...en.dictionary },
       });
-      return zxcvbn;
+      return (password: string, userInputs?: (string | number)[]) => factory.check(password, userInputs);
     });
   }
   return zxcvbnReady;

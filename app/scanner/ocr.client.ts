@@ -1,6 +1,5 @@
 import * as ort from 'onnxruntime-web';
 import type { CellBbox } from './types';
-import { cdn } from '~/utils/cdn';
 
 const IMG_H = 32;
 const IMG_W = 128;
@@ -8,8 +7,11 @@ const CHARS = ['', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'K'];
 
 let session: ort.InferenceSession | null = null;
 
-export async function initOCR(): Promise<void> {
-  session = await ort.InferenceSession.create(cdn('/scanner/models/qty_model.onnx'), {
+// modelBytes is fetched by modelLoader.client.ts up front, in parallel with the other
+// model/data files — passing bytes directly (instead of a URL) means onnxruntime-web never
+// issues its own redundant fetch for this file.
+export async function initOCR(modelBytes: Uint8Array): Promise<void> {
+  session = await ort.InferenceSession.create(modelBytes, {
     executionProviders: ['wasm'], // OCR is lightweight; always use WASM
   });
 }

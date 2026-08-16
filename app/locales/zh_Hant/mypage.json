@@ -1,0 +1,128 @@
+{
+  "raids": {
+    "title": "我的通關紀錄",
+    "description": "儲存總力戰、大決戰、聯合戰術考試、制約解除決戰的通關紀錄。",
+    "noGuide": "未參考攻略通關",
+    "server": "伺服器",
+    "floor": "層數",
+    "notes": "備註",
+    "rankText": "第{{rank}}名",
+    "importSuccess": "已載入{{count}}筆紀錄。",
+    "action": {
+      "import": "匯入JSON",
+      "export": "匯出JSON",
+      "addRecord": "新增紀錄",
+      "editRecord": "編輯紀錄",
+      "deleteRecord": "刪除紀錄"
+    },
+    "warning": {
+      "deviceOnly": "目前僅儲存於此裝置。",
+      "syncSuffix": "即可同步至其他裝置。"
+    },
+    "tabs": {
+      "records": "紀錄",
+      "stats": "統計"
+    },
+    "filters": {
+      "showing": "顯示 {{visible}} / {{total}}",
+      "sort": "排序",
+      "sortByDateDesc": "日期新→舊",
+      "sortByDateAsc": "日期舊→新",
+      "sortByAddedDesc": "登錄新→舊",
+      "sortByAddedAsc": "登錄舊→新"
+    },
+    "error": {
+      "invalidFormat": "無效的戰鬥紀錄格式。",
+      "importFailed": "無法載入JSON檔案。",
+      "noRaidSelected": "請選擇戰鬥。",
+      "scoreInvalid": "分數必須為0以上的整數。",
+      "scoreOptionalInvalid": "分數必須為空或0以上的整數。",
+      "rankInvalid": "名次必須為空或1以上的整數。",
+      "floorInvalid": "制約解除決戰的層數必須在1~124之間。",
+      "guideLinkInvalid": "攻略連結必須以http://或https://開頭。",
+      "armorGuideLinkInvalid": "屬性攻略連結必須以http://或https://開頭。",
+      "assistDuplicate": "此學生在此戰鬥中已作為助戰使用。",
+      "assistDuplicateArmor": "此屬性中此學生已作為助戰使用。",
+      "studentDuplicate": "不能重複編入同一名學生。",
+      "studentDuplicateWithoutAssist": "除非借用為助戰，否則不能重複編入同一名學生。"
+    },
+    "table": {
+      "empty": "尚無任何紀錄。"
+    },
+    "modal": {
+      "add": "新增通關紀錄",
+      "edit": "編輯通關紀錄",
+      "raid": "戰鬥",
+      "trophy": "獎盃",
+      "clearTime": "通關時間",
+      "clearTimePlaceholder": "選擇",
+      "totalScore": "合計分數",
+      "clearTimeLabel": "通關時間 {{time}}",
+      "difficultyCombo": "難度組合",
+      "rankPlaceholder": "未填寫",
+      "armorScore": "屬性分數",
+      "armorDifficulty": "屬性難度",
+      "party": "隊伍{{n}}",
+      "jfdStage": "第{{n}}階段",
+      "deleteParty": "刪除隊伍",
+      "addParty": "新增隊伍",
+      "armorGuideLink": "屬性攻略連結",
+      "armorNotes": "屬性備註",
+      "guideLink": "參考攻略連結"
+    },
+    "slotPicker": {
+      "starGrade": "星級",
+      "clearSlot": "清除欄位",
+      "assistConflict": "已作為助戰使用",
+      "mulligan": "換牌",
+      "expandOptional": "▼ 輸入裝備・技能 (選填)",
+      "collapseOptional": "▲ 收合裝備・技能",
+      "noEquip": "無",
+      "notesPlaceholder": "(選填)",
+      "confirmAndNext": "確認並移至下一格",
+      "nextParty": "移至下一隊伍"
+    },
+    "stats": {
+      "totalRecords": "紀錄數",
+      "uniqueStudents": "登場學生數",
+      "assistCount": "助戰使用次數",
+      "noData": "沒有資料。",
+      "content": "內容",
+      "boss": "BOSS",
+      "armor": "屬性",
+      "rankValue": "第{{rank}}名",
+      "starLabel": "{{n}}★",
+      "weaponLabel": "武{{n}}",
+      "floorLabel": "第{{floor}}層",
+      "starDist": "星級分布",
+      "levelDist": "等級分布",
+      "assistTimes": "助戰 {{count}}次",
+      "studentDeployment": "學生出戰紀錄",
+      "totalDeployments": "共出戰{{count}}次",
+      "scoreLabel": "分數 {{score}}",
+      "rankLabel": "名次 {{rank}}",
+      "scoreChart": {
+        "title": "總力戰 / 大決戰 結果趨勢",
+        "desc": "切換分數與名次查看，獎盃以點的顏色區分。",
+        "emptyScore": "沒有符合條件的分數紀錄。",
+        "emptyRank": "沒有符合條件的名次紀錄。"
+      },
+      "jfdChart": {
+        "title": "聯合戰術考試分數趨勢",
+        "desc": "聯合戰術考試以獨立圖表呈現。",
+        "empty": "沒有聯合戰術考試紀錄。"
+      },
+      "usageChart": {
+        "title": "最常同行的學生",
+        "desc": "依內容類型及助戰狀態篩選查看。",
+        "empty": "沒有符合條件的學生使用紀錄。"
+      },
+      "restrictionChart": {
+        "title": "制約解除決戰通關推移",
+        "desc": "選擇層數或通關時間查看趨勢。",
+        "empty": "沒有符合條件的制約解除決戰紀錄。"
+      },
+      "countTimes": "{{count}}次"
+    }
+  }
+}

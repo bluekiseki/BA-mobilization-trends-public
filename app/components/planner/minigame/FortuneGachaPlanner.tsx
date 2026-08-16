@@ -30,7 +30,7 @@ interface FortuneGachaPlannerProps {
 }
 
 // --- Simulation Engine ---
-const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): { avgCost: number; avgRewards: Record<string, number> } => {
+export const runSimulation = (gachaData: EventData['fortune_gacha'], simRuns: number): { avgCost: number; avgRewards: Record<string, number> } => {
   if (!gachaData || simRuns <= 0) return { avgCost: 0, avgRewards: {} };
 
   const totalRewards: Record<string, number> = {};

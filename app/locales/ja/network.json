@@ -1,0 +1,57 @@
+{
+  "title": "学生出撃ネットワーク分析",
+  "description": "レイド編成で一緒に使われやすい生徒の関係と中心となる生徒をネットワークで確認できます。",
+  "loadingAssets": "初期アセットを読み込み中...",
+  "fullPage": "フルページ →",
+  "sidebarTabs": {
+    "filter": "フィルター",
+    "search": "検索",
+    "rankings": "ランキング",
+    "detail": "詳細"
+  },
+  "controls": {
+    "range": "範囲",
+    "from": "開始",
+    "to": "終了",
+    "seasonsInRange": "{{count}}シーズン範囲",
+    "type": "タイプ",
+    "rankCutoff": "ランクカットオフ",
+    "topRank": "トップ {{value}}",
+    "display": "表示",
+    "minEdgeWeight": "最小エッジ重み: {{value}}",
+    "maxStudents": "最大学生数: {{value}}",
+    "topNPerNode": "ノードあたりのトップN リンク",
+    "on": "オン",
+    "off": "オフ"
+  },
+  "ranking": {
+    "noData": "データなし",
+    "pageRank": "ページランク",
+    "pageRankDesc": "ページランクとは、単純な共出撃回数だけでなく、一緒に出撃した生徒の重要度も考慮して中心度を測る指標。繋がっている生徒のランクが高いほどスコアが高くなる。",
+    "betweenness": "媒介中心性",
+    "betweennessDesc": "媒介中心性とは、ある生徒が他の2人の生徒間の最短経路上にどれだけ頻繁に位置するかを示す指標。値が高いほどパーティ編成の核心的な橋渡し役となり、除くとネットワークが分断されやすくなる。",
+    "strength": "連結強度",
+    "strengthDesc": "他のすべての生徒との共出撃回数の合計。どれだけ頻繁にパーティに編成されたかを示す最もシンプルな使用頻度の指標。",
+    "degree": "次数",
+    "degreeDesc": "共に出撃したことのある固有の生徒数。多様なパーティ編成に幅広く組み込まれるほど次数が高くなる。汎用性の指標として活用できる。"
+  },
+  "nodeDetail": {
+    "clickToSeeDetails": "ノードをクリックして詳細を表示",
+    "appearances": "{{count}}回の出撃",
+    "coOccurrences": "共出撃",
+    "noConnections": "現在のビューに接続がありません",
+    "viewProfile": "学生情報及び出戦状況"
+  },
+  "canvas": {
+    "recentSeasons": "最近14シーズンの結合",
+    "nodesStat": "{{nodes}}人の学生 · {{edges}}個の接続",
+    "focus": "フォーカス:",
+    "instructionsHint": "ノードをクリックしてフォーカス · ドラッグして移動 · スクロールでズーム",
+    "selectSeasons": "フィルタータブからシーズンを選択して開始します。",
+    "noMatches": "現在のフィルターに一致するデータがありません。"
+  },
+  "search": {
+    "placeholder": "学生を検索...",
+    "noResults": "結果なし"
+  }
+}

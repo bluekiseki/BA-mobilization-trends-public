@@ -7,7 +7,7 @@ interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   onChange: (newValue: number) => void;
   min: number;
   max: number;
-  narrowButtonType?: 'max' | 'plus' | 'max_only' | 'plus_only';
+  narrowButtonType?: 'all' | 'max' | 'plus' | 'max_only' | 'plus_only';
   disabled?: boolean;
 }
 

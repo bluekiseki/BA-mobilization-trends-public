@@ -2,6 +2,7 @@
 
 // Wakamo=10033, S.Hoshino=10045, Mika=10059
 const WAKAMO_MIKA_BANNER_EXCL = [10033, 10045, 10059];
+const WAKAMO_S_HANAKO_BANNER_EXCL = [10033, 10045, 10059, 10086, 10074];
 
 export const FES_EXCLUSIONS_BY_PICKUP_ID: Record<number, number[]> = {
   // Aris(Battle)/Kei/Hoshino(Battle)/Shiroko*Terror banner — Wakamo, S.Hoshino, Mika, Hina(Dress) excluded
@@ -9,6 +10,10 @@ export const FES_EXCLUSIONS_BY_PICKUP_ID: Record<number, number[]> = {
   10135: WAKAMO_MIKA_BANNER_EXCL,
   10098: WAKAMO_MIKA_BANNER_EXCL,
   10100: WAKAMO_MIKA_BANNER_EXCL,
+  10148: WAKAMO_S_HANAKO_BANNER_EXCL,
+  20060: WAKAMO_S_HANAKO_BANNER_EXCL,
+  10111: WAKAMO_S_HANAKO_BANNER_EXCL,
+  20041: WAKAMO_S_HANAKO_BANNER_EXCL,
 };
 
 export const FES_EXCLUSIONS = FES_EXCLUSIONS_BY_PICKUP_ID;
@@ -80,4 +85,37 @@ export const canSpook = (studentId: number, isLimited: boolean, isFes: boolean):
   if (ARCHIVE_STUDENT_IDS.has(studentId)) return false;
 
   return true;
+};
+
+/**
+ * "Recruitment Count Bonus" reward table, based on the official patch notes dated 2026-07-28.
+ * Only the two reward types tracked by this planner (limited-time 10-pull tickets and Eligma) are included.
+ * Other rewards, such as gift boxes, Tactical Training Blu-rays, Tech Notes, and Keystone Fragments, are ignored.
+ * The count is tracked per BannerPeriod and resets for each banner. This simplifies the actual rule, where
+ * banners within the same period share the count, and matches the counter behavior used elsewhere in this planner.
+ */
+const FIRST_TIME_TICKET_COUNTS = new Set([70, 130, 150, 170, 270, 330, 350, 370]);
+const FIRST_TIME_ELIGMA: Record<number, number> = { 30: 10, 110: 20, 230: 10, 310: 20 };
+const REPEAT_ELIGMA_BY_RELATIVE: Record<number, number> = { 100: 10, 200: 10 };
+
+export const getRecruitCountReward = (count: number): { ticket: number; eligma: number } => {
+  if (count <= 390) {
+    return { ticket: FIRST_TIME_TICKET_COUNTS.has(count) ? 1 : 0, eligma: FIRST_TIME_ELIGMA[count] ?? 0 };
+  }
+  // Repeat tier: cycles every 200 counts starting at 391, with rewards at relative positions 100 and 200.
+  const relative = ((count - 391) % 200) + 1;
+  return { ticket: 0, eligma: REPEAT_ELIGMA_BY_RELATIVE[relative] ?? 0 };
+};
+
+/**
+ * Smallest FIRST_TIME_TICKET_COUNTS threshold strictly greater than `count`, or undefined once none remain.
+ * Both `count` and every threshold are multiples of 10 (pulls always advance in 10s from 0), so the caller
+ * can rely on `next - count >= 10` whenever a value is returned — no rounding/overshoot is possible.
+ */
+export const getNextTicketThreshold = (count: number): number | undefined => {
+  let next: number | undefined;
+  for (const t of FIRST_TIME_TICKET_COUNTS) {
+    if (t > count && (next === undefined || t < next)) next = t;
+  }
+  return next;
 };

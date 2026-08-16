@@ -4,7 +4,7 @@ import { magicLink, username } from 'better-auth/plugins';
 import { passkey } from '@better-auth/passkey';
 import { validatePassword } from './password-validate';
 import { getMagicLinkEmail, getVerifyEmailTemplate } from './emailTemplates';
-import { localUrl, productionUrl, localAuthUrl, authEmail } from '~/data/livedataServer.json';
+import { localUrl, productionUrl, localAuthUrl, authEmail, magicLinkLogin } from '~/data/livedataServer.json';
 
 let authInstance: ReturnType<typeof createAuthInstance> | null = null;
 let authDb: D1Database | null = null;
@@ -117,18 +117,22 @@ export const createAuthInstance = (env: Env) => {
         maxUsernameLength: 20,
         usernameValidator: (value: string) => /^[a-zA-Z0-9_-]+$/.test(value),
       }),
-      // Email magic link (primary recommended method)
-      magicLink({
-        sendMagicLink: async ({ email, url, metadata }) => {
-          if (!isProd) console.log(`[Magic Link] To: ${email}, URL: ${url}`);
-          if (env.RESEND_API_KEY) {
-            const locale = typeof metadata?.locale === 'string' ? metadata.locale : undefined;
-            const { subject, html } = getMagicLinkEmail(url, locale);
-            await sendEmailViaResend({ apiKey: env.RESEND_API_KEY, to: email, subject, html });
-          }
-        },
-        expiresIn: 600,
-      }),
+      // Email magic link (primary recommended method), gated by magicLinkLogin flag
+      ...(magicLinkLogin
+        ? [
+            magicLink({
+              sendMagicLink: async ({ email, url, metadata }) => {
+                if (!isProd) console.log(`[Magic Link] To: ${email}, URL: ${url}`);
+                if (env.RESEND_API_KEY) {
+                  const locale = typeof metadata?.locale === 'string' ? metadata.locale : undefined;
+                  const { subject, html } = getMagicLinkEmail(url, locale);
+                  await sendEmailViaResend({ apiKey: env.RESEND_API_KEY, to: email, subject, html });
+                }
+              },
+              expiresIn: 600,
+            }),
+          ]
+        : []),
       // Passkey / WebAuthn (registered after account creation)
       passkey({
         rpName: 'Yuzu Trends',

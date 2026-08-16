@@ -55,10 +55,24 @@ export const bannerStrategySchema = z.object({
   /** Whether there is a plan to pull during this banner period */
   isActive: z.boolean(),
   /**
-   * Maximum Budget (in Spark units)
+   * Maximum Budget (in Spark units) — legacy spark-point system only.
    * 1 allows up to 200 pulls, 2 allows up to 400 pulls
    */
   maxSparks: z.number(),
+  /**
+   * Maximum Budget (in Half-Charge units) — new "recruit charge" system only (banners with useChargeSystem=true).
+   * 1 allows up to 100 pulls (the soft-pity checkpoint), 2 allows up to 200 pulls (hard pity), etc.
+   */
+  maxHalfCharges: z.number(),
+  /**
+   * "Recruitment Count Bonus" opt-in — for the new "recruit charge" system only. If every other stop condition is already
+   * met but the next ticket milestone (`gachaRules.getNextTicketThreshold`) is within `recruitBonusThreshold`
+   * pulls, continue pulling in 10-pull increments until it is claimed. Optional (not `.default()`) because
+   * old localStorage/sync payloads may genuinely lack this key at runtime — always read it with `?? false`.
+   */
+  claimRecruitBonus: z.boolean().optional(),
+  /** Pulls-remaining-to-next-ticket threshold for claimRecruitBonus (read with `?? 10` fallback). */
+  recruitBonusThreshold: z.number().optional(),
   /**
    * Minimum Guaranteed Pulls
    * Always perform this many pulls regardless of the result (e.g., for farming Eligma)
@@ -90,6 +104,8 @@ export const bannerPeriodSchema = z.object({
   // Benefits and rules
   freePulls: z.number(), // Auto-calculated: 100 assigned by adjacent FES logic
   excludedFesId: z.array(z.number()), // Retrieved from gachaRules (exclusion list for specific FES)
+  /** Whether this banner uses the "recruit charge" pity system (post Makoto (Swimsuit) patch) instead of the legacy spark-point system. */
+  useChargeSystem: z.boolean(),
   pickupStudents: z.array(studentSchema),
 });
 export type BannerPeriod = z.infer<typeof bannerPeriodSchema>;

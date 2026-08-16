@@ -1,0 +1,173 @@
+{
+  "header": {
+    "title": "성장 자원 플래너",
+    "description": "학생 승급 목표를 위한 엘레프, 엘리그마, 코인 수입을 예측하세요"
+  },
+  "horizon": {
+    "oneMonth": "1개월",
+    "threeMonths": "3개월",
+    "fourMonths": "4개월",
+    "sixMonths": "6개월",
+    "oneYear": "1년"
+  },
+  "tabs": {
+    "overview": "개요",
+    "resources": "자원",
+    "income": "수입 & 지출",
+    "incomeShort": "설정",
+    "students": "학생 목표",
+    "studentsShort": "목표"
+  },
+  "incomeTabHint": "위에서 추적할 자원을 선택하여 수입, 구매 및 농장 계획을 구성하세요.",
+  "planStatus": {
+    "title": "계획 상태",
+    "summary": "{{atRisk}}개 위험 · {{covered}}개 엘리그마 필요 · {{onTrack}}개 정상",
+    "summaryWithDeadline": "{{atRisk}}개 위험 · {{covered}}개 엘리그마 필요 · {{onTrack}}개 정상 · {{noDeadline}}개 기한 없음",
+    "openButton": "학생 목표",
+    "sectionTitle": "학생 목표",
+    "emptyState": "학생 목표를 추가하여 보유 엘레프가 충분한지 또는 엘리그마가 필요한지 확인하세요.",
+    "statusAtRisk": "위험",
+    "statusCovered": "엘리그마 커버",
+    "statusOnTrack": "정상",
+    "statusNoDeadline": "기한 없음",
+    "noDeadlineDate": "기한 없음",
+    "needsFromEligma": "엘리그마에서 필요",
+    "costsEligma": "엘리그마 비용",
+    "naturalEleph": "보유 엘레프",
+    "eligmaShort": "{{amount}} 엘리그마 부족",
+    "eligmaLeft": "{{amount}} 엘리그마 남음",
+    "resourceRisks": "자원 위험",
+    "tacticalCoin": "전술 도전 코인",
+    "apPurchaseDays_one": "{{count}}일 동안 AP 구매",
+    "apPurchaseDays_other": "{{count}}일 동안 AP 구매",
+    "apPlanGains": "AP 계획 수입",
+    "lowestBalance": "최저 잔액",
+    "shortOn": "{{date}}에 부족"
+  },
+  "studentGoals": {
+    "byStudent": "학생별",
+    "bySchedule": "일정별",
+    "activePlans": "활성 계획이 있는 학생",
+    "noStudentSelected": "선택된 학생 없음",
+    "selectStudentHint": "위의 추적 항목에서 학생의 엘레프를 선택하여 목표를 보고 편집하세요."
+  },
+  "trackedItems": {
+    "title": "추적 항목",
+    "searchPlaceholder": "항목 또는 학생 별명 검색...",
+    "noResults": "검색 결과 없음",
+    "activeTarget": "선택됨",
+    "noGoalsSet": "설정된 목표 없음. 학생 목표에서 목표를 추가하세요.",
+    "displayByGrowthPlan": "성장 계획 기준 표시",
+    "greyOutUnplannedStudents": "성장 계획 없는 학생 회색 표시",
+    "studentCount_one": "명",
+    "studentCount_other": "명"
+  },
+  "income": {
+    "sectionTitle": "수입원 · {{section}}",
+    "defaultDailyCoins": "기본 일일 코인",
+    "coinsPerDay": "코인/일",
+    "perPeriodOverride": "기간별 재설정:",
+    "removeOverride": "재설정 제거",
+    "override": "재설정",
+    "noDefaultSet": "기본값 없음 — 이 기간을 추적하지 않습니다.",
+    "usingDefaultConfig": "기본 설정 사용 중.",
+    "defaultAllPeriods": "기본값 (모든 기간)",
+    "clear": "삭제",
+    "weeklyMax": "주간 최대",
+    "dailyMode": "일일",
+    "weeklyIncome": "주간 수입",
+    "permitsPerWeek": "허가/주",
+    "dailyInputHint": "일일 입력: 아래 일정 달력을 사용하여 일일 금액을 입력하세요.",
+    "defaultMaxFloor": "기본 최대 층",
+    "noMfPeriods": "일정에 능력 개방 WB 기간이 없습니다."
+  },
+  "elephCard": {
+    "contentMode": "콘텐츠",
+    "dateMode": "날짜",
+    "timingStart": "시작",
+    "timingEnd": "종료",
+    "selectContent": "— 콘텐츠 선택 —",
+    "finalGoal": "최종 목표",
+    "by": "기한",
+    "noGoalsSet": "목표 설정 안 함",
+    "goalsCount_one": "{{count}}개 목표 · {{eleph}} 엘레프 총",
+    "goalsCount_other": "{{count}}개 목표 · {{eleph}} 엘레프 총",
+    "setGoalsBelow": "아래에 목표 설정",
+    "current": "현재",
+    "target": "목표",
+    "remove": "제거",
+    "intermediateGoals": "중간 목표",
+    "addGoal": "목표 추가",
+    "noGoalsYet": "아직 목표 없음. 엘레프 지출을 계획하려면 목표를 추가하세요.",
+    "currentEleph": "현재 엘레프",
+    "gachaAvg": "가챠 평균",
+    "gachaAvgValue": "~{{value}} 총합"
+  },
+  "pvp": {
+    "rankingTier": "순위 등급",
+    "defenseWins": "방어 승리/일 (0–10)",
+    "plusCoinsPerDay": "+{{coins}} 코인/일",
+    "extraWeeklyIncome": "추가 주간 수입",
+    "miscSources": "기타 수입",
+    "daily": "일일:",
+    "weekly": "주간:",
+    "coins": "코인"
+  },
+  "raid": {
+    "killDifficulty": "처치 난이도",
+    "trophy": "트로피",
+    "normal": "일반:",
+    "premium": "프리미엄:",
+    "eligmaLabel": "엘리그마:"
+  },
+  "panel": {
+    "title": "자원",
+    "startingInventory": "초기 보유량",
+    "gachaSimulation": "가챠 시뮬레이션",
+    "noSimDataPre": "시뮬레이션 데이터 없음.",
+    "noSimDataPost": "을 먼저 실행하세요.",
+    "runSim": "시뮬레이션",
+    "planAt": "계획 기준",
+    "avg": "평균",
+    "eventIncome": "이벤트 수입 (이벤트 플래너에서)",
+    "noEventDataPre": "이벤트 수입 연계 없음.",
+    "goToEventPlanner": "이벤트 플래너에서 설정",
+    "noEventDataPost": "하면 이벤트 보상이 포함됩니다.",
+    "total": "합계",
+    "coinShopNote": "코인 상점, 전문가 허가 구매 및 하드 스테이지 운영은 아래 일정 섹션에서 설정됩니다."
+  },
+  "schedule": {
+    "title": "지출 일정",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "returnToCurrentMonth": "현재 계획 달로 돌아가기",
+    "dragHint": "날짜 셀을 가로로 드래그하거나, 일정 바를 눌러 범위를 선택할 수 있습니다. 드래그는 가로 방향으로 먼저 움직여야 인식됩니다.<br/><kbd>←</kbd> / <kbd>→</kbd> 키 또는 화면 버튼으로 달을 전환하세요.<br/>월간 상점 구매는 달마다 선택 범위 중 가장 이른 날에 기록됩니다."
+  },
+  "stageFarming": {
+    "runsPerDay": "운영/일",
+    "apply": "적용",
+    "remove": "제거",
+    "runsScheduled_one": "{{count}}회 운영 예약됨",
+    "runsScheduled_other": "{{count}}회 운영 예약됨"
+  },
+  "purchasePanel": {
+    "shopNotOpen": "상점이 아직 열려있지 않음 · {{date}}부터 사용 가능",
+    "targetReached": "목표 도달",
+    "apply": "적용",
+    "cancel": "취소"
+  },
+  "eventLabels": {
+    "title": "{{title}}",
+    "raidBoss": "총력전 {{boss}}",
+    "eraidBoss": "대결전 {{boss}}",
+    "mfBoss": "제약해제결전 {{boss}}",
+    "jfdSeason": "종합 전술 시험 S{{season}}",
+    "shopRefresh": "상점 갱신 ×{{count}}",
+    "purchaseFrom": "{{item}} 교환",
+    "growthSpendStudent": "{{students}} - {{item}} 목표 달성 지출",
+    "growthSpendEleph": "{{item}} 목표 달성 지출",
+    "growthSpendDefault": "성장 지출",
+    "elephGoalReached": "{{studentName}} - 엘레프 (목표 도달)",
+    "goalLabel": "(목표)"
+  }
+}

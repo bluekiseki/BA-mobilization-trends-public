@@ -1,11 +1,23 @@
 import type { Grid } from '~/utils/solveRoadPuzzle';
 
+// Hexagon side numbering used by rail (r) and goalEntry: 1=UL, 2=UR, 3=R, 4=LR, 5=LL, 6=L.
+//
+//      /\
+//   1 /  \ 2
+//    |    |
+//  6 |    | 3
+//    |    |
+//   5 \  / 4
+//      \/
+//
 export interface MapData {
   grid: Grid;
   // 0 = row 0 is even (no visual indent), 1 = row 0 is odd (has visual indent)
   rowOffset: 0 | 1;
   // Explicit door side for G (1-6). Auto-detected from the grid when omitted.
   goalEntry?: number;
+  // Restrict the first tile placed next to S to a single exit side (1-6). All sides allowed when omitted.
+  startEntry?: number;
 }
 
 const W: Grid[0][0] = { type: 'x' };
@@ -66,8 +78,10 @@ const ROAD_PUZZLE_1: MapData = {
 // Round 7 / RoadPuzzle_2
 // First row has indent (rowOffset=1)
 // rails: 1=r24 @(3,2), 2=r45 @(3,5), 3=r25 @(6,6)
+// S only connects out through side 3 (R)
 const ROAD_PUZZLE_2: MapData = {
   rowOffset: 1,
+  startEntry: 3,
   grid: [
     [W, W, W, O, O, O, W, W],
     [S, O, O, O, O, O, O, W],
@@ -122,7 +136,7 @@ const ROAD_PUZZLE_5: MapData = {
     [W, r(3, 5), O, O, r(3, 6), O, O, O, O, W],
     [W, O, O, W, W, W, W, O, O, W],
     [W, W, O, W, W, W, W, O, W, W],
-    [W, W, O, W, W, W, W, W, r(1, 4), W],
+    [W, W, O, W, W, W, W, r(2, 5), W, W],
     [W, O, O, O, W, O, O, O, O, W],
     [W, O, O, O, W, W, O, O, O, W],
     [S, W, W, W, W, O, O, O, W, W],
@@ -131,19 +145,18 @@ const ROAD_PUZZLE_5: MapData = {
 };
 
 // Round 7 / RoadPuzzle_6
-// Same grid layout as RoadPuzzle_3, different rail types
-// rails: 1=r26 @(6,2), 2=r35 @(1,3), 3=r26 @(6,5)
+// rails: 1=r46 @(2,0), 2=r36 @(1,3), 3=r26 @(6,3)
 const ROAD_PUZZLE_6: MapData = {
   rowOffset: 1,
   grid: [
-    [O, O, W, W, W, W, W, G, W],
-    [W, O, O, W, W, W, W, O, W],
-    [W, O, O, W, W, O, r(2, 6), W, W],
-    [W, r(3, 5), O, O, W, O, O, W, W],
-    [O, W, W, O, W, O, O, W, W],
-    [O, O, W, W, O, O, r(2, 6), O, W],
-    [O, O, W, O, O, W, O, O, W],
-    [S, W, W, W, O, W, W, O, O],
+    [W, O, r(4, 6), W, W, W, W, G],
+    [W, O, W, O, W, W, O, O],
+    [O, W, W, O, W, O, O, W],
+    [O, r(3, 6), O, O, O, O, r(2, 6), W],
+    [O, O, O, O, O, W, W, W],
+    [O, W, W, O, W, O, W, W],
+    [O, W, O, W, W, O, W, W],
+    [S, W, O, O, O, O, O, W],
   ],
 };
 

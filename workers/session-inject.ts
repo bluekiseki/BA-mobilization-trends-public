@@ -1,5 +1,7 @@
+import { createInternalSessionRequest } from '../app/utils/internalSessionRequest';
+
 async function fetchSessionPayload(request: Request, env: Env): Promise<string | null> {
-  const resp = await env.AUTH_WORKER.fetch(new Request(new URL('/__internal/session', request.url), { headers: request.headers }));
+  const resp = await env.AUTH_WORKER.fetch(createInternalSessionRequest(request));
   if (resp.status !== 200) return null;
   return await resp.text();
 }

@@ -770,7 +770,9 @@ export const StudentFilterBar: React.FC<{
                   className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-xs text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                 >
                   {portraitData?.[id] && <img className="w-6 h-6 rounded-full object-cover shrink-0" src={`data:image/webp;base64,${portraitData[id]}`} alt="" />}
-                  <span className="flex-1 truncate">{name}</span>
+                  <span className="flex-1 truncate" title={name}>
+                    {name}
+                  </span>
                   {usageCounts && <span className="font-mono text-neutral-400 dark:text-neutral-500 w-8 text-right shrink-0">{(usageCounts.get(id) ?? 0) > 0 ? usageCounts.get(id) : ''}</span>}
                 </li>
               ))}

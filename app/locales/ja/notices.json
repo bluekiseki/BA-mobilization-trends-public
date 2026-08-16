@@ -37,5 +37,10 @@
   "versionId": "VERSION ID: {{id}}",
   "changeRecorded": "データ変更が記録されました。",
   "notFound": "お知らせが見つかりません。",
-  "viewAll": "すべてのお知らせを見る"
+  "viewAll": "すべてのお知らせを見る",
+  "viewDiff": "変更点を比較",
+  "viewFull": "全文を表示",
+  "titleChanged": "タイトルが変更されました",
+  "diffStatsLines": "行",
+  "diffStatsChars": "文字"
 }

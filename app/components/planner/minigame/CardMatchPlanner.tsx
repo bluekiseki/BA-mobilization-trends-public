@@ -50,7 +50,7 @@ function shuffleArray(array: number[]) {
   }
 }
 
-const simulateAverageFlips = (simCount: number, maxOpenCount: number): number => {
+export const simulateAverageFlips = (simCount: number, maxOpenCount: number): number => {
   let totalFlips = 0;
 
   for (let i = 0; i < simCount; i++) {

@@ -5,6 +5,7 @@ import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { HydratedRouter } from 'react-router/dom';
 import Fetch from 'i18next-fetch-backend';
 import I18nextBrowserLanguageDetector from 'i18next-browser-languagedetector';
+import { cdn } from '~/utils/cdn';
 
 async function main() {
   await i18next
@@ -20,7 +21,7 @@ async function main() {
       ns: ['common'],
       detection: { order: ['htmlTag'], caches: [] },
       // Update this to the path where your locales will be served
-      backend: { loadPath: '/api/locales/{{lng}}/{{ns}}' },
+      backend: { loadPath: cdn('/locales/{{lng}}/{{ns}}.json') },
     });
 
   startTransition(() => {

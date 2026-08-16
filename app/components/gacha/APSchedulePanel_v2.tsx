@@ -5,7 +5,7 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import type { PlannerSchedule } from '~/utils/pyroxeneCalc';
 
 const AP_OPTIONS = [0, 3, 6, 9, 12];
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 
 interface Props {
   schedules: PlannerSchedule[];
@@ -47,6 +47,19 @@ function ApSelect({ value, onChange, placeholder }: { value: number | undefined;
   );
 }
 
+function normalizeCampaignStorageKey(value: string | undefined): 'Normal' | 'Hard' | 'Commission' | null {
+  if (!value) return null;
+  const normalized = value.toLowerCase();
+  if (normalized === 'normal') return 'Normal';
+  if (normalized === 'hard') return 'Hard';
+  if (normalized === 'commission') return 'Commission';
+  return null;
+}
+
+function getLocalizedCampaignLabel(value: string, t: (key: string) => string): string {
+  return t(`campaign.${value.toLowerCase()}`);
+}
+
 const typeStyle = (type: string, t: (k: string) => string) => {
   switch (type) {
     case 'Event':
@@ -78,32 +91,22 @@ export default function APSchedulePanel_v2({
   apIcon: _apIcon,
 }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.timeline' });
-  const tCampaign = (key: string) => {
-    const campaignTypeMap: Record<string, string> = {
-      Normal: t('campaignTypes.normal'),
-      Hard: t('campaignTypes.hard'),
-      Commission: t('campaignTypes.commission'),
-    };
-    return campaignTypeMap[key] || key;
-  };
+  const { t: tCal } = useTranslation('calendar');
   const [showCampaignBulk, setShowCampaignBulk] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const CAMPAIGN_TYPES = [
-    { key: 'Normal', label: tCampaign('Normal') },
-    { key: 'Hard', label: tCampaign('Hard') },
-    { key: 'Commission', label: tCampaign('Commission') },
-  ];
+  const CAMPAIGN_TYPES = ['Normal', 'Hard', 'Commission'];
 
   const sorted = useMemo(() => schedules.filter((s) => new Date(s.end) >= today).sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()), [schedules]);
 
   const effectiveAp = (item: PlannerSchedule): number => {
     if (item.type === 'Event') return item.isApEvent ? apRefreshes_event : apRefreshes_normal;
     if (item.type === 'Campaign') {
-      const key = item.campaignType && item.multiplier ? `${item.campaignType}_${item.multiplier}` : null;
+      const campaignType = normalizeCampaignStorageKey(item.campaignType);
+      const key = campaignType && item.multiplier ? `${campaignType}_${item.multiplier}` : null;
       return key ? (apRefreshes_campaigns[key] ?? apRefreshes_normal) : apRefreshes_normal;
     }
     return apRefreshes_normal;
@@ -139,10 +142,10 @@ export default function APSchedulePanel_v2({
                 <div>×2</div>
                 <div>×3</div>
               </div>
-              {CAMPAIGN_TYPES.map(({ key, label }) => (
+              {CAMPAIGN_TYPES.map((key) => (
                 <div key={key} className="grid grid-cols-[3rem_1fr_1fr] gap-2 items-center">
                   <span className="text-xs text-neutral-500 dark:text-neutral-400 whitespace-nowrap" style={monoStyle}>
-                    {label}
+                    {getLocalizedCampaignLabel(key, tCal as (key: string) => string)}
                   </span>
                   {[2, 3].map((mult) => {
                     const dKey = `${key}_${mult}`;
@@ -212,6 +215,7 @@ export default function APSchedulePanel_v2({
                     const customOverride = apOverrides[item.id] ?? -1;
                     const hasOverride = customOverride !== -1;
                     const autoAp = effectiveAp(item);
+                    const itemName = item.type === 'Campaign' && item.campaignType ? getLocalizedCampaignLabel(item.campaignType, tCal as (key: string) => string) : item.name;
 
                     return (
                       <div key={item.id} className="flex items-center px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
@@ -222,7 +226,9 @@ export default function APSchedulePanel_v2({
                           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${cls}`}>{label}</span>
                         </div>
                         <div className="flex-1 px-2 min-w-0">
-                          <div className="text-xs text-neutral-700 dark:text-neutral-300 truncate">{item.name}</div>
+                          <div className="text-xs text-neutral-700 dark:text-neutral-300 truncate" title={itemName}>
+                            {itemName}
+                          </div>
                         </div>
                         <div className="w-24 shrink-0 flex items-center justify-end gap-1.5">
                           {isConfigurable && (

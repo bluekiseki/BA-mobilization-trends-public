@@ -159,7 +159,9 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
 
                   <div className="flex-1 min-w-0 ml-4">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-neutral-800 dark:text-white truncate transition-colors duration-300">{student.Name}</span>
+                      <span className="font-medium text-neutral-800 dark:text-white truncate transition-colors duration-300" title={student.Name}>
+                        {student.Name}
+                      </span>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-xs font-semibold rounded-full px-2 py-0.5 text-white" style={{ backgroundColor: squadTypeColors[student.SquadType] || '#666' }}>
                           {t_student_dynamic(`squad_type_${student.SquadType.toLowerCase()}`)}

@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 
 export class WasmStats {
   free(): void;
@@ -40,6 +41,19 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly __wbg_get_wasmstats_grade1: (a: number) => number;
+  readonly __wbg_get_wasmstats_grade2: (a: number) => number;
+  readonly __wbg_get_wasmstats_grade3: (a: number) => number;
+  readonly __wbg_get_wasmstats_pickup: (a: number) => number;
+  readonly __wbg_get_wasmstats_total: (a: number) => number;
+  readonly __wbg_set_wasmstats_grade1: (a: number, b: number) => void;
+  readonly __wbg_set_wasmstats_grade2: (a: number, b: number) => void;
+  readonly __wbg_set_wasmstats_grade3: (a: number, b: number) => void;
+  readonly __wbg_set_wasmstats_pickup: (a: number, b: number) => void;
+  readonly __wbg_set_wasmstats_total: (a: number, b: number) => void;
+  readonly __wbg_wasmstats_free: (a: number, b: number) => void;
+  readonly wasmstats_new: () => number;
+  readonly wasmstats_student_counts_json: (a: number) => [number, number];
   readonly gacha_run_chunk: (
     a: number,
     b: number,
@@ -59,19 +73,6 @@ export interface InitOutput {
     p: bigint,
   ) => number;
   readonly simulate_strategies_chunk: (a: number, b: number, c: number, d: number, e: number, f: bigint) => [number, number];
-  readonly __wbg_get_wasmstats_grade1: (a: number) => number;
-  readonly __wbg_get_wasmstats_grade2: (a: number) => number;
-  readonly __wbg_get_wasmstats_grade3: (a: number) => number;
-  readonly __wbg_get_wasmstats_pickup: (a: number) => number;
-  readonly __wbg_get_wasmstats_total: (a: number) => number;
-  readonly __wbg_set_wasmstats_grade1: (a: number, b: number) => void;
-  readonly __wbg_set_wasmstats_grade2: (a: number, b: number) => void;
-  readonly __wbg_set_wasmstats_grade3: (a: number, b: number) => void;
-  readonly __wbg_set_wasmstats_pickup: (a: number, b: number) => void;
-  readonly __wbg_set_wasmstats_total: (a: number, b: number) => void;
-  readonly __wbg_wasmstats_free: (a: number, b: number) => void;
-  readonly wasmstats_new: () => number;
-  readonly wasmstats_student_counts_json: (a: number) => [number, number];
   readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

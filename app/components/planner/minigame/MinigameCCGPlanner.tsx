@@ -154,19 +154,12 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
   }, []);
 
   const formatMissionDesc = (mission: (typeof missions)[0]) => {
-    const localeToKey: Record<string, string> = {
-      ja: 'MissionDescJp',
-      ko: 'MissionDescKr',
-      en: 'MissionDescEn',
-      'zh-Hant': 'MissionDescEn',
-    };
-    const key = localeToKey[locale] || 'MissionDescEn';
-    const value = mission[key as keyof typeof mission];
-    if (typeof value === 'string') return value;
-    if (typeof value === 'object' && value !== null && 'En' in value) {
-      return value.En;
-    }
-    return '';
+    let desc: string;
+    if (locale === 'ko') desc = mission.DescriptionStr.Kr || mission.DescriptionStr.Jp || mission.DescriptionStr.En || '';
+    else if (locale === 'ja') desc = mission.DescriptionStr.Jp || mission.DescriptionStr.Kr || mission.DescriptionStr.En || '';
+    else if (locale === 'zh-Hant') desc = mission.DescriptionStr.Tw || mission.DescriptionStr.En || '';
+    else desc = mission.DescriptionStr.En || mission.DescriptionStr.Jp || mission.DescriptionStr.Kr || '';
+    return desc.replace('{0}', mission.CompleteConditionCount.toLocaleString());
   };
 
   const toggleMission = (missionId: number) => {
@@ -307,8 +300,8 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
 
         {/* MISSIONS */}
         {activeTab === 'mission' && (
-          <div className="p-4 rounded-b-lg bg-neutral-50 dark:bg-neutral-700/50 space-y-2 animate-fadeIn">
-            <div className="flex justify-between items-center mb-2">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden animate-fadeIn">
+            <div className="bg-neutral-50 dark:bg-neutral-900/50 p-2 flex justify-between items-center border-b border-neutral-200 dark:border-neutral-700">
               <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                 {Object.keys(minigameMissionStatus).length} / {missions.length}
               </span>
@@ -322,7 +315,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
               </div>
             </div>
 
-            <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
+            <div className="divide-y divide-neutral-100 dark:divide-neutral-700 max-h-[500px] overflow-y-auto">
               {missions.map((mission) => {
                 const desc = formatMissionDesc(mission);
                 const isChecked = minigameMissionStatus[mission.Id] ?? false;
@@ -331,7 +324,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                   <div
                     key={mission.Id}
                     onClick={() => toggleMission(mission.Id)}
-                    className="p-2 rounded-lg flex items-center justify-between bg-white dark:bg-neutral-800 shadow-sm cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                    className="p-3 flex items-center justify-between cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors"
                   >
                     <label className="flex items-center gap-3 cursor-pointer flex-1">
                       <input type="checkbox" checked={isChecked} readOnly className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500" />
@@ -339,15 +332,9 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                     </label>
                     <div className="flex flex-wrap gap-1 ml-4 justify-end">
                       {mission.MissionRewardParcelId.map((rid, idx) => (
-                        <ItemIcon
-                          key={idx}
-                          type={mission.MissionRewardParcelTypeStr[idx]}
-                          itemId={String(rid)}
-                          amount={mission.MissionRewardAmount[idx]}
-                          size={12}
-                          eventData={eventData}
-                          iconData={iconData}
-                        />
+                        <div key={idx} className="shrink-0">
+                          <ItemIcon type={mission.MissionRewardParcelTypeStr[idx]} itemId={String(rid)} amount={mission.MissionRewardAmount[idx]} size={12} eventData={eventData} iconData={iconData} />
+                        </div>
                       ))}
                     </div>
                   </div>

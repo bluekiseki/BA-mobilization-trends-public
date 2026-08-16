@@ -1,6 +1,5 @@
 import * as ort from 'onnxruntime-web';
 import type { CellBbox } from './types';
-import { cdn } from '~/utils/cdn';
 
 const INPUT_SIZE = 640;
 const CONF_THRESH = 0.25;
@@ -8,8 +7,11 @@ const IOU_THRESH = 0.45;
 
 let session: ort.InferenceSession | null = null;
 
-export async function initDetector(providers: string[]): Promise<void> {
-  session = await ort.InferenceSession.create(cdn('/scanner/models/cell_detect.onnx'), {
+// modelBytes is fetched by modelLoader.client.ts up front, in parallel with the other
+// model/data files — passing bytes directly (instead of a URL) means onnxruntime-web never
+// issues its own redundant fetch for this file.
+export async function initDetector(providers: string[], modelBytes: Uint8Array): Promise<void> {
+  session = await ort.InferenceSession.create(modelBytes, {
     executionProviders: providers,
   });
 }

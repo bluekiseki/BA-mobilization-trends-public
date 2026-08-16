@@ -28,7 +28,7 @@ const formatDuration = (ms: number): string => {
   return `${(ms * 1000).toFixed(0)}μs`;
 };
 
-const monoStyle = { fontFamily: 'ui-monospace, monospace' };
+const monoStyle = { fontFamily: 'inherit' };
 const fmt = (n: number) => Math.round(n).toLocaleString();
 
 interface Props {
@@ -283,6 +283,10 @@ export default function IncomePlannerPanel_v2({
     return acc;
   }, {});
 
+  // The new "recruit charge" pity system is only implemented in the JS engine so far — the WASM/Rust
+  // mirror still runs the legacy spark-point rules for every banner. Warn when that would matter.
+  const hasActiveChargeSystemBanner = Object.values(strategies).some((s) => s.isActive && bannersMap[s.bannerId]?.useChargeSystem);
+
   const WASM_SPEED_RATIO = 10;
   const handleToggleEngine = (wasm: boolean) => {
     if (wasm === useWasm) return;
@@ -314,11 +318,14 @@ export default function IncomePlannerPanel_v2({
       mergedAccRef.current = {
         resultsPulls: [],
         resultsCost: [],
+        resultsEligma: [],
         bannerCumulativeCosts: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
+        bannerCumulativeEligma: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
         bannerStatsSum: Object.fromEntries(activeBannerIds.map((id) => [id, { pulls: 0, cost: 0 }])),
         studentAcquired: {},
         studentElephTotal: {},
         studentElephDist: {},
+        bannerStudentElephDist: Object.fromEntries(activeBannerIds.map((id) => [id, {}])),
         totalEligmaSum: 0,
         successCount: 0,
       };
@@ -448,6 +455,7 @@ export default function IncomePlannerPanel_v2({
               ]}
               onChange={(v) => handleToggleEngine(v === 'wasm')}
             />
+            {useWasm && hasActiveChargeSystemBanner && <div className="mt-1.5 max-w-xs text-[10px] text-amber-600 dark:text-amber-400">{tr('panel.wasm_charge_system_warning')}</div>}
           </div>
 
           {/* Run button */}

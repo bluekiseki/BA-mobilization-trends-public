@@ -1,53 +1,56 @@
-season,startTime,endTime,type,teran,armorType,3nd,4nd
-1,2022-03-09 11:00:00,2022-03-15 03:59:59,shooting,Outdoor,LightArmor,"아군 공격 속도 감소","적 회피 수치 증가"
-2,2022-03-23 11:00:00,2022-03-30 03:59:59,defense,Outdoor,Unarmed,"아군 defense력 감소","적 사망 시 자폭"
-3,2022-05-11 11:00:00,2022-05-18 03:59:59,breakthrough,Outdoor,HeavyArmor,"SR을 사용하는 학생들의 공격력 감소 ","적 명중치 증가"
-4,2022-06-08 11:00:00,2022-06-15 03:59:59,shooting,Indoor,HeavyArmor,"아군 치명 수치 증가","EX 스킬 사용 시 코스트 회복 속도 감소"
-5,2022-07-06 11:00:00,2022-07-13 03:59:59,defense,Indoor,LightArmor,"MT, AR을 사용하는 학생들의 공격력 감소","적 체력이 증가하는 대신, 군중제어 효과 적중 시 추가 피해"
-6,2022-08-03 11:00:00,2022-08-09 03:59:59,breakthrough,Indoor,Unarmed,"허수아비의 체력 1초마다 감소","팀에 서포터, 어태커, 탱커, 힐러, T.S.가 모두 한 명 이상 편성할 경우 아군 전체의 코스트 회복 속도 증가"
-7,2022-09-21 11:00:00,2022-09-28 03:59:59,shooting,Street,Unarmed,"편성한 학생의 수가 적을수록 코스트 회복 속도가 증가(최대 4명까지)","일정 시간마다 적이 체력을 회복"
-8,2022-10-12 11:00:00,2022-10-19 03:59:59,defense,Street,HeavyArmor,"적 최대 체력이 감소하지만, 한 번에 최대 1의 피해만 받음","AR, HG 무기를 사용하는 아군 학생이 공격 시 추가 피해가 적용"
-9,2022-11-09 11:00:00,2022-11-16 03:59:59,breakthrough,Street,LightArmor,"아군에게 걸려있는 이로운 효과가 사라짐","적의 defense관통 수치가 증가"
-10,2022-11-30 11:00:00,2022-12-07 03:59:59,shooting,Indoor,LightArmor,"T.S 클래스, AR 무기 공격력 증가","EX 스킬 대미지 면역"
-11,2022-12-28 11:00:00,2023-01-04 03:59:59,defense,Indoor,Unarmed,"적 처치 시 공격력 감소, 회복 시 제거","SR, MG 무기 공격력 감소"
-12,2023-02-15 11:00:00,2023-02-22 03:59:59,breakthrough,Indoor,HeavyArmor,"허수아비 상태 변화[12차]","적 사망 시 해당 위치에 화염 지대 생성"
-13,2023-03-08 11:00:00,2023-03-15 03:59:59,shooting,Indoor,Unarmed,"화상, 오한, 중독, 응원의 열기 추가 피해","치명저항 수치 증가"
-14,2023-04-05 11:00:00,2023-04-12 03:59:59,defense,Outdoor,HeavyArmor,"적 이동속도 감소, 공격력 증가","아군 탱커 최대 체력 감소"
-15,2023-05-10 11:00:00,2023-05-17 03:59:59,breakthrough,Outdoor,LightArmor,"게헨나 소속 학생의 공격력이 증가","편성한 학생 수에 따라 최대 체력과 코스트 회복 속도가 변화, 적을수록 더 많은 수치가 증가(최대 4명까지)"
-16,2023-06-07 11:00:00,2023-06-14 03:59:59,shooting,Street,HeavyArmor,"스페셜 학생의 공격력 증가","아군이 치명적인 중독에 걸림"
-17,2023-06-21 11:00:00,2023-06-28 03:59:59,defense,Street,LightArmor,"적의 최대 체력 증가, 피격 시 체력 회복","적의 회피 수치 증가"
-18,2023-08-09 11:00:00,2023-08-16 03:59:59,breakthrough,Street,Unarmed,"적의 공격력 증가, 추가 대미지","허수아비 회복 시 적에게 피해"
-19,2023-09-06 11:00:00,2023-09-13 03:59:59,shooting,Indoor,LightArmor,"적 최대 체력이 감소하지만, 한 번에 최대 1의 피해만 받음","적이 폭발 타입에만 피해를 받음, 폭발 타입 학생의 코스트 회복 속도 증가"
-20,2023-10-11 11:00:00,2023-10-18 03:59:59,defense,Street,ElasticArmor,"적 처치 시 공격력 감소, 회복 시 제거","적의 최대 HP 증가"
-21,2023-11-08 11:00:00,2023-11-15 03:59:59,escort,Outdoor,Unarmed,"군중제어 게이지 충전 시 스킬 중단, 기본 스킬 사용 중 공격력 증가","최대 체력 감소, defense력 증가"
-22,2023-12-06 11:00:00,2023-12-13 03:59:59,breakthrough,Indoor,HeavyArmor,"허수아비의 HP 지속 감소","전 클래스 편성"
-23,2024-01-10 11:00:00,2024-01-17 03:59:59,shooting,Street,HeavyArmor,"아군 치명 수치 증가, 적 체력 증가","트리니티 공격력 감소"
-24,2024-02-07 11:00:00,2024-02-14 03:59:59,defense,Outdoor,LightArmor,"적 체력 증가, 아군 Front 공격력 증가","적의 공격력 증가, 이동속도 증가"
-25,2024-03-06 11:00:00,2024-03-13 03:59:59,escort,Street,HeavyArmor,"아방가르드군 이로운 효과 복제","아방가르드군 받는 회복량 감소, 적 공격력 감소"
-26,2024-04-11 11:00:00,2024-04-17 03:59:59,breakthrough,Street,ElasticArmor,"아군 회복 시 허수아비 회복, 허수아비 체력 증가","SR 무기 공격력 증가, 적 체력 증가"
-27,2024-05-08 11:00:00,2024-05-15 03:59:59,shooting,Street,HeavyArmor,"스페셜 공격력 증가","적 해로운 효과 수 비례 적의 받는 피해량 증가"
-28,2024-06-05 11:00:00,2024-06-12 03:59:59,defense,Indoor,LightArmor,"최대 체력 증가, 피격 시 회복","GL, MT, MG 무기 공격력 증가"
-29,2024-07-10 11:00:00,2024-07-17 03:59:59,escort,Street,ElasticArmor,"아방가르드군 과부하","최대 체력 감소, defense력 증가"
-30,2024-08-07 11:00:00,2024-08-14 03:59:59,breakthrough,Outdoor,Unarmed,"허수아비 회복 시 적에게 피해","허수아비 회복 시 아군에게 피해"
-31,2024-09-04 11:00:00,2024-09-11 03:59:59,shooting,Indoor,Unarmed,"적 해로운 효과 수 비례 적의 받는 피해량 증가","화상, 오한, 중독, 응원의 열기, 감전 대미지 증가"
-32,2024-10-10 11:00:00,2024-10-16 03:59:59,defense,Indoor,HeavyArmor,"SG 무기 주는 대미지 증가, 적 받는 대미지 감소","이동속도 감소, 공격력 증가"
-33,2024-11-06 11:00:00,2024-11-13 03:59:59,escort,Indoor,LightArmor,"스트라이커 학생 주는 대미지 감소, 스페셜 학생 주는 대미지 증가","최대 체력 감소, defense력 증가"
-34,2024-12-04 11:00:00,2024-12-11 03:59:59,breakthrough,Street,LightArmor,"추가 대미지","폭발 타입 학생 허수아비 추가 회복, 허수아비 최대 체력 증가"
-35,2025-01-08 11:00:00,2025-01-15 03:59:59,shooting,Street,ElasticArmor,"화상, 오한, 중독, 응원의 열기, 감전 추가 대미지","치명저항 수치 증가"
-36,2025-02-05 11:00:00,2025-02-12 03:59:59,defense,Indoor,Unarmed,"최대 체력 증가, 피격 시 회복","밀레니엄, 아비도스 공격력 증가"
-37,2025-03-12 11:00:00,2025-03-19 03:59:59,escort,Outdoor,Unarmed,"아방가르드군에게 피해","공격력 증가"
-38,2025-04-09 11:00:00,2025-04-16 03:59:59,breakthrough,Street,HeavyArmor,"허수아비 체력 지속 감소","주는 대미지 증가 혹은 감소"
-39,2025-05-07 11:00:00,2025-05-14 03:59:59,shooting,Street,LightArmor,"AR, SR 무기 공격력 증가","최대 체력 증가, defense력 증가"
-40,2025-06-04 11:00:00,2025-06-11 03:59:59,defense,Outdoor,ElasticArmor,"최대 피해 제한","공격 시 추가 대미지"
-41,2025-07-09 11:00:00,2025-07-16 03:59:59,escort,Indoor,HeavyArmor,"아방가르드군, 백귀야행 주는 대미지 증가","아방가르드군 이로운 효과 적용 시, 적 defense력 감소"
-42,2025-08-06 11:00:00,2025-08-13 03:59:59,breakthrough,Indoor,Unarmed,"허수아비 회복 시 적에게 피해","해로운 효과 적용 시, 보호막 해제"
-43,2025-09-03 11:00:00,2025-09-10 03:59:59,shooting,Street,ElasticArmor,"마지막 박스캣 받는 대미지 감소","SR 무기 공격력 증가"
-44,2025-10-08 11:00:00,2025-10-15 03:59:59,defense,Indoor,LightArmor,"이동속도 증가, 피격 시 넉백","사망 시, 주변에 대미지"
-45,2025-11-05 11:00:00,2025-11-12 03:59:59,escort,Outdoor,ElasticArmor,"적을 쓰러뜨렸을 때 defense력 감소, 받는 대미지량 증가","적의 HP가 감소할 때, 다른 적의 HP 회복"
-46,2025-12-03 11:00:00,2025-12-10 03:59:59,breakthrough,Outdoor,LightArmor,,
-47,2026-01-07 11:00:00,2026-01-14 03:59:59,escort,Street,HeavyArmor,,
-48,2026-01-29 11:00:00,2026-02-05 03:59:59,defense,Indoor,Unarmed,,
-49,2026-02-25 11:00:00,2026-03-04 03:59:59,shooting,Street,LightArmor,,
-50,2026-04-01 11:00:00,2026-04-08 03:59:59,breakthrough,Outdoor,Unarmed,,
-51,2026-05-06 11:00:00,2026-05-13 03:59:59,defense,Street,HeavyArmor,,
-52,2026-06-10 11:00:00,2026-06-17 03:59:59,shooting,Street,LightArmor,,
+season,startTime,endTime,type,teran,armorType,3nd_en,3nd_kr,3nd_ja,3nd_tw,4nd_en,4nd_kr,4nd_ja,4nd_tw
+1,2022-03-09 11:00:00,2022-03-15 23:59:59,shooting,Outdoor,LightArmor,ATK SPD Decrease,공격속도 감소,攻撃速度減少,攻擊速度減少,Evasion Increase,회피 수치 증가,回避値増加,迴避數值增加
+2,2022-03-23 11:00:00,2022-03-30 03:59:59,defense,Outdoor,Unarmed,DEF Decrease,방어력 감소,防御力減少,防禦力減少,Damage when enemy is defeated,적 퇴치 시 피해,敵を倒した時にダメージ,擊退敵人傷害
+3,2022-05-11 11:00:00,2022-05-18 03:59:59,breakthrough,Outdoor,HeavyArmor,SR Weapon ATK Decrease,SR 무기 공격력 감소,SRの攻撃力減少,SR武器攻擊力減少,Accuracy Increase,명중 수치 증가,命中値の増加,命中數值增加
+4,2022-06-08 11:00:00,2022-06-15 03:59:59,shooting,Indoor,HeavyArmor,Ally Crit Increase,아군 치명 수치 증가,味方の会心値増加,我方的暴擊數值增加,Cost Recovery Speed Decrease upon Skill Use,스킬 사용 시 코스트 회복 속도 감소,EXスキルの使用時、コスト回復速度減少,技能使用時，COST恢復速度減少
+5,2022-07-06 11:00:00,2022-07-13 03:59:59,defense,Indoor,LightArmor,"MT, AR Weapon ATK Decrease","MT, AR 무기 공격력 감소",武器種MT・ARの攻撃力減少,MT、AR武器攻擊力減少,Additional Damage upon Crowd Control Hit,군중제어 적중 시 추가 피해,CC効果の作用時に追加ダメージ,群控命中時，額外傷害
+6,2022-08-03 11:00:00,2022-08-09 03:59:59,breakthrough,Indoor,Unarmed,Scarecrow's Continuous HP Decrease,허수아비 체력 지속 감소,かかしのHP持続減少,稻草人的體力持續減少,All Roles Formation,모든 역할 편성 ,全クラス編成,編入所有角色
+7,2022-09-21 11:00:00,2022-09-28 03:59:59,shooting,Street,Unarmed,The Select Few,소수정예,少数精鋭,少數精英,Interval Recovery,일정 시간마다 회복,一定時間毎に回復,每隔一定時間恢復
+8,2022-10-12 11:00:00,2022-10-19 03:59:59,defense,Street,HeavyArmor,Max Damage Limit,최대 피해 제한,最大ダメージ制限,限制最大傷害,Additional Damage upon Attack,"공격 시 추가 피해(AR, HG)",攻撃時には追加ダメージ(AR、HG),攻擊時額外傷害（AR、HG）
+9,2022-11-09 11:00:00,2022-11-16 03:59:59,breakthrough,Street,LightArmor,Buff Removal,이로운 효과 제거,バフ効果の除去,解除增益效果,Defense Piercing Increase,방어관통 수치 증가,防御貫通値の増加,增加防禦貫穿數值
+10,2022-11-30 11:00:00,2022-12-07 03:59:59,shooting,Indoor,LightArmor,"T.S Class, AR Weapon ATK Increase","T.S 역할, AR 무기 공격력 증가",T.Sクラス、AR武器の攻撃力が増加,T.S角色、AR武器攻擊力增加,EX Skill Damage Immunity,EX 스킬 대미지 면역,EXスキルダメージ無効化,免疫EX技能傷害
+11,2022-12-28 11:00:00,2023-01-04 03:59:59,defense,Indoor,Unarmed,"Decreases ATK upon defeating an enemy, removed upon Recovery","적 처치 시 공격력 감소, 회복 시 제거",敵を倒した時攻撃力減少、回復時は減少解除,打倒敵人時減少攻擊力，恢復時消除,"SR, MG Weapon ATK Decrease","SR, MG 무기 공격력 감소",SR、MG武器攻撃力減少,SR、MG武器攻擊力減少
+12,2023-02-15 11:00:00,2023-02-22 03:59:59,breakthrough,Indoor,HeavyArmor,Scarecrow Status Changes,허수아비 상태 변화,かかしの状態変化,稻草人的狀態變化,Enemy Death Zone of Flames,적 사망 시 화염 지대,敵を倒した時に燃焼エリア生成,敵人死亡時生成燃燒區域
+13,2023-03-08 11:00:00,2023-03-15 03:59:59,shooting,Outdoor,Unarmed,"Burn, Chill, Poison, Passionate Cheering Additional Damage","화상, 오한, 중독, 응원의 열기 추가 피해",火傷、悪寒、中毒、応援の熱気追加ダメージ,燒傷、惡寒、中毒、熱情應援額外傷害,Crit RES Increase,치명저항 수치 증가,会心抵抗値の増加,暴擊抵抗數值增加
+14,2023-04-05 11:00:00,2023-04-12 03:59:59,defense,Outdoor,HeavyArmor,"Movement Speed Decrease, ATK Increase","이동속도 감소, 공격력 증가",移動速度の減少、攻撃力の増加,移動速度減少、攻擊力增加,Max HP Decrease,최대 체력 감소,HP減少,最大體力減少
+15,2023-05-10 11:00:00,2023-05-17 03:59:59,breakthrough,Outdoor,LightArmor,Gehenna ATK Increase,게헨나 공격력 증가,ゲヘナ攻撃力増加,格黑娜攻擊力增加,The Select Few 2,소수정예2,少数精鋭Ⅱ,少數精英Ⅱ
+16,2023-06-07 11:00:00,2023-06-14 03:59:59,shooting,Street,HeavyArmor,Special Student ATK Increase,스페셜 공격력 증가,スペシャルの攻撃力増加,SPECIAL的攻擊力增加,Deadly Poison,치명적인 중독,致命的な中毒,致命中毒
+17,2023-06-21 11:00:00,2023-06-28 03:59:59,defense,Street,LightArmor,"More HP, Hurting Heals","최대 체력 증가, 피격 시 회복",最大体力増加、被弾時に回復,最大體力增加、受到攻擊時恢復,Evasion Increase,회피 수치 증가,回避値増加,迴避數值增加
+18,2023-08-09 11:00:00,2023-08-16 03:59:59,breakthrough,Street,Unarmed,Survival of the Strongest,"추가 대미지, 공격력 증가",追加ダメージ、攻撃力増加,追加傷害、攻擊力增加,Scarecrow Recovery Reverse Damage,허수아비 회복 시 적에게 피해,かかし回復時、敵にダメージ,稻草人恢復時，對敵人造成傷害
+19,2023-09-06 11:00:00,2023-09-13 03:59:59,shooting,Indoor,LightArmor,Max Damage Limit,최대 피해 제한,最大ダメージ制限,限制最大傷害,Explosive Formation,폭발 타입 편성,爆発タイプ編成,編輯爆炸類型
+20,2023-10-11 11:00:00,2023-10-18 03:59:59,defense,Street,ElasticArmor,"Decreases ATK upon defeating an enemy, removed upon Recovery","적 처치 시 공격력 감소, 회복 시 제거",敵を倒した時攻撃力減少、回復時は減少解除,打倒敵人時減少攻擊力，恢復時消除,Increased Max HP,최대 체력 증가,最大HP増加,最大體力增加
+21,2023-11-08 11:00:00,2023-11-15 03:59:59,escort,Outdoor,Unarmed,"Fill Crowd Control Gauge, ATK Increased","군중제어 게이지 충전 시 스킬 중단, 기본 스킬 사용 중 공격력 증가",CCゲージ満タン時にスキル中断、ノーマルスキル使用中の攻撃力増加,群控量表充電時技能中斷，基本技能使用中攻擊力增加。,"Max HP Decrease, DEF Increase","최대 체력 감소, 방어력 증가",HP減少、防御力増加,最大體力減少，防禦力增加
+22,2023-12-06 11:00:00,2023-12-13 03:59:59,breakthrough,Indoor,HeavyArmor,Scarecrow's Continuous HP Decrease,허수아비 체력 지속 감소,かかしのHP持続減少,稻草人的體力持續減少,All Roles Formation,모든 역할 편성 ,全クラス編成,編入所有角色
+23,2024-01-10 11:00:00,2024-01-17 03:59:59,shooting,Street,HeavyArmor,"Ally Crit Increase, Enemy HP Increase","아군 치명 수치 증가, 적 체력 증가",味方の会心値増加、敵のHP増加,我方的暴擊數值增加，敵人的體力增加,Trinity ATK Decrease,트리니티 공격력 감소,トリニティ攻撃力減少,三一攻擊力減少
+24,2024-02-07 11:00:00,2024-02-14 03:59:59,defense,Outdoor,LightArmor,"Enemy HP Increase, Front Ally ATK Increase","적 체력 증가, 아군 Front 공격력 증가",敵のHP増加、味方Frontの攻撃力増加,敵人的體力增加，我方Front的攻擊力增加,"Enemy ATK Increase, MOV SPD Increase","적 공격력 증가, 이동속도 증가",敵の攻撃力増加、移動速度増加,敵人的攻擊力、移動速度增加
+25,2024-03-06 11:00:00,2024-03-13 03:59:59,escort,Street,HeavyArmor,Avant Guard Buff Replication,아방가르드군 이로운 효과 복제,アバンギャルド君のバフ効果複製,複製前衛君的增益效果,"Avant Guard Recovery Rate Decrease, Enemy ATK Decrease","아방가르드군 받는 회복량 감소, 적 공격력 감소",アバンギャルド君の被回復量減少、敵の攻撃力減少,前衛君獲得的恢復量減少、敵方攻擊力減少
+26,2024-04-11 11:00:00,2024-04-17 03:59:59,breakthrough,Street,ElasticArmor,"Scarecrow Recovery When Ally Recovers, Scarecrow HP Increase","아군 회복 시 허수아비 회복, 허수아비 체력 증가",味方回復時にかかし回復、かかしのHP増加,我方恢復時稻草人也會恢復、稻草人的體力增加,"SR Weapon ATK Increase, Enemy HP Increase","SR 무기 공격력 증가, 적 체력 증가",SR武器の攻撃力が増加、敵のHP増加,SR武器攻擊力增加、敵方體力增加
+27,2024-05-08 11:00:00,2024-05-15 03:59:59,shooting,Street,HeavyArmor,Special Student ATK Increase,스페셜 공격력 증가,スペシャルの攻撃力増加,SPECIAL的攻擊力增加,Damage Taken Proportional to Enemy Debuffs,적 해로운 효과 수 비례 적의 받는 피해량 증가,敵の弱体状態数に比例し敵の被ダメージ量増加,依敵人持有的減益效果數量成比例增加敵人受到的傷害量
+28,2024-06-05 11:00:00,2024-06-12 03:59:59,defense,Indoor,LightArmor,"More HP, Hurting Heals","최대 체력 증가, 피격 시 회복",最大体力増加、被弾時に回復,最大體力增加、受到攻擊時恢復,"GL, MT, MG Weapon ATK Increase","GL, MT, MG 무기 공격력 증가","GL, MT, MG武器の攻撃力が増加",GL、MT、MG武器攻擊力增加
+29,2024-07-10 11:00:00,2024-07-17 03:59:59,escort,Street,ElasticArmor,Avant Guard Overload,아방가르드군 과부화,アバンギャルド君オーバーロード,前衛君超負荷,"Max HP Decrease, DEF Increase","최대 체력 감소, 방어력 증가",HP減少、防御力増加,最大體力減少，防禦力增加
+30,2024-08-07 11:00:00,2024-08-14 03:59:59,breakthrough,Outdoor,Unarmed,Scarecrow Recovery Reverse Damage,허수아비 회복 시 적에게 피해,かかし回復時、敵にダメージ,稻草人恢復時，對敵人造成傷害,Scarecrow Causes Damage Upon Recovery,허수아비 회복시 아군에게 피해,かかし回復時、味方にダメージ,稻草人恢復時對我方造成傷害
+31,2024-09-04 11:00:00,2024-09-11 03:59:59,shooting,Indoor,Unarmed,Damage Taken Proportional to Enemy Debuffs,적 해로운 효과 수 비례 적의 받는 피해량 증가,敵の弱体状態数に比例し敵の被ダメージ量増加,依敵人持有的減益效果數量成比例增加敵人受到的傷害量,"Burn, Chill, Poison, Passionate Cheering, and Shock damage increase","화상, 오한, 중독, 응원의 열기, 감전 대미지 증가",火傷、悪寒、中毒、応援の熱気、感電ダメージ増加,增加燒傷、惡寒、中毒、熱情應援、觸電傷害
+32,2024-10-10 11:00:00,2024-10-16 03:59:59,defense,Indoor,HeavyArmor,"Damage dealt by SG weapon increases, damage taken by enemy decreases","SG 무기 주는 대미지 증가, 적 받는 대미지 감소",SG武器の与えるダメージ量増加、敵の被ダメージ量減少,增加SG武器造成的傷害，減少敵人所受傷害,"Movement Speed Decrease, ATK Increase","이동속도 감소, 공격력 증가",移動速度の減少、攻撃力の増加,移動速度減少、攻擊力增加
+33,2024-11-06 11:00:00,2024-11-13 03:59:59,escort,Indoor,LightArmor,"Damage dealt by Striker students decreases, damage dealt by Special students increases","스트라이커 학생 주는 대미지 감소, 스페셜 학생 주는 대미지 증가",ストライカーの生徒の与えるダメージ量減少、スペシャルの生徒の与えるダメージ量増加,減少STRIKER學生造成的傷害，增加SPECIAL學生造成的傷害,"Max HP Decrease, DEF Increase","최대 체력 감소, 방어력 증가",HP減少、防御力増加,最大體力減少，防禦力增加
+34,2024-12-04 11:00:00,2024-12-11 03:59:59,breakthrough,Street,LightArmor,Additional Damage,추가 대미지,追加ダメージ,額外傷害,"Additional Scarecrow recovery by Explosive-type students, Scarecrow Max HP increase","허수아비 추가 회복, 허수아비 최대 HP 증가",かかし追加回復、かかしの最大HP増加,以爆炸類型學生額外修復稻草人，增加稻草人最大體力
+35,2025-01-08 11:00:00,2025-01-15 03:59:59,shooting,Street,ElasticArmor,"Burn, Chill, Poison, Passionate Cheering, Shock Additional Damage","화상, 오한, 중독, 응원의 열기, 감전 추가 대미지",火傷、悪寒、中毒、応援の熱気、感電追加ダメージ,燒傷、惡寒、中毒、熱情應援、觸電追加傷害,Crit RES Increase,치명저항 수치 증가,会心抵抗値の増加,暴擊抵抗數值增加
+36,2025-02-03 11:00:00,2025-02-12 03:59:59,defense,Indoor,Unarmed,"More HP, Hurting Heals","최대 체력 증가, 피격 시 회복",最大体力増加、被弾時に回復,最大體力增加、受到攻擊時恢復,"Millennium, Abydos ATK Increase","밀레니엄, 아비도스 공격력 증가",ミレニアム、アビドス攻撃力増加,千年、阿拜多斯攻擊力增加
+37,2025-03-12 11:00:00,2025-03-19 03:59:59,escort,Outdoor,Unarmed,Damage to Avant Guard,아방가르드군에게 피해,アバンギャルド君への反動,對前衛君的傷害,ATK Increase,공격력 증가,攻撃力増加,攻擊力增加
+38,2025-04-09 11:00:00,2025-04-16 03:59:59,breakthrough,Street,HeavyArmor,Scarecrow's Continuous HP Decrease,허수아비 체력 지속 감소,かかしのHP持続減少,稻草人的體力持續減少,Damage dealt increases/decreases,주는 대미지 증가 혹은 감소,与えるダメージ量増加または減少,造成的傷害增加或減少
+39,2025-05-07 11:00:00,2025-05-14 03:59:59,shooting,Street,LightArmor,"AR, SR weapon ATK increase","AR, SR 무기 공격력 증가",AR、SR武器攻撃力増加,AR、SR武器攻擊力增加,"Max HP, DEF increase","최대 체력 증가, 방어력 증가",最大HP増加、防御力増加,最大體力增加、防禦力增加
+40,2025-06-04 11:00:00,2025-06-11 03:59:59,defense,Outdoor,ElasticArmor,Max Damage Limit,최대 피해 제한,最大ダメージ制限,限制最大傷害,Additional damage upon attack,공격 시 추가 대미지,攻撃時追加ダメージ,攻擊時追加傷害
+41,2025-07-09 11:00:00,2025-07-16 03:59:59,escort,Indoor,HeavyArmor,"Avant Guard, Hyakkiyako Dealt-Damage Increase","아방가르드군, 백귀야행 주는 대미지 증가",アバンギャルド君、百鬼夜行の与えるダメージ量増加,前衛君、百鬼夜行造成的傷害增加, Decreased Enemy DEF When Avant Guard Is Buffed," 아방가르드군 이로운 효과 적용 시, 적 방어력 감소",アバンギャルド君にバフ効果を適用時、敵の防御力減少,給予前衛君增益效果時，敵方防禦力減少
+42,2025-08-06 11:00:00,2025-08-13 03:59:59,breakthrough,Indoor,Unarmed,Scarecrow Recovery Reverse Damage,허수아비 회복 시 적에게 피해,かかし回復時、敵にダメージ,稻草人恢復時，對敵人造成傷害,Debuff Removes the Barrier,"해로운 효과 적용 시, 보호막 해제",弱体状態を付与した時、シールドを解除,給予減益效果時，解除護盾
+43,2025-09-03 11:00:00,2025-09-10 03:59:59,shooting,Street,ElasticArmor,Reduced Damage for the Last Box Cat,마지막 박스캣 받는 대미지 감소,ネロの被ダメージ量減少,最後的盒中貓受到的傷害減少,SR Weapon ATK Increase,SR 무기 공격력 증가,SR武器攻撃力増加,SR武器攻擊力增加
+44,2025-10-08 11:00:00,2025-10-15 03:59:59,defense,Indoor,LightArmor,"MOV SPD increase, Knockback upon hit","이동속도 증가, 피격 시 넉백",移動速度増加、被弾時ノックバック,移動速度增加、被擊中時後退。,Damages nearby area once defeated,"퇴치 시, 주변에 대미지",敵を倒した時、周囲の生徒にダメージ,死亡時，對周圍造成傷害
+45,2025-11-05 11:00:00,2025-11-12 03:59:59,escort,Outdoor,ElasticArmor,Defeating an enemy decreases DEF and increases damage taken,"적 처치 시 방어력 감소, 받는 대미지 증가",敵を倒した時、防御力減少、被ダメージ量増加,擊敗敵人後防禦力減少、受到傷害增加,"When enemy HP falls, other enemies heal","적 체력 감소 시, 다른 적 회복",敵のHPが減少した時、他の敵のHP回復,敵人血量減少時，其他敵人恢復
+46,2025-12-03 11:00:00,2025-12-10 03:59:59,breakthrough,Outdoor,LightArmor,"Damage dealt by Striker students decreases, damage dealt by Special students increases","스트라이커 학생 주는 대미지 감소, 스페셜 학생 주는 대미지 증가",ストライカーの生徒の与えるダメージ量減少、スペシャルの生徒の与えるダメージ量増加,減少STRIKER學生造成的傷害，增加SPECIAL學生造成的傷害,"Boosts Recovery of Mystic type students, Scarecrow Max HP increase","신비 타입 학생의 회복량 증가, 허수아비의 최대 HP 증가",神秘タイプ生徒の回復量増加、かかしの最大HP増加,神秘類型學生的恢復量增加，稻草人的最大HP增加。
+47,2026-01-07 11:00:00,2026-01-14 03:59:59,escort,Street,HeavyArmor,Avant Guard Recovery Reverse Damage,아방가르드군 회복 시 적에게 피해,アバンギャルド君回復時、敵にダメージ,前衛君恢復時對敵方造成傷害,Increases Piercing Effectiveness,관통 특효 가산,貫通特効加算,貫穿特效增加
+48,2026-01-29 11:00:00,2026-02-05 03:59:59,defense,Indoor,Unarmed,Increases Mystic Effectiveness,신비 특효 가산,神秘特効加算,神祕特效增加,Damage When Enemy Is Defeated,적 퇴치 시 피해,敵を倒した時にダメージ,擊退敵人傷害
+49,2026-02-25 11:00:00,2026-03-04 03:59:59,shooting,Street,LightArmor,"Enemy Damage Taken, Last Box Cat's HP Increase","적 받는 피해 증가, 마지막 박스캣 체력 증가",敵の被ダメージ量増加、ネロのHP増加,敵人承受傷害增加、最後箱貓血量增加,Strong Fundamentals Increase,기본기 숙련 가산,基礎熟練度加算,基礎熟練度增加
+50,2026-04-01 11:00:00,2026-04-08 03:59:59,breakthrough,Outdoor,Unarmed,"Additional Damage, Accuracy Decrease","추가 대미지, 명중 수치 감소",追加ダメージ、命中値減少,追加傷害、命中數值減少,"Scarecrow Received Healing Decrease, Cost Recovery Increase When Debuff Is Cleansed","허수아비 받는 회복량 감소, 해로운 효과 해제 시 코스트 회복력 증가",かかしの被回復量減少、弱体状態を解除時のコスト回復力増加,稻草人恢復率減少、解除減益時COST恢復力增加
+51,2026-05-06 11:00:00,2026-05-13 03:59:59,defense,Street,HeavyArmor,"Damage reduced when defeating enemies (3 levels), removing damage reduction increases ATK","적 일정 수 처치 시 주는 대미지 감소, 주는 대미지 감소 효과 해제 시 공격력 증가",敵を一定数倒した時に与えるダメージ減少、与えるダメージ量減少効果解除時、攻撃力増加,擊敗敵人時造成傷害減少(3階段)，解除造成傷害減少效果時攻擊力增加,"Enemy ATK significantly increased, barriers reduce damage taken","적 공격력 대폭 증가, 보호막 상태일 때 받는 대미지 감소",敵の攻撃力大幅増加、シールド保有時、被ダメージ量減少,敵人攻擊力大幅增加，護盾狀態時受到傷害減少
+52,2026-06-10 11:00:00,2026-06-17 03:59:59,shooting,Street,LightArmor,,스페셜 학생 주는 대미지 대폭 증가,スペシャル生徒の与えるダメージ量大幅増加,,,박스캣 방어력 대폭 증가,ネロの防御力大幅増加,
+53,2026-07-08 11:00:00,2026-07-15 03:59:59,breakthrough,Outdoor,ElasticArmor,,"EX스킬을 사용할 때 마다 아군 공격력 증가, 치유력 증가",EXスキルを使用する度に味方の攻撃力、治癒力増加,,,"아군 학생 및 허수아비 체력 지속 감소, 주는 대미지 증가",味方生徒、かかしのHPが継続的に減少、与えるダメージ量増加,
+54,2026-08-12 11:00:00,2026-08-19 03:59:59,escort,Indoor,Unarmed,,"게헨나, 트리니티 신비 특효 가산",ゲヘナ、トリニティ神秘特効加算,,,"코스트 회복 속도 증가, 주는 EX스킬 대미지 증가, 적 최대 체력 증가",味方のコスト回復速度増加、与えるEXスキルダメージ増加、敵の最大HP増加,
+55,2026-09-09 11:00:00,2026-09-16 03:59:59,shooting,Outdoor,Unarmed,,"박스캣 최대 체력 증가, 딜러 2명 이상 편성 시 코스트 회복 속도 증가",ネロの最大HP増加、アタッカー2人以上編成時コスト回復速度増加,,,박스캣 체력에 따라 EX 스킬 피격 대미지량 감소,ネロのHPによってEXスキルの被ダメージ量減少,

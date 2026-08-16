@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useGlobalStore } from './useGlobalStore';
 import { useEventPlanStore } from './useEventPlanStore';
 import { useEquipmentPlanStore } from './useEquipmentPlanStore';
+import { getResourcePlanData, useResourcePlanStore } from './useResourcePlanStore';
 import { useSyncStore } from '../syncStore';
 
 const STALE_THRESHOLD_MS = 5 * 60 * 1000; // Resync if idle for more than 5 minutes
@@ -37,6 +38,10 @@ export function useSyncWatcher() {
           },
           1,
         );
+      }),
+
+      useResourcePlanStore.subscribe((state) => {
+        useSyncStore.getState().push('resourcePlan', getResourcePlanData(state), 1);
       }),
 
       useEventPlanStore.subscribe((state) => {

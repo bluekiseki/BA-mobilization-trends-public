@@ -181,42 +181,27 @@ export const PotentialTab = ({ plan, handleBatchUpdate, iconData, eventData, stu
                 pushable={false}
                 value={[currentVal, targetVal]}
                 onChange={(val) => handleSliderChange(stat, val)}
-                styles={
-                  {
-                    track: {
-                      backgroundColor: hasWarning ? '#f43f5e' : '#3b82f6',
-                      height: 5,
-                    },
-                    rail: {
-                      backgroundColor: 'var(--tw-colors-neutral-200, #e5e7eb)',
-                      height: 5,
-                    },
-                    handle: [
-                      {
-                        borderColor: isCurrentInvalid ? '#f43f5e' : '#9ca3af',
-                        backgroundColor: '#ffffff',
-                        opacity: 1,
-                        height: 18,
-                        width: 18,
-                        marginTop: -6.5,
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                        borderWidth: 2,
-                        zIndex: 10,
-                      },
-                      {
-                        borderColor: isTargetInvalid ? '#f43f5e' : '#3b82f6',
-                        backgroundColor: isTargetInvalid ? '#f43f5e' : '#3b82f6',
-                        opacity: 1,
-                        height: 18,
-                        width: 18,
-                        marginTop: -6.5,
-                        boxShadow: '0 1px 3px rgba(37,99,235,0.3)',
-                        borderWidth: 2,
-                        zIndex: 11,
-                      },
-                    ],
-                  } as Record<string, React.CSSProperties | React.CSSProperties[]>
-                }
+                styles={{
+                  track: {
+                    backgroundColor: hasWarning ? '#f43f5e' : '#3b82f6',
+                    height: 5,
+                  },
+                  rail: {
+                    backgroundColor: 'var(--tw-colors-neutral-200, #e5e7eb)',
+                    height: 5,
+                  },
+                  handle: {
+                    borderColor: isCurrentInvalid ? '#f43f5e' : '#9ca3af',
+                    backgroundColor: '#ffffff',
+                    opacity: 1,
+                    height: 18,
+                    width: 18,
+                    marginTop: -6.5,
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    borderWidth: 2,
+                    zIndex: 10,
+                  },
+                }}
                 className="dark:[&_.rc-slider-rail]:bg-neutral-700! dark:[&_.rc-slider-handle-1]:bg-neutral-800!"
               />
             </div>

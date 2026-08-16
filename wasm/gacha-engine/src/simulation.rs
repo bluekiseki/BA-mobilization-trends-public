@@ -364,8 +364,9 @@ pub fn run_strategies_chunk(
     let mut result = SimChunkResult::default();
     result.costs.reserve(sim_count as usize);
     result.pulls.reserve(sim_count as usize);
+    result.eligma.reserve(sim_count as usize);
 
-    // Pre-initialize banner_costs keys
+    // Pre-initialize banner_costs, banner_eligma, and banner_student_eleph_dist keys
     for s in strategies {
         result
             .banner_costs
@@ -375,6 +376,18 @@ pub fn run_strategies_chunk(
                 v.reserve(sim_count as usize);
                 v
             });
+        result
+            .banner_eligma
+            .entry(s.banner_id.clone())
+            .or_insert_with(|| {
+                let mut v = Vec::new();
+                v.reserve(sim_count as usize);
+                v
+            });
+        result
+            .banner_student_eleph_dist
+            .entry(s.banner_id.clone())
+            .or_default();
     }
 
     let mut state = SimState::new();
@@ -385,7 +398,9 @@ pub fn run_strategies_chunk(
             let Some(pool_data) = banner_pools.get(&strategy.banner_id) else {
                 continue;
             };
-            let prev_cost = state.total_cost;
+            // Snapshot eleph before this banner to compute incremental after
+            let prev_eleph: FxHashMap<u32, u32> = state.eleph.clone();
+
             simulate_single_banner(&mut state, strategy, pool_data, rng);
 
             result
@@ -393,12 +408,27 @@ pub fn run_strategies_chunk(
                 .get_mut(&strategy.banner_id)
                 .unwrap()
                 .push(state.total_cost);
+            result
+                .banner_eligma
+                .get_mut(&strategy.banner_id)
+                .unwrap()
+                .push(state.total_eligma);
 
-            let _ = prev_cost; // cumulative cost at end of this banner
+            // Record incremental eleph per student for this banner
+            if let Some(banner_dist) = result.banner_student_eleph_dist.get_mut(&strategy.banner_id) {
+                for (id, &curr) in &state.eleph {
+                    let prev = prev_eleph.get(id).copied().unwrap_or(0);
+                    let incr = curr.saturating_sub(prev);
+                    if incr > 0 {
+                        *banner_dist.entry(*id).or_default().entry(incr).or_insert(0) += 1;
+                    }
+                }
+            }
         }
 
         result.costs.push(state.total_cost);
         result.pulls.push(state.total_pulls);
+        result.eligma.push(state.total_eligma);
         result.total_eligma_sum += state.total_eligma as u64;
 
         // Success: all "must" targets acquired

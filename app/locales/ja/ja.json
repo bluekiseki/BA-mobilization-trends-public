@@ -17,6 +17,10 @@
     "load_more": "もっと見る",
     "raid": "総力戦",
     "eraid": "大決戦",
+    "raidAndEraid": "総力戦・大決戦",
+    "event": "イベント",
+    "campaign": "キャンペーン",
+    "multifloor": "制約解除決戦",
     "dataWarning": "当サイトで提供するデータは、二次加工したものであり、その過程でエラーが発生し不正確な情報が含まれる可能性があります。サイト運営者は、本データの利用によって生じるいかなる問題についても一切の責任を負いませんので、ご利用の際は予めご了承ください。",
     "viewMore": "詳細表示",
     "viewSimple": "簡易表示",
@@ -30,6 +34,9 @@
     "clear": "クリア",
     "period": "期間",
     "jfd": "合同火力演習",
+    "tacticalChallenge": "戦術対抗戦",
+    "finalRestrictionWB": "能力解放WB",
+    "expertPermit": "熟達証書",
     "pred": "予想",
     "title": "ユズ Trends",
     "site-title": "ユズ Trends",
@@ -50,7 +57,9 @@
     "changelog": {
       "title": "変更履歴",
       "noTranslation": "翻訳がありません",
-      "newUpdate": "最近のアップデート"
+      "newUpdate": "最近のアップデート",
+      "feedbackPrompt": "バグ報告と機能提案をお待ちしています。",
+      "sendFeedback": "フィードバック送信"
     },
     "currentLocale": "ja",
     "navigation": {
@@ -69,7 +78,26 @@
       "darkMode": "ダークモード",
       "systemTheme": "システム設定",
       "language": "言語",
-      "serverSettings": "サーバー設定"
+      "serverSettings": "サーバー設定",
+      "jukebox": "BGMプレーヤー",
+      "notices": "お知らせアーカイブ",
+      "itemScanner": "アイテムスキャナー",
+      "studentScanner": "生徒育成スキャナー",
+      "eventPlanner": "イベント周回プランナー",
+      "gachaPlanner": "青輝石・募集/ガチャ計画",
+      "studentGrowthPlanner": "生徒育成プランナー",
+      "equipmentFarmingPlanner": "装備ファーミングプランナー",
+      "favorCalculator": "絆ランク計算機"
+    },
+    "homeFeatures": {
+      "eventPlannerDesc": "学生成長のための財貨消耗及びイベントでの財貨獲得シミュレーション",
+      "gachaPlannerDesc": "未来視スケジュールに基づいて予想される青輝石の需給を計算し、希望する生徒のピックアップ戦略を立てて募集/ガチャの成功確率をシミュレーションします。",
+      "studentGrowthPlannerDesc": "全ての生徒の育成計画を一元管理し、必要な素材を計算します。",
+      "equipmentFarmingPlannerDesc": "生徒の育成計画に基づき、装備ファーミングを最適化します。",
+      "favorCalculatorDesc": "目標の絆ランクに到達するために必要な贈り物を計算します。",
+      "jukeboxDesc": "番号付きBGMの使い先検索",
+      "itemScannerDesc": "インベントリのスクリーンショットをスキャンして、所持しているアイテムを自動的に入力します。",
+      "studentScannerDesc": "生徒のプロフィール画面を左右にスワイプしながら録画した画面録画をスキャンして、育成情報を自動的に入力します。"
     },
     "LocaleSwitcher": {
       "en": "英語",
@@ -142,7 +170,8 @@
       "birthdaySoon": "お誕生日おめでとう！",
       "jpStats": "JP 統計",
       "kivotosPeace": "キヴォトスは現在平和な状態です",
-      "noEvent": "現在イベントはありません。"
+      "noEvent": "現在イベントはありません。",
+      "monthEndReset": "ショップ月末リセット"
     },
     "scroll_to_first_page": "最初のページ",
     "scroll_to_prev_page": "前のページ",
@@ -241,6 +270,7 @@
   },
   "raidInfo": {
     "All": "全て",
+    "allDifficulties": "全難易度",
     "Lunatic": "LUNATIC",
     "Torment": "TORMENT",
     "Insane": "INSANE",
@@ -254,6 +284,8 @@
     "title": "総力戦・大決戦ダッシュボード",
     "shorttitle": "ダッシュボード",
     "description1": "それぞれの総力戦・大決戦の詳細を見る",
+    "detailMetaTitle": "{{server}} {{season}} {{boss}} {{location}} {{raidType}} 攻略・統計",
+    "detailMetaDescription": "ブルーアーカイブ{{server}}サーバー {{season}} {{boss}} {{location}} {{raidType}}のスコア分布、難易度別クリア状況、上位編成、生徒使用率の統計です。",
     "rankRange": "順位範囲",
     "subtitle": "総力戦・大決戦ダッシュボード ペロロジラ 2025.09",
     "scoreDistribution": "コア分布",
@@ -332,7 +364,7 @@
     "unitSecond": "秒",
     "tooltipTime": "時間: {{time}}",
     "tooltipDifficulty": "難易度: {{difficulty}}",
-    "scoreCondition": "スコア <= {{score}}",
+    "scoreCondition": "スコア ≤ {{score}}",
     "tooltipCumulativeRank": "累積順位: ~{{rank}}位",
     "clearTime": "クリアタイム",
     "hideSettings": "設定を隠す",
@@ -428,14 +460,23 @@
       "mulligan_view_order": "ピック順",
       "mopup_filter": "残処理パーティフィルター"
     },
-    "videos": "動画",
+    "videos": "攻略動画",
     "videos_select_boss": "動画を見るにはボスタイプを選択してください。",
     "videos_empty": "動画がありません。",
+    "videos_sort_score_desc": "スコア高い順",
+    "videos_sort_score_asc": "スコア低い順",
+    "videos_sort_upload_desc": "投稿日が新しい順",
+    "videos_sort_upload_asc": "投稿日が古い順",
+    "videos_score_min_placeholder": "最小",
+    "videos_score_max_placeholder": "最大",
     "videos_filter_tl": "TLのみ",
     "videos_filter_target_type": "ターゲットタイプのみ",
     "videos_missing_note": "自動処理のため、一部の動画が欠けている場合があります。",
     "videos_view_all": "収録した全動画を確認",
-    "videos_external_sites": "参考になる外部サイト："
+    "videos_external_sites": "参考になる外部サイト：",
+    "video_source_cv": "サムネイルから自動抽出",
+    "video_source_text": "動画の説明から抽出",
+    "video_extraction_note": "編成情報はサムネイル画像認識(cv)または動画説明文(text)から自動抽出されます。精度は保証されません。"
   },
   "dashboardIndex": {
     "title": "ダッシュボード一覧",
@@ -465,7 +506,24 @@
     "platinum_prediction_avg": "{{rank}}位",
     "compare_cutoff": "{{name}} ボーダー ({{rank}}位)",
     "total_combined": "{{types}}",
-    "predicted_score": "{{score}}点"
+    "predicted_score": "{{score}}点",
+    "data_unavailable_reason": "公式APIが提供されていないため、外部の提供者から非公式にデータを受け取り運営してきました。",
+    "data_unavailable_status": "データ提供者の事情により供給が停止しており、現在ご利用いただけません。データを提供または提供のサポートができる方は、ご連絡ください。",
+    "data_unavailable_contact_email": "メールで連絡",
+    "data_unavailable_contact_anon": "匿名で連絡",
+    "platinum_cut_est": "プラチナボーダー予測（統計ベース）",
+    "hours_remaining_suffix": "残り",
+    "video_fallback_title": "攻略動画",
+    "video_fallback_note_crawl": "動画のクロールはまだ手動のため、最大1〜2日間隔で更新されます。",
+    "video_fallback_note_live_only": "現在開催中のレイドの動画のみ表示されます。さらに表示：",
+    "score_time_converter_title": "スコア・タイム変換",
+    "score_time_converter_placeholder": "スコア（例: 41230000）またはタイム（例: 3:45）を入力してください",
+    "score_time_converter_error_invalid_time": "タイムの形式が正しくありません。mm:ss形式で入力してください（例: 3:45）。",
+    "score_time_converter_error_negative_time": "タイムは正の値である必要があります。",
+    "score_time_converter_error_no_valid_score": "このタイムに該当する有効なスコアがありません。",
+    "score_time_converter_error_invalid_score": "数字のスコア、またはmm:ss形式のタイムを入力してください。",
+    "score_time_converter_error_negative_score": "スコアは正の値である必要があります。",
+    "score_time_converter_error_no_time": "このスコアに対するタイムを計算できませんでした。"
   },
   "emblemCounter": {
     "title": "絆ランク称号の設定状況",
@@ -499,8 +557,11 @@
   },
   "calendar": {
     "title": "カレンダー及び未来時",
+    "metaTitle": "ブルーアーカイブ予定カレンダー・ピックアップ＆イベント日程",
+    "upcomingTitle": "主な予定",
+    "predictionLabel": "（予想）",
     "description": {
-      "main": "ブルーアーカイブの主なイベントスケジュールをガントチャート形式で表示します。",
+      "main": "ブルーアーカイブの日本・グローバルサーバーのピックアップ、イベント、総力戦・大決戦日程を確認できる最新カレンダーです。",
       "prediction": "斜線の項目は先行サーバー基準の予測スケジュールです。"
     },
     "distribute": "(配布: {{name}})",

@@ -5,6 +5,7 @@ import { gqlFetch } from '~/utils/gqlFetch';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { useEventPlanStore } from '~/store/planner/useEventPlanStore';
 import { useEquipmentPlanStore } from '~/store/planner/useEquipmentPlanStore';
+import { getResourcePlanData, useResourcePlanStore } from '~/store/planner/useResourcePlanStore';
 import { useSyncStore } from '~/store/syncStore';
 
 interface Props {
@@ -24,6 +25,7 @@ export function ImportDataBanner({ profileId, onDone }: Props) {
       const globalState = useGlobalStore.getState();
       const equipState = useEquipmentPlanStore.getState();
       const eventState = useEventPlanStore.getState();
+      const resourcePlanState = useResourcePlanStore.getState();
 
       // Build batch data: growthPlans + equipmentPlan as single keys,
       // each event plan as separate key
@@ -48,6 +50,10 @@ export function ImportDataBanner({ profileId, onDone }: Props) {
             // blueprints: equipState.blueprints,
           },
         },
+        {
+          key: 'resourcePlan',
+          value: getResourcePlanData(resourcePlanState),
+        },
         ...Object.entries(eventState.plans).map(([eventId, plan]) => ({
           key: `eventPlans:${eventId}`,
           value: plan,
@@ -65,7 +71,7 @@ export function ImportDataBanner({ profileId, onDone }: Props) {
           ),
         ),
       );
-      useSyncStore.setState({ status: 'synced', lastSyncedAt: Date.now(), isInitialized: true });
+      await useSyncStore.getState().pullAll(profileId);
       onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('settings.errors.failedToImportProfile'));

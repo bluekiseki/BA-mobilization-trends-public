@@ -28,9 +28,7 @@ export type ChunkStats = {
 };
 
 export type WorkerOutMsg =
-  | { type: 'progress'; chunkStats: ChunkStats; completed: number; total: number }
-  | { type: 'done'; chunkStats: ChunkStats; completed: number; total: number }
-  | { type: 'error'; message: string };
+  { type: 'progress'; chunkStats: ChunkStats; completed: number; total: number } | { type: 'done'; chunkStats: ChunkStats; completed: number; total: number } | { type: 'error'; message: string };
 
 self.onmessage = async (e: MessageEvent<WorkerInMsg>) => {
   try {

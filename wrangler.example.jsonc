@@ -18,7 +18,9 @@
   "vars": {
     "VITE_TURNSTILE_SITE_KEY": "your-turnstile-site-key",
     "VITE_PUBLIC_POSTHOG_KEY": "your-posthog-public-key",
-    "VITE_PUBLIC_POSTHOG_HOST": "https://your-posthog-host",
+    "VITE_PUBLIC_POSTHOG_DIRECT_HOST": "https://us.i.posthog.com",
+    "VITE_PUBLIC_POSTHOG_UI_HOST": "https://us.posthog.com",
+    "VITE_PUBLIC_POSTHOG_HOST": "https://your-posthog-proxy-host",
     "VITE_WEB3FORMS_ACCESS_KEY": "your-web3forms-access-key",
     "GITHUB_CLIENT_ID": "your-github-oauth-client-id",
     "ENVIRONMENT": "production",

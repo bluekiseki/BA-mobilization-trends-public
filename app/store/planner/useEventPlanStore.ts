@@ -16,6 +16,7 @@ import { defaultClueSearchConfig, type ClueSearchConfig } from '~/types/minigame
 import { defaultFieldEventConfig, type FieldEventConfig } from '~/types/minigame/fieldEvent';
 import { defaultInteractiveWorldRaidConfig, type InteractiveWorldRaidConfig } from '~/types/minigame/interactiveWorldRaid';
 import { defaultRoadPuzzleConfig, type RoadPuzzleConfig } from '~/types/minigame/roadPuzzle';
+import { defaultJankenConfig, type JankenConfig } from '~/types/minigame/janken';
 import type { CcgRunInput } from '~/types/minigame/ccg';
 import { type EventPlan, type StagePrio } from '~/types/eventPlan';
 
@@ -66,9 +67,15 @@ interface EventPlanStoreState {
   setFieldEventConfig: (eventId: number, config: FieldEventConfig) => void;
   setInteractiveWorldRaidConfig: (eventId: number, config: InteractiveWorldRaidConfig) => void;
   setRoadPuzzleConfig: (eventId: number, config: RoadPuzzleConfig) => void;
+  setMinigameJankenConfig: (eventId: number, config: JankenConfig) => void;
 
   setTotalRewardCurrentAmount: (eventId: number, amount: number) => void;
   setTotalRewardTargetAmount: (eventId: number, amount: number) => void;
+
+  setCachedTotalItems: (
+    eventId: number,
+    cached: { savedAt: number; gained: Record<string, { amount: number; isBonusApplied: boolean }>; spent: Record<string, { amount: number; isBonusApplied: boolean }>; availableAp: number },
+  ) => void;
 
   // Action to reset all plans (for data import/export)
   resetAllPlans: (allPlans: Record<string, Partial<EventPlan>>) => void;
@@ -153,8 +160,10 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setFieldEventConfig: (eventId, config) => updatePlanForEvent(eventId, { fieldEventConfig: config }),
         setInteractiveWorldRaidConfig: (eventId, config) => updatePlanForEvent(eventId, { interactiveWorldRaidConfig: config }),
         setRoadPuzzleConfig: (eventId, config) => updatePlanForEvent(eventId, { roadPuzzleConfig: config }),
+        setMinigameJankenConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameJankenConfig: config }),
         setTotalRewardCurrentAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardCurrentAmount: amount }),
         setTotalRewardTargetAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardTargetAmount: amount }),
+        setCachedTotalItems: (eventId, cached) => updatePlanForEvent(eventId, { cachedTotalItems: cached }),
         setMinigameCCGConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameCCGConfig: config }),
         setMinigameMissionStatus: (eventId, status) => updatePlanForEvent(eventId, { minigameMissionStatus: status }),
 
@@ -254,8 +263,17 @@ export const usePlanForEvent = (eventId: number) => {
     setRoadPuzzleConfig: (config: RoadPuzzleConfig) => {
       if (eventId) actions.setRoadPuzzleConfig(eventId, config);
     },
+    setMinigameJankenConfig: (config: JankenConfig) => {
+      if (eventId) actions.setMinigameJankenConfig(eventId, config);
+    },
     setTotalRewardCurrentAmount: (amount: number) => eventId && actions.setTotalRewardCurrentAmount(eventId, amount),
     setTotalRewardTargetAmount: (amount: number) => eventId && actions.setTotalRewardTargetAmount(eventId, amount),
+    setCachedTotalItems: (cached: {
+      savedAt: number;
+      gained: Record<string, { amount: number; isBonusApplied: boolean }>;
+      spent: Record<string, { amount: number; isBonusApplied: boolean }>;
+      availableAp: number;
+    }) => eventId && actions.setCachedTotalItems(eventId, cached),
     // setMinigameCCGConfig: (updater: (prev: CcgRunInput[]) => CcgRunInput[]) => {
     //   if (eventId) actions.setMinigameCCGConfig(eventId, updater(plan.minigameCCGConfig || defaultPlan.minigameCCGConfig));
     // },
@@ -299,6 +317,7 @@ export const usePlanForEvent = (eventId: number) => {
     fieldEventConfig: plan.fieldEventConfig ?? defaultFieldEventConfig,
     interactiveWorldRaidConfig: plan.interactiveWorldRaidConfig ?? defaultInteractiveWorldRaidConfig,
     roadPuzzleConfig: plan.roadPuzzleConfig ?? defaultRoadPuzzleConfig,
+    minigameJankenConfig: plan.minigameJankenConfig ?? defaultJankenConfig,
     ...setters,
     completedMissionsSet,
     setCompletedMissions,

@@ -179,7 +179,7 @@ const WIKI_HUNT_PATTERNS: Record<number, { x: number; y: number }[]> = {
   ],
 };
 
-const runSingleSimulation = ({
+export const runSingleSimulation = ({
   roundData,
   treasureRewards,
   strategy,

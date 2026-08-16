@@ -3,6 +3,9 @@ import { gqlFetch } from '~/utils/gqlFetch';
 import { useGlobalStore } from './planner/useGlobalStore';
 import { useEventPlanStore, type EventPlan } from './planner/useEventPlanStore';
 import { useEquipmentPlanStore } from './planner/useEquipmentPlanStore';
+import { useResourcePlanStore } from './planner/useResourcePlanStore';
+import { useRaidHistoryStore } from './planner/useRaidHistoryStore';
+import { ProfileDataSchemas } from '~/schemas/profileDataValidation';
 
 export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
 
@@ -20,6 +23,7 @@ interface SyncState {
   status: SyncStatus;
   lastSyncedAt: number | null;
   pendingKeys: Set<string>;
+  revisions: Record<string, number>;
   currentProfileId: string | null;
   isPulling: boolean;
   // Blocks pushes until the first pullAll succeeds, preventing stale
@@ -35,6 +39,7 @@ interface SyncState {
   setCurrentProfileId: (profileId: string | null) => void;
   setError: (error: string | null) => void;
   clearPlannerStores: () => void;
+  clearAccountData: () => void;
   reset: () => void;
   hasPendingChanges: () => boolean;
 
@@ -46,6 +51,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   status: 'idle',
   lastSyncedAt: null,
   pendingKeys: new Set(),
+  revisions: {},
   currentProfileId: null,
   isPulling: false,
   isInitialized: false,
@@ -75,7 +81,24 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   clearPlannerStores: () => {
     useGlobalStore.setState({ growthPlans: [], ownedGifts: {}, materialInventory: {} });
     useEquipmentPlanStore.setState({ runCounts: {}, farmingDays: 1, normalMultiplier: 2, hardMultiplier: 2, /*inventory: {},*/ campaignSource: 'jp' /*blueprints: {}*/ });
+    useResourcePlanStore.getState().resetAll();
     useEventPlanStore.setState({ plans: {} });
+    useRaidHistoryStore.setState({ entries: [] });
+  },
+
+  clearAccountData: () => {
+    cancelAllPushTimers();
+    get().clearPlannerStores();
+    set({
+      status: 'idle',
+      lastSyncedAt: null,
+      pendingKeys: new Set(),
+      revisions: {},
+      currentProfileId: null,
+      isPulling: false,
+      isInitialized: false,
+      error: null,
+    });
   },
 
   reset: () =>
@@ -83,6 +106,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
       status: 'idle',
       lastSyncedAt: null,
       pendingKeys: new Set(),
+      revisions: {},
       error: null,
       isInitialized: false,
       // currentProfileId and isPulling intentionally not reset here
@@ -100,22 +124,29 @@ export const useSyncStore = create<SyncState>((set, get) => ({
       void (async () => {
         const profileId = get().currentProfileId;
         if (!profileId || get().isPulling || !get().isInitialized) return;
+        const baseRevision = get().revisions[key] ?? 0;
 
         set({ status: 'syncing' });
         try {
           await gqlFetch(
-            `mutation($profileId:ID!,$key:String!,$value:JSON!,$schemaVersion:Int!){
-              upsertProfileData(profileId:$profileId,key:$key,value:$value,schemaVersion:$schemaVersion)
+            `mutation($profileId:ID!,$key:String!,$value:JSON!,$schemaVersion:Int!,$baseRevision:Int!){
+              upsertProfileData(profileId:$profileId,key:$key,value:$value,schemaVersion:$schemaVersion,baseRevision:$baseRevision)
             }`,
-            { profileId, key, value, schemaVersion },
+            { profileId, key, value, schemaVersion, baseRevision },
           );
           get().removePendingKey(key);
+          set((state) => ({ revisions: { ...state.revisions, [key]: baseRevision + 1 } }));
           set({
             status: get().pendingKeys.size > 0 ? 'syncing' : 'synced',
             lastSyncedAt: Date.now(),
             error: null,
           });
         } catch (err) {
+          if (String(err).includes('SYNC_CONFLICT')) {
+            get().removePendingKey(key);
+            await get().pullAll(profileId);
+            return;
+          }
           set({ status: 'error', error: String(err) });
         }
       })();
@@ -128,13 +159,18 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     cancelAllPushTimers();
     set({ status: 'syncing', isPulling: true, pendingKeys: new Set() });
     try {
-      const data = await gqlFetch<{ profileAllData: { key: string; value: unknown; schemaVersion: number }[] }>(`query($id:ID!){ profileAllData(id:$id){ key value schemaVersion } }`, {
-        id: profileId,
-      });
+      const data = await gqlFetch<{ profileAllData: { key: string; value: unknown; schemaVersion: number; revision: number }[] }>(
+        `query($id:ID!){ profileAllData(id:$id){ key value schemaVersion revision } }`,
+        {
+          id: profileId,
+        },
+      );
 
       const rows = data?.profileAllData ?? [];
+      const revisions = Object.fromEntries(rows.map(({ key, revision }) => [key, revision]));
+      get().clearPlannerStores();
       if (rows.length === 0) {
-        set({ status: 'idle', isPulling: false, isInitialized: true });
+        set({ status: 'idle', isPulling: false, isInitialized: true, revisions });
         return false;
       }
 
@@ -144,6 +180,19 @@ export const useSyncStore = create<SyncState>((set, get) => ({
           useGlobalStore.setState(value as Record<string, unknown>);
         } else if (key === 'equipmentPlan' && typeof value === 'object' && value !== null) {
           useEquipmentPlanStore.setState(value as Record<string, unknown>);
+        } else if (key === 'resourcePlan' && typeof value === 'object' && value !== null) {
+          const data = value as Record<string, unknown>;
+          const activeServer = (data.server as 'kr' | 'jp') ?? 'kr';
+          const activeData = (data[activeServer] as Record<string, unknown>) ?? {};
+          // Restore nested server data AND spread active server's data into flat fields for component reads
+          useResourcePlanStore.setState({ ...data, ...activeData });
+        } else if (key === 'raidHistory' && typeof value === 'object' && value !== null) {
+          const validated = ProfileDataSchemas.raidHistory.safeParse(value);
+          if (!validated.success) {
+            console.error('Invalid raid history data from sync:', validated.error);
+            continue;
+          }
+          useRaidHistoryStore.setState(validated.data);
         } else if (key.startsWith('eventPlans:')) {
           eventPlansMap[key.slice(11)] = value;
         } else if (key === 'theme' && typeof value === 'string') {
@@ -160,7 +209,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
         }));
       }
 
-      set({ status: 'synced', lastSyncedAt: Date.now(), isPulling: false, isInitialized: true });
+      set({ status: 'synced', lastSyncedAt: Date.now(), isPulling: false, isInitialized: true, revisions });
       return true;
     } catch (err) {
       set({ status: 'error', error: String(err), isPulling: false });

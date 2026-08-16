@@ -3,19 +3,20 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaChartLine, FaClipboardList, FaSpinner, FaInfoCircle, FaTimes, FaExclamationTriangle, FaChevronRight } from 'react-icons/fa';
 
-import { parseAndGroupBanners, getAllStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
+import { parseAndGroupBanners, getAllStudents, normalizePortraitMap, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import type { Student } from '~/types/gacha';
 import { PageHeader } from '~/components/common/PageHeader';
 import IncomePlannerPanel, { type CustomIncome } from '~/components/gacha/IncomePlannerPanel';
 import BannerPlanner from '~/components/gacha/BannerPlanner';
 import PyroTimelineChart, { type ProbTimelinePoint, type CustomLineConfig, type BannerStudentMarker } from '~/components/gacha/PyroTimelineChart';
 
-import { loadScheduleData, type ScheduleItem } from '~/utils/calender.data';
+import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
+import { getItemTitle } from '~/utils/scheduleDisplay';
 import { getInstance } from '~/middleware/i18next';
 import type { GameServer } from '~/types/data';
 import { data, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import type { Locale } from '~/utils/i18n/config';
-import { calculatePyroxeneTimeline, getCdfByBinValue, getBinStartByCdf, PYROXENE_PER_EVENT, PYROXENE_PER_MAIN_STORY, type PlannerSchedule, type SimulationStats } from '~/utils/pyroxeneCalc';
+import { calculatePyroxeneTimeline, getCdfByBinValue, getBinStartByCdf, getEventPyroxeneReward, PYROXENE_PER_MAIN_STORY, type PlannerSchedule, type SimulationStats } from '~/utils/pyroxeneCalc';
 import type { GlobalAggregatedResult, DistributionData } from '~/utils/gachaEngine';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import { createMetaDescriptor } from '~/components/head';
@@ -44,14 +45,8 @@ export function loader({ request, context }: LoaderFunctionArgs) {
   const server = (url.searchParams.get('server') as GameServer) || 'kr';
 
   const i18n = getInstance(context);
-  const locale = (i18n.language as Locale) || 'ko';
 
-  const scheduleData = loadScheduleData({
-    server: server,
-    locale,
-    i18n,
-    tracksToLoad: 'all',
-  });
+  const scheduleData = loadScheduleDataV2({ server, tracksToLoad: 'all' });
 
   return data({
     siteTitle: i18n.t('common:title'),
@@ -108,7 +103,6 @@ export default function GachaMain() {
   const { scheduleData } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: t_planner } = useTranslation('planner');
-  const { t: t_cal } = useTranslation('calendar');
   const locale = i18n.language as Locale;
 
   const syncPush = useSyncStore((s) => s.push);
@@ -168,27 +162,19 @@ export default function GachaMain() {
     const result: PlannerSchedule[] = [];
     const toYMD = (dateStr: string) => (dateStr ? dateStr.split('T')[0] : '');
 
-    const t_cal_dynamic = t_cal as (key: string) => string;
-    const mapItems = (items: ScheduleItem[], type: PlannerSchedule['type']) => {
+    const mapItems = (items: ScheduleItemV2[], type: PlannerSchedule['type']) => {
       if (!items) return;
       items.forEach((item) => {
-        if (type == 'Campaign') {
-          if (item.type === 'campaign' && item.details?.campaignType) {
-            const rawTitle = t_cal_dynamic(`campaign.${item.details.campaignType.toLowerCase()}`);
-            const multiplier = item.title.split(' x')[1];
-            item.title = multiplier ? `${rawTitle} x${multiplier}` : rawTitle;
-          }
-        }
+        const title = getItemTitle(item, locale, i18n);
         let amount: undefined | number = undefined;
         if (type == 'Event') {
           const event_season = Number(item.id.split('-')[1]);
-          amount = event_season in PYROXENE_PER_EVENT ? PYROXENE_PER_EVENT[event_season] : 1800;
+          amount = getEventPyroxeneReward(event_season);
         }
         if (type == 'MainStory') {
-          amount = item.title.trim() in PYROXENE_PER_MAIN_STORY ? PYROXENE_PER_MAIN_STORY[item.title.trim()] : 100;
-          //if (amount == 100) console.log(`item.title '${item.title.trim()}'`, amount, PYROXENE_PER_MAIN_STORY);
+          amount = title.trim() in PYROXENE_PER_MAIN_STORY ? PYROXENE_PER_MAIN_STORY[title.trim()] : 100;
         }
-        result.push({ id: item.id, name: item.title, start: toYMD(item.startTime), end: toYMD(item.endTime), type, amount });
+        result.push({ id: item.id, name: title, start: toYMD(item.startTime), end: toYMD(item.endTime), type, amount });
       });
     };
 
@@ -212,7 +198,7 @@ export default function GachaMain() {
     if (tracks['maintenance']) mapItems(tracks['maintenance'], 'Maintenance');
 
     return result;
-  }, [scheduleData, t_cal]);
+  }, [scheduleData, locale, i18n]);
 
   // --- Base timeline + stats ---
   const { timeline: baseTimeline, stats } = useMemo(() => {
@@ -343,15 +329,15 @@ export default function GachaMain() {
         const [studentRes, portraitRes] = await Promise.all([fetch(cdn(`/schaledb.com/${locale}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
         if (!studentRes.ok) throw new Error(t('errors.load_students'));
         const rawStudentData: SchaleStudent[] | Record<string, SchaleStudent> = await studentRes.json();
-        const rawPortraitData: Record<number, string> = portraitRes.ok ? await portraitRes.json() : {};
-        setPortraitMap(rawPortraitData);
+        const rawPortraitData: Record<string, string> = portraitRes.ok ? await portraitRes.json() : {};
+        setPortraitMap(normalizePortraitMap(rawPortraitData));
         const studentMap: Record<string, SchaleStudent> = {};
         (Array.isArray(rawStudentData) ? rawStudentData : Object.values(rawStudentData)).forEach((s) => {
           studentMap[s.Id] = s;
         });
         const loadedBanners = parseAndGroupBanners(server, studentMap);
         setBanners(loadedBanners);
-        setAllStudents(getAllStudents(studentMap) as unknown as Student[]);
+        setAllStudents(withPickupFallbackStudents(getAllStudents(studentMap), loadedBanners) as unknown as Student[]);
         setStrategies(() => {
           let saved = savedStrategiesRef.current;
           // One-time migration: if v2 is empty, import active/modified entries from v1
@@ -373,7 +359,7 @@ export default function GachaMain() {
               b.pickupStudents.forEach((s, idx) => {
                 configs[s.id] = { studentId: s.id, priority: idx + 1, mode: 'skip', opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 };
               });
-              next[b.id] = { bannerId: b.id, isActive: false, maxSparks: 1, minPulls: 0, studentConfigs: configs, freePulls: 0, maxPulls: 200, isFes: false };
+              next[b.id] = { bannerId: b.id, isActive: false, maxSparks: 1, maxHalfCharges: 2, minPulls: 0, studentConfigs: configs, freePulls: 0, maxPulls: 200, isFes: false };
             }
           });
           return next;

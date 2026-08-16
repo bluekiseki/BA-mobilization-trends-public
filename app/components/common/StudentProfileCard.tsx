@@ -20,7 +20,7 @@ type FavorStory = {
   favor_rank: number;
   title: Record<string, string>;
   summary: Record<string, string>;
-  is_memorial: boolean;
+  memorial: boolean;
 };
 
 interface Props {
@@ -454,7 +454,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                             {t('common.rank')} {story.favor_rank}
                           </span>
                           {isGear && <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{t('common.gear')}</span>}
-                          {story.is_memorial && (
+                          {story.memorial && (
                             <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">{t('label.story_memorial')}</span>
                           )}
                         </div>

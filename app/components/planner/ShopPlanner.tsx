@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { ItemIcon } from './common/Icon';
 import { NumberInput } from './common/NumberInput';
-import type { EventData, GachaGroupInfo, IconData, IconInfo, Stage, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, Stage, StudentData, StudentPortraitData } from '~/types/plannerData';
 import { useEventSettings } from '~/store/planner/useSettingsStore';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useTranslation } from 'react-i18next';
@@ -10,41 +10,13 @@ import type { Locale } from '~/utils/i18n/config';
 import { getLocalizeEtcName } from './common/locale';
 import { CustomCheckbox } from '../CustomCheckbox';
 import { getCurrentTierPrice } from './common/shopTieredCost';
-
-type ItemType = 'Furniture' | 'Credit' | 'ExpGrowth' | 'Material' | 'Favor' | 'Coin' | 'SecretStone' | 'Gem' | 'Equipment' | 'Opart' | 'TacticalBD' | 'TechNote';
+import { getShopItemType } from '~/utils/itemType';
+import type { ItemType } from '~/utils/itemType';
+import { applyRepeatableEventBonus } from '~/utils/eventBonus';
 
 export type ShopResult = {
   costs: Record<string, number>;
   rewards: Record<string, number>;
-};
-
-const getShopItemType = (rewardType: string, rewardId: number, itemInfo?: IconInfo | GachaGroupInfo): ItemType | null => {
-  if (itemInfo && !('ItemCategory' in itemInfo)) return 'Equipment'; // Temporary
-
-  if (rewardType === 'Furniture') return 'Furniture';
-  if (rewardType === 'Equipment') return 'Equipment';
-  if (rewardType === 'Currency') {
-    if (rewardId === 1) return 'Credit';
-    if (rewardId === 3) return 'Gem';
-  }
-  if (itemInfo && typeof itemInfo.ItemCategory === 'number') {
-    switch (itemInfo.ItemCategory) {
-      case 0:
-        return 'Coin';
-      case 1:
-        return 'ExpGrowth';
-      case 2:
-        return 'SecretStone';
-      case 3:
-        if (rewardId >= 100 && rewardId <= 299) return 'Opart';
-        if (rewardId >= 3000 && rewardId <= 3999) return 'TacticalBD';
-        if (rewardId >= 4000 && rewardId <= 4999) return 'TechNote';
-        return 'Material';
-      case 6:
-        return 'Favor';
-    }
-  }
-  return null;
 };
 
 interface ShopPlannerProps {
@@ -93,7 +65,7 @@ export const ShopPlanner = ({ eventId, shop, eventData, iconData, allStages, tot
         if (!rewardInfo) continue;
         const baseDropAmount = (rewardInfo.RewardAmount * rewardInfo.RewardProb) / 10000;
         const bonusPercent = totalBonus[currencyId] || 0;
-        const effectiveDropAmount = baseDropAmount * (1 + bonusPercent / 10000);
+        const effectiveDropAmount = applyRepeatableEventBonus(baseDropAmount, bonusPercent);
 
         if (effectiveDropAmount > 0) {
           const apPerItem = (stage.StageEnterCostAmount * (baseDropAmount / totalRewardSum)) / effectiveDropAmount;

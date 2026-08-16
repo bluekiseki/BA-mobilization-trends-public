@@ -16,8 +16,20 @@ export const PYROXENE_PER_EVENT: Record<number, number> = {
   856: 2100,
   10843: 1250,
   857: 2120,
-  10845: 2220,
+  10845: 2270, //pray-ball
+  858: 2120, // lore v2
+  10847: 1920, //
+  859: 1980, // kisaki
+  10846: 2390, //highlander
+  860: 1870, // makoto
+  10844: 2080, //
 };
+
+export function getEventPyroxeneReward(eventSeason: number): number {
+  // Balancing Schale's Books events (600xx) do not award Pyroxenes.
+  if (eventSeason >= 60000 && eventSeason < 60100) return 0;
+  return PYROXENE_PER_EVENT[eventSeason] ?? 1800;
+}
 
 export const PYROXENE_PER_MAIN_STORY: Record<string, number> = {
   'Vol.6 Ch.2': 660,

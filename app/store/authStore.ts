@@ -1,20 +1,31 @@
 import { create } from 'zustand';
+import { getProfileServerLabel, PROFILE_SERVERS, type ProfileServer } from '~/utils/profileServer';
 
 export interface UserProfile {
   id: string;
   name: string;
-  server: 'jp' | 'kr' | 'tw' | 'asia' | 'global' | 'na';
+  server: ProfileServer;
   isDefault: boolean;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
 
+export type { ProfileServer } from '~/utils/profileServer';
+
+export const PROFILE_SERVER_OPTIONS: { value: ProfileServer; label: string }[] = PROFILE_SERVERS.map((server) => ({ value: server, label: getProfileServerLabel(server) }));
+
+export const GLKR_PROFILE_SERVER_OPTIONS = PROFILE_SERVER_OPTIONS.filter((option) => option.value !== 'jp') as { value: Exclude<ProfileServer, 'jp'>; label: string }[];
+
 export interface User {
   id: string;
   username: string;
   email?: string;
   profiles?: UserProfile[];
+}
+
+export function getActiveProfileStorageKey(userId: string): string {
+  return `yuzu_activeProfileId:${userId}`;
 }
 
 interface AuthState {
@@ -42,14 +53,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setUser: (user) => set({ user, error: null }),
   setActiveProfile: (profileId) => {
-    localStorage.setItem('yuzu_activeProfileId', profileId);
+    const userId = get().user?.id;
+    if (userId) localStorage.setItem(getActiveProfileStorageKey(userId), profileId);
     set({ activeProfileId: profileId });
   },
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
 
   logout: () => {
-    localStorage.removeItem('yuzu_activeProfileId');
     set({ user: null, activeProfileId: null });
   },
 
