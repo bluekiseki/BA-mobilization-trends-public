@@ -249,6 +249,7 @@ export const CompositionDetailView: React.FC<{
   analysisUnit?: 'team' | 'report';
 }> = ({ comp, entries, studentData, raidInfo, boss, server, id, portraitData, onClose, analysisUnit }) => {
   const { t } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
   const [selectedStudentId, setSelectedStudentId] = useState<'all' | number>('all');
   const [dataType, setDataType] = useState<'score' | 'time' | 'rank'>('rank');
   const [partyCountView, setPartyCountView] = useState<'none' | 'totalCount' | 'position'>('none');
@@ -588,7 +589,7 @@ export const CompositionDetailView: React.FC<{
               }}
               className={`px-2.5 py-1 text-xs rounded ${selectedStudentId === 'all' ? 'bg-sky-500 text-white font-bold' : 'bg-neutral-200 dark:bg-neutral-600'}`}
             >
-              {t('viewAllStudents')}
+              {t_ui('all')}
             </button>
             {uniqueIds.map((sid: number) => (
               <button
@@ -634,7 +635,7 @@ export const CompositionDetailView: React.FC<{
               className={`px-2 py-0.5 text-xs rounded disabled:opacity-50 ${dataType === 'time' ? 'bg-sky-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600'}`}
               disabled={!isTimeViewable}
             >
-              {t('byTime')}
+              {t_ui('time')}
             </button>
           </div>
           {!isTimeViewable && <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1.5">{t('timeViewUnavailableNotice')}</div>}
@@ -656,7 +657,7 @@ export const CompositionDetailView: React.FC<{
                   }}
                   className={`px-2 py-0.5 rounded transition-colors ${partyCountView === mode ? 'bg-sky-500 text-white' : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-600 dark:text-neutral-300'}`}
                 >
-                  {t(mode === 'none' ? 'byDefault' : mode === 'totalCount' ? 'byTotalPartyCount' : 'byPartyPosition')}
+                  {mode === 'none' ? t_ui('default') : t(mode === 'totalCount' ? 'byTotalPartyCount' : 'byPartyPosition')}
                 </button>
               ))}
             </div>
@@ -688,7 +689,7 @@ export const CompositionDetailView: React.FC<{
 
       {/* Star Distribution Bar Chart */}
       <div>
-        <h4 className="font-bold text-center mb-2">{t('starRatingDistribution')}</h4>
+        <h4 className="font-bold text-center mb-2">{t_ui('starDistribution')}</h4>
         <div className="space-y-4">
           {studentsToDisplay.map((studentId: number) => {
             const studentChartInfo = starDistributionData[studentId];

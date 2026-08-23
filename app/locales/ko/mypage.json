@@ -3,7 +3,6 @@
     "title": "내 클리어 기록",
     "description": "총력전, 대결전, 종합전술시험, 제약해제결전 기록을 저장합니다.",
     "noGuide": "공략 없이 클리어",
-    "server": "서버",
     "floor": "층수",
     "notes": "메모",
     "rankText": "{{rank}}등",
@@ -52,11 +51,6 @@
     "modal": {
       "add": "클리어 기록 추가",
       "edit": "클리어 기록 수정",
-      "raid": "레이드",
-      "trophy": "트로피",
-      "clearTime": "클리어 시간",
-      "clearTimePlaceholder": "선택",
-      "totalScore": "합산 점수",
       "clearTimeLabel": "클리어 시간 {{time}}",
       "difficultyCombo": "난이도 조합",
       "rankPlaceholder": "미입력",
@@ -71,13 +65,11 @@
       "guideLink": "참고한 공략 링크"
     },
     "slotPicker": {
-      "starGrade": "성급",
       "clearSlot": "슬롯 비우기",
       "assistConflict": "이미 사용 중인 조력자",
       "mulligan": "손패",
       "expandOptional": "▼ 장비 · 스킬 입력 (선택)",
       "collapseOptional": "▲ 장비 · 스킬 접기",
-      "noEquip": "없음",
       "notesPlaceholder": "(옵션)",
       "confirmAndNext": "확인 및 다음 슬롯",
       "nextParty": "다음 파티 이동"

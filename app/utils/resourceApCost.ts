@@ -1,21 +1,5 @@
-// Resolves "AP cost to obtain 1 unit of resource X" for a single event.
-//
-// Architecture: extraction is fully separated from cost resolution.
-//   1. EXTRACTION (extract*): ~15 small per-source functions, one per event data shape (stage, shop,
-//      each minigame, missions, field). Each is pure data-reading — it declares "this source costs
-//      {costAmount} of {costKey} and produces {amount} of {producesKey}", for EVERY resource the source
-//      can produce, in one pass over the whole event (not filtered to a single target key). No recursion,
-//      no cycle guard, no currency-chaining logic lives here at all.
-//   2. RESOLUTION (computeApRateMap / resolveResourceApProfile): a single generic Dijkstra pass turns the
-//      combined edge list into "AP cost per unit" for every currency in the event, then looks up whichever
-//      edges produce the requested target key. This replaces what used to be a `resolveApCostForCurrency`
-//      recursive call (with a `visited` cycle guard threaded through all 15 extractors) with one textbook
-//      shortest-path algorithm, written once.
-//
-// See project memory `project_resource_efficiency_tab` for the source-by-source coverage table and the
-// correctness rules this file must keep (no proportional AP-splitting across co-rewards, event bonus only
-// on repeatable-tag stage rewards, road-puzzle cost via real pathfinding, no fabricated formulas for
-// mechanics the game data doesn't expose).
+// Resolves AP cost per resource unit. Extract* functions (per-source) + Dijkstra resolution.
+// See project memory `project_resource_efficiency_tab` for correctness rules.
 import type { EventData, Stage, StageReward, MinigameDefenseStage, MinigameJankenStage } from '~/types/plannerData';
 import { runSimulation as runDiceRaceSimulation } from '~/components/planner/minigame/DiceRacePlanner';
 import { runSingleSimulation as runTreasureSimulation } from '~/components/planner/minigame/TreasurePlanner';
@@ -45,33 +29,22 @@ export interface Ctx {
   eventData: EventData;
   eventId: number;
   totalBonus?: TotalBonusMap;
-  // Gates every Monte-Carlo-simulation-based extractor (dice_race, treasure, concentration, minigame_dream,
-  // fortune_gacha, minigame_road_puzzle) — measured at ~1.5-3s+ per event for road_puzzle alone, these are
-  // too expensive to run on every render/tab-open. Defaults to false (fast, deterministic sources only);
-  // the UI opts in explicitly (a button click), matching the "run simulation" pattern every other minigame
-  // planner in this app already uses instead of running Monte Carlo automatically on mount.
+  // Gates Monte-Carlo extractors (expensive: 1.5-3s+ per event); UI opts in explicitly, not auto on mount.
   includeSimulations?: boolean;
 }
 
 // ---------------------------------------------------------------------------
-// Source identity: every extractor tags its output with a structured SourceRef (raw fields, no display
-// text) instead of a pre-formatted string. `formatSourceLabel` is the ONLY place that turns a SourceRef
-// into human-readable text, called once at the very end (resolveSegment/resolveOneTime) — so nothing
-// upstream (extraction, resolution, tests) ever matches against display prose.
+// Every extractor uses SourceRef (raw fields); only formatSourceLabel converts to display text (called once at end).
 // ---------------------------------------------------------------------------
 
-// Every "enter cost, get a FirstClear-vs-repeatable reward table" source (regular stages, minigame_defense,
-// minigame_janken stages) collapses to this one shape instead of three near-identical variants + three
-// near-identical formatSourceLabel cases — `category` picks the display prefix, `stageNumber` is the parsed
-// trailing number from the source's raw `Name` (omitted entirely for janken's Challenge stage, which the
-// game itself never numbers).
+// Collapse enter-cost sources to one shape; category picks prefix, stageNumber is parsed from raw Name.
 type StageLikeCategory = 'stage' | 'story' | 'challenge' | 'minigame_defense' | 'janken_story' | 'janken_normal' | 'janken_challenge';
 
 export type SourceRef =
-  // `oneTimeClear` covers both FirstClear- and ThreeStar-tagged rows: both are one-time, both cost the same
-  // entry AP, so they're tracked and labeled as one bucket — splitting them changes no computed AP/amount,
-  // only which of two near-identical labels gets shown.
+  // `oneTimeClear` covers FirstClear and ThreeStar: both one-time, same AP cost, tracked as one bucket.
   | { type: 'stage_like'; category: StageLikeCategory; stageNumber?: string; oneTimeClear?: boolean }
+  // Sequenced family prefix spans multiple categories (story gates regular-stage access); list each category's range.
+  | { type: 'sequenced_prefix_bulk'; ranges: { category: StageLikeCategory; from: number; to: number }[] }
   | { type: 'minigame_janken_score'; score: number }
   | { type: 'shop_unlimited'; shopId: string }
   | { type: 'shop_flat_limit'; shopId: string; limit: number }
@@ -98,18 +71,15 @@ type StageLikeSourceRef = Extract<SourceRef, { type: 'stage_like' }>;
 
 const STAGE_LIKE_PREFIX: Record<StageLikeCategory, string> = {
   stage: 'common.stage',
-  story: 'common.story',
+  story: 'ui:story',
   challenge: 'common.challenge',
   minigame_defense: 'minigame.minigame_defense',
-  janken_story: 'common.story',
-  janken_normal: 'minigame_janken.normal',
+  janken_story: 'ui:story',
+  janken_normal: 'ui:normal',
   janken_challenge: 'common.challenge',
 };
 
-// Raw internal `Name` fields (e.g. "EVENT_845_Normal_MainGround_Stage02", "Minigame_Janken_Normal_Stage_01")
-// aren't fit for user-facing display, so every stage-shaped SourceRef carries just the parsed trailing
-// stage number instead, and this is the only place that formats it — same trailing-number-only convention
-// RepeatableTab.tsx/OnetimeTab.tsx/MissionPlanner.tsx already use (`Name.split('_').pop().replace('Stage', '')`).
+// Format raw stage Name to parsed trailing number (same convention as RepeatableTab.tsx/OnetimeTab.tsx).
 export interface SourceLabelKey {
   parts: Array<{ type: 'key' | 'text'; value: string }>;
   params?: Record<string, string | number>;
@@ -127,6 +97,22 @@ function formatSourceLabel(source: SourceRef): SourceLabelKey {
         parts.push({ type: 'text', value: ' ' }, { type: 'key', value: 'ui.oneTimeReward' });
       }
       return { parts, params: source.stageNumber ? { stageNumber: source.stageNumber } : undefined };
+    }
+    case 'sequenced_prefix_bulk': {
+      const parts: Array<{ type: 'key' | 'text'; value: string }> = [];
+      source.ranges.forEach((r, i) => {
+        if (i > 0) parts.push({ type: 'text', value: ' + ' });
+        parts.push({ type: 'key', value: STAGE_LIKE_PREFIX[r.category] });
+        parts.push({ type: 'text', value: r.from === r.to ? ` {{n${i}}}` : ` {{n${i}}}-{{m${i}}}` });
+      });
+      // Use literal "(cleared once each)" to disambiguate multi-stage ranges (not shared translation key).
+      parts.push({ type: 'text', value: ' (cleared once each)' });
+      const params: Record<string, string | number> = {};
+      source.ranges.forEach((r, i) => {
+        params[`n${i}`] = r.from;
+        if (r.from !== r.to) params[`m${i}`] = r.to;
+      });
+      return { parts, params };
     }
     case 'minigame_janken_score':
       return {
@@ -355,10 +341,8 @@ interface RawSegment {
   source: SourceRef;
   repeatsForever?: boolean;
   isApproximated?: boolean;
-  // Extra one-time amount of this SAME producesKey granted alongside this segment's very first run (e.g. a
-  // stage's FirstClear-tagged reward for a resource that's also given by that same stage's Default/Rare/
-  // Event-tagged reward row) — folded in here instead of emitted as an independent RawOneTime, because it
-  // costs no additional AP beyond the segment's own cost: the first clear already pays for both at once.
+  // Extra one-time amount of this same producesKey granted alongside the segment's first run (e.g. a stage's
+  // FirstClear bonus for a resource it also drops repeatably) — folded in here since it costs no extra AP.
   firstRunBonusAmount?: number;
 }
 
@@ -379,10 +363,8 @@ function merge(...parts: Extracted[]): Extracted {
   return { segments: parts.flatMap((p) => p.segments), oneTime: parts.flatMap((p) => p.oneTime) };
 }
 
-// GachaGroup rewards are opaque "boxes", not real farmable currencies — reuse the exact same expected-value
-// decomposition Icon.tsx's GachaGroup tooltip already computes (`calculateExpectedContents`) so a box reward
-// chains into the resource graph as its real contents instead of an unusable "GachaGroup_500000" resource.
-// `iconData`/`locale` only affect display fields (icon src) this call site never reads, so a stub suffices.
+// GachaGroup rewards are opaque boxes — reuse Icon.tsx's expected-value decomposition (calculateExpectedContents)
+// so a box chains into the resource graph as its real contents instead of an unusable GachaGroup_* key.
 function expandGachaGroupReward(producesKey: string, amount: number, eventData: EventData): { producesKey: string; amount: number }[] {
   if (!producesKey.startsWith('GachaGroup_') || amount <= 0) return [{ producesKey, amount }];
   const groupId = producesKey.slice('GachaGroup_'.length);
@@ -392,10 +374,7 @@ function expandGachaGroupReward(producesKey: string, amount: number, eventData: 
     .map((c) => ({ producesKey: keyOf(c.type, Number(c.id)), amount: c.expectedAmount }));
 }
 
-// Decomposes every GachaGroup box in the list, then re-merges by producesKey — a box can unpack into the
-// same real item another row in the same reward table already awards directly, and those must be summed
-// into one segment rather than left as duplicate same-cost rows (see the co-reward summing rule this file
-// keeps everywhere else, e.g. extractStageLike's repeatableByKey/oneTimeByKey grouping).
+// Decompose GachaGroup boxes and re-merge by producesKey to sum duplicate same-cost rows.
 function expandGachaGroupRewards(rewards: { producesKey: string; amount: number }[], eventData: EventData): { producesKey: string; amount: number }[] {
   const merged = new Map<string, number>();
   for (const r of rewards) {
@@ -406,9 +385,7 @@ function expandGachaGroupRewards(rewards: { producesKey: string; amount: number 
   return [...merged].map(([producesKey, amount]) => ({ producesKey, amount }));
 }
 
-// Converts parallel ParcelId/ParcelTypeStr/ParcelAmount arrays (the near-universal reward-table shape
-// across this event data) into {producesKey, amount} pairs, decomposing any GachaGroup box into its
-// expected real contents.
+// Convert parallel ParcelId/ParcelTypeStr/ParcelAmount arrays to {producesKey, amount} pairs, decomposing GachaGroup boxes.
 function parcelRewards(ids: number[], types: string[], amounts: number[], eventData: EventData): { producesKey: string; amount: number }[] {
   return expandGachaGroupRewards(
     ids.map((id, i) => ({ producesKey: keyOf(types[i], id), amount: amounts[i] })),
@@ -416,9 +393,8 @@ function parcelRewards(ids: number[], types: string[], amounts: number[], eventD
   );
 }
 
-// Pushes one segment per {producesKey, amount} pair, all sharing the same (costKey, costAmount) — the
-// other half of the pattern repeated across every round/tier-based source (card_shop, box_gacha,
-// minigame_ccg, interactive_world_raid, and the round-completion halves of clue_search/road_puzzle).
+// Pushes one segment per {producesKey, amount} pair sharing the same (costKey, costAmount) — the shared
+// pattern used by every round/tier-based source.
 function emitSegments(
   segments: RawSegment[],
   costKey: string,
@@ -442,10 +418,7 @@ export function getEventDurationDays(ctx: Ctx): number {
   return Math.max(1, Math.round((new Date(closeTime).getTime() - new Date(season.EventContentOpenTime).getTime()) / 86400000));
 }
 
-// ---------------------------------------------------------------------------
-// Extraction: stage-shaped sources (regular stages + minigame_defense + minigame_janken stages all
-// share this exact reward shape: entry cost + reward array with FirstClear-vs-repeatable tag split).
-// ---------------------------------------------------------------------------
+// Stage-shaped sources: regular, defense, and janken with FirstClear-vs-repeatable split.
 
 function extractStageLike(entries: { source: StageLikeSourceRef; costKey: string; costAmount: number; rewards: StageReward[]; bonusEligible?: boolean }[], ctx: Ctx): Extracted {
   const segments: RawSegment[] = [];
@@ -453,21 +426,14 @@ function extractStageLike(entries: { source: StageLikeSourceRef; costKey: string
   const eventCurrencyIds = new Set(ctx.eventData.currency?.map((c) => c.ItemUniqueId) ?? []);
   for (const entry of entries) {
     if (entry.costAmount <= 0) continue;
-    // A single run can match the same target via more than one reward-table row (e.g. a "Default" roll
-    // and a separate "Rare" bonus roll for the same item) — group by produced key and sum, since they're
-    // all paid for by the same run's cost, not separate alternative routes. FirstClear and ThreeStar rows
-    // are merged into this same one-time bucket too: both cost the same entry AP and both are one-time,
-    // so splitting them would change no computed AP/amount, only which of two near-identical labels shows.
+    // Group same-target rewards by key and sum (paid by single run's cost, not separate routes).
     const repeatableByKey = new Map<string, number>();
     const oneTimeClearByKey = new Map<string, number>();
     for (const r of entry.rewards) {
       const rawKey = keyOf(r.RewardParcelTypeStr, r.RewardId);
       let amount = r.RewardAmount * (r.RewardProb / 10000);
       const isRepeatable = REPEATABLE_TAGS.has(r.RewardTagStr);
-      // Event bonus (BonusSelector) only ever boosts the repeatable-tag branch, and only for regular farming
-      // stages, and only against the reward row's own id (mirrors FarmingPlanner.tsx's exact eligibility
-      // check) — applied here, before any GachaGroup decomposition below, since a box is never itself a
-      // registered event currency.
+      // Event bonus only boosts repeatable-tag farming stages (mirrors FarmingPlanner.tsx eligibility).
       if (isRepeatable && entry.bonusEligible && eventCurrencyIds.has(r.RewardId)) {
         const bonusPercent = ctx.totalBonus?.[r.RewardId] || 0;
         amount = applyRepeatableEventBonus(amount, bonusPercent);
@@ -479,10 +445,8 @@ function extractStageLike(entries: { source: StageLikeSourceRef; costKey: string
     }
     for (const [producesKey, amount] of repeatableByKey) {
       if (amount <= 0) continue;
-      // If this same run's FirstClear/ThreeStar rows ALSO grant this exact resource, that's obtained
-      // alongside this repeating segment's first run — no separate AP purchase exists for it, so it's
-      // folded in here (and NOT also emitted below as an independent RawOneTime row) instead of
-      // double-charging AP for what is actually a single stage clear.
+      // If FirstClear/ThreeStar rows also grant this resource, it comes free with this segment's first run —
+      // folded in here instead of emitted as a separate RawOneTime, to avoid double-charging AP.
       const firstRunBonusAmount = oneTimeClearByKey.get(producesKey);
       if (firstRunBonusAmount !== undefined) oneTimeClearByKey.delete(producesKey);
       segments.push({ costKey: entry.costKey, costAmount: entry.costAmount, producesKey, amount, source: entry.source, repeatsForever: true, firstRunBonusAmount });
@@ -505,9 +469,7 @@ function extractStage(ctx: Ctx): Extracted {
   return extractStageLike(entries, ctx);
 }
 
-// minigame_defense reuses the exact Stage reward shape; entry cost is a single global currency
-// (MinigameDefensePlanner.tsx reads `gameInfo.DefenseBattleParcelId/DefenseBattleParcelTypeStr`, NOT the
-// per-stage `StageEnterCostId/Type` fields — confirmed by reading that component directly).
+// minigame_defense reuses Stage reward shape; entry cost is global currency, not per-stage fields.
 function extractMinigameDefense(ctx: Ctx): Extracted {
   const defense = ctx.eventData.minigame_defense;
   if (!defense || defense.info.length === 0) return { segments: [], oneTime: [] };
@@ -522,11 +484,8 @@ function extractMinigameDefense(ctx: Ctx): Extracted {
   return extractStageLike(entries, ctx);
 }
 
-// minigame_janken stages give a direct EventContentStageReward, same FirstClear-vs-repeatable split as
-// regular stages; entry cost is a single global currency from `info.CostParcelId/CostParcelTypeStr`.
-// The score-ladder reward (reward_score/reward_score_item) isn't modeled: no score-per-win formula exists
-// anywhere in this codebase or the exported data (MinigameJankenPlanner.tsx takes score as plain manual
-// input), so it's surfaced as an undetermined-cost one-time contribution instead of guessed.
+// minigame_janken stages: same FirstClear-vs-repeatable split as regular stages, entry cost from
+// info.CostParcelId/CostParcelTypeStr. Score-ladder has no formula, so treated as undetermined-cost one-time.
 function extractMinigameJanken(ctx: Ctx): Extracted {
   const janken = ctx.eventData.minigame_janken;
   if (!janken || janken.info.length === 0) return { segments: [], oneTime: [] };
@@ -643,9 +602,8 @@ function extractBoxGacha(ctx: Ctx): Extracted {
   const boxGacha = ctx.eventData.box_gacha;
   if (!boxGacha) return { segments: [], oneTime: [] };
   const segments: RawSegment[] = [];
-  // `manage[]` carries per-round loop metadata only, matched by `Round` — its own `Goods` has no
-  // ParcelId/ParcelAmount/ParcelTypeStr at all in real event data (confirmed directly against JSON), so
-  // it never produces a reward itself; it's purely a lookup for whether a `shop` round repeats forever.
+  // `manage[]` carries per-round loop metadata only (matched by `Round`) — its own `Goods` never has reward
+  // fields in real data, it's purely a lookup for whether a `shop` round repeats forever.
   const loopByRound = new Map<number, boolean>();
   boxGacha.manage.forEach((m) => loopByRound.set(m.Round, m.IsLoop));
   boxGacha.shop.forEach((item) => {
@@ -664,10 +622,7 @@ function extractBoxGacha(ctx: Ctx): Extracted {
   return { segments, oneTime: [] };
 }
 
-// ---------------------------------------------------------------------------
-// Extraction: interactive_world_raid, minigame_ccg, clue_search — exact math. minigame_road_puzzle is
-// defined further below, alongside the other Monte-Carlo-simulation-based extractors it now belongs with.
-// ---------------------------------------------------------------------------
+// Exact-math extractors: interactive_world_raid, minigame_ccg, clue_search.
 
 function extractInteractiveWorldRaid(ctx: Ctx): Extracted {
   const raid = ctx.eventData.interactive_world_raid;
@@ -750,12 +705,8 @@ function extractClueSearch(ctx: Ctx): Extracted {
   return { segments, oneTime: [] };
 }
 
-// ---------------------------------------------------------------------------
-// Extraction: genuinely path-dependent random minigames — reuse each one's existing simulation/Monte
-// Carlo function rather than re-deriving new math (a from-scratch assumption was already proven wrong
-// once: treasure hunt does NOT require opening every cell, players stop once they find the treasure).
-// All of these (plus road_puzzle below) are gated behind Ctx.includeSimulations — see extractAll.
-// ---------------------------------------------------------------------------
+// Path-dependent random minigames: reuse existing Monte Carlo simulations.
+// Gated behind Ctx.includeSimulations for performance.
 
 // Trials for the road-puzzle draw simulation below — matches RoadPuzzlePlanner.tsx's own default simCount,
 // so results between the two are directly comparable. Acceptable as an explicit, user-triggered action.
@@ -770,10 +721,8 @@ function extractRoadPuzzle(ctx: Ctx): Extracted {
   const costKey = keyOf(info.CostGoods.ConsumeParcelTypeStr[0], info.CostGoods.ConsumeParcelId[0]);
   const costPerRail = info.CostGoods.ConsumeParcelAmount[0];
   const segments: RawSegment[] = [];
-  // Reuses RoadPuzzlePlanner.tsx's own round/map/reward normalization AND its actual draw simulation: tiles
-  // are drawn WITHOUT replacement from each map's fixed pool (not freely chosen), so the true expected AP
-  // cost is the simulated draw count, not the map's unconstrained minimum-tiles pathfinding solve (which
-  // would undercount, since a free-choice lower bound ignores the random draw order players are stuck with).
+  // Reuses RoadPuzzlePlanner.tsx's draw simulation: tiles are drawn WITHOUT replacement from each map's fixed
+  // pool, so true AP cost is the simulated draw count, not the unconstrained minimum-tiles pathfinding solve.
   const roundInfos = buildRoadPuzzleRoundInfos(puzzle);
   for (const roundInfo of roundInfos) {
     const drawCounts: number[] = [];
@@ -925,10 +874,8 @@ function extractMinigameDream(ctx: Ctx): Extracted {
   return { segments, oneTime: [] };
 }
 
-// fortune_gacha (Omikuji): a soft-pity weighted draw table (FortuneGachaPlanner.tsx's own `runSimulation`
-// already implements the exact pity-shift/normalize/reset logic against `modify`), reused as-is rather than
-// re-derived. Some draws land on a `GachaGroup` box rather than a real item directly — decomposed into its
-// expected real contents (same as every other reward table here) instead of being dropped.
+// fortune_gacha (Omikuji): reuses FortuneGachaPlanner.tsx's own pity-shift simulation as-is. GachaGroup box
+// draws are decomposed into expected real contents, same as every other reward table here.
 function extractFortuneGacha(ctx: Ctx): Extracted {
   const gacha = ctx.eventData.fortune_gacha;
   if (!gacha || gacha.shop.length === 0) return { segments: [], oneTime: [] };
@@ -975,10 +922,7 @@ function extractMissions(ctx: Ctx): Extracted {
   return { segments: [], oneTime };
 }
 
-// Field quests + mastery levels are free (no AP cost modeled anywhere in FieldEventPlanner.tsx either).
-// FieldContentStageReward is stage-shaped and DOES cost AP, via `getStageCost(eventId, stageId)` — a
-// hardcoded per-event/per-stage lookup table (FieldEventPlanner.tsx uses the exact same helper), paid in
-// the event's first registered currency (`eventData.currency[0]`), matching that component's own logic.
+// Field quests/mastery free; FieldContentStageReward costs AP via hardcoded stage-lookup table.
 function extractField(ctx: Ctx): Extracted {
   const field = ctx.eventData.field;
   if (!field) return { segments: [], oneTime: [] };
@@ -1010,10 +954,8 @@ function extractField(ctx: Ctx): Extracted {
     // `t('stageLabel', { n: idx + 1 })` — the raw numeric stageId isn't fit for user-facing display.
     Object.entries(field.FieldContentStageReward).forEach(([stageId, rewardItems], idx) => {
       const costAmount = getStageCost(ctx.eventId, stageId);
-      // Same co-reward summing + FirstClear/ThreeStar-vs-repeatable split as extractStageLike: multiple
-      // rows can target the same resource, and FirstClear/ThreeStar rows are merged into one bucket since
-      // both are one-time and cost the same stage AP — folded into that segment's first-run bonus when a
-      // repeatable row also grants the same resource, rather than double-charging the stage's AP cost.
+      // Same co-reward summing + FirstClear/ThreeStar split as extractStageLike — merged into one bucket since
+      // both are one-time and same-cost, folded into the segment's first-run bonus to avoid double-charging AP.
       const repeatableByKey = new Map<string, number>();
       const oneTimeClearByKey = new Map<string, number>();
       for (const r of rewardItems) {
@@ -1072,14 +1014,15 @@ function extractAll(ctx: Ctx): Extracted {
   );
 }
 
-/**
- * Dijkstra over the currency graph: `segments` are edges "costKey -costAmount-> producesKey (amount)".
- * Returns the minimum AP needed for 1 unit of every currency reachable from AP, choosing the cheapest
- * route at each step — this is what used to be a recursive `resolveApCostForCurrency` call (with a
- * `visited` cycle guard threaded through every extractor); cycles and "no route exists" are both handled
- * naturally by Dijkstra's finalized-node set instead of bespoke per-call bookkeeping.
- */
-function computeApRateMap(segments: RawSegment[]): Map<string, number> {
+/* Dijkstra: cheapest AP-per-unit route for every reachable currency (no cycles/bookkeeping) */
+interface ApRateResult {
+  apCostPerUnit: Map<string, number>;
+  // Cheapest repeatable route per currency picked by Dijkstra.
+  // firstRunBonusAmount is only free for the chosen segment.
+  chosenEdge: Map<string, RawSegment>;
+}
+
+function computeApRateMap(segments: RawSegment[]): ApRateResult {
   const edgesByCost = new Map<string, RawSegment[]>();
   for (const s of segments) {
     if (s.amount <= 0 || s.costAmount <= 0) continue;
@@ -1088,6 +1031,7 @@ function computeApRateMap(segments: RawSegment[]): Map<string, number> {
   }
 
   const apCostPerUnit = new Map<string, number>([[AP, 1]]);
+  const chosenEdge = new Map<string, RawSegment>();
   const finalized = new Set<string>();
 
   while (true) {
@@ -1105,27 +1049,13 @@ function computeApRateMap(segments: RawSegment[]): Map<string, number> {
     for (const edge of edgesByCost.get(curKey) ?? []) {
       const candidate = (curCost * edge.costAmount) / edge.amount;
       const existing = apCostPerUnit.get(edge.producesKey);
-      if (existing === undefined || candidate < existing) apCostPerUnit.set(edge.producesKey, candidate);
+      if (existing === undefined || candidate < existing) {
+        apCostPerUnit.set(edge.producesKey, candidate);
+        chosenEdge.set(edge.producesKey, edge);
+      }
     }
   }
-  return apCostPerUnit;
-}
-
-function resolveSegment(rateMap: Map<string, number>, s: RawSegment): ApSegment | null {
-  const rate = s.costKey === AP ? 1 : rateMap.get(s.costKey);
-  if (rate === undefined) return null;
-  const apCost = rate * s.costAmount;
-  if (apCost <= 0) return null;
-  const sourceLabel = formatSourceLabel(s.source);
-  return {
-    apCost,
-    amount: s.amount,
-    source: s.source,
-    sourceLabel,
-    repeatsForever: s.repeatsForever,
-    isApproximated: s.isApproximated,
-    firstRunBonusAmount: s.firstRunBonusAmount,
-  };
+  return { apCostPerUnit, chosenEdge };
 }
 
 function resolveOneTime(rateMap: Map<string, number>, o: RawOneTime): OneTimeContribution | null {
@@ -1137,15 +1067,222 @@ function resolveOneTime(rateMap: Map<string, number>, o: RawOneTime): OneTimeCon
   return { amount: o.amount, apCost, source: o.source, sourceLabel };
 }
 
-function profileFromExtracted(extracted: Extracted, rateMap: Map<string, number>, targetKey: string): ResourceApProfile {
-  const segments = extracted.segments
-    .filter((s) => s.producesKey === targetKey)
-    .map((s) => resolveSegment(rateMap, s))
-    .filter((s): s is ApSegment => s !== null)
-    .sort((a, b) => b.amount / b.apCost - a.amount / a.apCost);
+// Resolves one-time amounts at any chain depth, including recursive currency exchanges.
+// Handles firstRunBonusAmount correctly via sequencedFamilyPrefix.
+function sequencedFamilyPrefix(
+  extracted: Extracted,
+  chosenEdge: ReadonlyMap<string, RawSegment>,
+  currencyKey: string,
+): { amount: number; apCost: number; segMembers: Set<RawSegment>; oneTimeMembers: Set<RawOneTime>; bulkSource: SourceRef } | null {
+  const chosen = chosenEdge.get(currencyKey);
+  if (!chosen) return null;
+  const family = sequenceFamilyOf(chosen.source);
+  const chosenOrder = sequenceOrderOf(chosen.source);
+  if (family === null || chosenOrder === null) return null;
 
-  const oneTimeContributions = extracted.oneTime
-    .filter((o) => o.producesKey === targetKey)
+  const segMembers = extracted.segments.filter((s) => s.producesKey === currencyKey && sequenceFamilyOf(s.source) === family && (sequenceOrderOf(s.source) as number) <= chosenOrder);
+  const oneTimeMembers = extracted.oneTime.filter((o) => o.producesKey === currencyKey && sequenceFamilyOf(o.source) === family && (sequenceOrderOf(o.source) as number) <= chosenOrder);
+  const amount = segMembers.reduce((a, s) => a + s.amount + (s.firstRunBonusAmount ?? 0), 0) + oneTimeMembers.reduce((a, o) => a + o.amount, 0);
+  const apCost = segMembers.reduce((a, s) => a + s.costAmount, 0) + oneTimeMembers.reduce((a, o) => a + (o.costAmount ?? 0), 0);
+
+  // Show full range covered ("story 1-10 + stage 1-12"), not just endpoint; prefix spans multiple categories.
+  const rangeByCategory = new Map<StageLikeCategory, { from: number; to: number }>();
+  for (const s of [...segMembers, ...oneTimeMembers.map((o) => ({ source: o.source }))]) {
+    if (s.source.type !== 'stage_like' || s.source.stageNumber === undefined) continue;
+    const num = Number(s.source.stageNumber);
+    const existing = rangeByCategory.get(s.source.category);
+    if (existing) {
+      existing.from = Math.min(existing.from, num);
+      existing.to = Math.max(existing.to, num);
+    } else {
+      rangeByCategory.set(s.source.category, { from: num, to: num });
+    }
+  }
+  const ranges = [...rangeByCategory.entries()].sort((a, b) => a[1].from - b[1].from).map(([category, { from, to }]) => ({ category, from, to }));
+  const bulkSource: SourceRef = ranges.length > 0 ? { type: 'sequenced_prefix_bulk', ranges } : chosen.source;
+
+  return { amount, apCost, segMembers: new Set(segMembers), oneTimeMembers: new Set(oneTimeMembers), bulkSource };
+}
+
+function collectCurrencyOneTime(
+  extracted: Extracted,
+  chosenEdge: ReadonlyMap<string, RawSegment>,
+  currencyKey: string,
+  // Explicit isTopLevel flag (not inferred from visited); netCurrencyPoolIntoSegments needs it for recursive calls.
+  isTopLevel: boolean,
+  visited: ReadonlySet<string> = new Set(),
+  skipCostKeys: ReadonlySet<string> = new Set(),
+): RawOneTime[] {
+  if (visited.has(currencyKey)) return [];
+  const nextVisited = new Set(visited).add(currencyKey);
+
+  const prefix = sequencedFamilyPrefix(extracted, chosenEdge, currencyKey);
+
+  const direct = extracted.oneTime.filter((o) => o.producesKey === currencyKey && !prefix?.oneTimeMembers.has(o));
+  // firstRunBonusAmount is free only in mandatory prefix segments.
+  // Skipped at top level, bundled deeper in the chain.
+  const bundled = extracted.segments
+    .filter((s) => s.producesKey === currencyKey && s.firstRunBonusAmount && !prefix?.segMembers.has(s))
+    .map((s) => ({
+      producesKey: currencyKey,
+      amount: s.firstRunBonusAmount as number,
+      costKey: s.costKey,
+      costAmount: s.costAmount,
+      source: s.source,
+    }));
+  const bulk: RawOneTime[] = !isTopLevel && prefix && prefix.amount > 0 ? [{ producesKey: currencyKey, amount: prefix.amount, costKey: AP, costAmount: prefix.apCost, source: prefix.bulkSource }] : [];
+
+  // Dedupe by costKey: keep single best (highest amount/costAmount) edge (tiered shop per tier).
+  // Skip skipCostKeys to avoid double-counting (already folded into target's own segments).
+  const bestEdgeByCostKey = new Map<string, RawSegment>();
+  for (const s of extracted.segments) {
+    if (s.producesKey !== currencyKey || s.costKey === AP || s.costAmount <= 0) continue;
+    if (isTopLevel && skipCostKeys.has(s.costKey)) continue;
+    const rate = s.amount / s.costAmount;
+    const existing = bestEdgeByCostKey.get(s.costKey);
+    if (!existing || rate > existing.amount / existing.costAmount) bestEdgeByCostKey.set(s.costKey, s);
+  }
+  const chained: RawOneTime[] = [];
+  for (const edge of bestEdgeByCostKey.values()) {
+    const exchangeRate = edge.amount / edge.costAmount;
+    for (const upstream of collectCurrencyOneTime(extracted, chosenEdge, edge.costKey, false, nextVisited)) {
+      chained.push({ ...upstream, producesKey: currencyKey, amount: upstream.amount * exchangeRate });
+    }
+  }
+
+  return [...direct, ...bundled, ...bulk, ...chained];
+}
+
+// Group segments by consumption order within families (never across different families, even with same SourceRef shape).
+function sequenceFamilyOf(source: SourceRef): string | null {
+  switch (source.type) {
+    case 'stage_like':
+      if (source.stageNumber === undefined) return null;
+      // Story gates regular-stage access, so merge into stage family as mandatory prerequisite; challenge is separate.
+      return source.category === 'story' ? 'stage_like:stage' : `stage_like:${source.category}`;
+    case 'clue_search_round':
+    case 'clue_search_clue':
+      return 'clue_search';
+    case 'road_puzzle_round':
+    case 'card_shop_round':
+    case 'box_gacha_round':
+    case 'minigame_ccg_point':
+      return source.type;
+    default:
+      return null;
+  }
+}
+
+// Position within that family's progression (see foldOneSequencedFamily/netCurrencyPoolIntoSegments) — null
+// for anything sequenceFamilyOf already excluded.
+function sequenceOrderOf(source: SourceRef): number | null {
+  switch (source.type) {
+    case 'stage_like': {
+      if (source.stageNumber === undefined) return null;
+      const num = Number(source.stageNumber);
+      // Story has its own numbering but must be cleared before any area stage — offset it well below every
+      // area stage number so it sorts first, while still preserving story's own internal order via `num`.
+      return source.category === 'story' ? num - 100_000 : num;
+    }
+    case 'clue_search_round':
+    case 'clue_search_clue':
+    case 'road_puzzle_round':
+    case 'card_shop_round':
+    case 'box_gacha_round':
+      return source.round;
+    case 'minigame_ccg_point':
+      return source.point;
+    default:
+      return null;
+  }
+}
+
+// Net one-time currency pools against segment costs to avoid double-counting.
+function netCurrencyPoolIntoSegments(
+  extracted: Extracted,
+  rateMap: Map<string, number>,
+  chosenEdge: ReadonlyMap<string, RawSegment>,
+  rawSegments: RawSegment[],
+): { segments: ApSegment[]; nettedCostKeys: Set<string> } {
+  const byCostKey = new Map<string, RawSegment[]>();
+  for (const s of rawSegments) {
+    if (s.costKey === AP) continue;
+    if (!byCostKey.has(s.costKey)) byCostKey.set(s.costKey, []);
+    byCostKey.get(s.costKey)?.push(s);
+  }
+
+  const discountedCostAmount = new Map<RawSegment, number>();
+  const extraApCost = new Map<RawSegment, number>();
+  const nettedCostKeys = new Set<string>();
+  for (const [costKey, group] of byCostKey) {
+    // Net only into groups with same sequenced family; others handled by collectCurrencyOneTime.
+    const families = new Set(group.map((s) => sequenceFamilyOf(s.source)));
+    if (families.size !== 1 || families.has(null)) continue;
+
+    // Only activate as much of the pool as the group's total demand needs, to avoid overcounting unused
+    // amounts. Free contributors sort first, then best rate (amount/AP), until demand is covered.
+    const totalDemand = group.reduce((a, s) => a + s.costAmount, 0);
+    const pool = collectCurrencyOneTime(extracted, chosenEdge, costKey, false)
+      .map((o) => resolveOneTime(rateMap, o))
+      .filter((o): o is OneTimeContribution => o !== null)
+      .sort((a, b) => {
+        const rateA = a.apCost === undefined || a.apCost === 0 ? Infinity : a.amount / a.apCost;
+        const rateB = b.apCost === undefined || b.apCost === 0 ? Infinity : b.amount / b.apCost;
+        return rateB - rateA;
+      });
+    let remaining = 0;
+    let poolApCost = 0;
+    for (const o of pool) {
+      if (remaining >= totalDemand) break;
+      remaining += o.amount;
+      poolApCost += o.apCost ?? 0;
+    }
+    if (remaining <= 0) continue;
+    nettedCostKeys.add(costKey);
+
+    const ordered = [...group].sort((a, b) => (sequenceOrderOf(a.source) as number) - (sequenceOrderOf(b.source) as number));
+    for (const s of ordered) {
+      if (remaining <= 0) break;
+      const discount = Math.min(remaining, s.costAmount);
+      remaining -= discount;
+      discountedCostAmount.set(s, s.costAmount - discount);
+      if (poolApCost > 0) {
+        extraApCost.set(s, poolApCost);
+        poolApCost = 0;
+      }
+    }
+  }
+
+  // Resolved inline rather than via resolveSegment: a fully-netted segment has costAmount 0, which
+  // resolveSegment's apCost<=0 guard would drop — but the pool-unlock AP (`extra`) must be added first,
+  // since it can still be non-zero.
+  const segments = rawSegments
+    .map((s): ApSegment | null => {
+      const costAmount = discountedCostAmount.get(s) ?? s.costAmount;
+      const rate = s.costKey === AP ? 1 : rateMap.get(s.costKey);
+      if (rate === undefined) return null;
+      const apCost = rate * costAmount + (extraApCost.get(s) ?? 0);
+      if (apCost <= 0) return null;
+      return {
+        apCost,
+        amount: s.amount,
+        source: s.source,
+        sourceLabel: formatSourceLabel(s.source),
+        repeatsForever: s.repeatsForever,
+        isApproximated: s.isApproximated,
+        firstRunBonusAmount: s.firstRunBonusAmount,
+      };
+    })
+    .filter((s): s is ApSegment => s !== null);
+  return { segments, nettedCostKeys };
+}
+
+function profileFromExtracted(extracted: Extracted, rateMap: Map<string, number>, chosenEdge: ReadonlyMap<string, RawSegment>, targetKey: string): ResourceApProfile {
+  const rawSegments = extracted.segments.filter((s) => s.producesKey === targetKey);
+  const { segments: nettedSegments, nettedCostKeys } = netCurrencyPoolIntoSegments(extracted, rateMap, chosenEdge, rawSegments);
+  const segments = nettedSegments.sort((a, b) => b.amount / b.apCost - a.amount / a.apCost);
+
+  const oneTimeContributions = collectCurrencyOneTime(extracted, chosenEdge, targetKey, true, new Set(), nettedCostKeys)
     .map((o) => resolveOneTime(rateMap, o))
     .filter((o): o is OneTimeContribution => o !== null);
 
@@ -1155,21 +1292,23 @@ function profileFromExtracted(extracted: Extracted, rateMap: Map<string, number>
 export interface ResourceApIndex {
   resourceKeys: string[];
   resolveProfile: (targetKey: string) => ResourceApProfile;
+  buildSankey: (targetKey: string, targetAmount: number) => SankeyFlow;
+  buildFarmingPlan: (targetKey: string) => FarmingPlanEntry[];
 }
 
 /**
- * Runs extraction + rate resolution EXACTLY ONCE, then lets the caller resolve as many profiles / list the
- * resource keys as it needs from that single cached pass — `resolveResourceApProfile` and
- * `listSelectableResourceKeys` each used to run `extractAll` fresh on every call, which is fine for a single
- * lookup but compounds badly when a caller (e.g. ResourceEfficiencyPanel.tsx's default-resource probing)
- * calls into this module several times per render: with `includeSimulations` on, that meant re-running the
- * ~2.3s road-puzzle simulation once per probe instead of once total.
+ * Runs extraction + rate resolution once; caches result so callers can resolve multiple profiles efficiently.
  */
 export function buildResourceApIndex(ctx: Ctx): ResourceApIndex {
   const extracted = extractAll(ctx);
-  const rateMap = computeApRateMap(extracted.segments);
+  const { apCostPerUnit: rateMap, chosenEdge } = computeApRateMap(extracted.segments);
   const resourceKeys = [...new Set([...extracted.segments.map((s) => s.producesKey), ...extracted.oneTime.map((o) => o.producesKey)])];
-  return { resourceKeys, resolveProfile: (targetKey) => profileFromExtracted(extracted, rateMap, targetKey) };
+  return {
+    resourceKeys,
+    resolveProfile: (targetKey) => profileFromExtracted(extracted, rateMap, chosenEdge, targetKey),
+    buildSankey: (targetKey, targetAmount) => sankeyFlowFromExtracted(extracted, chosenEdge, targetKey, targetAmount),
+    buildFarmingPlan: (targetKey) => farmingPlanFromExtracted(extracted, chosenEdge, targetKey),
+  };
 }
 
 export function resolveResourceApProfile(targetKey: string, ctx: Ctx): ResourceApProfile {
@@ -1181,14 +1320,332 @@ export function listSelectableResourceKeys(ctx: Ctx): string[] {
   return buildResourceApIndex(ctx).resourceKeys;
 }
 
-// ---------------------------------------------------------------------------
-// Cumulative curve builder — unchanged: consume segments best-efficiency-first, extending the last
-// repeatsForever segment to maxAp with intermediate sample points for consistent chart granularity.
-// ---------------------------------------------------------------------------
+// AP flow trace for Sankey rendering; debug use only.
+
+export interface SankeyFlow {
+  labels: string[];
+  source: number[];
+  target: number[];
+  value: number[];
+  /** Column (left-to-right position) per node index, in chronological/causal order from AP (0) onward. */
+  depth: number[];
+}
+
+function sankeyNodeLabel(source: SourceRef): string {
+  switch (source.type) {
+    case 'stage_like': {
+      const num = source.stageNumber ? ` ${source.stageNumber}` : '';
+      return `${source.category}${num}${source.oneTimeClear ? ' (1st clear)' : ''}`;
+    }
+    case 'sequenced_prefix_bulk':
+      return source.ranges.map((r) => `${r.category} ${r.from === r.to ? r.from : `${r.from}-${r.to}`}`).join(' + ') + ' (1x each)';
+    case 'clue_search_round':
+      return `Clue round ${source.round}`;
+    case 'clue_search_clue':
+      return `Clue ${source.round}/${source.clueId}`;
+    case 'shop_unlimited':
+      return `Shop ${source.shopId}`;
+    case 'shop_flat_limit':
+      return `Shop ${source.shopId} (x${source.limit})`;
+    case 'shop_tier':
+      return `Shop ${source.shopId} tier ${source.tier}`;
+    case 'road_puzzle_round':
+      return `Road puzzle round ${source.round}`;
+    case 'card_shop_round':
+      return `Card shop round ${source.round}`;
+    case 'box_gacha_round':
+      return `Box gacha round ${source.round}`;
+    case 'mission':
+      return source.category === 'minigame_mission' ? 'Minigame mission' : 'Mission';
+    case 'field_quest':
+      return 'Field quest';
+    case 'field_stage':
+      return `Field stage ${source.index + 1}`;
+    default:
+      return source.type;
+  }
+}
+
+/**
+ * Trace AP cost breakdown for targetAmount; returns Plotly sankey node/link structure.
+ * Takes extracted data and chosen-route map to reuse cached ResourceApIndex.
+ * pass instead of paying for extractAll (and any simulations it runs) a second time.
+ */
+export function sankeyFlowFromExtracted(extracted: Extracted, chosenEdge: ReadonlyMap<string, RawSegment>, targetKey: string, targetAmount: number): SankeyFlow {
+  const labels: string[] = [];
+  const nodeIndex = new Map<string, number>();
+  const linkValueByPair = new Map<string, number>();
+  // Column (left-to-right position) per node index — AP is column 0, each hop further out is one column
+  // more, so the diagram reads in chronological order instead of Plotly's default auto-layout.
+  const nodeDepth: number[] = [];
+  function setDepth(idx: number, depth: number): void {
+    nodeDepth[idx] = nodeDepth[idx] === undefined ? depth : Math.max(nodeDepth[idx], depth);
+  }
+
+  function node(key: string, label: string): number {
+    let idx = nodeIndex.get(key);
+    if (idx === undefined) {
+      idx = labels.length;
+      labels.push(label);
+      nodeIndex.set(key, idx);
+    }
+    return idx;
+  }
+  // Accumulates into one link per (source, target) pair instead of a new link per crossing — Plotly renders
+  // repeated links as separate bands, not merged.
+  function addLink(source: number, target: number, value: number): void {
+    if (value <= 0) return;
+    const key = `${source}:${target}`;
+    linkValueByPair.set(key, (linkValueByPair.get(key) ?? 0) + value);
+  }
+
+  const apNodeIdx = node(AP, 'AP spent');
+  setDepth(apNodeIdx, 0);
+
+  // Tracks how much of each currency's mandatory prefix pool (see sequencedFamilyPrefix) has been allocated,
+  // so it's a shared one-time cost across all call sites, not re-granted per caller.
+  const prefixUsed = new Map<string, number>();
+
+  // Resolve currency amount via chosen route, return node index and AP cost.
+  function resolve(currencyKey: string, amount: number): { nodeIdx: number; apValue: number; depth: number } {
+    const currencyNode = node(currencyKey, currencyKey);
+    if (amount <= 0) return { nodeIdx: currencyNode, apValue: 0, depth: nodeDepth[currencyNode] ?? 1 };
+    const chosen = chosenEdge.get(currencyKey);
+    if (!chosen) return { nodeIdx: currencyNode, apValue: 0, depth: nodeDepth[currencyNode] ?? 1 };
+
+    let remaining = amount;
+    let apValue = 0;
+    let depth = 1;
+    const prefix = sequencedFamilyPrefix(extracted, chosenEdge, currencyKey);
+    if (prefix && prefix.amount > 0) {
+      const alreadyUsed = prefixUsed.get(currencyKey) ?? 0;
+      const available = Math.max(0, prefix.amount - alreadyUsed);
+      const used = Math.min(remaining, available);
+      if (used > 0) {
+        const apPortion = (used / prefix.amount) * prefix.apCost;
+        const prefixNode = node(`${currencyKey}:prefix`, `${currencyKey}: clear ${sankeyNodeLabel(prefix.bulkSource)}`);
+        setDepth(prefixNode, 1);
+        addLink(apNodeIdx, prefixNode, apPortion);
+        addLink(prefixNode, currencyNode, apPortion);
+        prefixUsed.set(currencyKey, alreadyUsed + used);
+        remaining -= used;
+        apValue += apPortion;
+        depth = Math.max(depth, 2);
+      }
+    }
+    if (remaining > 0) {
+      const rate = chosen.amount / chosen.costAmount; // currencyKey units per 1 unit of chosen.costKey
+      const costKeyAmountNeeded = remaining / rate;
+      if (chosen.costKey === AP) {
+        const repeatNode = node(`${currencyKey}:repeat`, `${currencyKey}: repeat ${sankeyNodeLabel(chosen.source)}`);
+        setDepth(repeatNode, 1);
+        addLink(apNodeIdx, repeatNode, costKeyAmountNeeded);
+        addLink(repeatNode, currencyNode, costKeyAmountNeeded);
+        apValue += costKeyAmountNeeded;
+        depth = Math.max(depth, 2);
+      } else {
+        const upstream = resolve(chosen.costKey, costKeyAmountNeeded);
+        addLink(upstream.nodeIdx, currencyNode, upstream.apValue);
+        apValue += upstream.apValue;
+        depth = Math.max(depth, upstream.depth + 1);
+      }
+    }
+    setDepth(currencyNode, depth);
+    return { nodeIdx: currencyNode, apValue, depth };
+  }
+
+  // Walk sequential target segments in natural order; create nodes in order to keep them top-to-bottom in diagram.
+  const targetNode = node(targetKey, targetKey);
+  const targetSegments = extracted.segments
+    .filter((s) => s.producesKey === targetKey)
+    .sort((a, b) => {
+      const oa = sequenceOrderOf(a.source);
+      const ob = sequenceOrderOf(b.source);
+      return oa !== null && ob !== null ? oa - ob : 0;
+    });
+  let remainingTarget = targetAmount;
+  let targetDepth = 1;
+  for (const s of targetSegments) {
+    if (remainingTarget <= 0) break;
+    // A repeatsForever segment (e.g. IsLoop round) isn't capped at its one-run amount — it repeats as needed
+    // to cover whatever remains, acting as the target's steady-state tail.
+    const used = s.repeatsForever ? remainingTarget : Math.min(remainingTarget, s.amount);
+    if (used <= 0) continue;
+    const costAmountNeeded = (used / s.amount) * s.costAmount;
+    remainingTarget -= used;
+    const resolved = s.costKey === AP ? { nodeIdx: apNodeIdx, apValue: costAmountNeeded, depth: 0 } : resolve(s.costKey, costAmountNeeded);
+    const stepNode = node(`${targetKey}:step:${sankeyNodeLabel(s.source)}`, sankeyNodeLabel(s.source));
+    setDepth(stepNode, resolved.depth + 1);
+    addLink(resolved.nodeIdx, stepNode, resolved.apValue);
+    addLink(stepNode, targetNode, resolved.apValue);
+    targetDepth = Math.max(targetDepth, resolved.depth + 2);
+  }
+  setDepth(targetNode, targetDepth);
+
+  const source: number[] = [];
+  const target: number[] = [];
+  const value: number[] = [];
+  for (const [key, v] of linkValueByPair) {
+    const [s, t] = key.split(':').map(Number);
+    source.push(s);
+    target.push(t);
+    value.push(v);
+  }
+  return { labels, source, target, value, depth: nodeDepth };
+}
+
+/** Standalone convenience wrapper — runs its own extractAll pass. Prefer ResourceApIndex.buildSankey when a
+ *  ResourceApIndex already exists for this ctx (e.g. in a UI that also renders profiles), to avoid extracting
+ *  twice. */
+export function buildApFlowSankey(ctx: Ctx, targetKey: string, targetAmount: number): SankeyFlow {
+  const extracted = extractAll(ctx);
+  const { chosenEdge } = computeApRateMap(extracted.segments);
+  return sankeyFlowFromExtracted(extracted, chosenEdge, targetKey, targetAmount);
+}
+
+export interface FarmingPlanEntry {
+  category: 'stage' | 'story';
+  stageNumber: string;
+  repeatsForever: boolean;
+}
+
+/**
+ * List every regular farming stage; only chosen repeat target (via chosenEdge) marks as repeating.
+ */
+export function farmingPlanFromExtracted(extracted: Extracted, chosenEdge: ReadonlyMap<string, RawSegment>, targetKey: string): FarmingPlanEntry[] {
+  const plan = new Map<string, FarmingPlanEntry>();
+  function addEntry(source: SourceRef, repeatsForever: boolean): void {
+    if (source.type !== 'stage_like' || source.stageNumber === undefined) return;
+    if (source.category !== 'stage' && source.category !== 'story') return;
+    const key = `${source.category}:${source.stageNumber}`;
+    const existing = plan.get(key);
+    if (existing) {
+      existing.repeatsForever = existing.repeatsForever || repeatsForever;
+    } else {
+      plan.set(key, { category: source.category, stageNumber: source.stageNumber, repeatsForever });
+    }
+  }
+
+  for (const s of extracted.segments) addEntry(s.source, false);
+  for (const o of extracted.oneTime) addEntry(o.source, false);
+
+  // Mark whichever single stage is targetKey's own chosen ongoing repeat target, walking the same
+  // chosenEdge chain the Segments list's AP rates are priced through.
+  const visited = new Set<string>();
+  function walk(currencyKey: string): void {
+    if (visited.has(currencyKey)) return;
+    visited.add(currencyKey);
+    const chosen = chosenEdge.get(currencyKey);
+    if (!chosen) return;
+    if (chosen.costKey === AP) {
+      addEntry(chosen.source, true);
+    } else {
+      walk(chosen.costKey);
+    }
+  }
+  for (const s of extracted.segments) {
+    if (s.producesKey !== targetKey) continue;
+    if (s.costKey === AP) {
+      addEntry(s.source, !!s.repeatsForever);
+    } else {
+      walk(s.costKey);
+    }
+  }
+
+  return [...plan.values()].sort((a, b) => {
+    if (a.category !== b.category) return a.category === 'story' ? -1 : 1;
+    return Number(a.stageNumber) - Number(b.stageNumber);
+  });
+}
+
+/** Standalone convenience wrapper — see buildApFlowSankey's own note; prefer ResourceApIndex.buildFarmingPlan
+ *  when a ResourceApIndex already exists. */
+export function buildFarmingPlan(ctx: Ctx, targetKey: string): FarmingPlanEntry[] {
+  const extracted = extractAll(ctx);
+  const { chosenEdge } = computeApRateMap(extracted.segments);
+  return farmingPlanFromExtracted(extracted, chosenEdge, targetKey);
+}
+
+// Build cumulative reward curve with sample points for consistent chart granularity.
 
 const REPEATING_TAIL_SAMPLE_POINTS = 24;
 
-export function buildCumulativeCurve(segments: ApSegment[], maxAp: number): { ap: number; amount: number }[] {
+// Sequential-progression key for stage/clue sources. Groups by family, position by order.
+function sequenceKeyOf(s: ApSegment): { family: string; order: number } | null {
+  const family = sequenceFamilyOf(s.source);
+  const order = sequenceOrderOf(s.source);
+  if (family === null || order === null) return null;
+  return { family, order };
+}
+
+// Pick the best-rate member as the infinite repeat target; earlier members become mandatory prefix runs,
+// later members are kept only while cumulative (reward - tailRate*cost) still improves.
+function foldOneSequencedFamily(segments: ApSegment[], members: ApSegment[]): ApSegment[] {
+  const best = members.reduce((a, b) => (b.amount / b.apCost > a.amount / a.apCost ? b : a));
+  const bestOrder = sequenceKeyOf(best)?.order;
+  if (bestOrder === undefined || !Number.isFinite(bestOrder)) return segments;
+  const rate = best.amount / best.apCost;
+  const orderOf = (s: ApSegment) => sequenceKeyOf(s)?.order ?? NaN;
+
+  const others = members.filter((s) => s !== best);
+  const before = others.filter((s) => orderOf(s) < bestOrder).sort((a, b) => orderOf(a) - orderOf(b));
+  const after = others.filter((s) => orderOf(s) > bestOrder).sort((a, b) => orderOf(a) - orderOf(b));
+
+  const mandatory = before.map((s) => ({ ...s, repeatsForever: false }));
+
+  let running = 0;
+  let bestRunning = 0;
+  let cut = 0;
+  for (let i = 0; i < after.length; i++) {
+    const s = after[i];
+    running += s.amount + (s.firstRunBonusAmount ?? 0) - rate * s.apCost;
+    if (running > bestRunning) {
+      bestRunning = running;
+      cut = i + 1;
+    }
+  }
+  const extension = after.slice(0, cut).map((s) => ({ ...s, repeatsForever: false }));
+
+  const memberSet = new Set(members);
+  const rest = segments.filter((s) => s === best || !memberSet.has(s));
+  return [...mandatory, ...extension, ...rest];
+}
+
+function foldSequencedFamilies(segments: ApSegment[]): ApSegment[] {
+  const byFamily = new Map<string, ApSegment[]>();
+  for (const s of segments) {
+    if (!s.repeatsForever) continue;
+    const key = sequenceKeyOf(s);
+    if (!key) continue;
+    if (!byFamily.has(key.family)) byFamily.set(key.family, []);
+    byFamily.get(key.family)?.push(s);
+  }
+
+  let result = segments;
+  for (const members of byFamily.values()) {
+    if (members.length > 1) result = foldOneSequencedFamily(result, members);
+  }
+  return result;
+}
+
+// Force sequenced one-time contributions to the front (player completes them early regardless of optimized resource).
+function pullSequencedOneTimeToFront(segments: ApSegment[]): ApSegment[] {
+  const isSequencedFinite = (s: ApSegment) => !s.repeatsForever && sequenceKeyOf(s) !== null;
+  const front: ApSegment[] = [];
+  const rest: ApSegment[] = [];
+  for (const s of segments) (isSequencedFinite(s) ? front : rest).push(s);
+  // Enforce natural order within each family (round 1, 2, 3...) despite efficiency-based sorting.
+  front.sort((a, b) => {
+    const ka = sequenceKeyOf(a);
+    const kb = sequenceKeyOf(b);
+    if (!ka || !kb || ka.family !== kb.family) return 0;
+    return ka.order - kb.order;
+  });
+  return [...front, ...rest];
+}
+
+export function buildCumulativeCurve(rawSegments: ApSegment[], maxAp: number): { ap: number; amount: number }[] {
+  const segments = pullSequencedOneTimeToFront(foldSequencedFamilies(rawSegments));
   const points: { ap: number; amount: number }[] = [{ ap: 0, amount: 0 }];
   let ap = 0;
   let amount = 0;
@@ -1209,7 +1666,8 @@ export function buildCumulativeCurve(segments: ApSegment[], maxAp: number): { ap
       break;
     }
     ap += seg.apCost;
-    amount += seg.amount;
+    // firstRunBonusAmount can still be set here on a demoted (foldSequencedFamilies) segment.
+    amount += seg.amount + (seg.firstRunBonusAmount ?? 0);
     points.push({ ap: Math.min(ap, maxAp), amount });
   }
   if (ap < maxAp) points.push({ ap: maxAp, amount });
@@ -1218,12 +1676,8 @@ export function buildCumulativeCurve(segments: ApSegment[], maxAp: number): { ap
 
 const has = (v: unknown): boolean => (Array.isArray(v) ? v.length > 0 : Object.keys(v ?? {}).length > 0 || !!v);
 
-// Cheap presence check — does this event have ANY data shape resourceApCost.ts knows how to read at all?
-// Deliberately does NOT call extractAll/listSelectableResourceKeys: several extractors (dice_race, treasure,
-// concentration, fortune_gacha, minigame_road_puzzle) run a real Monte Carlo simulation, which is far too
-// expensive to run just to decide whether to show a tab button — that decision only needs "is there
-// anything here at all", not the actual resolved resource list (which stays deferred to when the Resource
-// Efficiency panel itself mounts, i.e. only once the user actually opens that tab).
+// Cheap presence check across all known data shapes — deliberately skips extractAll/listSelectableResourceKeys,
+// since several extractors run real Monte Carlo simulations too expensive to run just to decide tab visibility.
 export function hasAnySelectableResourceSource(eventData: EventData): boolean {
   const d = eventData;
   return (
@@ -1252,9 +1706,8 @@ export function hasAnySelectableResourceSource(eventData: EventData): boolean {
   );
 }
 
-// Cheap presence check for whether any Monte-Carlo-gated source (see Ctx.includeSimulations) exists in this
-// event at all — lets the UI skip showing an "include simulations" prompt entirely when there's nothing
-// for it to affect.
+// Cheap check: does this event have any Monte-Carlo-gated source (see Ctx.includeSimulations)? Lets the UI
+// skip the "include simulations" prompt when there's nothing for it to affect.
 export function hasSimulatedResourceSource(eventData: EventData): boolean {
   const d = eventData;
   return has(d.dice_race) || has(d.treasure) || has(d.concentration) || has(d.minigame_dream) || has(d.fortune_gacha) || has(d.minigame_road_puzzle);

@@ -3,7 +3,6 @@
     "title": "クリア記録",
     "description": "総力戦、大決戦、総合戦術試験、制約解除決戦のクリア記録を保存します。",
     "noGuide": "攻略なしでクリア",
-    "server": "サーバー",
     "floor": "層",
     "notes": "メモ",
     "rankText": "{{rank}}位",
@@ -52,11 +51,6 @@
     "modal": {
       "add": "クリア記録を追加",
       "edit": "クリア記録を編集",
-      "raid": "レイド",
-      "trophy": "トロフィー",
-      "clearTime": "クリア時間",
-      "clearTimePlaceholder": "選択",
-      "totalScore": "合計スコア",
       "clearTimeLabel": "クリア時間 {{time}}",
       "difficultyCombo": "難易度コンボ",
       "rankPlaceholder": "未入力",
@@ -71,13 +65,11 @@
       "guideLink": "参考攻略リンク"
     },
     "slotPicker": {
-      "starGrade": "星",
       "clearSlot": "スロットをクリア",
       "assistConflict": "すでに助っ人として使用中",
       "mulligan": "手札",
       "expandOptional": "▼ 装備・スキル入力 (任意)",
       "collapseOptional": "▲ 装備・スキルを折りたたむ",
-      "noEquip": "なし",
       "notesPlaceholder": "(任意)",
       "confirmAndNext": "確認して次のスロット",
       "nextParty": "次のパーティへ"

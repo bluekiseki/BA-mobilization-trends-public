@@ -19,7 +19,6 @@
     "modified": "Recently Modified"
   },
   "noResults": "No results.",
-  "loading": "Loading data...",
   "postedAt": "Posted",
   "modifiedAt": "Modified",
   "prev": "Previous",
@@ -29,7 +28,6 @@
   "apiCreated": "Created",
   "apiModified": "Modified",
   "copy": "Copy",
-  "copied": "✓ Copied",
   "noContent": "No content available.",
   "historyTitle": "Edit History Timeline",
   "currentlyViewing": "Currently Viewing",

@@ -89,9 +89,10 @@ const SlotPicker = forwardRef<
   ref,
 ) {
   const { t } = useTranslation('mypage');
+  const { t: t_ui } = useTranslation('ui');
   const { t: td } = useTranslation('dashboard');
-  const { t: tp } = useTranslation('planner');
-  const { t: tc } = useTranslation('common');
+  const { t: tp } = useTranslation(['planner', 'game']);
+  const { t: t_g } = useTranslation('game');
   const containerRef = useRef<HTMLDivElement>(null);
   const selectAndNextRef = useRef<(() => void) | null>(null);
 
@@ -222,7 +223,7 @@ const SlotPicker = forwardRef<
       <>
         {/* star grade */}
         <div className="flex flex-wrap items-center gap-1 border-t border-neutral-100 pt-2 dark:border-neutral-800/60">
-          <span className={LABEL_CLS}>{t('raids.slotPicker.starGrade')}</span>
+          <span className={LABEL_CLS}>{t_g('starRank')}</span>
           {validStarValues.map((n) => (
             <button
               key={n}
@@ -293,7 +294,7 @@ const SlotPicker = forwardRef<
 
         {/* level */}
         <div className="flex items-center gap-2">
-          <span className={LABEL_CLS}>{tp('common.level')}</span>
+          <span className={LABEL_CLS}>{tp('game:level')}</span>
           <CustomNumberInput
             value={level}
             onChange={(lv) => {
@@ -316,7 +317,7 @@ const SlotPicker = forwardRef<
           <>
             {/* equipment */}
             <div className="flex items-center gap-2">
-              <span className={LABEL_CLS}>{tp('growthCard.equipment')}</span>
+              <span className={LABEL_CLS}>{tp('game:equipment')}</span>
               {([0, 1, 2] as const).map((slot) => (
                 <select
                   key={slot}
@@ -331,7 +332,7 @@ const SlotPicker = forwardRef<
                 >
                   {Array.from({ length: 11 }, (_, tier) => (
                     <option key={tier} value={tier}>
-                      {tierBaseLabel(tier) ?? t('raids.slotPicker.noEquip')}
+                      {tierBaseLabel(tier) ?? t_ui('none')}
                     </option>
                   ))}
                 </select>
@@ -340,7 +341,7 @@ const SlotPicker = forwardRef<
 
             {/* skills */}
             <div className="flex items-center gap-2">
-              <span className={LABEL_CLS}>{tp('growthCard.skills')}</span>
+              <span className={LABEL_CLS}>{tp('game:skills')}</span>
               {(['ex', 'normal', 'passive', 'sub'] as const).map((key) => {
                 const isEx = key === 'ex';
                 const min = isEx ? 1 : 0;
@@ -406,7 +407,7 @@ const SlotPicker = forwardRef<
             </button>
           )}
           <button type="button" onClick={onClose} className="rounded bg-ba-btn-blue px-3 py-1 text-xs font-semibold text-neutral-900 hover:bg-ba-btn-blue-dark">
-            {tc('confirm')}
+            {t_ui('confirm')}
           </button>
         </div>
       </>
@@ -626,7 +627,9 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
   const { t } = useTranslation('mypage');
   const { t: td } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
-  const { t: ta } = useTranslation('auth');
+  // const { t: ta } = useTranslation('auth');
+  const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const historyEntries = useRaidHistoryStore((state) => state.entries);
   const firstServer = defaultServer;
   const firstRaid = raidOptions.find((raid) => raid.server === firstServer) ?? raidOptions[0];
@@ -767,9 +770,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
         return false;
       }
     } else {
-      // Non-assist: no duplicates within the same report.
-      // Elimination only: each armorType is a separate report, so scope = same armorType teams.
-      // All other types: all teams are one report, so scope = all teams.
+      // Non-assist: no duplicates within scope (elimination scopes to same armorType; others scope to all teams).
       const currentArmorType = teams[slot.teamIndex]?.armorType;
       const isDuplicate = teams.some((team, i) => {
         if (isElimination && team.armorType !== currentArmorType) return false;
@@ -927,7 +928,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
             <div className="space-y-3">
               <div className="grid gap-3 md:grid-cols-[9rem_minmax(0,1fr)]">
                 <label className="space-y-1">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t('raids.server')}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t_ui('server')}</div>
                   <select
                     value={server}
                     onChange={(event) => changeServer(event.currentTarget.value as RaidHistoryServer)}
@@ -941,7 +942,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
                   </select>
                 </label>
                 <label className="space-y-1">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t('raids.modal.raid')}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t_g('raid')}</div>
                   <select
                     value={raidId}
                     onChange={(event) => setRaidId(event.currentTarget.value)}
@@ -962,7 +963,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
               {/* Trophy + score/difficulty/rank */}
               {isRaidLike && (
                 <div>
-                  <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t('raids.modal.trophy')}</div>
+                  <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t_g('trophy')}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {RAID_TROPHIES.map((trophyType) => (
                       <button
@@ -994,11 +995,11 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
                     />
                   </label>
                   <label className="space-y-1">
-                    <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t('raids.modal.clearTime')}</div>
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{t_ui('clearTime')}</div>
                     <input
                       value={clearTime}
                       onChange={(event) => setClearTime(event.currentTarget.value)}
-                      placeholder={t('raids.modal.clearTimePlaceholder')}
+                      placeholder={t_ui('select')}
                       className="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
                     />
                   </label>
@@ -1006,7 +1007,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
               ) : (
                 <div className="flex items-end gap-6">
                   <div className="flex-1">
-                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{isRaid ? td('byScore') : t('raids.modal.totalScore')}</div>
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">{isRaid ? td('byScore') : t_ui('totalScore')}</div>
                     {isRaid ? (
                       <>
                         <input
@@ -1025,7 +1026,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
                   {isRaidLike && (
                     <div className="shrink-0 text-right">
                       <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                        {isElimination ? t('raids.modal.difficultyCombo') : td('headerDifficulty')}
+                        {isElimination ? t('raids.modal.difficultyCombo') : t_g('difficulty')}
                       </div>
                       <div className="py-1 text-lg font-bold text-neutral-900 dark:text-neutral-100">{displayedDifficulty}</div>
                     </div>
@@ -1218,10 +1219,10 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
           <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="rounded bg-ba-btn-gray px-4 py-2 text-sm font-semibold text-neutral-900 hover:brightness-95">
-              {ta('common.cancel')}
+              {t_ui('cancel')}
             </button>
             <button type="button" onClick={submit} className="rounded bg-ba-btn-blue px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-ba-btn-blue-dark">
-              {ta('common.save')}
+              {t_ui('save')}
             </button>
           </div>
         </div>

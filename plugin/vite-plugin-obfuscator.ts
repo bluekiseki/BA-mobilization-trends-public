@@ -1,7 +1,7 @@
 // vite-plugin-obfuscator.ts
 import type { Plugin } from 'vite';
 import JavaScriptObfuscator from 'javascript-obfuscator';
-import { collectCrossChunkNames } from './collectCrossChunkNames';
+import { collectCrossChunkNames } from './collectCrossChunkNames.ts';
 
 // Gets the option type of JavaScriptObfuscator.
 type ObfuscatorOptions = Parameters<typeof JavaScriptObfuscator.obfuscate>[1];

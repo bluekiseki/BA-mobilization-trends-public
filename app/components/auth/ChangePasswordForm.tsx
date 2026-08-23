@@ -15,6 +15,7 @@ interface Props {
 
 export function ChangePasswordForm({ mode, storedUsername, onSuccess, onCancel }: Props) {
   const { t } = useTranslation('auth');
+  const { t: t_ui } = useTranslation('ui');
   const { username, usernameError, handleUsernameChange } = useUsernameField(mode === 'change' ? (storedUsername ?? '') : '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -136,7 +137,7 @@ export function ChangePasswordForm({ mode, storedUsername, onSuccess, onCancel }
           onClick={onCancel}
           className="flex-1 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition"
         >
-          {t('common.cancel')}
+          {t_ui('cancel')}
         </button>
         <button
           type="submit"

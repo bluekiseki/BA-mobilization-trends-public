@@ -12,7 +12,8 @@ interface DateRangeSliderProps {
 export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }) => {
   const { dateRangeIndex, setDateRangeIndex } = useTierDashboardStore();
 
-  const { t: t_c } = useTranslation('common');
+  // const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
 
   const [isMounted, setIsMounted] = useState(false);
   const [localIndex, setLocalIndex] = useState<[number, number]>([dateRangeIndex[0], dateRangeIndex[1]]);
@@ -91,7 +92,7 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({ distinctDays }
       <div className="flex justify-between items-center text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mb-2">
         <div className="flex items-center gap-1.5 font-semibold">
           <FiCalendar className="text-blue-500" />
-          <span>{t_c('period')}</span>
+          <span>{t_ui('period')}</span>
         </div>
 
         <div className="flex items-center gap-2">

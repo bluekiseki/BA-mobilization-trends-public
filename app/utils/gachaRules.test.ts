@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getRecruitCountReward, getNextTicketThreshold } from './gachaRules';
+import { getRecruitCountReward, getNextTicketThreshold, getRecruitBonusTicketExpiry, getEraidTicketExpiry } from './gachaRules';
 
 describe('getRecruitCountReward', () => {
   it('grants first-time tickets at the documented counts', () => {
@@ -45,5 +45,26 @@ describe('getNextTicketThreshold', () => {
     expect(getNextTicketThreshold(375)).toBeUndefined();
     expect(getNextTicketThreshold(390)).toBeUndefined();
     expect(getNextTicketThreshold(1000)).toBeUndefined();
+  });
+});
+
+describe('getRecruitBonusTicketExpiry', () => {
+  it('expires exactly 40 days after banner start, at 11:00', () => {
+    const cases: [string, string][] = [
+      ['2026-07-29 12:00', '2026-09-07 11:00'],
+      ['2026-08-05 12:00', '2026-09-14 11:00'],
+      ['2026-08-12 12:00', '2026-09-21 11:00'],
+    ];
+    for (const [start, expectedExpiry] of cases) {
+      expect(getRecruitBonusTicketExpiry(start)).toBe(new Date(expectedExpiry).getTime());
+    }
+  });
+});
+
+describe('getEraidTicketExpiry', () => {
+  it('expires on the last day of the month following the raid end month, at 23:59', () => {
+    expect(getEraidTicketExpiry('2026-08-15 12:00')).toBe(new Date('2026-09-30 23:59').getTime());
+    // December end month rolls the expiry into the following year.
+    expect(getEraidTicketExpiry('2026-12-10 12:00')).toBe(new Date('2027-01-31 23:59').getTime());
   });
 });

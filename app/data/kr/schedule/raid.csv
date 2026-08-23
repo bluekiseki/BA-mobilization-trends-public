@@ -84,6 +84,6 @@ season,startTime,endTime,boss,maxDifficulty,prediction
 83,2026-06-30 11:00:00,2026-07-07 03:59:59,Binah,Lunatic
 84,2026-07-28 11:00:00,2026-08-04 03:59:59,Goz_Outdoor,Lunatic
 85,2026-08-25 11:00:00,2026-09-01 03:59:59,Kaitenger_Street,Lunatic
-86,2026-09-29 11:00:00,2026-10-06 03:59:59,EN0022,Lunatic,true
-87,2026-10-27 11:00:00,2026-11-03 03:59:59,EN0005,Lunatic,true
-88,2026-12-01 11:00:00,2026-12-08 03:59:59,Hieronymus_Street,Lunatic,true
+86,2026-09-22 11:00:00,2026-09-29 03:59:59,EN0022,Lunatic,true
+87,2026-10-20 11:00:00,2026-10-27 03:59:59,EN0005,Lunatic,true
+88,2026-11-24 11:00:00,2026-12-01 03:59:59,Hieronymus_Street,Lunatic,true

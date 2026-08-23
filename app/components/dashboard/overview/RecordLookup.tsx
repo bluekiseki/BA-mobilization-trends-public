@@ -93,6 +93,8 @@ interface UseRecordSearchProps {
 const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
   const { searchTerm, scores, activeFilters, availableDifficultyOrder, isTotalChart, raidInfo, server, t } = props;
 
+  const { t: t_ui } = useTranslation('ui');
+
   const createRecord = (rank: number, score: number, type: SearchResultType, label: string, context: string): SearchResult => {
     return {
       type,
@@ -176,7 +178,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
         const rank = i + 1;
 
         if (score <= theoreticalScore && !bestRankRecord) {
-          bestRankRecord = createRecord(rank, score, 'closest', t('recordAfter'), currentDifficulty);
+          bestRankRecord = createRecord(rank, score, 'closest', t_ui('next'), currentDifficulty);
         }
         if (score >= theoreticalScore) {
           lastWorstRank = rank;
@@ -186,7 +188,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
       }
 
       if (lastWorstRank !== -1) {
-        results.push(createRecord(lastWorstRank, lastWorstScore, 'closest', t('recordBefore'), lastWorstDifficulty));
+        results.push(createRecord(lastWorstRank, lastWorstScore, 'closest', t_ui('previous'), lastWorstDifficulty));
       }
       if (bestRankRecord) results.push(bestRankRecord);
 
@@ -224,7 +226,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
           const rank = i + 1;
 
           if (score <= targetScore && !bestRankRecord) {
-            bestRankRecord = createRecord(rank, score, 'closest', t('recordAfter'), getBracketFromTotalScore(score));
+            bestRankRecord = createRecord(rank, score, 'closest', t_ui('next'), getBracketFromTotalScore(score));
           }
           if (score >= targetScore) {
             lastWorstRank = rank;
@@ -232,7 +234,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
           }
         }
         if (lastWorstRank !== -1) {
-          results.push(createRecord(lastWorstRank, lastWorstScore, 'closest', t('recordBefore'), getBracketFromTotalScore(lastWorstScore)));
+          results.push(createRecord(lastWorstRank, lastWorstScore, 'closest', t_ui('previous'), getBracketFromTotalScore(lastWorstScore)));
         }
         if (bestRankRecord) results.push(bestRankRecord);
       } else {
@@ -266,7 +268,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
             const rank = i + 1;
 
             if (score <= targetScore && !bestRankRecord) {
-              bestRankRecord = createRecord(rank, score, 'closest', t('recordAfter'), currentDifficulty);
+              bestRankRecord = createRecord(rank, score, 'closest', t_ui('next'), currentDifficulty);
             }
             if (score >= targetScore) {
               lastWorstRank = rank;
@@ -275,7 +277,7 @@ const useRecordSearch = (props: UseRecordSearchProps): SearchResult[] => {
             }
           }
           if (lastWorstRank !== -1) {
-            results.push(createRecord(lastWorstRank, lastWorstScore, 'closest', t('recordBefore'), lastWorstDifficulty));
+            results.push(createRecord(lastWorstRank, lastWorstScore, 'closest', t_ui('previous'), lastWorstDifficulty));
           }
           if (bestRankRecord) results.push(bestRankRecord);
         }
@@ -348,7 +350,7 @@ export const RecordLookup: React.FC<RecordLookupProps> = React.memo(({ scores, r
   return (
     <>
       <div ref={containerRef} data-component-name="RecordLookup" className="relative">
-        <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 min-h-[44px]">
+        <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 min-h-11">
           {!isTotalChart &&
             Array.from(activeFilters).map((diff) => (
               <div key={diff} className="flex items-center gap-1.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">
@@ -359,7 +361,7 @@ export const RecordLookup: React.FC<RecordLookupProps> = React.memo(({ scores, r
               </div>
             ))}
 
-          <div className="relative grow flex items-center min-w-[150px]">
+          <div className="relative grow flex items-center min-w-37.5">
             <div className="absolute right-1 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500 pointer-events-none">
               <FiSearch size={18} />
             </div>

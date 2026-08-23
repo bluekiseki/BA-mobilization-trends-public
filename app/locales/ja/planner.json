@@ -6,25 +6,17 @@
   },
   "common": {
     "ap": "AP",
-    "pyroxene": "青輝石",
-    "credits": "クレジット",
     "normalReport": "通常レポート",
     "advancedReport": "上級レポート",
     "stage": "ステージ",
-    "mission": "ミッション",
-    "story": "ストーリー",
     "challenge": "チャレンジ",
     "shop": "ショップ",
     "include": "含める",
     "priority": "優先",
     "exclude": "除外",
     "day": "日目",
-    "count": "回数",
     "hint": "ヒント",
-    "rerun": "復刻",
-    "close": "閉じる",
     "continueReview": "確認を続ける",
-    "done": "完了",
     "mon": "月",
     "tue": "火",
     "wed": "水",
@@ -37,33 +29,11 @@
     "remove": "削除",
     "current": "現在",
     "target": "目標",
-    "level": "レベル",
     "tierNone": "-",
     "tierPrefix": "T{{tier}}",
     "levelDisplay": "(Lv.{{level}})",
-    "Hat": "帽子",
-    "Shoes": "シューズ",
-    "Gloves": "グローブ",
-    "Hairpin": "ヘアピン",
-    "Bag": "バッグ",
-    "Watch": "腕時計",
-    "Charm": "お守り",
-    "Badge": "バッジ",
-    "Necklace": "ネックレス",
     "exp": "EXP",
     "preferenceLevelAlt": "好感度{{level}}段階",
-    "hp": "体力",
-    "atk": "攻撃力",
-    "heal": "治癒力",
-    "ex": "EX",
-    "normal": "ノーマル",
-    "passive": "パッシブ",
-    "sub": "サブ",
-    "ue": "固有",
-    "uniqueWeapon": "固有武器",
-    "gear": "愛用品",
-    "cost": "コスト",
-    "rank": "ランク",
     "source": "ソース",
     "schaledb": "SchaleDB",
     "viewOnSchaledb": "SchaleDBで表示",
@@ -147,6 +117,7 @@
     "resourceEfficiencyElephHintBefore": "",
     "resourceEfficiencyElephHintAfter": "で入力した星の数があれば反映されます。",
     "resourceEfficiencyOneTime": "一回限定 / 無料提供",
+    "resourceEfficiencyFarmingPlan": "使用したステージ",
     "resourceEfficiencyFirstRunBonus": "+{{amount}} 初回クリア時ボーナス(追加APなし)",
     "resourceEfficiencySimPrompt": "このイベントには、正確な数値がシミュレーションを必要とするミニゲームがあります。計算されるまで除外されます(数秒かかる場合があります)。",
     "resourceEfficiencySimButton": "シミュレーションミニゲームを計算",
@@ -165,7 +136,6 @@
     "scrimmageCost": "交流会コスト (AP)",
     "otherDailyApConsumption": "その他のデイリー消費/獲得AP",
     "consumed": "使用",
-    "gained": "獲得",
     "prefarmedAp": "事前に貯めたAP",
     "aronaAttendanceStartDate": "アロナの出席簿！の基準日",
     "aronaAttendanceDay": "基準日の出席日数",
@@ -176,7 +146,9 @@
     "alreadyPurchased": "購入済み:",
     "purchase": "購入:",
     "bonusStudent": "ボーナス学生選択",
+    "bonusIncreaseHint": "ボーナス上昇の可能性あり",
     "pastEvents": "過去のイベント一覧",
+    "currentEvent": "現在のイベント",
     "noPickup": "ピックアップ非表示",
     "dateSeparator": "〜",
     "sortAscLabel": "時系列",
@@ -184,8 +156,6 @@
     "gainsMode": "獲得アイテム表示",
     "gainsTotal": "全イベント合計",
     "gainsNoData": "プランナーに保存されたイベントデータがありません。",
-    "eventsTab": "イベント",
-    "pickupsTab": "ピックアップ",
     "noUpcomingPickups": "予定されているピックアップはありません",
     "showMore": "10件さらに表示",
     "showAll": "すべて表示",
@@ -197,7 +167,6 @@
     "setRewardPerExchange": "報酬設定 (1交換あたり)",
     "numberedBgm": "番号付きブルーアーカイブBGM",
     "noCurrentEvent": "開催中のイベントはありません。",
-    "loadingData": "データを読み込み中...",
     "noStudentPlanInEvent": "このイベントに含まれる生徒の計画がありません。",
     "ownedInput": "所持数",
     "expandView": "展開",
@@ -211,8 +180,6 @@
     "inventorySearchEmpty": "該当するアイテムがありません。",
     "inventoryReset": "全リセット",
     "inventoryResetConfirm": "すべての所持数をリセットしますか？",
-    "inventoryResetCancel": "キャンセル",
-    "inventoryResetOk": "リセット",
     "noStudentGrowthPlan": "作成された生徒の育成計画がありません。",
     "startByAddingNewPlan": "「新しい生徒計画を追加」ボタンを押して開始してください。",
     "selectStudentForDetails": "左のリストから生徒を選択して詳細情報を確認してください。",
@@ -241,7 +208,6 @@
     "carryUpTooltip": "下位アイテムを上位アイテムにまとめます。(例: 上級レポート×5 → 最上級レポート×1)",
     "totalNeededTitle": "総必要素材",
     "backToPlanner": "一覧に戻る",
-    "searchStudentPlaceholder": "生徒検索...",
     "sortByDate": "登録順",
     "sortByName": "名前順",
     "sortByLevel": "目標レベル順",
@@ -254,10 +220,6 @@
     "importCsv": "CSVインポート",
     "exportJson": "JSONエクスポート",
     "importJson": "JSONインポート",
-    "selectAll": "全選択",
-    "deselectAll": "解除",
-    "selectAllTooltip": "すべての生徒を選択",
-    "deselectAllTooltip": "選択をすべて解除",
     "summaryForSelected": "選択した{{count}}名の合計",
     "noStudentSelected": "選択した生徒がいません。",
     "openInPlanner": "生徒成長プランナーで開く",
@@ -268,7 +230,6 @@
   },
   "button": {
     "runAutoFarmCalc": "自動周回計算を実行",
-    "runCalculation": "計算実行",
     "runSimulation": "シミュレーション実行",
     "simRunning": "計算中...",
     "exportData": "⬇️ 計画をエクスポート",
@@ -277,7 +238,8 @@
     "hideOneTimeRewards": "初回報酬を非表示",
     "quickExclude": "クイック除外:",
     "setAllFirstClear": "全ての初回報酬を一括変更",
-    "setAllOneTime": "全ての一回報酬を設定/解除",
+    "setAllOneTime": "全ての一回報酬を設定・解除",
+    "setAllFirstRewards": "全ての初回報酬を獲得し、1回以上に設定・解除",
     "includeOneTimeRewards": "初回報酬も計算に含める",
     "openAllCards": "全てのカードを開く",
     "openOneAndReset": "1枚だけ開いてリセット",
@@ -288,8 +250,6 @@
     "resetAll": "全てリセット",
     "purchaseCurrentTab": "現在のタブを全て購入",
     "resetCurrentTab": "現在のタブをリセット",
-    "selectAll": "すべて選択",
-    "deselectAll": "すべて解除",
     "selectFromMyPool": "所持生徒から選択",
     "splitView": "分割表示",
     "confirmInput": "入力完了",
@@ -298,7 +258,6 @@
     "showOneTimeRewards": "初回報酬を表示"
   },
   "placeholder": {
-    "story": "ストーリー",
     "storyNum": "ストーリー {num}",
     "customExchange": "カスタム交換所",
     "cardGacha": "カードめくり",
@@ -321,32 +280,21 @@
     "minimizeAp": "AP最小化",
     "material": "素材",
     "furniture": "家具",
-    "coin": "コイン",
     "owned": "保有量",
     "totalConsumption": "総消費",
     "totalAcquisition": "総獲得",
     "cumulativeRewards": "累積報酬",
     "materialsForCurrentEvent": "現在のイベントで必要な財貨",
-    "credits": "クレジット",
-    "eligma": "神名のカケラ",
-    "xpReports": "レポート",
-    "equipEnh": "強化石",
     "uwEnh": "強化剤",
-    "opart": "オーパーツ",
     "tacticalBD": "戦術教育BD",
     "techNote": "技術ノート",
-    "potential": "熟達証書",
-    "equipment": "装備",
     "skill": "スキル素材",
-    "other": "その他",
     "totalMaterialsForAllPlans": "全ての計画で必要な総財貨",
     "exchangeCount": "交換回数",
     "dailyPyroRefills": "デイリー青輝石でのAP回復回数",
     "global_server_data_pending": "データがまだグローバルサーバーに反映されていません。",
-    "favorGifts": "ギフト",
     "skillInfo": "スキル情報",
     "relationshipStories": "絆ストーリー",
-    "story_rank_only": "ランク",
     "story_rank_title": "ランク+タイトル",
     "story_summary_hide": "−概要",
     "story_summary_show": "+概要",
@@ -354,12 +302,7 @@
     "story_global_soon": "GL近日配信",
     "story_memorial": "メモリアル"
   },
-  "item": {
-    "reports": "レポート",
-    "gifts": "贈り物",
-    "eleph": "神名文字",
-    "equipment": "装備"
-  },
+  "item": {},
   "minigame": {
     "roulette": "ルーレット",
     "treasureHunt": "宝探し",
@@ -376,9 +319,7 @@
     "minigame_shooting": "ゲーム開発部のお掃除大作戦",
     "minigame_janken": "天下一蟹・武術大会"
   },
-  "gameTerm": {
-    "tacticalChallenge": "戦術対抗戦"
-  },
+  "gameTerm": {},
   "apBreakdown": {
     "hardMode": "ハード消費",
     "scrimmage": "交流会消費",
@@ -389,7 +330,6 @@
     "otherConsumption": "その他消費"
   },
   "apSource": {
-    "pyroxene": "青輝石",
     "apPackage": "APパッケージ",
     "weeklyQuests": "ウィークリー",
     "attendance": "出席"
@@ -460,12 +400,10 @@
     "openedCells": "開けたマス:",
     "remainingTreasures": "残りの宝物",
     "foundTreasures": "見つけた宝物",
-    "cancel": "キャンセル",
     "saveResult": "結果を保存（{{count}}マス）",
     "goalFindAll": "全ての宝物を見つける",
     "cellBaseReward": "セルごと:",
     "tabInfo": "情報",
-    "tabCalculator": "計算機",
     "boardSize": "ボード",
     "treasureContents": "宝物",
     "rewardItem": "アイテム",
@@ -476,7 +414,6 @@
   "fortune_gacha": {
     "title": "おみくじ引き",
     "calcAvgRewards": "1. 平均報酬計算（シミュレーション）",
-    "run": "実行",
     "avgCostPerPull": "1回あたりの平均消費:",
     "avgRewardsPerPull": "1回あたりの平均報酬:",
     "planTotalPulls": "2. 総引き回数計画",
@@ -510,8 +447,6 @@
   },
   "dice_race": {
     "title": "すごろく",
-    "tabOverview": "概要",
-    "tabCalculator": "計算",
     "rewardsPerNode": "マス別報酬",
     "startFinishNode": "スタート/ゴール",
     "nodeLabel": "{id}マス",
@@ -559,23 +494,16 @@
       "skillsCurrent": "スキル (現在)",
       "skillsTarget": "スキル (目標)",
       "equipmentCurrent": "装備 (現在)",
-      "equipmentTarget": "装備 (目標)",
-      "other": "その他"
+      "equipmentTarget": "装備 (目標)"
     },
     "headerField": {
-      "add": "追加",
-      "select": "選択",
       "name": "名前",
-      "school": "学園",
-      "level": "レベル",
-      "rank": "星",
       "ueLevel": "固有武器Lv",
       "affection": "絆",
       "experience": "経験値",
       "equipment1": "装備 1",
       "equipment2": "装備 2",
       "equipment3": "装備 3",
-      "bondGear": "愛用品",
       "acquiredDate": "獲得日",
       "useEligma": "神名のカケラ使用",
       "eligmaPrice": "神名のカケラ価格",
@@ -595,17 +523,14 @@
       "shortcutRedo": "やり直し",
       "shortcutSave": "変更を保存",
       "sortLabel": "ソート:",
-      "resetSort": "リセット",
       "unsavedChanges": "保存されていない変更があります。",
       "save": "保存",
-      "cancel": "キャンセル",
       "addPlanHint": "追加ボタンを押して計画を追加してください",
       "recruitedStudents": "受入済みの生徒数"
     },
     "sortLabels": {
       "hasPlan": "計画あり",
       "isSelected": "選択中",
-      "school": "学園",
       "name": "名前",
       "currentLevel": "現在のレベル",
       "currentRank": "現在の星",
@@ -629,15 +554,10 @@
   },
   "growthCard": {
     "stats": "基本情報",
-    "skills": "スキル",
-    "equipment": "装備",
-    "potential": "能力解放",
-    "affection": "絆ランク",
     "includeInEventsQuestion": "どのイベントの計算に含めますか？",
     "searchEventsPlaceholder": "イベント検索...",
     "selectStudentPrompt": "生徒を選択して詳細情報を確認してください。",
     "selectStudentPlaceholder": "生徒を選択してください...",
-    "btnMinAll": "初期化",
     "btnResetTargets": "目標リセット",
     "btnMaxTargets": "目標最大",
     "btnMaxAll": "最大成長",
@@ -664,7 +584,6 @@
   },
   "affectionTab": {
     "result": {
-      "title": "シミュレーション",
       "success": "達成可能",
       "missing": "不足",
       "expGap": "経験値差",
@@ -728,16 +647,12 @@
     "ownedEleph": "所持神名文字",
     "affectionWarning": "現在のレアリティでは絆ランク{{limit}}が上限です。",
     "uwLevel": "固有武器レベル",
-    "bondGear": "愛用品",
-    "gearNone": "なし",
     "gearReqAffection": "好感度ランク{{rank}}+が必要"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
     "tabs": {
-      "overview": "概要",
-      "missions": "ミッション報酬",
-      "calculator": "計算機"
+      "missions": "ミッション報酬"
     },
     "overview": {
       "parameters": "パラメータ（ステータス）",
@@ -749,10 +664,7 @@
       "scheduleResult": "結果",
       "probability": "確率"
     },
-    "missions": {
-      "selectAll": "すべて選択",
-      "deselectAll": "すべて解除"
-    },
+    "missions": {},
     "calculator": {
       "settingsTitle": "1. シミュレーション設定",
       "simRuns": "シミュレーション回数",
@@ -809,7 +721,6 @@
       "dayLabel": "Day",
       "actionsRemaining": "残りの行動",
       "outcomeLabel": "結果",
-      "defaultScheduleName": "スケジュール",
       "waiting": "行動を選択してください...",
       "historyLog": "全記録を見る",
       "noHistory": "記録がありません。"
@@ -911,8 +822,6 @@
     "sortByAmount": "数量順",
     "selectPlansTitle": "計算に含める生徒育成計画",
     "addEditPlans": "計画の追加/修正",
-    "selectAll": "すべて選択",
-    "deselectAll": "選択解除",
     "totalNeeded": "総必要数 (選択した生徒)",
     "editInventory": "所持数を入力",
     "noItemsNeeded": "選択された育成計画がないか、必要な装備がありません。",
@@ -948,16 +857,12 @@
     "tabInput": "入力",
     "tabStages": "ステージ",
     "tabResults": "結果",
-    "settings": "設定",
     "source": "ソース",
     "sourceLabelNormal": "Normal ×",
     "sourceLabelHard": "Hard ×",
     "studentPlanTitle": "学生プラン",
-    "studentPlanSelectAll": "すべて",
-    "studentPlanDeselectAll": "クリア",
     "studentSearchPlaceholder": "名前で検索...",
     "studentFilterSelected": "選択のみ",
-    "studentSearchEmpty": "検索結果なし",
     "ownedEquipment": "所持装備",
     "universalBlueprint": "万能設計図",
     "elephStudents": "象:",
@@ -997,8 +902,6 @@
     "stageTypeHard": "Hard",
     "sourceKR": "KR",
     "sourceJPNew": "JP",
-    "inventoryLoadingData": "データを読み込み中...",
-    "inventoryClear": "クリア",
     "inventoryDeficient": "不足",
     "inventorySufficient": "十分",
     "inventoryNotFarmable": "ファーミング不可",
@@ -1014,7 +917,6 @@
       "rewardInfo": "報酬情報"
     },
     "ui": {
-      "settings": "設定",
       "autoCalculate": "ラウンド自動設定",
       "simulationResults": "シミュレーション結果"
     },
@@ -1032,7 +934,6 @@
       "reward": "報酬"
     },
     "button": {
-      "run": "実行",
       "consumeAllCost": "チケット全消費",
       "fulfillDeficit": "不足分を補充"
     },
@@ -1058,8 +959,6 @@
     "questDaily": "デイリー",
     "questReward": "報酬",
     "questAllDone": "全て完了",
-    "questSelectAll": "全て選択",
-    "questDeselectAll": "全て解除",
     "questFromDay": "〜日目から:",
     "questDay": "{{day}}日目",
     "masteryRange": "レベル範囲",
@@ -1067,7 +966,6 @@
     "masteryEndLevel": "終了レベル",
     "masteryAll": "全て (1 ~ {{max}})",
     "stageLabel": "ステージ {{n}}",
-    "stageRuns": "回数",
     "stageCostPerRun": "{{cost}}pt/回",
     "stageFirstClear": "初回クリア",
     "stageFirstClearDone": "既に入手",
@@ -1078,7 +976,6 @@
   "clue_search": {
     "title": "手がかり探し",
     "tabInfo": "情報",
-    "tabCalculator": "計算機",
     "roundLabel": "{{round}}周目",
     "roundLoop": "{{round}}周目~ (ループ)",
     "totalFragments": "かけら合計: {{count}}個",
@@ -1095,9 +992,6 @@
   },
   "minigame_ccg": {
     "title": "正義実現委員会の終わらない夏休み",
-    "overview": "概要",
-    "missions": "ミッション",
-    "calculator": "計算機",
     "game_rules": "ゲームルール",
     "desc_1": "ローグライク形式のデッキ構築カードゲームです。",
     "desc_2": "ステージ3-7クリアで掃討機能が解放されます。",
@@ -1106,16 +1000,11 @@
     "stage_rewards": "ステージ別報酬一覧",
     "stage": "ステージ",
     "rewards": "追加報酬",
-    "select_all": "全て選択",
-    "deselect_all": "全て解除",
     "calc_tip": "行を追加して計算してください。ステージ3-7の報酬効率が最大です。",
     "add_row": "行を追加"
   },
   "minigame_janken": {
     "title": "天下一蟹・武術大会",
-    "overview": "概要",
-    "calculator": "計算機",
-    "missions": "ミッション",
     "game_rules": "ゲームルール",
     "desc_1": "じゃんけんバトル。勝てば相手に大ダメージ、あいこはお互いにダメージ、負けは自分だけダメージを受ける。",
     "desc_2": "勝率の低い手で勝つほど、与えるダメージ量が増加する。",
@@ -1125,23 +1014,18 @@
     "stage": "ステージ",
     "equipment_tier_table": "装備Tier強化コスト",
     "tier": "Tier",
-    "cost": "コスト",
     "section_story": "ストーリー（一回限り）",
-    "story": "ストーリー",
     "mark_cleared": "クリア済み",
     "label_first": "初回",
     "label_three_star": "3★",
     "section_normal": "ノーマル（周回）",
-    "normal": "ノーマル",
     "section_equipment": "装備Tier",
     "equipment_target_tier": "目標Tier",
     "section_challenge": "チャレンジ",
     "challenge_current_score": "現在のスコア",
     "challenge_target_score": "目標スコア",
     "total_rewards": "獲得報酬合計（見込み）",
-    "no_rewards": "計算された報酬はありません",
-    "select_all": "全て選択",
-    "deselect_all": "全て解除"
+    "no_rewards": "計算された報酬はありません"
   },
   "gacha": {
     "title": "青輝石・募集/ガチャ計画",
@@ -1163,13 +1047,16 @@
         "note1_link": "Google Spreadsheet（更新停止）",
         "note1_post": "を参照して制作されました。まだ不安定な部分があるため、スプレッドシートのご使用を推奨します。",
         "note2": "グランドアサルトチケットの有効期限は無制限と仮定します。",
-        "note3": "メンテナンス報酬、一部ストーリー、PvPリセット、モモトーク、実績などで得る青輝石は反映されません。代わりに実際の収支に近づけるため、デフォルトで「月1,200個」の追加収入があると仮定します。",
-        "note4": "すべてのイベントの青輝石消費・獲得はイベント初日に行われると仮定します。",
-        "note5": "総力戦およびグランドアサルトの青輝石獲得はその期間の最終日に行われると仮定します。",
-        "note6": "データのあるイベントは1回あたりの収支（スプレッドシートから手動抽出）が反映されており、データのないイベントはデフォルト値1,800個として反映されます。",
-        "note7": "アロナの出席簿は今日を1日目として開始すると仮定します。",
-        "note8": "戦略タブで1バナーから複数キャラを引こうとする場合、「最大予算（最大天井回数）」を適切に変更してください。",
-        "note9": "すべての10連・単発リクルートチケットは同等の青輝石（1連＝120青輝石）に変換して計算されます。"
+        "note3": "グランドアサルト報酬のうち、期間限定10連リクルートチケットは本来GMT+9基準で翌日0時に付与されますが、その時点ではすでに新しいバナーが開いているため、開いた直後に引くとそのバナーに使用できない問題があります。そのため本プランナーではこのチケットのみ、グランドアサルト終了と同時にGMT+9基準で当日11時に獲得すると仮定します。青輝石報酬はこれとは別に、グランドアサルトの最終日に獲得すると仮定します。",
+        "note4": "メンテナンス報酬、一部ストーリー、PvPリセット、モモトーク、実績などで得る青輝石は反映されません。代わりに実際の収支に近づけるため、デフォルトで「月1,200個」の追加収入があると仮定します。",
+        "note5": "すべてのイベントの青輝石消費・獲得はイベント初日に行われると仮定します。",
+        "note6": "総力戦およびグランドアサルトの青輝石獲得はその期間の最終日に行われると仮定します。",
+        "note7": "データのあるイベントは1回あたりの収支（スプレッドシートから手動抽出）が反映されており、データのないイベントはデフォルト値1,800個として反映されます。",
+        "note8": "アロナの出席簿は今日を1日目として開始すると仮定します。",
+        "note9": "戦略タブで1バナーから複数キャラを引こうとする場合、「最大予算（最大天井回数）」を適切に変更してください。",
+        "note10": "すべての10連・単発リクルートチケットは同等の青輝石（1連＝120青輝石）に変換して計算されます。",
+        "note11_pre": "ガチャ確率の適用確認用デバッグページ：",
+        "note11_post": ""
       }
     },
     "server": {
@@ -1197,13 +1084,13 @@
         },
         "empty": "予定がありません。",
         "types": {
-          "evt": "EVT",
-          "raid": "RAID",
-          "elim": "ELIM",
           "towr": "TOWR",
           "jfd": "JFD",
+          "etc": "ETC",
           "camp": "CAMP",
-          "etc": "ETC"
+          "elim": "大決戦",
+          "evt": "イベント",
+          "raid": "総力戦"
         },
         "eventPeriod": "イベント期間",
         "normalPeriod": "通常期間",
@@ -1212,7 +1099,6 @@
         "scheduleCount": "{{count}}件",
         "campaignTypes": {
           "normal": "ノーマル",
-          "hard": "ハード",
           "commission": "特別依頼"
         },
         "unit_times": "回",
@@ -1236,10 +1122,7 @@
           "pvp": "戦術対抗戦 (PvP)",
           "monthly": "マンスリーパッケージ",
           "raid_elim": "総力戦 / 大決戦",
-          "multifloor": "制約解除決戦",
-          "jfd": "合同火力演習",
           "mainstory": "メインストーリー",
-          "event": "イベント",
           "ministory": "ミニストーリー",
           "maintenance": "メンテナンス",
           "manual": "追加入力",
@@ -1273,6 +1156,15 @@
         "custom_income_amount": "青輝石の量",
         "ticket1": "1回募集チケット",
         "ticket10": "10回募集チケット",
+        "ticket_batches_title": "期間限定募集チケット",
+        "ticket_batches_eraid_label": "大決戦(保有中)",
+        "ticket_batches_eraid_empty": "まだ期限切れになっていない大決戦チケットがありません。",
+        "ticket_batches_expiry_placeholder": "有効期限(空欄で無期限)",
+        "ticket_batches_unlimited": "無期限",
+        "ticket_batches_consume_policy_label": "期限間近のチケットを最後のバナーで自動消化",
+        "unclaimed_main_story": "未受取メインストーリー報酬",
+        "unclaimed_momotalk": "未受取モモトーク",
+        "no_past_main_story": "過去のメインストーリーはありません。",
         "raid_title": "総力戦/大決戦ランク"
       },
       "chart": {
@@ -1282,12 +1174,10 @@
         "worst": "下位 100%",
         "upper_x": "上位 {{x}}%",
         "avg_balance": "平均残高",
-        "avg": "平均",
         "upper_10": "上位 10%",
         "lower_10": "下位 10%",
         "hide_details": "詳細を隠す",
         "show_details": "日別の収入・支出の詳細を見る",
-        "table_date": "日付",
         "table_reason": "増減内容",
         "table_delta": "変動量",
         "table_balance": "残高 (平均)",
@@ -1295,7 +1185,8 @@
         "daily_calc": "日次・イベント精算",
         "percentile_placeholder": "例: 25",
         "add_btn_title": "確率線を追加",
-        "remove_line": "削除"
+        "ticket_balance_name": "チケット込み残高",
+        "footer_ticket_note": "青輝石 + 期間限定チケット（青輝石換算）"
       },
       "log": {
         "fixed_daily_sunday": "日次/週次/マンスリー等の固定収入",
@@ -1307,7 +1198,12 @@
         "event": "[イベント] {{name}}",
         "multifloor": "[制約解除] {{name}} 報酬",
         "mainstory": "[メインストーリー] {{name}} 報酬",
-        "ap_refresh": "AP回復"
+        "ministory": "[ミニストーリー] {{name}} 報酬",
+        "momotalk": "[モモトーク] 未受取報酬",
+        "ap_refresh": "AP回復",
+        "term_ticket_acquired": "期間限定募集チケット獲得 ({{count}}連)",
+        "term_ticket_acquired_expiry": "期間限定募集チケット獲得 ({{count}}連) ({{date}} 失効)",
+        "term_ticket_expired": "期間限定募集チケット失効 ({{count}}連, {{date}})"
       },
       "unit_sheets": "枚",
       "unit_per_month": "/月",
@@ -1327,7 +1223,9 @@
         "manual_input_label": "手動入力",
         "sim_count_unit": "回",
         "sim_count_display": "{{count}}回",
-        "wasm_charge_system_warning": "新しい募集チャージシステムはまだWASMに反映されていません。正確な結果を得るにはJSエンジンを使用してください。"
+        "owned_students_toggle_label": "募集済みの生徒をエリグマ計算に反映",
+        "owned_students_count": "{{count}}人募集済み",
+        "owned_students_help": "生徒は初めて募集したときにはエリグマがもらえず、重複募集した時だけ手に入ります。だから何人すでに募集済みかで、シミュレーション結果のエリグマ量は大きく変わってきます。オフにすると、まだ誰も募集していない状態で計算します。"
       },
       "empty_state": "上のボタンを押してシミュレーションを開始してください。",
       "income_nudge": "収入計画を設定すると、タイムライン基準のより精密な予算分析が可能です",
@@ -1377,23 +1275,22 @@
         "cdf_label_pyroxenes": "{{amount}} 青輝石以内",
         "cdf_label_pulls": "{{amount}}回以内",
         "legend_within_budget": "以内",
-        "legend_over_budget": "超過区間"
+        "legend_over_budget": "超過区間",
+        "cost_view_net": "青輝石のみ",
+        "cost_view_gross": "青輝石+チケット換算",
+        "no_data": "データがありません。"
       },
       "student_stats": {
         "title": "生徒別獲得・神名文字予測",
-        "tag_limited": "限定",
-        "tag_fes": "フェス",
         "rate_obtain": "獲得率",
         "avg_eleph": "平均神名文字",
         "collapse": "閉じる ▲",
-        "expand": "分布を見る ▼",
-        "chart_x_eleph": "神名文字"
+        "expand": "分布を見る ▼"
       },
       "filter": {
         "star1": "★1",
         "star2": "★2",
         "star3": "★3",
-        "fes": "フェス",
         "pickup": "ピックアップ"
       },
       "timing": {
@@ -1402,19 +1299,21 @@
         "per_iteration": "回"
       },
       "search_placeholder": "名前で検索...",
-      "search_no_result": "検索結果なし",
       "non_pickup_badge": "非ピックアップ",
-      "limited_badge": "限定",
-      "fes_badge": "フェス",
       "rate_obtain_label": "獲得率",
       "eleph_distribution_label": "エレフ獲得分布",
       "probability_unit": "確率",
-      "average_label": "平均",
       "median_label": "P50中央値",
       "pessimistic_label": "P90悲観",
       "worst_label": "P99.5最悪",
       "pulls_short": "回",
-      "chart_pdf_cdf": "棒グラフ(PDF) · 曲線(CDF)"
+      "chart_pdf_cdf": "棒グラフ(PDF) · 曲線(CDF)",
+      "banner_select_all_period": "全期間",
+      "dist_mode": {
+        "cumulative": "累積",
+        "incremental": "単独"
+      },
+      "eligma_owned_caption": "既に募集済みの生徒{{count}}人を基準に計算"
     },
     "banner_planner": {
       "header": {
@@ -1422,13 +1321,13 @@
         "toggle_show": "過去のガチャ{{count}}件を表示",
         "toggle_hide": "過去のガチャを隠す",
         "deactivate_past": "過去ガチャを解除 ({{count}})",
+        "reset_planner": "設定をリセット",
         "auto_scroll_hint": "* 自動スクロール対応"
       },
       "badge": {
         "now": "開催中",
         "fes": "★ FES 6%",
         "free_pulls": "無料{{count}}連",
-        "limited": "限定",
         "charge_system": "呼び出し"
       },
       "toggle": {
@@ -1445,7 +1344,6 @@
       },
       "mode": {
         "skip": "スルー",
-        "must": "必須",
         "opportunistic": "条件付"
       },
       "condition": {
@@ -1483,11 +1381,7 @@
       "free_pulls_label": "無料{{count}}連"
     },
     "pulls": "Pulls",
-    "pyroxenes": "Pyroxenes",
     "survival_rate": "Survival Rate",
-    "common": {
-      "add": "Add"
-    },
     "sim_levels": {
       "10k": "1万",
       "100k": "10万",
@@ -1506,7 +1400,8 @@
     "section_strategy": "戦略 · Banners",
     "section_settings": "設定 · Plan",
     "active_banner_count": "{{count}}件アクティブ",
-    "net_income": "純収入"
+    "net_income": "純収入",
+    "reset_confirm": "ガチャプランナーに保存された設定(収入設定、バナー戦略、シミュレーション結果)をすべて初期化します。続けますか?"
   },
   "itemScanner": {
     "title": "アイテムスキャナー",
@@ -1540,27 +1435,19 @@
     "dataCollectionDetails": "詳細",
     "dropZoneInstructions": "ここにインベントリスクリーンショットをドロップ",
     "dropZoneBrowse": "またはクリックして選択 — 複数ファイル対応",
-    "categoryCredits": "クレジット",
-    "categoryEligma": "神名のカケラ",
-    "categoryXpReports": "レポート",
     "categoryEquipEnh": "装備強化珠",
     "categoryUwGrowth": "固有武器成長素材",
     "categoryPotential": "能力解放素材",
-    "categoryOpart": "オーパーツ",
     "categoryTacticalBD": "戦術教育BD",
     "categoryTechNote": "技術ノート",
     "categoryEquipment": "装備設計図",
     "categorySkill": "スキル素材",
-    "categoryEleph": "神名文字",
-    "categoryGifts": "贈り物",
-    "categoryOther": "その他",
     "tableItem": "アイテム",
     "tableConfidence": "信頼度",
     "tableCurrent": "現在",
     "tableScanned": "スキャン",
     "tableDiff": "差分",
     "filterLabel": "フィルター",
-    "filterAll": "すべて",
     "applyButton": "{{count}}個のアイテムを適用",
     "appliedToast": "{{count}}個のアイテムを適用しました ({{category}})",
     "logLabel": "ログ",
@@ -1573,12 +1460,11 @@
     "confirmAll": "すべて確認",
     "noItemsRecognized": "認識されたアイテムはありません",
     "itemCountRecognized": "{{count}}個のアイテムを認識",
-    "okButton": "OK",
-    "cancelTitle": "キャンセル",
     "confidence": "信頼度",
     "quantity": "数量:",
     "unknownItem": "不明なアイテム",
-    "belowThreshold": "(しきい値未満)"
+    "belowThreshold": "(しきい値未満)",
+    "backButton": "戻る"
   },
   "studentScanner": {
     "title": "生徒育成スキャナー",
@@ -1606,7 +1492,6 @@
     "progressDeduplicate": "重複チェック中 {{current}}/{{total}}",
     "progressDeduplicateRejected": "生徒画面でないフレームを{{rejected}}件除外 · 重複チェック中 {{current}}/{{total}}",
     "progressAnalyzingFrame": "フレーム分析中 {{current}}/{{total}}",
-    "cancelScan": "キャンセル",
     "resultsTitle": "認識された生徒",
     "resultsCount": "{{count}}人認識",
     "reviewListLabel": "認識された生徒一覧",
@@ -1616,7 +1501,6 @@
   },
   "interactive_world_raid": {
     "title": "連合作戦",
-    "tab_overview": "概要",
     "tab_calculator": "周回設定",
     "tab_ticket": "チケット購入",
     "game_flow_title": "進行方式",
@@ -1625,7 +1509,6 @@
     "game_flow_3": "ストーリーバトル: 1回限り、ボスとの戦闘を含む。クリアで報酬獲得",
     "ticket_note": "入場チケットは毎日リセットされます。ボスごとに登場期間が異なります。",
     "boss_hp": "ボスHP",
-    "difficulty": "難易度",
     "runs": "周回数",
     "ticket_unit": "チケット",
     "story_cleared": "ストーリークリア",
@@ -1647,8 +1530,6 @@
     "total_n_runs": "{{n}}周合計",
     "total_rewards": "総獲得予想",
     "ref_1run": "1周基準",
-    "story": "ストーリー",
-    "raid": "レイド",
     "runs_unit": "回",
     "entry_reward": "参加報酬",
     "kill_reward": "撃破報酬",
@@ -1663,7 +1544,6 @@
     "daily_purchase": "1日の購入",
     "auto_recharge": "自動チャージ",
     "available": "総利用可能",
-    "pyro_unit": "青輝石",
     "tickets_per_run": "チケット/回",
     "select_all_stories": "ストーリー全選択",
     "deselect_all_stories": "ストーリー全解除",
@@ -1671,8 +1551,6 @@
   },
   "road_puzzle": {
     "title": "鉄道パズル",
-    "tabOverview": "概要",
-    "tabCalculator": "計算機",
     "tabMaps": "マップ",
     "round": "ラウンド",
     "roundLabel": "{{round}}ラウンド",
@@ -1681,7 +1559,6 @@
     "tileType2": "曲線",
     "tileType3": "急カーブ",
     "rewards": "報酬",
-    "total": "合計",
     "rangeTitle": "ラウンド範囲",
     "startRound": "開始ラウンド",
     "endRound": "終了ラウンド",
@@ -1702,7 +1579,6 @@
     "inventoryComparison": "所持 vs. 必要数",
     "mapInventoryLabel": "タイル所持数",
     "mapPoolLabel": "未引きレール",
-    "mapDataMissingShort": "データなし",
     "solvedTiles": "最適",
     "mcTitle": "モンテカルロシミュレーション",
     "mcDesc": "各ステージでマップのカードプールからタイルが1枚ランダムに提供されます。パズルが解けるようになるまで引き続けるシミュレーションを行い、マップあたりの平均タイル購入必要数を推定します。",
@@ -1726,5 +1602,28 @@
     "mapDisplayNoData": "{{round}}-{{mapIndex}}",
     "costTitle": "総消費資源",
     "rewardsTitle": "総獲得報酬"
+  },
+  "inventory": {
+    "title": "アイテム管理",
+    "description": "保有中のすべてのリソースを一目で確認し、成長計画に必要な数量との差を確認できます。",
+    "sortByType": "タイプ + ID",
+    "toggleMatrix": "表",
+    "toggleAdvancedFilters": "高度なフィルター",
+    "targetComparison": "目標と比較",
+    "onlyOwned": "1個以上を表示",
+    "selectPlans": "計画を選択 ({{selected}}/{{total}})",
+    "noResourcesToShow": "表示するリソースがありません。",
+    "studentNeeds": "学生ごとの必要数 ({{count}})",
+    "noActivePlanNeeds": "アクティブな成長計画はこれを必要としません。",
+    "allUsersHeading": "これを使用する学生 — すべて ({{count}})",
+    "noUsersForGrowth": "この素材を成長に使用する学生はいません。",
+    "displayMode": {
+      "owned": "保有数",
+      "needed": "目標数",
+      "diff": "保有 - 目標",
+      "deficit": "不足数"
+    },
+    "emptyMessage": "選択した計画に必要なリソースがありません。",
+    "helperShowOwned": "保有 {{owned}} / 必要 {{needed}}"
   }
 }

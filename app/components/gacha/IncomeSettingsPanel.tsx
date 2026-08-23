@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaGem, FaToggleOn, FaToggleOff, FaBolt, FaTrophy, FaPlusCircle, FaTrash } from 'react-icons/fa';
 import { PVP_REWARDS } from '~/utils/pyroxeneCalc';
-import type { PyroxeneConfig } from '~/routes/planner/Gacha_v2';
+import type { PyroxeneConfig } from '~/routes/planner/Gacha_old';
 import { CustomNumberInput } from '../CustomInput';
 
 export interface CustomIncome {

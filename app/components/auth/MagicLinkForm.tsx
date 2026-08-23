@@ -30,6 +30,7 @@ export function MagicLinkForm({ consentGiven = true }: Props) {
       });
 
       if (!res.ok) {
+        if (res.status === 503) throw new Error(t('common.authServerMaintenance'));
         let message = t('common.sendLinkFailed');
         try {
           const data: { message?: string } = await res.json();

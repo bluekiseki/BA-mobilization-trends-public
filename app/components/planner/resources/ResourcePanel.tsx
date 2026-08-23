@@ -2,7 +2,7 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { buildResourceTimelines, buildAnnotations, buildResourcePlanningTimelines, getResourceDistributionPercentile } from '~/utils/resourceTimeline';
+import { buildResourceTimelines, buildAnnotations, buildResourcePlanningTimelines } from '~/utils/resourceTimeline';
 import type { ResourceEvent, ResourcePlanEvent } from '~/utils/resourceTimeline';
 import {
   eventsFromPurchaseEvents,
@@ -15,7 +15,7 @@ import {
 } from '~/utils/resourceEventAdapters';
 import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
 import { getItemTitle, type I18nLike } from '~/utils/scheduleDisplay';
-import type { GlobalAggregatedResult, DistributionData } from '~/utils/gachaEngine';
+import { meanFromDist, type GlobalAggregatedResult, type DistributionData } from '~/utils/gachaEngine';
 import { getPercentileFromDist } from '~/utils/elephEligmaCalc';
 import type { EventPlan } from '~/types/eventPlan';
 import ResourceTimelineChart from './ResourceTimelineChart';
@@ -123,6 +123,7 @@ export default function ResourcePanel({
   studentPlansSection,
 }: Props) {
   const { t, i18n } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   const getScheduleTitle = useCallback((item: ScheduleItemV2) => getItemTitle(item, i18n.language as Locale, i18n as I18nLike), [i18n]);
 
   const alwaysIncludeKeys = useMemo(() => new Set([...trackingItems.map((t) => t.key), ...(extraKeys ?? [])]), [trackingItems, extraKeys]);
@@ -219,21 +220,11 @@ export default function ResourcePanel({
   const eventIncomeTotal = eventIncomeItems.reduce((s, e) => s + e.amount, 0);
 
   const hasGachaData = distEligma.length > 0;
-  const exactEligmaDist = gachaResult?.distEligmaExact;
-  const getGachaEligmaPercentile = (pct: number) => (exactEligmaDist?.length ? getResourceDistributionPercentile(exactEligmaDist, pct) : getPercentileFromDist(distEligma, pct));
+  const getGachaEligmaPercentile = (pct: number) => getPercentileFromDist(distEligma, pct);
   const gachaP10 = hasGachaData ? getGachaEligmaPercentile(10) : null;
   const gachaP50 = hasGachaData ? getGachaEligmaPercentile(50) : null;
   const gachaP90 = hasGachaData ? getGachaEligmaPercentile(90) : null;
-  const gachaAvg = hasGachaData
-    ? Math.round(
-        gachaResult?.avgTotalEligma ??
-          distEligma.reduce((sum, bin) => sum + bin.binEnd * bin.pdf, 0) /
-            Math.max(
-              1,
-              distEligma.reduce((sum, bin) => sum + bin.pdf, 0),
-            ),
-      )
-    : null;
+  const gachaAvg = hasGachaData ? Math.round(meanFromDist(distEligma)) : null;
 
   const groupedEventLog = useMemo(() => {
     if (!effectiveKey) return [];
@@ -244,7 +235,7 @@ export default function ResourcePanel({
   const hasBand = selectedTimeline ? selectedTimeline.some((p) => p.probabilistic || p.p10 !== p.p90) : false;
   // When band data exists, show the planning-percentile value; otherwise fall back to p50
   const lastPlanningValue = effectiveKey ? (hasBand ? planningTimelines[effectiveKey]?.at(-1)?.p50 : timelines[effectiveKey]?.at(-1)?.p50) : undefined;
-  const planningLabel = gachaEligmaUseMean ? t('panel.avg') : `P${gachaEligmaPercentile}`;
+  const planningLabel = gachaEligmaUseMean ? t_ui('avg') : `P${gachaEligmaPercentile}`;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -299,7 +290,7 @@ export default function ResourcePanel({
                       { l: 'P10', v: gachaP10 },
                       { l: 'P50', v: gachaP50 },
                       { l: 'P90', v: gachaP90 },
-                      { l: t('panel.avg'), v: gachaAvg },
+                      { l: t_ui('avg'), v: gachaAvg },
                     ].map(({ l, v }) => (
                       <div key={l} className="flex flex-col gap-0.5">
                         <span className="text-[10px] text-neutral-400 dark:text-neutral-500">{l}</span>
@@ -311,7 +302,7 @@ export default function ResourcePanel({
                   <p className={noteCls}>
                     {t('panel.noSimDataPre')}{' '}
                     <Link to={`/${locale}/planner/gacha`} className="text-blue-500 hover:underline not-italic">
-                      {t('panel.runSim')}
+                      {t_ui('simulation')}
                     </Link>
                     {t('panel.noSimDataPost')}
                   </p>
@@ -341,7 +332,7 @@ export default function ResourcePanel({
                 </div>
                 <label className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 cursor-pointer">
                   <input type="checkbox" checked={gachaEligmaUseMean} onChange={(e) => onSetUseMean(e.target.checked)} className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600" />
-                  {t('panel.avg')}
+                  {t_ui('avg')}
                 </label>
               </div>
             )}
@@ -370,7 +361,7 @@ export default function ResourcePanel({
                     </div>
                   ))}
                   <div className="border-t border-neutral-100 dark:border-neutral-800 pt-1 flex justify-between text-xs text-neutral-400 dark:text-neutral-500">
-                    <span>{t('panel.total')}</span>
+                    <span>{t_ui('total')}</span>
                     <span className="font-mono font-semibold">{eventIncomeTotal}</span>
                   </div>
                 </div>

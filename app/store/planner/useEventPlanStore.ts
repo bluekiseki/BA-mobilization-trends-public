@@ -274,9 +274,6 @@ export const usePlanForEvent = (eventId: number) => {
       spent: Record<string, { amount: number; isBonusApplied: boolean }>;
       availableAp: number;
     }) => eventId && actions.setCachedTotalItems(eventId, cached),
-    // setMinigameCCGConfig: (updater: (prev: CcgRunInput[]) => CcgRunInput[]) => {
-    //   if (eventId) actions.setMinigameCCGConfig(eventId, updater(plan.minigameCCGConfig || defaultPlan.minigameCCGConfig));
-    // },
     setMinigameCCGConfig: (config: CcgRunInput[]) => {
       if (eventId) actions.setMinigameCCGConfig(eventId, config);
     },

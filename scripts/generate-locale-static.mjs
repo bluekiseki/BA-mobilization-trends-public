@@ -10,6 +10,10 @@
 import { readdir, readFile, writeFile, rm, mkdir } from 'node:fs/promises';
 
 const LOCALES = ['en', 'ja', 'ko', 'zh_Hant'];
+// Source dirs under app/locales/ use zh_Hant, but the client requests translations
+// using the BCP-47-style locale code (zh-Hant, see Locale type in utils/i18n/config.ts),
+// so the output dir name must match that instead of the source dir name.
+const OUTPUT_DIR_NAME = { zh_Hant: 'zh-Hant' };
 const localesDir = new URL('../app/locales/', import.meta.url);
 const outDir = new URL('../public/locales/', import.meta.url);
 
@@ -17,7 +21,7 @@ let totalFiles = 0;
 
 for (const locale of LOCALES) {
   const localeDir = new URL(`${locale}/`, localesDir);
-  const localeOutDir = new URL(`${locale}/`, outDir);
+  const localeOutDir = new URL(`${OUTPUT_DIR_NAME[locale] ?? locale}/`, outDir);
   await rm(localeOutDir, { recursive: true, force: true });
   await mkdir(localeOutDir, { recursive: true });
 

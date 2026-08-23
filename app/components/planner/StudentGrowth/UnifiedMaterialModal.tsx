@@ -157,6 +157,7 @@ export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventDa
 
   const { materialInventory, updateMaterialInventory, resetMaterialInventory } = useGlobalStore();
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnTo)}`;
@@ -308,7 +309,7 @@ export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventDa
                   <>
                     <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('ui.inventoryResetConfirm')}</span>
                     <button onClick={() => setConfirmReset(false)} className="text-xs px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
-                      {t('ui.inventoryResetCancel')}
+                      {t_ui('cancel')}
                     </button>
                     <button
                       onClick={() => {
@@ -317,7 +318,7 @@ export const UnifiedMaterialModal = ({ isOpen, onClose, calculatedNeeds, eventDa
                       }}
                       className="text-xs px-2 py-0.5 rounded border border-red-400 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
-                      {t('ui.inventoryResetOk')}
+                      {t_ui('reset')}
                     </button>
                   </>
                 ) : (

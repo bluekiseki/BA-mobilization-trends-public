@@ -11,9 +11,8 @@ const TYPE_REFS: [string, [number, number, number]][] = [
 ];
 const BULLET: Record<string, string> = { red: 'Explosion', gold: 'Pierce', blue: 'Mystic', purple: 'Sonic', teal: 'Chemical' };
 const ARMOR: Record<string, string> = { red: 'LightArmor', gold: 'HeavyArmor', blue: 'Unarmed', purple: 'ElasticArmor', teal: 'CompositeArmor' };
-// matchStudents' grade() only ever produces D/B/A from the raw adaptation value — no S tier
-// exists in this pipeline's matching logic, so a reference color for it would only ever steal
-// a classification away from the correct D/B/A grade.
+// No S tier here — matchStudents' grade() only ever produces D/B/A, so an S reference color
+// would just steal classifications from the correct grade.
 const TERRAIN: [string, [number, number, number]][] = [
   ['D', [0xff, 0x86, 0x7c]],
   ['D', [0xf4, 0x8b, 0x7c]],
@@ -46,9 +45,7 @@ export const classifySquad = (image: ImageData): 'Main' | 'Support' => {
 };
 
 export const classifyTerrain = (image: ImageData, circle: Circle): string => {
-  // Exact equivalent of Python's:
-  // crop[int(cy-r):int(cy-r)+int(2r), int(cx-r):int(cx-r)+int(2r)]
-  // followed by the central half of that crop.
+  // Exact equivalent of Python's centered crop followed by the central half of that crop.
   const diameter = Math.trunc(circle.radius * 2);
   const circleCrop = crop(image, { x: Math.trunc(circle.x - circle.radius), y: Math.trunc(circle.y - circle.radius), width: diameter, height: diameter });
   const half = Math.max(1, Math.floor(Math.min(circleCrop.width, circleCrop.height) / 4));
@@ -80,20 +77,17 @@ export const countStars = (image: ImageData, box: Box, blue = false): number => 
   return biggest ? Math.max(0, Math.min(5, Math.round(biggest.width / (target.width / 5)))) : 0;
 };
 
-// The game has no "defense" potential-release stat — confirmed, not a guess (see GROWTHPLAN_MAPPING.md).
-// This detector still splits the stat box into a naive 2x2 grid, so whatever lands in the
-// bottom-left quadrant gets labeled 'defense'; that's misdetected noise or a misplaced 'heal'
-// badge, not a real 4th stat. Needs recalibration against real screenshots to find the true
-// 3-badge layout — until then, 'defense' output must be treated as spurious by every caller.
+// The game has no "defense" potential-release stat (confirmed, see GROWTHPLAN_MAPPING.md). The
+// naive 2x2 grid still labels the bottom-left quadrant 'defense', but that's always spurious
+// noise/misdetected 'heal' — callers must treat 'defense' output as invalid until recalibrated.
 export const findPotentialBadges = (stat: ImageData): { quadrant: 'hp' | 'attack' | 'defense' | 'heal'; image: ImageData; box: Box }[] => {
   const mask = new Uint8Array(stat.width * stat.height);
   for (let p = 0; p < mask.length; p += 1) {
     const i = p * 4;
     if (Math.hypot(stat.data[i] - 0x42, stat.data[i + 1] - 0x66, stat.data[i + 2] - 0x94) < 25) mask[p] = 1;
   }
-  // Python's 200px threshold was calibrated on a roughly 969x229 stat box.
-  // Browser candidates are resized to at most 1280px wide, so preserve the
-  // same normalized component area instead of requiring 200 resized pixels.
+  // Python's 200px threshold was calibrated on a ~969x229 stat box; use normalized area instead
+  // since browser candidates get resized to at most 1280px wide.
   const minimumArea = Math.max(20, Math.round(stat.width * stat.height * (200 / (969 * 229))));
   return connectedComponents(mask, stat.width, stat.height, minimumArea).map((component) => ({
     quadrant: component.cx < stat.width / 2 ? (component.cy < stat.height / 2 ? 'hp' : 'defense') : component.cy < stat.height / 2 ? 'attack' : 'heal',

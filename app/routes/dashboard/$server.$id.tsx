@@ -127,7 +127,7 @@ export function loader({ context, params, request }: LoaderFunctionArgs) {
 
   const isRaid = isTotalAssault(raidInfos[0]);
   const raid = raidInfos[0];
-  const raidType = isRaid ? i18n.t('common:raid') : i18n.t('common:eraid');
+  const raidType = isRaid ? i18n.t('game:raid') : i18n.t('game:eraid');
   const metaVariables = {
     server: server.toUpperCase(),
     season: raid.Id,
@@ -182,9 +182,7 @@ export default function RaidDetailsPage() {
     if (isGrandAssault) {
       // Check if tab exists in URL and is in the valid tab list
       if (tabFromUrl && grandAssaultTabs.includes(tabFromUrl)) {
-        // [Edge case handling]
-        // If 'All' tab (which is disabled) was accessed directly in 'detail' view,
-        // force change to the first valid tab.
+        // Edge case: 'All' tab is disabled, so redirect to the first valid tab in 'detail' view.
         if (mainView === 'detail' && tabFromUrl === 'All') {
           return grandAssaultTabs.find((t) => t !== 'All') || raidInfos[0]?.Type || 'All';
         }
@@ -197,8 +195,9 @@ export default function RaidDetailsPage() {
     return 'default';
   }, [searchParams, isGrandAssault, grandAssaultTabs, mainView, raidInfos]);
 
-  const { t: t_c, i18n } = useTranslation('common');
-  const { t } = useTranslation('dashboard');
+  const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
+  const { t, i18n } = useTranslation('dashboard');
   const locale = i18n.language as Locale;
 
   // const filteredRaidInfo = raidInfos.filter(v => v.Cnt.Torment)
@@ -311,9 +310,7 @@ export default function RaidDetailsPage() {
       (prev) => {
         prev.set('view', view);
 
-        // [Edge case handling]
-        // If switching to 'detail' view and the current tab is 'All'
-        // also change to the first valid tab.
+        // Edge case: switching to 'detail' view while on the 'All' tab also changes to the first valid tab.
         if (view === 'detail' && prev.get('tab') === 'All') {
           const firstValidType = grandAssaultTabs.find((t) => t !== 'All') || raidInfos[0]?.Type || 'Explosion';
           prev.set('tab', firstValidType);
@@ -359,7 +356,7 @@ export default function RaidDetailsPage() {
   const translatedTypeName = useMemo(() => {
     // Total Assault
     if (!isGrandAssault) {
-      return t_c('raid'); // e.g., "Total Assault"
+      return t_g('raid'); // e.g., "Total Assault"
     }
     // JFD (if not allType)
     if (activeTab !== 'All' && type_translation[activeTab as keyof typeof type_translation]) {
@@ -448,7 +445,7 @@ export default function RaidDetailsPage() {
       {/* overviewLoading:{overviewLoading} / activeTab:{activeTab} / mainView={mainView} */}
       {/* --- Content Area (Common structure) --- */}
       {loading ? (
-        <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_c('loading_txt')}</div>
+        <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
       ) : (
         <>
           {/* --- 1. 'Overall Score Distribution' (Overview) View --- */}
@@ -477,7 +474,7 @@ export default function RaidDetailsPage() {
                   )}
                 </>
               ) : overviewLoading ? (
-                <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_c('loading_txt')}</div>
+                <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
               ) : (
                 <div className="min-h-[50vh] flex justify-center items-center text-2xl text-red-500">
                   {/* {t('overviewDataLoadError')} */}
@@ -491,7 +488,7 @@ export default function RaidDetailsPage() {
           {mainView === 'detail' && (
             <>
               {dashboardLoading ? (
-                <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_c('loading_txt')}</div>
+                <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
               ) : currentDashboardData ? (
                 <DashboardUI dashboardData={currentDashboardData} studentData={studentData} portraitData={portraitData} raidInfo={currentRaidInfo} server={server} />
               ) : (

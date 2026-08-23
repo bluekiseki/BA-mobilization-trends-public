@@ -12,6 +12,7 @@ import { type_translation, typecolor } from '~/components/raid/raidToString';
 export function LiveVideoSection({ raidInfos, studentData, portraitData }: { raidInfos: RaidInfo[]; studentData: StudentData; portraitData: PortraitData }) {
   const { t, i18n } = useTranslation('liveDashboard');
   const { t: t_d } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const localeShort = getLocaleShortName(locale);
   const isEraid = !isTotalAssault(raidInfos[0]);
@@ -40,7 +41,7 @@ export function LiveVideoSection({ raidInfos, studentData, portraitData }: { rai
   return (
     <section className="border-t border-neutral-200 dark:border-neutral-700 pt-8 space-y-4">
       <h2 className="text-2xl font-bold">
-        {t('video_fallback_title')}
+        {t_ui('clearVideos')}
         <span className="ml-2 text-sm font-normal text-neutral-500 dark:text-neutral-400">(Experimental)</span>
       </h2>
 

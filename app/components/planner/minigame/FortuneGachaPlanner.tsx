@@ -104,6 +104,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
   const [isRunning, setIsRunning] = useState(false);
 
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'fortune_gacha' });
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { isDark } = useIsDarkState();
   const {
@@ -195,7 +196,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
               onClick={handleRunSimulation}
               className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shrink-0"
             >
-              {t('run')}
+              {t_ui('run')}
             </SimRunButton>
           </div>
           {avgRates && (

@@ -4,7 +4,8 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import 'rc-slider/assets/index.css';
 import type { GameServer, RaidInfo, Student } from '~/types/data';
 import { GAMESERVER_LIST } from '~/types/data';
-import { difficultyInfo, type DifficultyName } from '~/components/raid/Difficulty';
+import { difficultyInfo } from '~/components/raid/Difficulty';
+import { CheckboxSelect, type CheckboxSelectOption } from '~/components/common/CheckboxSelect';
 import { useTranslation } from 'react-i18next';
 import { ToggleButtonGroup } from '~/components/ToggleButtonGroup';
 import TooltipSlider from '~/components/HandleTooltip';
@@ -17,7 +18,7 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
 
 import { RankingChart } from '~/components/ranking/chart';
-import { PlayIcon, StopIcon, ChevronIcon } from '~/components/Icon';
+import { PlayIcon, StopIcon } from '~/components/Icon';
 import { PageHeader } from '~/components/common/PageHeader';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
@@ -42,6 +43,8 @@ export interface RatingData {
   };
 }
 
+type TacticRoleFilter = Student['TacticRole'] | 'All';
+
 export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
   if (!server || !GAMESERVER_LIST.includes(server as GameServer)) {
@@ -51,7 +54,7 @@ export function loader({ context, params }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   return {
     siteTitle: i18n.t('common:title'),
-    title: i18n.t('common:navigation.ranking'),
+    title: i18n.t('ui:ranking'),
     description: i18n.t('charts:ranking.description1'),
     server: g_server,
   };
@@ -124,7 +127,7 @@ export default function RankingChartPage() {
 
   // Inside your RankingChartPage component
   const [selectedSquadType, setSelectedSquadType] = useState<string>('All');
-  const [selectedTacticRole, setSelectedTacticRole] = useState<string>('All');
+  const [selectedTacticRoles, setSelectedTacticRoles] = useState<Set<TacticRoleFilter>>(new Set(['All']));
   const [selectedStudentType, setSelectedStudentType] = useState<string>('All');
   const [allStudents, setAllStudents] = useState<Record<string, Student>>({});
   const [raidInfo, setraidInfo] = useState<RaidInfo[]>([]);
@@ -137,11 +140,12 @@ export default function RankingChartPage() {
   }, []);
   const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 134]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<Set<string>>(new Set(['All']));
-  const [isDifficultyDropdownOpen, setIsDifficultyDropdownOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const currentLocale = useTranslation().i18n.language as Locale;
   const { t, i18n } = useTranslation('charts', { keyPrefix: 'ranking' });
   const { t: t_raids } = useTranslation('raidInfo');
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const locale = i18n.language as Locale;
 
   const { server } = useLoaderData<typeof loader>();
@@ -150,30 +154,12 @@ export default function RankingChartPage() {
 
   // Create a ref for the SVG container
   const containerRef = useRef<HTMLDivElement>(null);
-  const difficultyDropdownRef = useRef<HTMLDivElement>(null);
   // State to hold the dynamic width of the SVG container
   const [svgWidth, setSvgWidth] = useState(800); // window.innerWidth - 50
 
   const fetchData = useDataCache<RawRatingData>();
   const fetchStudents = useDataCache<Record<string, Student>>();
   const fetchRaids = useDataCache<RaidInfo[]>();
-
-  useEffect(() => {
-    // Close dropdown when clicking outside
-    const handleClickOutside = (event: MouseEvent) => {
-      if (difficultyDropdownRef.current && !difficultyDropdownRef.current.contains(event.target as Node)) {
-        setIsDifficultyDropdownOpen(false);
-      }
-    };
-
-    if (isDifficultyDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDifficultyDropdownOpen]);
 
   useEffect(() => {
     // Function to get the current container width
@@ -244,7 +230,7 @@ export default function RankingChartPage() {
       .filter((studentId) => {
         const student = allStudents[studentId];
         const squadTypeMatch = selectedSquadType === 'All' || student.SquadType === selectedSquadType;
-        const tacticRoleMatch = selectedTacticRole === 'All' || student.TacticRole === selectedTacticRole;
+        const tacticRoleMatch = selectedTacticRoles.has('All') || selectedTacticRoles.has(student.TacticRole);
 
         return squadTypeMatch && tacticRoleMatch;
       })
@@ -337,7 +323,7 @@ export default function RankingChartPage() {
         });
       return { ...item, processedRatings };
     });
-  }, [rawRatingData, allStudents, selectedRaidIds, displayMode, selectedSquadType, selectedTacticRole, selectedDifficulties, raidInfo, selectedStudentType, studentMap, isRelativeMode, svgWidth]);
+  }, [rawRatingData, allStudents, selectedRaidIds, displayMode, selectedSquadType, selectedTacticRoles, selectedDifficulties, raidInfo, selectedStudentType, studentMap, isRelativeMode, svgWidth]);
 
   // Create marks for the slider
   // const raidIds = Object.keys(raidInfo).map(Number).filter(id => !isNaN(id));
@@ -392,8 +378,6 @@ export default function RankingChartPage() {
     return () => clearInterval(interval);
   }, [isPlaying, filteredRaidInfoByDifficulty]);
 
-  if (loading) return <div>{t('loading_txt')}</div>;
-
   return (
     <div data-component-name="RankingChartPage" className="flex flex-col items-center justify-center py-6">
       <div className="w-full mx-auto p-4 sm:p-6 pt-0 sm:pt-0 bg-neutral-50 dark:bg-neutral-900  transition-colors duration-300">
@@ -409,7 +393,7 @@ export default function RankingChartPage() {
                 <ToggleButtonGroup
                   label={t('control.bar_option.name')}
                   options={[
-                    { value: true, label: t('control.bar_option.percent') },
+                    { value: true, label: t_ui('max') },
                     {
                       value: false,
                       label: t('control.bar_option.absolute'),
@@ -425,11 +409,11 @@ export default function RankingChartPage() {
                   options={[
                     {
                       value: 'total',
-                      label: t('control.sum_option.display_total'),
+                      label: t_ui('total'),
                     },
                     {
                       value: 'average',
-                      label: t('control.sum_option.display_average'),
+                      label: t_ui('avg'),
                     },
                   ]}
                   selectedValue={displayMode}
@@ -441,7 +425,7 @@ export default function RankingChartPage() {
 
           {/* 2. Detailed Filter */}
           <div data-component-name="RankingChartPage_DetailedFilter" className="space-y-2">
-            <h3 className="text-base font-semibold text-neutral-800 dark:text-white">{t('filters')}</h3>
+            <h3 className="text-base font-semibold text-neutral-800 dark:text-white">{t_ui('filter')}</h3>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-3 space-x-2">
               <div className="flex items-center space-x-2 py-0.5">
                 <label htmlFor="student-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
@@ -453,7 +437,7 @@ export default function RankingChartPage() {
                   onChange={(e) => setSelectedStudentType(e.target.value)}
                   className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                 >
-                  <option value="All">{t('control.rank_all')}</option>
+                  <option value="All">{t_ui('all')}</option>
                   <option value="Normal">{t('control.rank_normal')}</option>
                   <option value="Helper">{t('control.rank_assist')}</option>
                 </select>
@@ -469,91 +453,42 @@ export default function RankingChartPage() {
                   onChange={(e) => setSelectedSquadType(e.target.value)}
                   className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                 >
-                  <option value="All">{t('control.squad_type_all')}</option>
-                  <option value="Main">{t('control.squad_type_main')}</option>
-                  <option value="Support">{t('control.squad_type_support')}</option>
+                  <option value="All">{t_ui('all')}</option>
+                  <option value="Main">{t_g('squad_type.main')}</option>
+                  <option value="Support">{t_g('squad_type.support')}</option>
                 </select>
               </div>
 
               <div className="flex items-center space-x-2 py-0.5">
-                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.difficulty')}</label>
-                <div className="relative" ref={difficultyDropdownRef}>
-                  <button
-                    onClick={() => setIsDifficultyDropdownOpen(!isDifficultyDropdownOpen)}
-                    className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white bg-transparent min-w-32 text-left flex justify-between items-center"
-                  >
-                    <span>
-                      {selectedDifficulties.has('All')
-                        ? t('control.squad_type_all')
-                        : Array.from(selectedDifficulties)
-                            .map((d) => t_raids(d as DifficultyName))
-                            .join(', ')}
-                    </span>
-                    <ChevronIcon className={`w-3! h-3! transition-transform ${isDifficultyDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {isDifficultyDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md shadow-lg z-10 p-2 min-w-40">
-                      <label className="flex items-center space-x-2 p-1 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-600 rounded">
-                        <input
-                          type="checkbox"
-                          checked={selectedDifficulties.has('All')}
-                          onChange={() => {
-                            if (selectedDifficulties.has('All')) {
-                              const newSet = new Set(selectedDifficulties);
-                              newSet.delete('All');
-                              setSelectedDifficulties(newSet.size === 0 ? new Set(['All']) : newSet);
-                            } else {
-                              setSelectedDifficulties(new Set(['All']));
-                            }
-                          }}
-                          className="w-4 h-4 border border-neutral-300 rounded dark:border-neutral-600"
-                        />
-                        <span className="text-sm text-neutral-700 dark:text-neutral-300">{t('control.squad_type_all')}</span>
-                      </label>
-                      {difficultyInfo
-                        .filter((v) => v.name !== 'Extreme')
-                        .map(({ name }) => (
-                          <label key={name} className="flex items-center space-x-2 p-1 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-600 rounded">
-                            <input
-                              type="checkbox"
-                              checked={selectedDifficulties.has(name) && !selectedDifficulties.has('All')}
-                              onChange={() => {
-                                const newSet = new Set(selectedDifficulties);
-                                if (newSet.has('All')) newSet.delete('All');
-                                if (newSet.has(name)) {
-                                  newSet.delete(name);
-                                } else {
-                                  newSet.add(name);
-                                }
-                                setSelectedDifficulties(newSet.size === 0 ? new Set(['All']) : newSet);
-                              }}
-                              className="w-4 h-4 border border-neutral-300 rounded dark:border-neutral-600"
-                            />
-                            <span className="text-sm text-neutral-700 dark:text-neutral-300">{t_raids(name)}</span>
-                          </label>
-                        ))}
-                    </div>
-                  )}
-                </div>
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t_g('difficulty')}</label>
+                <CheckboxSelect
+                  ariaLabel={t_g('difficulty')}
+                  options={difficultyInfo.filter(({ name }) => name !== 'Extreme').map(({ name }) => ({ value: name, label: t_raids(name) })) satisfies CheckboxSelectOption<string>[]}
+                  selectedValues={selectedDifficulties}
+                  onChange={(next) => setSelectedDifficulties(next.size === 0 ? new Set(['All']) : next)}
+                  allOption={{ value: 'All', label: t_ui('all') }}
+                  className="w-32"
+                />
               </div>
 
               <div className="flex items-center space-x-2 py-0.5">
-                <label htmlFor="tactic-role-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                  {t('control.tactic_role')}
-                </label>
-                <select
-                  id="tactic-role-select"
-                  value={selectedTacticRole}
-                  onChange={(e) => setSelectedTacticRole(e.target.value)}
-                  className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
-                >
-                  <option value="All">{t('control.tactic_role_All')}</option>
-                  <option value="DamageDealer">{t('control.tactic_role_DamageDealer')}</option>
-                  <option value="Healer">{t('control.tactic_role_Healer')}</option>
-                  <option value="Supporter">{t('control.tactic_role_Supporter')}</option>
-                  <option value="Tanker">{t('control.tactic_role_Tanker')}</option>
-                  <option value="Vehicle">{t('control.tactic_role_Vehicle')}</option>
-                </select>
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.tactic_role')}</label>
+                <CheckboxSelect<TacticRoleFilter>
+                  ariaLabel={t('control.tactic_role')}
+                  options={
+                    [
+                      { value: 'DamageDealer', label: t_g('tactic_roles.damageDealer') },
+                      { value: 'Healer', label: t_g('tactic_roles.healer') },
+                      { value: 'Supporter', label: t_g('tactic_roles.supporter') },
+                      { value: 'Tanker', label: t_g('tactic_roles.tanker') },
+                      { value: 'Vehicle', label: t_g('tactic_roles.vehicle') },
+                    ] satisfies CheckboxSelectOption<TacticRoleFilter>[]
+                  }
+                  selectedValues={selectedTacticRoles}
+                  onChange={(next) => setSelectedTacticRoles(next.size === 0 ? new Set(['All']) : next)}
+                  allOption={{ value: 'All', label: t_ui('all') }}
+                  className="w-32"
+                />
               </div>
             </div>
           </div>
@@ -564,7 +499,7 @@ export default function RankingChartPage() {
         {/* 3. Raid Period Setting Slider Section */}
         <div data-component-name="RankingChartPage_Slider" className="w-full">
           <div className="flex justify-center items-center gap-x-3 mb-2">
-            <h3 className="font-semibold text-neutral-800 dark:text-white select-none">{t('control.raid')}</h3>
+            <h3 className="font-semibold text-neutral-800 dark:text-white select-none">{t_g('raid')}</h3>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               disabled={!filteredRaidInfoByDifficulty.length || selectedRaidIds[1] >= filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length - 1].index}
@@ -652,8 +587,15 @@ export default function RankingChartPage() {
       </div>
 
       {/* Attach the ref to the container div */}
-      <div className="w-full bg-white p-4 sm:p-6 rounded-lg shadow-xl overflow-x-auto dark:bg-neutral-800 dark:shadow-xl transition-colors duration-300 dark:text-neutral-300">
-        <RankingChart svgWidth={svgWidth} containerRef={containerRef} processedData={processedData} displayMode={displayMode} isRelativeMode={isRelativeMode} />
+      <div className="relative w-full bg-white p-4 sm:p-6 rounded-lg shadow-xl overflow-x-auto dark:bg-neutral-800 dark:shadow-xl transition-colors duration-300 dark:text-neutral-300">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">{t_ui('loading')}</p>
+          </div>
+        ) : (
+          <RankingChart svgWidth={svgWidth} containerRef={containerRef} processedData={processedData} displayMode={displayMode} isRelativeMode={isRelativeMode} />
+        )}
       </div>
     </div>
   );

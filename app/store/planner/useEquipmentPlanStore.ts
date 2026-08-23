@@ -15,8 +15,7 @@ interface EquipmentPlanState {
   // inventory: Record<string, number>; // key: 'Equipment_ID', value: owned quantity
   // Campaign data source
   campaignSource: 'kr' | 'jp';
-  // Universal blueprints inventory (by equipment type name)
-  // @deprecated Use useGlobalStore.materialInventory with Equipment_501000~509000 instead
+  // @deprecated Universal blueprints inventory — use useGlobalStore.materialInventory with Equipment_501000~509000 instead
   // blueprints: Record<string, number>; // key: 'Hat'|'Gloves'|'Shoes'|'Bag'|'Badge'|'Hairpin'|'Charm'|'Watch'|'Necklace'
 
   // Setters

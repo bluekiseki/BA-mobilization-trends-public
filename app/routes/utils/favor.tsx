@@ -210,22 +210,19 @@ export const FavorPlannerPage = () => {
     return getGiftAffectionList(allStudents[selectedStudentId], { icons: iconInfoData } as EventData);
   }, [selectedStudentId, allStudents, iconInfoData]);
 
-  if (loading)
-    return (
-      <div className="flex flex-col justify-center items-center py-32 gap-3">
-        <FaHeart className="text-pink-400 animate-pulse" size={28} />
-        <p className="text-neutral-400 text-sm">Loading...</p>
-      </div>
-    );
-
   const isSelected = selectedStudentId !== null;
 
   return (
     <div className="px-4 py-8 md:py-10 w-full mx-auto">
       <PageHeader icon={<span className="text-red-400">♥</span>} title={t('page.favorCalculator')} description={t('page.description.favorCalculator')} />
 
-      {/* Student Selection Bar */}
-      {!isSelected ? (
+      {loading ? (
+        <div className="flex flex-col justify-center items-center py-32 gap-3">
+          <FaHeart className="text-pink-400 animate-pulse" size={28} />
+          <p className="text-neutral-400 text-sm">Loading...</p>
+        </div>
+      ) : !isSelected ? (
+        /* Student Selection Bar */
         <div className="w-full relative z-10">
           <StudentSearchDropdown students={allStudents} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
         </div>

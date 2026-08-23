@@ -33,6 +33,7 @@ type StageRowProps = Pick<StageFarmingPanelProps, 'rangeMin' | 'rangeMax' | 'ren
 
 function StageRow({ stageId, stage, plan, rangeMin, rangeMax, renderItemIcon, iconInfoData }: StageRowProps) {
   const { t } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   const { addStageFarmingPlan, setStageFarmingRunsRange } = useResourcePlanStore();
   const [count, setCount] = useState(0);
 
@@ -111,7 +112,7 @@ function StageRow({ stageId, stage, plan, rangeMin, rangeMax, renderItemIcon, ic
             disabled={!effectiveStart || !effectiveEnd}
             className="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {t('stageFarming.apply')}
+            {t_ui('apply')}
           </button>
           {isHard && (
             <button

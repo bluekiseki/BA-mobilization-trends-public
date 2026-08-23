@@ -20,6 +20,7 @@ function isNoticesResponse(value: unknown): value is NoticesResponse {
 
 export function NoticeWidget() {
   const { t, i18n } = useTranslation('notices');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const [region, setRegion] = useState(() => LOCALE_DEFAULT_REGION[locale] ?? 'ALL');
@@ -120,7 +121,7 @@ export function NoticeWidget() {
         {notices.length > 0 ? (
           notices.map((post) => <NoticeListItem key={post.post_id} post={post} to={localeLink(locale, `/notices/${post.post_id}`)} sort={sort} locale={locale} variant="widget" />)
         ) : (
-          <div className="py-12 text-center text-xs text-neutral-400 dark:text-neutral-600">{isLoading ? t('loading') : t('noResults')}</div>
+          <div className="py-12 text-center text-xs text-neutral-400 dark:text-neutral-600">{isLoading ? t_ui('loading') : t('noResults')}</div>
         )}
       </div>
 

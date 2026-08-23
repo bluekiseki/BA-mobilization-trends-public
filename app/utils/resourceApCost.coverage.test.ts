@@ -1,7 +1,5 @@
-// Debug tool — prints, per event, which reward sources exist in that event's data and how the
-// resourceApCost.ts resolver handles each (modeled / partially_modeled / not_modeled + why).
-// Run directly: pnpx vitest run app/utils/resourceApCost.coverage.test.ts --reporter=verbose
-// Add event IDs to DEBUG_EVENT_IDS below to audit a different event (needs app/data/event/event.<id>.json locally).
+// Debug tool: prints per-event coverage of each reward source (modeled/partially_modeled/not_modeled + why).
+// Run: pnpx vitest run app/utils/resourceApCost.coverage.test.ts --reporter=verbose
 import { describe, it } from 'vitest';
 import { readFileSync } from 'fs';
 import { debugSourceCoverage } from '~/utils/resourceApCost';

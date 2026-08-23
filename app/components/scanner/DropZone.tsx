@@ -14,9 +14,7 @@ interface Props {
   // Background media shown behind the drop target while empty (e.g. an example recording) —
   // caller only passes this when it should currently be visible (no file selected yet).
   exampleSrc?: string;
-  // `disabled` can be true for several different reasons (models still loading, a scan already
-  // running, roster data not fetched yet) — the default message only fits "models not loaded",
-  // so callers should override it with the actual reason when disabling for something else.
+  // `disabled` can be true for several reasons; the default message only fits "models not loaded", so override for other cases.
   disabledLabel?: string;
 }
 

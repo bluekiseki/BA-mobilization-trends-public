@@ -139,12 +139,7 @@ interface McResult {
   perMap: Record<string, MapStats>;
 }
 
-// Simulates drawing tiles WITHOUT replacement from a map's fixed rail-tile pool until the accumulated
-// inventory becomes solvable (checked via the same `solveRoadPuzzle` pathfinder RoadPuzzleMapSolver.tsx
-// uses) — the player can't freely choose which tile to place next, so the true expected AP cost is this
-// draw count, not the map's unconstrained `minTiles` (a free-choice lower bound that undercounts the real
-// cost). Skips solver checks until draws >= minTilesNeeded (a guaranteed lower bound) to save calls, and
-// memoizes solver results by inventory composition since many trials revisit the same inventory.
+// Simulate draws until solvable. Memoized by inventory composition.
 export function simulateRoadPuzzleMapDraws(mapName: string, pool: Record<number, number>, minTilesNeeded: number, trials: number): MapStats {
   const mapData = ROAD_PUZZLE_MAPS[mapName];
   if (!mapData) return { avg: 0, min: 0, max: 0, stddev: 0 };
@@ -204,6 +199,7 @@ export function simulateRoadPuzzleMapDraws(mapName: string, pool: Record<number,
 
 export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }: RoadPuzzlePlannerProps) => {
   const { t } = useTranslation('planner', { keyPrefix: 'road_puzzle' });
+  const { t: t_ui } = useTranslation('ui');
   const [activeTab, setActiveTab] = useState<'overview' | 'calculator' | 'maps'>('overview');
   const [mapsRound, setMapsRound] = useState<number>(1);
   const [simCount, setSimCount] = useState(1000);
@@ -396,7 +392,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'}`}
             >
-              {tab === 'overview' ? t('tabOverview') : tab === 'calculator' ? t('tabCalculator') : t('tabMaps')}
+              {tab === 'overview' ? t_ui('overview') : tab === 'calculator' ? t_ui('calculator') : t('tabMaps')}
             </button>
           ))}
         </div>
@@ -601,7 +597,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-[11px] text-neutral-400 dark:text-neutral-500 italic">{t('mapDataMissingShort')}</span>
+                                  <span className="text-[11px] text-neutral-400 dark:text-neutral-500 italic">{t_ui('noData')}</span>
                                 )}
                               </div>
                             );
@@ -653,7 +649,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                   {mcResult ? (
                     <div className="space-y-3">
                       <div className="flex flex-wrap gap-2 items-center">
-                        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">{t('total')}</span>
+                        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">{t_ui('total')}</span>
                         <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
                           ~{totalExpected.toFixed(1)} {t('tilesUnit')}
                         </span>

@@ -275,9 +275,10 @@ function formatEntryDate(date: string | undefined) {
 
 export function RaidHistoryTable({ entries, raidOptions, students, portraitData, locale, onEdit, onDelete }: RaidHistoryTableProps) {
   const { t } = useTranslation('mypage');
-  const { t: td } = useTranslation('dashboard');
-  const { t: tr } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   const { t: tp } = useTranslation('planner');
+
+  const { t: t_g } = useTranslation('game');
   const raidInfoByKey = new Map(raidOptions.map((raid) => [`${raid.server}:${raid.id}`, raid]));
 
   if (entries.length === 0) {
@@ -291,7 +292,7 @@ export function RaidHistoryTable({ entries, raidOptions, students, portraitData,
           const raidInfo = raidInfoByKey.get(`${entry.server}:${entry.raidId}`);
           const scoreTime = getScoreTime(entry, raidInfo);
           const rankText = formatRank(entry.rank);
-          const jfdCoinText = entry.raidType === 'jfd' ? formatJfdCoinReward(entry.score, tp('label.coin')) : null;
+          const jfdCoinText = entry.raidType === 'jfd' ? formatJfdCoinReward(entry.score, t_g('coin')) : null;
           const difficultyLabel = entry.difficulty ? (entry.raidType === 'jfd' ? t('raids.modal.jfdStage', { n: entry.difficulty }) : entry.difficulty) : '-';
           const subLabel = rankText ? t('raids.rankText', { rank: rankText }) : (entry.trophy ?? scoreTime ?? jfdCoinText ?? '-');
           const scoreDetail = entry.trophy && scoreTime ? scoreTime : null;
@@ -319,11 +320,11 @@ export function RaidHistoryTable({ entries, raidOptions, students, portraitData,
                 <div className="grid gap-4 border-t border-neutral-200 pt-3 dark:border-neutral-800">
                   <div className={`grid gap-3 text-sm ${useWidePartyLayout ? 'sm:grid-cols-3' : 'sm:grid-cols-3 md:grid-cols-1'}`}>
                     <div>
-                      <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{tr('elephCard.dateMode')}</div>
+                      <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{t_ui('date')}</div>
                       <div className="mt-1 font-semibold text-neutral-900 dark:text-neutral-100">{formatEntryDate(entry.date)}</div>
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{td('headerDifficulty')}</div>
+                      <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{t_g('difficulty')}</div>
                       <div className="mt-1 font-semibold text-neutral-900 dark:text-neutral-100">{difficultyLabel}</div>
                     </div>
                     <div>

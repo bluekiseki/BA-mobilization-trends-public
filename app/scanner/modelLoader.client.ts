@@ -57,26 +57,19 @@ export async function loadAllModels(onProgress: (step: string, percent: number) 
   const backend = providers[0] === 'webgpu' ? 'WebGPU' : 'WASM';
   onLog(`Backend: ${backend}`);
 
-  // The wasm runtime filename is NOT chosen at runtime based on `executionProviders` — this
-  // project's `import * as ort from 'onnxruntime-web'` resolves (via the package's "default"
-  // export condition, which Vite uses) to dist/ort.bundle.min.mjs, and that bundle references
-  // exactly one wasm binary unconditionally: ort-wasm-simd-threaded.jsep.wasm (verified by
-  // grepping the installed package). So prefetching this exact filename is safe, not a guess —
-  // unlike trying to prefetch a variant chosen from multiple candidates.
+  // The wasm filename isn't chosen at runtime — this bundle (dist/ort.bundle.min.mjs) always
+  // references ort-wasm-simd-threaded.jsep.wasm, so prefetching it here is safe, not a guess.
   prefetch(cdn('/scanner/ort/ort-wasm-simd-threaded.jsep.mjs'));
   prefetch(cdn('/scanner/ort/ort-wasm-simd-threaded.jsep.wasm'));
 
-  // InferenceSession.create() calls below must stay sequential — onnxruntime-web's WASM
-  // backend can't run two sessions at once (see classifier.client.ts) — but downloading the
-  // bytes for each model/data file has no such constraint. Fetch all of them up front, in
-  // parallel, and hand the raw bytes to InferenceSession.create() directly instead of a URL —
-  // that way onnxruntime-web never issues its own second fetch for the same file, so each one
-  // is downloaded exactly once instead of once here and again inside create().
+  // InferenceSession.create() must stay sequential (WASM backend can't run two at once, see
+  // classifier.client.ts), but fetching bytes has no such constraint — fetch all up front in
+  // parallel and pass raw bytes to create() so each file downloads only once.
   onProgress(messages.loadingData, 0);
   onLog('Loading icon data…');
   const [{ icons }, cellDetectBytes, embedModelBytes, qtyModelBytes, embedResp] = await Promise.all([
     loadIcons(),
-    fetchBytes(cdn('/scanner/models/cell_detect.onnx')),
+    fetchBytes(cdn('/scanner/models/cell_detect_v2.onnx')),
     fetchBytes(cdn('/scanner/models/embed_model.onnx')),
     fetchBytes(cdn('/scanner/models/qty_model.onnx')),
     fetchEmbeddings(cdn('/scanner/embeddings.json')),

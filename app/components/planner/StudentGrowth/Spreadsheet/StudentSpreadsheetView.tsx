@@ -55,14 +55,6 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
     [updateDraft, draftPlans, draftPushUndo],
   );
 
-  // const removePlan = useCallback(
-  //   (uuid: string) => {
-  //     const updatedPlans = draftPlans.filter((p) => p.uuid !== uuid);
-  //     initializeDraft(updatedPlans);
-  //   },
-  //   [draftPlans, initializeDraft],
-  // );
-
   const handleSort = (field: string) => {
     setSortStack((prev) => {
       const existing = prev.find((s) => s.field === field);
@@ -87,6 +79,8 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
 
   const { t: t_club } = useTranslation('club', { keyPrefix: 'short' });
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
 
   const starUwOptions = useMemo(
     () =>
@@ -300,11 +294,11 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
             className="ml-auto shrink-0 whitespace-nowrap px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-semibold flex items-center gap-1"
           >
             <MdSave size={14} />
-            {t('messages.save')}
+            {t_ui('save')}
           </button>
           <button onClick={() => discardDraft()} className="shrink-0 whitespace-nowrap px-3 py-1 bg-neutral-400 hover:bg-neutral-500 text-white text-xs rounded font-semibold flex items-center gap-1">
             <MdClose size={14} />
-            {t('messages.cancel')}
+            {t_ui('cancel')}
           </button>
         </div>
       )}
@@ -365,7 +359,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
               const sortLabels: Record<string, string> = {
                 hasPlan: t('sortLabels.hasPlan'),
                 isSelected: t('sortLabels.isSelected'),
-                school: t('sortLabels.school'),
+                school: t_g('school'),
                 name: t('sortLabels.name'),
                 level: t('sortLabels.currentLevel'),
                 star: t('sortLabels.currentRank'),
@@ -394,7 +388,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
             })
             .join(' > ')}
           <button onClick={() => setSortStack([])} className="ml-3 text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600">
-            {t('messages.resetSort')}
+            {t_ui('reset')}
           </button>
         </div>
       )}

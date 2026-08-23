@@ -1,14 +1,31 @@
 // app/components/gacha/IncomePlannerPanel_v2.tsx
 import { useRef, useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
+import { Link } from 'react-router';
+import Tooltip from 'rc-tooltip';
+import 'rc-tooltip/assets/bootstrap.css';
 import { CustomNumberInput } from '../CustomInput';
-import { FaBolt, FaChartPie } from 'react-icons/fa';
-import { runGlobalSimulation, buildGlobalResultFromRaw, buildWasmPayload, mergeSimAccumulator, type GlobalAggregatedResult, type SimulationConfig, type SimRawAccumulator } from '~/utils/gachaEngine';
-import type { PyroxeneConfig } from '~/routes/planner/Gacha_v2';
+import { FaBolt, FaChartPie, FaInfoCircle } from 'react-icons/fa';
+import { localeLink } from '~/utils/localeLink';
+import type { Locale } from '~/utils/i18n/config';
+import {
+  runGlobalSimulation,
+  buildGlobalResultFromRaw,
+  buildWasmPayload,
+  mergeSimAccumulator,
+  SimMetricAccumulator,
+  PYROXENE_PER_10PULL,
+  PYROXENE_PER_PULL_UNIT,
+  PULL_UNITS_PER_10PULL,
+  type GlobalAggregatedResult,
+  type SimulationConfig,
+  type SimRawAccumulator,
+  type SimChunkAcc,
+} from '~/utils/gachaEngine';
 import type { BannerPeriod } from '~/utils/gachaData';
 import type { BannerStrategy, Student } from '~/types/gacha';
-import type { PlannerSchedule, SimulationStats } from '~/utils/pyroxeneCalc';
-import IncomeSettingsPanel_v2, { type CustomIncome } from './IncomeSettingsPanel_v2';
+import { buildInitialTicketBatches, type PlannerSchedule, type PyroxeneConfig, type SimulationStats } from '~/utils/pyroxeneCalc';
+import IncomeSettingsPanel_v2, { Toggle, type CustomIncome } from './IncomeSettingsPanel_v2';
 import APSchedulePanel_v2 from './APSchedulePanel_v2';
 import SimulationResultView_v2 from './SimulationResultView_v2';
 import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
@@ -16,8 +33,8 @@ import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
 export type { CustomIncome };
 
 type SimWorkerOutMsg =
-  | { type: 'progress'; chunkAcc: SimRawAccumulator; completed: number; total: number }
-  | { type: 'done'; chunkAcc: SimRawAccumulator; completed: number; total: number; totalMs: number }
+  | { type: 'progress'; chunkAcc: SimChunkAcc; completed: number; total: number }
+  | { type: 'done'; chunkAcc: SimChunkAcc; completed: number; total: number; totalMs: number }
   | { type: 'error'; message: string };
 
 const WORKER_COUNT = typeof navigator !== 'undefined' ? Math.min(navigator.hardwareConcurrency ?? 4, 8) : 1;
@@ -40,6 +57,8 @@ interface Props {
   banners: BannerPeriod[];
   strategies: Record<string, BannerStrategy>;
   allStudents: Student[];
+  /** Student IDs the player already owns (from the Student Planner's growth-plan roster) — dupe pulls of these pay eligma from the very first roll of the sim. */
+  ownedStudentIds?: number[];
   portraitMap: Record<number, string>;
   pyroxeneIcon?: string | null;
   apIcon?: string | null;
@@ -113,6 +132,7 @@ const StatsPanel = ({
 }) => {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.stats' });
   const { t: tIncome } = useTranslation('planner', { keyPrefix: 'gacha.income' });
+  const { t: t_g } = useTranslation('game');
   const netFlow = stats.totalIncome - stats.expense.gacha;
   const finalBalance = config.currentPyroxene + netFlow - stats.expense.ap;
 
@@ -156,9 +176,9 @@ const StatsPanel = ({
         <Row label={t('items.pvp')} value={stats.income.pvp} />
         <Row label={t('items.monthly')} value={stats.income.monthlyCard} />
         <Row label={t('items.raid_elim')} value={stats.income.raid + stats.income.elimination} />
-        <Row label={t('items.multifloor')} value={stats.income.multifloor} dim={stats.income.multifloor === 0} />
-        <Row label={t('items.jfd')} value={stats.income.jfd} dim={stats.income.jfd === 0} />
-        <Row label={t('items.event')} value={stats.income.event} />
+        <Row label={t_g('multifloor')} value={stats.income.multifloor} dim={stats.income.multifloor === 0} />
+        <Row label={t_g('jfd')} value={stats.income.jfd} dim={stats.income.jfd === 0} />
+        <Row label={t_g('event')} value={stats.income.event} />
         <Row label={t('items.mainstory')} value={stats.income.mainstory} dim={stats.income.mainstory === 0} />
         {stats.income.miniStory > 0 && <Row label={t('items.ministory')} value={stats.income.miniStory} />}
         {stats.income.maintenance > 0 && <Row label={t('items.maintenance')} value={stats.income.maintenance} />}
@@ -237,6 +257,7 @@ export default function IncomePlannerPanel_v2({
   banners,
   strategies,
   allStudents,
+  ownedStudentIds,
   portraitMap,
   pyroxeneIcon,
   apIcon,
@@ -251,8 +272,13 @@ export default function IncomePlannerPanel_v2({
   hasSimulation,
   simulationDays,
 }: Props) {
-  const { t: tg } = useTranslation('planner', { keyPrefix: 'gacha' });
+  const { t: tg, i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: tr } = useTranslation('planner', { keyPrefix: 'gacha.result' });
+  const { t: tBase } = useTranslation('planner');
+  const locale = i18n.language as Locale;
+  const ownedStudentCount = ownedStudentIds?.length ?? 0;
+  const [applyOwnedStudents, setApplyOwnedStudents] = useState(false);
+  const effectiveOwnedStudentIds = applyOwnedStudents ? (ownedStudentIds ?? []) : [];
 
   const SIM_LEVELS: { id: SimLevelId; label: string; n: number | null }[] = [
     { id: '10k', label: tg('sim_levels.10k'), n: 10_000 },
@@ -277,15 +303,12 @@ export default function IncomePlannerPanel_v2({
   const simStartTimeRef = useRef(0);
 
   const simCount = levelId === 'manual' ? customN : (SIM_LEVELS.find((l) => l.id === levelId)?.n ?? 100_000);
+  const simProgressPercent = simProgress && simProgress.total > 0 ? Math.min(100, (simProgress.completed / simProgress.total) * 100) : 0;
 
   const bannersMap = banners.reduce<Record<string, BannerPeriod>>((acc, b) => {
     acc[b.id] = b;
     return acc;
   }, {});
-
-  // The new "recruit charge" pity system is only implemented in the JS engine so far — the WASM/Rust
-  // mirror still runs the legacy spark-point rules for every banner. Warn when that would matter.
-  const hasActiveChargeSystemBanner = Object.values(strategies).some((s) => s.isActive && bannersMap[s.bannerId]?.useChargeSystem);
 
   const WASM_SPEED_RATIO = 10;
   const handleToggleEngine = (wasm: boolean) => {
@@ -304,29 +327,41 @@ export default function IncomePlannerPanel_v2({
   };
 
   const handleRun = () => {
+    const initialTicketBatches = buildInitialTicketBatches(config, schedules);
+    const consumeExpiringTickets = config.consumeExpiringTickets ?? true;
     if (useWasm) {
       if (workerRefs.current.length === 0) {
         for (let i = 0; i < WORKER_COUNT; i++) workerRefs.current.push(new GachaSimWorker());
       }
-      const payload = buildWasmPayload(Object.values(strategies), bannersMap as unknown as Parameters<typeof buildWasmPayload>[1], allStudents);
-      const { strategiesJson, bannerPoolsJson, activeBannerIds } = payload;
+      const payload = buildWasmPayload(
+        Object.values(strategies),
+        bannersMap as unknown as Parameters<typeof buildWasmPayload>[1],
+        allStudents,
+        effectiveOwnedStudentIds,
+        initialTicketBatches,
+        consumeExpiringTickets,
+      );
+      const { strategiesJson, bannerPoolsJson, activeBannerIds, initialOwnedIds, ticketBatchesJson } = payload;
       const runId = ++runIdRef.current;
       const N = workerRefs.current.length;
       const perWorker = Math.ceil(simCount / N);
       workerCompletedRef.current = Array(N).fill(0) as number[];
       workerDoneCountRef.current = 0;
       mergedAccRef.current = {
-        resultsPulls: [],
-        resultsCost: [],
-        resultsEligma: [],
-        bannerCumulativeCosts: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
-        bannerCumulativeEligma: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
+        cost: new SimMetricAccumulator(PYROXENE_PER_10PULL),
+        costIncremental: new SimMetricAccumulator(PYROXENE_PER_10PULL),
+        costWithTickets: new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT),
+        costWithGachaTickets: new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT),
+        costWithGachaTicketsIncremental: new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT),
+        pulls: new SimMetricAccumulator(PULL_UNITS_PER_10PULL),
+        pullsIncremental: new SimMetricAccumulator(PULL_UNITS_PER_10PULL),
+        eligmaCumulative: new SimMetricAccumulator(1),
+        eligmaIncremental: new SimMetricAccumulator(1),
         bannerStatsSum: Object.fromEntries(activeBannerIds.map((id) => [id, { pulls: 0, cost: 0 }])),
         studentAcquired: {},
         studentElephTotal: {},
         studentElephDist: {},
         bannerStudentElephDist: Object.fromEntries(activeBannerIds.map((id) => [id, {}])),
-        totalEligmaSum: 0,
         successCount: 0,
       };
       if (chartRafRef.current !== null) {
@@ -337,15 +372,27 @@ export default function IncomePlannerPanel_v2({
       setIsSimulating(true);
       setSimProgress({ completed: 0, total: simCount });
 
+      const abortRun = (message: string) => {
+        if (runIdRef.current !== runId) return;
+        runIdRef.current++;
+        console.error('Sim worker error:', message);
+        workerRefs.current.forEach((worker) => worker.terminate());
+        workerRefs.current = [];
+        if (chartRafRef.current !== null) {
+          cancelAnimationFrame(chartRafRef.current);
+          chartRafRef.current = null;
+        }
+        setIsSimulating(false);
+        setSimProgress(null);
+      };
+
       workerRefs.current.forEach((worker, i) => {
         const workerSimCount = i === N - 1 ? simCount - perWorker * (N - 1) : perWorker;
         worker.onmessage = (e: MessageEvent<SimWorkerOutMsg>) => {
           if (runIdRef.current !== runId) return;
           const msg = e.data;
           if (msg.type === 'error') {
-            console.error('Sim worker error:', msg.message);
-            setIsSimulating(false);
-            setSimProgress(null);
+            abortRun(msg.message);
             return;
           }
           if (mergedAccRef.current) mergeSimAccumulator(mergedAccRef.current, msg.chunkAcc);
@@ -376,7 +423,21 @@ export default function IncomePlannerPanel_v2({
             }
           }
         };
-        worker.postMessage({ strategiesJson, bannerPoolsJson, simCount: workerSimCount, seed: Date.now() + i * 0x10000 + Math.floor(Math.random() * 0xffff) });
+        worker.onerror = (event) => {
+          abortRun(event.message || 'The simulation worker stopped unexpectedly.');
+        };
+        worker.onmessageerror = () => {
+          abortRun('The simulation worker returned an unreadable result.');
+        };
+        worker.postMessage({
+          strategiesJson,
+          bannerPoolsJson,
+          simCount: workerSimCount,
+          seed: Date.now() + i * 0x10000 + Math.floor(Math.random() * 0xffff),
+          initialOwnedIds,
+          ticketBatchesJson,
+          consumeExpiringTickets,
+        });
       });
     } else {
       setIsSimulating(true);
@@ -384,7 +445,15 @@ export default function IncomePlannerPanel_v2({
         try {
           const simConfig: SimulationConfig = { initialPyroxenes: config.currentPyroxene, simCount };
           const start = performance.now();
-          const res = runGlobalSimulation(Object.values(strategies), bannersMap as unknown as Parameters<typeof runGlobalSimulation>[1], allStudents, simConfig);
+          const res = runGlobalSimulation(
+            Object.values(strategies),
+            bannersMap as unknown as Parameters<typeof runGlobalSimulation>[1],
+            allStudents,
+            simConfig,
+            effectiveOwnedStudentIds,
+            initialTicketBatches,
+            consumeExpiringTickets,
+          );
           setSimTiming({ totalMs: performance.now() - start, count: simCount });
           setGachaSimResult(res);
         } catch (e) {
@@ -455,14 +524,13 @@ export default function IncomePlannerPanel_v2({
               ]}
               onChange={(v) => handleToggleEngine(v === 'wasm')}
             />
-            {useWasm && hasActiveChargeSystemBanner && <div className="mt-1.5 max-w-xs text-[10px] text-amber-600 dark:text-amber-400">{tr('panel.wasm_charge_system_warning')}</div>}
           </div>
 
           {/* Run button */}
           <button
             onClick={handleRun}
             disabled={isSimulating}
-            className="flex items-center gap-2 px-5 h-[38px] rounded-lg font-bold text-sm text-[#06262f] disabled:opacity-60 transition whitespace-nowrap"
+            className="flex items-center gap-2 px-5 h-9.5 rounded-lg font-bold text-sm text-[#06262f] disabled:opacity-60 transition whitespace-nowrap"
             style={{ background: '#77e0ff' }}
           >
             {isSimulating && <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />}
@@ -485,15 +553,36 @@ export default function IncomePlannerPanel_v2({
           </div>
         </div>
 
+        {/* Recruited students (grown-plan roster) — feeds gacha dupe eligma. Toggleable: off simulates a fresh/empty box. */}
+        <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+              {tr('panel.owned_students_toggle_label')}
+              <Tooltip placement="top" trigger={['hover', 'click']} overlay={<span className="block max-w-xs text-[11px] leading-relaxed">{tr('panel.owned_students_help')}</span>}>
+                <span className="cursor-pointer text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 inline-flex items-center shrink-0">
+                  <FaInfoCircle size={12} />
+                </span>
+              </Tooltip>
+            </div>
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5">
+              {tr('panel.owned_students_count', { count: ownedStudentCount })}{' '}
+              <Link to={localeLink(locale, '/planner/students')} state={{ view: 'table' }} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+                {tBase('button.goToPlanner')}
+              </Link>
+            </p>
+          </div>
+          <Toggle on={applyOwnedStudents} onClick={() => setApplyOwnedStudents((v) => !v)} />
+        </div>
+
         {/* Progress bar */}
         {simProgress && (
           <div className="mt-3 space-y-1">
             <div className="h-1 w-full rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-150" style={{ width: `${(simProgress.completed / simProgress.total) * 100}%`, background: '#77e0ff' }} />
+              <div className="h-full rounded-full" style={{ width: `${simProgressPercent}%`, background: '#77e0ff' }} />
             </div>
             <p className="text-[10px] text-neutral-400" style={monoStyle}>
               {simProgress.completed.toLocaleString()} / {simProgress.total.toLocaleString()}
-              &nbsp;({((simProgress.completed / simProgress.total) * 100).toFixed(1)}%)
+              &nbsp;({simProgressPercent.toFixed(1)}%)
             </p>
           </div>
         )}
@@ -510,14 +599,16 @@ export default function IncomePlannerPanel_v2({
             elephIconMap={elephIconMap}
             bankruptcyRate={bankruptcyRate}
             strategies={strategies}
+            banners={banners}
             allStudents={allStudents}
+            ownedStudentCount={effectiveOwnedStudentIds.length}
           />
         </>
       )}
 
       {/* ── Income settings ── */}
       <SectionDivider label={tg('tabs.income')} />
-      <IncomeSettingsPanel_v2 config={config} setConfig={setConfig} pyroxeneIcon={pyroxeneIcon} ticket1Icon={ticket1Icon} ticket10Icon={ticket10Icon} />
+      <IncomeSettingsPanel_v2 config={config} setConfig={setConfig} schedules={schedules} pyroxeneIcon={pyroxeneIcon} ticket1Icon={ticket1Icon} ticket10Icon={ticket10Icon} />
 
       {/* ── AP schedule ── */}
       <SectionDivider label={tg('income.timeline.title')} />

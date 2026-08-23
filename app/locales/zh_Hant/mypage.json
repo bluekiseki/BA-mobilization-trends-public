@@ -3,7 +3,6 @@
     "title": "我的通關紀錄",
     "description": "儲存總力戰、大決戰、聯合戰術考試、制約解除決戰的通關紀錄。",
     "noGuide": "未參考攻略通關",
-    "server": "伺服器",
     "floor": "層數",
     "notes": "備註",
     "rankText": "第{{rank}}名",
@@ -52,11 +51,6 @@
     "modal": {
       "add": "新增通關紀錄",
       "edit": "編輯通關紀錄",
-      "raid": "戰鬥",
-      "trophy": "獎盃",
-      "clearTime": "通關時間",
-      "clearTimePlaceholder": "選擇",
-      "totalScore": "合計分數",
       "clearTimeLabel": "通關時間 {{time}}",
       "difficultyCombo": "難度組合",
       "rankPlaceholder": "未填寫",
@@ -71,13 +65,11 @@
       "guideLink": "參考攻略連結"
     },
     "slotPicker": {
-      "starGrade": "星級",
       "clearSlot": "清除欄位",
       "assistConflict": "已作為助戰使用",
       "mulligan": "換牌",
       "expandOptional": "▼ 輸入裝備・技能 (選填)",
       "collapseOptional": "▲ 收合裝備・技能",
-      "noEquip": "無",
       "notesPlaceholder": "(選填)",
       "confirmAndNext": "確認並移至下一格",
       "nextParty": "移至下一隊伍"

@@ -163,8 +163,9 @@ const BgmItem = memo(function BgmItem({
 
 // --- PAGE COMPONENT ---
 export default function JukeboxPage() {
-  const { t, i18n } = useTranslation('jukebox');
+  const { t, i18n } = useTranslation(['jukebox', 'game']);
   const { t: t_club } = useTranslation('club');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const language = ({ ja: 'jp', ko: 'ko', en: 'en', 'zh-Hant': 'zh_Hant' }[locale] as Language) || 'jp';
 
@@ -447,13 +448,6 @@ export default function JukeboxPage() {
     );
   }, [activeFilters, mainStoryList, eventStoryList, studentFilterList]);
 
-  // const handleSelectAllGeneral = useCallback(() => {
-  //   setSpoilerFilters((p) => ({
-  //     ...p,
-  //     general: Object.fromEntries(Object.keys(p.general).map((k) => [k, !allGeneralSelected])),
-  //   }));
-  // }, [allGeneralSelected]);
-
   const isAllSelected = allGeneralSelected && allStoriesSelected;
 
   // Integrated master toggle handler
@@ -574,15 +568,6 @@ export default function JukeboxPage() {
     [locale, language, showStoryNames, t, t_club, eventData, studentData, otherStoryData],
   );
 
-  // --- Loading / Error states ---
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-sky-50 dark:bg-neutral-900 text-neutral-500">{t('status.loading')}</div>;
-  if (error)
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-sky-50 dark:bg-neutral-900 text-red-500">
-        {t('status.error')}: {error}
-      </div>
-    );
-
   // --- Filter chip label helpers ---
   const chipClass =
     'inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 text-xs font-medium';
@@ -642,7 +627,7 @@ export default function JukeboxPage() {
                   : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-sky-400 dark:hover:border-sky-500'
               }`}
             >
-              {isAllSelected ? t('actions.deselect_all') : t('actions.select_all')}
+              {isAllSelected ? t_ui('deselectAll') : t_ui('selectAll')}
             </button>
 
             <button
@@ -689,7 +674,7 @@ export default function JukeboxPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* ── Story filter sidebar (desktop only) ── */}
-          <aside className="hidden md:block md:col-span-1 self-start sticky top-[88px]">
+          <aside className="hidden md:block md:col-span-1 self-start sticky top-22">
             <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 shadow-sm">
               <h2 className="text-sm font-bold text-neutral-700 dark:text-neutral-300 mb-4">{t('filter_title')}</h2>
               <StoryFilters
@@ -779,7 +764,16 @@ export default function JukeboxPage() {
               </div>
 
               <div ref={bgmListContainerRef} className="max-h-[80vh] mx-2 overflow-y-auto divide-y divide-neutral-100 dark:divide-neutral-700/50">
-                {filteredBgm.length > 0 ? (
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-16">
+                    <div className="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs text-neutral-500">{t_ui('loading')}</p>
+                  </div>
+                ) : error ? (
+                  <p className="text-center text-red-500 py-12 text-sm">
+                    {t('status.error')}: {error}
+                  </p>
+                ) : filteredBgm.length > 0 ? (
                   filteredBgm.map((bgm) => (
                     <BgmItem
                       key={bgm.id}

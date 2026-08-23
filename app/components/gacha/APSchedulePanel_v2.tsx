@@ -57,6 +57,7 @@ function normalizeCampaignStorageKey(value: string | undefined): 'Normal' | 'Har
 }
 
 function getLocalizedCampaignLabel(value: string, t: (key: string) => string): string {
+  if (value == 'schedule') return t('game:schedule');
   return t(`campaign.${value.toLowerCase()}`);
 }
 
@@ -91,7 +92,7 @@ export default function APSchedulePanel_v2({
   apIcon: _apIcon,
 }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.timeline' });
-  const { t: tCal } = useTranslation('calendar');
+  const { t: tCal } = useTranslation(['calendar', 'game']);
   const [showCampaignBulk, setShowCampaignBulk] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 

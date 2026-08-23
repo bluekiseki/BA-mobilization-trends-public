@@ -19,6 +19,7 @@ import { applyRepeatableEventBonus } from '~/utils/eventBonus';
 // --- React Component ---
 export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency, totalBonus }: DreamMakerPlannerProps) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'dream_maker' });
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const locale_key = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En';
 
@@ -229,9 +230,8 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
           [conversionTargetInfo.id]: shopAdjustmentCount, // + (prev[conversionTargetInfo.id] || 0)
         }));
       } else if (conversionTargetInfo && !useLeftoverEpConversion) {
-        // If conversion is disabled, ensure the count for this item is 0
-        // unless the user manually set it elsewhere (which this might override - potential issue)
-        // A safer approach might involve a dedicated state slice for auto-purchases.
+        // If conversion is disabled, force this item's count to 0 (may override a manual
+        // value set elsewhere — a dedicated state slice for auto-purchases would be safer).
 
         setPurchaseCounts((prev) => {
           const current = { ...prev };
@@ -285,9 +285,9 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
   if (!dreamData) return null;
 
   const tabs: { id: DreamMakerTab; name: string }[] = [
-    { id: 'overview', name: t('tabs.overview') },
-    { id: 'missions', name: t('tabs.missions') },
-    { id: 'calculator', name: t('tabs.calculator') },
+    { id: 'overview', name: t_ui('overview') },
+    { id: 'missions', name: t_ui('mission') },
+    { id: 'calculator', name: t_ui('calculator') },
   ];
   // const eventPointItemId = dreamData.info[0].DreamMakerDailyPointId;
   // const eventPointItemType = dreamData.info[0].DreamMakerDailyPointParcelTypeStr;
@@ -395,7 +395,7 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
                   return (
                     <div key={s.DreamMakerScheduleGroupId} className="p-3 overflow-x-scroll">
                       <p className="font-semibold text-center mb-2 text-base">{s.LocalizeEtc?.[locale_key]}</p>
-                      <table className="w-full min-w-[300px] text-xs text-center border-collapse">
+                      <table className="w-full min-w-75 text-xs text-center border-collapse">
                         <thead>
                           <tr className="bg-neutral-200 dark:bg-neutral-600">
                             <th className="p-1 border dark:border-neutral-500">{t('overview.scheduleResult')}</th>
@@ -473,10 +473,10 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
           <div className="p-4 rounded-b-lg bg-neutral-50 dark:bg-neutral-700/50 space-y-2">
             <div className="flex justify-end gap-2 mb-2">
               <button onClick={handleSelectAllMissions} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
-                {t('missions.selectAll')}
+                {t_ui('selectAll')}
               </button>
               <button onClick={handleDeselectAllMissions} className="text-xs bg-neutral-400 text-white px-2 py-1 rounded hover:bg-neutral-500">
-                {t('missions.deselectAll')}
+                {t_ui('deselectAll')}
               </button>
             </div>
             {gameMissions.map((mission) => (

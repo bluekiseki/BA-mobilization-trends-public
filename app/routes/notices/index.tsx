@@ -64,6 +64,7 @@ export const handle: AppHandle = {
 export default function NoticesIndex() {
   const { notices, total, page } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation('notices');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const navigation = useNavigation();
 
@@ -189,7 +190,7 @@ export default function NoticesIndex() {
             })}
           </div>
         ) : (
-          <div className="py-24 text-center text-sm text-neutral-400 dark:text-neutral-600">{isLoading ? t('loading') : t('noResults')}</div>
+          <div className="py-24 text-center text-sm text-neutral-400 dark:text-neutral-600">{isLoading ? t_ui('loading') : t('noResults')}</div>
         )}
       </div>
 

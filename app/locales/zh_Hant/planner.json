@@ -6,25 +6,17 @@
   },
   "common": {
     "ap": "AP",
-    "pyroxene": "青輝石",
-    "credits": "信用點數",
     "normalReport": "活動報告",
     "advancedReport": "高級活動報告",
     "stage": "關卡",
-    "mission": "任務",
-    "story": "劇情",
     "challenge": "挑戰",
     "shop": "商店",
     "include": "包含",
     "priority": "優先",
     "exclude": "排除",
     "day": " 天",
-    "count": "計數",
     "hint": "提示",
-    "rerun": "重播",
-    "close": "關閉",
     "continueReview": "繼續確認",
-    "done": "完成",
     "mon": "週一",
     "tue": "週二",
     "wed": "週三",
@@ -37,33 +29,11 @@
     "remove": "移除",
     "current": "當前",
     "target": "目標",
-    "level": "等級",
     "tierNone": "-",
     "tierPrefix": "T{{tier}}",
     "levelDisplay": "(Lv.{{level}})",
-    "Hat": "帽子",
-    "Shoes": "鞋子",
-    "Gloves": "手套",
-    "Hairpin": "髮夾",
-    "Bag": "包包",
-    "Watch": "手錶",
-    "Charm": "護身符",
-    "Badge": "徽章",
-    "Necklace": "項鍊",
     "exp": "經驗值",
     "preferenceLevelAlt": "偏好等級 {{level}}",
-    "hp": "生命值",
-    "atk": "攻擊力",
-    "heal": "治療",
-    "ex": "EX",
-    "normal": "普通",
-    "passive": "被動",
-    "sub": "支援",
-    "ue": "固有",
-    "uniqueWeapon": "固有武器",
-    "gear": "愛用品",
-    "cost": "費用",
-    "rank": "排名",
     "source": "來源",
     "schaledb": "SchaleDB",
     "viewOnSchaledb": "在 SchaleDB 上查看",
@@ -147,6 +117,7 @@
     "resourceEfficiencyElephHintBefore": "",
     "resourceEfficiencyElephHintAfter": "中輸入的星級會反映在這裡。",
     "resourceEfficiencyOneTime": "一次性/免費獲得",
+    "resourceEfficiencyFarmingPlan": "使用的關卡",
     "resourceEfficiencyFirstRunBonus": "+{{amount}} 首次通關獎勵(不消耗額外AP)",
     "resourceEfficiencySimPrompt": "此活動包含需要模擬的迷你遊戲。在計算前會被排除(可能需要幾秒鐘)。",
     "resourceEfficiencySimButton": "計算模擬迷你遊戲",
@@ -165,7 +136,6 @@
     "scrimmageCost": "練習賽進入費用 (AP)",
     "otherDailyApConsumption": "其他每日 AP 使用/獲得",
     "consumed": "消費",
-    "gained": "獲得",
     "prefarmedAp": "預先刷取的 AP",
     "aronaAttendanceStartDate": "Arona 出勤開始日期",
     "aronaAttendanceDay": "出勤次數",
@@ -176,7 +146,9 @@
     "alreadyPurchased": "已擁有：",
     "purchase": "購買：",
     "bonusStudent": "加成學生選擇",
+    "bonusIncreaseHint": "可能提升加成",
     "pastEvents": "過去活動",
+    "currentEvent": "目前活動",
     "noPickup": "隱藏徵召",
     "dateSeparator": "~",
     "sortAscLabel": "時間順",
@@ -184,8 +156,6 @@
     "gainsMode": "顯示獲得道具",
     "gainsTotal": "所有活動合計",
     "gainsNoData": "規劃器中沒有已儲存的活動資料。",
-    "eventsTab": "活動",
-    "pickupsTab": "徵召",
     "noUpcomingPickups": "沒有即將到來的徵召",
     "showMore": "再顯示10個",
     "showAll": "顯示全部",
@@ -197,7 +167,6 @@
     "setRewardPerExchange": "設定獎勵（每次交換）",
     "numberedBgm": "編號的 Blue Archive BGM",
     "noCurrentEvent": "目前沒有進行中的活動。",
-    "loadingData": "正在載入資料...",
     "noStudentPlanInEvent": "此活動中未包含任何學生計劃。",
     "ownedInput": "持有數",
     "expandView": "展開",
@@ -211,8 +180,6 @@
     "inventorySearchEmpty": "找不到相關道具。",
     "inventoryReset": "全部重置",
     "inventoryResetConfirm": "確定要重置所有持有數嗎？",
-    "inventoryResetCancel": "取消",
-    "inventoryResetOk": "重置",
     "noStudentGrowthPlan": "尚未建立任何學生成長計劃。",
     "startByAddingNewPlan": "按下「新增學生計劃」按鈕開始。",
     "selectStudentForDetails": "從左側列表中選擇學生以查看詳細資訊。",
@@ -241,7 +208,6 @@
     "carryUpTooltip": "將低階物品合併為高階物品。(例: 高級報告 ×5 → 最高級報告 ×1)",
     "totalNeededTitle": "總需求",
     "backToPlanner": "返回列表",
-    "searchStudentPlaceholder": "搜尋學生...",
     "sortByDate": "加入日期",
     "sortByName": "名稱",
     "sortByLevel": "目標等級",
@@ -254,10 +220,6 @@
     "importCsv": "匯入 CSV",
     "exportJson": "匯出 Json",
     "importJson": "匯入 Json",
-    "selectAll": "全部",
-    "deselectAll": "取消",
-    "selectAllTooltip": "全選",
-    "deselectAllTooltip": "取消全選",
     "summaryForSelected": "已選 {{count}} 名學生的合計",
     "noStudentSelected": "未選擇任何學生。",
     "openInPlanner": "在學生成長規劃器中開啟",
@@ -268,7 +230,6 @@
   },
   "button": {
     "runAutoFarmCalc": "執行自動刷取計算",
-    "runCalculation": "計算",
     "runSimulation": "執行模擬",
     "simRunning": "計算中...",
     "exportData": "⬇️ 匯出計劃",
@@ -277,7 +238,8 @@
     "hideOneTimeRewards": "隱藏一次性獎勵",
     "quickExclude": "快速排除：",
     "setAllFirstClear": "切換所有首次通關獎勵",
-    "setAllOneTime": "設定/取消所有一次性獎勵",
+    "setAllOneTime": "設定・取消所有一次性獎勵",
+    "setAllFirstRewards": "設定・取消所有首次獲得獎勵及至少 1 次",
     "includeOneTimeRewards": "包含一次性獎勵",
     "openAllCards": "開啟所有卡片",
     "openOneAndReset": "開啟一張並重置",
@@ -288,8 +250,6 @@
     "resetAll": "重置所有",
     "purchaseCurrentTab": "購買當前分頁所有物品",
     "resetCurrentTab": "重置當前分頁",
-    "selectAll": "全選",
-    "deselectAll": "取消全選",
     "selectFromMyPool": "從我的學生名單選擇",
     "splitView": "分割顯示",
     "confirmInput": "確認輸入",
@@ -298,7 +258,6 @@
     "showOneTimeRewards": "顯示一次性獎勵"
   },
   "placeholder": {
-    "story": "故事",
     "storyNum": "故事 {num}",
     "customExchange": "自訂交換",
     "cardGacha": "卡片抽取",
@@ -321,32 +280,21 @@
     "minimizeAp": "最小化 AP",
     "material": "材料",
     "furniture": "家具",
-    "coin": "硬幣",
     "owned": "擁有",
     "totalConsumption": "總消耗",
     "totalAcquisition": "總獲得",
     "cumulativeRewards": "累積獎勵",
     "materialsForCurrentEvent": "當前活動所需材料",
-    "credits": "信用貨幣",
-    "eligma": "神名文字碎片",
-    "xpReports": "活動報告",
-    "equipEnh": "強化石",
     "uwEnh": "強化劑",
-    "opart": "歐帕茲",
     "tacticalBD": "戰술教育BD",
     "techNote": "技術筆記",
-    "potential": "熟練證書",
-    "equipment": "裝備",
     "skill": "技能素材",
-    "other": "其他",
     "totalMaterialsForAllPlans": "所有計劃所需材料總計",
     "exchangeCount": "交換次數",
     "dailyPyroRefills": "每日青輝石補充",
     "global_server_data_pending": "資料尚未在全球伺服器更新。",
-    "favorGifts": "禮物",
     "skillInfo": "技能資訊",
     "relationshipStories": "羈絆故事",
-    "story_rank_only": "排名",
     "story_rank_title": "排名+標題",
     "story_summary_hide": "−摘要",
     "story_summary_show": "+摘要",
@@ -354,12 +302,7 @@
     "story_global_soon": "GL即將上線",
     "story_memorial": "紀念"
   },
-  "item": {
-    "reports": "報告",
-    "gifts": "禮物",
-    "eleph": "神明文字",
-    "equipment": "裝備"
-  },
+  "item": {},
   "minigame": {
     "roulette": "輪盤",
     "treasureHunt": "尋寶",
@@ -376,9 +319,7 @@
     "minigame_shooting": "遊戲開發部清掃大作戰",
     "minigame_janken": "天下第一蟹・武術大會"
   },
-  "gameTerm": {
-    "tacticalChallenge": "戰術對抗戰"
-  },
+  "gameTerm": {},
   "apBreakdown": {
     "hardMode": "困難模式",
     "scrimmage": "學院交流會",
@@ -389,7 +330,6 @@
     "otherConsumption": "其他"
   },
   "apSource": {
-    "pyroxene": "青輝石",
     "apPackage": "AP 套餐",
     "weeklyQuests": "每週任務",
     "attendance": "上線"
@@ -460,12 +400,10 @@
     "openedCells": "已開啟格子：",
     "remainingTreasures": "剩餘寶藏",
     "foundTreasures": "已找到寶藏",
-    "cancel": "取消",
     "saveResult": "保存結果（{{count}} 格子）",
     "goalFindAll": "獲取所有寶藏",
     "cellBaseReward": "每格:",
     "tabInfo": "資訊",
-    "tabCalculator": "計算器",
     "boardSize": "棋盤",
     "treasureContents": "寶物",
     "rewardItem": "物品",
@@ -476,7 +414,6 @@
   "fortune_gacha": {
     "title": "幸運抽卡",
     "calcAvgRewards": "1. 計算平均獎勵（模擬）",
-    "run": "執行",
     "avgCostPerPull": "每次抽卡平均成本：",
     "avgRewardsPerPull": "每次抽卡平均獎勵：",
     "planTotalPulls": "2. 計劃總抽卡次數",
@@ -510,8 +447,6 @@
   },
   "dice_race": {
     "title": "骰子賽跑",
-    "tabOverview": "概覽",
-    "tabCalculator": "計算器",
     "rewardsPerNode": "每個節點的獎勵",
     "startFinishNode": "起點/終點",
     "nodeLabel": "節點 {{id}}",
@@ -559,23 +494,16 @@
       "skillsCurrent": "技能 (目前)",
       "skillsTarget": "技能 (目標)",
       "equipmentCurrent": "裝備 (目前)",
-      "equipmentTarget": "裝備 (目標)",
-      "other": "其他"
+      "equipmentTarget": "裝備 (目標)"
     },
     "headerField": {
-      "add": "新增",
-      "select": "選擇",
       "name": "名稱",
-      "school": "學園",
-      "level": "等級",
-      "rank": "星級",
       "ueLevel": "專武 Lv",
       "affection": "好感度",
       "experience": "經驗值",
       "equipment1": "裝備 1",
       "equipment2": "裝備 2",
       "equipment3": "裝備 3",
-      "bondGear": "愛用品",
       "acquiredDate": "獲得日期",
       "useEligma": "使用神名文字",
       "eligmaPrice": "神名文字價格",
@@ -595,17 +523,14 @@
       "shortcutRedo": "重做",
       "shortcutSave": "保存更改",
       "sortLabel": "排序：",
-      "resetSort": "重置",
       "unsavedChanges": "有尚未儲存的變更。",
       "save": "儲存",
-      "cancel": "取消",
       "addPlanHint": "點擊新增按鈕來加入規劃",
       "recruitedStudents": "已招募學生總數"
     },
     "sortLabels": {
       "hasPlan": "有規劃",
       "isSelected": "已選擇",
-      "school": "學園",
       "name": "名稱",
       "currentLevel": "目前等級",
       "currentRank": "目前星級",
@@ -629,15 +554,10 @@
   },
   "growthCard": {
     "stats": "基本屬性",
-    "skills": "技能",
-    "equipment": "裝備",
-    "potential": "潛力解鎖",
-    "affection": "好感度等級",
     "includeInEventsQuestion": "應該包含在哪些活動中？",
     "searchEventsPlaceholder": "搜尋活動...",
     "selectStudentPrompt": "請選擇學生以查看詳細資訊。",
     "selectStudentPlaceholder": "請選擇學生...",
-    "btnMinAll": "全部初始化",
     "btnResetTargets": "重設目標",
     "btnMaxTargets": "目標最大",
     "btnMaxAll": "全部最大",
@@ -664,7 +584,6 @@
   },
   "affectionTab": {
     "result": {
-      "title": "模擬結果",
       "success": "達成目標",
       "missing": "經驗值不足",
       "expGap": "經驗值差距",
@@ -728,16 +647,12 @@
     "ownedEleph": "擁有的 神明文字",
     "affectionWarning": "目前的星級將羈絆等級上限限制為 {{limit}}。",
     "uwLevel": "固有武器等級",
-    "bondGear": "愛用物品",
-    "gearNone": "無",
     "gearReqAffection": "需要好感度等級 {{rank}}+"
   },
   "dream_maker": {
     "title": "Like no Tomorrow",
     "tabs": {
-      "overview": "概覽",
-      "missions": "任務獎勵",
-      "calculator": "計算器"
+      "missions": "任務獎勵"
     },
     "overview": {
       "parameters": "參數（屬性）",
@@ -749,10 +664,7 @@
       "scheduleResult": "結果",
       "probability": "機率"
     },
-    "missions": {
-      "selectAll": "全選",
-      "deselectAll": "全不選"
-    },
+    "missions": {},
     "calculator": {
       "settingsTitle": "1. 模擬設定",
       "simRuns": "模擬次數",
@@ -809,7 +721,6 @@
       "dayLabel": "天數",
       "actionsRemaining": "剩餘行動次數",
       "outcomeLabel": "結果",
-      "defaultScheduleName": "行程",
       "waiting": "選擇一個行動...",
       "historyLog": "查看完整日誌",
       "noHistory": "尚無歷史記錄。"
@@ -911,8 +822,6 @@
     "sortByAmount": "數量",
     "selectPlansTitle": "包含的學生成長計劃",
     "addEditPlans": "新增/編輯計劃",
-    "selectAll": "全選",
-    "deselectAll": "全不選",
     "totalNeeded": "所需總數（選定學生）",
     "editInventory": "編輯庫存",
     "noItemsNeeded": "未選擇學生成長計劃或不需要裝備。",
@@ -948,16 +857,12 @@
     "tabInput": "輸入",
     "tabStages": "關卡",
     "tabResults": "結果",
-    "settings": "設定",
     "source": "來源",
     "sourceLabelNormal": "普通 ×",
     "sourceLabelHard": "困難 ×",
     "studentPlanTitle": "學生計畫",
-    "studentPlanSelectAll": "全選",
-    "studentPlanDeselectAll": "取消",
     "studentSearchPlaceholder": "按名稱搜索...",
     "studentFilterSelected": "僅選中",
-    "studentSearchEmpty": "未找到搜索結果",
     "ownedEquipment": "所有裝備",
     "universalBlueprint": "通用藍圖",
     "elephStudents": "象:",
@@ -997,8 +902,6 @@
     "stageTypeHard": "困難",
     "sourceKR": "KR",
     "sourceJPNew": "JP",
-    "inventoryLoadingData": "正在加載數據...",
-    "inventoryClear": "清除",
     "inventoryDeficient": "不足",
     "inventorySufficient": "充足",
     "inventoryNotFarmable": "無法耕作",
@@ -1014,7 +917,6 @@
       "rewardInfo": "獎勵資訊"
     },
     "ui": {
-      "settings": "設定",
       "autoCalculate": "自動設定回合數",
       "simulationResults": "模擬結果"
     },
@@ -1032,7 +934,6 @@
       "reward": "獎勵"
     },
     "button": {
-      "run": "執行模擬",
       "consumeAllCost": "使用所有票券",
       "fulfillDeficit": "彌補不足"
     },
@@ -1058,8 +959,6 @@
     "questDaily": "每日",
     "questReward": "獎勵",
     "questAllDone": "全部完成",
-    "questSelectAll": "全選",
-    "questDeselectAll": "全不選",
     "questFromDay": "從第~天起:",
     "questDay": "第 {{day}} 天",
     "masteryRange": "等級範圍",
@@ -1067,7 +966,6 @@
     "masteryEndLevel": "結束等級",
     "masteryAll": "全部 (1 ~ {{max}})",
     "stageLabel": "關卡 {{n}}",
-    "stageRuns": "次數",
     "stageCostPerRun": "{{cost}}pt/次",
     "stageFirstClear": "首次通關",
     "stageFirstClearDone": "已取得",
@@ -1078,7 +976,6 @@
   "clue_search": {
     "title": "尋找線索",
     "tabInfo": "資訊",
-    "tabCalculator": "計算機",
     "roundLabel": "第 {{round}} 輪",
     "roundLoop": "第 {{round}} 輪~ (重複)",
     "totalFragments": "碎片總計：{{count}} 個",
@@ -1095,9 +992,6 @@
   },
   "minigame_ccg": {
     "title": "The Justice Task Force's Endless Summer Vacation",
-    "overview": "概覽",
-    "missions": "任務",
-    "calculator": "計算器",
     "game_rules": "遊戲規則",
     "desc_1": "一款roguelike卡牌建造遊戲。",
     "desc_2": "通關第3-7關以解鎖掃蕩功能。",
@@ -1106,16 +1000,11 @@
     "stage_rewards": "關卡獎勵掉落表",
     "stage": "關卡",
     "rewards": "額外獎勵",
-    "select_all": "全選",
-    "deselect_all": "全不選",
     "calc_tip": "新增列(Row)以模擬運行。第3-7關提供最高獎勵。",
     "add_row": "新增列(Row)"
   },
   "minigame_janken": {
     "title": "天下第一蟹・武術大會",
-    "overview": "概覽",
-    "calculator": "計算器",
-    "missions": "任務",
     "game_rules": "遊戲規則",
     "desc_1": "猜拳對戰：獲勝會對對方造成大量傷害，平手雙方都會受到傷害，落敗則只有自己受到傷害。",
     "desc_2": "勝率越低的手勢，獲勝時造成的傷害越高。",
@@ -1125,23 +1014,18 @@
     "stage": "關卡",
     "equipment_tier_table": "裝備Tier強化費用",
     "tier": "Tier",
-    "cost": "費用",
     "section_story": "劇情（一次性）",
-    "story": "劇情",
     "mark_cleared": "已通關",
     "label_first": "首次",
     "label_three_star": "3★",
     "section_normal": "普通（可重複）",
-    "normal": "普通",
     "section_equipment": "裝備Tier",
     "equipment_target_tier": "目標Tier",
     "section_challenge": "挑戰",
     "challenge_current_score": "目前分數",
     "challenge_target_score": "目標分數",
     "total_rewards": "預估獲得獎勵合計",
-    "no_rewards": "尚未計算出任何獎勵",
-    "select_all": "全選",
-    "deselect_all": "全不選"
+    "no_rewards": "尚未計算出任何獎勵"
   },
   "gacha": {
     "title": "青輝石與招募規劃",
@@ -1163,13 +1047,16 @@
         "note1_link": "Google Spreadsheet（已停止更新）",
         "note1_post": "製作而成。由於仍有不穩定之處，建議使用該試算表。",
         "note2": "假設大決戰票券無有效期限。",
-        "note3": "維護獎勵、部分故事、PvP重置、媽媽聊天、成就等所獲青輝石不予反映。為使實際收支接近，預設每月有1,200個額外收入。",
-        "note4": "假設所有活動的青輝石消耗與獲取均在活動第一天完成。",
-        "note5": "假設總力戰及大決戰的青輝石獲取在該期間最後一天完成。",
-        "note6": "有數據的活動已反映每次的收支（從試算表手動提取），無數據的活動預設為1,800個。",
-        "note7": "假設阿洛娜的出席本以今天為第1天開始。",
-        "note8": "在策略標籤中若要從同一橫幅抽取多個角色，請務必適當調整「最大預算（最大天花板次數）」。",
-        "note9": "所有10連及單抽招募券均換算為等值青輝石（1連＝120青輝石）計算。"
+        "note3": "大決戰獎勵中，限時10連招募券原本應於GMT+9時間翌日0點發放，但屆時新一期招募已經開放，若在招募開放後立即抽卡，將無法把該券用在該次招募上。因此本規劃工具僅針對此券假設於大決戰結束當下、即GMT+9時間當日11:00獲得。青輝石獎勵則另外假設於大決戰最後一天獲得。",
+        "note4": "維護獎勵、部分故事、PvP重置、媽媽聊天、成就等所獲青輝石不予反映。為使實際收支接近，預設每月有1,200個額外收入。",
+        "note5": "假設所有活動的青輝石消耗與獲取均在活動第一天完成。",
+        "note6": "假設總力戰及大決戰的青輝石獲取在該期間最後一天完成。",
+        "note7": "有數據的活動已反映每次的收支（從試算表手動提取），無數據的活動預設為1,800個。",
+        "note8": "假設阿洛娜的出席本以今天為第1天開始。",
+        "note9": "在策略標籤中若要從同一橫幅抽取多個角色，請務必適當調整「最大預算（最大天花板次數）」。",
+        "note10": "所有10連及單抽招募券均換算為等值青輝石（1連＝120青輝石）計算。",
+        "note11_pre": "用於確認抽卡機率套用情況的偵錯頁面：",
+        "note11_post": ""
       }
     },
     "server": {
@@ -1197,13 +1084,13 @@
         },
         "empty": "尚無預定行程。",
         "types": {
-          "evt": "EVT",
-          "raid": "RAID",
-          "elim": "ELIM",
           "towr": "TOWR",
           "jfd": "JFD",
+          "etc": "ETC",
           "camp": "CAMP",
-          "etc": "ETC"
+          "elim": "大決戰",
+          "evt": "事件",
+          "raid": "總力戰"
         },
         "eventPeriod": "活動期間",
         "normalPeriod": "一般期間",
@@ -1212,7 +1099,6 @@
         "scheduleCount": "{{count}}件",
         "campaignTypes": {
           "normal": "一般",
-          "hard": "困難",
           "commission": "特別任務"
         },
         "unit_times": "次",
@@ -1236,10 +1122,7 @@
           "pvp": "戰術對抗戰 (PvP)",
           "monthly": "月卡",
           "raid_elim": "總力戰 / 大決戰",
-          "multifloor": "制約解除決戰",
-          "jfd": "綜合戰術考試",
           "mainstory": "主線劇情",
-          "event": "活動",
           "ministory": "迷你劇情",
           "maintenance": "維護補償",
           "manual": "額外輸入",
@@ -1273,6 +1156,15 @@
         "custom_income_amount": "數量",
         "ticket1": "招募券 (1)",
         "ticket10": "招募券 (10)",
+        "ticket_batches_title": "期限招募票券",
+        "ticket_batches_eraid_label": "大決戰 (持有中)",
+        "ticket_batches_eraid_empty": "目前沒有尚未過期的大決戰票券。",
+        "ticket_batches_expiry_placeholder": "到期日 (留空表示無期限)",
+        "ticket_batches_unlimited": "無期限",
+        "ticket_batches_consume_policy_label": "到期票券於最後一個可用招募自動消耗",
+        "unclaimed_main_story": "未領取主線故事獎勵",
+        "unclaimed_momotalk": "未讀 MoMoTalk",
+        "no_past_main_story": "沒有過去的主線故事。",
         "raid_title": "總力戰/大決戰等級"
       },
       "chart": {
@@ -1282,12 +1174,10 @@
         "worst": "後 100%",
         "upper_x": "前 {{x}}%",
         "avg_balance": "平均餘額",
-        "avg": "平均",
         "upper_10": "前 10%",
         "lower_10": "後 10%",
         "hide_details": "隱藏詳細紀錄",
         "show_details": "查看每日收支詳細紀錄",
-        "table_date": "日期",
         "table_reason": "收支明細",
         "table_delta": "變動量",
         "table_balance": "餘額 (平均)",
@@ -1295,18 +1185,9 @@
         "daily_calc": "每日/活動結算",
         "percentile_placeholder": "例: 25",
         "add_btn_title": "新增機率線",
-        "remove_line": "刪除"
+        "ticket_balance_name": "含票券餘額",
+        "footer_ticket_note": "青輝石 + 期限票券（換算青輝石）"
       },
-      "fixed_daily_sunday": "每日/每週/月卡等固定收入",
-      "fixed_daily": "每日/月卡等固定收入",
-      "monthly_extra": "每月額外收入 (月初)",
-      "raid": "[總力戰] {{name}} 獎勵",
-      "elimination": "[大決戰] {{name}} 獎勵",
-      "jfd": "[綜合戰術考試] {{name}} 獎勵",
-      "event": "[活動] {{name}}",
-      "multifloor": "[制約解除] {{name}} 獎勵",
-      "mainstory": "[主線劇情] {{name}} 獎勵",
-      "ap_refresh": "購買 AP",
       "unit_sheets": "張",
       "unit_per_month": "/月",
       "net_income_label": "淨收入",
@@ -1320,7 +1201,12 @@
         "event": "[活動] {{name}}",
         "multifloor": "[制約解除] {{name}} 參與獎勵",
         "mainstory": "[主線故事] {{name}} 獎勵",
-        "ap_refresh": "AP補充"
+        "ministory": "[迷你故事] {{name}} 獎勵",
+        "momotalk": "[MoMoTalk] 未領取獎勵",
+        "ap_refresh": "AP補充",
+        "term_ticket_acquired": "取得期限招募票券 ({{count}}抽)",
+        "term_ticket_acquired_expiry": "取得期限招募票券 ({{count}}抽) ({{date}} 到期)",
+        "term_ticket_expired": "期限招募票券已到期 ({{count}}抽, {{date}})"
       }
     },
     "result": {
@@ -1337,7 +1223,9 @@
         "manual_input_label": "手動輸入",
         "sim_count_unit": "次",
         "sim_count_display": "{{count}}次",
-        "wasm_charge_system_warning": "新的招募充能系統目前尚未反映在 WASM 中。若要獲得準確結果，請切換為 JS 引擎。"
+        "owned_students_toggle_label": "計算艾利格瑪時計入已招募的學生",
+        "owned_students_count": "已招募 {{count}} 人",
+        "owned_students_help": "學生第一次招募到手時不會拿到艾利格瑪，只有抽到重複才會發放。所以目前已招募的學生人數，會大幅左右模擬結果的艾利格瑪總量。關閉此選項會視同尚未招募任何學生進行模擬。"
       },
       "empty_state": "請點擊上方按鈕開始模擬。",
       "income_nudge": "設定收入計畫後，可進行更精確的時間軸預算分析",
@@ -1387,23 +1275,22 @@
         "cdf_label_pyroxenes": "{{amount}} 青輝石以內",
         "cdf_label_pulls": "{{amount}}次以內",
         "legend_within_budget": "以內",
-        "legend_over_budget": "超出區間"
+        "legend_over_budget": "超出區間",
+        "cost_view_net": "僅青輝石",
+        "cost_view_gross": "青輝石+票券換算",
+        "no_data": "沒有資料。"
       },
       "student_stats": {
         "title": "學生獲得與神名文字預測",
-        "tag_limited": "限定",
-        "tag_fes": "慶典",
         "rate_obtain": "獲得率",
         "avg_eleph": "平均神名文字",
         "collapse": "收起 ▲",
-        "expand": "查看分佈 ▼",
-        "chart_x_eleph": "神名文字"
+        "expand": "查看分佈 ▼"
       },
       "filter": {
         "star1": "★1",
         "star2": "★2",
         "star3": "★3",
-        "fes": "慶典",
         "pickup": "招募"
       },
       "timing": {
@@ -1412,19 +1299,21 @@
         "per_iteration": "次"
       },
       "search_placeholder": "以名稱搜尋...",
-      "search_no_result": "無搜尋結果",
       "non_pickup_badge": "非精選",
-      "limited_badge": "限定",
-      "fes_badge": "慶典",
       "rate_obtain_label": "獲取率",
       "eleph_distribution_label": "精靈獲取分布",
       "probability_unit": "機率",
-      "average_label": "平均",
       "median_label": "P50中位數",
       "pessimistic_label": "P90悲觀",
       "worst_label": "P99.5最差",
       "pulls_short": "抽",
-      "chart_pdf_cdf": "長條(PDF) · 曲線(CDF)"
+      "chart_pdf_cdf": "長條(PDF) · 曲線(CDF)",
+      "banner_select_all_period": "整個期間",
+      "dist_mode": {
+        "cumulative": "累積",
+        "incremental": "單獨"
+      },
+      "eligma_owned_caption": "以已招募 {{count}} 名學生為基準計算"
     },
     "banner_planner": {
       "header": {
@@ -1432,13 +1321,13 @@
         "toggle_show": "顯示 {{count}} 個過去招募",
         "toggle_hide": "隱藏過去招募",
         "deactivate_past": "解除過去招募 ({{count}})",
+        "reset_planner": "重設設定",
         "auto_scroll_hint": "* 支援自動捲動"
       },
       "badge": {
         "now": "進行中",
         "fes": "★ 慶典 6%",
         "free_pulls": "免費 {{count}} 抽",
-        "limited": "限定",
         "charge_system": "召喚"
       },
       "toggle": {
@@ -1455,7 +1344,6 @@
       },
       "mode": {
         "skip": "跳過",
-        "must": "必抽",
         "opportunistic": "看情況"
       },
       "condition": {
@@ -1493,11 +1381,7 @@
       "free_pulls_label": "免費{{count}}連"
     },
     "pulls": "Pulls",
-    "pyroxenes": "Pyroxenes",
     "survival_rate": "Survival Rate",
-    "common": {
-      "add": "Add"
-    },
     "sim_levels": {
       "10k": "1萬",
       "100k": "10萬",
@@ -1516,7 +1400,8 @@
     "section_strategy": "策略 · Banners",
     "section_settings": "設定 · Plan",
     "active_banner_count": "{{count}}個啟用中",
-    "net_income": "淨收入"
+    "net_income": "淨收入",
+    "reset_confirm": "這將重設所有已儲存的抽卡規劃設定(收入設定、招募策略、模擬結果)。要繼續嗎?"
   },
   "itemScanner": {
     "title": "物品掃描器",
@@ -1550,27 +1435,19 @@
     "dataCollectionDetails": "詳細資料",
     "dropZoneInstructions": "將庫存截圖拖曳至此處",
     "dropZoneBrowse": "或點擊瀏覽 — 支援多個檔案",
-    "categoryCredits": "信用點",
-    "categoryEligma": "神名文字碎片",
-    "categoryXpReports": "經驗值報告",
     "categoryEquipEnh": "裝備強化珠",
     "categoryUwGrowth": "專武成長材料",
     "categoryPotential": "潛能材料",
-    "categoryOpart": "歐帕茲",
     "categoryTacticalBD": "戰術教育BD",
     "categoryTechNote": "技術筆記",
     "categoryEquipment": "裝備設計圖",
     "categorySkill": "技能材料",
-    "categoryEleph": "學生神名文字",
-    "categoryGifts": "禮物",
-    "categoryOther": "其他",
     "tableItem": "物品",
     "tableConfidence": "信心度",
     "tableCurrent": "目前",
     "tableScanned": "掃描結果",
     "tableDiff": "差異",
     "filterLabel": "篩選",
-    "filterAll": "全部",
     "applyButton": "套用 {{count}} 個物品",
     "appliedToast": "已套用 {{count}} 個物品 ({{category}})",
     "logLabel": "日誌",
@@ -1583,12 +1460,11 @@
     "confirmAll": "全部確認",
     "noItemsRecognized": "未辨識出任何物品",
     "itemCountRecognized": "已辨識 {{count}} 個物品",
-    "okButton": "確定",
-    "cancelTitle": "取消",
     "confidence": "信心度",
     "quantity": "數量：",
     "unknownItem": "未知物品",
-    "belowThreshold": "(低於門檻)"
+    "belowThreshold": "(低於門檻)",
+    "backButton": "返回"
   },
   "studentScanner": {
     "title": "學生培養掃描器",
@@ -1616,7 +1492,6 @@
     "progressDeduplicate": "檢查重複中 {{current}}/{{total}}",
     "progressDeduplicateRejected": "已排除 {{rejected}} 個非學生畫面的影格 · 檢查重複中 {{current}}/{{total}}",
     "progressAnalyzingFrame": "分析影格中 {{current}}/{{total}}",
-    "cancelScan": "取消",
     "resultsTitle": "已辨識的學生",
     "resultsCount": "已辨識 {{count}} 位學生",
     "reviewListLabel": "已辨識的學生列表",
@@ -1626,7 +1501,6 @@
   },
   "interactive_world_raid": {
     "title": "聯合作戰",
-    "tab_overview": "概覽",
     "tab_calculator": "刷關設定",
     "tab_ticket": "購買票券",
     "game_flow_title": "進行方式",
@@ -1635,7 +1509,6 @@
     "game_flow_3": "劇情戰鬥：一次性，包含與Boss的戰鬥，通關可獲得獎勵",
     "ticket_note": "入場票每日重置。每個Boss的出現時間不同。",
     "boss_hp": "Boss HP",
-    "difficulty": "難度",
     "runs": "次數",
     "ticket_unit": "票",
     "story_cleared": "劇情通關",
@@ -1657,8 +1530,6 @@
     "total_n_runs": "{{n}}次合計",
     "total_rewards": "總獲得預估",
     "ref_1run": "1次基準",
-    "story": "劇情",
-    "raid": "突擊",
     "runs_unit": "次",
     "entry_reward": "參與獎勵",
     "kill_reward": "擊敗獎勵",
@@ -1673,7 +1544,6 @@
     "daily_purchase": "每日購買",
     "auto_recharge": "自動充能",
     "available": "總可用",
-    "pyro_unit": "琥珀晶",
     "tickets_per_run": "票/次",
     "select_all_stories": "全選劇情",
     "deselect_all_stories": "取消全選劇情",
@@ -1681,8 +1551,6 @@
   },
   "road_puzzle": {
     "title": "鐵道拼圖",
-    "tabOverview": "概覽",
-    "tabCalculator": "計算機",
     "tabMaps": "地圖",
     "round": "回合",
     "roundLabel": "第{{round}}回合",
@@ -1691,7 +1559,6 @@
     "tileType2": "緩曲線",
     "tileType3": "急曲線",
     "rewards": "獎勵",
-    "total": "合計",
     "rangeTitle": "回合範圍",
     "startRound": "開始回合",
     "endRound": "結束回合",
@@ -1712,7 +1579,6 @@
     "inventoryComparison": "持有 vs. 需求",
     "mapInventoryLabel": "我的磁磚庫存",
     "mapPoolLabel": "未抽取數量",
-    "mapDataMissingShort": "無資料",
     "solvedTiles": "最優",
     "mcTitle": "蒙地卡羅模擬",
     "mcDesc": "每個關卡會從地圖的卡池中隨機提供1片磁磚。模擬抽取直到拼圖可解為止，估算每張地圖平均需要購買的磁磚數量。",
@@ -1736,5 +1602,28 @@
     "mapDisplayNoData": "{{round}}-{{mapIndex}}",
     "costTitle": "總消耗資源",
     "rewardsTitle": "總獲得獎勵"
+  },
+  "inventory": {
+    "title": "物品管理",
+    "description": "一目瞭然地查看所有資源，並檢查與成長計劃相比還需要多少。",
+    "sortByType": "類型 + ID",
+    "toggleMatrix": "表格",
+    "toggleAdvancedFilters": "進階篩選",
+    "targetComparison": "與目標比較",
+    "onlyOwned": "顯示有1個以上的物品",
+    "selectPlans": "選擇計劃 ({{selected}}/{{total}})",
+    "noResourcesToShow": "沒有要顯示的資源。",
+    "studentNeeds": "按學生計算的需求 ({{count}})",
+    "noActivePlanNeeds": "目前沒有活躍的成長計劃需要此物品。",
+    "allUsersHeading": "使用此物品的學生 — 全部 ({{count}})",
+    "noUsersForGrowth": "沒有學生使用此物品進行成長。",
+    "displayMode": {
+      "owned": "擁有數",
+      "needed": "目標數",
+      "diff": "擁有 - 目標",
+      "deficit": "不足數"
+    },
+    "emptyMessage": "所選計劃中沒有所需的資源。",
+    "helperShowOwned": "擁有 {{owned}} / 需要 {{needed}}"
   }
 }

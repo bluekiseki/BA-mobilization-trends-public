@@ -1,11 +1,7 @@
 import { diffLines, diffChars, type Change } from 'diff';
 import { imageLineToken, parseImageLine } from './notices';
 
-// Some sources (e.g. Yostar JP) never report a real modification timestamp,
-// so api_modify_date ends up equal to api_create_date (or null) on every version.
-// Fall back to crawled_at, which always changes between versions, whenever
-// api_modify_date can't actually distinguish a change.
-// `tablePrefix` should include the trailing dot, e.g. "pv." when the query aliases post_versions.
+// Fall back to crawled_at when api_modify_date can't distinguish a change. tablePrefix should include trailing dot.
 export function effectiveModifyDateSql(tablePrefix = ''): string {
   return `CASE WHEN ${tablePrefix}api_modify_date IS NULL OR ${tablePrefix}api_modify_date = ${tablePrefix}api_create_date THEN ${tablePrefix}crawled_at ELSE ${tablePrefix}api_modify_date END`;
 }
@@ -58,9 +54,7 @@ export function buildLineDiff(oldText: string, newText: string): DiffLineRow[] {
   return rows;
 }
 
-// Pairs up adjacent remove/add lines (a same-position replacement) and attaches a
-// char-level diff to each, so the UI can highlight just the words that actually changed
-// instead of coloring the whole line. Image lines are left unpaired — no point diffing a URL.
+// Pair remove/add lines and attach char-level diffs for word-level highlighting; skip image lines.
 export function pairLineDiff(rows: DiffLineRow[]): DiffLineRow[] {
   const out = [...rows];
   let i = 0;

@@ -42,6 +42,8 @@ export interface BannerPeriod {
   endTime: string;
 
   // Global banner attributes
+  /** Raw CSV bannerType ('', 'recall', 'encore', or future values) — part of the banner grouping key so new types stay distinct without code changes. */
+  bannerType: string;
   isFes: boolean;
   isLimitedBanner: boolean;
   isRerunBanner: boolean;
@@ -88,8 +90,9 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
 
     const startDateKey = row.startTime.trim();
     const endDateKey = row.endTime.trim();
-    const isRecall = ['recall', 'encore'].includes((row.bannerType || '').trim());
-    const groupKey = `${startDateKey}_${endDateKey}_${isRecall}`;
+    const bannerType = (row.bannerType || '').trim();
+    const isRecall = ['recall', 'encore'].includes(bannerType);
+    const groupKey = `${startDateKey}_${endDateKey}_${bannerType}`;
 
     // Predicted/unconfirmed banners use an "x" prefix (e.g. "x10146") until the real ID is confirmed.
     const studentId = Number(row.studentId.trim().replace(/^x/i, ''));
@@ -120,6 +123,7 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
         id: groupKey,
         startTime: startDateKey,
         endTime: endDateKey,
+        bannerType,
         isFes: false, // Update later
         isLimitedBanner: false,
         isRerunBanner: true, // Default: true, changed to false if a new character is found
@@ -165,10 +169,8 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
   for (let i = 0; i < sortedBanners.length; i++) {
     const current = sortedBanners[i];
 
-    // Free pull candidates: Limited banner & New banner (not Rerun) & Not a FES banner
-    // (Note: There were cases where free pulls were given during FES (e.g., S.Hoshino),
-    // but recent trends grant them to limited banners before/after FES, so this logic is followed.)
-    // Exceptions can be handled via OR conditions by adding constants in gachaRules.ts)
+    // Free pull candidates: Limited & New (not Rerun) & not FES. Some free pulls were granted
+    // during FES itself (e.g. S.Hoshino), but recent trend is limited banners before/after FES.
     if (current.isLimitedBanner && !current.isRerunBanner && !current.isFes) {
       const prevBanner = sortedBanners[i - 1];
       const nextBanner = sortedBanners[i + 1];
@@ -183,9 +185,8 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
     }
   }
 
-  // 4. Determine the "recruit charge" pity system cutoff (replaces the legacy spark-point system).
-  // Effective from each region's earliest banner featuring Makoto (Swimsuit) (studentId 10146,
-  // may appear as the predicted "x10146" before the real ID is confirmed).
+  // 4. Determine the "recruit charge" pity cutoff (replaces the legacy spark-point system),
+  // effective from each region's earliest banner featuring Makoto (Swimsuit) (studentId 10146).
   const CHARGE_SYSTEM_TRIGGER_ID = 10146;
   const cutoffTime = sortedBanners.filter((b) => b.pickupStudents.some((s) => s.id === CHARGE_SYSTEM_TRIGGER_ID)).reduce((min, b) => Math.min(min, new Date(b.startTime).getTime()), Infinity);
 
@@ -196,12 +197,7 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
   return sortedBanners;
 };
 
-/**
- * Predicted/unconfirmed future banners key their portrait art by the raw CSV id (e.g. "x10148") until the
- * real id is confirmed, while parseAndGroupBanners normalizes Student.id to the plain number (10148) for
- * gameplay logic. Mirror those entries under the normalized numeric key too, so portrait lookups by the
- * normalized id (used everywhere else in the app) still resolve.
- */
+/* Mirror CSV portrait keys (x10148) under normalized numeric key (10148) for lookups */
 export const normalizePortraitMap = (raw: Record<string, string>): Record<string, string> => {
   const normalized = { ...raw };
   for (const key of Object.keys(raw)) {
@@ -232,13 +228,7 @@ export const getAllStudents = (schaleStudentData: Record<string, SchaleStudent> 
   }));
 };
 
-/**
- * Predicted/unrevealed future pickup students (e.g. an upcoming costume banner) may not exist in the
- * SchaleDB roster yet, so getAllStudents() alone omits them — silently dropping their eligma/eleph stats
- * from studentStats once they're actually simulated as a pickup (the engine itself handles raw ids fine;
- * only the final per-student stats map, which iterates the student list, misses them). Fill in any pickup
- * student not already present in the base roster using the CSV-derived data already parsed for their banner.
- */
+/* Fill in unrevealed future pickups from CSV data (not yet in SchaleDB roster) */
 export const withPickupFallbackStudents = (baseStudents: Student[], banners: BannerPeriod[]): Student[] => {
   const known = new Set(baseStudents.map((s) => s.id));
   const merged = [...baseStudents];

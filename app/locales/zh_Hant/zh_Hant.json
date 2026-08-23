@@ -3,40 +3,15 @@
     "greeting": "你好!",
     "about": "關於",
     "contact": "聯絡",
-    "loading_txt": "載入資料中...",
-    "confirm": "確認",
-    "open": "開啟",
-    "close": "關閉",
     "viewAll": "查看全部",
-    "etc": "其他",
-    "selectAll": "全選",
-    "total": "全部",
     "page": "頁面",
     "times": " 次",
     "show_count": "每頁項目數",
-    "load_more": "載入更多",
-    "raid": "總力戰",
-    "eraid": "大決戰",
-    "raidAndEraid": "總力戰·大決戰",
-    "event": "事件",
-    "campaign": "戰役",
-    "multifloor": "制約解除決戰",
     "dataWarning": "本網站提供的數據均經由其他來源處理而來，在處理過程中可能因錯誤而包含不準確之處。本網站營運者對於使用這些數據所產生的任何問題概不承擔任何責任。請自行斟酌使用這些資訊。",
     "viewMore": "查看更多",
     "viewSimple": "簡易檢視",
-    "start": "開始",
-    "end": "結束",
-    "acquire": "獲得",
-    "loop": "循環",
-    "rerun": "重跑",
-    "fest": "加速",
-    "limited": "限時",
     "clear": "清除",
-    "period": "期間",
-    "jfd": "綜合戰術考試",
-    "tacticalChallenge": "戰術大賽",
     "finalRestrictionWB": "能力而發WB",
-    "expertPermit": "精通證書",
     "pred": "pred",
     "title": "柚子 Trends",
     "site-title": "柚子 Trends",
@@ -63,20 +38,17 @@
     "currentLocale": "zh_Hant",
     "navigation": {
       "heatmap": "熱圖",
-      "ranking": "排名",
       "home": "首頁",
       "dashboard": "儀表板",
       "planner": "規劃器",
       "help": "幫助",
       "viewDescription": "查看說明",
       "reportBug": "使用指南",
-      "email": "email",
       "viewCode": "查看代碼",
       "theme": "主題",
       "lightMode": "亮色模式",
       "darkMode": "暗色模式",
       "systemTheme": "系統設定",
-      "language": "語言",
       "serverSettings": "伺服器設定",
       "jukebox": "BGM 播放器",
       "notices": "公告存檔",
@@ -84,7 +56,6 @@
       "studentScanner": "學生培養掃描器",
       "eventPlanner": "活動刷取規劃器",
       "gachaPlanner": "青輝石與招募規劃",
-      "studentGrowthPlanner": "學生成長規劃器",
       "equipmentFarmingPlanner": "裝備刷取規劃器",
       "favorCalculator": "羈絆等級計算機"
     },
@@ -102,7 +73,7 @@
       "en": "英文",
       "ko": "韓文",
       "ja": "日文",
-      "zh-Hant-TW": "繁體中文",
+      "zh_Hant": "繁體中文",
       "label": "label"
     },
     "language_banner": {
@@ -120,8 +91,7 @@
       "startGuide": "開始指南",
       "driver": {
         "next": "下一步 ➔",
-        "prev": "⬅ 上一步",
-        "done": "完成"
+        "prev": "⬅ 上一步"
       }
     },
     "promoBanner": {
@@ -139,7 +109,6 @@
       "inputDesc": "請輸入詳細內容",
       "inputEmail": "接收回覆的電子郵件（選填）",
       "submitBtn": "提交",
-      "submittingBtn": "傳送中...",
       "errorMsg": "傳送失敗，請重試。",
       "githubIssue": "透過 GitHub Issues 回報",
       "poweredBy": "此請求透過 Web3Forms 傳送。"
@@ -177,7 +146,9 @@
     "scroll_to_prev_page": "上一頁",
     "scroll_to_next_page": "下一頁",
     "scroll_to_last_page": "最後一頁",
-    "scroll_to_top": "滾動至頂部"
+    "scroll_to_top": "滾動至頂部",
+    "exclude": "排除",
+    "viewOnSchaledb": "在 SchaleDB 上查看"
   },
   "charts": {
     "ranking": {
@@ -186,43 +157,23 @@
       "control": {
         "bar_option": {
           "name": "Bar 長度",
-          "percent": "最大值",
           "absolute": "比例"
         },
-        "sum_option": {
-          "name": "計數計算",
-          "display_total": "總計",
-          "display_average": "平均率"
-        },
-        "percent": "顯示百分比 (%)",
-        "absolute": "顯示總計數",
         "squad_type": "類型:",
-        "squad_type_all": "全部",
-        "squad_type_main": "Striker",
-        "squad_type_support": "Special",
         "tactic_role": "角色:",
-        "tactic_role_All": "全部",
-        "tactic_role_DamageDealer": "輸出",
-        "tactic_role_Healer": "補師",
-        "tactic_role_Supporter": "輔助",
-        "tactic_role_Tanker": "坦克",
-        "tactic_role_Vehicle": "T.S",
         "rank": "包含助戰:",
-        "rank_all": "全部",
         "rank_normal": "僅招募學生",
         "rank_assist": "僅助戰",
         "display_mode": "顯示模式",
-        "display_total": "總共",
-        "display_average": "每次出擊平均",
         "raid": "選擇出擊時間",
-        "difficulty": "難度"
+        "sum_option": {
+          "name": "次數計算"
+        }
       },
       "desp_percent": "每個長條圖的長度代表其佔總出擊次數的比例",
       "desp_absolute": "每個長條圖的長度代表實際出擊次數。",
       "unit_cnt": " 次",
-      "loading_txt": "載入資料中...",
-      "total_x": "總共 {x} 項",
-      "filters": "篩選條件"
+      "total_x": "總共 {x} 項"
     },
     "heatmap": {
       "title": "學生出擊率趨勢熱圖",
@@ -237,7 +188,6 @@
         "heatmap_option_absolute": "出擊百分比",
         "histogram_option_percent": "星級百分比",
         "histogram_option_absolute": "出擊百分比",
-        "setButton": "套用",
         "displayOptions": {
           "title": "顯示選項",
           "heatmap": "熱圖:",
@@ -245,16 +195,15 @@
           "rankWidth": "排名群組大小:",
           "X-Threshold": "隱藏出擊次數低於以下的出擊:"
         },
-        "filterByStars": {
-          "title": "依星級篩選",
-          "all": "全選",
-          "none": "全不選",
-          "count": ""
-        },
         "raidRange": {
           "title": "選擇出擊期間"
         },
-        "difficulty": "難度"
+        "filterByStars": {
+          "title": "按星級篩選",
+          "all": "全選",
+          "none": "全取消",
+          "count": "次"
+        }
       },
       "draw": {
         "unit": {
@@ -263,11 +212,12 @@
         },
         "rank": "排名:",
         "desp_chart": "將滑鼠懸停在圖表上以查看詳細資訊。"
-      }
+      },
+      "usage_statistics": "使用統計",
+      "usage_desc": "按星級比較各突襲的選擇率。"
     }
   },
   "raidInfo": {
-    "All": "All",
     "allDifficulties": "全部難度",
     "Lunatic": "Lunatic",
     "Torment": "Torment",
@@ -292,7 +242,6 @@
     "StudentGrowthByRankTitle": "按排名的學生星級狀態",
     "StudentGrowthByRank": "按排名的學生星級狀態",
     "popularFormations": "熱門隊形（總計：{x}）",
-
     "rankingsAndTeams": "排名與隊伍（總計：{x}）",
     "includeStudent": "包含學生",
     "excludeStudent": "排除學生",
@@ -308,13 +257,9 @@
     "filter_import": "從剪貼簿匯入",
     "filter_import_placeholder": "貼上篩選條件JSON...",
     "filter_import_error": "格式不正確。",
-    "filter_import_apply": "套用",
-    "filter_reset": "重置",
     "add_my_students": "新增未模集的學生",
     "includableStudentTitle": "可用學生",
     "excludableStudentTitle": "難以出擊的學生",
-    "tagMustInclude": "必須包含",
-    "normal": "已選擇",
     "assist": "助戰",
     "mustBeIncluded": "必須包含",
     "usageCount": "可用出擊次數",
@@ -330,7 +275,6 @@
     "tagHardExclude": "排除",
     "tagAllowOnce": "助戰",
     "description": "報告臨時替換(Report temporary replacement)",
-    "dashboardList": "儀表板列表",
     "selectBossPrompt": "選擇一個首領進行分析。",
     "histogramTitle": "總分分佈（直方圖）",
     "scoreRangeFilter": "分數範圍篩選",
@@ -338,8 +282,6 @@
     "switchToScore": "切換至分數",
     "binSize": "區間（區間大小）",
     "bracketFilter": "難度區間篩選",
-    "selectAll": "全選",
-    "deselectAll": "全不選",
     "playerCount": "玩家數",
     "donutChartTitle": "階層 / 難度組合分佈",
     "donutChartSubtitle": "點擊甜甜圈圖表的內部元素以查看詳細資訊",
@@ -364,7 +306,6 @@
     "tooltipDifficulty": "難度: {{difficulty}}",
     "scoreCondition": "分數 ≤ {{score}}",
     "tooltipCumulativeRank": "累計排名: ~{{rank}}",
-    "clearTime": "清除時間",
     "hideSettings": "隱藏設定",
     "showSettings": "顯示設定",
     "rankRangeSettings": "排名範圍設定",
@@ -372,7 +313,6 @@
     "maxRankPlaceholder": "最高排名",
     "clearTimeDistribution": "清除時間分佈",
     "noData": "無資料顯示。請檢查設定。",
-    "headerDifficulty": "難度",
     "headerInterval": "區間（分:秒）",
     "headerTimeout": "超時（分:秒）",
     "headerShowTimeoutTitle": "顯示超時記錄",
@@ -388,16 +328,12 @@
     "bestRank": "最高名次",
     "timeViewUnavailable": "時間視圖僅在所有隊伍成員處於相同難度時可用。",
     "viewByStudent": "按學生查看",
-    "viewAllStudents": "全部學生",
     "dataType": "資料類型",
     "byScore": "分數",
-    "byTime": "時間",
     "timeDistribution": "時間分佈",
-    "starRatingDistribution": "星級分佈",
     "timeViewUnavailableNotice": "時間視圖因混合難度記錄而無法使用。",
     "byRank": "排名",
     "rankDistribution": "排名分佈",
-    "byDefault": "預設",
     "byTotalPartyCount": "依隊伍數",
     "byPartyPosition": "依隊伍順序",
     "nPartyCount": "{{n}}隊",
@@ -407,8 +343,6 @@
     "lookupPlaceholder": "輸入排名、分數或時間計算（例如，4:00 - 2:30.5）...",
     "lookupInFiltersPlaceholder": "在篩選條件中輸入排名、分數或時間（M:SS）...",
     "rankLookup": "排名 {{rank}}",
-    "recordBefore": "上一筆",
-    "recordAfter": "下一筆",
     "difficultyFilterPlaceholder": "搜尋/新增難度篩選條件...",
     "noMoreFilters": "沒有更多篩選條件可新增",
     "totalScoreSum": "接近總分的記錄",
@@ -424,17 +358,10 @@
     "searchYouTube": {
       "title": "關鍵字搜尋",
       "searchYouTube": "前往 YouTube",
-      "language": "語言",
-      "difficulty": "難度",
-      "none": "無",
-      "include": "包含",
       "terrain": "地形",
       "defenseType": "防禦類型",
       "attackType": "攻擊類型",
-      "student_name": "學生名稱",
-      "copy": "複製",
-      "copied": "已複製",
-      "dateRange": "日期範圍"
+      "student_name": "學生名稱"
     },
     "composition": {
       "mode_team": "Team",
@@ -449,7 +376,6 @@
       "usage_count": "{{counts}} uses",
       "click_to_collapse": "Click to collapse",
       "click_for_details": "Click for details",
-      "load_more": "Load More",
       "sort_count": "出擊次數排序",
       "sort_bestRank": "最高分數排序",
       "ignore_position": "忽略配置",
@@ -458,7 +384,6 @@
       "mulligan_view_order": "選取順序",
       "mopup_filter": "Mop-up party filter"
     },
-    "videos": "攻略影片",
     "videos_select_boss": "選擇Boss類型以查看影片。",
     "videos_empty": "沒有可用影片。",
     "videos_sort_score_desc": "分數由高到低",
@@ -466,7 +391,6 @@
     "videos_sort_upload_desc": "上傳日期最新",
     "videos_sort_upload_asc": "上傳日期最舊",
     "videos_score_min_placeholder": "最小",
-    "videos_score_max_placeholder": "最大",
     "videos_filter_tl": "僅TL",
     "videos_filter_target_type": "僅目標類型",
     "videos_missing_note": "由於自動處理，部分影片可能缺失。",
@@ -474,22 +398,19 @@
     "videos_external_sites": "推薦的外部網站：",
     "video_source_cv": "從縮圖自動提取",
     "video_source_text": "從影片說明提取",
-    "video_extraction_note": "學生編成資料從縮圖圖像識別(cv)或影片說明文字(text)自動提取，可能存在誤差。"
+    "video_extraction_note": "學生編成資料從縮圖圖像識別(cv)或影片說明文字(text)自動提取，可能存在誤差。",
+    "normal": "已持有"
   },
   "dashboardIndex": {
-    "title": "儀表板列表",
     "description": "過去總力戰和大決戰的統計儀表板",
     "pinnedGlobalTitle": "當前國際服伺服器總力戰或大決戰",
     "liveBetaTitle": "實時儀表板（測試版）",
-    "searchPlaceholder": "搜尋 Boss 名稱或 ID...",
-    "filterAll": "全部"
+    "searchPlaceholder": "搜尋 Boss 名稱或 ID..."
   },
   "liveDashboard": {
     "description": "實時統計總力戰和大決戰",
-    "total_clear": "總清除數",
     "hourly_change": "每小時變化",
     "platinum_tier_distribution": "白金階層分佈",
-    "total_score": "總分數",
     "ranking_cutoff_fluctuation": "排名截止波動",
     "highscore_change_by_difficulty": "難度別最高分變化",
     "service_discontinuation_notice": "此服務可能隨時終止。",
@@ -497,7 +418,6 @@
     "changePerHourLabel": "玩家 / 小時",
     "playersPerHourUnit": "玩家/小時",
     "playersUnit": "玩家",
-    "hoursUnit": "小時",
     "show_prediction_cutoff": "顯示白金檔線預測",
     "prediction_mode_stats": "平均/最大·最小範圍",
     "prediction_mode_compare": "過去賽季比較",
@@ -510,8 +430,6 @@
     "data_unavailable_contact_email": "透過電子郵件聯絡",
     "data_unavailable_contact_anon": "匿名提交",
     "platinum_cut_est": "白金檔線預測（統計依據）",
-    "hours_remaining_suffix": "剩餘",
-    "video_fallback_title": "攻略影片",
     "video_fallback_note_crawl": "影片爬取目前仍為手動進行，更新頻率最長為1至2天一次。",
     "video_fallback_note_live_only": "僅顯示目前進行中的戰役影片。更多影片：",
     "score_time_converter_title": "分數・時間轉換器",
@@ -549,7 +467,6 @@
     "bySchool": "按學校",
     "school": "按學校",
     "percentage": "%",
-    "count": "計數",
     "change": "變化",
     "emblemSummary": "總共 {{counts}} 次出現，比例：{{rate}}%"
   },
@@ -565,33 +482,10 @@
     "distribute": "(分布: {{name}})",
     "track": {
       "raid": "總力戰&大決戰",
-      "event": "活動",
-      "multifloor": "最終限制 Rls.",
-      "campaign": "活動",
-      "pickup": "抽卡",
       "birthday": "生日",
       "birthday-suffix": "生日後綴",
-      "story": "故事",
-      "misc": "其他",
       "maintenance": "維護",
       "patch": "補丁"
-    },
-    "campaign": {
-      "hard": "Hard",
-      "bounty": "懸賞通緝",
-      "schedule": "時間表",
-      "scrimmage": "學院交流會",
-      "normal": "Normal",
-      "commission": "特殊任務"
-    },
-    "jfd": {
-      "shooting": "射擊考試",
-      "defense": "防禦考試",
-      "breakthrough": "突破考試",
-      "escort": "綜合戰術考試"
-    },
-    "story": {
-      "mini": "迷你故事: {{title}}"
     },
     "misc": {
       "shop-reset": "商店重置"
@@ -599,6 +493,16 @@
     "widget": {
       "view-more": "查看完整時間表"
     },
-    "scrollToNow": "滾動到當前時間"
+    "scrollToNow": "滾動到當前時間",
+    "campaign": {
+      "hard": "困難",
+      "bounty": "賞金",
+      "scrimmage": "交流會",
+      "normal": "一般",
+      "commission": "特別任務"
+    },
+    "story": {
+      "mini": "小故事: {{title}}"
+    }
   }
 }

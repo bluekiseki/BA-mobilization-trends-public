@@ -124,6 +124,7 @@ export function StudentScannerPage() {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'studentScanner' });
   const { t: tPlanner } = useTranslation('planner');
   const { t: tItemScanner } = useTranslation('planner', { keyPrefix: 'itemScanner' });
+  const { t: t_ui } = useTranslation('ui');
   const [state, dispatch] = useReducer(reducer, {
     ...INITIAL,
     loadPhase: isModelsLoaded() ? 'ready' : 'idle',
@@ -142,10 +143,7 @@ export function StudentScannerPage() {
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
   const scanningRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  // Mirror state.reviewRows/results synchronously so the per-frame onResult callback (called
-  // from inside processVideo's loop) always merges against the latest rows, not a stale
-  // closure over `state` from when handleVideo started. resultsRef also fixes a pre-existing
-  // bug where the unmount cleanup below only ever saw the initial (empty) state.results.
+  // Mirrors state.reviewRows/results synchronously so the per-frame onResult callback merges against latest rows, not a stale closure; also fixes unmount cleanup only seeing initial state.
   const reviewRowsRef = useRef<StudentReviewRow[]>([]);
   const resultsRef = useRef<StudentResult[]>([]);
 
@@ -342,7 +340,7 @@ export function StudentScannerPage() {
       )}
       <PageHeader icon={<RiUserSearchLine />} title={t('title')} badge={tItemScanner('beta')} description={t('description')} />
 
-      <DesktopNotice translationKeyPrefix="studentScanner" />
+      <DesktopNotice />
 
       <LogPanel entries={state.logEntries} visible={state.logVisible} onToggle={() => dispatch({ type: 'TOGGLE_LOG' })} startTime={state.startTime} translationKeyPrefix="itemScanner" />
 
@@ -361,7 +359,7 @@ export function StudentScannerPage() {
             onClick={handleCancel}
             className="rounded border border-neutral-300 dark:border-neutral-600 px-3 py-1 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
-            {t('cancelScan')}
+            {t_ui('cancel')}
           </button>
         </div>
       )}
@@ -423,7 +421,7 @@ export function StudentScannerPage() {
           title={tPlanner('dataExchange.applyData')}
           description={tPlanner('dataExchange.msgAppliedOwn', { count: appliedCount })}
           stayLabel={tPlanner('common.continueReview')}
-          doneLabel={tPlanner('common.done')}
+          doneLabel={t_ui('done')}
           returnTo={returnTo}
           onClose={() => setAppliedCount(null)}
         />

@@ -46,15 +46,13 @@ export type ExtractionTiming = {
   totalMs: number;
 };
 
-// Recursively nullable — OCR/detection can fail on any given field (including individual
-// equipment slots and potential stats), and this pipeline should not fabricate values it
-// isn't confident about.
+// Recursively nullable — OCR/detection can fail on any field, and this pipeline shouldn't
+// fabricate values it isn't confident about.
 type DeepNullable<T> = T extends object ? { [K in keyof T]: DeepNullable<T[K]> } : T | null;
 
-// Derived from GrowthPlan.current (app/types/growthPlan.ts) — every field nullable except
-// affectionExp/eleph, which are never detected (always 0, see extract.ts) — so
-// applyReviewRows.ts can write recognized fields straight into a plan's `current` block with
-// no adapter.
+// Derived from GrowthPlan.current — every field nullable except affectionExp/eleph (never
+// detected, always 0, see extract.ts) — so applyReviewRows.ts can write recognized fields
+// straight into a plan's `current` block with no adapter.
 export type StudentCurrent = DeepNullable<Omit<GrowthPlan['current'], 'affectionExp' | 'eleph'>> & Pick<GrowthPlan['current'], 'affectionExp' | 'eleph'>;
 
 export type StudentResult = {

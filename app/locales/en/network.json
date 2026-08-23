@@ -25,7 +25,6 @@
     "off": "Off"
   },
   "ranking": {
-    "noData": "No data",
     "pageRank": "PageRank",
     "pageRankDesc": "PageRank: centrality weighted by the importance of co-occurring students, not just raw count. Higher-ranked neighbors boost the score.",
     "betweenness": "Betweenness",
@@ -51,7 +50,6 @@
     "noMatches": "No data matches the current filters."
   },
   "search": {
-    "placeholder": "Search student...",
     "noResults": "No results"
   }
 }

@@ -71,6 +71,7 @@ export const CompositionChart: React.FC<{
   onUseDetailedChange: (v: boolean) => void;
 }> = React.memo(({ data, detailedData, studentData, portraitData, raidInfo, server, onScrollToFilter, useDetailed, onUseDetailedChange }) => {
   const { t, i18n } = useTranslation('dashboard'); // Translation hook
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
   const [analysisUnit, setAnalysisUnit] = useState<'report' | 'team'>('report');
@@ -669,7 +670,7 @@ export const CompositionChart: React.FC<{
 
       {visibleCount < displayedCompData.length && (
         <button onClick={() => setVisibleCount((p) => p + 20)} className="w-full py-2 bg-neutral-200 dark:bg-neutral-700 rounded">
-          {t('composition.load_more')}
+          {t_ui('loadMore')}
         </button>
       )}
     </div>
@@ -688,6 +689,7 @@ export const StudentFilterBar: React.FC<{
   totalCount?: number;
 }> = ({ filter, onChange, studentNames, portraitData, searchFn, usageCounts, filteredCount, totalCount }) => {
   const { t } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
   const [addMode, setAddMode] = useState<'exclude' | 'include'>('exclude');
   const [studentSearch, setStudentSearch] = useState('');
   const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
@@ -742,7 +744,7 @@ export const StudentFilterBar: React.FC<{
                     : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700'
                 }`}
             >
-              {mode === 'exclude' ? t('tagHardExclude') : t('searchYouTube.include')}
+              {mode === 'exclude' ? t('tagHardExclude') : t_ui('include')}
             </button>
           ))}
         </div>
@@ -781,7 +783,7 @@ export const StudentFilterBar: React.FC<{
         </div>
         {hasFilter && (
           <button onClick={() => onChange({ excludeIds: [], includeIds: [] })} className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
-            {t('filter_reset')}
+            {t_ui('reset')}
           </button>
         )}
       </div>

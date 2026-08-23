@@ -22,15 +22,16 @@ type Top10Tab = 'total' | 'boss1' | 'boss2' | 'boss3';
 export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidInfos, server, studentData, portraitData }) => {
   // console.log('[Top10Rankings] ', { isRaid, lastData, raidInfos, server, studentData, portraitData });
   const [activeTab, setActiveTab] = useState<Top10Tab>('total');
-  const { t, i18n } = useTranslation('liveDashboard');
+  // const { t, i18n } = useTranslation('liveDashboard');
+  const { t: t_ui, i18n } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const TABS: { id: Top10Tab; name: string }[] = useMemo(
     () =>
       isRaid
-        ? [{ id: 'total', name: t('total_score') }]
+        ? [{ id: 'total', name: t_ui('totalScore') }]
         : [
-            { id: 'total', name: t('total_score') },
+            { id: 'total', name: t_ui('totalScore') },
             {
               id: 'boss1',
               name: type_translation[raidInfos?.[0]?.Type as keyof typeof type_translation][getLocaleShortName(locale)] || 'Boss 1',
@@ -125,7 +126,7 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
       </div>
 
       {!isRaid && activeTab === 'total' ? (
-        <TotalRankingList title={`${t('total_score')} Top 10`} data={totalTop10DataForDisplay} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
+        <TotalRankingList title={`${t_ui('totalScore')} Top 10`} data={totalTop10DataForDisplay} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
       ) : (
         <RankingList
           title={`${TABS.find((t) => t.id === activeTab)?.name} Top 10`}

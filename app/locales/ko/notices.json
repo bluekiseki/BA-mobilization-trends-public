@@ -19,7 +19,6 @@
     "modified": "최근 수정순"
   },
   "noResults": "결과가 없습니다.",
-  "loading": "데이터를 불러오는 중...",
   "postedAt": "등록됨",
   "modifiedAt": "수정됨",
   "prev": "이전",
@@ -29,7 +28,6 @@
   "apiCreated": "최종 생성",
   "apiModified": "최종 수정",
   "copy": "복사",
-  "copied": "✓ 복사됨",
   "noContent": "본문 내용이 없습니다.",
   "historyTitle": "수정 이력 타임라인",
   "currentlyViewing": "현재 화면",

@@ -25,7 +25,6 @@
     "off": "關"
   },
   "ranking": {
-    "noData": "無數據",
     "pageRank": "頁面排名",
     "pageRankDesc": "頁面排名不只計算共同出擊次數，還將共同出擊學生的重要度納入考量來衡量中心度。連接的學生排名越高，得分越高。",
     "betweenness": "介中心性",
@@ -51,7 +50,6 @@
     "noMatches": "沒有與當前篩選器匹配的數據。"
   },
   "search": {
-    "placeholder": "搜尋學生...",
     "noResults": "無結果"
   }
 }

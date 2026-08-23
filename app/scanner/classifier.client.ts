@@ -13,6 +13,7 @@ const STD = [0.229, 0.224, 0.225];
 const SIMILARITY_THRESHOLD = 0.55;
 const TOP_K = 8;
 const PALETTE_WEIGHT = 0.22;
+const EMBED_MARGIN = 0.08;
 
 let session: ort.InferenceSession | null = null;
 let keys: string[] = [];
@@ -27,13 +28,7 @@ export function isClassifierLoaded(): boolean {
   return initialized;
 }
 
-// Shared by item scanner and the student scanner (equipment-slot classification reuses this
-// same embedding model — see app/scanner-student/pipeline/equipment.ts). Both features have
-// their own top-level `loaded` flag scoped to their own modelLoader, so without this guard,
-// loading one feature's models after the other's were already loaded in the same tab would
-// re-create the ONNX session and rebuild all icon color features from scratch — wasteful, and
-// onnxruntime-web's WASM backend is documented as unable to run two sessions at once, so
-// creating a second session while the first is still live can hang instead of just being slow.
+// Guard against re-creating ONNX session: shared by item and student scanners; onnxruntime-web can't run two at once.
 export async function initClassifier(
   providers: string[],
   icons: IconEntry[],
@@ -51,10 +46,8 @@ export async function initClassifier(
   // network/CPU work below — paletteGroups construction after that work needs it.
   iconMap = new Map(icons.map((ic) => [ic.inventoryKey, ic]));
 
-  // modelBytes and embedResp are already-fetched by modelLoader.client.ts (in parallel with
-  // everything else), so the only remaining work here is the (local, CPU-bound) session
-  // compile and color-feature build — run them concurrently since neither depends on the
-  // other's output.
+  // modelBytes/embedResp are already fetched by modelLoader.client.ts, so the only remaining
+  // work is the CPU-bound session compile and color-feature build — run concurrently.
   onProgress('Loading embedding model and palette color features…');
   const [sess, features] = await Promise.all([ort.InferenceSession.create(modelBytes, { executionProviders: providers }), buildColorFeatures(icons, onColorProgress)]);
 
@@ -83,24 +76,40 @@ export async function initClassifier(
 export async function classifyBatch(bitmap: ImageBitmap, cells: CellBbox[]): Promise<Array<{ icon: IconEntry | null; similarity: number }>> {
   if (!session || !embedMat || !colorFeatures || !paletteGroups) throw new Error('Classifier not initialized');
 
+  const sess = session;
+  const mat = embedMat;
+  const features = colorFeatures;
+  const groups = paletteGroups;
+
   const canvas = new OffscreenCanvas(EMBED_SIZE, EMBED_SIZE);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas not initialized');
   const results: Array<{ icon: IconEntry | null; similarity: number }> = [];
 
-  for (const { x, y, w, h } of cells) {
-    ctx.clearRect(0, 0, EMBED_SIZE, EMBED_SIZE);
-    ctx.drawImage(bitmap, x, y, w, h, 0, 0, EMBED_SIZE, EMBED_SIZE);
-    const imgData = ctx.getImageData(0, 0, EMBED_SIZE, EMBED_SIZE).data;
-
+  const classifyImgData = async (imgData: Uint8ClampedArray, queryColor: Float32Array) => {
     const tensor = new ort.Tensor('float32', rgbaToNchw(imgData), [1, 3, EMBED_SIZE, EMBED_SIZE]);
-    const out = await session.run({ input: tensor });
+    const out = await sess.run({ input: tensor });
     const feat = (out['embedding']?.data ?? out[Object.keys(out)[0]].data) as Float32Array;
-
     const embedding = l2normalize(feat);
-    const queryColor = colorFeature(imgData, EMBED_SIZE);
-    const candidates = cosineTopK(embedding, embedMat, dim, TOP_K);
-    const { idx, sim } = rerankPaletteCandidates(candidates, embedding, queryColor, keys, iconMap, colorFeatures, paletteGroups, embedMat, dim);
+    const candidates = cosineTopK(embedding, mat, dim, TOP_K);
+    return rerankPaletteCandidates(candidates, embedding, queryColor, keys, iconMap, features, groups, mat, dim);
+  };
+
+  for (const { x, y, w, h } of cells) {
+    const grab = (mx: number, my: number) => {
+      ctx.clearRect(0, 0, EMBED_SIZE, EMBED_SIZE);
+      ctx.drawImage(bitmap, x + mx, y + my, w - 2 * mx, h - 2 * my, 0, 0, EMBED_SIZE, EMBED_SIZE);
+      return ctx.getImageData(0, 0, EMBED_SIZE, EMBED_SIZE).data;
+    };
+
+    const queryColor = colorFeature(grab(0, 0), EMBED_SIZE);
+
+    let { idx, sim } = await classifyImgData(grab(0, 0), queryColor);
+
+    if (sim < SIMILARITY_THRESHOLD) {
+      const retry = await classifyImgData(grab(w * EMBED_MARGIN, h * EMBED_MARGIN), queryColor);
+      if (retry.sim > sim) ({ idx, sim } = retry);
+    }
 
     if (sim < SIMILARITY_THRESHOLD) {
       results.push({ icon: null, similarity: sim });
@@ -162,6 +171,8 @@ function paletteGroup(icon: IconEntry | undefined): string | null {
     if (id >= 3000 && id <= 4999 && id % 10 <= 3) {
       return `item-${Math.floor(id / 10)}`;
     }
+    if (id >= 150000 && id <= 150003) return 'item-15000';
+    if (id >= 150004 && id <= 150007) return 'item-15004';
   }
   if (key.startsWith('Equipment_')) {
     const id = parseInt(key.split('_')[1]);
@@ -212,9 +223,8 @@ function cosineAt(query: Float32Array, mat: Float32Array, dim: number, idx: numb
 
 const COLOR_FEATURE_CHUNK_SIZE = 32;
 
-// icon.dataUrl is already an in-memory base64 string, so decode it directly instead
-// of round-tripping through fetch()/Response — that avoided overhead adds up over
-// hundreds of icons.
+// Decode dataUrl directly instead of round-tripping through fetch()/Response — the saved
+// overhead adds up over hundreds of icons.
 function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(',');
   const mime = /data:(.*);base64/.exec(header)?.[1] ?? 'image/webp';

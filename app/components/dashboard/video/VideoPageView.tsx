@@ -32,6 +32,9 @@ export const VideoPageView: React.FC<{
 }> = ({ raidInfo, server, portraitData, studentData, isGrandAssault, activeTab }) => {
   const raidDate = raidInfo.Date;
   const { t } = useTranslation(['dashboard', 'mypage']);
+
+  const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const { t: t_raidInfo } = useTranslation('raidInfo');
   const { i18n } = useTranslation('common');
   const locale = i18n.language as Locale;
@@ -171,14 +174,11 @@ export const VideoPageView: React.FC<{
 
   return (
     <div className="w-full space-y-4 text-sm">
-      {/* Mobile: slim toolbar, no card - offset below the sticky site header (h-14).
-          Kept as a direct sibling of the video grid so its containing block spans the
-          whole scrollable list below; nesting it inside a short wrapper makes sticky
-          positioning have no room to hold on to and it scrolls away immediately. */}
+      {/* Mobile: slim sticky toolbar below site header (direct grid sibling for positioning) */}
       <div className="sm:hidden sticky top-14 z-10">
         <div className="flex items-center gap-2 py-2 bg-neutral-50/95 dark:bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-700">
           <select
-            aria-label={t('searchYouTube.difficulty')}
+            aria-label={t_g('difficultyShort')}
             value={difficultyFilter}
             onChange={(e) => setDifficultyFilter(e.target.value)}
             className="min-w-0 flex-1 px-2 py-1.5 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-xs rounded"
@@ -238,7 +238,7 @@ export const VideoPageView: React.FC<{
                 id="score-max-filter-mobile"
                 value={scoreMaxInput}
                 onChange={setScoreMaxInput}
-                placeholder={t('videos_score_max_placeholder')}
+                placeholder={t_ui('max')}
                 className="w-full px-3 py-1.5 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm rounded text-neutral-900 dark:text-neutral-100"
               />
             </div>
@@ -276,7 +276,7 @@ export const VideoPageView: React.FC<{
           {/* Difficulty Filter */}
           <div className="flex items-center gap-2">
             <label htmlFor="difficulty-filter" className="text-neutral-600 dark:text-neutral-300 text-sm font-medium">
-              {t('searchYouTube.difficulty')}:
+              {t_g('difficulty')}:
             </label>
             <select
               id="difficulty-filter"
@@ -326,7 +326,7 @@ export const VideoPageView: React.FC<{
               id="score-max-filter"
               value={scoreMaxInput}
               onChange={setScoreMaxInput}
-              placeholder={t('videos_score_max_placeholder')}
+              placeholder={t_ui('max')}
               className="w-24 px-3 py-1.5 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm rounded transition-colors text-neutral-900 dark:text-neutral-100"
             />
           </div>

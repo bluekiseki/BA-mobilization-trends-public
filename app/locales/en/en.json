@@ -3,40 +3,15 @@
     "greeting": "Hello!",
     "about": "About",
     "contact": "Contact",
-    "loading_txt": "Loading data...",
-    "confirm": "Confirm",
-    "open": "Open",
-    "close": "Close",
     "viewAll": "View All",
-    "etc": "ETC",
-    "selectAll": "All",
-    "total": "All",
     "page": "Page",
     "times": " times",
     "show_count": "Items per page",
-    "load_more": "Load More",
-    "raid": "Total Assault",
-    "eraid": "Grand Assault",
-    "raidAndEraid": "Assaults",
-    "event": "Event",
-    "campaign": "Campaign",
-    "multifloor": "Final Restriction Rls.",
     "dataWarning": "The data provided on this site has been processed from another sources and may contain inaccuracies due to errors during processing. The site operator assumes no liability for any issues arising from the use of this data. Please use this information at your own discretion.",
     "viewMore": "View More",
     "viewSimple": "View Simple",
-    "start": "Start",
-    "end": "End",
-    "acquire": "Acquire",
-    "loop": "Loop",
-    "rerun": "Rerun",
-    "fest": "Fest",
-    "limited": "Ltd.",
     "clear": "Clear",
-    "period": "Period",
-    "jfd": "Joint Firing Drill",
-    "tacticalChallenge": "Tactical Challenge",
     "finalRestrictionWB": "Talents Unlock WB",
-    "expertPermit": "Expert Permit",
     "pred": "pred",
     "title": "Yuzu Trends",
     "site-title": "Yuzu Trends",
@@ -63,20 +38,17 @@
     "currentLocale": "en",
     "navigation": {
       "heatmap": "Trending",
-      "ranking": "Ranking",
       "home": "Home",
       "dashboard": "Board",
       "planner": "Planner",
       "help": "Help",
       "viewDescription": "Guide",
       "reportBug": "Report / Feedback",
-      "email": "email",
       "viewCode": "View Code",
       "theme": "Theme",
       "lightMode": "Light Mode",
       "darkMode": "Dark Mode",
       "systemTheme": "System Default",
-      "language": "Language",
       "serverSettings": "Server Settings",
       "jukebox": "BGM Player",
       "notices": "Notice Archive",
@@ -84,7 +56,6 @@
       "studentScanner": "Student Growth Scanner",
       "eventPlanner": "Event Farming Planner",
       "gachaPlanner": "Pyroxene & Recruit/Gacha Planner",
-      "studentGrowthPlanner": "Student Growth Planner",
       "equipmentFarmingPlanner": "Equipment Farming Planner",
       "favorCalculator": "Relationship Rank Calculator"
     },
@@ -102,6 +73,7 @@
       "en": "English",
       "ko": "Korean",
       "ja": "Japanese",
+      "zh_Hant": "Traditional Chinese",
       "label": "label"
     },
     "language_banner": {
@@ -119,8 +91,7 @@
       "startGuide": "Start Guide",
       "driver": {
         "next": "Next ➔",
-        "prev": "⬅ Prev",
-        "done": "Done"
+        "prev": "⬅ Prev"
       }
     },
     "promoBanner": {
@@ -138,7 +109,6 @@
       "inputDesc": "Please provide details",
       "inputEmail": "Email for reply (optional)",
       "submitBtn": "Submit",
-      "submittingBtn": "Submitting...",
       "errorMsg": "Failed to send. Please try again.",
       "githubIssue": "Report via GitHub Issues",
       "poweredBy": "This request is sent via Web3Forms."
@@ -176,7 +146,9 @@
     "scroll_to_prev_page": "Previous Page",
     "scroll_to_next_page": "Next Page",
     "scroll_to_last_page": "Last Page",
-    "scroll_to_top": "Scroll to Top"
+    "scroll_to_top": "Scroll to Top",
+    "exclude": "Exclude",
+    "viewOnSchaledb": "View on SchaleDB"
   },
   "charts": {
     "ranking": {
@@ -185,43 +157,23 @@
       "control": {
         "bar_option": {
           "name": "Bar Length",
-          "percent": "Maximum",
           "absolute": "Proportional"
         },
         "sum_option": {
-          "name": "Count Calculation",
-          "display_total": "Total",
-          "display_average": "Average Rate"
+          "name": "Count Calculation"
         },
-        "percent": "Show Percentage (%)",
-        "absolute": "Show Total Counts",
         "squad_type": "Type:",
-        "squad_type_all": "All",
-        "squad_type_main": "Striker",
-        "squad_type_support": "Special",
         "tactic_role": "Role:",
-        "tactic_role_All": "All",
-        "tactic_role_DamageDealer": "Attacker",
-        "tactic_role_Healer": "Healer",
-        "tactic_role_Supporter": "Supporter",
-        "tactic_role_Tanker": "Tanker",
-        "tactic_role_Vehicle": "T.S",
         "rank": "Include Assist:",
-        "rank_all": "All",
         "rank_normal": "Recruited student only",
         "rank_assist": "Assist only",
         "display_mode": "Display Mode",
-        "display_total": "Total Counts",
-        "display_average": "Average per Assault",
-        "raid": "Select a assault period",
-        "difficulty": "Difficulty"
+        "raid": "Select a assault period"
       },
       "desp_percent": "Each bar length represents a ratio to the total number of mobilizations",
       "desp_absolute": "Each bar length represents the actual number of mobilizations.",
       "unit_cnt": " times",
-      "loading_txt": "Loading data...",
-      "total_x": "{x} entries selected",
-      "filters": "Filters"
+      "total_x": "{x} entries selected"
     },
     "heatmap": {
       "title": "Student Mobilization Trends by Assault",
@@ -238,7 +190,6 @@
         "heatmap_option_absolute": "Mobilization percentage",
         "histogram_option_percent": "Star level percentage",
         "histogram_option_absolute": "Mobilization percentage",
-        "setButton": "Apply",
         "displayOptions": {
           "title": "Display Options",
           "heatmap": "Heatmap:",
@@ -254,8 +205,7 @@
         },
         "raidRange": {
           "title": "Select a assault period"
-        },
-        "difficulty": "Difficulty"
+        }
       },
       "draw": {
         "unit": {
@@ -268,7 +218,6 @@
     }
   },
   "raidInfo": {
-    "All": "All",
     "allDifficulties": "All Difficulties",
     "Lunatic": "Lunatic",
     "Torment": "Torment",
@@ -293,7 +242,6 @@
     "StudentGrowthByRankTitle": "Student Star Level Status by Rank",
     "StudentGrowthByRank": "Student Star Level Status by Rank",
     "popularFormations": "Popular Formations (Total: {x})",
-
     "rankingsAndTeams": "Rankings & Teams (Total: {x})",
     "includeStudent": "Include Student",
     "excludeStudent": "Exclude Student",
@@ -309,12 +257,9 @@
     "filter_import": "Import from clipboard",
     "filter_import_placeholder": "Paste filter JSON here...",
     "filter_import_error": "Invalid format.",
-    "filter_import_apply": "Apply",
-    "filter_reset": "Reset",
     "add_my_students": "Add unrecruited students",
     "includableStudentTitle": "Available Students",
     "excludableStudentTitle": "Students Difficult to Mobilize",
-    "tagMustInclude": "Required",
     "normal": "Selected",
     "assist": "Assist",
     "mustBeIncluded": "Must Include",
@@ -331,7 +276,6 @@
     "tagHardExclude": "Exclude",
     "tagAllowOnce": "Assist",
     "description": "Report temporary replacement",
-    "dashboardList": "Dashboard List",
     "selectBossPrompt": "Select a boss to analyze.",
     "histogramTitle": "Total Score Distribution (Histogram)",
     "scoreRangeFilter": "Score Range Filter",
@@ -339,8 +283,6 @@
     "switchToScore": "Switch to Score",
     "binSize": "Interval (Bin Size)",
     "bracketFilter": "Difficulty Bracket Filter",
-    "selectAll": "Select All",
-    "deselectAll": "Deselect All",
     "playerCount": "Players",
     "donutChartTitle": "Tier / Difficulty Combination Distribution",
     "donutChartSubtitle": "Click on inner elements of the donut chart for details",
@@ -365,7 +307,6 @@
     "tooltipDifficulty": "Difficulty: {{difficulty}}",
     "scoreCondition": "Score ≤ {{score}}",
     "tooltipCumulativeRank": "Cumulative Rank: ~{{rank}}",
-    "clearTime": "Clear Time",
     "hideSettings": "Hide Settings",
     "showSettings": "Show Settings",
     "rankRangeSettings": "Rank Range Settings",
@@ -373,7 +314,6 @@
     "maxRankPlaceholder": "Max Rank",
     "clearTimeDistribution": "Clear Time Distribution",
     "noData": "No data to display. Please check the settings.",
-    "headerDifficulty": "Difficulty",
     "headerInterval": "Interval (m:s)",
     "headerTimeout": "Timeout (m:s)",
     "headerShowTimeoutTitle": "Show records exceeding timeout",
@@ -389,16 +329,12 @@
     "bestRank": "Highest Rank",
     "timeViewUnavailable": "Time view is only available when all party members are on the same difficulty.",
     "viewByStudent": "View by Student",
-    "viewAllStudents": "All",
     "dataType": "Data Type",
     "byScore": "Score",
-    "byTime": "Time",
     "timeDistribution": "Time Distribution",
-    "starRatingDistribution": "Star Rating Distribution",
     "timeViewUnavailableNotice": "Time view is unavailable due to mixed difficulty records.",
     "byRank": "Rank",
     "rankDistribution": "Rank Distribution",
-    "byDefault": "Default",
     "byTotalPartyCount": "By party count",
     "byPartyPosition": "By order",
     "nPartyCount": "{{n}}pt",
@@ -408,8 +344,6 @@
     "lookupPlaceholder": "Enter rank, score, or time calculation (e.g., 4:00 - 2:30.5)...",
     "lookupInFiltersPlaceholder": "Enter rank, score, or time (M:SS) within filters...",
     "rankLookup": "Rank {{rank}}",
-    "recordBefore": "Previous",
-    "recordAfter": "Next",
     "difficultyFilterPlaceholder": "Search/add difficulty filter...",
     "noMoreFilters": "No more filters to add",
     "totalScoreSum": "Records Near Total Score",
@@ -425,17 +359,10 @@
     "searchYouTube": {
       "title": "Research Keywords",
       "searchYouTube": "Go YouTube",
-      "language": "Lang",
-      "difficulty": "Diff",
-      "none": "None",
-      "include": "Include",
       "terrain": "Terrain",
       "defenseType": "Defense Type",
       "attackType": "Attack Type",
-      "student_name": "Student Name",
-      "copy": "Copy",
-      "copied": "Copied!",
-      "dateRange": "Date Range"
+      "student_name": "Student Name"
     },
     "composition": {
       "mode_team": "Team",
@@ -450,7 +377,6 @@
       "usage_count": "{{counts}} uses",
       "click_to_collapse": "Click to collapse",
       "click_for_details": "Click for details",
-      "load_more": "Load More",
       "sort_count": "Most popular",
       "sort_bestRank": "Best score",
       "ignore_position": "Ignore placement order",
@@ -459,7 +385,6 @@
       "mulligan_view_order": "Pick Order",
       "mopup_filter": "Mop-up party filter"
     },
-    "videos": "Clear Videos",
     "videos_select_boss": "Select a boss type to view videos.",
     "videos_empty": "No videos available.",
     "videos_sort_score_desc": "Score (High to Low)",
@@ -467,7 +392,6 @@
     "videos_sort_upload_desc": "Upload Date (Newest)",
     "videos_sort_upload_asc": "Upload Date (Oldest)",
     "videos_score_min_placeholder": "Min",
-    "videos_score_max_placeholder": "Max",
     "videos_filter_tl": "TL Only",
     "videos_filter_target_type": "Target Type Only",
     "videos_missing_note": "Some videos may be missing due to automated processing.",
@@ -478,19 +402,15 @@
     "video_extraction_note": "Student compositions are auto-extracted: from video thumbnails via image recognition (cv), or from video description text (text). Data may be inaccurate."
   },
   "dashboardIndex": {
-    "title": "Dashboard List",
     "description": "Statistical dashboards for past Total Assaults and Grand Assaults",
     "pinnedGlobalTitle": "Current Global Server Raids",
     "liveBetaTitle": "Live Dashboard (Beta)",
-    "searchPlaceholder": "Search by boss name or ID...",
-    "filterAll": "All"
+    "searchPlaceholder": "Search by boss name or ID..."
   },
   "liveDashboard": {
     "description": "Real-time statistics of Total Assaults and Grand Assaults",
-    "total_clear": "Total Clears",
     "hourly_change": "Hourly Changes",
     "platinum_tier_distribution": "Platinum Tier Distribution",
-    "total_score": "Total Score",
     "ranking_cutoff_fluctuation": "Ranking Cutoff Fluctuation",
     "highscore_change_by_difficulty": "High Score Changes by Difficulty",
     "service_discontinuation_notice": "This service may be discontinued at any time.",
@@ -498,7 +418,6 @@
     "changePerHourLabel": "Players / hr",
     "playersPerHourUnit": "players/hr",
     "playersUnit": "players",
-    "hoursUnit": "hrs",
     "show_prediction_cutoff": "Show Platinum Cutoff Prediction",
     "prediction_mode_stats": "Avg / Min-Max Range",
     "prediction_mode_compare": "Compare Past Seasons",
@@ -511,8 +430,6 @@
     "data_unavailable_contact_email": "Contact via Email",
     "data_unavailable_contact_anon": "Submit Anonymously",
     "platinum_cut_est": "Platinum Cut Est. (stats-based)",
-    "hours_remaining_suffix": "remaining",
-    "video_fallback_title": "Clear Videos",
     "video_fallback_note_crawl": "Video crawling is still manual — updates at most every 1–2 days.",
     "video_fallback_note_live_only": "Showing only the current raid. For more:",
     "score_time_converter_title": "Score / Time Converter",
@@ -550,7 +467,6 @@
     "bySchool": "By School",
     "school": "By School",
     "percentage": "%",
-    "count": "Count",
     "change": "Change",
     "emblemSummary": "Total {{counts}} occurrences, Rate: {{rate}}%"
   },
@@ -566,30 +482,17 @@
     "distribute": "(Distro: {{name}})",
     "track": {
       "raid": "Raid",
-      "event": "Event",
-      "multifloor": "Final Restriction Rls.",
-      "campaign": "Campaign",
-      "pickup": "Pick-Up",
       "birthday": "Birthday",
       "birthday-suffix": "Birthday",
-      "story": "Story",
-      "misc": "Misc",
       "maintenance": "Maint.",
       "patch": "Patch"
     },
     "campaign": {
       "hard": "Hard",
       "bounty": "Bounty",
-      "schedule": "Schedule",
       "scrimmage": "Scrimmage",
       "normal": "Normal",
       "commission": "Commission"
-    },
-    "jfd": {
-      "shooting": "Shooting",
-      "defense": "Defense",
-      "breakthrough": "Breakthrough",
-      "escort": "Escort"
     },
     "story": {
       "mini": "Mini Story: {{title}}"

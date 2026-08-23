@@ -207,6 +207,7 @@ export function headers({}: Route.HeadersArgs) {
 export default function ResourcePlanner() {
   const { locale, krEvents, jpEvents, krRaid, jpRaid, krMultifloor, jpMultifloor, krCampaign, jpCampaign, krPickup, jpPickup } = useLoaderData<typeof loader>();
   const { t } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   const { i18n } = useTranslation();
   const { t: t_planner } = useTranslation('planner');
   useTranslation('calendar');
@@ -214,9 +215,9 @@ export default function ResourcePlanner() {
   const tabs = useMemo(
     () =>
       [
-        { id: 'overview', label: t('tabs.overview'), shortLabel: t('tabs.overview') },
+        { id: 'overview', label: t_ui('overview'), shortLabel: t_ui('overview') },
         { id: 'resources', label: t('tabs.resources'), shortLabel: t('tabs.resources') },
-        { id: 'income', label: t('tabs.income'), shortLabel: t('tabs.incomeShort') },
+        { id: 'income', label: t('tabs.income'), shortLabel: t_ui('settings') },
         { id: 'students', label: t('tabs.students'), shortLabel: t('tabs.studentsShort') },
       ] as const satisfies Array<{ id: TabId; label: string; shortLabel: string }>,
     [t],
@@ -1056,7 +1057,7 @@ export default function ResourcePlanner() {
             inventory={materialInventory}
             studentPlansSection={undefined}
             onUpdateInventory={updateMaterialInventory}
-            distEligma={gachaResult?.distEligma ?? []}
+            distEligma={gachaResult?.eligmaCumulative.dist('inf') ?? []}
             gachaEligmaPercentile={gachaEligmaPercentile}
             gachaEligmaUseMean={gachaEligmaUseMean}
             onSetPercentile={setGachaEligmaPercentile}

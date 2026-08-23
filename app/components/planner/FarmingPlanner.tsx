@@ -8,6 +8,7 @@ import { solveOptimalRuns } from '~/utils/solveFarmingHeuristic';
 import { solveOpartMaximize } from '~/utils/solveOpartMaximize';
 import { buildFarmingPriorities } from '~/utils/buildFarmingPriorities';
 import { CustomNumberInput } from '../CustomInput';
+import { CustomCheckbox } from '../CustomCheckbox';
 import { FaRedoAlt, FaRegStar } from 'react-icons/fa';
 import type { IconType } from 'react-icons/lib';
 import type { StagePrio, FarmingTab, FarmingResult } from './FarmingPlannerTypes';
@@ -68,16 +69,6 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
   }, [runCounts, allStages]);
 
   const isApExceeded = totalApUsed > availableAp;
-
-  useEffect(() => {
-    if (stagePrio && Object.keys(stagePrio).length === 0) {
-      const newPrios: Record<number, StagePrio> = {};
-      farmingStages.forEach((stage, i) => {
-        if (i < farmingStages.length - 4) newPrios[stage.Id] = 'exclude';
-      });
-      setStagePrio((prev) => ({ ...prev, ...newPrios }));
-    }
-  }, [eventId, farmingStages, setStagePrio, stagePrio]);
 
   const farmingCalculationResult = useMemo(() => {
     const totalItems: Record<string, { amount: number; isBonusApplied: boolean }> = {};
@@ -201,7 +192,9 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     const apCosts = Array<number>(numStages).fill(0);
     for (let i = 0; i < numStages; i++) {
       const stage = optimizableStages[i];
-      apCosts[i] = stage.StageEnterCostAmount;
+      // Tie-break bias: prefer stages already in plan.
+      const alreadyPlanned = (runCounts?.[stage.Id] || 0) > 0;
+      apCosts[i] = stage.StageEnterCostAmount * (alreadyPlanned ? 1 - 1e-6 : 1);
       for (const reward of stage.EventContentStageReward) {
         if (itemMap.has(reward.RewardId) && (reward.RewardTagStr === 'Event' || reward.RewardTagStr === 'Default')) {
           const itemIndex = itemMap.get(reward.RewardId);
@@ -222,12 +215,14 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       const priorities = buildFarmingPriorities(optimizableStages, null, stagePrio || null);
       additionalRunsArray = solveOptimalRuns({ dropMatrix, apCosts, neededAmounts, priorities }).map(Math.round);
     }
-    const additionalRunCounts: Record<number, number> = {};
-    for (let i = 0; i < numStages; i++) {
-      if (additionalRunsArray[i] > 0) additionalRunCounts[optimizableStages[i].Id] = Math.round(additionalRunsArray[i]);
-    }
-    const filtered = runCounts ? Object.fromEntries(Object.entries(runCounts).filter(([key]) => eventData.stage.stage?.filter((v) => v.Id === Number(key)).length == 0)) : {};
-    setRunCounts(() => ({ ...filtered, ...additionalRunCounts }));
+    // Replaces (not appends) optimizable stage runs; one-time/excluded stages unchanged.
+    setRunCounts((prev) => {
+      const next = { ...prev };
+      for (let i = 0; i < numStages; i++) {
+        next[optimizableStages[i].Id] = additionalRunsArray[i] > 0 ? Math.round(additionalRunsArray[i]) : 0;
+      }
+      return next;
+    });
   }, [neededItems, farmingStages, stagePrio, priorityItemId, totalBonus, runCounts, setRunCounts]);
 
   const handleRunCountChange = useCallback(
@@ -265,6 +260,26 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       return newCounts;
     });
   }, [oneTimeStages, runCounts, setRunCounts]);
+
+  const handleToggleAllFirstRewards = useCallback(() => {
+    const allStages = [...farmingStages, ...oneTimeStages];
+    const isEnabled = farmingStages.every((stage) => firstClears?.[stage.Id]) && allStages.every((stage) => (runCounts?.[stage.Id] || 0) > 0);
+    setFirstClears((prev) => {
+      const next = { ...prev };
+      farmingStages.forEach((stage) => {
+        next[stage.Id] = !isEnabled;
+      });
+      return next;
+    });
+    setRunCounts((prev) => {
+      const next = { ...prev };
+      allStages.forEach((stage) => {
+        const count = next[stage.Id] || 0;
+        if (isEnabled ? count === 1 : count === 0) next[stage.Id] = isEnabled ? 0 : 1;
+      });
+      return next;
+    });
+  }, [farmingStages, oneTimeStages, firstClears, runCounts, setFirstClears, setRunCounts]);
 
   const handleSetMaxRuns = useCallback(
     (stageId: number) => {
@@ -326,6 +341,14 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
     if (checkedCount === oneTimeStages.length) return 'checked' as const;
     return 'indeterminate' as const;
   }, [oneTimeStages, runCounts]);
+
+  const allFirstRewardsState = useMemo(() => {
+    const allStages = [...farmingStages, ...oneTimeStages];
+    const enabledCount = allStages.filter((stage) => (stage.type !== 'stage' || firstClears?.[stage.Id]) && (runCounts?.[stage.Id] || 0) > 0).length;
+    if (enabledCount === 0) return 'unchecked' as const;
+    if (enabledCount === allStages.length && farmingStages.every((stage) => firstClears?.[stage.Id])) return 'checked' as const;
+    return 'indeterminate' as const;
+  }, [farmingStages, oneTimeStages, firstClears, runCounts]);
 
   if (!stagePrio || !firstClears || !runCounts) return null;
 
@@ -393,6 +416,11 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       >
         {t('button.runAutoFarmCalc')}
       </button>
+
+      <label className="flex items-center gap-2 my-2 w-fit bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-1 px-3 rounded-md text-sm cursor-pointer">
+        <CustomCheckbox state={allFirstRewardsState} onChange={handleToggleAllFirstRewards} />
+        <span className="select-none">{t('button.setAllFirstRewards')}</span>
+      </label>
 
       <div data-component-name="FarmingPlanner_tab" className="flex border-b border-neutral-200 dark:border-neutral-700">
         {tabs.map((tab) => (

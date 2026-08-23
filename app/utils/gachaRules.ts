@@ -20,14 +20,7 @@ export const FES_EXCLUSIONS = FES_EXCLUSIONS_BY_PICKUP_ID;
 
 // src/utils/gachaRules.ts
 
-/**
- * List of Archived Student IDs
- * * Description: Students classified under 'Archive Recruitment' because they were released long ago or are farmable.
- * They do not appear in the regular pool (off-rate) unless they are the specific pickup target.
- * (However, they can be acquired via Selective Pickup or Archive Recruitment)
- * * Criteria: Initial 3-star and major farmable characters.
- * Actual IDs must match the database; example IDs and comments are used here for explanation.
- */
+/* Archived student IDs (farmable or old releases, excluded from off-rate pool) */
 export const ARCHIVE_STUDENT_IDS = new Set([
   10000, // aru
   10001, // eimi
@@ -87,13 +80,7 @@ export const canSpook = (studentId: number, isLimited: boolean, isFes: boolean):
   return true;
 };
 
-/**
- * "Recruitment Count Bonus" reward table, based on the official patch notes dated 2026-07-28.
- * Only the two reward types tracked by this planner (limited-time 10-pull tickets and Eligma) are included.
- * Other rewards, such as gift boxes, Tactical Training Blu-rays, Tech Notes, and Keystone Fragments, are ignored.
- * The count is tracked per BannerPeriod and resets for each banner. This simplifies the actual rule, where
- * banners within the same period share the count, and matches the counter behavior used elsewhere in this planner.
- */
+/* "Recruitment Count Bonus" reward table (tickets + Eligma only, resets per banner) */
 const FIRST_TIME_TICKET_COUNTS = new Set([70, 130, 150, 170, 270, 330, 350, 370]);
 const FIRST_TIME_ELIGMA: Record<number, number> = { 30: 10, 110: 20, 230: 10, 310: 20 };
 const REPEAT_ELIGMA_BY_RELATIVE: Record<number, number> = { 100: 10, 200: 10 };
@@ -119,3 +106,28 @@ export const getNextTicketThreshold = (count: number): number | undefined => {
   }
   return next;
 };
+
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/* KST midnight for YYYY-MM-DD (pinned +9, not UTC or local) */
+const kstMidnight = (dateStr: string): number => {
+  const [year, month, day] = dateStr.split(/[-T: ]/).map(Number);
+  return Date.UTC(year, month - 1, day) - KST_OFFSET_MS;
+};
+
+/** Expiry for a "Recruitment Count Bonus" 10-pull ticket: banner start + 40 days, 11:00 KST. */
+export const getRecruitBonusTicketExpiry = (bannerStartTime: string): number => kstMidnight(bannerStartTime) + 40 * DAY_MS + 11 * 60 * 60 * 1000;
+
+/**
+ * Expiry for an eraid 10-pull ticket: the last day of the month *following* the raid's end
+ * month, 23:59 KST. (Month lengths vary, so unlike the +40-day case above this needs real calendar math —
+ * done in KST via the same Date.UTC-then-subtract-offset trick.)
+ */
+export const getEraidTicketExpiry = (eraidEndTime: string): number => {
+  const [year, month] = eraidEndTime.split(/[-T: ]/).map(Number);
+  return Date.UTC(year, month + 1, 0, 23, 59) - KST_OFFSET_MS; // day 0 of (month+1) = the month right after `month`'s last day
+};
+
+/* Eraid ticket available from 11:00 KST one day before nominal end date (buffer for banner timing mismatches) */
+export const getEraidTicketAvailableFrom = (eraidEndTime: string): number => kstMidnight(eraidEndTime) - DAY_MS + 11 * 60 * 60 * 1000;

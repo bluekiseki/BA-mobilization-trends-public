@@ -183,7 +183,7 @@ function getFilterLabel(value: string, locale: Locale): string {
 }
 
 function FilterCheckboxRow({ label, options, selected, onToggle, locale }: { label: string; options: string[]; selected: Set<string>; onToggle: (value: string) => void; locale: Locale }) {
-  const { t: tc } = useTranslation('common');
+  const { t: t_g } = useTranslation('game');
   if (options.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
@@ -198,7 +198,7 @@ function FilterCheckboxRow({ label, options, selected, onToggle, locale }: { lab
               className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-900"
             />
             <span className="truncate" title={option}>
-              {option === 'raid' || option === 'eraid' || option === 'jfd' || option === 'multifloor' ? tc(option) : getFilterLabel(option, locale)}
+              {option === 'raid' || option === 'eraid' || option === 'jfd' || option === 'multifloor' ? t_g(option) : getFilterLabel(option, locale)}
             </span>
           </label>
         ))}
@@ -209,8 +209,7 @@ function FilterCheckboxRow({ label, options, selected, onToggle, locale }: { lab
 
 function ScoreTooltip({ active, payload, metric }: { active?: boolean; payload?: ReadonlyArray<{ payload?: ScorePoint }>; metric: RaidResultMetric }) {
   const { t } = useTranslation('mypage');
-  const { t: tc } = useTranslation('common');
-  const { t: tp } = useTranslation('planner');
+  const { t: t_g } = useTranslation('game');
   if (!active || !payload || payload.length === 0) return null;
   const point = payload[0]?.payload;
   if (!point) return null;
@@ -221,7 +220,7 @@ function ScoreTooltip({ active, payload, metric }: { active?: boolean; payload?:
       {metric === 'score' && typeof point.score === 'number' && <div className="mt-1">{point.score.toLocaleString()}</div>}
       {metric === 'rank' && typeof point.rank === 'number' && <div className="mt-1">{t('raids.stats.rankValue', { rank: point.rank.toLocaleString() })}</div>}
       {metric === 'score' && point.raidType === 'jfd' && typeof point.score === 'number' && (
-        <div className="text-xs text-neutral-500 dark:text-neutral-400">{formatJfdCoinReward(point.score, tp('label.coin')) ?? '-'}</div>
+        <div className="text-xs text-neutral-500 dark:text-neutral-400">{formatJfdCoinReward(point.score, t_g('coin')) ?? '-'}</div>
       )}
       <div className="text-xs text-neutral-500 dark:text-neutral-400">
         {typeof point.score === 'number' && t('raids.stats.scoreLabel', { score: point.score.toLocaleString() })}
@@ -229,7 +228,7 @@ function ScoreTooltip({ active, payload, metric }: { active?: boolean; payload?:
         {typeof point.rank === 'number' && t('raids.stats.rankLabel', { rank: point.rank.toLocaleString() })}
       </div>
       <div className="text-xs text-neutral-500 dark:text-neutral-400">
-        {tc(point.raidType)}
+        {t_g(point.raidType)}
         {point.trophy ? ` · ${point.trophy}` : ''}
       </div>
     </div>
@@ -302,6 +301,8 @@ export function RaidStatsTab({ entries, raidOptions, students, portraitData, loc
   const { t } = useTranslation('mypage');
   const { t: td } = useTranslation('dashboard');
   const { t: tch } = useTranslation('charts');
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const { isDark } = useIsDarkState();
   const raidInfoByKey = useMemo(() => new Map(raidOptions.map((raid) => [`${raid.server}:${raid.id}`, raid])), [raidOptions]);
 
@@ -767,7 +768,7 @@ export function RaidStatsTab({ entries, raidOptions, students, portraitData, loc
             {(
               [
                 ['floor', t('raids.floor')],
-                ['time', td('byTime')],
+                ['time', t_ui('time')],
               ] as [RestrictionMetric, string][]
             ).map(([value, label]) => (
               <button
@@ -793,7 +794,7 @@ export function RaidStatsTab({ entries, raidOptions, students, portraitData, loc
             locale={locale}
           />
           <FilterCheckboxRow
-            label={td('headerDifficulty')}
+            label={t_g('difficulty')}
             options={restrictionDifficultyOptions}
             selected={restrictionDifficultyFilters}
             onToggle={(value) => toggleSetValue(setRestrictionDifficultyFilters, value)}

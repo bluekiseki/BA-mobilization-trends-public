@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FiTrendingUp } from 'react-icons/fi';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
@@ -25,6 +26,37 @@ type BonusStudent = {
   totalBonusValue: number;
 };
 
+const calculateBonusMap = (studentIds: string[], eventData: BonusSelectorProps['eventData'], allStudents: StudentData): TotalBonusMap => {
+  const bonusMap: TotalBonusMap = {};
+
+  eventData.currency.forEach((currency) => {
+    const relevantStudents = studentIds
+      .map((id) => {
+        const bonusInfo = eventData.bonus[id];
+        if (!bonusInfo) return null;
+        const typeIndex = bonusInfo.EventContentItemType.indexOf(currency.EventContentItemType);
+        if (typeIndex === -1) return null;
+        return {
+          squadType: allStudents[Number(id)]?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support'),
+          bonusValue: bonusInfo.BonusPercentage[typeIndex],
+        };
+      })
+      .filter((student): student is NonNullable<typeof student> => student !== null);
+
+    const strikers = relevantStudents
+      .filter((student) => student.squadType === 'Main')
+      .sort((a, b) => b.bonusValue - a.bonusValue)
+      .slice(0, 4);
+    const specials = relevantStudents
+      .filter((student) => student.squadType === 'Support')
+      .sort((a, b) => b.bonusValue - a.bonusValue)
+      .slice(0, 2);
+    bonusMap[currency.ItemUniqueId] = [...strikers, ...specials].reduce((sum, student) => sum + student.bonusValue, 0);
+  });
+
+  return bonusMap;
+};
+
 export const BonusSelector = ({ eventId, eventData, iconData, allStudents, studentPortraits, onBonusCalculate }: BonusSelectorProps) => {
   const bonusData = eventData.bonus;
   const { plan, setSelectedStudents } = usePlanForEvent(eventId);
@@ -45,6 +77,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
     [selectedStudents, setSelectedStudents],
   );
   const { t } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
 
   if (!selectedStudents) return null;
 
@@ -77,41 +110,20 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
     setSelectedStudents([]);
   }, [selectedStudents, onSelectStudent]);
 
-  const totalBonus = useMemo(() => {
-    const finalBonusMap: TotalBonusMap = {};
-    // if (!eventData) return finalBonusMap;
+  const totalBonus = useMemo(() => calculateBonusMap(selectedStudents, eventData, allStudents), [selectedStudents, allStudents, eventData]);
 
-    eventData.currency.forEach((currency) => {
-      const itemType = currency.EventContentItemType;
-      const itemUniqueId = currency.ItemUniqueId;
-      const relevantStudents = selectedStudents
-        .map((id) => {
-          const bonusInfo = eventData.bonus[id];
-          const studentInfo = allStudents[Number(id)];
-          if (!bonusInfo) return null;
-          const typeIndex = bonusInfo.EventContentItemType.indexOf(itemType);
-          if (typeIndex === -1) return null;
-          return {
-            id,
-            squadType: studentInfo?.SquadType || (Number(id) < 20000 ? 'Main' : 'Support'),
-            bonusValue: bonusInfo.BonusPercentage[typeIndex],
-          };
+  const studentsThatIncreaseBonus = useMemo(() => {
+    const currentBonus = calculateBonusMap(selectedStudents, eventData, allStudents);
+    return new Set(
+      bonusStudents
+        .filter((student) => !selectedStudents.includes(student.id))
+        .filter((student) => {
+          const nextBonus = calculateBonusMap([...selectedStudents, student.id], eventData, allStudents);
+          return eventData.currency.some((currency) => nextBonus[currency.ItemUniqueId] > currentBonus[currency.ItemUniqueId]);
         })
-        .filter((s): s is NonNullable<typeof s> => s !== null);
-
-      const strikers = relevantStudents.filter((s) => s.squadType === 'Main');
-      const specials = relevantStudents.filter((s) => s.squadType === 'Support');
-      strikers.sort((a, b) => b.bonusValue - a.bonusValue);
-      specials.sort((a, b) => b.bonusValue - a.bonusValue);
-
-      const topStrikers = strikers.slice(0, 4);
-      const topSpecials = specials.slice(0, 2);
-      const totalStrikersBonus = topStrikers.reduce((sum, s) => sum + s.bonusValue, 0);
-      const totalSpecialsBonus = topSpecials.reduce((sum, s) => sum + s.bonusValue, 0);
-      finalBonusMap[itemUniqueId] = totalStrikersBonus + totalSpecialsBonus;
-    });
-    return finalBonusMap;
-  }, [selectedStudents, allStudents, eventData]);
+        .map((student) => student.id),
+    );
+  }, [selectedStudents, eventData, allStudents, bonusStudents]);
 
   // 1. Get the list of currencies to use for toggles
   const eventCurrencies = useMemo(() => {
@@ -178,6 +190,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
   const renderStudentCard = (student: BonusStudent) => {
     const isSelected = selectedStudents.includes(student.id);
     const bonusInfo = bonusData[student.id];
+    const increasesBonus = !isSelected && studentsThatIncreaseBonus.has(student.id);
 
     return (
       <div
@@ -192,6 +205,14 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path>
             </svg>
+          </div>
+        )}
+        {increasesBonus && (
+          <div
+            className="absolute top-1 right-1 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800"
+            title="Selecting this student increases an event bonus"
+          >
+            <FiTrendingUp aria-hidden="true" className="w-2.5 h-2.5 text-white" />
           </div>
         )}
         <img src={`data:image/webp;base64,${student.portrait}`} alt={student.name} className="w-full h-auto object-cover aspect-square" loading="lazy" />
@@ -225,7 +246,13 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
       {/* Header: Title on left, controls on right. */}
       <div className="flex flex-wrap justify-between items-center cursor-pointer group pt-6 gap-3">
         {/* 1. Title (Always left-aligned) */}
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 shrink-0">{t('ui.bonusStudent')}</h2>
+        <div className="flex items-center gap-3 shrink-0">
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('ui.bonusStudent')}</h2>
+          <span className="flex items-center gap-1 text-[10px] text-neutral-400 dark:text-neutral-500">
+            <FiTrendingUp aria-hidden="true" className="w-3 h-3 text-green-700 dark:text-green-300" />
+            {t('ui.bonusIncreaseHint')}
+          </span>
+        </div>
 
         {/* Wrapper for all controls, aligned to the right */}
         <div className="flex flex-wrap justify-end items-center gap-2">
@@ -276,7 +303,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
             onClick={handleSelectAll}
             className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9"
           >
-            {t('button.selectAll')}
+            {t_ui('selectAll')}
           </button>
           <button
             onClick={handleSelectFromMyPool}
@@ -293,7 +320,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
             onClick={handleDeselectAll}
             className="bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold text-xs py-1 px-3 rounded-md transition-all hover:scale-105 active:scale-95 h-9"
           >
-            {t('button.deselectAll')}
+            {t_ui('deselectAll')}
           </button>
         </div>
       </div>

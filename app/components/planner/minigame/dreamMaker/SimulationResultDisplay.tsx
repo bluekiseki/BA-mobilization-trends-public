@@ -17,7 +17,7 @@ interface SimulationResultDisplayProps {
 
 export const SimulationResultDisplay = ({ result, title, description, eventData, iconData, avgPtDisplayMode, setAvgPtDisplayMode }: SimulationResultDisplayProps) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'dream_maker' });
-  const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const locale_key = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En';
   const dreamData = eventData.minigame_dream;
@@ -128,7 +128,7 @@ export const SimulationResultDisplay = ({ result, title, description, eventData,
                 <div className="flex justify-between items-baseline">
                   <p className="font-bold text-[11px] mb-1">
                     {loop}
-                    {t_c('loop')}
+                    {t_ui('loop')}
                   </p>
                   <p className="text-purple-600 dark:text-purple-400 text-[10px]">
                     {t('calculator.specialEndingRateShort', {
@@ -143,17 +143,17 @@ export const SimulationResultDisplay = ({ result, title, description, eventData,
                       {p.LocalizeEtc?.[locale_key]}
                     </div>
                   ))}
-                  <div className="font-semibold text-neutral-500 text-[10px]">{t_c('start')}</div>
+                  <div className="font-semibold text-neutral-500 text-[10px]">{t_ui('start')}</div>
                   {dreamData.parameter.map((p) => (
                     <div key={p.ParameterType}>{data.startStats[p.ParameterType]?.toFixed(0)}</div>
                   ))}
-                  <div className="font-semibold text-neutral-500 text-[10px]">{t_c('end')}</div>
+                  <div className="font-semibold text-neutral-500 text-[10px]">{t_ui('end')}</div>
                   {dreamData.parameter.map((p) => (
                     <div key={p.ParameterType}>{data.endStats[p.ParameterType]?.toFixed(0)}</div>
                   ))}
                 </div>
                 <p className="font-semibold text-center text-[11px] mt-1 text-blue-600">
-                  {t_c('acquire')} Pt: {data.eventPoints.toFixed(0)}
+                  {t_ui('acquire')} Pt: {data.eventPoints.toFixed(0)}
                 </p>
               </div>
             ))}

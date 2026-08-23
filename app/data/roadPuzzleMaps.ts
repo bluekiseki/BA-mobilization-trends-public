@@ -74,7 +74,6 @@ const ROAD_PUZZLE_1: MapData = {
     [W, O, O, W, W, W, W, W],
   ],
 };
-
 // Round 7 / RoadPuzzle_2
 // First row has indent (rowOffset=1)
 // rails: 1=r24 @(3,2), 2=r45 @(3,5), 3=r25 @(6,6)

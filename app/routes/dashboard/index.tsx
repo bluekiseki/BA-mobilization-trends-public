@@ -16,12 +16,7 @@ import type { Route } from './+types';
 import { getInstance } from '~/middleware/i18next';
 import { localeLink } from '~/utils/localeLink';
 import bossData from '~/data/bossdata.json';
-// import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
-// import { getBracketFromTotalScore } from '~/components/raid/Difficulty';
-// import { formatTimeToTimestamp } from '~/utils/time';
 import { HiUserGroup } from 'react-icons/hi';
-// import { FaTrophy } from 'react-icons/fa6';
-// import { IoMdTime } from 'react-icons/io';
 import { BsPinAngleFill } from 'react-icons/bs';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { getCurrentGlobalraid, getKstTime } from '~/data/globalRaidDates';
@@ -89,7 +84,7 @@ export function loader({ context, params }: LoaderFunctionArgs) {
   }
 
   return data({
-    title: i18n.t('dashboardIndex:title'),
+    title: i18n.t('ui:dashboardList'),
     description: i18n.t('dashboardIndex:description'),
     siteTitle: i18n.t('common:title'),
     groupedRaidInfos,
@@ -130,7 +125,7 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
   const primaryRaid = raidInfos[0];
   const navigate = useNavigate();
   const { Id: id, Boss, Date: date, Location: location } = primaryRaid;
-  const { t } = useTranslation('common');
+  const { t: t_g } = useTranslation('game');
   const difficultLevel = getMostDifficultLevel(primaryRaid);
   const difficultClearCount = difficultLevel ? primaryRaid.Cnt[difficultLevel] : 0;
 
@@ -142,7 +137,7 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
       {/* Header */}
       <div className="flex justify-between items-center text-sm text-neutral-500 dark:text-neutral-400 mb-2">
         <div className="flex items-center gap-2">
-          <span className="font-mono font-semibold text-xs">{isGrand ? t('eraid') : t('raid')}</span>
+          <span className="font-mono font-semibold text-xs">{isGrand ? t_g('eraid') : t_g('raid')}</span>
           <span className="w-px h-2 bg-neutral-300 dark:bg-neutral-600"></span>
           <TerrainIconGameStyle terrain={location as Terrain} size={'1em'} />
         </div>
@@ -178,7 +173,7 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
                   }}
                   className="flex items-center gap-1.5 leading-none hover:scale-101"
                 >
-                  <div className="flex items-center px-1 py-0.5 rounded-[2px] text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
+                  <div className="flex items-center px-1 py-0.5 rounded-xs text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
                     <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type][getLocaleShortName(locale)]}</span>
                     <span className="text-xs font-normal">{diff}</span>
                   </div>
@@ -189,7 +184,7 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
           </div>
         ) : (
           <div className="flex items-center gap-1 leading-none mb-0.5">
-            <div className="px-1.5 py-0.5 rounded-[2px] bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600">
+            <div className="px-1.5 py-0.5 rounded-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600">
               <span className="text-xs font-medium">{difficultLevel}</span>
             </div>
             <span className="text-xs text-neutral-600 dark:text-neutral-300 tabular-nums font-normal ml-0.5">{difficultClearCount?.toLocaleString()}</span>
@@ -256,7 +251,7 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
         {israid ? (
           /* Case 1: Total Assault (Show Max Difficulty) */
           <div className="flex items-center gap-1 leading-none mb-0.5">
-            <div className="px-1.5 py-0.5 rounded-[2px] bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600">
+            <div className="px-1.5 py-0.5 rounded-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600">
               <span className="text-xs font-medium">{getMostDifficultLevel(primaryRaid)}</span>
             </div>
             {}
@@ -269,7 +264,7 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
               return (
                 <div key={raid.Type} className="flex items-center gap-1.5 leading-none">
                   {}
-                  <div className="flex items-center px-1 py-0.5 rounded-[2px] text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
+                  <div className="flex items-center px-1 py-0.5 rounded-xs text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
                     <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type][getLocaleShortName(locale)]}</span>
                     <span className="text-xs font-normal">{getMostDifficultLevel(raid)}</span>
                   </div>
@@ -285,9 +280,11 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
 
 export default function DashboardIndex() {
   const { groupedRaidInfos, server, locale, pinnedTotalAssault, pinnedGrandAssault } = useLoaderData<typeof loader>();
-  const { t } = useTranslation('dashboard');
+  // const { t } = useTranslation('dashboard');
   const { t: t_index } = useTranslation('dashboardIndex');
-  const { t: t_common } = useTranslation('common');
+  // const { t: t_common } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
 
   // Sort grouped data by date
   const sortedRaids = groupedRaidInfos.sort((a, b) => {
@@ -324,7 +321,7 @@ export default function DashboardIndex() {
   return (
     <div className="bg-neutral-50 dark:bg-neutral-900 min-h-screen p-4 sm:p-6 lg:p-8 py-6">
       <div className="max-w-7xl mx-auto">
-        <PageHeader title={`${t('dashboardList')} (${server.toUpperCase()})`} description={t_index('description')} />
+        <PageHeader title={`${t_ui('dashboardList')} (${server.toUpperCase()})`} description={t_index('description')} />
 
         <div className="mb-6 flex gap-2">
           <input
@@ -341,7 +338,7 @@ export default function DashboardIndex() {
                 onClick={() => setTypeFilter(opt)}
                 className={`px-3 py-1.5 transition-colors ${typeFilter === opt ? 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900' : 'bg-white dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
               >
-                {opt === 'all' ? t_index('filterAll') : t_common(opt)}
+                {opt === 'all' ? t_ui('all') : t_g(opt)}
               </button>
             ))}
           </div>

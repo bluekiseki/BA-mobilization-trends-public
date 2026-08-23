@@ -184,43 +184,45 @@ function ReviewCard({
   onConfirm: () => void;
 }) {
   const { t } = useTranslation('planner', { keyPrefix: 'studentScanner' });
-  const { t: tPlanner } = useTranslation('planner');
+  const { t: tPlanner } = useTranslation(['planner', 'game']);
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const [activeControl, setActiveControl] = useState<string | null>(null);
   const projection = useMemo(() => projectReviewRow(row), [row]);
   const equipmentLabel = (slot: number) => {
     const type = row.equipmentTypes?.[slot];
     const equipmentNames = {
-      Hat: tPlanner('common.Hat'),
-      Shoes: tPlanner('common.Shoes'),
-      Gloves: tPlanner('common.Gloves'),
-      Hairpin: tPlanner('common.Hairpin'),
-      Bag: tPlanner('common.Bag'),
-      Badge: tPlanner('common.Badge'),
-      Watch: tPlanner('common.Watch'),
-      Charm: tPlanner('common.Charm'),
-      Necklace: tPlanner('common.Necklace'),
+      Hat: tPlanner('game:equipments.hat'),
+      Shoes: tPlanner('game:equipments.shoes'),
+      Gloves: tPlanner('game:equipments.gloves'),
+      Hairpin: tPlanner('game:equipments.hairpin'),
+      Bag: tPlanner('game:equipments.bag'),
+      Badge: tPlanner('game:equipments.badge'),
+      Watch: tPlanner('game:equipments.watch'),
+      Charm: tPlanner('game:equipments.charm'),
+      Necklace: tPlanner('game:equipments.necklace'),
     };
     return type
       ? equipmentNames[type]
       : tPlanner(`spreadsheet.headerField.equipment${slot + 1}` as 'spreadsheet.headerField.equipment1' | 'spreadsheet.headerField.equipment2' | 'spreadsheet.headerField.equipment3');
   };
   const config: Record<ReviewImpactKey, EditConfig> = {
-    level: { label: tPlanner('spreadsheet.headerField.level'), min: 1, max: 90, select: false, onCommit: (value) => onEditField(index, 'level', value) },
-    star: { label: tPlanner('spreadsheet.headerField.rank'), min: 1, max: 5, select: true, onCommit: (value) => onEditField(index, 'star', value) },
-    uw: { label: tPlanner('common.ue'), min: 0, max: 4, select: true, onCommit: (value) => onEditField(index, 'uw', value) },
+    level: { label: t_g('level'), min: 1, max: 90, select: false, onCommit: (value) => onEditField(index, 'level', value) },
+    star: { label: t_g('rank'), min: 1, max: 5, select: true, onCommit: (value) => onEditField(index, 'star', value) },
+    uw: { label: tPlanner('game:ue'), min: 0, max: 4, select: true, onCommit: (value) => onEditField(index, 'uw', value) },
     uwLevel: { label: tPlanner('spreadsheet.headerField.ueLevel'), min: 1, max: 70, select: false, onCommit: (value) => onEditField(index, 'uwLevel', value) },
     affection: { label: tPlanner('spreadsheet.headerField.affection'), min: 1, max: 100, select: false, onCommit: (value) => onEditField(index, 'affection', value) },
-    ex: { label: tPlanner('common.ex'), min: 1, max: 5, select: true, onCommit: (value) => onEditField(index, 'ex', value) },
-    normal: { label: tPlanner('common.normal'), min: 1, max: 10, select: true, onCommit: (value) => onEditField(index, 'normal', value) },
-    passive: { label: tPlanner('common.passive'), min: 1, max: 10, select: true, onCommit: (value) => onEditField(index, 'passive', value) },
-    sub: { label: tPlanner('common.sub'), min: 1, max: 10, select: true, onCommit: (value) => onEditField(index, 'sub', value) },
+    ex: { label: tPlanner('game:skill.ex'), min: 1, max: 5, select: true, onCommit: (value) => onEditField(index, 'ex', value) },
+    normal: { label: tPlanner('game:skill.normal'), min: 1, max: 10, select: true, onCommit: (value) => onEditField(index, 'normal', value) },
+    passive: { label: tPlanner('game:skill.passive'), min: 1, max: 10, select: true, onCommit: (value) => onEditField(index, 'passive', value) },
+    sub: { label: tPlanner('game:skill.sub'), min: 1, max: 10, select: true, onCommit: (value) => onEditField(index, 'sub', value) },
     equipment1: { label: equipmentLabel(0), min: 0, max: 10, select: true, valuePrefix: 'T', onCommit: (value) => onEditEquipment(index, 0, value) },
     equipment2: { label: equipmentLabel(1), min: 0, max: 10, select: true, valuePrefix: 'T', onCommit: (value) => onEditEquipment(index, 1, value) },
     equipment3: { label: equipmentLabel(2), min: 0, max: 10, select: true, valuePrefix: 'T', onCommit: (value) => onEditEquipment(index, 2, value) },
-    gear: { label: tPlanner('spreadsheet.headerField.bondGear'), min: 0, max: 2, select: true, valuePrefix: 'T', onCommit: (value) => onEditField(index, 'gear', value) },
-    potentialHp: { label: tPlanner('common.hp'), min: 0, max: 25, select: false, onCommit: (value) => onEditPotential(index, 'hp', value) },
-    potentialAtk: { label: tPlanner('common.atk'), min: 0, max: 25, select: false, onCommit: (value) => onEditPotential(index, 'atk', value) },
-    potentialHeal: { label: tPlanner('common.heal'), min: 0, max: 25, select: false, onCommit: (value) => onEditPotential(index, 'heal', value) },
+    gear: { label: t_g('gear'), min: 0, max: 2, select: true, valuePrefix: 'T', onCommit: (value) => onEditField(index, 'gear', value) },
+    potentialHp: { label: tPlanner('game:hp'), min: 0, max: 25, select: false, onCommit: (value) => onEditPotential(index, 'hp', value) },
+    potentialAtk: { label: tPlanner('game:atk'), min: 0, max: 25, select: false, onCommit: (value) => onEditPotential(index, 'atk', value) },
+    potentialHeal: { label: tPlanner('game:heal'), min: 0, max: 25, select: false, onCommit: (value) => onEditPotential(index, 'heal', value) },
   };
   const itemByKey = new Map(projection.items.map((item) => [item.key, item]));
   const detectedValues: Record<ReviewImpactKey, number | null> = {
@@ -337,7 +339,7 @@ function ReviewCard({
               >
                 {value !== null && (
                   <span
-                    className={`absolute whitespace-nowrap px-0.5 text-xs leading-4 ${active ? 'bg-blue-600 text-white outline outline-1 outline-blue-200 dark:bg-blue-400 dark:text-neutral-950 dark:outline-blue-700' : 'bg-neutral-950/90 text-white outline outline-1 outline-neutral-400/70'} ${overlayValuePosition[overlay.field]}`}
+                    className={`absolute whitespace-nowrap px-0.5 text-xs leading-4 ${active ? 'bg-blue-600 text-white outline outline-blue-200 dark:bg-blue-400 dark:text-neutral-950 dark:outline-blue-700' : 'bg-neutral-950/90 text-white outline outline-neutral-400/70'} ${overlayValuePosition[overlay.field]}`}
                   >
                     {value}
                     {modified && '*'}
@@ -364,8 +366,8 @@ function ReviewCard({
                 type="button"
                 onClick={() => onReset(index)}
                 disabled={!row.edited}
-                title={`${tPlanner('itemScanner.tableScanned')} ${tPlanner('ui.inventoryResetOk')}`}
-                aria-label={`${tPlanner('itemScanner.tableScanned')} ${tPlanner('ui.inventoryResetOk')}`}
+                title={`${tPlanner('itemScanner.tableScanned')} ${t_ui('reset')}`}
+                aria-label={`${tPlanner('itemScanner.tableScanned')} ${t_ui('reset')}`}
                 className="border border-neutral-300 p-1.5 text-neutral-700 disabled:opacity-40 dark:border-neutral-600 dark:text-neutral-300"
               >
                 <FiRotateCcw aria-hidden className="h-3.5 w-3.5" />
@@ -405,7 +407,7 @@ function ReviewCard({
                   title={starItem.scanned !== detectedValues.star || uwItem.scanned !== detectedValues.uw ? tPlanner('spreadsheet.messages.unsavedChanges') : undefined}
                   className="block truncate text-xs font-medium leading-4 text-neutral-700 dark:text-neutral-300"
                 >
-                  {tPlanner('spreadsheet.headerField.rank')}
+                  {t_g('rank')}
                   {(starItem.scanned !== detectedValues.star || uwItem.scanned !== detectedValues.uw) && <span className="text-blue-600 dark:text-blue-400">*</span>}
                 </label>
                 <select
@@ -449,13 +451,13 @@ function ReviewCard({
               {renderItem('uwLevel')}
               {renderItem('affection')}
             </section>
-            <section aria-label={tPlanner('growthCard.skills')} className="grid grid-cols-4 border-t border-neutral-200 dark:border-neutral-700">
+            <section aria-label={tPlanner('game:skills')} className="grid grid-cols-4 border-t border-neutral-200 dark:border-neutral-700">
               {(['ex', 'normal', 'passive', 'sub'] as const).map(renderItem)}
             </section>
-            <section aria-label={tPlanner('growthCard.equipment')} className="grid grid-cols-4 border-t border-neutral-200 dark:border-neutral-700">
+            <section aria-label={tPlanner('game:equipment')} className="grid grid-cols-4 border-t border-neutral-200 dark:border-neutral-700">
               {(['equipment1', 'equipment2', 'equipment3', 'gear'] as const).map(renderItem)}
             </section>
-            <section aria-label={tPlanner('growthCard.potential')} className="grid grid-cols-3 border-y border-neutral-200 dark:border-neutral-700">
+            <section aria-label={tPlanner('game:potential')} className="grid grid-cols-3 border-y border-neutral-200 dark:border-neutral-700">
               {(['potentialHp', 'potentialAtk', 'potentialHeal'] as const).map(renderItem)}
             </section>
           </div>

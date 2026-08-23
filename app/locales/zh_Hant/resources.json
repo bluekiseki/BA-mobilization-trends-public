@@ -11,10 +11,8 @@
     "oneYear": "1 年"
   },
   "tabs": {
-    "overview": "概述",
     "resources": "資源",
     "income": "收入與支出",
-    "incomeShort": "設定",
     "students": "學生目標",
     "studentsShort": "目標"
   },
@@ -26,7 +24,6 @@
     "openButton": "學生目標",
     "sectionTitle": "學生目標",
     "emptyState": "新增學生目標以查看自然艾蕾芙收入是否充足或需要艾麗格瑪。",
-    "statusAtRisk": "風險",
     "statusCovered": "艾麗格瑪涵蓋",
     "statusOnTrack": "正常",
     "statusNoDeadline": "無期限",
@@ -54,7 +51,6 @@
   "trackedItems": {
     "title": "追蹤項目",
     "searchPlaceholder": "搜尋項目或學生別名...",
-    "noResults": "無搜尋結果",
     "activeTarget": "已選擇",
     "noGoalsSet": "未設定內容目標。請在學生目標部分新增目標。",
     "displayByGrowthPlan": "依成長計劃顯示",
@@ -72,7 +68,6 @@
     "noDefaultSet": "未設定預設值 — 未追蹤此期間。",
     "usingDefaultConfig": "使用預設設定中。",
     "defaultAllPeriods": "預設 (所有期間)",
-    "clear": "清除",
     "weeklyMax": "每週最大",
     "dailyMode": "每日",
     "weeklyIncome": "每週收入",
@@ -83,7 +78,6 @@
   },
   "elephCard": {
     "contentMode": "內容",
-    "dateMode": "日期",
     "timingStart": "開始",
     "timingEnd": "結束",
     "selectContent": "— 選擇內容 —",
@@ -110,15 +104,12 @@
     "extraWeeklyIncome": "額外每週收入",
     "miscSources": "其他來源",
     "daily": "每日:",
-    "weekly": "每週:",
-    "coins": "硬幣"
+    "weekly": "每週:"
   },
   "raid": {
     "killDifficulty": "擊敗難度",
-    "trophy": "獎盃",
     "normal": "普通:",
-    "premium": "高級:",
-    "eligmaLabel": "艾麗格瑪:"
+    "premium": "高級:"
   },
   "panel": {
     "title": "資源",
@@ -126,14 +117,11 @@
     "gachaSimulation": "抽卡模擬",
     "noSimDataPre": "沒有模擬資料。",
     "noSimDataPost": "請先執行。",
-    "runSim": "模擬",
     "planAt": "計劃於",
-    "avg": "平均",
     "eventIncome": "事件收入 (來自事件計劃工具)",
     "noEventDataPre": "無事件收入連結。",
     "goToEventPlanner": "設定活動規劃器",
     "noEventDataPost": "以加入活動獎勵。",
-    "total": "總計",
     "coinShopNote": "硬幣商店、專家許可證購買和硬體副本運作在下方的日程表部分配置。"
   },
   "schedule": {
@@ -145,16 +133,13 @@
   },
   "stageFarming": {
     "runsPerDay": "次/天",
-    "apply": "套用",
     "remove": "移除",
     "runsScheduled_one": "已排程 {{count}} 次運行",
     "runsScheduled_other": "已排程 {{count}} 次運行"
   },
   "purchasePanel": {
     "shopNotOpen": "商店尚未開放 · 從 {{date}} 開始可用",
-    "targetReached": "已達目標",
-    "apply": "套用",
-    "cancel": "取消"
+    "targetReached": "已達目標"
   },
   "eventLabels": {
     "title": "{{title}}",

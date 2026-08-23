@@ -164,6 +164,7 @@ function getProfileStats(rows: Array<{ key: string; value: unknown }>): ProfileS
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation('auth');
+  const { t: t_ui } = useTranslation('ui');
   const { user, linkedProviders, passkeys } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
 
@@ -676,7 +677,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div>
-                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t('settings.profiles.server')}</label>
+                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t_ui('server')}</label>
                     <select
                       value={profileServerDraft}
                       onChange={(e) => setProfileServerDraft(e.target.value as ProfileServer)}
@@ -731,7 +732,7 @@ export default function SettingsPage() {
                       onClick={() => setEditingProfileId(null)}
                       className="flex-1 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition"
                     >
-                      {t('common.cancel')}
+                      {t_ui('cancel')}
                     </button>
                     <button
                       type="button"
@@ -766,19 +767,11 @@ export default function SettingsPage() {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-neutral-400 dark:text-neutral-500">{t('settings.account.loginId')}</span>
-            {user.username ? (
-              <span className="font-semibold text-neutral-900 dark:text-white">{user.username}</span>
-            ) : (
-              <span className="text-neutral-400 dark:text-neutral-500">{t('settings.account.none')}</span>
-            )}
+            {user.username ? <span className="font-semibold text-neutral-900 dark:text-white">{user.username}</span> : <span className="text-neutral-400 dark:text-neutral-500">{t_ui('none')}</span>}
           </div>
           <div className="flex justify-between">
-            <span className="text-neutral-400 dark:text-neutral-500">{t('settings.account.email')}</span>
-            {hasSyntheticEmail ? (
-              <span className="text-neutral-400 dark:text-neutral-500">{t('settings.account.none')}</span>
-            ) : (
-              <span className="font-semibold text-neutral-900 dark:text-white">{user.email}</span>
-            )}
+            <span className="text-neutral-400 dark:text-neutral-500">{t_ui('email')}</span>
+            {hasSyntheticEmail ? <span className="text-neutral-400 dark:text-neutral-500">{t_ui('none')}</span> : <span className="font-semibold text-neutral-900 dark:text-white">{user.email}</span>}
           </div>
         </div>
       </section>
@@ -863,7 +856,7 @@ export default function SettingsPage() {
                       }}
                       className="flex-1 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition"
                     >
-                      {t('common.cancel')}
+                      {t_ui('cancel')}
                     </button>
                     <button type="submit" disabled={emailLoading} className="flex-1 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-400 text-white font-medium rounded-md transition">
                       {emailLoading ? t('common.saving') : t('settings.signinMethods.magicLink.saveEmail')}
@@ -999,7 +992,7 @@ export default function SettingsPage() {
                   }}
                   className="flex-1 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition"
                 >
-                  {t('common.cancel')}
+                  {t_ui('cancel')}
                 </button>
                 <button
                   type="submit"

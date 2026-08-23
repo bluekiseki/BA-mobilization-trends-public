@@ -149,11 +149,7 @@ export function GanttTrack({ title, items, scrollLeft, viewportWidth, laneHeight
   const { scheduledItems, maxLanes } = itemsWithLanes;
   const trackMinHeight = Math.max(maxLanes * effectiveLaneHeight, effectiveLaneHeight);
 
-  // Virtualization
-  // viewportWidth is 0 during SSR and for a brief moment before the client's first layout measurement
-  // (see useGanttController). Filtering with a 0-width window would hide every item — render
-  // everything unfiltered in that case so SSR output (and the first paint) has real content, and only
-  // start culling once we actually know how wide the viewport is.
+  // Virtualization: viewportWidth is 0 during SSR/before first layout measurement; render unfiltered then so SSR/first paint has content.
   const buffer = viewportWidth;
   const visibleStart = scrollLeft - buffer;
   const visibleEnd = scrollLeft + viewportWidth + buffer;
@@ -201,7 +197,7 @@ export function GanttTrack({ title, items, scrollLeft, viewportWidth, laneHeight
 }
 // --- 1. Gantt Bar ---
 export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortraits, lane, laneHeight, colorMap, colorKey }: GanttRenderProps) {
-  const { t: t_c, i18n } = useTranslation('common');
+  const { t: t_c, i18n } = useTranslation(['common', 'game']);
   const locale = i18n.language as Locale;
 
   const width = Math.max(calculateWidthPx(item.startTime, item.endTime), 2);
@@ -376,7 +372,7 @@ const PickupStudentItem = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [tappedOnce, setTappedOnce] = useState(false); // State for checking mobile double-tap
-  const { t: t_c, i18n } = useTranslation('common');
+  const { t: t_c, i18n } = useTranslation(['common', 'game']);
   const locale = i18n.language as Locale; // Need to verify Locale type definition
 
   const isInvalidId = /ID: \d+/.test(studentName);
@@ -439,10 +435,10 @@ const PickupStudentItem = ({
             style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)' }}
           />
           <div className="absolute top-[-4px] left-0 right-0 flex justify-between w-full px-0 pointer-events-none opacity-90 group-hover:opacity-100">
-            {student.rerun ? <span className="bg-blue-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm backdrop-blur-[1px] whitespace-nowrap">{t_c('rerun')}</span> : <span />}
+            {student.rerun ? <span className="bg-blue-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm backdrop-blur-[1px] whitespace-nowrap">{t_c('game:rerun')}</span> : <span />}
             <div className="flex gap-px whitespace-nowrap">
-              {student.fest && <span className="bg-amber-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('fest')}</span>}
-              {!student.fest && student.limited && <span className="bg-pink-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('limited')}</span>}
+              {student.fest && <span className="bg-amber-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('game:fest')}</span>}
+              {!student.fest && student.limited && <span className="bg-pink-600/90 text-white text-[7px] font-black px-1 rounded-sm shadow-sm">{t_c('game:limited')}</span>}
             </div>
           </div>
         </Link>
@@ -506,7 +502,7 @@ export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studen
 }
 
 export function GanttMarker({ item, calculateLeftPx, lane, laneHeight, studentData }: GanttRenderProps) {
-  const { i18n } = useTranslation('common');
+  const { i18n } = useTranslation(['common', 'game']);
   const locale = i18n.language as Locale;
   const left = calculateLeftPx(item.startTime);
   const colorClass = TRACK_COLORS[item.type] || 'bg-neutral-500';

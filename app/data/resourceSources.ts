@@ -1,14 +1,4 @@
-/**
- * Canonical list of all resource income sources.
- *
- * Adding a new income source:
- *   1. Add an entry to RESOURCE_SOURCES below.
- *   2. If it needs a new TriggerType, add it here and handle it in eventsFromDailySources
- *      or eventsFromContentYields in resourceEventAdapters.ts.
- *   3. Add item metadata to ResourcesPanel's ITEM_META if needed.
- *
- * Spend events are not listed here — they live in purchaseEvents in the store.
- */
+/* Canonical resource income sources (spend events in store) */
 
 export type TriggerType =
   | 'daily-per-date' // user sets amount per date (calendar UI)

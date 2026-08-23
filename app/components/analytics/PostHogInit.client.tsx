@@ -85,10 +85,8 @@ async function selectApiHost(directHost: string, proxyHost: string): Promise<str
   }
 }
 
-// No component in this app reads PostHog's React context (usePostHog), so a plain
-// posthog.init() side effect is used instead of wrapping the tree in <PostHogProvider>.
-// That keeps this component isolated (no children to gate behind Suspense) and lets
-// posthog-js stay entirely out of the SSR module graph via the .client.tsx boundary.
+// No component reads PostHog's React context, so a plain posthog.init() side effect is used instead of <PostHogProvider>,
+// keeping posthog-js out of the SSR module graph via the .client.tsx boundary.
 export function PostHogInit({ envData }: { envData: PostHogEnv | null }) {
   useEffect(() => {
     if (import.meta.env.MODE === 'development') return;

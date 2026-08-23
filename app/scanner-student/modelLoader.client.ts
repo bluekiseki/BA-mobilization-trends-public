@@ -28,11 +28,8 @@ async function fetchEmbeddings(url: string): Promise<EmbeddingsPayload> {
   return resp.json();
 }
 
-// Best-effort HTTP cache warm-up — failures here are harmless, the real fetch/create() calls
-// just fall back to a normal network request. Used for files that don't get the "fetch bytes
-// and pass through" treatment below (ppocr_chars.txt is tiny and only read lazily on the first
-// scan — see pipeline/ocr.ts's getCharacters() — and the wasm runtime binary has no API to
-// accept pre-fetched bytes).
+// Best-effort HTTP cache warm-up; failures are harmless since fetch/create() falls back to a
+// normal request. Used for files that skip the "fetch bytes and pass through" treatment below.
 function prefetch(url: string): void {
   void fetch(url, { cache: 'force-cache' }).catch(() => {});
 }
@@ -55,22 +52,12 @@ export async function loadAllModels(onProgress: (step: string, percent: number) 
   onLog(`Backend: ${backend}`);
 
   prefetch(cdn('/student-scanner/models/ppocr_chars.txt'));
-  // The wasm runtime filename is NOT chosen at runtime based on `executionProviders` — this
-  // project's `import * as ort from 'onnxruntime-web'` resolves (via the package's "default"
-  // export condition, which Vite uses) to dist/ort.bundle.min.mjs, and that bundle references
-  // exactly one wasm binary unconditionally: ort-wasm-simd-threaded.jsep.wasm (verified by
-  // grepping the installed package). So prefetching this exact filename is safe, not a guess.
+  // ort's default export always resolves to dist/ort.bundle.min.mjs, which references exactly
+  // one wasm binary (ort-wasm-simd-threaded.jsep.wasm) — verified in the package, not a guess.
   prefetch(cdn('/scanner/ort/ort-wasm-simd-threaded.jsep.mjs'));
   prefetch(cdn('/scanner/ort/ort-wasm-simd-threaded.jsep.wasm'));
 
-  // InferenceSession.create() calls below must stay sequential — onnxruntime-web's WASM
-  // backend can't run two sessions at once (see classifier.client.ts) — but downloading the
-  // bytes for each model/data file has no such constraint. Fetch all of them up front, in
-  // parallel (alongside icons and portrait histograms, which are plain fetch + parse with no
-  // session involved at all), and hand the raw bytes to InferenceSession.create() directly
-  // instead of a URL — that way onnxruntime-web never issues its own second fetch for the
-  // same file, so each one is downloaded exactly once instead of once here and again inside
-  // create().
+  // Sessions must be sequential (onnxruntime-web limit), but fetch all data in parallel first, then pass raw bytes to create().
   onProgress(messages.loadingData, 0);
   onLog('Loading icon data…');
   onLog('Loading portrait reference data…');
@@ -84,10 +71,8 @@ export async function loadAllModels(onProgress: (step: string, percent: number) 
   onLog(`Loaded ${icons.length} icons`);
   onLog('Portrait reference data ready');
 
-  // Equipment slot classification reuses item scanner's embedding classifier — equipment
-  // pieces are already part of its inventory icon set (see pipeline/equipment.ts).
-  // Classifier and OCR each create an onnxruntime-web session — the WASM backend can't run
-  // two sessions at once (see classifier.client.ts), so these two must stay sequential.
+  // Reuses item scanner's embedding classifier for equipment slots. Classifier and OCR each
+  // create an onnxruntime-web session, and WASM can't run two at once, so they stay sequential.
   onProgress(messages.loadingClassifier, 30);
   onLog('Loading equipment classifier…');
   await initClassifier(providers, icons, onLog, embedModelBytes, embedResp, (done, total) => onProgress(messages.loadingClassifier, 30 + Math.round((done / total) * 40)));

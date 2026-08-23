@@ -51,6 +51,7 @@ export function LoginForm({ onSwitchToSignup }: Props) {
       });
 
       if (!response.ok) {
+        if (response.status === 503) throw new Error(t('common.authServerMaintenance'));
         const data: LoginResponse = await response.json();
         const rawMsg = data?.message || t('common.loginFailed');
         const key = getLoginErrorKey(rawMsg);

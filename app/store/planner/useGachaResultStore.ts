@@ -7,9 +7,7 @@ interface GachaResultState {
   setResult: (result: GlobalAggregatedResult | null) => void;
 }
 
-// Persisted store: holds the latest gacha simulation result.
-// Written by Gacha_v2.tsx after each simulation run.
-// Read by ResourcePlanner.tsx to show eligma/eleph contributions.
+// Persisted gacha simulation result: written by Gacha_v2.tsx, read by ResourcePlanner.tsx for eligma/eleph contributions.
 export const useGachaResultStore = create<GachaResultState>()(
   persist(
     (set) => ({

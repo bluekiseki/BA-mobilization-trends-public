@@ -61,6 +61,7 @@ export const MissionPlanner = ({ eventId, eventData, iconData, allStages, onCalc
   const { completedMissions, durationDays, setCompletedMissions, setDurationDays } = usePlanForEvent(eventId);
 
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const missionData = eventData.mission || [];
@@ -156,7 +157,7 @@ export const MissionPlanner = ({ eventId, eventData, iconData, allStages, onCalc
               {t('mission.clearAll')}
             </button>
             <button onClick={handleDeselectAll} className="bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white text-xs font-bold py-1 px-3 rounded-md">
-              {t('button.deselectAll')}
+              {t_ui('deselectAll')}
             </button>
           </div>
         </div>

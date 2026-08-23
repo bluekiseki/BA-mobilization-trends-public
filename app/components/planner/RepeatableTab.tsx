@@ -56,8 +56,9 @@ export const RepeatableTab = ({
   eventData,
   iconData,
 }: RepeatableTabProps) => {
-  const { t, i18n } = useTranslation('planner');
+  const { t, i18n } = useTranslation(['planner', 'game']);
   const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const prioButtonInfo: Record<StagePrio, { text: string; className: string }> = {
@@ -199,7 +200,7 @@ export const RepeatableTab = ({
                     min={0}
                     value={runCounts[s.Id] || 0}
                     onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                    placeholder={t('common.count')}
+                    placeholder={t_ui('count')}
                     className="w-14 py-1 text-base scale-[0.75] rounded bg-neutral-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-neutral-200"
                   />
                   <button onClick={() => handleSetMaxRuns(s.Id)} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold px-2 py-1 rounded-md text-xs">
@@ -252,7 +253,7 @@ export const RepeatableTab = ({
                         }
                       >
                         <span className="font-bold text-yellow-600 dark:text-yellow-500 cursor-help shrink-0">
-                          <FaTrophy className="inline mr-1 text-yellow-500" /> {t('common.mission')}
+                          <FaTrophy className="inline mr-1 text-yellow-500" /> {t_ui('mission')}
                         </span>
                       </Tooltip>
                     )}
@@ -401,7 +402,7 @@ export const RepeatableTab = ({
                     min={0}
                     value={runCounts[s.Id] || 0}
                     onChange={(e) => handleRunCountChange(s.Id, e || 0)}
-                    placeholder={t('common.count')}
+                    placeholder={t_ui('count')}
                     className="grow sm:grow-0 w-14 py-1 text-base scale-[0.75] rounded bg-neutral-100 dark:bg-neutral-700 text-center border dark:border-neutral-600 dark:text-neutral-200"
                   />
                   <button onClick={() => handleSetMaxRuns(s.Id)} className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold px-2.5 py-1 rounded-md text-xs">

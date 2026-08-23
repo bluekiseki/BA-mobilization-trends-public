@@ -139,15 +139,11 @@ type SortOrder = 'asc' | 'desc';
 
 export function EmblemCounter({}) {
   const { t, i18n } = useTranslation('emblemCounter');
+  const { t: t_ui } = useTranslation('ui');
   const { t: t_d } = useTranslation('dashboard');
   const { t: t_s } = useTranslation('club');
 
   const locale = i18n.language as Locale;
-  // const t_s = (x: string) => {
-  //   if (!s_locale[locale]) return x;
-  //   if (!s_locale[locale][x]) return x;
-  //   return s_locale[locale][x];
-  // };
 
   const [dataList] = useState(emblemDataList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   const [emblemData, setEmblemData] = useState<EmblemCountData>([]);
@@ -529,7 +525,7 @@ export function EmblemCounter({}) {
                       {sortKey === 'count' ? <FiHash size={12} /> : <FiTrendingUp size={12} />}
 
                       {/* Dynamic Label */}
-                      <span>{sortKey === 'count' ? t('count') : t('change')}</span>
+                      <span>{sortKey === 'count' ? t_ui('count') : t('change')}</span>
 
                       {/* Sort Order Arrow */}
                       <span className="transition-opacity opacity-100">{sortOrder === 'desc' ? <FiArrowDown size={14} /> : <FiArrowUp size={14} />}</span>

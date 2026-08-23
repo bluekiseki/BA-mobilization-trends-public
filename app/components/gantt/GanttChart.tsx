@@ -40,7 +40,9 @@ export interface GanttChartProps {
 }
 
 export function GanttChart({ data, controller, mode, className }: GanttChartProps) {
-  const { t: t_cal } = useTranslation('calendar');
+  const { t: t_cal } = useTranslation(['calendar', 'game']);
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const locale = useTranslation().i18n.language as Locale;
   const [hoverInfo, setHoverInfo] = useState<{ time: string; x: number; y: number } | null>(null);
 
@@ -95,7 +97,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
       {/* Hover Tooltip */}
       {hoverInfo && (
         <div
-          className="fixed z-50 px-1.5 py-0.5 bg-neutral-900/95 text-white rounded-[2px] text-[10px] font-mono pointer-events-none shadow-sm backdrop-blur-sm border border-white/10"
+          className="fixed z-50 px-1.5 py-0.5 bg-neutral-900/95 text-white rounded-xs text-[10px] font-mono pointer-events-none shadow-sm backdrop-blur-sm border border-white/10"
           style={{ top: hoverInfo.y + 10, left: hoverInfo.x + 10 }}
         >
           {hoverInfo.time}
@@ -106,10 +108,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
       <div ref={scrollContainerRef} className="w-full overflow-x-auto border-y border-neutral-200 dark:border-neutral-800 select-none custom-scrollbar touch-[pan-x_pan-y] overscroll-x-none">
         <div className="relative" style={{ width: `${totalWidth}px` }} onMouseMove={handleMouseMove} onMouseLeave={() => setHoverInfo(null)}>
           {/* Grid Layer */}
-          {/* Markers align to the viewer's own local calendar day (see useGanttController), so the
-              server (UTC) and client (viewer's timezone) legitimately compute different positions/
-              labels here — suppressHydrationWarning lets React show the server's guess immediately
-              and quietly swap in the client's correct value, instead of discarding this whole layer. */}
+          {/* Markers: local timezone (suppressHydrationWarning for UTC↔client mismatch) */}
           <div className="absolute inset-0 pointer-events-none">
             {markers.daily.map((left, i) => (
               <div key={`d-${i}`} className="absolute top-0 h-full border-l border-dashed border-neutral-200 dark:border-neutral-800" style={{ left }} suppressHydrationWarning />
@@ -118,7 +117,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
             {markers.weekly.map((m: WeeklyMarker) => (
               <div key={m.date} className="absolute top-0 h-full border-l border-neutral-300 dark:border-neutral-600 z-0" style={{ left: m.left }} suppressHydrationWarning>
                 <span
-                  className="sticky top-8 -ml-1 text-[10px] font-bold text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-black/80 px-1 rounded shadow-xs truncate max-w-[80px]"
+                  className="sticky top-8 -ml-1 text-[10px] font-bold text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-black/80 px-1 rounded shadow-xs truncate max-w-20"
                   suppressHydrationWarning
                 >
                   {m.label}
@@ -141,7 +140,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
             ))}
 
             {nowMarkerLeft !== null && (
-              <div className="absolute top-0 h-full w-[2px] bg-red-500 z-30 shadow-[0_0_8px_rgba(239,68,68,0.6)]" style={{ left: nowMarkerLeft }}>
+              <div className="absolute top-0 h-full w-0.5 bg-red-500 z-30 shadow-[0_0_8px_rgba(239,68,68,0.6)]" style={{ left: nowMarkerLeft }}>
                 <div className="sticky top-0 -ml-8 text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-sm">NOW</div>
               </div>
             )}
@@ -150,29 +149,24 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
           {/* Tracks Layer */}
           <div className="py-6 space-y-3">
             <GanttTrack title={'' /*t_cal('track.raid')*/} items={tracks.raid || []} {...commonProps} />
-            <GanttTrack title={'' /*t_cal('track.event')*/} items={tracks.event || []} {...commonProps} />
-            <GanttTrack title={t_cal('track.campaign')} items={tracks.campaign || []} colorMap={CAMPAIGN_COLORS} colorKey="campaignType" laneHeight={32} {...commonProps} />
-            <GanttTrack title={t_cal('track.pickup')} items={tracks.pickup || []} {...commonProps} />
+            <GanttTrack title={'' /*t_cal('game:event')*/} items={tracks.event || []} {...commonProps} />
+            <GanttTrack title={t_g('campaign')} items={tracks.campaign || []} colorMap={CAMPAIGN_COLORS} colorKey="campaignType" laneHeight={32} {...commonProps} />
+            <GanttTrack title={t_g('pickup')} items={tracks.pickup || []} {...commonProps} />
 
             {mode === 'full' && (
               <>
-                <GanttTrack title={t_cal('track.multifloor')} items={tracks.multifloor || []} {...commonProps} />
+                <GanttTrack title={t_g('multifloor')} items={tracks.multifloor || []} {...commonProps} />
                 <GanttTrack title={t_cal('track.birthday')} items={birthdayTrackItems} laneHeight={32} {...commonProps} />
-                <GanttTrack title={t_cal('track.story')} items={[...(tracks.mainstory || []), ...(tracks.ministory || [])]} {...commonProps} />
+                <GanttTrack title={t_g('story')} items={[...(tracks.mainstory || []), ...(tracks.ministory || [])]} {...commonProps} />
                 <GanttTrack title={t_cal('track.patch')} items={tracks.patch || []} laneHeight={32} {...commonProps} />
-                <GanttTrack title={t_cal('track.misc')} items={tracks.misc || []} laneHeight={32} {...commonProps} />
+                <GanttTrack title={t_ui('etc')} items={tracks.misc || []} laneHeight={32} {...commonProps} />
                 <GanttTrack title={t_cal('track.maintenance')} items={tracks.maintenance || []} {...commonProps} />
               </>
             )}
           </div>
         </div>
       </div>
-      {/* Sets the initial scroll position (centered on "now") synchronously as the browser parses
-          this HTML — before React hydrates. Hydration is gated behind an async i18n init (see
-          entry.client.tsx), so without this the raw SSR markup would sit unscrolled at the left
-          edge (timeRange.min) for however long that takes, then jump once React attaches. Mirrors
-          the dark-mode flash-prevention script in root.tsx. BASE_PIXELS_PER_HOUR must match
-          ./constants.ts (can't import it into a raw script string). */}
+      {/* Set initial scroll position (centered on "now") before React hydration */}
       {timeRange.min > 0 && (
         <script
           suppressHydrationWarning

@@ -11,10 +11,8 @@
     "oneYear": "1年"
   },
   "tabs": {
-    "overview": "概要",
     "resources": "リソース",
     "income": "収入と支出",
-    "incomeShort": "設定",
     "students": "生徒の目標",
     "studentsShort": "目標"
   },
@@ -26,7 +24,6 @@
     "openButton": "生徒の目標",
     "sectionTitle": "生徒の目標",
     "emptyState": "生徒の目標を追加して、自然なエレフ収入が十分か、エリグマが必要かを確認してください。",
-    "statusAtRisk": "リスク中",
     "statusCovered": "エリグマでカバー",
     "statusOnTrack": "順調",
     "statusNoDeadline": "期限なし",
@@ -54,7 +51,6 @@
   "trackedItems": {
     "title": "追跡アイテム",
     "searchPlaceholder": "アイテムまたは生徒のあだ名を検索...",
-    "noResults": "検索結果がありません",
     "activeTarget": "選択済み",
     "noGoalsSet": "設定されたコンテンツの目標がありません。生徒の目標セクションで目標を追加してください。",
     "displayByGrowthPlan": "育成プラン別に表示",
@@ -72,7 +68,6 @@
     "noDefaultSet": "デフォルト設定なし — この期間は追跡していません。",
     "usingDefaultConfig": "デフォルト設定を使用中。",
     "defaultAllPeriods": "デフォルト (全期間)",
-    "clear": "クリア",
     "weeklyMax": "週間最大",
     "dailyMode": "日次",
     "weeklyIncome": "週間収入",
@@ -83,7 +78,6 @@
   },
   "elephCard": {
     "contentMode": "コンテンツ",
-    "dateMode": "日付",
     "timingStart": "開始",
     "timingEnd": "終了",
     "selectContent": "— コンテンツを選択 —",
@@ -110,15 +104,12 @@
     "extraWeeklyIncome": "追加週間収入",
     "miscSources": "その他の収入源",
     "daily": "日次:",
-    "weekly": "週次:",
-    "coins": "コイン"
+    "weekly": "週次:"
   },
   "raid": {
     "killDifficulty": "撃破難易度",
-    "trophy": "トロフィー",
     "normal": "通常:",
-    "premium": "プレミアム:",
-    "eligmaLabel": "エリグマ:"
+    "premium": "プレミアム:"
   },
   "panel": {
     "title": "リソース",
@@ -126,14 +117,11 @@
     "gachaSimulation": "ガチャシミュレーション",
     "noSimDataPre": "シミュレーションデータなし。",
     "noSimDataPost": "をまず実行してください。",
-    "runSim": "シミュレーション",
     "planAt": "計画基準",
-    "avg": "平均",
     "eventIncome": "イベント収入 (イベントプランナーより)",
     "noEventDataPre": "イベント収入の連携なし。",
     "goToEventPlanner": "イベントプランナーで設定",
     "noEventDataPost": "するとイベントドロップが含まれます。",
-    "total": "合計",
     "coinShopNote": "コインショップ、専門家許可証の購入、およびハードステージ運用は以下のスケジュールセクションで設定されます。"
   },
   "schedule": {
@@ -145,16 +133,13 @@
   },
   "stageFarming": {
     "runsPerDay": "回/日",
-    "apply": "適用",
     "remove": "削除",
     "runsScheduled_one": "{{count}}回の実行予定",
     "runsScheduled_other": "{{count}}回の実行予定"
   },
   "purchasePanel": {
     "shopNotOpen": "ショップはまだ開いていません · {{date}}から利用可能",
-    "targetReached": "目標達成",
-    "apply": "適用",
-    "cancel": "キャンセル"
+    "targetReached": "目標達成"
   },
   "eventLabels": {
     "title": "{{title}}",

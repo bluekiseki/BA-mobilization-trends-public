@@ -45,7 +45,7 @@ export async function loader({ context, params }: LoaderFunctionArgs) {
   const eventEntry = eventList[String(eventId < 60000 ? eventId % 10000 : eventId) as keyof typeof eventList] ?? eventList[String(eventId % 10000) as keyof typeof eventList];
   const localeKey = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En' | 'Tw';
   const localizedName = eventEntry?.[localeKey] || eventEntry?.Jp || 'No event information';
-  const eventName = `${eventId > 10000 && eventId < 60000 ? `[${i18n.t('planner:common.rerun')}] ` : ''}${localizedName}`;
+  const eventName = `${eventId > 10000 && eventId < 60000 ? `[${i18n.t('game:rerun')}] ` : ''}${localizedName}`;
 
   return data({
     locale,

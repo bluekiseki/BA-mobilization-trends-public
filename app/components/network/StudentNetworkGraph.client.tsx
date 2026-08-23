@@ -116,6 +116,7 @@ export function StudentNetworkGraph({
 }: StudentNetworkGraphProps) {
   const { t, i18n } = useTranslation('network');
   const { t: t_common } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
@@ -505,7 +506,7 @@ export function StudentNetworkGraph({
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="md:hidden w-8 shrink-0 flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 text-base"
-                aria-label={t_common('close')}
+                aria-label={t_ui('close')}
               >
                 &times;
               </button>
@@ -528,7 +529,7 @@ export function StudentNetworkGraph({
                 <div className="px-4 pt-3">
                   <input
                     type="text"
-                    placeholder={t('search.placeholder')}
+                    placeholder={t_ui('searchStudents')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     autoFocus
@@ -609,7 +610,7 @@ export function StudentNetworkGraph({
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-neutral-900/80 z-10 gap-3">
             <div className="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-neutral-500">{progress || t_common('loading_txt')}</p>
+            <p className="text-xs text-neutral-500">{progress || t_ui('loading')}</p>
           </div>
         )}
 

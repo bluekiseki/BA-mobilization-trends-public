@@ -11,10 +11,8 @@
     "oneYear": "1년"
   },
   "tabs": {
-    "overview": "개요",
     "resources": "자원",
     "income": "수입 & 지출",
-    "incomeShort": "설정",
     "students": "학생 목표",
     "studentsShort": "목표"
   },
@@ -26,7 +24,6 @@
     "openButton": "학생 목표",
     "sectionTitle": "학생 목표",
     "emptyState": "학생 목표를 추가하여 보유 엘레프가 충분한지 또는 엘리그마가 필요한지 확인하세요.",
-    "statusAtRisk": "위험",
     "statusCovered": "엘리그마 커버",
     "statusOnTrack": "정상",
     "statusNoDeadline": "기한 없음",
@@ -54,7 +51,6 @@
   "trackedItems": {
     "title": "추적 항목",
     "searchPlaceholder": "항목 또는 학생 별명 검색...",
-    "noResults": "검색 결과 없음",
     "activeTarget": "선택됨",
     "noGoalsSet": "설정된 목표 없음. 학생 목표에서 목표를 추가하세요.",
     "displayByGrowthPlan": "성장 계획 기준 표시",
@@ -72,7 +68,6 @@
     "noDefaultSet": "기본값 없음 — 이 기간을 추적하지 않습니다.",
     "usingDefaultConfig": "기본 설정 사용 중.",
     "defaultAllPeriods": "기본값 (모든 기간)",
-    "clear": "삭제",
     "weeklyMax": "주간 최대",
     "dailyMode": "일일",
     "weeklyIncome": "주간 수입",
@@ -83,7 +78,6 @@
   },
   "elephCard": {
     "contentMode": "콘텐츠",
-    "dateMode": "날짜",
     "timingStart": "시작",
     "timingEnd": "종료",
     "selectContent": "— 콘텐츠 선택 —",
@@ -110,15 +104,12 @@
     "extraWeeklyIncome": "추가 주간 수입",
     "miscSources": "기타 수입",
     "daily": "일일:",
-    "weekly": "주간:",
-    "coins": "코인"
+    "weekly": "주간:"
   },
   "raid": {
     "killDifficulty": "처치 난이도",
-    "trophy": "트로피",
     "normal": "일반:",
-    "premium": "프리미엄:",
-    "eligmaLabel": "엘리그마:"
+    "premium": "프리미엄:"
   },
   "panel": {
     "title": "자원",
@@ -126,14 +117,11 @@
     "gachaSimulation": "가챠 시뮬레이션",
     "noSimDataPre": "시뮬레이션 데이터 없음.",
     "noSimDataPost": "을 먼저 실행하세요.",
-    "runSim": "시뮬레이션",
     "planAt": "계획 기준",
-    "avg": "평균",
     "eventIncome": "이벤트 수입 (이벤트 플래너에서)",
     "noEventDataPre": "이벤트 수입 연계 없음.",
     "goToEventPlanner": "이벤트 플래너에서 설정",
     "noEventDataPost": "하면 이벤트 보상이 포함됩니다.",
-    "total": "합계",
     "coinShopNote": "코인 상점, 전문가 허가 구매 및 하드 스테이지 운영은 아래 일정 섹션에서 설정됩니다."
   },
   "schedule": {
@@ -145,16 +133,13 @@
   },
   "stageFarming": {
     "runsPerDay": "운영/일",
-    "apply": "적용",
     "remove": "제거",
     "runsScheduled_one": "{{count}}회 운영 예약됨",
     "runsScheduled_other": "{{count}}회 운영 예약됨"
   },
   "purchasePanel": {
     "shopNotOpen": "상점이 아직 열려있지 않음 · {{date}}부터 사용 가능",
-    "targetReached": "목표 도달",
-    "apply": "적용",
-    "cancel": "취소"
+    "targetReached": "목표 도달"
   },
   "eventLabels": {
     "title": "{{title}}",

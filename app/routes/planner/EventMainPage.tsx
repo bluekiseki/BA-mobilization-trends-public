@@ -132,6 +132,7 @@ export const EventMainPage = () => {
   const { i18n, t: tRaw } = useTranslation('planner');
   const t = tRaw as unknown as (key: string) => string;
   const { t: tc } = useTranslation('common');
+  const { t: tg } = useTranslation('game');
   const locale = i18n.language as Locale;
   const { jpEvent, glEvent, pickupScheduleData } = useLoaderData<typeof loader>();
   const plans = useEventPlanStore((state) => state.plans);
@@ -268,7 +269,7 @@ export const EventMainPage = () => {
     return (
       <div key={event.id} className="relative pl-4 group">
         <div
-          className={`absolute left-[-14px] top-2 w-2.5 h-2.5 rounded-full border-2 transition-colors ${
+          className={`absolute -left-3.5 top-2 w-2.5 h-2.5 rounded-full border-2 transition-colors ${
             isActive ? 'bg-green-400 dark:bg-green-500 border-white dark:border-neutral-900' : 'bg-neutral-300 dark:bg-neutral-600 border-white dark:border-neutral-800 group-hover:bg-blue-400'
           }`}
         />
@@ -280,7 +281,7 @@ export const EventMainPage = () => {
             }`}
           >
             <span className="line-clamp-1">
-              {((event.id / 10000) | 0) == 1 ? `[${tc('rerun')}] ` : ''}
+              {((event.id / 10000) | 0) == 1 ? `[${tg('rerun')}] ` : ''}
               {event.name}
             </span>
             {jpActive && <span className="text-[9px] font-black px-1 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 shrink-0">JP</span>}

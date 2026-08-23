@@ -11,6 +11,11 @@ function json(data: unknown, status = 200) {
   });
 }
 
+function isAuthMaintenanceEnabled(env: Env): boolean {
+  const maintenanceEnv = env as Env & { AUTH_MAINTENANCE?: string };
+  return maintenanceEnv.AUTH_MAINTENANCE === 'true';
+}
+
 function getClientIp(request: Request): string {
   return request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
 }
@@ -105,8 +110,8 @@ async function handleAuthExt(request: Request, env: Env): Promise<Response> {
 
   try {
     await db
-      .prepare('INSERT INTO account (id, userId, accountId, providerId, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), session.user.id, syntheticEmail, 'credential', hashedPw, now, now)
+      .prepare('INSERT INTO account (id, userId, issuer, accountId, providerId, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(crypto.randomUUID(), session.user.id, 'local:credential', session.user.id, 'credential', hashedPw, now, now)
       .run();
     await db.prepare('UPDATE user SET username = ?, email = ?, updatedAt = ? WHERE id = ?').bind(username, syntheticEmail, now, session.user.id).run();
   } catch (err) {
@@ -211,6 +216,13 @@ async function handleInternalSession(request: Request, env: Env): Promise<Respon
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(request.url);
+
+    if (isAuthMaintenanceEnabled(env) && (pathname.startsWith('/api/auth') || pathname === '/api/auth-ext')) {
+      return new Response(JSON.stringify({ error: 'Authentication is temporarily unavailable for maintenance.' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '300' },
+      });
+    }
 
     if (pathname === '/api/auth-ext') return handleAuthExt(request, env);
     if (pathname.startsWith('/api/auth')) return handleAuth(request, env);

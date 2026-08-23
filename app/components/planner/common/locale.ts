@@ -36,3 +36,26 @@ export const getItemName = (key: string, icons: IconInfos | null | undefined, lo
   const group = icons?.[key.slice(0, i) as keyof IconInfos] as Record<string, { LocalizeEtc?: LocalizeEtc }> | undefined;
   return getLocalizeEtcName(group?.[key.slice(i + 1)]?.LocalizeEtc, locale) || key;
 };
+
+export const getLocalizeEtcDescription = (localizeEtc: LocalizeEtc | undefined, locale: Locale): string | null => {
+  if (!localizeEtc) return null;
+  switch (locale) {
+    case 'en':
+      return localizeEtc.DescriptionEn || localizeEtc.DescriptionJp;
+    case 'ko':
+      return localizeEtc.DescriptionKr;
+    case 'ja':
+      return localizeEtc.DescriptionJp;
+    case 'zh-Hant':
+      return localizeEtc.DescriptionTw || localizeEtc.DescriptionEn || localizeEtc.DescriptionJp;
+  }
+};
+
+// Resolve a short description for an item key using icon data. Returns null if none is found
+// (unlike getItemName, there's no sensible fallback to the key itself).
+export const getItemDescription = (key: string, icons: IconInfos | null | undefined, locale: Locale): string | null => {
+  const i = key.lastIndexOf('_');
+  if (i < 0) return null;
+  const group = icons?.[key.slice(0, i) as keyof IconInfos] as Record<string, { LocalizeEtc?: LocalizeEtc }> | undefined;
+  return getLocalizeEtcDescription(group?.[key.slice(i + 1)]?.LocalizeEtc, locale);
+};

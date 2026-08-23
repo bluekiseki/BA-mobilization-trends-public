@@ -27,6 +27,8 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, /*eventData, iconDat
     schedule,
   } = dreamData;
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'dream_maker' });
+
+  const { t: t_g } = useTranslation('game');
   const locale = i18n.language as Locale;
 
   // Helper to get localized string from LocalizeEtc
@@ -164,7 +166,7 @@ export const DreamMakerInteractiveSimulator = ({ dreamData, /*eventData, iconDat
     }
 
     // ... (History logging - updated to use locale) ...
-    const scheduleName = getLocaleString(schedule.find((s) => s.DreamMakerScheduleGroupId === scheduleGroupId)?.LocalizeEtc) || t('sim.defaultScheduleName');
+    const scheduleName = getLocaleString(schedule.find((s) => s.DreamMakerScheduleGroupId === scheduleGroupId)?.LocalizeEtc) || t_g('schedule');
     const outcomeText = `${outcome.DreamMakerResultStr} (${statChangesLog.join(', ')})`; // Assuming outcome has LocalizeEtc
     setHistory((prev) => [`${t('sim.dayLabel')} ${currentDay}-${actionsPerDay - actionsRemaining + 1}: ${scheduleName} -> ${outcomeText}`, ...prev]);
     setLastOutcome(outcomeText);

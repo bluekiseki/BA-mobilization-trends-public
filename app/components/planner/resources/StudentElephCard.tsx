@@ -55,11 +55,12 @@ function starBtnCls(active: boolean) {
 /** Toggle row: "Content | Date" mode buttons. */
 function ModeToggle({ mode, onChange }: { mode: 'event' | 'date'; onChange: (m: 'event' | 'date') => void }) {
   const { t } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   return (
     <div className="flex rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden text-[10px] shrink-0">
       {(['event', 'date'] as const).map((m) => (
         <button key={m} onClick={() => onChange(m)} className={`${MODE_BTN_BASE} ${mode === m ? MODE_BTN_ACTIVE : MODE_BTN_IDLE}`}>
-          {m === 'event' ? t('elephCard.contentMode') : t('elephCard.dateMode')}
+          {m === 'event' ? t('elephCard.contentMode') : t_ui('date')}
         </button>
       ))}
     </div>

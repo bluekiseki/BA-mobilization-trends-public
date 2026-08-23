@@ -105,7 +105,7 @@ function sortEntries(items: ItemEntry[], mode: SortMode, eventData: EventData, d
 
 export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, allStudents, studentPortraits }: FinalResultsDisplayProps) => {
   const { t } = useTranslation('planner');
-  const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
 
   const [showDetails, setShowDetails] = useState(false);
   const [isExpanded, setIsExpanded] = useState({ gained: false, spent: false });
@@ -185,7 +185,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold text-green-700 dark:text-green-400">{t('label.totalAcquisition')}</h3>
                 <button onClick={() => toggleExpand('gained')} className="text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                  {isExpanded.gained ? t_c('close') : t_c('open')}
+                  {isExpanded.gained ? t_ui('close') : t_ui('open')}
                 </button>
               </div>
               <div className={`flex gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-2 ${isExpanded.gained ? 'flex-wrap bg-white dark:bg-neutral-800' : 'overflow-x-auto pb-2'}`}>
@@ -223,7 +223,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold text-red-700 dark:text-red-400">{t('label.totalConsumption')}</h3>
                 <button onClick={() => toggleExpand('spent')} className="text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                  {isExpanded.spent ? t_c('close') : t_c('open')}
+                  {isExpanded.spent ? t_ui('close') : t_ui('open')}
                 </button>
               </div>
               <div className={`flex gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-2 ${isExpanded.spent ? 'flex-wrap' : 'overflow-x-auto pb-2'}`}>

@@ -6,12 +6,31 @@ export class WasmStats {
   [Symbol.dispose](): void;
   constructor();
   student_counts_json(): string;
+  charge: number;
   grade1: number;
   grade2: number;
   grade3: number;
   pickup: number;
   total: number;
 }
+
+/**
+ * Raw recruit-charge simulation for debug/testing (single banner, no strategy logic).
+ */
+export function gacha_run_charge_chunk(
+  grade3_ids: Uint32Array,
+  grade2_ids: Uint32Array,
+  grade1_ids: Uint32Array,
+  fes_ids: Uint32Array,
+  fes_excluded_ids: Uint32Array,
+  banner_pickup_ids: Uint32Array,
+  pickup_id: number,
+  is_fes: boolean,
+  pull_count: number,
+  initial_charge: number,
+  checkpoint_test_mode: boolean,
+  rng_seed: bigint,
+): WasmStats;
 
 /**
  * Raw pull simulation for debug/testing (single banner, no strategy logic).
@@ -35,17 +54,27 @@ export function gacha_run_chunk(
  * banner_pools_json: JSON object mapping bannerId → BannerPoolData
  * Returns SimChunkResult as JSON string.
  */
-export function simulate_strategies_chunk(strategies_json: string, banner_pools_json: string, sim_count: number, rng_seed: bigint): string;
+export function simulate_strategies_chunk(
+  strategies_json: string,
+  banner_pools_json: string,
+  sim_count: number,
+  rng_seed: bigint,
+  initial_owned_ids: Uint32Array,
+  ticket_batches_json: string,
+  consume_expiring_tickets: boolean,
+): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly __wbg_get_wasmstats_charge: (a: number) => number;
   readonly __wbg_get_wasmstats_grade1: (a: number) => number;
   readonly __wbg_get_wasmstats_grade2: (a: number) => number;
   readonly __wbg_get_wasmstats_grade3: (a: number) => number;
   readonly __wbg_get_wasmstats_pickup: (a: number) => number;
   readonly __wbg_get_wasmstats_total: (a: number) => number;
+  readonly __wbg_set_wasmstats_charge: (a: number, b: number) => void;
   readonly __wbg_set_wasmstats_grade1: (a: number, b: number) => void;
   readonly __wbg_set_wasmstats_grade2: (a: number, b: number) => void;
   readonly __wbg_set_wasmstats_grade3: (a: number, b: number) => void;
@@ -54,6 +83,26 @@ export interface InitOutput {
   readonly __wbg_wasmstats_free: (a: number, b: number) => void;
   readonly wasmstats_new: () => number;
   readonly wasmstats_student_counts_json: (a: number) => [number, number];
+  readonly gacha_run_charge_chunk: (
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    e: number,
+    f: number,
+    g: number,
+    h: number,
+    i: number,
+    j: number,
+    k: number,
+    l: number,
+    m: number,
+    n: number,
+    o: number,
+    p: number,
+    q: number,
+    r: bigint,
+  ) => number;
   readonly gacha_run_chunk: (
     a: number,
     b: number,
@@ -72,7 +121,7 @@ export interface InitOutput {
     o: number,
     p: bigint,
   ) => number;
-  readonly simulate_strategies_chunk: (a: number, b: number, c: number, d: number, e: number, f: bigint) => [number, number];
+  readonly simulate_strategies_chunk: (a: number, b: number, c: number, d: number, e: number, f: bigint, g: number, h: number, i: number, j: number, k: number) => [number, number];
   readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

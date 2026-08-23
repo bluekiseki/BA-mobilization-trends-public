@@ -50,11 +50,6 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
     setInventory((prev) => ({ ...prev, [type]: max - undrawn }));
   }
 
-  // const handleSolve = useCallback(() => {
-  //   const r = solveRoadPuzzle(mapData.grid, mapData.rowOffset, inventory, mapData.goalEntry);
-  //   setResult(r);
-  // }, [mapData, inventory]);
-
   return (
     <div className="space-y-3">
       {/* Map visualization */}

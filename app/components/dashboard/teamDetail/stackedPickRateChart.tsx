@@ -21,8 +21,8 @@ export const StackedPickRateChart: React.FC<{
   const { isDark } = useIsDarkState();
   const [visibleCount, setVisibleCount] = useState(INITIAL_ITEMS); // State for load more
   const [assistantFilter, setAssistantFilter] = useState<AssistantFilter>('include'); // State for assistant filter
-  const { t: t_c } = useTranslation('common');
   const { t: t_a } = useTranslation('charts', { keyPrefix: 'ranking.control' });
+  const { t: t_ui } = useTranslation('ui');
 
   const fullChartData = useMemo(() => {
     const pickCounts = new Map<number, Map<number, number>>(); // studentId -> { starValue -> count }
@@ -138,7 +138,7 @@ export const StackedPickRateChart: React.FC<{
             onClick={() => setAssistantFilter(opt.value)}
             className={`px-2 py-1.5 text-xs font-medium rounded-sm transition-colors ${assistantFilter === opt.value ? 'bg-ba-btn-blue text-black' : 'bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
           >
-            {t_a(opt.labelKey)} {/* Translate the label key */}
+            {opt.labelKey == 'rank_all' ? t_ui('all') : t_a(opt.labelKey)} {/* Translate the label key */}
           </button>
         ))}
       </div>
@@ -172,7 +172,7 @@ export const StackedPickRateChart: React.FC<{
                       return (
                         <div
                           key={i}
-                          className="w-full min-w-[150px]"
+                          className="w-full min-w-37.5"
                           style={{
                             backgroundColor: star == activeIndex ? `color-mix(in oklab, ${entry.color} 20%, transparent)` : '',
                           }}
@@ -233,7 +233,7 @@ export const StackedPickRateChart: React.FC<{
             onClick={handleLoadMore}
             className="w-full h-9 px-4 flex items-center justify-center gap-2 text-sm font-medium rounded-md bg-neutral-800 text-white hover:bg-neutral-900 dark:bg-neutral-200 dark:text-neutral-800 dark:hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500 dark:focus:ring-offset-neutral-900 transition-all shadow-sm"
           >
-            {t_c('load_more')} ({fullChartData.length - visibleCount}) {/* Show remaining count */}
+            {t_ui('loadMore')} ({fullChartData.length - visibleCount}) {/* Show remaining count */}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path fillRule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z" />
             </svg>

@@ -20,6 +20,7 @@ const METRIC_FMT: Record<Metric, (v: number) => string> = {
 
 export function RankingPanel({ graph, focusId, onFocus }: RankingPanelProps) {
   const { t } = useTranslation('network');
+  const { t: t_ui } = useTranslation('ui');
   const [metric, setMetric] = useState<Metric>('pageRank');
 
   const METRIC_LABELS = useMemo(
@@ -49,7 +50,7 @@ export function RankingPanel({ graph, focusId, onFocus }: RankingPanelProps) {
   const sorted = useMemo(() => [...rankings].sort((a, b) => b[metric] - a[metric]), [rankings, metric]);
 
   if (graph.nodes.length === 0) {
-    return <div className="flex items-center justify-center h-32 text-xs text-neutral-400">{t('ranking.noData')}</div>;
+    return <div className="flex items-center justify-center h-32 text-xs text-neutral-400">{t_ui('noData')}</div>;
   }
 
   return (

@@ -3,40 +3,15 @@
     "greeting": "こんにちは！",
     "about": "このサイトについて",
     "contact": "お問い合わせ",
-    "loading_txt": "データを読み込んでいます...",
-    "confirm": "確認",
-    "open": "開く",
-    "close": "閉じる",
     "viewAll": "すべて表示",
-    "etc": "その他",
-    "selectAll": "すべて選択",
-    "total": "すべて",
     "page": "ページ",
     "times": "回",
     "show_count": "表示件数",
-    "load_more": "もっと見る",
-    "raid": "総力戦",
-    "eraid": "大決戦",
-    "raidAndEraid": "総力戦・大決戦",
-    "event": "イベント",
-    "campaign": "キャンペーン",
-    "multifloor": "制約解除決戦",
     "dataWarning": "当サイトで提供するデータは、二次加工したものであり、その過程でエラーが発生し不正確な情報が含まれる可能性があります。サイト運営者は、本データの利用によって生じるいかなる問題についても一切の責任を負いませんので、ご利用の際は予めご了承ください。",
     "viewMore": "詳細表示",
     "viewSimple": "簡易表示",
-    "start": "開始",
-    "end": "終了",
-    "acquire": "獲得",
-    "loop": "周回",
-    "rerun": "復刻",
-    "fest": "フェス",
-    "limited": "限定",
     "clear": "クリア",
-    "period": "期間",
-    "jfd": "合同火力演習",
-    "tacticalChallenge": "戦術対抗戦",
     "finalRestrictionWB": "能力解放WB",
-    "expertPermit": "熟達証書",
     "pred": "予想",
     "title": "ユズ Trends",
     "site-title": "ユズ Trends",
@@ -52,7 +27,6 @@
     "js-disable-description": "このウェブサイトの全ての機能を利用するにはJavaScriptを有効にする必要があります。お使いのブラウザ設定をご確認ください。",
     "404_not_found": "Page Not Found",
     "dashboard-btn": "総力戦・大決戦<0/>ダッシュボード",
-    "dashboard-btn1": "総力戦・大決戦ダッシュボード",
     "dashboard-btn-go": "総力戦・大決戦ダッシュボードを<0/>見る",
     "changelog": {
       "title": "変更履歴",
@@ -64,20 +38,17 @@
     "currentLocale": "ja",
     "navigation": {
       "heatmap": "トレンド",
-      "ranking": "ランキング",
       "home": "ホーム",
       "dashboard": "ボード",
       "planner": "プランナー",
       "help": "ヘルプ",
       "viewDescription": "説明を見る",
       "reportBug": "フィードバックを送信",
-      "email": "メール",
       "viewCode": "コードを見る",
       "theme": "テーマ",
       "lightMode": "ライトモード",
       "darkMode": "ダークモード",
       "systemTheme": "システム設定",
-      "language": "言語",
       "serverSettings": "サーバー設定",
       "jukebox": "BGMプレーヤー",
       "notices": "お知らせアーカイブ",
@@ -85,7 +56,6 @@
       "studentScanner": "生徒育成スキャナー",
       "eventPlanner": "イベント周回プランナー",
       "gachaPlanner": "青輝石・募集/ガチャ計画",
-      "studentGrowthPlanner": "生徒育成プランナー",
       "equipmentFarmingPlanner": "装備ファーミングプランナー",
       "favorCalculator": "絆ランク計算機"
     },
@@ -103,6 +73,7 @@
       "en": "英語",
       "ko": "韓国語",
       "ja": "日本語",
+      "zh_Hant": "繁体字中国語",
       "label": "言語"
     },
     "language_banner": {
@@ -120,8 +91,7 @@
       "startGuide": "開始指南",
       "driver": {
         "next": "下一步 ➔",
-        "prev": "⬅ 上一步",
-        "done": "完成"
+        "prev": "⬅ 上一步"
       }
     },
     "promoBanner": {
@@ -139,7 +109,6 @@
       "inputDesc": "詳細を入力してください",
       "inputEmail": "返信用メールアドレス（任意）",
       "submitBtn": "送信する",
-      "submittingBtn": "送信中...",
       "errorMsg": "送信に失敗しました。もう一度お試しください。",
       "githubIssue": "GitHub Issuesで報告する",
       "poweredBy": "このリクエストは Web3Forms を通じて送信されます。"
@@ -177,7 +146,9 @@
     "scroll_to_prev_page": "前のページ",
     "scroll_to_next_page": "次のページ",
     "scroll_to_last_page": "最後のページ",
-    "scroll_to_top": "上にスクロール"
+    "scroll_to_top": "上にスクロール",
+    "exclude": "除外",
+    "viewOnSchaledb": "SchaleDBで表示"
   },
   "charts": {
     "ranking": {
@@ -186,43 +157,23 @@
       "control": {
         "bar_option": {
           "name": "バーの長さ",
-          "percent": "最大値",
           "absolute": "比例"
         },
-        "sum_option": {
-          "name": "回数計算",
-          "display_total": "総合",
-          "display_average": "平均の合"
-        },
-        "percent": "割合（％）で表示",
-        "absolute": "回数で表示",
         "squad_type": "役割：",
-        "squad_type_all": "全て",
-        "squad_type_main": "ストライカー",
-        "squad_type_support": "スペシャル",
         "tactic_role": "クラス：",
-        "tactic_role_All": "全て",
-        "tactic_role_DamageDealer": "アタッカー",
-        "tactic_role_Healer": "ヒーラー",
-        "tactic_role_Supporter": "サポーター",
-        "tactic_role_Tanker": "タンク",
-        "tactic_role_Vehicle": "T.S",
         "rank": "助っ人：",
-        "rank_all": "全て",
         "rank_normal": "自前の生徒のみ",
         "rank_assist": "助っ人のみ",
         "display_mode": "表示形式",
-        "display_total": "合計",
-        "display_average": "1戦あたりの平均",
         "raid": "総力戦・大決戦を選択",
-        "difficulty": "難易度"
+        "sum_option": {
+          "name": "回数計算"
+        }
       },
       "desp_percent": "各グラフの長さは、全体の出撃回数に対する割合（％）を表します。",
       "desp_absolute": "各グラフの長さは、実際の出撃回数を表します。",
       "unit_cnt": "回",
-      "loading_txt": "データを読み込んでいます...",
-      "total_x": "計{x}件",
-      "filters": "フィルター"
+      "total_x": "計{x}件"
     },
     "heatmap": {
       "title": "生徒別 総力戦・大決戦編成トレンド",
@@ -233,7 +184,6 @@
       "usage_statistics": "採用率統計",
       "usage_desc": "総力戦・大決戦レイドごとの星数別採用率を比較します。",
       "control": {
-        "setButton": "適用",
         "selectStudent": "生徒を選択",
         "studentSearchPlaceholder": "生徒名、役割、学園名などで検索",
         "heatmap_option_percent": "星の数 (%)",
@@ -247,16 +197,15 @@
           "rankWidth": "順位の集計単位：",
           "X-Threshold": "総力戦・大決戦の表示省略する条件："
         },
-        "filterByStars": {
-          "title": "星の数で絞り込み",
-          "all": "全選択",
-          "none": "全解除",
-          "count": "回"
-        },
         "raidRange": {
           "title": "総力戦・大決戦を選択"
         },
-        "difficulty": "難易度"
+        "filterByStars": {
+          "title": "星レベルでフィルタリング",
+          "all": "すべて選択",
+          "none": "すべて解除",
+          "count": "回"
+        }
       },
       "draw": {
         "unit": {
@@ -269,7 +218,6 @@
     }
   },
   "raidInfo": {
-    "All": "全て",
     "allDifficulties": "全難易度",
     "Lunatic": "LUNATIC",
     "Torment": "TORMENT",
@@ -294,7 +242,6 @@
     "StudentGrowthByRankTitle": "順位別生徒の星の数の状況",
     "StudentGrowthByRank": "順位別生徒の星の数の状況",
     "popularFormations": "人気の編成（合計 {x}件）",
-
     "rankingsAndTeams": "ランキング＆チーム（合計 {x}件）",
     "includeStudent": "含める生徒",
     "excludeStudent": "除外する生徒",
@@ -310,13 +257,9 @@
     "filter_import": "クリップボードからインポート",
     "filter_import_placeholder": "フィルターJSONを貼り付け...",
     "filter_import_error": "フォーマットが正しくありません。",
-    "filter_import_apply": "適用",
-    "filter_reset": "リセット",
     "add_my_students": "未編成生徒を追加",
     "includableStudentTitle": "出撃可能な生徒",
     "excludableStudentTitle": "出撃が難しい生徒",
-    "tagMustInclude": "必須",
-    "normal": "編成済み",
     "assist": "助っ人",
     "mustBeIncluded": "必ず編成",
     "usageCount": "出撃可能",
@@ -332,7 +275,6 @@
     "tagHardExclude": "除外",
     "tagAllowOnce": "助っ人",
     "description": "レポートの臨時代替",
-    "dashboardList": "ダッシュボード一覧",
     "selectBossPrompt": "分析したいボスを選択してください。",
     "histogramTitle": "総合スコア分布 (ヒストグラム)",
     "scoreRangeFilter": "スコア範囲フィルター",
@@ -340,8 +282,6 @@
     "switchToScore": "スコア表示に切り替え",
     "binSize": "間隔 (Bin Size)",
     "bracketFilter": "難易度段階フィルター",
-    "selectAll": "すべて選択",
-    "deselectAll": "すべて解除",
     "playerCount": "人数",
     "donutChartTitle": "Tier / 難易度組み合わせ分布",
     "donutChartSubtitle": "ドーナツチャートの内部要素をクリックすると詳細情報を確認できます",
@@ -366,7 +306,6 @@
     "tooltipDifficulty": "難易度: {{difficulty}}",
     "scoreCondition": "スコア ≤ {{score}}",
     "tooltipCumulativeRank": "累積順位: ~{{rank}}位",
-    "clearTime": "クリアタイム",
     "hideSettings": "設定を隠す",
     "showSettings": "設定を表示",
     "rankRangeSettings": "順位範囲設定",
@@ -374,7 +313,6 @@
     "maxRankPlaceholder": "最大順位",
     "clearTimeDistribution": "クリアタイム分布",
     "noData": "表示するデータがありません。設定を確認してください。",
-    "headerDifficulty": "難易度",
     "headerInterval": "間隔 (分:秒)",
     "headerTimeout": "タイムアウト (分:秒)",
     "headerShowTimeoutTitle": "タイムアウト超過記録を表示",
@@ -390,16 +328,12 @@
     "bestRank": "最高順位",
     "timeViewUnavailable": "時間別分析は全てのパーティーメンバーが同一難易度である場合のみ可能です。",
     "viewByStudent": "生徒別表示",
-    "viewAllStudents": "全体",
     "dataType": "データ種類",
     "byScore": "スコア",
-    "byTime": "時間",
     "timeDistribution": "時間分布",
-    "starRatingDistribution": "星評価分布",
     "timeViewUnavailableNotice": "難易度の異なる記録が混在しているため、時間別での照会はできません。",
     "byRank": "ランク",
     "rankDistribution": "ランク分布",
-    "byDefault": "デフォルト",
     "byTotalPartyCount": "パーティ数別",
     "byPartyPosition": "パーティ順別",
     "nPartyCount": "{{n}}パーティ",
@@ -409,8 +343,6 @@
     "lookupPlaceholder": "順位、スコア、または時間計算式（例: 4:00 - 2:30.5）を入力...",
     "lookupInFiltersPlaceholder": "フィルター内で順位、スコア、または時間計算式（例: 4:00 - 2:30.5）を入力...",
     "rankLookup": "{{rank}}位",
-    "recordBefore": "前へ",
-    "recordAfter": "次へ",
     "difficultyFilterPlaceholder": "難易度フィルターを検索/追加...",
     "noMoreFilters": "追加するフィルターがありません",
     "totalScoreSum": "合算スコア近接記録",
@@ -426,17 +358,10 @@
     "searchYouTube": {
       "title": "多言語検索サポーター",
       "searchYouTube": "YouTube検索",
-      "language": "言語",
-      "difficulty": "難易度",
-      "none": "なし",
-      "include": "含める",
       "terrain": "地形",
       "defenseType": "防御タイプ",
       "attackType": "攻撃タイプ",
-      "student_name": "生徒名",
-      "copy": "コピー",
-      "copied": "コピーしました！",
-      "dateRange": "期間"
+      "student_name": "生徒名"
     },
     "composition": {
       "mode_team": "部隊",
@@ -451,7 +376,6 @@
       "usage_count": "{{counts}}回",
       "click_to_collapse": "閉じる",
       "click_for_details": "詳細を表示",
-      "load_more": "もっと見る",
       "sort_count": "出撃数順",
       "sort_bestRank": "最高スコア順",
       "ignore_position": "配置を無視",
@@ -460,7 +384,6 @@
       "mulligan_view_order": "ピック順",
       "mopup_filter": "残処理パーティフィルター"
     },
-    "videos": "攻略動画",
     "videos_select_boss": "動画を見るにはボスタイプを選択してください。",
     "videos_empty": "動画がありません。",
     "videos_sort_score_desc": "スコア高い順",
@@ -468,7 +391,6 @@
     "videos_sort_upload_desc": "投稿日が新しい順",
     "videos_sort_upload_asc": "投稿日が古い順",
     "videos_score_min_placeholder": "最小",
-    "videos_score_max_placeholder": "最大",
     "videos_filter_tl": "TLのみ",
     "videos_filter_target_type": "ターゲットタイプのみ",
     "videos_missing_note": "自動処理のため、一部の動画が欠けている場合があります。",
@@ -476,22 +398,19 @@
     "videos_external_sites": "参考になる外部サイト：",
     "video_source_cv": "サムネイルから自動抽出",
     "video_source_text": "動画の説明から抽出",
-    "video_extraction_note": "編成情報はサムネイル画像認識(cv)または動画説明文(text)から自動抽出されます。精度は保証されません。"
+    "video_extraction_note": "編成情報はサムネイル画像認識(cv)または動画説明文(text)から自動抽出されます。精度は保証されません。",
+    "normal": "保有"
   },
   "dashboardIndex": {
-    "title": "ダッシュボード一覧",
     "description": "過去に開催された総力戦・大決戦の統計ダッシュボード一覧",
     "pinnedGlobalTitle": "現在進行中のグローバルサーバー総力戦・大決戦",
     "liveBetaTitle": "リアルタイムダッシュボード (ベータ)",
-    "searchPlaceholder": "ボス名またはIDで検索...",
-    "filterAll": "すべて"
+    "searchPlaceholder": "ボス名またはIDで検索..."
   },
   "liveDashboard": {
     "description": "現在開催中の総力戦・大決戦のリアルタイムボーダー",
-    "total_clear": "総クリア",
     "hourly_change": "時間毎の変化",
     "platinum_tier_distribution": "プラチナランク分布図",
-    "total_score": "合計スコア",
     "ranking_cutoff_fluctuation": "ランキングカットラインの変動",
     "highscore_change_by_difficulty": "難易度別ハイスコアの変動",
     "service_discontinuation_notice": "本サービスは予告なく中断されることがあります。",
@@ -499,7 +418,6 @@
     "changePerHourLabel": "増加量 (人/時間)",
     "playersPerHourUnit": "人/時間",
     "playersUnit": "人",
-    "hoursUnit": "時間",
     "show_prediction_cutoff": "プラチナボーダー予測を表示",
     "prediction_mode_stats": "平均/最大・最小範囲",
     "prediction_mode_compare": "過去シーズン比較",
@@ -512,8 +430,6 @@
     "data_unavailable_contact_email": "メールで連絡",
     "data_unavailable_contact_anon": "匿名で連絡",
     "platinum_cut_est": "プラチナボーダー予測（統計ベース）",
-    "hours_remaining_suffix": "残り",
-    "video_fallback_title": "攻略動画",
     "video_fallback_note_crawl": "動画のクロールはまだ手動のため、最大1〜2日間隔で更新されます。",
     "video_fallback_note_live_only": "現在開催中のレイドの動画のみ表示されます。さらに表示：",
     "score_time_converter_title": "スコア・タイム変換",
@@ -551,7 +467,6 @@
     "bySchool": "学園別",
     "school": "学園別",
     "percentage": "%",
-    "count": "回数",
     "change": "増減",
     "emblemSummary": "合計{{counts}}件、設定率: {{rate}}%"
   },
@@ -565,37 +480,12 @@
       "prediction": "斜線の項目は先行サーバー基準の予測スケジュールです。"
     },
     "distribute": "(配布: {{name}})",
-    "fest": "Fes",
-    "limited": "限定",
     "track": {
       "raid": "総力戦・大決戦",
-      "event": "イベント",
-      "multifloor": "制約解除決戦",
-      "campaign": "キャンペーン",
-      "pickup": "募集",
       "birthday": "誕生日",
       "birthday-suffix": "誕生日",
-      "story": "ストーリー",
-      "misc": "その他",
       "maintenance": "メンテ",
       "patch": "パッチ"
-    },
-    "campaign": {
-      "hard": "ハード",
-      "bounty": "指名手配",
-      "schedule": "スケジュール",
-      "scrimmage": "学園交流会",
-      "normal": "ノーマル",
-      "commission": "特別依頼"
-    },
-    "jfd": {
-      "shooting": "射撃演習",
-      "defense": "防御演習",
-      "breakthrough": "突破演習",
-      "escort": "護衛演習"
-    },
-    "story": {
-      "mini": "ミニストーリー: {{title}}"
     },
     "misc": {
       "shop-reset": "通常ショップリセット"
@@ -603,6 +493,16 @@
     "widget": {
       "view-more": "全スケジュール表示"
     },
-    "scrollToNow": "現在時刻へスクロール"
+    "scrollToNow": "現在時刻へスクロール",
+    "campaign": {
+      "hard": "ハード",
+      "bounty": "報奨",
+      "scrimmage": "学園交流会",
+      "normal": "ノーマル",
+      "commission": "依頼"
+    },
+    "story": {
+      "mini": "ミニストーリー: {{title}}"
+    }
   }
 }

@@ -285,7 +285,13 @@ export function ItemScannerPage() {
       )}
 
       {loadPhase !== 'loading' && scanPhase !== 'scanning' && (
-        <DropZone disabled={loadPhase !== 'ready'} accept="image/*" multiple onFiles={(e) => void handleFiles(e)} onRejected={() => log(t('unsupportedFile'), 'warn')} />
+        <DropZone
+          disabled={loadPhase !== 'ready'}
+          accept="image/*"
+          multiple
+          onFiles={(e) => void handleFiles(e)}
+          onRejected={() => log(t('unsupportedFile', { keyPrefix: 'studentScanner' }), 'warn')}
+        />
       )}
 
       {state.imageScanResults.length > 0 && (

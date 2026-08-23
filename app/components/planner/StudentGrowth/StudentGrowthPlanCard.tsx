@@ -273,7 +273,8 @@ function GoalRowCard({ goal, visibleSVs, contentItems, starBtnCls, onUpdate, onR
 export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, contentItems = [], eventData, iconData, onClose }: StudentGrowthPlanCardProps) => {
   const { updatePlan, removePlan, toggleEventInclusion } = useGlobalStore();
   const { targetGoals, addTargetGoal, updateTargetGoal, removeTargetGoal, setFinalGoal } = useResourcePlanStore();
-  const { t } = useTranslation(['planner', 'common']);
+  const { t } = useTranslation(['planner', 'game', 'common']);
+  const { t: t_ui } = useTranslation('ui');
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false, skills: false, equipment: false, potential: false, affection: false, targets: false });
   const [showTargetPending, setShowTargetPending] = useState(false);
@@ -288,7 +289,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
   const rankOptions = useMemo(
     () => [
       ...Array.from({ length: 5 }, (_, i) => ({ value: `star_${i + 1}`, label: `${i + 1}★` })),
-      ...Array.from({ length: 4 }, (_, i) => ({ value: `uw_${i + 1}`, label: `${t('common.ue', 'UE')} ${i + 1}★` })),
+      ...Array.from({ length: 4 }, (_, i) => ({ value: `uw_${i + 1}`, label: `${t('game:ue', 'UE')} ${i + 1}★` })),
     ],
     [],
   );
@@ -496,7 +497,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
     () =>
       Object.entries(eventList)
         .filter(([, details]) => details.Planable != false)
-        .map(([id, details]) => ({ id: Number(id), name: `${Number(id) > 10000 ? `[${t('common.rerun')}] ` : ''}${details.Kr}` }))
+        .map(([id, details]) => ({ id: Number(id), name: `${Number(id) > 10000 ? `[${t('game:rerun')}] ` : ''}${details.Kr}` }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [],
   );
@@ -544,7 +545,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
       {/* 1. macOS Style Top Header (Compact) */}
       <div className="relative">
         {/* Top accent border: uses the provided bulletColor */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] z-10" style={{ backgroundColor: bulletColor || '#3b82f6' }} />
+        <div className="absolute top-0 left-0 right-0 h-0.75 z-10" style={{ backgroundColor: bulletColor || '#3b82f6' }} />
 
         <div className="flex items-center justify-between px-3 pt-3 pb-2 bg-neutral-50/50 dark:bg-neutral-800/30">
           {/* Left: macOS Signal Colors with Permanent Icons */}
@@ -561,7 +562,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
               <FiTrash2 size={11} strokeWidth={2.5} />
             </button>
             {/* Close Button (Red) */}
-            <button onClick={onClose} className="w-5 h-5 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center text-[#926600] transition-colors " title={t('common.close')}>
+            <button onClick={onClose} className="w-5 h-5 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center text-[#926600] transition-colors " title={t_ui('close')}>
               <FiX size={11} strokeWidth={2.5} />
             </button>
           </div>
@@ -719,7 +720,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
               />
             </GrowthAccordion>
             <GrowthAccordion
-              title={t('growthCard.skills')}
+              title={t('game:skills')}
               isOpen={openSections.skills}
               onToggle={() => setOpenSections((p) => ({ ...p, skills: !p.skills }))}
               currentSummary={summaries.skills.cur}
@@ -730,7 +731,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
             </GrowthAccordion>
 
             <GrowthAccordion
-              title={t('growthCard.equipment')}
+              title={t('game:equipment')}
               isOpen={openSections.equipment}
               onToggle={() => setOpenSections((p) => ({ ...p, equipment: !p.equipment }))}
               currentSummary={summaries.eq.cur}
@@ -743,7 +744,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
             </GrowthAccordion>
 
             <GrowthAccordion
-              title={t('growthCard.potential')}
+              title={t('game:potential')}
               isOpen={openSections.potential}
               onToggle={() => setOpenSections((p) => ({ ...p, potential: !p.potential }))}
               currentSummary={summaries.pot.cur}
@@ -762,7 +763,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
             </GrowthAccordion>
 
             <GrowthAccordion
-              title={t('growthCard.affection')}
+              title={t('game:affection')}
               isOpen={openSections.affection}
               onToggle={() => setOpenSections((p) => ({ ...p, affection: !p.affection }))}
               currentSummary={`Rank ${plan.current.affection}`}
@@ -950,7 +951,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
               key={id}
               className="inline-flex items-center gap-1.5 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 px-2.5 py-1 rounded-full text-[11px] shadow-sm"
             >
-              <span className="truncate max-w-[120px]">{sortedEvents.find((e) => e.id === id)?.name || id}</span>
+              <span className="truncate max-w-30">{sortedEvents.find((e) => e.id === id)?.name || id}</span>
               <button onClick={() => toggleEventInclusion(plan.uuid, id)} className="text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full p-0.5 transition-colors">
                 <FiX size={10} />
               </button>

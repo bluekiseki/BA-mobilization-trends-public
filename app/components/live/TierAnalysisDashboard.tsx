@@ -24,12 +24,8 @@ interface TierAnalysisDashboardProps {
 }
 type TierTab = 'boss1' | 'boss2' | 'boss3' | 'total' | 'change' | 'total_change';
 
-// const calculateTotalClearsForBoss = (bossTier: any): number => {
-//     return Object.values(bossTier || {}).reduce((sum: number, count: any) => sum + count, 0);
-// };
-
 const CustomTotalClearTooltip = ({ active, payload }: Partial<TooltipContentProps<number, string>>) => {
-  const { t, i18n } = useTranslation('common');
+  const { t: t_ui, i18n } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   if (active && payload && payload.length) {
@@ -43,7 +39,7 @@ const CustomTotalClearTooltip = ({ active, payload }: Partial<TooltipContentProp
         {/* Boss Name (or Total for Raid) */}
         {/* <p className="font-bold mb-1 text-neutral-800 dark:text-neutral-200">{bossData.name === 'total' ? t('total') : t(bossData.name, { ns: 'term', defaultValue: bossData.name })}</p> */}
         <p className="font-bold mb-1 text-neutral-800 dark:text-neutral-200">
-          {bossData.name === 'total' ? t('total') : type_translation[String(bossData.name) as keyof typeof type_translation][getLocaleShortName(locale)]}
+          {bossData.name === 'total' ? t_ui('total') : type_translation[String(bossData.name) as keyof typeof type_translation][getLocaleShortName(locale)]}
         </p>
         {/* Difficulty Breakdown - Sort payload by difficulty order */}
         {/* as keyof typeof type_translation */}
@@ -67,7 +63,7 @@ const CustomTotalClearTooltip = ({ active, payload }: Partial<TooltipContentProp
           })}
         {/* Total for this boss */}
         <div className="mt-1 pt-1 border-t dark:border-neutral-600 flex justify-between font-semibold text-neutral-800 dark:text-neutral-200">
-          <span>{t('total')}</span>
+          <span>{t_ui('total')}</span>
           <span>{(bossData.total ?? 0).toLocaleString()}</span>
         </div>
       </div>
@@ -163,7 +159,7 @@ const CustomAreaChartTooltip = ({ active, payload, _label, raidInfos }: { active
 export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, timelineData, raidInfos }) => {
   // console.log('[TierAnalysisDashboard]', { isRaid, timelineData, raidInfos });
   const { t, i18n } = useTranslation('liveDashboard');
-  const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { isDark } = useIsDarkState();
 
@@ -174,12 +170,12 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
     () =>
       isRaid
         ? [
-            { id: 'total', name: t('total_clear') },
+            { id: 'total', name: t_ui('totalClears') },
             { id: 'change', name: t('hourly_change') },
             { id: 'boss1', name: 'Timeline' },
           ]
         : [
-            { id: 'total', name: t('total_clear') },
+            { id: 'total', name: t_ui('totalClears') },
             { id: 'change', name: t('hourly_change') },
             {
               id: 'boss1',
@@ -409,7 +405,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
       </div>
 
       {/* Chart Area */}
-      <div className="min-h-[500px]">
+      <div className="min-h-125">
         {activeTab === 'total' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
@@ -422,7 +418,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
                     type="category"
                     dataKey="name"
                     width={isRaid ? 0 : 80}
-                    tickFormatter={(name) => (isRaid ? '' : name === 'total' ? t_c('total') : type_translation[name as keyof typeof type_translation][getLocaleShortName(locale)])}
+                    tickFormatter={(name) => (isRaid ? '' : name === 'total' ? t_ui('total') : type_translation[name as keyof typeof type_translation][getLocaleShortName(locale)])}
                   />
                   <Legend content={<CustomSortedLegend />} />
                   <Tooltip content={<CustomTotalClearTooltip />} cursor={{ fill: 'rgba(200, 200, 200, 0.1)' }} />
@@ -453,7 +449,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
               </ResponsiveContainer>
             </div>
             {/* Cards */}
-            <div className={`flex flex-col pt-4 gap-2 md:gap-6 ${isRaid ? 'md:h-[200px]' : 'md:h-[430px]'}`}>
+            <div className={`flex flex-col pt-4 gap-2 md:gap-6 ${isRaid ? 'md:h-50' : 'md:h-107.5'}`}>
               {analysisData.latestClearsByBoss.map((boss) => {
                 const bossRecord: Record<string, number | string | null> = boss;
                 const bossName = boss.name;
@@ -477,7 +473,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
                     {/* Total + Platinum cut */}
                     <div className="flex flex-1 md:flex-none flex-row items-center md:items-end justify-between gap-2">
                       <div>
-                        <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mb-0.5">{t_c('total')}</p>
+                        <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mb-0.5">{t_ui('total')}</p>
                         <p className="text-xl font-bold text-sky-500 leading-none tabular-nums">{boss.total.toLocaleString()}</p>
                       </div>
                       {boss.rank20000Score != null && (
@@ -535,7 +531,7 @@ export const TierAnalysisDashboard: FC<TierAnalysisDashboardProps> = ({ isRaid, 
                           </span>
                         </p>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                          ({originalChange.toLocaleString()} {t('playersUnit')} / {durationHours.toFixed(1)} {t('hoursUnit')})
+                          ({originalChange.toLocaleString()} {t('playersUnit')} / {durationHours.toFixed(1)} {t_ui('hour')})
                         </p>
                       </div>
                     );

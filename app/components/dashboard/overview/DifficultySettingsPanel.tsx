@@ -92,6 +92,7 @@ const TimeInput: React.FC<TimeInputProps> = ({ valueInUnits, onChangeInUnits, di
 
 export default function DifficultySettingsPanel({ settings, onChange }: DifficultySettingsPanelProps) {
   const { t } = useTranslation('dashboard');
+  const { t: t_g } = useTranslation('game');
 
   const handleSettingChange = (difficulty: DifficultyName, key: keyof DifficultySetting, value: boolean | number) => {
     const newSettings = {
@@ -104,7 +105,7 @@ export default function DifficultySettingsPanel({ settings, onChange }: Difficul
   return (
     <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-lg border dark:border-neutral-700 text-sm">
       <div className="grid grid-cols-12 gap-2 font-bold px-2 pb-2 border-b dark:border-neutral-700">
-        <div className="col-span-5">{t('headerDifficulty')}</div>
+        <div className="col-span-5">{t_g('difficulty')}</div>
         <div className="col-span-3 text-center">{t('headerInterval')}</div>
         <div className="col-span-3 text-center">{t('headerTimeout')}</div>
         <div className="col-span-1 text-center" title={t('headerShowTimeoutTitle')}>

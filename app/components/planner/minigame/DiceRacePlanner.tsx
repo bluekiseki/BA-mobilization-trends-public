@@ -156,6 +156,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
   const { diceRaceActiveTab: activeTab, setDiceRaceActiveTab: setActiveTab, diceRaceSimResult: simResult, setDiceRaceSimResult: setSimResult } = useEventSettings(eventId);
 
   const { t } = useTranslation('planner', { keyPrefix: 'dice_race' });
+  const { t: t_ui } = useTranslation('ui');
 
   const diceRaceData = eventData.dice_race;
 
@@ -195,8 +196,8 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
 
   if (!diceRaceData) return null;
   const tabs: { id: DiceRaceTab; name: string }[] = [
-    { id: 'overview', name: t('tabOverview') },
-    { id: 'calculator', name: t('tabCalculator') },
+    { id: 'overview', name: t_ui('overview') },
+    { id: 'calculator', name: t_ui('calculator') },
   ];
 
   return (
@@ -270,7 +271,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
                   return (
                     <div key={node.NodeId} className="bg-neutral-50 dark:bg-neutral-800/50 p-2 rounded-lg">
                       <p className={`font-bold text-sm ${titleColor}`}>{titleText}</p>
-                      <div className="flex flex-wrap gap-1 mt-1 min-h-[36px] items-center">{content}</div>
+                      <div className="flex flex-wrap gap-1 mt-1 min-h-9 items-center">{content}</div>
                     </div>
                   );
                 })}

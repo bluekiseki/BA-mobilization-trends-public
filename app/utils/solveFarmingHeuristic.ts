@@ -161,9 +161,7 @@ function simplexSolver(c: number[], A: number[][], b: number[], log: boolean = f
     basis[i] = n + m + i;
   }
 
-  // Set Phase 1 objective function (min w = sum(r_i)).
-  // Objective function row holds z_j - c_j values.
-  // Where z_j = c_B' * P_j, and initial c_B = [1,1,...,1].
+  // Phase 1 objective (min w = sum(r_i)): row holds z_j - c_j, with initial c_B = [1,...,1].
   const obj_row_p1 = tableau_p1[m];
   for (let i = 0; i < m; i++) {
     // Add each constraint row to the objective row to calculate z_j

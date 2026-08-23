@@ -52,7 +52,19 @@ export function loader({ context, request }: LoaderFunctionArgs) {
     .map((item) => {
       const isPickup = item.type === 'pickup';
       const typeLabel =
-        item.type === 'raid' ? i18n.t('common:raid') : item.type === 'eraid' ? i18n.t('common:eraid') : item.type === 'jointFiringDrill' ? i18n.t('common:jfd') : i18n.t(`calendar:track.${item.type}`);
+        item.type === 'raid'
+          ? i18n.t('game:raid')
+          : item.type === 'eraid'
+            ? i18n.t('game:eraid')
+            : item.type === 'jointFiringDrill'
+              ? i18n.t('game:jfd')
+              : item.type === 'event'
+                ? i18n.t('game:event')
+                : item.type === 'multifloor'
+                  ? i18n.t('game:multifloor')
+                  : item.type === 'pickup'
+                    ? i18n.t('game:pickup')
+                    : i18n.t(`calendar:track.${item.type}`);
       return {
         id: item.id,
         title: isPickup ? i18n.t('calendar:track.pickup') : getItemTitle(item, locale, i18n),

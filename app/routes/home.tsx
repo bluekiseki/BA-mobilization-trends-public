@@ -174,10 +174,7 @@ export function loader({ context }: LoaderFunctionArgs) {
     }
   }
 
-  // ── JP Raid ───────────────────────────────────────────────────────────────
-  // 1) liveRaids currently in progress → 'live'
-  // 2) CSV startTime > now → 'upcoming' (no link)
-  // 3) If none, null → "Kivotos is at peace"
+  // JP Raid: live/upcoming from liveRaids or CSV data.
   let jpRaid: StatusRaid | null = null;
   {
     // Step 1: Check if liveRaids is in progress
@@ -200,9 +197,7 @@ export function loader({ context }: LoaderFunctionArgs) {
       }
     }
 
-    // Step 2: Search in CSV — first check actively-running (startTime <= now < endTime),
-    // then fall back to upcoming (startTime > now). Active-from-CSV means live data is
-    // not yet available from the external provider, so we show it without a link.
+    // Step 2: Search CSV — prefer actively-running (no live data yet, so no link) over upcoming.
     if (!jpRaid) {
       const raids = parseCsvString<{ season: string; startTime: string; endTime: string; boss: string }>(jpRaidCsvRaw);
       const eRaids = parseCsvString<{ season: string; startTime: string; endTime: string; boss1: string; boss2: string; boss3: string }>(jpEraidCsvRaw);
@@ -279,9 +274,7 @@ export function loader({ context }: LoaderFunctionArgs) {
     }
   }
 
-  // ── GL/KR Raid ────────────────────────────────────────────────────────────
-  // GL users look up the JP dashboard for the currently running GL raid (Future Sight)
-  // Link always goes to /dashboard/jp/{id} for historical stats
+  // GL users view JP dashboard for current GL raid data via /dashboard/jp/{id}.
   let glRaid: StatusRaid | null = null;
   {
     const raids = parseCsvString<{ season: string; startTime: string; endTime: string; boss: string }>(krRaidCsvRaw);
@@ -390,12 +383,12 @@ export function headers() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function RaidCard({ raid, server, locale }: { raid: StatusRaid | null; server: 'JP' | 'GL/KR'; locale: Locale }) {
-  const { t: t_c } = useTranslation('common');
+  const { t: t_g } = useTranslation('game');
   if (!raid) return <EmptyRaidCard server={server} />;
 
   const seasonNum = raid.id.substring(1);
   const localeShort = getLocaleShortName(locale);
-  const raidTypeLabel = raid.isGrand ? t_c('eraid') : t_c('raid');
+  const raidTypeLabel = raid.isGrand ? t_g('eraid') : t_g('raid');
 
   const inner = (
     <>
@@ -599,10 +592,9 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
   const { t: tCommon } = useTranslation('common');
   const { t: tDashboard } = useTranslation('dashboard');
   const { t: tCharts } = useTranslation('charts');
-  // Card titles/descriptions live under common:navigation / common:homeFeatures (not the
-  // planner namespace) so this feature-card grid doesn't drag in the whole planner.json
-  // (~76KB, used by dozens of unrelated planner/gacha/scanner/minigame components).
+  // Uses common:navigation/homeFeatures (not planner namespace) to avoid pulling in the ~76KB planner.json bundle.
   const { t: tNav } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_ui } = useTranslation('ui');
   const { t: tHomeFeatures } = useTranslation('common', { keyPrefix: 'homeFeatures' });
   const { t: tEmblem } = useTranslation('emblemCounter');
 
@@ -648,7 +640,7 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
     {
       to: localeLink(locale, '/planner/students'),
       img: isDark ? '/img/growth_dark.webp' : '/img/growth.webp',
-      title: tNav('studentGrowthPlanner'),
+      title: t_ui('studentGrowthPlanner'),
       desc: tHomeFeatures('studentGrowthPlannerDesc'),
     },
     {

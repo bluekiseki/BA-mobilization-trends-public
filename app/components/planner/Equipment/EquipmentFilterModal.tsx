@@ -55,9 +55,7 @@ export const EquipmentFilterModal = ({
               const isSelected = itemFilter.has(key);
               const itemType = key.split('_')[0] as keyof IconInfos;
               const itemId = key.split('_')[1];
-              // Remove unnecessary variable (handled internally by EquipmentItemIcon)
-              // const itemInfo = iconInfoData.Equipment?.[itemId];
-              // const tierLabel = getEquipmentTierLabel(itemInfo);
+              // itemInfo/tierLabel now handled internally by EquipmentItemIcon.
               return (
                 <button
                   key={key}

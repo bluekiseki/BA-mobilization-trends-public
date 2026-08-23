@@ -18,6 +18,7 @@ interface ApCalculatorProps {
   endTime: string;
   iconData: IconData;
   onCalculate: (totalAp: number) => void;
+  totalApUsed?: number;
 }
 
 interface DailyBreakdown {
@@ -73,7 +74,7 @@ const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 type DayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const AP_PER_MINUTE = 1 / 6;
 
-export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculate }: ApCalculatorProps) => {
+export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculate, totalApUsed = 0 }: ApCalculatorProps) => {
   // const [isCollapsed, setIsCollapsed] = useState(false);
   const [showDetails, setShowDetails] = useState(false); // Details display state
 
@@ -88,7 +89,9 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
     total: number;
   } | null>(null);
 
-  const { t } = useTranslation('planner');
+  const { t } = useTranslation(['planner', 'game']);
+  const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
 
   if (!config) return null;
 
@@ -280,6 +283,11 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
         <h3 className="font-bold text-center text-lg dark:text-neutral-200">
           {t('ui.calculationResult')} {t('ui.total')} <span className="text-blue-600 dark:text-blue-400">{result ? result.total.toLocaleString() : '?'}</span> AP
         </h3>
+        {result && totalApUsed > 0 && (
+          <div className={`text-right text-xs font-semibold ${totalApUsed > result.total ? 'text-red-500 dark:text-red-400' : 'text-neutral-600 dark:text-neutral-400'}`}>
+            {t('ui.usedAp')} {totalApUsed.toLocaleString()} / {result.total.toLocaleString()}
+          </div>
+        )}
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -334,7 +342,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
             {(
               [
                 {
-                  label: t('gameTerm.tacticalChallenge') + ' (x90 AP)',
+                  label: t('game:tacticalChallenge') + ' (x90 AP)',
                   type: 'select',
                   value: config.pvpRefills,
                   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => setNumericConfig('pvpRefills', e.target.value, 4),
@@ -393,7 +401,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                     onClick={() => setConfig({ ...config, miscDailySpend: -Math.abs(config.miscDailySpend) })}
                     className={`px-1.5 py-0.5 transition-colors ${config.miscDailySpend < 0 ? 'bg-green-500 text-white' : 'text-neutral-400 dark:text-neutral-500 dark:bg-neutral-700'}`}
                   >
-                    {t('ui.gained')}
+                    {t_ui('acquire')}
                   </button>
                 </div>
               </div>
@@ -420,30 +428,30 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
               <label className={labelClass}>{t('ui.aronaAttendanceDay')}</label>
               <select value={config.attendanceStartDay} onChange={(e) => setNumericConfig('attendanceStartDay', e.target.value)} className={inputClass + ' bg-white dark:bg-neutral-700'}>
                 <option value={1}>
-                  1{t('common.day')} (20k {t('common.credits')})
+                  1{t('common.day')} (20k {t_g('credit')})
                 </option>
                 <option value={2}>
                   2{t('common.day')} (3 {t('common.normalReport')})
                 </option>
                 <option value={3}>3{t('common.day')} (50 AP)</option>
                 <option value={4}>
-                  4{t('common.day')} (20k {t('common.credits')})
+                  4{t('common.day')} (20k {t_g('credit')})
                 </option>
                 <option value={5}>
-                  5{t('common.day')} (50 {t('common.pyroxene')})
+                  5{t('common.day')} (50 {t_g('pyroxene')})
                 </option>
                 <option value={6}>
-                  6{t('common.day')} (40k {t('common.credits')})
+                  6{t('common.day')} (40k {t_g('credit')})
                 </option>
                 <option value={7}>
                   7{t('common.day')} (1 {t('common.advancedReport')})
                 </option>
                 <option value={8}>8{t('common.day')} (100 AP)</option>
                 <option value={9}>
-                  9{t('common.day')} (40k {t('common.credits')})
+                  9{t('common.day')} (40k {t_g('credit')})
                 </option>
                 <option value={10}>
-                  10{t('common.day')} (100 {t('common.pyroxene')})
+                  10{t('common.day')} (100 {t_g('pyroxene')})
                 </option>
               </select>
             </div>
@@ -476,7 +484,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
         </div>
 
         <button onClick={handleCalculate} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg transition-colors">
-          {t('button.runCalculation')}
+          {t_ui('run')}
         </button>
 
         {result && (
@@ -519,12 +527,12 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                           </span>
                           {daily.gem > 0 && (
                             <span>
-                              +{daily.gem} {t('apSource.pyroxene')}
+                              +{daily.gem} {t_g('pyroxene')}
                             </span>
                           )}
                           {daily.pvp > 0 && (
                             <span>
-                              +{daily.pvp} {t('gameTerm.tacticalChallenge')}
+                              +{daily.pvp} {t('game:tacticalChallenge')}
                             </span>
                           )}
                           {daily.apPackage > 0 && (

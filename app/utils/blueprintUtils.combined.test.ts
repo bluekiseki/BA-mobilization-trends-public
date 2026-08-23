@@ -41,15 +41,7 @@ describe('optimizeCombinedStages2Step', () => {
   });
 
   it('uses fewer AP than sequential when hard over-allocates for shared items', () => {
-    // Hard A: Hat T2 (unique to hard) + Gloves T2 (shared), ap=40
-    // Normal B: Gloves T2 only, ap=15
-    // Need: 10 Hat + 20 Gloves
-    //
-    // Sequential: hard LP only sees hardA → must use A×40 to cover all Gloves (binding constraint)
-    //             (40 runs of A gives 40 Hat + 20 Gloves; 30 Hat wasted) → AP = 40×40 = 1600
-    //             Normal LP: nothing left → total 1600
-    // Combined:   joint LP sees B can cover Gloves → A×10 for Hat, B×15 for remaining Gloves
-    //             → AP = 10×40 + 15×15 = 400 + 225 = 625
+    // Sequential: A×40 (1600 AP). Combined: A×10 + B×15 (625 AP, cross-source optimization).
     const hardA = mkStage(1, 'Hard', 40, { Equipment_1001: 1.0, Equipment_2001: 0.5 });
     const normalB = mkStage(2, 'Normal', 15, { Equipment_2001: 1.0 });
     const stages = [hardA, normalB];

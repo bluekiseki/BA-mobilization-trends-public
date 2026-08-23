@@ -40,9 +40,10 @@ interface MinigameDefensePlannerProps {
 
 export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ eventId: _eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
   // const { t, i18n } = useTranslation('planner', { keyPrefix: 'minigame_defense' });
-  const { t: t_common, i18n } = useTranslation('planner', { keyPrefix: 'common' });
-  const { t: t_c } = useTranslation('common');
+  const { t: t_c, i18n } = useTranslation('common');
   const { t: t_planner } = useTranslation('planner');
+  const { t: t_game } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   // --- Local State ---
@@ -340,7 +341,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
               : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'
           }`}
         >
-          <FaTasks className="mr-2" /> {t_common('mission')}
+          <FaTasks className="mr-2" /> {t_ui('mission')}
         </button>
       </div>
 
@@ -393,7 +394,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                       <div className="w-full sm:flex-1 min-w-0 overflow-hidden">{renderRewards(s)}</div>
 
                       <div className="flex flex-col sm:items-end justify-center shrink-0 w-full sm:w-auto gap-1">
-                        <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase hidden sm:block">{t_common('count')}</span>
+                        <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase hidden sm:block">{t_ui('count')}</span>
                         <div className="flex rounded-md shadow-sm h-8">
                           <CustomNumberInput
                             min={0}
@@ -440,7 +441,7 @@ export const MinigameDefensePlanner: React.FC<MinigameDefensePlannerProps> = ({ 
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="w-full sm:w-48 sm:shrink-0">
                         <h4 className={`font-bold text-sm truncate ${isStory ? 'text-indigo-600 dark:text-indigo-400' : 'text-purple-600 dark:text-purple-400'}`}>
-                          {isStory ? `${t_common('story')} ${s.StageNumber}` : `Challenge ${s.StageNumber}`}
+                          {isStory ? `${t_game('story')} ${s.StageNumber}` : `Challenge ${s.StageNumber}`}
                         </h4>
                         <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex gap-2">
                           <span>

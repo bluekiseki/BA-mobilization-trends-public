@@ -97,6 +97,7 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
   // console.log('[ScoreTimelineChart] ', { isRaid, timelineData, ranksToPlot, raidInfos });
   const [activeTab, setActiveTab] = useState<GrandAssaultTab>('total');
   const { t, i18n } = useTranslation('liveDashboard');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { isDark } = useIsDarkState();
   const { dateRangeIndex } = useTierDashboardStore();
@@ -116,9 +117,9 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
   const TABS: { id: GrandAssaultTab; name: string }[] = useMemo(
     () =>
       isRaid
-        ? [{ id: 'total', name: t('total_score') }]
+        ? [{ id: 'total', name: t_ui('totalScore') }]
         : [
-            { id: 'total', name: t('total_score') },
+            { id: 'total', name: t_ui('totalScore') },
             {
               id: 'boss1',
               name: type_translation[raidInfos?.[0]?.Type as keyof typeof type_translation][getLocaleShortName(locale)] || 'Boss 1',
@@ -262,10 +263,8 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
       return entry;
     });
 
-    // Difficulty-tier normalization:
-    // For each rank, collect all non-null values → sort into 1D array →
-    // find tier boundaries (consecutive sorted values with >20% gap) →
-    // apply value-based offset so the same score always maps to the same Y position.
+    // Difficulty-tier normalization: group each rank's values, find tier boundaries (>20% gap
+    // between sorted values), and offset so the same score always maps to the same Y position.
     // keys.forEach((key) => {
 
     const sorted: number[] = [];

@@ -5,8 +5,21 @@ import { useRef, useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaGem, FaCalendarAlt, FaChartBar, FaSpinner, FaCoins, FaChartPie, FaPlay, FaTrophy, FaCog, FaBolt } from 'react-icons/fa';
-import { runGlobalSimulation, buildGlobalResultFromRaw, buildWasmPayload, mergeSimAccumulator, type GlobalAggregatedResult, type SimulationConfig, type SimRawAccumulator } from '~/utils/gachaEngine';
-import type { PyroxeneConfig } from '~/routes/planner/Gacha_v2';
+import {
+  runGlobalSimulation,
+  buildGlobalResultFromRaw,
+  buildWasmPayload,
+  mergeSimAccumulator,
+  SimMetricAccumulator,
+  PYROXENE_PER_10PULL,
+  PYROXENE_PER_PULL_UNIT,
+  PULL_UNITS_PER_10PULL,
+  type GlobalAggregatedResult,
+  type SimulationConfig,
+  type SimRawAccumulator,
+  type SimChunkAcc,
+} from '~/utils/gachaEngine';
+import type { PyroxeneConfig } from '~/routes/planner/Gacha_old';
 import type { BannerPeriod } from '~/utils/gachaData';
 import type { BannerStrategy, Student } from '~/types/gacha';
 import type { PlannerSchedule, SimulationStats } from '~/utils/pyroxeneCalc';
@@ -16,8 +29,8 @@ import SimulationResultPanel from './SimulationResultPanel';
 import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
 
 type SimWorkerOutMsg =
-  | { type: 'progress'; chunkAcc: SimRawAccumulator; completed: number; total: number }
-  | { type: 'done'; chunkAcc: SimRawAccumulator; completed: number; total: number; totalMs: number }
+  | { type: 'progress'; chunkAcc: SimChunkAcc; completed: number; total: number }
+  | { type: 'done'; chunkAcc: SimChunkAcc; completed: number; total: number; totalMs: number }
   | { type: 'error'; message: string };
 
 const WORKER_COUNT = typeof navigator !== 'undefined' ? Math.min(navigator.hardwareConcurrency ?? 4, 8) : 1;
@@ -58,6 +71,8 @@ interface Props {
 // ---------------------------------------------------------------------------
 const StatsPanel = ({ config, stats, planSuccessRate, hasSimulation }: { config: PyroxeneConfig; stats: SimulationStats; planSuccessRate: number; hasSimulation: boolean }) => {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.stats' });
+
+  const { t: t_g } = useTranslation('game');
   const fmt = (n: number) => Math.round(n).toLocaleString();
   const successColor = planSuccessRate >= 90 ? 'text-blue-600' : planSuccessRate >= 50 ? 'text-yellow-500' : 'text-red-600';
   const totalBalance = config.currentPyroxene + stats.totalIncome - stats.expense.ap - stats.expense.gacha;
@@ -122,16 +137,16 @@ const StatsPanel = ({ config, stats, planSuccessRate, hasSimulation }: { config:
               <span>{t('items.raid_elim')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.raid + stats.income.elimination)}</b>
             </div>
             <div className="flex justify-between">
-              <span>{t('items.multifloor')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.multifloor)}</b>
+              <span>{t_g('multifloor')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.multifloor)}</b>
             </div>
             <div className="flex justify-between">
-              <span>{t('items.jfd')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.jfd)}</b>
+              <span>{t_g('jfd')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.jfd)}</b>
             </div>
             <div className="flex justify-between">
               <span>{t('items.mainstory')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.mainstory)}</b>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-              <span>{t('items.event')}</span> <b>{fmt(stats.income.event)}</b>
+              <span>{t_g('event')}</span> <b>{fmt(stats.income.event)}</b>
             </div>
             <div className="flex justify-between">
               <span>{t('items.ministory')}</span> <b className="text-neutral-900 dark:text-neutral-200">{fmt(stats.income.miniStory)}</b>
@@ -196,6 +211,8 @@ const StudentDetailSection = ({
   allStudents: Student[];
 }) => {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
+
+  const { t: t_g } = useTranslation('game');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<StudentFilter>>(new Set());
 
@@ -253,7 +270,7 @@ const StudentDetailSection = ({
 
   const filterLabels: { key: StudentFilter; label: string }[] = [
     { key: 'pickup', label: t('filter.pickup') },
-    { key: 'fes', label: t('filter.fes') },
+    { key: 'fes', label: t_g('fest') },
     { key: 'star3', label: t('filter.star3') },
     { key: 'star2', label: t('filter.star2') },
     { key: 'star1', label: t('filter.star1') },
@@ -308,12 +325,12 @@ const StudentDetailSection = ({
                       {stat.name}
                       {stat.isLimited && (
                         <span className="text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-1.5 rounded border border-amber-200 dark:border-amber-800">
-                          {t('student_stats.tag_limited')}
+                          {t_g('limited')}
                         </span>
                       )}
                       {stat.isFes && (
                         <span className="text-[10px] bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 px-1.5 rounded border border-purple-200 dark:border-purple-800">
-                          {t('student_stats.tag_fes')}
+                          {t_g('fest')}
                         </span>
                       )}
                     </div>
@@ -339,11 +356,7 @@ const StudentDetailSection = ({
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stat.elephDistribution}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#888" opacity={0.1} />
-                        <XAxis
-                          dataKey="amount"
-                          tick={{ fontSize: 10, fill: '#888' }}
-                          label={{ value: t('student_stats.chart_x_eleph'), position: 'insideBottom', fontSize: 10, offset: -5, fill: '#888' }}
-                        />
+                        <XAxis dataKey="amount" tick={{ fontSize: 10, fill: '#888' }} label={{ value: t_g('eleph'), position: 'insideBottom', fontSize: 10, offset: -5, fill: '#888' }} />
                         <YAxis hide />
                         <Tooltip contentStyle={{ backgroundColor: '#171717', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '10px' }} itemStyle={{ color: '#a78bfa' }} />
                         <Bar dataKey="probability" fill="#8b5cf6" radius={[2, 2, 0, 0]} isAnimationActive={false} />
@@ -430,17 +443,20 @@ export default function IncomePlannerPanel({
       workerCompletedRef.current = Array(N).fill(0) as number[];
       workerDoneCountRef.current = 0;
       mergedAccRef.current = {
-        resultsPulls: [],
-        resultsCost: [],
-        resultsEligma: [],
-        bannerCumulativeCosts: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
-        bannerCumulativeEligma: Object.fromEntries(activeBannerIds.map((id) => [id, []])),
+        cost: new SimMetricAccumulator(PYROXENE_PER_10PULL),
+        costIncremental: new SimMetricAccumulator(PYROXENE_PER_10PULL),
+        costWithTickets: new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT),
+        costWithGachaTickets: new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT),
+        costWithGachaTicketsIncremental: new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT),
+        pulls: new SimMetricAccumulator(PULL_UNITS_PER_10PULL),
+        pullsIncremental: new SimMetricAccumulator(PULL_UNITS_PER_10PULL),
+        eligmaCumulative: new SimMetricAccumulator(1),
+        eligmaIncremental: new SimMetricAccumulator(1),
         bannerStatsSum: Object.fromEntries(activeBannerIds.map((id) => [id, { pulls: 0, cost: 0 }])),
         studentAcquired: {},
         studentElephTotal: {},
         studentElephDist: {},
         bannerStudentElephDist: Object.fromEntries(activeBannerIds.map((id) => [id, {}])),
-        totalEligmaSum: 0,
         successCount: 0,
       };
       if (chartRafRef.current !== null) {

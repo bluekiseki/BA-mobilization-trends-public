@@ -10,15 +10,15 @@ import { MinMaxControls } from './MinMaxControls';
 import { InlineCostHint } from './InlineCostHint';
 
 export const SKILL_CONFIG = [
-  { id: 'ex', labelKey: 'common.ex', skillKey: 'Ex', maxLevel: 5 },
-  { id: 'normal', labelKey: 'common.normal', skillKey: 'Public', maxLevel: 10 },
+  { id: 'ex', labelKey: 'game:skill.ex', skillKey: 'Ex', maxLevel: 5 },
+  { id: 'normal', labelKey: 'game:skill.normal', skillKey: 'Public', maxLevel: 10 },
   {
     id: 'passive',
-    labelKey: 'common.passive',
+    labelKey: 'game:skill.passive',
     skillKey: 'Passive',
     maxLevel: 10,
   },
-  { id: 'sub', labelKey: 'common.sub', skillKey: 'ExtraPassive', maxLevel: 10 },
+  { id: 'sub', labelKey: 'game:skill.sub', skillKey: 'ExtraPassive', maxLevel: 10 },
 ] as const;
 
 interface SkillsTabProps {
@@ -30,7 +30,7 @@ interface SkillsTabProps {
 }
 
 export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, eventData }: SkillsTabProps) => {
-  const { t } = useTranslation('planner');
+  const { t } = useTranslation(['planner', 'game']);
 
   if (!studentInfo) return <div className="text-center p-4 text-xs text-neutral-400">Please select a student.</div>;
 

@@ -3,7 +3,6 @@
     "title": "My Clear Records",
     "description": "Save your clear records for Total Assault, Grand Assault, Joint Firing Drill, and Final Restriction Rls.",
     "noGuide": "Cleared without guide",
-    "server": "Server",
     "floor": "Floor",
     "notes": "Notes",
     "rankText": "#{{rank}}",
@@ -52,11 +51,6 @@
     "modal": {
       "add": "Add Clear Record",
       "edit": "Edit Clear Record",
-      "raid": "Raid",
-      "trophy": "Trophy",
-      "clearTime": "Clear Time",
-      "clearTimePlaceholder": "Select",
-      "totalScore": "Total Score",
       "clearTimeLabel": "Clear Time {{time}}",
       "difficultyCombo": "Difficulty Combo",
       "rankPlaceholder": "Not entered",
@@ -71,13 +65,11 @@
       "guideLink": "Guide Reference Link"
     },
     "slotPicker": {
-      "starGrade": "Stars",
       "clearSlot": "Clear slot",
       "assistConflict": "Already used as assist",
       "mulligan": "Mulligan",
       "expandOptional": "▼ Enter Equipment & Skills (optional)",
       "collapseOptional": "▲ Collapse Equipment & Skills",
-      "noEquip": "None",
       "notesPlaceholder": "(optional)",
       "confirmAndNext": "Confirm & Next Slot",
       "nextParty": "Move to Next Party"

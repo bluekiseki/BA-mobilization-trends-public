@@ -357,9 +357,8 @@ export default function UnifiedPlanCalendar({
     };
   }, []);
 
-  // Non-passive touchmove: direction-based — horizontal → selection drag, vertical → scroll.
-  // Drag mode is only entered once the finger actually crosses into a different cell,
-  // so a tap with minor finger wobble never mis-selects an adjacent cell.
+  // Non-passive touchmove: horizontal drags the selection, vertical scrolls. Drag only
+  // starts once the finger crosses into a different cell, so minor wobble on a tap doesn't mis-select.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;

@@ -1,10 +1,10 @@
 // <reference types="vite/client" />
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
-import vitePluginObfuscator from './plugin/vite-plugin-obfuscator';
+import vitePluginObfuscator from './plugin/vite-plugin-obfuscator.ts';
 import { defineConfig } from 'vite';
 // import tsconfigPaths from 'vite-tsconfig-paths';
-import { domain } from './app/data/livedataServer.json';
+import { domain } from './app/data/livedataServer.json' with { type: 'json' };
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { execSync } from 'child_process';
 import fs from 'fs';
@@ -12,7 +12,7 @@ import path from 'path';
 // import { visualizer } from 'rollup-plugin-visualizer';
 
 const ENABLE_OBFUSCATION = true;
-const ortDistDir = path.resolve(__dirname, 'node_modules/onnxruntime-web/dist');
+const ortDistDir = path.resolve(import.meta.dirname, 'node_modules/onnxruntime-web/dist');
 
 function removeWasmPlugin() {
   return {

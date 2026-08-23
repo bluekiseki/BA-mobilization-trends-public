@@ -569,9 +569,8 @@ export function optimizeHardStages(
   return { runCounts, remaining };
 }
 
-// Joint LP for hard + normal stages together per tier.
-// Hard stages are placed first in the matrix (preferred when LP is indifferent).
-// After solving, hard runs are capped at maxRunsPerStage; any shortfall is re-covered by normal-only LP.
+// Joint LP for hard + normal stages per tier; hard stages come first in the matrix (preferred when LP is indifferent).
+// Hard runs are capped at maxRunsPerStage post-solve; any shortfall is re-covered by normal-only LP.
 function step1TierLPCombined(stages: FarmingStage[], remainingNeeds: Record<string, number>, normalMultiplier: number, hardMultiplier: number, maxRunsPerStage: number): Step1Result {
   const remaining = { ...remainingNeeds };
   const runCounts: Record<number, number> = {};

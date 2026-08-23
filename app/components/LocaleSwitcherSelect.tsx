@@ -37,9 +37,7 @@ export function changePathLanguage(currentLocale: Locale, newLocale: Locale, pat
     // e.g., '/page'
     newPath = basePath;
   } else {
-    // 3c. If the new language is not the default, add the prefix.
-    // e.g., '/ja/page'
-    // (Handle case where basePath is '/', to become '/ja' instead of '/ja/')
+    // 3c. Non-default language: add locale prefix (e.g. '/ja' or '/ja/page').
     newPath = basePath === '/' ? `/${newLocale}` : `/${newLocale}${basePath}`;
   }
 

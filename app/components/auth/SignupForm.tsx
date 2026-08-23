@@ -72,6 +72,7 @@ export function SignupForm({ consentGiven }: Props) {
       });
 
       if (!response.ok) {
+        if (response.status === 503) throw new Error(t('common.authServerMaintenance'));
         const data: SignupResponse = await response.json();
         const rawMsg = data?.message || t('common.signupFailed');
         const key = getServerErrorKey(rawMsg);

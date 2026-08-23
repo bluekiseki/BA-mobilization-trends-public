@@ -8,6 +8,7 @@ pub struct WasmStats {
     pub grade3: u32,
     pub pickup: u32,
     pub total: u32,
+    pub charge: u32,
     student_counts: HashMap<u32, u32>,
 }
 
@@ -21,6 +22,7 @@ impl WasmStats {
             grade3: 0,
             pickup: 0,
             total: 0,
+            charge: 0,
             student_counts: HashMap::new(),
         }
     }

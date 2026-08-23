@@ -1,0 +1,52 @@
+@keyframes gacha-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -24px, 620px) rotateX(5deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
+  }
+}
+
+.animate-gacha-reveal {
+  animation: gacha-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center top;
+}
+
+@keyframes gacha-reveal-from-bottom {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 620px) rotateX(5deg) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
+  }
+}
+
+.animate-gacha-reveal-from-bottom {
+  animation: gacha-reveal-from-bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center bottom;
+}
+
+.gacha-new-label,
+.gacha-pickup-label {
+  paint-order: stroke fill;
+  -webkit-text-stroke: 2.5px #000000;
+}
+
+.gacha-new-label {
+  color: #f6e94b;
+}
+
+.gacha-pickup-label {
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gacha-reveal,
+  .animate-gacha-reveal-from-bottom {
+    animation: none;
+  }
+}

@@ -19,25 +19,27 @@ interface Props {
 export function FilteredResultsSection({ rows, editedValues, confirmedItems, returnTo, onEdit, onApply }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'itemScanner' });
   const { t: tPlanner } = useTranslation('planner');
+  const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const [activeCats, setActiveCats] = useState<Set<string> | null>(null); // null = all
   const [toast, setToast] = useState<string | null>(null);
   const { updateMaterialInventory, updateOwnedGifts } = useGlobalStore();
 
   const CATEGORY_LABELS: Record<string, string> = {
-    credits: t('categoryCredits'),
-    eligma: t('categoryEligma'),
-    xpReports: t('categoryXpReports'),
+    credits: t_g('credit'),
+    eligma: t_g('eligma'),
+    xpReports: t_g('report'),
     equipEnh: t('categoryEquipEnh'),
     uwGrowth: t('categoryUwGrowth'),
     potential: t('categoryPotential'),
-    opart: t('categoryOpart'),
+    opart: t_g('opart'),
     tacticalBD: t('categoryTacticalBD'),
     techNote: t('categoryTechNote'),
     equipment: t('categoryEquipment'),
     skill: t('categorySkill'),
-    eleph: t('categoryEleph'),
-    gifts: t('categoryGifts'),
-    other: t('categoryOther'),
+    eleph: t_g('eleph'),
+    gifts: t_g('gift'),
+    other: t_ui('etc'),
   };
 
   const materialRows = rows.filter((r) => !r.icon?.isGift);
@@ -95,7 +97,7 @@ export function FilteredResultsSection({ rows, editedValues, confirmedItems, ret
 
     onApply?.(updatedRows);
 
-    const catLabel = activeCats?.size === 1 ? (CATEGORY_LABELS[[...activeCats][0]] ?? [...activeCats][0]) : t('filterAll');
+    const catLabel = activeCats?.size === 1 ? (CATEGORY_LABELS[[...activeCats][0]] ?? [...activeCats][0]) : t_ui('all');
     setToast(t('appliedToast', { count: targets.length, plural: targets.length !== 1 ? 's' : '', category: catLabel }));
   }
 
@@ -114,7 +116,7 @@ export function FilteredResultsSection({ rows, editedValues, confirmedItems, ret
             !isFiltered ? 'bg-neutral-300 text-neutral-900' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-600',
           ].join(' ')}
         >
-          {t('filterAll')}
+          {t_ui('all')}
         </button>
         {allGroups.map((g) => {
           const rowMap = new Map(rows.map((r) => [r.inventoryKey, r]));
@@ -161,7 +163,7 @@ export function FilteredResultsSection({ rows, editedValues, confirmedItems, ret
           title={tPlanner('dataExchange.applyData')}
           description={toast}
           stayLabel={tPlanner('common.continueReview')}
-          doneLabel={tPlanner('common.done')}
+          doneLabel={t_ui('done')}
           returnTo={returnTo}
           onClose={() => setToast(null)}
         />

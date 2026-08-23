@@ -14,6 +14,7 @@ interface HistogramAnalysisProps {
 
 export default function HistogramAnalysis({ allPlayers, tierCounter }: HistogramAnalysisProps) {
   const { t } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
   const [histFilter, setHistFilter] = useState({
@@ -295,10 +296,10 @@ export default function HistogramAnalysis({ allPlayers, tierCounter }: Histogram
               <label className="text-sm font-bold">{t('bracketFilter')}</label>
               <div className="flex gap-2">
                 <button onClick={handleSelectAllBrackets} className="text-[10px] px-2 py-1 rounded bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 font-medium">
-                  {t('selectAll')}
+                  {t_ui('selectAll')}
                 </button>
                 <button onClick={handleDeselectAllBrackets} className="text-[10px] px-2 py-1 rounded bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 font-medium">
-                  {t('deselectAll')}
+                  {t_ui('deselectAll')}
                 </button>
               </div>
             </div>

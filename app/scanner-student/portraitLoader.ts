@@ -1,12 +1,9 @@
 import { cdn } from '~/utils/cdn';
 import { preloadPortraitHistograms } from './pipeline/match';
 
-// StudentPortraitData (students_portrait.json) renders each student against a background
-// scene, unlike the plain character-art cutout rankByPortrait's histogram comparison was
-// built and tuned against. So this fetches the same reference portraits used for that
-// comparison (SchaleDB's collection art), pre-combined into one JSON file (see
-// scripts/build-reference-portraits.mjs) so a scan does one fetch instead of one per
-// candidate student.
+// StudentPortraitData renders each student on a background, unlike the plain cutout art
+// rankByPortrait's histogram comparison expects. Fetch SchaleDB's collection art instead,
+// pre-combined into one JSON file so a scan does one fetch instead of one per candidate.
 let referencePortraitsPromise: Promise<Record<string, string>> | null = null;
 
 const getReferencePortraits = (): Promise<Record<string, string>> => {
@@ -34,9 +31,8 @@ interface HistogramsFile {
 
 let histogramsLoaded = false;
 
-// Fetches the precomputed portrait histograms (see scripts/build-reference-portrait-histograms.mjs)
-// and seeds match.ts's cache, so rankByPortrait skips decode+histogram work entirely for every
-// student covered by the precomputed set. Call once, before scanning starts.
+// Loads precomputed portrait histograms and seeds match.ts's cache so rankByPortrait skips
+// decode+histogram work. Call once, before scanning starts.
 export async function loadPortraitHistograms(): Promise<void> {
   if (histogramsLoaded) return;
   const file: HistogramsFile = await (await fetch(cdn('/student-scanner/reference/student_collection_histograms.json'))).json();

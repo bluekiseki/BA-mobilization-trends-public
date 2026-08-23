@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { parseAndGroupBanners, withPickupFallbackStudents } from './gachaData';
 import type { BannerPeriod, Student } from './gachaData';
 
-// Makoto (Swimsuit) — the "recruit charge" system takes effect from the earliest banner
-// (per region) that features this student, identified by studentId 10146 (raw CSV id may be
-// the predicted "x10146" until confirmed).
+// Makoto (Swimsuit, studentId 10146) is the earliest banner (per region) the "recruit charge" system applies from.
 const CHARGE_SYSTEM_TRIGGER_ID = 10146;
 
 describe('parseAndGroupBanners — recruit charge system cutoff', () => {
@@ -56,6 +54,7 @@ describe('withPickupFallbackStudents', () => {
     id: `${pickupStudents[0]?.id ?? 0}`,
     startTime: '2026-01-01 00:00',
     endTime: '2026-01-08 00:00',
+    bannerType: '',
     isFes: false,
     isLimitedBanner: true,
     isRerunBanner: false,

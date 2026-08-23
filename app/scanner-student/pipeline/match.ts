@@ -79,17 +79,12 @@ const correlation = (a: Float64Array, b: Float64Array): number => {
   return numerator / (Math.sqrt(denomA * denomB) || 1);
 };
 
-// A video scan calls rankByPortrait once per ambiguous frame, and the same students keep
-// reappearing as candidates across frames (200+ students, same roster every time). Without
-// caching, every one of those repeats would re-fetch/decode/histogram the same reference
-// portrait. Cache by student Id for the lifetime of the page instead — one fetch+decode+
-// histogram per unique student per session, not per (frame, candidate) pair.
+// Same students reappear as candidates across frames, so cache by student Id for the page's
+// lifetime instead of re-fetching/decoding per (frame, candidate) pair.
 const portraitHistogramCache = new Map<number, Float64Array | null>();
 
-// Seeds the cache directly from precomputed histograms (see
-// scripts/build-reference-portrait-histograms.mjs), so getReferenceHistogram's cache check
-// short-circuits before ever calling loadPortrait for any id already seeded — no per-student
-// fetch/decode/histogram work at scan time for the common case.
+// Seeds the cache from precomputed histograms so getReferenceHistogram skips loadPortrait
+// entirely for any id already seeded.
 export const preloadPortraitHistograms = (entries: Iterable<[number, Float64Array]>): void => {
   for (const [id, hist] of entries) portraitHistogramCache.set(id, hist);
 };

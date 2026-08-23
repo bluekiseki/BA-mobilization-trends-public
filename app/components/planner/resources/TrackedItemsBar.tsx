@@ -25,6 +25,7 @@ function hasLocalizeEtc(info: unknown): info is IconInfo {
 
 export function TrackedItemsBar({ trackingItems, selectedItemKey, iconInfos, studentsRecord, locale, onSelectSearchResult, onSelectItem, renderItemIcon }: TrackedItemsBarProps) {
   const { t } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   const [itemSearch, setItemSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -119,7 +120,7 @@ export function TrackedItemsBar({ trackingItems, selectedItemKey, iconInfos, stu
         {isOpen && itemSearch.trim() && (
           <div className="absolute left-0 top-full max-h-[80vh] mt-1 z-20 w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden overflow-y-scroll">
             {searchResults.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{t('trackedItems.noResults')}</p>
+              <p className="px-3 py-2 text-xs text-neutral-400 dark:text-neutral-500">{t_ui('noResults')}</p>
             ) : (
               searchResults.map((r) => (
                 <button

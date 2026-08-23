@@ -52,6 +52,8 @@ export type StudentStrategyConfig = z.infer<typeof studentStrategyConfigSchema>;
  */
 export const bannerStrategySchema = z.object({
   bannerId: z.string(),
+  /* Server (KR/JP differ); optional for backwards compat with older saved data */
+  server: z.union([z.literal('KR'), z.literal('JP')]).optional(),
   /** Whether there is a plan to pull during this banner period */
   isActive: z.boolean(),
   /**
@@ -64,12 +66,7 @@ export const bannerStrategySchema = z.object({
    * 1 allows up to 100 pulls (the soft-pity checkpoint), 2 allows up to 200 pulls (hard pity), etc.
    */
   maxHalfCharges: z.number(),
-  /**
-   * "Recruitment Count Bonus" opt-in — for the new "recruit charge" system only. If every other stop condition is already
-   * met but the next ticket milestone (`gachaRules.getNextTicketThreshold`) is within `recruitBonusThreshold`
-   * pulls, continue pulling in 10-pull increments until it is claimed. Optional (not `.default()`) because
-   * old localStorage/sync payloads may genuinely lack this key at runtime — always read it with `?? false`.
-   */
+  /* Claim next ticket milestone if within recruitBonusThreshold pulls (charge system only) */
   claimRecruitBonus: z.boolean().optional(),
   /** Pulls-remaining-to-next-ticket threshold for claimRecruitBonus (read with `?? 10` fallback). */
   recruitBonusThreshold: z.number().optional(),

@@ -16,9 +16,8 @@ const digits = (value: string) => {
 };
 const parseSkill = (raw: string): SkillState => ({ raw, max: /MAX/i.test(raw), level: /MAX/i.test(raw) ? null : digits(raw) });
 
-// Skill level caps are fixed by skill type, not per-student. Confirmed against
-// app/data/growthData.ts: skillLevelUpCredit has 9 entries (levels 2-10) for Normal/Passive/Sub,
-// exSkillLevelUpCredit has 4 entries (levels 2-5) for EX.
+// Skill level caps are fixed by skill type, not per-student (see app/data/growthData.ts:
+// skillLevelUpCredit levels 2-10 for Normal/Passive/Sub, exSkillLevelUpCredit levels 2-5 for EX).
 const SKILL_MAX_LEVEL = { ex: 5, normal: 10, passive: 10, sub: 10 } as const;
 const resolveSkillLevel = (key: keyof typeof SKILL_MAX_LEVEL, skill: SkillState): number | null => (skill.max ? SKILL_MAX_LEVEL[key] : skill.level);
 
@@ -72,9 +71,8 @@ export const extractStudent = async (
   });
   const equipmentIconCrops = SUB_FIELDS.equipmentIcon.map((spec) => crop(image, fractionBox(panel.equipment, spec)));
   const preparedAt = performance.now();
-  // ONNX Runtime Web's WASM backend cannot run two inference sessions at
-  // once (Firefox reports "Session already started"). Keep model runs
-  // sequential; students themselves are already processed sequentially.
+  // ONNX Runtime Web's WASM backend can't run two inference sessions at once (Firefox
+  // reports "Session already started"), so model runs must stay sequential.
   const recognizedText = await recognizeBatch(ocrCrops);
   const ocrAt = performance.now();
   const equipmentPredictions = await classifyEquipmentTypesBatch(equipmentIconCrops);

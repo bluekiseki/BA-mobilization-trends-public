@@ -15,18 +15,18 @@ interface VerifyResponse {
   user?: User;
 }
 
-async function getAuthenticationOptions(errorMessage: string, signal?: AbortSignal): Promise<PublicKeyCredentialRequestOptionsJSON> {
+async function getAuthenticationOptions(errorMessage: string, maintenanceMessage: string, signal?: AbortSignal): Promise<PublicKeyCredentialRequestOptionsJSON> {
   const response = await fetch('/api/auth/passkey/generate-authenticate-options', {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     signal,
   });
 
-  if (!response.ok) throw new Error(errorMessage);
+  if (!response.ok) throw new Error(response.status === 503 ? maintenanceMessage : errorMessage);
   return response.json();
 }
 
-async function verifyAuthentication(credential: AuthenticationResponseJSON, errorMessage: string): Promise<VerifyResponse> {
+async function verifyAuthentication(credential: AuthenticationResponseJSON, errorMessage: string, maintenanceMessage: string): Promise<VerifyResponse> {
   const response = await fetch('/api/auth/passkey/verify-authentication', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -34,7 +34,7 @@ async function verifyAuthentication(credential: AuthenticationResponseJSON, erro
   });
   const data: VerifyResponse = await response.json();
 
-  if (!response.ok) throw new Error(data.message || errorMessage);
+  if (!response.ok) throw new Error(response.status === 503 ? maintenanceMessage : data.message || errorMessage);
   return data;
 }
 
@@ -55,7 +55,7 @@ export function PasskeyLoginButton({ enableAutofill = true }: Props) {
       try {
         if (!(await browserSupportsWebAuthnAutofill()) || !active) return;
 
-        const options = await getAuthenticationOptions(t('passkey.errors.failedToGetOptions'), controller.signal);
+        const options = await getAuthenticationOptions(t('passkey.errors.failedToGetOptions'), t('common.authServerMaintenance'), controller.signal);
         if (!active) return;
 
         const credential = await startAuthentication({
@@ -64,7 +64,7 @@ export function PasskeyLoginButton({ enableAutofill = true }: Props) {
         });
         if (!active) return;
 
-        const data = await verifyAuthentication(credential, t('passkey.errors.failedToAuthenticate'));
+        const data = await verifyAuthentication(credential, t('passkey.errors.failedToAuthenticate'), t('common.authServerMaintenance'));
         if (!active) return;
 
         if (data.user) setUser(data.user);
@@ -97,13 +97,13 @@ export function PasskeyLoginButton({ enableAutofill = true }: Props) {
 
     try {
       // 1. Get challenge options from server
-      const options = await getAuthenticationOptions(t('passkey.errors.failedToGetOptions'));
+      const options = await getAuthenticationOptions(t('passkey.errors.failedToGetOptions'), t('common.authServerMaintenance'));
 
       // 2. Prompt user for passkey via browser WebAuthn API
       const credential = await startAuthentication({ optionsJSON: options });
 
       // 3. Verify credential with server
-      const data = await verifyAuthentication(credential, t('passkey.errors.failedToAuthenticate'));
+      const data = await verifyAuthentication(credential, t('passkey.errors.failedToAuthenticate'), t('common.authServerMaintenance'));
       if (data?.user) setUser(data.user);
       window.location.href = localeLink(locale, '/settings');
     } catch (err) {

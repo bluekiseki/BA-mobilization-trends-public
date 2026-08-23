@@ -227,6 +227,7 @@ function DiffLines({ rows }: { rows: DiffRow[] }) {
 export default function NoticeDetail() {
   const { currentPost, history, listParams, titleDiff, contentDiff } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation('notices');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const [copied, setCopied] = useState(false);
   const [diffMode, setDiffMode] = useState(false);
@@ -347,7 +348,7 @@ export default function NoticeDetail() {
                       : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400'
                   }`}
                 >
-                  {copied ? t('copied') : t('copy')}
+                  {copied ? t_ui('copied') : t_ui('copy')}
                 </button>
               </div>
             )}

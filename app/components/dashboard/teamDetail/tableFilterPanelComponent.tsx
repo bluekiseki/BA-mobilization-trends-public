@@ -22,6 +22,7 @@ const StudentDropdownItem: React.FC<{
 }> = ({ studentId, student, usageStats, isExpanded, type, portraitData, onToggleExpand, onAdd }) => {
   const [selectedStars, setSelectedStars] = useState<Set<number>>(new Set());
   const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const { t } = useTranslation('dashboard');
 
   const [mustBeIncluded, setMustBeIncluded] = useState(true);
@@ -105,7 +106,7 @@ const StudentDropdownItem: React.FC<{
                 <h4 className="text-neutral-900 dark:text-white font-bold">{t('selectStar')}</h4>
                 <label className="text-neutral-700 dark:text-white text-sm">
                   <input type="checkbox" checked={selectedStars.size > 0 && selectedStars.size === availableStars.length} onChange={handleSelectAllStars} className="mr-1" />
-                  {t_c('selectAll')}
+                  {t_ui('selectAll')}
                 </label>
               </div>
               <div className="max-h-32 overflow-y-auto space-y-1 pr-2 text-sm">
@@ -167,7 +168,7 @@ const StudentDropdownItem: React.FC<{
           )}
 
           <button onClick={handleApply} disabled={isApplyDisabled} className="w-full bg-ba-btn-blue hover:bg-sky-500 text-black p-1 mt-2 rounded disabled:opacity-50">
-            {t_c('confirm')}
+            {t_ui('confirm')}
           </button>
         </div>
       )}
@@ -265,6 +266,7 @@ export const TableFilterPanelComponent: React.FC<{
   partyCountMax?: number;
 }> = ({ tableFilters, handleTableFilterChange, studentData, usageStats, portraitData, partyCountMin = 1, partyCountMax = 99 }) => {
   const { t } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
   const { growthPlans } = useGlobalStore();
   const [viewMode, setViewMode] = useState<'gui' | 'code'>('gui');
   const [codeText, setCodeText] = useState('');
@@ -370,7 +372,7 @@ export const TableFilterPanelComponent: React.FC<{
   }> = ({ cond, onRemove }) => {
     const getIncludableTagText = (c: IncludableStudentCondition) => {
       const tags: string[] = [];
-      if (c.mustBeIncluded) tags.push(t('tagMustInclude'));
+      if (c.mustBeIncluded) tags.push(t_ui('required'));
       if (c.usage === InclusionUsage.Assist) tags.push(t('tagUsageAssist'));
       else if (c.usage === InclusionUsage.Twice) tags.push(t('tagUsageTwice'));
       return tags.join(' ');
@@ -446,7 +448,7 @@ export const TableFilterPanelComponent: React.FC<{
                 className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-ba-btn-gray text-neutral-600 border-neutral-300 hover:brightness-95 dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600"
               >
                 <FiRotateCcw size={11} />
-                {t('filter_reset')}
+                {t_ui('reset')}
               </button>
               <label className="flex items-center gap-1.5 px-1 sm:px-2.5 py-1 text-xs font-medium cursor-pointer border shadow-sm transition-colors bg-ba-btn-gray text-neutral-600 border-neutral-300 hover:brightness-95 dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600">
                 <input type="checkbox" onChange={switchToCode} className="hidden" />
@@ -467,7 +469,7 @@ export const TableFilterPanelComponent: React.FC<{
                 placeholderText={t('searchStudentByName')}
                 portraitData={portraitData}
               />
-              <div className="flex flex-wrap gap-2 pt-2 min-h-[42px]">
+              <div className="flex flex-wrap gap-2 pt-2 min-h-10.5">
                 {tableFilters.includable.map((c) => (
                   <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('includable', c.id)} />
                 ))}
@@ -495,7 +497,7 @@ export const TableFilterPanelComponent: React.FC<{
                 placeholderText={t('searchStudentByName')}
                 portraitData={portraitData}
               />
-              <div className="flex flex-wrap gap-2 pt-2 min-h-[42px]">
+              <div className="flex flex-wrap gap-2 pt-2 min-h-10.5">
                 {tableFilters.excludable.map((c) => (
                   <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('excludable', c.id)} />
                 ))}
@@ -536,7 +538,7 @@ export const TableFilterPanelComponent: React.FC<{
               className="flex items-center gap-1.5 bg-ba-btn-gray hover:brightness-95 text-black px-4 py-1.5 text-xs font-bold transition-colors shadow-sm border border-neutral-300 dark:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600"
             >
               <FiDownload size={13} />
-              {t('filter_import_apply')}
+              {t_ui('apply')}
             </button>
           </div>
         </div>

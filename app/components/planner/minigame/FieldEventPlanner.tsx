@@ -46,6 +46,7 @@ const getDayIndex = (fieldDateId: number) => fieldDateId % 100;
 export const FieldEventPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: FieldEventPlannerProps) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'field_event' });
   const { t: t_p } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const [fromDayValue, setFromDayValue] = useState('');
 
   const { fieldEventActiveTab: activeTab, setFieldEventActiveTab: setActiveTab, fieldEventDisplayResult: displayResult, setFieldEventDisplayResult: setDisplayResult } = useEventSettings(eventId);
@@ -309,7 +310,7 @@ export const FieldEventPlanner = ({ eventId, eventData, iconData, onCalculate, r
                     : 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600'
                 }`}
               >
-                {allDone ? t('questDeselectAll') : t('questSelectAll')}
+                {allDone ? t_ui('deselectAll') : t_ui('selectAll')}
               </button>
               <span className="text-xs text-neutral-400 dark:text-neutral-500">{t('questFromDay')}</span>
               <select
@@ -348,7 +349,7 @@ export const FieldEventPlanner = ({ eventId, eventData, iconData, onCalculate, r
                           : 'border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100'
                       }`}
                     >
-                      {groupAllDone ? t('questDeselectAll') : t('questSelectAll')}
+                      {groupAllDone ? t_ui('deselectAll') : t_ui('selectAll')}
                     </button>
                   </div>
 

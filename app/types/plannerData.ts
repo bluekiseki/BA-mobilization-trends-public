@@ -284,6 +284,7 @@ export interface IconInfo {
   TagsStr: string[];
   Rarity: number;
   UsingResultParcelTypeStr?: 'None' | 'GachaGroup';
+  ShopCategory?: number[]; // ShopCategoryType enum values this item can appear under
 }
 
 export interface GachaElement {

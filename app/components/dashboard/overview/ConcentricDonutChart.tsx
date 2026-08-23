@@ -201,10 +201,6 @@ export function ConcentricDonutChartItem({ boss, server, id, scores, tierCounter
   };
 
   const handleMouseEnter = (data: ChartData, event: React.MouseEvent, fill: string) => {
-    // const name = data.timeBinName || data.name;
-    // const value = data.value;
-    // const percent = data.percent;
-
     const tooltipNode = tooltipRef.current;
     if (!tooltipNode) return;
 

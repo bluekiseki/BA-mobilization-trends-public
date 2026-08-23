@@ -105,12 +105,8 @@ export async function loader({ context }: LoaderFunctionArgs) {
     return res.json() as unknown as T;
   };
 
-  // Historical trajectory datasets used by RankScatterChart/PlatinumCutWidget (~940KB
-  // combined). They live in public/data/jp/trajectory/ so the existing "Deploy Assets to
-  // R2" CI workflow keeps them synced to the yuzutrends-cdn bucket automatically on every
-  // push - no manual upload step needed for future updates. Fetched via the CDN_BUCKET R2
-  // binding (zero-latency) rather than an external HTTP fetch. Non-critical to the page,
-  // so a miss just means those charts render without the overlay/prediction.
+  // Historical trajectory datasets for RankScatterChart/PlatinumCutWidget, synced to R2 via CI and fetched
+  // through the CDN_BUCKET binding. Non-critical: a miss just means charts render without the overlay.
   const fetchTrajectory = async (filename: string): Promise<unknown> => {
     try {
       const r2Object = await env.CDN_BUCKET.get(`assets/data/jp/trajectory/${filename}`);
@@ -137,7 +133,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
       siteTitle: i18n.t('common:title'),
       pageTitle: i18n.t('dashboardIndex:liveBetaTitle'),
       description: i18n.t('liveDashboard:description'),
-      raidType: isRaid ? i18n.t('common:raid') : i18n.t('common:eraid'),
+      raidType: isRaid ? i18n.t('game:raid') : i18n.t('game:eraid'),
       raidInfos,
 
       lastData,
@@ -194,7 +190,7 @@ export default function LiveDashboardPage() {
   const fetchStudents = useDataCacheJson<Record<string, Student>>();
   const { t: t_d, i18n } = useTranslation('dashboardIndex');
   const { t } = useTranslation('liveDashboard');
-  const { t: t_c } = useTranslation('common');
+  const { t: tg } = useTranslation('game');
   const locale = i18n.language as Locale;
   const [isReady, setIsReady] = useState(false);
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
@@ -229,7 +225,7 @@ export default function LiveDashboardPage() {
 
         <div className="flex justify-center items-center gap-2 mt-4">
           <span className="inline-block px-3 py-1 text-sm font-semibold text-black bg-ba-btn-blue rounded-full">
-            {(isRaid ? t_c('raid') : t_c('eraid')).replace(/Assault/gi, '').trim()} {/* 総力戦 */}
+            {(isRaid ? tg('raid') : tg('eraid')).replace(/Assault/gi, '').trim()} {/* 総力戦 */}
           </span>
           <span className="inline-flex items-center px-3 py-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">
             <TerrainIconGameStyle terrain={raidInfos[0].Location as Terrain} size={'1.2em'} />

@@ -30,6 +30,8 @@ const Badge = ({ children, variant, className = '' }: { children: React.ReactNod
 
 export default function BannerPlanner({ banners, strategies, portraitMap, onUpdateStrategy, onUpdateStudentConfig }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.banner_planner' });
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const [showOldBanners, setShowOldBanners] = useState(false);
   const bannerRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -134,7 +136,7 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                     <div className="flex flex-wrap gap-1">
                       {banner.isFes && <Badge variant="purple">{t('badge.fes')}</Badge>}
                       {banner.freePulls > 0 && <Badge variant="success">{t('badge.free_pulls', { count: banner.freePulls })}</Badge>}
-                      {banner.isLimitedBanner && !banner.isFes && <Badge variant="warning">{t('badge.limited')}</Badge>}
+                      {banner.isLimitedBanner && !banner.isFes && <Badge variant="warning">{t_g('limited')}</Badge>}
                     </div>
                   </div>
 
@@ -160,7 +162,7 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                 <div className="flex items-center shrink-0" onClick={(e) => e.stopPropagation()}>
                   <label className="inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={isParticipating} onChange={(e) => onUpdateStrategy(banner.id, { isActive: e.target.checked })} />
-                    <div className="relative w-9 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-neutral-500 peer-checked:bg-blue-600"></div>
+                    <div className="relative w-9 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-neutral-500 peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               </div>
@@ -279,7 +281,7 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                                   {t('mode.skip')}
                                 </option>
                                 <option value="must" className="dark:bg-neutral-800">
-                                  {t('mode.must')}
+                                  {t_ui('required')}
                                 </option>
                                 <option value="opportunistic" className="dark:bg-neutral-800">
                                   {t('mode.opportunistic')}

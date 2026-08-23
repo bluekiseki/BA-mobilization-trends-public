@@ -27,9 +27,7 @@ export function useLazySchedule({ server, apiType, initialData, resetKey, extend
   const [data, setData] = useState<LazyScheduleData>(initialData);
   const rangeRef = useRef(initialData.timeRange);
   const pendingRef = useRef<{ start: boolean; end: boolean }>({ start: false, end: false });
-  // Once an edge-triggered fetch comes back with zero items, that direction has hit the real
-  // extent of the underlying data (e.g. before game launch, or past the furthest scheduled item) —
-  // stop extending so the timeline doesn't scroll into an endless empty void.
+  // A zero-item edge fetch means that direction hit the real data extent — stop extending there.
   const exhaustedRef = useRef<{ start: boolean; end: boolean }>({ start: false, end: false });
   const resetKeyRef = useRef(resetKey);
 

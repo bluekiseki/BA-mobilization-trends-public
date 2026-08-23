@@ -11,9 +11,7 @@ export interface StudentScanCallbacks {
   onResult?: (result: StudentResult) => void;
 }
 
-// Orchestrates a full video scan: scanStableFrames (0-40%) -> prepareVideoCandidates
-// (40-55%) -> extractStudent per remaining candidate (55-100%). Runs as one batch call
-// (unlike item scanner's per-file loop) since a single video yields many candidate frames.
+// Orchestrates a full video scan: scanStableFrames (0-40%) -> prepareVideoCandidates (40-55%) -> extractStudent per candidate (55-100%).
 export async function processVideo(
   file: File,
   database: StudentRecord[],

@@ -44,7 +44,7 @@
   "EmptyClub": "無",
   "CentralControlCenter": "CCC",
   "FreightLogisticsDepartment": "貨物輸送管理部",
-  "OccultClub": "神祕學研究會",
+  "OccultClub": "神秘學研究會",
   "FreeTradeCartel": "特殊交易部",
   "NicomediasTroop": "尼科米底亞連隊",
   "PublishingDepartment": "出版部",
@@ -65,5 +65,21 @@
     "Other": "其他",
     "Highlander": "高地人",
     "WildHunt": "狂獵"
-  }
+  },
+  "Abydos": "阿拜多斯",
+  "Arius": "奧利斯",
+  "Gehenna": "格黑娜",
+  "Hyakkiyako": "百鬼夜行",
+  "Millennium": "千年",
+  "RedWinter": "赤冬",
+  "Shanhaijing": "山海經",
+  "SRT": "SRT",
+  "Trinity": "三一",
+  "Valkyrie": "女武神",
+  "ETC": "其他",
+  "Tokiwadai": "常盤台中學",
+  "Sakugawa": "柵川中學",
+  "Highlander": "高地人",
+  "WildHunt": "狂獵",
+  "FoxSquad": "FOX小隊"
 }

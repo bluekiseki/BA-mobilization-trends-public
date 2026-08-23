@@ -13,6 +13,7 @@ interface BugReportModalProps {
 
 export default function BugReportModal({ onClose, issuesURL }: BugReportModalProps) {
   const { t } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const data = useLoaderData<typeof loader>();
 
@@ -135,7 +136,7 @@ export default function BugReportModal({ onClose, issuesURL }: BugReportModalPro
                 disabled={status === 'submitting'}
                 className="w-full py-2 bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-100 dark:hover:bg-white text-white dark:text-neutral-900 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 mt-1"
               >
-                {status === 'submitting' ? t('bugReport.submittingBtn') : t('bugReport.submitBtn')}
+                {status === 'submitting' ? t_ui('sending') : t('bugReport.submitBtn')}
               </button>
 
               <p className="text-center text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">{t('bugReport.poweredBy')}</p>

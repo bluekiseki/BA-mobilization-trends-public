@@ -1,12 +1,129 @@
 [
   {
+    "date": "2026-08-22",
+    "changes": {
+      "en": ["[제보] Item Scanner: Fixed low recognition rate — some files were not uploaded to the server", "Item Scanner: Improved classification accuracy"],
+      "ko": ["[제보] 아이템 스캐너: 인식률이 낮은 오류 수정 - 서버 업로드 문제로 일부 파일이 업로드되지 않은 문제", "아이템 스캐너: 아이템 분류 정확도 개선"],
+      "ja": ["[제報] アイテムスキャナー: 認識率が低い問題を修正 - サーバー配布問題で一部ファイルがアップロードされなかった問題", "アイテムスキャナー: アイテム分類精度を向上"]
+    },
+    "to": ["/scanner/item"]
+  },
+  {
+    "date": "2026-08-21",
+    "changes": {
+      "en": [
+        "[Issue #11] Gacha Planner: Reflected gacha ticket expiration dates in calculations and display",
+        "Gacha Planner: Fixed pickup selection disappearing for some students, caused by saved strategy/schedule data conflicting after a Prediction update — restructured the data to prevent this, and added a strategy reset button"
+      ],
+      "ko": [
+        "[Issue #11] 모집/가챠 플래너: 가챠 티켓의 유효기간을 계산 및 표기에 반영",
+        "모집/가챠 플래너: 미래시 업데이트로 기존 전략/일정 데이터가 충돌해 일부 픽업 학생의 선택창이 사라지던 문제 수정 - 충돌하지 않도록 자료구조 개선, 전략 초기화 버튼 추가"
+      ],
+      "ja": [
+        "[Issue #11] 募集/ガチャプランナー: ガチャチケットの有効期限を計算と表示に反映",
+        "募集/ガチャプランナー: 未来視アップデートで既存の戦略・スケジュールデータが競合し、一部のピックアップ生徒の選択欄が消える問題を修正 - 競合しないようデータ構造を改善、戦略初期化ボタンを追加"
+      ]
+    },
+    "to": ["/planner/gacha", "/planner/gacha"]
+  },
+  {
+    "date": "2026-08-19",
+    "changes": {
+      "en": [
+        "Event Planner: Display total AP in the AP Calculation tab",
+        "Improved Main Story labels in English and Simplified Chinese",
+        "Gacha Planner: Fixed pyroxene rewards not being included for some Main Stories and Mini Stories",
+        "Event Planner: Added buttons to run all stages once and claim all first-clear rewards in the Farming tab",
+        "Event Planner: Bonus tab displays student badges for students who can further increase the bonus when added",
+        "Changed the theme selection button behavior from a dropdown to a click button",
+        "Gacha Planner: Added support for reflecting unread Main Stories and MomoTalks",
+        "Gacha Planner: Added filters to the details view"
+      ],
+      "ko": [
+        "이벤트 플래너: AP 계산 탭에서 총 AP 표시",
+        "영어, 중국어 간체 메인스토리 표기 개선",
+        "모집/가챠 플래너: 일부 메인스토리 및 미니 스토리의 획득 청휘석이 반영되지 않던 문제 수정",
+        "이벤트 플래너: 파밍 탭에 전체 일괄 1회 주회 및 초회 획득 버튼 추가",
+        "이벤트 플래너: 보너스 탭에서 추가 시 보너스 증가의 여지가 있는 학생 배지 표시",
+        "테마 선택 버튼 동작 변경: 드롭다운에서 클릭 방식으로 변경",
+        "모집/가챠 플래너: 아직 보지 않은 메인스토리와 모모톡 반영 기능 추가",
+        "모집/가챠 플래너 상세 내역에 필터 기능 추가"
+      ],
+      "ja": [
+        "イベントプランナー: AP計算タブに合計APを表示",
+        "英語・簡体字中国語のメインストーリー表記を改善",
+        "募集/ガチャプランナー: 一部のメインストーリーおよびミニストーリーの獲得青輝石が反映されない問題を修正",
+        "イベントプランナー: 周回タブに全ステージを一括で1回周回し、初回報酬を獲得するボタンを追加",
+        "イベントプランナー: ボーナスタブで追加時にボーナスをさらに増加できる生徒のバッジを表示",
+        "テーマ選択ボタンの動作をドロップダウンからクリック式に変更",
+        "募集/ガチャプランナー: 未読のメインストーリーとモモトークを反映する機能を追加",
+        "募集/ガチャプランナー: 詳細画面にフィルター機能を追加"
+      ]
+    },
+    "to": ["/planner/event", null, null, "/planner/event", "/planner/event", null, "/planner/gacha", "/planner/gacha"]
+  },
+  {
+    "date": "2026-08-18",
+    "changes": {
+      "en": [
+        "Fixed Traditional Chinese (zh-Hant) text not displaying correctly",
+        "Event Planner: In the Resource Efficiency tab, fixed first-clear rewards being skipped for some stages",
+        "[Issue #10] Gacha Planner: Added an option to reflect already-recruited students (from the Student Planner) in the Eligma calculation"
+      ],
+      "ko": [
+        "중국어 번체 텍스트가 올바르게 표시되지 않던 문제 수정",
+        "이벤트 플래너: 재화 효율 탭에서, 초회 보상을 생략하는 문제 수정",
+        "[Issue #10] 모집/가챠 플래너: 엘리그마 계산에 이미 모집된 학생(학생 플래너 기준)을 반영하는 기능 추가"
+      ],
+      "ja": [
+        "繁体字中国語のテキストが正しく表示されない問題を修正",
+        "イベントプランナー: リソース効率タブで、初回クリア報酬が省略される問題を修正",
+        "[Issue #10] 募集/ガチャプランナー: エリグマ計算に募集済みの生徒(生徒プランナー基準)を反映するオプションを追加"
+      ]
+    },
+    "to": [null, "/planner/event", "/planner/gacha"]
+  },
+  {
+    "date": "2026-08-17",
+    "changes": {
+      "en": [
+        "Gacha Planner: Fixed Eleph distribution tooltip showing inflated percentages (e.g. 8409%); average Eleph now shown next to obtain rate in the student list",
+        "Gacha Planner: Added Recruit Charge system support to the WASM engine",
+        "Gacha Debug: Added in-game-style recruit result cards with New/Pick Up labels and reveal animation",
+        "Gacha Planner, Raid Ranking, Favor Rank Calculator, BGM Player, Student Growth Planner: Improved page load speed"
+      ],
+      "ko": [
+        "모집/가챠 플래너: 엘리프 획득 분포 툴팁에 비정상적으로 부풀려진 확률(예: 8409%)이 표시되던 문제 수정, 학생 목록 획득 확률 옆에 평균 엘리프 표시",
+        "모집/가챠 플래너: WASM 엔진에 모집 충전 시스템 반영",
+        "가챠 디버그: New/Pick Up 라벨과 등장 애니메이션을 포함한 인게임 스타일 모집 결과 카드 추가",
+        "모집/가챠 플래너, 총력전 순위, 인연 랭크 계산기, BGM 플레이어, 학생 성장 플래너: 로딩 속도 개선"
+      ],
+      "ja": [
+        "募集/ガチャプランナー: エレフ獲得分布のツールチップで異常に大きい確率(例: 8409%)が表示される問題を修正、生徒リストの獲得確率の横に平均エレフを表示",
+        "募集/ガチャプランナー: WASMエンジンに募集チャージシステムを実装",
+        "ガチャデバッグ: New/Pick Upラベルと登場アニメーションを備えたゲーム風の募集結果カードを追加",
+        "募集/ガチャプランナー、総力戦ランキング、絆ランク計算機、BGMプレイヤー、生徒育成プランナー: 読み込み速度を改善"
+      ]
+    },
+    "to": ["/planner/gacha", "/planner/gacha", "/planner/gacha-test", null]
+  },
+  {
     "date": "2026-08-16",
     "changes": {
-      "en": ["[Report] [Issue #9] Event Planner: Fixed repeatable event bonus rewards not being rounded up for each run"],
-      "ko": ["[제보] [Issue #9] 이벤트 플래너: 반복 보상의 이벤트 보너스가 매 회차 올림되지 않던 문제 수정"],
-      "ja": ["[報告] [Issue #9] イベントプランナー: 周回報酬のイベントボーナスが1回ごとに切り上げられず計算されていた問題を修正"]
+      "en": [
+        "[Report] [Issue #9] Event Planner: Fixed repeatable event bonus rewards not being rounded up for each run",
+        "[Issue #7] Gacha Planner: Fixed the WASM simulation engine counting banner pickup students already present in the normal ★3 pool twice, doubling their spook rate"
+      ],
+      "ko": [
+        "[제보] [Issue #9] 이벤트 플래너: 반복 보상의 이벤트 보너스가 매 회차 올림되지 않던 문제 수정",
+        "[Issue #7] 모집/가챠 플래너: WASM 시뮬레이션 엔진에서 통상 3성 모집에 이미 있는 배너 픽업 학생이 중복 계산되어 획득률이 2배로 표시되던 문제 수정"
+      ],
+      "ja": [
+        "[報告] [Issue #9] イベントプランナー: 周回報酬のイベントボーナスが1回ごとに切り上げられず計算されていた問題を修正",
+        "[Issue #7] 募集/ガチャプランナー: WASMシミュレーションエンジンで通常★3プールに既に存在するバナーピックアップ生徒が重複計算され、排出率が2倍になっていた問題を修正"
+      ]
     },
-    "to": ["/planner/event"]
+    "to": ["/planner/event", "/planner/gacha"]
   },
   {
     "date": "2026-08-15",

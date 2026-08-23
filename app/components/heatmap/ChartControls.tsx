@@ -21,7 +21,8 @@ import React from 'react';
 import { ToggleButtonGroup } from '../ToggleButtonGroup';
 import type { Student } from '~/types/data';
 import { useTranslation } from 'react-i18next';
-import { difficultyInfo, type DifficultySelect } from '../raid/Difficulty';
+import { difficultyInfo } from '../raid/Difficulty';
+import { CheckboxSelect, type CheckboxSelectOption } from '../common/CheckboxSelect';
 import type { Locale } from '~/utils/i18n/config';
 import { CustomNumberInput } from '../CustomInput';
 import StudentProfileCard from '../common/StudentProfileCard';
@@ -69,8 +70,11 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
   const { t, i18n } = useTranslation('charts', {
     keyPrefix: 'heatmap.control',
   });
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const { t: t_raids } = useTranslation('raidInfo');
   const locale = i18n.language as Locale;
+  const difficultyOptions = difficultyInfo.filter(({ name }) => name !== 'Extreme').map(({ name }) => ({ value: name, label: t_raids(name) })) satisfies CheckboxSelectOption<string>[];
 
   const {
     selectedStudentId,
@@ -90,8 +94,8 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
     setXRange,
     fullXRange,
     availableZValueCounter,
-    difficulty,
-    setDifficulty,
+    selectedDifficulties,
+    setSelectedDifficulties,
     getFilteredRaidInfoByDifficulty,
   } = useChartControlsStore(
     useShallow((state) => ({
@@ -112,8 +116,8 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
       setXRange: state.setXRange,
       fullXRange: state.fullXRange,
       availableZValueCounter: state.availableZValueCounter,
-      difficulty: state.difficulty,
-      setDifficulty: state.setDifficulty,
+      selectedDifficulties: state.selectedDifficulties,
+      setSelectedDifficulties: state.setSelectedDifficulties,
       getFilteredRaidInfoByDifficulty: state.getFilteredRaidInfoByDifficulty,
     })),
   );
@@ -182,7 +186,7 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
                   onClick={() => setRankWidth(tempRankWidth)}
                   className="px-3 py-1 bg-ba-btn-blue hover:bg-sky-400 transition-colors w-full shadow-ba text-black rounded-r-md text-xs font-semibold"
                 >
-                  {t('setButton')}
+                  {t_ui('settings')}
                 </button>
               </div>
             </div>
@@ -200,27 +204,20 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
                   onClick={() => setHideXThreshold(hideXThreshold)}
                   className="px-3 py-1.5 bg-ba-btn-blue hover:bg-sky-400 transition-colors w-full shadow-ba text-black rounded-r-md text-xs font-semibold"
                 >
-                  {t('setButton')}
+                  {t_ui('settings')}
                 </button>
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <label htmlFor="squad-type-select" className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                {t('difficulty')}
-              </label>
-              <select
-                id="squad-type-select"
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as DifficultySelect)}
-                className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
-              >
-                <option value="All">{t_raids('All')}</option>
-                {difficultyInfo.map(({ name }) => (
-                  <option value={name} key={name}>
-                    {t_raids(name)}
-                  </option>
-                ))}
-              </select>
+              <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t_g('difficulty')}</label>
+              <CheckboxSelect
+                ariaLabel={t_g('difficulty')}
+                options={difficultyOptions}
+                selectedValues={selectedDifficulties}
+                onChange={(next) => setSelectedDifficulties(next.size === 0 ? new Set(['All']) : next)}
+                allOption={{ value: 'All', label: t_ui('all') }}
+                className="w-32"
+              />
             </div>
           </div>
         </div>
@@ -279,13 +276,13 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
           <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 mb-2">{t('raidRange.title')}</h3>
           <div className="w-full text-center text-sm text-neutral-700 dark:text-neutral-400 mb-2 transition-colors duration-300 flex flex-col sm:flex-row justify-center">
             <span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.max(fullXRange[0], xRange[0])], locale, true)}</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.min(fullXRange[1], xRange[1])]?.Id}</span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.min(fullXRange[1], xRange[1])], locale, true)}</span>
             </span>
             <span className="mx-2 font-medium">—</span>
             <span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.min(fullXRange[1], xRange[1])]?.Id}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.min(fullXRange[1], xRange[1])], locale, true)}</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}</span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.max(fullXRange[0], xRange[0])], locale, true)}</span>
             </span>
           </div>
           <SliderComponent fullXRange={fullXRange} labelMap={labelMap} xRange={xRange} setXRange={setXRange} />

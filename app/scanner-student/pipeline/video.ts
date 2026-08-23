@@ -23,9 +23,8 @@ const get2dContext = (canvas: HTMLCanvasElement, options?: CanvasRenderingContex
   return context;
 };
 
-// Keep candidate frames at the video's display resolution. Type/terrain
-// pixels are only a few dozen pixels wide; downscaling them changes the
-// sampled colour and no longer matches the Python/OpenCV pipeline.
+// Keep candidate frames at display resolution — downscaling would change the sampled colour
+// of type/terrain pixels (only a few dozen px wide) and break the match with the Python/OpenCV pipeline.
 const canvasBlob = (canvas: HTMLCanvasElement) =>
   new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Frame compression failed'))), 'image/jpeg', 0.92));
 
@@ -280,9 +279,8 @@ export const prepareVideoCandidates = async (
   for (let i = candidates.length - 1; i >= 0; i -= 1) {
     const image = await loadImageData(candidates[i].blob);
     const anchors = layout?.anchors ?? locateAnchors(image);
-    // A motionless loading/title frame is stable too, but it is not a
-    // student page. When layout voting fell back to per-frame detection,
-    // exclude such frames here instead of letting one abort the whole run.
+    // A motionless loading/title frame is stable too but not a student page — when layout voting
+    // falls back to per-frame detection, exclude such frames here instead of aborting the run.
     if (!anchors) {
       rejected += 1;
       onProgress(0.35 + ((candidates.length - i) / Math.max(1, candidates.length)) * 0.65, messages.deduplicateRejected(rejected, candidates.length - i, candidates.length));

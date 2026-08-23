@@ -200,7 +200,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
         } else if (key === 'gacha_prefs') {
           localStorage.setItem('gacha_prefs_v1', JSON.stringify(value));
         } else if (key === 'gacha_strategies') {
-          localStorage.setItem('gacha_strategies_v2', JSON.stringify(value));
+          localStorage.setItem('gacha_strategies_v3', JSON.stringify(value));
         }
       }
       if (Object.keys(eventPlansMap).length > 0) {

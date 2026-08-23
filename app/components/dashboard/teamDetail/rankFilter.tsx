@@ -23,7 +23,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
   // Actively utilize local state for immediate UI responsiveness.
   const [minRankInput, setMinRankInput] = useState(currentMin);
   const [maxRankInput, setMaxRankInput] = useState(currentMax);
-  const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
 
   // Synchronize only when parent values change externally (e.g., reset, clicking different presets)
   // (Caution may be needed to avoid synchronization during user input, but overwriting is fine in the current structure)
@@ -178,7 +178,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
         </div>
 
         <button onClick={handleInputConfirm} className="bg-ba-btn-blue hover:bg-sky-500 active:bg-sky-600 text-black px-5 py-2 text-sm font-bold transition-colors shadow-sm">
-          {t_c('confirm')}
+          {t_ui('confirm')}
         </button>
       </div>
     </div>

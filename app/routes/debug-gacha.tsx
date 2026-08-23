@@ -1,3 +1,4 @@
+import './debug-gacha.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseAndGroupBanners, getAllStudents, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import { rollSingle, createPoolForBanner, preprocessReleaseDates, calcPullRewards, calcDupeReward, type GachaPools } from '~/utils/gachaEngine';
@@ -8,6 +9,7 @@ import GachaWorker from '~/workers/gacha-engine.worker?worker';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
 import { PageHeader } from '~/components/common/PageHeader';
+import { FaStar } from 'react-icons/fa';
 
 interface ChunkStats {
   grade1: number;
@@ -15,6 +17,7 @@ interface ChunkStats {
   grade3: number;
   pickup: number;
   total: number;
+  charge: number;
   studentCountsJson: string;
 }
 
@@ -26,6 +29,7 @@ interface PullResult {
   studentName: string;
   grade: number;
   isPickup: boolean;
+  isNew: boolean;
   isFes: boolean;
 }
 
@@ -54,10 +58,25 @@ const EMPTY_STATS = (): CumulativeStats => ({
   studentCounts: { 1: {}, 2: {}, 3: {} },
 });
 
-const GRADE_STYLE: Record<number, string> = {
-  1: 'bg-blue-400',
-  2: 'bg-yellow-400',
-  3: 'bg-gradient-to-br from-violet-600 via-violet-400 to-purple-500',
+const CARD_STYLE: Record<1 | 2 | 3, { frame: string; panel: string; stars: string; glow: string }> = {
+  1: {
+    frame: 'border-[#d9e0e8] bg-[#edf2f6]',
+    panel: 'bg-[#667180]',
+    stars: 'text-[#f6e94b]',
+    glow: '',
+  },
+  2: {
+    frame: 'border-[#f8eb78] bg-[#fff6b2]',
+    panel: 'bg-[#747164]',
+    stars: 'text-[#fff39a]',
+    glow: 'shadow-[0_0_clamp(2px,0.8vw,6px)_clamp(1px,0.15vw,1px)_#fff6b2,0_0_clamp(3px,1.2vw,10px)_clamp(1px,0.3vw,3px)_#f8eb78]',
+  },
+  3: {
+    frame: 'border-[#f4c6ff] bg-[#f8e3ff]',
+    panel: 'bg-[#9a7ca5]',
+    stars: 'text-[#fff1a5]',
+    glow: 'shadow-[0_0_clamp(3px,1vw,8px)_clamp(1px,0.2vw,2px)_#f8e3ff,0_0_clamp(4px,1.6vw,14px)_clamp(1px,0.4vw,4px)_#f4c6ff]',
+  },
 };
 
 function formatDuration(ms: number): string {
@@ -71,13 +90,38 @@ function pct(count: number, total: number, decimals = 4): string {
   return total > 0 ? ((count / total) * 100).toFixed(decimals) : '0.0000';
 }
 
-function EnvelopeCard({ pull, portraits }: { pull: PullResult; portraits: Record<number, string> }) {
+function EnvelopeCard({ pull, portraits, delayMs, fromBottom }: { pull: PullResult; portraits: Record<number, string>; delayMs: number; fromBottom: boolean }) {
   const portrait = portraits[pull.studentId];
+  const style = CARD_STYLE[pull.grade as 1 | 2 | 3] ?? CARD_STYLE[1];
   return (
-    <div className={`relative flex flex-col items-center justify-center rounded-lg p-2 aspect-square ${GRADE_STYLE[pull.grade] ?? 'bg-neutral-400'}`}>
-      {portrait && <img src={`data:image/webp;base64,${portrait}`} alt={pull.studentName} className="w-10 h-10 rounded-full object-cover" />}
-      <span className="text-white text-xs font-bold mt-1 text-center leading-tight truncate w-full">{pull.studentName}</span>
-      {pull.isPickup && <span className="absolute top-1 right-1 text-yellow-200 text-xs font-bold">★</span>}
+    <div className={`relative ${fromBottom ? 'animate-gacha-reveal-from-bottom' : 'animate-gacha-reveal'}`} style={{ animationDelay: `${delayMs}ms` }}>
+      {pull.grade === 3 && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-1/2 h-[240%] -translate-y-1/2 -skew-x-6 bg-gradient-to-b from-transparent via-[#f4c6ff]/80 to-transparent blur-[3px] mix-blend-screen"
+        />
+      )}
+      <div
+        className={`relative w-full -skew-x-6 overflow-hidden rounded-[clamp(3px,0.4vw,6px)] border-[clamp(1px,0.14vw,2px)] p-[clamp(1px,0.28vw,4px)] ${style.frame} ${style.glow}`}
+        title={pull.studentName}
+      >
+        <div className="aspect-[1.15] w-full skew-x-6 overflow-hidden rounded-[clamp(2px,0.25vw,4px)] bg-white/45">
+          {portrait ? <img src={`data:image/webp;base64,${portrait}`} alt={pull.studentName} className="h-full w-full object-cover" /> : <div className="h-full w-full bg-neutral-200" />}
+        </div>
+        <div className={`flex aspect-[4.5] w-full items-center justify-center border-t border-white/40 ${style.panel}`}>
+          <div className="flex skew-x-6 gap-0.5">
+            {Array.from({ length: pull.grade }, (_, index) => (
+              <FaStar key={index} aria-hidden className={`h-[clamp(10px,1.2vw,17px)] w-[clamp(10px,1.2vw,17px)] ${style.stars}`} />
+            ))}
+          </div>
+        </div>
+        {(pull.isNew || pull.isPickup) && (
+          <div className="absolute left-0.5 top-0.5 flex flex-col items-start gap-1 -skew-x-6 font-black italic leading-[0.8] tracking-[-0.08em]">
+            {pull.isNew && <span className="gacha-new-label inline-block skew-x-6 text-[clamp(10px,2.1vw,21px)]">New</span>}
+            {pull.isPickup && <span className="gacha-pickup-label inline-block skew-x-6 text-[clamp(10px,2.1vw,21px)]">Pick Up!</span>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -96,7 +140,23 @@ function StatCard({ label, count, total, expected }: { label: string; count: num
 
 type GradeTab = 1 | 2 | 3;
 
-function StudentCountTable({ counts, total, grade }: { counts: Record<number, StudentCount>; total: number; grade: 1 | 2 | 3 }) {
+function StudentCountTable({
+  counts,
+  total,
+  grade,
+  countLabel,
+  rateLabel,
+  elephLabel,
+  eligmaLabel,
+}: {
+  counts: Record<number, StudentCount>;
+  total: number;
+  grade: 1 | 2 | 3;
+  countLabel: string;
+  rateLabel: string;
+  elephLabel: string;
+  eligmaLabel: string;
+}) {
   const sorted = Object.entries(counts)
     .map(([id, v]) => ({ id: Number(id), ...v }))
     .sort((a, b) => b.count - a.count);
@@ -108,10 +168,10 @@ function StudentCountTable({ counts, total, grade }: { counts: Record<number, St
       <thead>
         <tr className="text-neutral-500 border-b dark:border-neutral-700">
           <th className="py-1 text-left font-medium">Student</th>
-          <th className="py-1 text-right font-medium">Count</th>
-          <th className="py-1 text-right font-medium">Rate</th>
-          <th className="py-1 text-right font-medium">Eleph</th>
-          <th className="py-1 text-right font-medium">Eligma</th>
+          <th className="py-1 text-right font-medium">{countLabel}</th>
+          <th className="py-1 text-right font-medium">{rateLabel}</th>
+          <th className="py-1 text-right font-medium">{elephLabel}</th>
+          <th className="py-1 text-right font-medium">{eligmaLabel}</th>
         </tr>
       </thead>
       <tbody>
@@ -149,14 +209,24 @@ export default function DebugGachaPage() {
   const [activeTab, setActiveTab] = useState<GradeTab>(3);
   const [selectedPickupId, setSelectedPickupId] = useState<number | null>(null);
   const [customCount, setCustomCount] = useState<string>('100000000');
-  // "Recruit charge" pity counter (new system) — only meaningful for useChargeSystem banners; reset alongside stats.
+  // "Recruit charge" pity counter (new system) — only meaningful when chargeSystemOverride is on; reset alongside stats.
   const [charge, setCharge] = useState(0);
+  // Whether to simulate the "recruit charge" pity system. Defaults to the banner's useChargeSystem flag (gachaData.ts cutoff logic), but can be flipped manually.
+  const [chargeSystemOverride, setChargeSystemOverride] = useState(false);
+  // When on, every single pull is forced to start at charge=99 (instead of continuing from the real counter),
+  // so it always lands exactly on the 100-count soft pity checkpoint — for bulk-testing that probability split.
+  const [checkpointTestMode, setCheckpointTestMode] = useState(false);
   const [useWasm, setUseWasm] = useState(false);
   const [showBatches, setShowBatches] = useState(false);
+  const [showCumulativeStats, setShowCumulativeStats] = useState(true);
+  const [latestResultKey, setLatestResultKey] = useState(0);
   const [wasmProgress, setWasmProgress] = useState<{ completed: number; total: number } | null>(null);
   const [timingResult, setTimingResult] = useState<{ totalPulls: number; elapsedMs: number } | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const { i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
+  const { t, i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
+  const { t: tPlanner } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const locale = i18n.language as Locale;
 
   useEffect(() => {
@@ -194,6 +264,13 @@ export default function DebugGachaPage() {
     };
     void loadData();
   }, []);
+
+  // Re-sync the charge-system checkbox to the newly selected banner's real cutoff each time it changes;
+  // the user can still flip it manually afterward.
+  useEffect(() => {
+    const banner = banners.find((b) => b.id === selectedBannerId);
+    setChargeSystemOverride(banner?.useChargeSystem ?? false);
+  }, [selectedBannerId, banners]);
 
   const pools: GachaPools | null = useMemo(() => {
     const banner = banners.find((b) => b.id === selectedBannerId);
@@ -238,7 +315,7 @@ export default function DebugGachaPage() {
     const startTime = performance.now();
 
     const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
-    const useCharge = banner.useChargeSystem;
+    const useCharge = chargeSystemOverride;
     let currentCharge = charge;
     let remaining = count;
     let currentStats: CumulativeStats = {
@@ -262,17 +339,20 @@ export default function DebugGachaPage() {
         for (let i = 0; i < 10; i++) {
           let forced: 'pickup' | 'random3star' | undefined;
           if (useCharge) {
+            if (checkpointTestMode) currentCharge = 99;
             currentCharge += 1;
             forced = currentCharge === 200 ? 'pickup' : currentCharge === 100 ? (Math.random() < 0.5 ? 'pickup' : 'random3star') : undefined;
           }
           const result = rollSingle(i === 9, banner.isFes, selectedPickupId, pools, bannerPickupIds, forced);
           if (useCharge && result.isPickup) currentCharge = 0;
           const student = studentMap.get(result.id);
+          const isNew = !Object.values(currentStats.studentCounts).some((counts) => counts[result.id] !== undefined);
           const pull: PullResult = {
             studentId: result.id,
             studentName: student?.name ?? `Unknown (${result.id})`,
             grade: result.grade,
             isPickup: result.isPickup,
+            isNew,
             isFes: student?.isFes ?? false,
           };
           batch.push(pull);
@@ -300,7 +380,11 @@ export default function DebugGachaPage() {
       }
 
       currentStats = newStats;
-      setBatches((prev) => [...prev, ...newBatches]);
+      if (newBatches.length > 0) {
+        setBatches([newBatches[newBatches.length - 1]]);
+        setShowBatches(true);
+        setLatestResultKey((key) => key + 1);
+      }
       setStats({ ...newStats });
       if (useCharge) setCharge(currentCharge);
 
@@ -333,7 +417,9 @@ export default function DebugGachaPage() {
     for (const [idStr, count] of Object.entries(counts)) {
       const id = Number(idStr);
       const student = studentMap.get(id);
-      const grade = (student?.rarity ?? 1) as 1 | 2 | 3;
+      // `studentMap` is typed as `~/types/gacha`'s Student (with `rarity`), but at runtime it holds
+      // `~/utils/gachaData.ts`'s Student (with `starGrade`) via the `as unknown as Student[]` cast above.
+      const grade = ((student as { starGrade?: number } | undefined)?.starGrade ?? 1) as 1 | 2 | 3;
       if (grade !== 1 && grade !== 2 && grade !== 3) continue;
       const existing = sc[grade][id];
       if (existing) {
@@ -391,6 +477,7 @@ export default function DebugGachaPage() {
       }
       latestStats = mergeWasmChunk(latestStats, msg.chunkStats, currentPickupId);
       setStats({ ...latestStats });
+      if (chargeSystemOverride) setCharge(msg.chunkStats.charge);
       setWasmProgress({ completed: msg.completed, total: msg.total });
       if (msg.type === 'done') {
         setTimingResult({ totalPulls: count, elapsedMs: performance.now() - wasmStartTime });
@@ -408,6 +495,9 @@ export default function DebugGachaPage() {
       bannerPickupIds,
       pickupId: selectedPickupId,
       isFes: banner.isFes,
+      useChargeSystem: chargeSystemOverride,
+      initialCharge: charge,
+      checkpointTestMode,
       totalPullCount: count,
     });
   };
@@ -417,11 +507,11 @@ export default function DebugGachaPage() {
   const expectedPickup = 0.7;
 
   if (banners.length === 0) {
-    return <div className="p-6 text-neutral-500 text-sm">Loading...</div>;
+    return <div className="p-3 text-sm text-neutral-500 sm:p-4 lg:p-6">Loading...</div>;
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 p-3 sm:p-4 lg:space-y-6 lg:p-6">
       <PageHeader title="Gacha Engine Debug" eyebrow="Debug" />
 
       <div>
@@ -456,7 +546,7 @@ export default function DebugGachaPage() {
                   handleReset();
                 }}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  selectedPickupId === s.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 hover:border-blue-400'
+                  selectedPickupId === s.id ? 'border-ba-btn-blue bg-ba-btn-blue text-neutral-900 hover:bg-ba-btn-blue-dark' : 'border-neutral-300 bg-ba-btn-gray text-neutral-900 hover:brightness-95'
                 }`}
               >
                 {s.name}
@@ -467,11 +557,11 @@ export default function DebugGachaPage() {
       )}
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-neutral-500">Engine:</span>
+        <span className="text-xs text-neutral-500">{t('result.panel.engine_label')}:</span>
         <button
           onClick={() => setUseWasm(false)}
           className={`px-3 py-1.5 rounded text-xs font-bold border transition-colors ${
-            !useWasm ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
+            !useWasm ? 'border-ba-btn-blue bg-ba-btn-blue text-neutral-900 hover:bg-ba-btn-blue-dark' : 'border-neutral-300 bg-ba-btn-gray text-neutral-900 hover:brightness-95'
           }`}
         >
           JS
@@ -479,67 +569,78 @@ export default function DebugGachaPage() {
         <button
           onClick={() => setUseWasm(true)}
           className={`px-3 py-1.5 rounded text-xs font-bold border transition-colors ${
-            useWasm ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
+            useWasm ? 'border-ba-btn-yellow bg-ba-btn-yellow text-neutral-900 hover:brightness-95' : 'border-neutral-300 bg-ba-btn-gray text-neutral-900 hover:brightness-95'
           }`}
         >
           Rust⚡
         </button>
         {useWasm && <span className="text-xs text-neutral-400">Bulk simulation — envelope grid disabled</span>}
-        {selectedBanner?.useChargeSystem && useWasm && <span className="text-xs text-amber-600 dark:text-amber-400">Recruit charge system not reflected in Rust/WASM yet — use JS</span>}
       </div>
 
-      {selectedBanner?.useChargeSystem && (
+      <label className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300 cursor-pointer">
+        <input type="checkbox" checked={chargeSystemOverride} onChange={(e) => setChargeSystemOverride(e.target.checked)} className="rounded" />
+        Use recruit charge system (new pity){selectedBanner && <span className="text-neutral-400"> — banner default: {selectedBanner.useChargeSystem ? 'on' : 'off'}</span>}
+      </label>
+
+      {chargeSystemOverride && (
         <div className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
           Charge: <span className="font-bold text-neutral-800 dark:text-neutral-100">{charge}</span> / 200
         </div>
+      )}
+
+      {chargeSystemOverride && (
+        <label className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300 cursor-pointer">
+          <input type="checkbox" checked={checkpointTestMode} onChange={(e) => setCheckpointTestMode(e.target.checked)} className="rounded" />
+          Force 100-charge checkpoint (every pull starts at charge=99, so it always hits the checkpoint)
+        </label>
       )}
 
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(10)}
           disabled={loading || !pools}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           ×10
         </button>
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(100)}
           disabled={loading || !pools}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           +100
         </button>
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(200)}
           disabled={loading || !pools}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           +200
         </button>
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(1000)}
           disabled={loading || !pools}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           +1K
         </button>
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(10000)}
           disabled={loading || !pools}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           +10K
         </button>
         <button
           onClick={() => (useWasm ? doWasmPulls : doPulls)(1000000)}
           disabled={loading || !pools}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           +1M
         </button>
-        {batches.length > 0 && (
-          <button onClick={handleReset} className="px-4 py-2 bg-neutral-500 text-white rounded-lg hover:bg-neutral-600 dark:bg-neutral-600 dark:hover:bg-neutral-700 font-medium ml-auto">
-            Reset
+        {stats.total > 0 && (
+          <button onClick={handleReset} className="ml-auto rounded-lg border border-neutral-300 bg-ba-btn-gray px-4 py-2 font-medium text-neutral-900 hover:brightness-95">
+            {t_ui('reset')}
           </button>
         )}
       </div>
@@ -559,7 +660,7 @@ export default function DebugGachaPage() {
             }
           }}
           className="w-36 px-3 py-2 border rounded-lg text-sm dark:bg-neutral-800 dark:border-neutral-600 tabular-nums"
-          placeholder="Count"
+          placeholder={t_ui('count')}
         />
         <button
           onClick={() => {
@@ -568,7 +669,7 @@ export default function DebugGachaPage() {
             else doPulls(n);
           }}
           disabled={loading || !pools || !customCount}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 font-medium text-sm"
+          className="rounded-lg border border-ba-btn-blue bg-ba-btn-blue px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-ba-btn-blue-dark disabled:opacity-50"
         >
           Pull
         </button>
@@ -588,86 +689,107 @@ export default function DebugGachaPage() {
 
       {timingResult && (
         <div className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
-          Total <span className="font-semibold text-neutral-700 dark:text-neutral-200">{timingResult.totalPulls.toLocaleString()}</span> pulls &nbsp;·&nbsp;
-          <span className="font-semibold text-neutral-700 dark:text-neutral-200">{formatDuration(timingResult.elapsedMs)}</span> &nbsp;·&nbsp;per 10 pulls{' '}
+          {tPlanner('ui.total')} <span className="font-semibold text-neutral-700 dark:text-neutral-200">{timingResult.totalPulls.toLocaleString()}</span> pulls &nbsp;·&nbsp;
+          <span className="font-semibold text-neutral-700 dark:text-neutral-200">{formatDuration(timingResult.elapsedMs)}</span> &nbsp;·&nbsp;average per 10 pulls{' '}
           <span className="font-semibold text-neutral-700 dark:text-neutral-200">{formatDuration(timingResult.elapsedMs / (timingResult.totalPulls / 10))}</span>
         </div>
       )}
 
       {stats.total > 0 && (
         <div className="space-y-4">
-          <div className="text-sm font-medium text-neutral-500">Cumulative Stats ({stats.total} pulls)</div>
-          <div className="grid grid-cols-4 gap-3">
-            <StatCard label="★1" count={stats.grade1} total={stats.total} expected={78.5} />
-            <StatCard label="★2" count={stats.grade2} total={stats.total} expected={18.5} />
-            <StatCard label="★3" count={stats.grade3} total={stats.total} expected={expectedR3} />
-            <StatCard label="Pickup" count={stats.pickup} total={stats.total} expected={expectedPickup} />
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-neutral-500">Cumulative Stats ({stats.total} pulls)</span>
+            <button
+              type="button"
+              onClick={() => setShowCumulativeStats((visible) => !visible)}
+              className="rounded border border-neutral-300 bg-ba-btn-gray px-2 py-1 text-xs font-medium text-neutral-900 hover:brightness-95"
+            >
+              {showCumulativeStats ? t_ui('close') : t_ui('open')}
+            </button>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-xs border dark:border-neutral-700 rounded-lg max-h-64 overflow-y-auto">
-              <div className="py-1.5 px-3 font-medium bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 sticky top-0">Eleph (per student)</div>
-              {([3, 2, 1] as const).map((g) => {
-                const students = rewardTotals.elephByGrade[g];
-                if (students.length === 0) return null;
-                return (
-                  <div key={g} className="border-t dark:border-neutral-700 first:border-0">
-                    <div className="py-1 px-3 text-neutral-500 bg-neutral-50/50 dark:bg-neutral-800/50">★{g}</div>
-                    {students.map(({ id, name, eleph }) => (
-                      <div key={id} className="flex justify-between py-0.5 px-3 border-t dark:border-neutral-700/50">
-                        <span>{name}</span>
-                        <span className="tabular-nums">{eleph.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="text-xs border dark:border-neutral-700 rounded-lg overflow-hidden">
-              <div className="py-1.5 px-3 font-medium bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">Eligma (shared)</div>
-              {([3, 2, 1] as const).map((g) => (
-                <div key={g} className="flex justify-between py-1.5 px-3 border-t dark:border-neutral-700">
-                  <span>★{g}</span>
-                  <span className="tabular-nums">{rewardTotals.eligmaByGrade[g].toLocaleString()}</span>
-                </div>
-              ))}
-              <div className="flex justify-between py-1.5 px-3 border-t dark:border-neutral-700 font-semibold bg-neutral-50 dark:bg-neutral-800">
-                <span>Total</span>
-                <span className="tabular-nums">{rewardTotals.totalEligma.toLocaleString()}</span>
+          {showCumulativeStats && (
+            <>
+              <div className="grid grid-cols-4 gap-3">
+                <StatCard label="★1" count={stats.grade1} total={stats.total} expected={78.5} />
+                <StatCard label="★2" count={stats.grade2} total={stats.total} expected={18.5} />
+                <StatCard label="★3" count={stats.grade3} total={stats.total} expected={expectedR3} />
+                <StatCard label={t('result_view.filter.pickup')} count={stats.pickup} total={stats.total} expected={expectedPickup} />
               </div>
-            </div>
-          </div>
 
-          <div>
-            <div className="flex gap-1 mb-2">
-              {([3, 2, 1] as GradeTab[]).map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setActiveTab(g)}
-                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                    activeTab === g
-                      ? g === 3
-                        ? 'bg-blue-600 text-white'
-                        : g === 2
-                          ? 'bg-yellow-500 text-white'
-                          : 'bg-blue-600 text-white'
-                      : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
-                  }`}
-                >
-                  ★{g} ({Object.keys(stats.studentCounts[g]).length} types)
-                </button>
-              ))}
-            </div>
-            <div className="border dark:border-neutral-700 rounded-lg p-3 max-h-64 overflow-y-auto">
-              <StudentCountTable counts={stats.studentCounts[activeTab]} total={stats.total} grade={activeTab} />
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-xs border dark:border-neutral-700 rounded-lg max-h-64 overflow-y-auto">
+                  <div className="py-1.5 px-3 font-medium bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 sticky top-0">{t_g('eleph')} (per student)</div>
+                  {([3, 2, 1] as const).map((g) => {
+                    const students = rewardTotals.elephByGrade[g];
+                    if (students.length === 0) return null;
+                    return (
+                      <div key={g} className="border-t dark:border-neutral-700 first:border-0">
+                        <div className="py-1 px-3 text-neutral-500 bg-neutral-50/50 dark:bg-neutral-800/50">★{g}</div>
+                        {students.map(({ id, name, eleph }) => (
+                          <div key={id} className="flex justify-between py-0.5 px-3 border-t dark:border-neutral-700/50">
+                            <span>{name}</span>
+                            <span className="tabular-nums">{eleph.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs border dark:border-neutral-700 rounded-lg overflow-hidden">
+                  <div className="py-1.5 px-3 font-medium bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">{t_g('eligma')} (shared)</div>
+                  {([3, 2, 1] as const).map((g) => (
+                    <div key={g} className="flex justify-between py-1.5 px-3 border-t dark:border-neutral-700">
+                      <span>★{g}</span>
+                      <span className="tabular-nums">{rewardTotals.eligmaByGrade[g].toLocaleString()}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between py-1.5 px-3 border-t dark:border-neutral-700 font-semibold bg-neutral-50 dark:bg-neutral-800">
+                    <span>{tPlanner('ui.total')}</span>
+                    <span className="tabular-nums">{rewardTotals.totalEligma.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex gap-1 mb-2">
+                  {([3, 2, 1] as GradeTab[]).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setActiveTab(g)}
+                      className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+                        activeTab === g
+                          ? g === 3
+                            ? 'border border-ba-btn-blue bg-ba-btn-blue text-neutral-900'
+                            : g === 2
+                              ? 'border border-ba-btn-yellow bg-ba-btn-yellow text-neutral-900'
+                              : 'border border-neutral-300 bg-ba-btn-gray text-neutral-900'
+                          : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
+                      }`}
+                    >
+                      ★{g} ({Object.keys(stats.studentCounts[g]).length} types)
+                    </button>
+                  ))}
+                </div>
+                <div className="border dark:border-neutral-700 rounded-lg p-3 max-h-64 overflow-y-auto">
+                  <StudentCountTable
+                    counts={stats.studentCounts[activeTab]}
+                    total={stats.total}
+                    grade={activeTab}
+                    countLabel={t_ui('count')}
+                    rateLabel={t('result_view.student_stats.rate_obtain')}
+                    elephLabel={t_g('eleph')}
+                    eligmaLabel={t_g('eligma')}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {!useWasm && batches.length > 0 && (
-        <button onClick={() => setShowBatches((v) => !v)} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
-          {showBatches ? 'Hide' : 'Show'} pull envelopes ({batches.length * 10} pulls)
+        <button onClick={() => setShowBatches((v) => !v)} className="rounded border border-neutral-300 bg-ba-btn-gray px-2 py-1 text-xs font-medium text-neutral-900 hover:brightness-95">
+          {showBatches ? t_ui('close') : t_ui('open')} latest pull result
         </button>
       )}
 
@@ -675,17 +797,12 @@ export default function DebugGachaPage() {
         showBatches &&
         batches.length > 0 &&
         (() => {
-          const MAX_VISIBLE = 50;
-          const hidden = batches.length - MAX_VISIBLE;
-          const visible = batches.slice(-MAX_VISIBLE).reverse();
+          const latestBatch = batches.at(-1);
+          if (!latestBatch) return null;
           return (
-            <div className="space-y-8">
-              {hidden > 0 && (
-                <p className="text-xs text-center text-neutral-400">
-                  {hidden * 10} pulls hidden (total {batches.length * 10} pulls)
-                </p>
-              )}
-              {visible.map((batch, bIdx) => {
+            <div>
+              {(() => {
+                const batch = latestBatch;
                 const elephByStudent: Record<number, { name: string; amount: number }> = {};
                 let totalEligma = 0;
                 for (const pull of batch) {
@@ -701,25 +818,33 @@ export default function DebugGachaPage() {
                 const elephEntries = Object.entries(elephByStudent);
                 const hasRewards = elephEntries.length > 0 || totalEligma > 0;
                 return (
-                  <div key={bIdx} className="space-y-1">
-                    <div className="grid grid-cols-5 gap-2">
+                  <div className="space-y-1">
+                    <div
+                      key={latestResultKey}
+                      className="grid perspective-[900px] grid-cols-[repeat(5,var(--gacha-card-w))] justify-center gap-[calc(var(--gacha-card-w)/4.5)] overflow-hidden rounded-lg bg-gradient-to-b from-[#b5e1f4] via-[#cae6f8] to-[#d8e1ed] p-5 px-9"
+                      style={{ '--gacha-card-w': 'min(9rem, calc((100% - 2rem) / 5))' } as React.CSSProperties}
+                    >
                       {batch.map((pull, pIdx) => (
-                        <EnvelopeCard key={pIdx} pull={pull} portraits={portraits} />
+                        <EnvelopeCard key={pIdx} pull={pull} portraits={portraits} delayMs={pIdx * 35} fromBottom={pIdx >= 5} />
                       ))}
                     </div>
                     {hasRewards && (
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 justify-end text-xs text-neutral-400 tabular-nums">
                         {elephEntries.map(([id, { name, amount }]) => (
                           <span key={id}>
-                            {name} Eleph +{amount}
+                            {name} {t_g('eleph')} +{amount}
                           </span>
                         ))}
-                        {totalEligma > 0 && <span>Eligma +{totalEligma}</span>}
+                        {totalEligma > 0 && (
+                          <span>
+                            {t_g('eligma')} +{totalEligma}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
                 );
-              })}
+              })()}
             </div>
           );
         })()}

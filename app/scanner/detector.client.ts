@@ -7,9 +7,7 @@ const IOU_THRESH = 0.45;
 
 let session: ort.InferenceSession | null = null;
 
-// modelBytes is fetched by modelLoader.client.ts up front, in parallel with the other
-// model/data files — passing bytes directly (instead of a URL) means onnxruntime-web never
-// issues its own redundant fetch for this file.
+// modelBytes is fetched by modelLoader.client.ts up front; passing bytes directly avoids a redundant fetch by onnxruntime-web.
 export async function initDetector(providers: string[], modelBytes: Uint8Array): Promise<void> {
   session = await ort.InferenceSession.create(modelBytes, {
     executionProviders: providers,

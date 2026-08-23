@@ -1,4 +1,5 @@
 import type { DistributionData } from './gachaEngine';
+import { getEraidTicketExpiry, getEraidTicketAvailableFrom } from './gachaRules';
 
 export const PYROXENE_PER_EVENT: Record<number, number> = {
   850: 1860,
@@ -32,25 +33,39 @@ export function getEventPyroxeneReward(eventSeason: number): number {
 }
 
 export const PYROXENE_PER_MAIN_STORY: Record<string, number> = {
-  'Vol.6 Ch.2': 660,
-  'Vol.6 Ch.3': 600,
-  'Vol.Ex. デカグラマトン Ch.3 Pt.1': 540,
-  'Vol.Ex. デカグラマトン Ch.3 Pt.2': 60,
-  'Vol.Ex. デカグラマトン Ch.3 Pt.3': 60,
-  'Vol.Ex. デカグラマトン Ch.3 Pt.4': 900,
-  '第2部メインストーリープロロ－グ': 240,
-  'Vol.0 Ch.1': 600,
-  'Vol.Ex. ロア追跡 Ch.1': 660,
-  'Vol.Ex. ロア追跡 Ch.2': 660,
+  vol6_ch1: 60 * 12,
+  vol6_ch2: 60 * 11,
+  vol6_ch3: 60 * 10,
+  ex_deca_ch2_part1: 540,
+  ex_deca_ch2_part2: 60,
+  ex_deca_ch2_part3: 60,
+  ex_deca_ch2_part4: 900,
+  part2_prologue: 60 * 4,
+  part2_vol0_ch1: 60 * 10,
+  part2_ex_lore_ch1: 60 * 11,
+  part2_ex_lore_ch2: 60 * 11,
+  part2_vol1_ch1: 60 * 17,
+  part2_vol1_ch2: 60 * 21,
 };
 
+export const PYROXENE_PER_MINI_STORY: Record<number, number> = {
+  // 100 Pyroxenes Schedule: Direct Rewards (40) + Limited-Time Achievement Rewards (60)
+  8: 40 * 3 + (30 + 30 + 40),
+  9: (40 + 50) * 2,
+  10: (40 + 50) * 2,
+  11: (40 + 50) * 2,
+  12: (40 + 50) * 2,
+  13: (40 + 20) * 5,
+  14: 40 * 6 + (15 + 15 + 15 + 15 + 15 + 25),
+  15: 40 * 3 + 100,
+};
 // --- Types ---
 export interface PlannerSchedule {
   id: string;
   name: string;
   start: string;
   end: string;
-  type: 'Event' | 'Raid' | 'Elimination' | 'Multifloor' | 'Campaign' | 'JointFiringDrill' | 'MainStory' | 'MiniStory' | 'Maintenance';
+  type: 'Event' | 'Raid' | 'Elimination' | 'Multifloor' | 'Campaign' | 'JointFiringDrill' | 'MainStory' | 'MiniStory' | 'Momotalk' | 'Maintenance';
   amount?: number;
   campaignType?: string;
   multiplier?: number;
@@ -62,10 +77,33 @@ export interface PackedSchedule extends PlannerSchedule {
   rowIndex: number; // Assigned row number
 }
 
+/**
+ * A pool of term-limited 10-pull tickets, normalized to "pull units" (1-pull ticket = 1 unit,
+ * 10-pull ticket = 10 units) so the gacha engine can spend them against any 10-pull action
+ * regardless of which ticket denomination originally funded it.
+ */
+export interface TicketBatch {
+  id: string;
+  pullUnits: number;
+  /** Unix ms timestamp the batch stops being usable, or null for a batch that never expires. */
+  expiresAt: number | null;
+  /** Unix ms timestamp the batch starts being usable (0 = already held, usable from the very start). */
+  availableFrom: number;
+  source: 'eraid' | 'manual';
+  label?: string;
+}
+
+/** User-entered ticket batch, before normalization into a TicketBatch. */
+export interface ManualTicketBatchInput {
+  id: string;
+  /** Date string (YYYY-MM-DD), or null/empty for a batch that never expires. */
+  expiresAt: string | null;
+  ticket1Count: number;
+  ticket10Count: number;
+}
+
 export interface PyroxeneConfig {
   currentPyroxene: number;
-  currentTicket1: number;
-  currentTicket10: number;
   monthlyCard: boolean;
   halfMonthlyCard: boolean;
   monthlyPackCost: number; // Can be removed if unused
@@ -77,6 +115,47 @@ export interface PyroxeneConfig {
 
   raidRank: 'platinum' | 'gold' | 'silver' | 'bronze';
   pvpRankTier: number;
+  selectedMainStoryIds?: string[];
+  momotalkCount?: number;
+
+  /** Term-limited ticket batches the player manually recorded (see ManualTicketBatchInput). */
+  manualTicketBatches?: ManualTicketBatchInput[];
+  /** IDs of past eraid  PlannerSchedule items the player is still holding an unspent ticket from. */
+  selectedEraidTicketIds?: string[];
+  /** Global policy: force-drain a ticket batch's remaining pull units at its last usable banner before it expires, instead of letting it expire unused. */
+  consumeExpiringTickets?: boolean;
+}
+
+/* Normalize manual + eraid tickets into engine-ready TicketBatch[] */
+export function buildInitialTicketBatches(config: Pick<PyroxeneConfig, 'manualTicketBatches' | 'selectedEraidTicketIds'>, schedules: PlannerSchedule[]): TicketBatch[] {
+  const batches: TicketBatch[] = [];
+  const now = new Date();
+  const todayYMD = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((v, i) => (i === 0 ? String(v) : String(v).padStart(2, '0'))).join('-');
+
+  for (const m of config.manualTicketBatches ?? []) {
+    const pullUnits = (m.ticket1Count || 0) + (m.ticket10Count || 0) * 10;
+    if (pullUnits <= 0) continue;
+    let expiresAt: number | null = null;
+    if (m.expiresAt) {
+      const d = new Date(m.expiresAt);
+      d.setHours(23, 59, 0, 0);
+      expiresAt = d.getTime();
+    }
+    batches.push({ id: m.id, pullUnits, expiresAt, availableFrom: 0, source: 'manual' });
+  }
+
+  const selected = new Set(config.selectedEraidTicketIds ?? []);
+  for (const s of schedules) {
+    if (s.type !== 'Elimination') continue;
+    if (s.end <= todayYMD) {
+      if (!selected.has(s.id)) continue;
+      batches.push({ id: s.id, pullUnits: 10, expiresAt: getEraidTicketExpiry(s.end), availableFrom: 0, source: 'eraid', label: s.name });
+    } else {
+      batches.push({ id: s.id, pullUnits: 10, expiresAt: getEraidTicketExpiry(s.end), availableFrom: getEraidTicketAvailableFrom(s.end), source: 'eraid', label: s.name });
+    }
+  }
+
+  return batches;
 }
 
 // export interface SimulationResult {
@@ -284,15 +363,35 @@ export function calculatePyroxeneTimeline(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Track ticket grant/expiry dates in viewer's local time (not KST).
+  const ticketBatches = buildInitialTicketBatches(config, schedules);
+  const toLocalDateStr = (ms: number): string => {
+    const d = new Date(ms);
+    return [d.getFullYear(), d.getMonth() + 1, d.getDate()].map((v, i) => (i === 0 ? String(v) : String(v).padStart(2, '0'))).join('-');
+  };
+
   for (let d = 0; d < simulationDays; d++) {
     const currentDate = new Date(today);
     currentDate.setDate(today.getDate() + d);
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = [currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate()].map((value, index) => (index === 0 ? String(value) : String(value).padStart(2, '0'))).join('-');
 
     let dailyIncome = 0;
     let dailyExpense = 0;
 
     const logs: TimelineLog[] = [];
+
+    for (const batch of ticketBatches) {
+      if (batch.availableFrom > 0 && toLocalDateStr(batch.availableFrom) === dateStr) {
+        if (batch.expiresAt !== null) {
+          logs.push({ i18nKey: 'log.term_ticket_acquired_expiry', params: { count: batch.pullUnits, date: new Date(batch.expiresAt).toLocaleString() }, amount: 0 });
+        } else {
+          logs.push({ i18nKey: 'log.term_ticket_acquired', params: { count: batch.pullUnits }, amount: 0 });
+        }
+      }
+      if (batch.expiresAt !== null && toLocalDateStr(batch.expiresAt) === dateStr) {
+        logs.push({ i18nKey: 'log.term_ticket_expired', params: { count: batch.pullUnits, date: new Date(batch.expiresAt).toLocaleString() }, amount: 0 });
+      }
+    }
 
     // ==========================================
     // 1. Daily / Monthly Fixed Income
@@ -344,7 +443,16 @@ export function calculatePyroxeneTimeline(
     // 2. Schedule Events Check
     // ==========================================
     const endingSchedules = schedules.filter((s) => s.end === dateStr);
-    const startingSchedules = schedules.filter((s) => s.start === dateStr);
+    const savedSelectedMainStoryIds = config.selectedMainStoryIds;
+    const selectedMainStoryIdList: string[] = Array.isArray(savedSelectedMainStoryIds) ? savedSelectedMainStoryIds.filter((id): id is string => typeof id === 'string') : [];
+    const selectedMainStoryIds = new Set<string>(selectedMainStoryIdList);
+    const startingSchedules = schedules.filter((schedule) => schedule.start === dateStr && schedule.type !== 'MainStory');
+    if (d === 0) {
+      startingSchedules.push(...schedules.filter((schedule) => schedule.type === 'MainStory' && schedule.start <= dateStr && selectedMainStoryIds.has(schedule.id)));
+      if ((config.momotalkCount || 0) > 0) startingSchedules.push({ id: 'momotalk-bulk', name: 'Momotalk', start: dateStr, end: dateStr, type: 'Momotalk', amount: (config.momotalkCount || 0) * 200 });
+    } else {
+      startingSchedules.push(...schedules.filter((schedule) => schedule.type === 'MainStory' && schedule.start === dateStr));
+    }
     const activeSchedules = schedules.filter((s) => s.start <= dateStr && s.end >= dateStr);
     const activeEvt = activeSchedules.find((s) => s.type === 'Event');
     const activeCampaign = activeSchedules.find((s) => s.type === 'Campaign');
@@ -360,7 +468,7 @@ export function calculatePyroxeneTimeline(
           logKey = 'log.raid';
           break;
         case 'Elimination':
-          reward = 650 + 1200 + 70;
+          reward = 650 + /*1200 +*/ 70;
           stats.income.elimination += reward;
           logKey = 'log.elimination';
           break;
@@ -390,7 +498,7 @@ export function calculatePyroxeneTimeline(
         case 'MiniStory':
           reward = sch.amount || (10 + 20 + 40) * 2;
           stats.income.miniStory += reward;
-          logKey = 'log.mainstory';
+          logKey = 'log.ministory';
           break;
         case 'Maintenance':
           reward = sch.amount || 360;
@@ -406,6 +514,11 @@ export function calculatePyroxeneTimeline(
           reward = sch.amount || 0;
           stats.income.mainstory += reward;
           logKey = 'log.mainstory';
+          break;
+        case 'Momotalk':
+          reward = sch.amount || 0;
+          stats.income.extra += reward;
+          logKey = 'log.momotalk';
           break;
       }
 

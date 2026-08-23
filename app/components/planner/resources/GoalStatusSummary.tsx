@@ -47,6 +47,8 @@ function statusClassName(status: StudentGoalStatus['status']): string {
 
 export function GoalStatusSummary({ statuses, tacticalCoinStatus, studentsRecord, onOpenStudentGoals, onSelectResource }: GoalStatusSummaryProps) {
   const { t } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
+
   const noDeadlineLabel = t('planStatus.noDeadlineDate');
 
   const portraitData = useMemo(() => {
@@ -63,13 +65,13 @@ export function GoalStatusSummary({ statuses, tacticalCoinStatus, studentsRecord
   const noDeadlineCount = statuses.filter((status) => status.status === 'no_deadline').length;
 
   const statusLabel = (status: StudentGoalStatus['status']): string => {
-    if (status === 'at_risk') return t('planStatus.statusAtRisk');
+    if (status === 'at_risk') return t_ui('atRisk');
     if (status === 'covered_by_eligma') return t('planStatus.statusCovered');
     if (status === 'no_deadline') return t('planStatus.statusNoDeadline');
     return t('planStatus.statusOnTrack');
   };
 
-  const tacticalStatusLabel = tacticalCoinStatus?.firstShortageDate ? t('planStatus.statusAtRisk') : t('planStatus.statusOnTrack');
+  const tacticalStatusLabel = tacticalCoinStatus?.firstShortageDate ? t_ui('atRisk') : t('planStatus.statusOnTrack');
   const tacticalStatusCls = tacticalCoinStatus?.firstShortageDate
     ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-300'
     : 'border-green-200 bg-green-50 text-green-700 dark:border-green-900/60 dark:bg-green-950/20 dark:text-green-300';

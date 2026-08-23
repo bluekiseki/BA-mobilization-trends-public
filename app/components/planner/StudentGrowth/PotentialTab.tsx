@@ -91,7 +91,7 @@ interface PotentialTabProps {
 }
 
 export const PotentialTab = ({ plan, handleBatchUpdate, iconData, eventData, studentInfo }: PotentialTabProps) => {
-  const { t } = useTranslation('planner');
+  const { t } = useTranslation(['planner', 'game']);
 
   const stats = ['hp', 'atk', 'heal'] as const;
   const wbIds = { hp: WB_HP_ID, atk: WB_ATK_ID, heal: WB_HEAL_ID };
@@ -108,9 +108,9 @@ export const PotentialTab = ({ plan, handleBatchUpdate, iconData, eventData, stu
   const isTargetUnlocked = checkUnlocked(targetLevel, targetUw);
 
   const statLabels = {
-    hp: t('common.hp', 'HP'),
-    atk: t('common.atk', 'ATK'),
-    heal: t('common.heal', 'HEAL'),
+    hp: t('game:hp', 'HP'),
+    atk: t('game:atk', 'ATK'),
+    heal: t('game:heal', 'HEAL'),
   };
 
   const handleSliderChange = (stat: (typeof stats)[number], value: number | number[]) => {

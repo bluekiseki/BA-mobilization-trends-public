@@ -83,6 +83,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
   const [allRaidInfos, setAllRaidInfos] = useState<RaidInfo[]>([]);
 
   const { t, i18n } = useTranslation('liveDashboard');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const currentLocaleShort = getLocaleShortName(locale);
 
@@ -98,9 +99,9 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
   const TABS: { id: ChartTab; name: string }[] = useMemo(
     () =>
       isRaid
-        ? [{ id: 'total', name: t('total_score') }]
+        ? [{ id: 'total', name: t_ui('totalScore') }]
         : [
-            { id: 'total', name: t('total_score') },
+            { id: 'total', name: t_ui('totalScore') },
             {
               id: 'boss1',
               name: type_translation[raidInfos?.[0]?.Type as keyof typeof type_translation]?.[currentLocaleShort] || 'Boss 1',
@@ -361,8 +362,6 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
   }, [lastData, activeTab, axisType, server, raidInfos, SCORE_BRACKETS, isRaid, isTotalChart]);
 
   // Find the intersection point between the predicted rank (X) and the score distribution curve.
-  // Find the exact intersection point (interpolation) between the predicted rank (X) and the score distribution curve.
-  // Find the exact intersection point between the predicted rank (X) and the score distribution curve (including missing value protection).
   const predictionIntersection = useMemo(() => {
     if (!currentPrediction || !chartData || chartData.length === 0) return null;
 
@@ -504,7 +503,7 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({ isRaid, lastData, 
             {predictionMode === 'compare' && (
               <div className="w-full sm:w-auto min-w-0 flex-1">
                 <select
-                  className="w-full sm:max-w-[200px] lg:max-w-[250px] px-2 py-1.5 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 outline-none truncate"
+                  className="w-full sm:max-w-50 lg:max-w-62.5 px-2 py-1.5 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 outline-none truncate"
                   value={compareRaidId}
                   onChange={(e) => setCompareRaidId(e.target.value)}
                   // Added title attribute to allow viewing full text on hover when truncated

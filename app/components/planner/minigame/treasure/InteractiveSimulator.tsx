@@ -83,6 +83,7 @@ export const placeTreasures = (roundData: TreasureRound, rewards: Record<string,
 export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, onClose }: InteractiveSimulatorProps) => {
   const [openedCells, setOpenedCells] = useState(new Set<string>());
   const { t } = useTranslation('planner', { keyPrefix: 'treasure' });
+  const { t: t_ui } = useTranslation('ui');
 
   const { placedTreasures } = useMemo(() => {
     return (
@@ -264,7 +265,7 @@ export const InteractiveSimulator = ({ roundData, treasureRewards, onComplete, o
 
           <div className="mt-auto pt-4">
             <button onClick={onClose} className="w-full bg-neutral-300 dark:bg-neutral-600 dark:hover:bg-neutral-700 px-4 py-2 rounded-md text-sm mb-2">
-              {t('cancel')}
+              {t_ui('cancel')}
             </button>
             <button
               onClick={() => onComplete(openedCells.size)}

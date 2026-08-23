@@ -60,9 +60,7 @@ export default function handleRequest(
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
+          // Log streaming errors from inside shell; skip initial shell rendering errors (logged elsewhere).
           if (shellRendered) {
             console.error(error);
           }
@@ -99,9 +97,7 @@ export default async function handleRequest(request: Request, responseStatusCode
     {
       onError(error: unknown) {
         responseStatusCode = 500;
-        // Log streaming rendering errors from inside the shell.  Don't log
-        // errors encountered during initial shell rendering since they'll
-        // reject and get logged in handleDocumentRequest.
+        // Log streaming errors; initial shell-render errors are already logged in handleDocumentRequest.
         if (shellRendered) {
           console.error(error);
         }

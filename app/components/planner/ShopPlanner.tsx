@@ -37,6 +37,7 @@ export const ShopPlanner = ({ eventId, shop, eventData, iconData, allStages, tot
   const { purchaseCounts, alreadyPurchasedCounts } = plan;
 
   const { t, i18n } = useTranslation('planner');
+  const { t: t_g } = useTranslation('game');
   const locale = i18n.language as Locale;
 
   useEffect(() => {
@@ -156,32 +157,7 @@ export const ShopPlanner = ({ eventId, shop, eventData, iconData, allStages, tot
     setPurchaseCounts(() => newCounts);
   };
 
-  /*
-    const handleSelectAllByTypeInCategory = (type: ItemType, categoryId: string) => {
-      const newCounts = { ...purchaseCounts };
-      const itemsInCategory = shop[categoryId];
-  
-      itemsInCategory.forEach(item => {
-        if (!item.Goods?.length) return;
-  
-        const goodsInfo = item.Goods[0];
-        const rewardId = goodsInfo.ParcelId[0];
-        const rewardType = goodsInfo.ParcelTypeStr[0];
-        const itemInfo = (eventData.icons as any)[rewardType]?.[rewardId.toString()];
-  
-        // Simplify logic by calling helper function
-        const currentItemType = getShopItemType(rewardType, rewardId, itemInfo);
-  
-        if (currentItemType === type) {
-          const alreadyPurchased = alreadyPurchasedCounts?.[item.Id] || 0;
-          const remainingLimit = item.PurchaseCountLimit - alreadyPurchased;
-          if (remainingLimit > 0) {
-            newCounts[item.Id] = remainingLimit;
-          }
-        }
-      });
-      setPurchaseCounts(() => newCounts);
-    };*/
+  /* Previous select-all logic (replaced by toggleTypeSelection) */
 
   const handleToggleTypeSelection = (type: ItemType, categoryId: string, currentState: 'checked' | 'unchecked' | 'indeterminate') => {
     const isFullyChecked = currentState === 'checked';
@@ -221,18 +197,18 @@ export const ShopPlanner = ({ eventId, shop, eventData, iconData, allStages, tot
 
   const itemTypeButtons = useMemo(
     () => [
-      { label: t('item.reports'), type: 'ExpGrowth' as const },
-      { label: t('item.equipment'), type: 'Equipment' as const },
+      { label: t_g('report'), type: 'ExpGrowth' as const },
+      { label: t_g('equipment'), type: 'Equipment' as const },
       { label: t('label.tacticalBD'), type: 'TacticalBD' as const },
       { label: t('label.techNote'), type: 'TechNote' as const },
-      { label: t('label.opart'), type: 'Opart' as const },
+      { label: t_g('opart'), type: 'Opart' as const },
       { label: t('label.material'), type: 'Material' as const },
-      { label: t('item.gifts'), type: 'Favor' as const },
+      { label: t_g('gift'), type: 'Favor' as const },
       { label: t('label.furniture'), type: 'Furniture' as const },
-      { label: t('common.credits'), type: 'Credit' as const },
-      { label: t('label.coin'), type: 'Coin' as const },
-      { label: t('item.eleph'), type: 'SecretStone' as const },
-      { label: t('common.pyroxene'), type: 'Gem' as const },
+      { label: t_g('credit'), type: 'Credit' as const },
+      { label: t_g('coin'), type: 'Coin' as const },
+      { label: t_g('eleph'), type: 'SecretStone' as const },
+      { label: t_g('pyroxene'), type: 'Gem' as const },
     ],
     [t],
   );
@@ -428,11 +404,6 @@ export const ShopPlanner = ({ eventId, shop, eventData, iconData, allStages, tot
         {shopCategories.map(([categoryId, items]) => {
           // console.log('shop - activeTab', activeTab);
           if (activeTab !== categoryId) return null; // Render only the active tab
-
-          // Find shop name using shop_info
-          // const shopInfo = shop_info?.find(info => info.CategoryType.toString() === categoryId);
-          // const currencyId = shopInfo?.CostParcelId[0];
-          // const currencyName = currencyId ? eventData.icons.Item[currencyId]?.LocalizeEtc?.NameKr : `Shop ${categoryId}`;
 
           const availableTypesInCategory = new Set<string>();
           items.forEach((item) => {

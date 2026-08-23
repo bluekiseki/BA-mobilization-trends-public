@@ -51,7 +51,9 @@ export function getItemTitle(item: ScheduleItemV2, locale: Locale, i18n: I18nLik
   if (item.type === 'campaign' && item.details?.campaignType) {
     const campaignKey = item.details.campaignType.toLowerCase();
     const tCal = i18n.getFixedT(i18n.language, 'calendar', 'campaign');
-    const label = tCal(campaignKey);
+    const tGame = i18n.getFixedT(i18n.language, 'game');
+
+    const label = campaignKey != 'schedule' ? tCal(campaignKey) : tGame(campaignKey);
     return item.details.multiplier ? `${label} x${item.details.multiplier}` : label;
   }
   if (item.type === 'jointFiringDrill' && item.season != null && item.i18nKey) {
@@ -78,13 +80,13 @@ export function getItemTitle(item: ScheduleItemV2, locale: Locale, i18n: I18nLik
 export function getItemLabel(item: ScheduleItemV2, i18n: I18nLike): string | undefined {
   switch (item.type) {
     case 'raid':
-      return i18n.t('common:raid');
+      return i18n.t('game:raid');
     case 'eraid':
-      return i18n.t('common:eraid');
+      return i18n.t('game:eraid');
     case 'jointFiringDrill':
-      return i18n.t('common:jfd');
+      return i18n.t('game:jfd');
     case 'event':
-      return i18n.t('calendar:track.event') + (item.details?.rerun ? `/${i18n.t('common:rerun')}` : '');
+      return i18n.t('game:event') + (item.details?.rerun ? `/${i18n.t('game:rerun')}` : '');
     default:
       return undefined;
   }

@@ -9,7 +9,7 @@ pub struct RollResult {
 
 /// Pick a uniform random element from `items` excluding `exclude`.
 /// Two-pass (count, then walk to index) — correct uniform distribution, no allocation.
-#[inline]
+#[inline(always)]
 fn pick_excluding(items: &[u32], exclude: u32, rng: f64) -> Option<u32> {
     let count = items.iter().filter(|&&id| id != exclude).count();
     if count == 0 {
@@ -24,7 +24,7 @@ fn pick_excluding(items: &[u32], exclude: u32, rng: f64) -> Option<u32> {
 }
 
 /// Pick from `fes` excluding `pickup_id` and every id in `exclude_list`.
-#[inline]
+#[inline(always)]
 fn pick_fes_spook(fes: &[u32], pickup_id: u32, exclude_list: &[u32], rng: f64) -> Option<u32> {
     let count = fes
         .iter()
@@ -40,9 +40,9 @@ fn pick_fes_spook(fes: &[u32], pickup_id: u32, exclude_list: &[u32], rng: f64) -
         .nth(target)
 }
 
-/// Pick from the combined normal-spook pool: grade3 + banner_pickup_ids, excluding pickup_id.
-/// Mirrors JS: `[...pools.grade3, ...bannerPickupIds].filter(id => id !== pickupId)`
-#[inline]
+/// Pick from the combined normal-spook pool: grade3 + banner_pickup_ids (deduplicated), excluding pickup_id.
+/// Mirrors JS: `[...new Set([...pools.grade3.map(v => v.id), ...bannerPickupIds])].filter(id => id !== pickupId)`
+#[inline(always)]
 fn pick_normal_spook(
     grade3: &[u32],
     banner_pickup_ids: &[u32],
@@ -50,9 +50,10 @@ fn pick_normal_spook(
     rng: f64,
 ) -> Option<u32> {
     let cnt_a = grade3.iter().filter(|&&id| id != pickup_id).count();
+    // Only count banner pickup ids not already present in grade3, to avoid double-counting them.
     let cnt_b = banner_pickup_ids
         .iter()
-        .filter(|&&id| id != pickup_id)
+        .filter(|&&id| id != pickup_id && !grade3.contains(&id))
         .count();
     let total = cnt_a + cnt_b;
     if total == 0 {
@@ -69,13 +70,57 @@ fn pick_normal_spook(
         banner_pickup_ids
             .iter()
             .copied()
-            .filter(|&id| id != pickup_id)
+            .filter(|&id| id != pickup_id && !grade3.contains(&id))
             .nth(target - cnt_a)
+    }
+}
+
+#[inline(always)]
+pub fn roll_forced_3_star(
+    rng: f64,
+    rng2: f64,
+    is_fes: bool,
+    pickup_id: u32,
+    pools: &GachaPools,
+    banner_pickup_ids: &[u32],
+    fes_excluded_ids: &[u32],
+    is_pickup: bool,
+) -> RollResult {
+    if is_pickup {
+        return RollResult {
+            id: pickup_id,
+            grade: 3,
+            is_pickup: true,
+        };
+    }
+
+    // The 100-count non-pickup table keeps each FES student's normal-pull rate.
+    // Its remaining probability mass is split across the regular 3-star pool.
+    if is_fes && rng < FES.fes_spook * 2.0 {
+        if let Some(id) = pick_fes_spook(pools.fes, pickup_id, fes_excluded_ids, rng2) {
+            return RollResult {
+                id,
+                grade: 3,
+                is_pickup: false,
+            };
+        }
+    }
+    let id = if is_fes {
+        pick_excluding(pools.grade3, pickup_id, rng2)
+    } else {
+        pick_normal_spook(pools.grade3, banner_pickup_ids, pickup_id, rng2)
+    }
+    .unwrap_or(0);
+    RollResult {
+        id,
+        grade: 3,
+        is_pickup: false,
     }
 }
 
 // Port of gachaEngine.ts:rollSingle()
 // rng must be in [0, 1)
+#[inline(always)]
 pub fn roll_single(
     rng: f64,
     rng2: f64,

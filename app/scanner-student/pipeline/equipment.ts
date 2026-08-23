@@ -5,9 +5,7 @@ import { imageDataToCanvas } from './image';
 
 export type EquipmentPrediction = { type: string; score: number };
 
-// Equipment pieces are themselves inventory items (Equipment_<id>) already covered by
-// item scanner's embedding classifier, so equipment-slot classification here reuses that
-// already-loaded model instead of a second one — see app/scanner-student/modelLoader.client.ts.
+// Equipment pieces are inventory items (Equipment_<id>) already covered by the item scanner's embedding classifier, so this reuses that model instead of loading a second one.
 const idToCategory = new Map<number, string>();
 for (const [category, ids] of Object.entries(equipmentId)) for (const id of ids) idToCategory.set(id, category);
 

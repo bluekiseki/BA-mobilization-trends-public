@@ -91,7 +91,7 @@ export interface EventPlannerProp {
 }
 
 export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studentPortraits }: EventPlannerProp) => {
-  const { t } = useTranslation('planner');
+  const { t } = useTranslation(['planner', 'game']);
   const tabNavRef = useRef<HTMLDivElement | null>(null);
 
   // Farming plan related state
@@ -229,10 +229,8 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       allTabs.push({ id: 'farming', name: `${n++}. ${t('ui.farmingRun')}`, subTabs: [{ id: 'stages', name: t('ui.stageFarming') }] });
     }
 
-    // Cheap presence check only — NOT listSelectableResourceKeys (which runs the full extraction, including
-    // Monte-Carlo-simulation-based sources that can take seconds). This tab's visibility shouldn't cost
-    // anything; the actual computation stays deferred to ResourceEfficiencyPanel itself, which only mounts
-    // once this tab is actually opened.
+    // Cheap presence check only — not listSelectableResourceKeys, which runs the full (Monte-Carlo)
+    // extraction. Actual computation is deferred to ResourceEfficiencyPanel once the tab opens.
     if (hasAnySelectableResourceSource(eventData)) {
       allTabs.push({ id: 'resource_efficiency', name: `${n++}. ${t('ui.resourceEfficiency')}` });
     }
@@ -1137,6 +1135,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 startTime={eventData.season.EventContentOpenTime}
                 endTime={eventData.season.EventContentCloseTime || eventData.season.ExtensionTime}
                 onCalculate={setAvailableAp}
+                totalApUsed={acquiredItemsResult.totalApUsed}
                 iconData={iconData}
               />
             )}

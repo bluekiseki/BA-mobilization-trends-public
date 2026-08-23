@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine } from 'recharts';
 import { FaGem, FaCheckCircle, FaChartBar, FaSyncAlt } from 'react-icons/fa';
-import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
+import type { GlobalAggregatedResult, DistributionData } from '~/utils/gachaEngine';
 
 interface CustomBarProps {
   x: number;
@@ -32,9 +32,9 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
   const [chartType, setChartType] = useState<'PDF' | 'CDF'>('PDF');
   const [unit, setUnit] = useState<UnitType>('pyroxenes');
 
-  const activeDist = unit === 'pyroxenes' ? result.distCost : result.distPulls;
+  const activeDist = unit === 'pyroxenes' ? result.cost.dist('inf') : result.pulls.dist('inf');
 
-  const chartData = activeDist.map((d) => ({
+  const chartData = activeDist.map((d: DistributionData) => ({
     ...d,
     label: unit === 'pyroxenes' ? `${(d.binEnd / 1000).toFixed(1)}k` : t('chart.unit_count', { count: d.binEnd }),
     rangeLabel: unit === 'pyroxenes' ? `${d.binStart.toLocaleString()} ~ ${d.binEnd.toLocaleString()}` : t('chart.range_count', { start: d.binStart, end: d.binEnd }),
@@ -51,7 +51,7 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
 
   // Simple budget check computed from distCost — always available even without income plan
   const simpleBudgetOverrate = (() => {
-    const bin = result.distCost.find((d) => d.binEnd > initialPyroxenes);
+    const bin = result.cost.dist('inf').find((d) => d.binEnd > initialPyroxenes);
     if (!bin) return 0;
     return parseFloat((100 - bin.cdf).toFixed(1));
   })();
@@ -61,12 +61,11 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
   // const isIncomePlanApplied = bankruptcyRate !== null;
   const isSafe = effectiveBankruptcyRate < 10;
 
-  // Derive the budget threshold from effectiveBankruptcyRate so the red bar area
-  // always matches the displayed percentage, regardless of income timeline.
-  // (initialPyroxenes alone is wrong because income accumulates over time)
+  // Derive threshold from effectiveBankruptcyRate so the red bar matches the displayed percentage
+  // (initialPyroxenes alone is wrong since income accumulates over time).
   const budgetThreshold = (() => {
     const targetCdf = 100 - effectiveBankruptcyRate;
-    const bin = result.distCost.find((d) => d.cdf >= targetCdf);
+    const bin = result.cost.dist('inf').find((d) => d.cdf >= targetCdf);
     return bin ? bin.binEnd : Infinity;
   })();
 
@@ -137,11 +136,11 @@ export default function SimulationResultView({ result, initialPyroxenes, portrai
           </div>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-2xl font-extrabold text-neutral-600 dark:text-neutral-300">
-              {unit === 'pyroxenes' ? Math.round(result.avgTotalCost).toLocaleString() : Math.round(result.avgTotalPulls).toLocaleString()}
+              {unit === 'pyroxenes' ? Math.round(result.cost.avg('inf')).toLocaleString() : Math.round(result.pulls.avg('inf')).toLocaleString()}
             </span>
           </div>
           <div className="text-[11px] text-neutral-400 dark:text-neutral-500">
-            {unit === 'pyroxenes' ? t('summary.avg_cost.approx_pulls', { amount: Math.round(result.avgTotalCost / 120).toLocaleString() }) : t('summary.avg_cost.includes_free')}
+            {unit === 'pyroxenes' ? t('summary.avg_cost.approx_pulls', { amount: Math.round(result.cost.avg('inf') / 120).toLocaleString() }) : t('summary.avg_cost.includes_free')}
           </div>
         </div>
       </div>

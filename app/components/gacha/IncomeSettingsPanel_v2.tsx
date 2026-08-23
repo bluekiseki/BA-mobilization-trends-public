@@ -5,7 +5,8 @@ import { FaGem, FaTicketAlt, FaCrown, FaShieldAlt, FaTrophy, FaPlus, FaTrash, Fa
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 import { PVP_REWARDS } from '~/utils/pyroxeneCalc';
-import type { PyroxeneConfig } from '~/routes/planner/Gacha_v2';
+import type { PlannerSchedule, PyroxeneConfig, ManualTicketBatchInput } from '~/utils/pyroxeneCalc';
+import { getEraidTicketExpiry } from '~/utils/gachaRules';
 import { CustomNumberInput } from '../CustomInput';
 
 export interface CustomIncome {
@@ -21,9 +22,15 @@ interface Props {
   pyroxeneIcon?: string | null;
   ticket1Icon?: string | null;
   ticket10Icon?: string | null;
+  schedules: PlannerSchedule[];
 }
 
 const monoStyle = { fontFamily: 'inherit' };
+
+const formatMD = (ts: number) => {
+  const d = new Date(ts);
+  return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 function RowLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -34,7 +41,7 @@ function RowLabel({ icon, children }: { icon: React.ReactNode; children: React.R
   );
 }
 
-function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+export function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="relative h-6 w-11 rounded-full transition-colors shrink-0" style={{ background: on ? '#77e0ff' : '#d4d4d8' }}>
       <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all" style={{ left: on ? 22 : 2 }} />
@@ -50,15 +57,21 @@ function GameImg({ src, size = 24 }: { src: string; size?: number }) {
   );
 }
 
-export default function IncomeSettingsPanel_v2({ config, setConfig, pyroxeneIcon, ticket1Icon, ticket10Icon }: Props) {
+export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, pyroxeneIcon, ticket1Icon: _ticket1Icon, ticket10Icon }: Props) {
   const { t: _t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const t = _t as (key: string, opts?: Record<string, string | number>) => string;
   const { t: tIntro } = useTranslation('planner', { keyPrefix: 'gacha.intro.notes' });
+  const { t: tUi } = useTranslation('ui');
+  const { t: tGame } = useTranslation('game');
 
   const [newCustomDate, setNewCustomDate] = useState('');
   const [newCustomTitle, setNewCustomTitle] = useState('');
   const [newCustomAmount, setNewCustomAmount] = useState<number | ''>('');
   const [needsSafariDateHint, setNeedsSafariDateHint] = useState(false);
+
+  const [newTicketExpiry, setNewTicketExpiry] = useState('');
+  const [newTicket1Count, setNewTicket1Count] = useState<number | ''>('');
+  const [newTicket10Count, setNewTicket10Count] = useState<number | ''>('');
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
@@ -84,6 +97,47 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, pyroxeneIcon
 
   const handleRemoveCustom = (id: string) => setConfig((prev) => ({ ...prev, customIncomes: (prev.customIncomes || []).filter((x) => x.id !== id) }));
 
+  const now = new Date();
+  const today = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((value, index) => (index === 0 ? String(value) : String(value).padStart(2, '0'))).join('-');
+  const pastMainStories = schedules.filter((item) => item.type === 'MainStory' && item.start <= today).sort((a, b) => b.start.localeCompare(a.start));
+
+  const savedSelectedMainStoryIds = config.selectedMainStoryIds;
+  const selectedMainStoryIdList: string[] = Array.isArray(savedSelectedMainStoryIds) ? savedSelectedMainStoryIds.filter((id): id is string => typeof id === 'string') : [];
+  const selectedMainStoryIds = new Set<string>(selectedMainStoryIdList);
+  const selectedMainStoryPyroxene = pastMainStories.filter((story) => selectedMainStoryIds.has(story.id)).reduce((total, story) => total + (story.amount || 0), 0);
+  const setMainStorySelected = (id: string, selected: boolean) => {
+    const next = new Set(selectedMainStoryIds);
+    if (selected) next.add(id);
+    else next.delete(id);
+    set({ selectedMainStoryIds: [...next] });
+  };
+  const clearSelectedMainStories = () => set({ selectedMainStoryIds: [] });
+
+  // Term-limited tickets — past eraid events whose ticket hasn't expired yet (checked = "still holding it"),
+  // plus manually-entered batches (from any other source, with an optional expiry — blank means it never expires).
+  const nowMs = now.getTime();
+  const pastEraidTickets = schedules.filter((item) => item.type === 'Elimination' && item.end <= today && getEraidTicketExpiry(item.end) > nowMs).sort((a, b) => b.end.localeCompare(a.end));
+  const selectedEraidTicketIds = new Set<string>(config.selectedEraidTicketIds ?? []);
+  const setEraidTicketSelected = (id: string, selected: boolean) => {
+    const next = new Set(selectedEraidTicketIds);
+    if (selected) next.add(id);
+    else next.delete(id);
+    set({ selectedEraidTicketIds: [...next] });
+  };
+
+  const manualTicketBatches = config.manualTicketBatches ?? [];
+  const handleAddTicketBatch = () => {
+    const ticket1Count = typeof newTicket1Count === 'number' ? newTicket1Count : 0;
+    const ticket10Count = typeof newTicket10Count === 'number' ? newTicket10Count : 0;
+    if (ticket1Count <= 0 && ticket10Count <= 0) return;
+    const item: ManualTicketBatchInput = { id: crypto.randomUUID(), expiresAt: newTicketExpiry || null, ticket1Count, ticket10Count };
+    setConfig((prev) => ({ ...prev, manualTicketBatches: [...(prev.manualTicketBatches ?? []), item] }));
+    setNewTicketExpiry('');
+    setNewTicket1Count('');
+    setNewTicket10Count('');
+  };
+  const handleRemoveTicketBatch = (id: string) => setConfig((prev) => ({ ...prev, manualTicketBatches: (prev.manualTicketBatches ?? []).filter((x) => x.id !== id) }));
+
   return (
     <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
@@ -98,33 +152,121 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, pyroxeneIcon
           />
         </label>
 
-        {/* 1-pull Recruitment Ticket */}
-        <label className="flex items-center justify-between gap-3 py-2.5">
-          <RowLabel icon={ticket1Icon ? <GameImg src={ticket1Icon} /> : <FaTicketAlt size={15} />}>{t('settings.ticket1')}</RowLabel>
-          <span className="flex items-center gap-1.5">
-            <CustomNumberInput
-              value={config.currentTicket1}
-              onChange={(val) => set({ currentTicket1: Math.max(0, val || 0) })}
-              className="w-20 rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-2 py-1.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-ba-btn-blue"
-              style={monoStyle}
-            />
-            <span className="text-xs text-neutral-400 w-6">{t('unit_sheets')}</span>
-          </span>
-        </label>
+        {/* Term-limited tickets */}
+        <div className="py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-ba-btn-blue inline-flex items-center justify-center">{ticket10Icon ? <GameImg src={ticket10Icon} /> : <FaTicketAlt size={15} />}</span>
+            <span className="text-sm text-neutral-600 dark:text-neutral-300">{t('settings.ticket_batches_title')}</span>
+          </div>
 
-        {/* 10-pull Recruitment Ticket */}
-        <label className="flex items-center justify-between gap-3 py-2.5">
-          <RowLabel icon={ticket10Icon ? <GameImg src={ticket10Icon} /> : <FaTicketAlt size={15} />}>{t('settings.ticket10')}</RowLabel>
-          <span className="flex items-center gap-1.5">
-            <CustomNumberInput
-              value={config.currentTicket10}
-              onChange={(val) => set({ currentTicket10: Math.max(0, val || 0) })}
-              className="w-20 rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-2 py-1.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-ba-btn-blue"
-              style={monoStyle}
-            />
-            <span className="text-xs text-neutral-400 w-6">{t('unit_sheets')}</span>
-          </span>
-        </label>
+          {/* Past eraid tickets — checked = still holding an unspent ticket from that raid */}
+          <div className="mb-2">
+            <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1">{t('settings.ticket_batches_eraid_label')}</div>
+            <div className="max-h-32 divide-y divide-neutral-100 overflow-y-auto rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
+              {pastEraidTickets.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-neutral-400">{t('settings.ticket_batches_eraid_empty')}</p>
+              ) : (
+                pastEraidTickets.map((item) => {
+                  const checked = selectedEraidTicketIds.has(item.id);
+                  return (
+                    <label
+                      key={item.id}
+                      className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-neutral-700 transition-colors dark:text-neutral-300 ${checked ? 'bg-neutral-50 dark:bg-neutral-800/60' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'}`}
+                    >
+                      <input type="checkbox" checked={checked} onChange={(event) => setEraidTicketSelected(item.id, event.currentTarget.checked)} className="accent-[#77e0ff]" />
+                      <span className="min-w-0 flex-1 truncate" title={item.name}>
+                        {item.name}
+                      </span>
+                      <span className="tabular-nums text-neutral-400 shrink-0 whitespace-nowrap">
+                        {item.end.slice(5, 10)} → {formatMD(getEraidTicketExpiry(item.end))}
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Manually entered batches — expiry optional (blank = never expires) */}
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-900 mb-2">
+            <div className="flex items-stretch border-b border-neutral-200 dark:border-neutral-700">
+              <div className="relative w-32 shrink-0 border-r border-neutral-200 dark:border-neutral-700">
+                <input
+                  type="date"
+                  aria-label="YYYY-MM-DD"
+                  className="h-full w-full px-2.5 py-2 bg-transparent text-neutral-600 dark:text-neutral-400 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
+                  value={newTicketExpiry}
+                  onChange={(e) => setNewTicketExpiry(e.target.value)}
+                />
+                {needsSafariDateHint && !newTicketExpiry && (
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 bg-white pr-1 text-[11px] text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
+                    {t('settings.ticket_batches_unlimited')}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 px-2.5 py-2 text-[10px] text-neutral-300 dark:text-neutral-700 flex items-center select-none">{t('settings.ticket_batches_expiry_placeholder')}</div>
+            </div>
+            <div className="flex items-stretch">
+              <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5">
+                <CustomNumberInput
+                  min={0}
+                  className="w-14 bg-transparent text-neutral-700 dark:text-neutral-300 outline-none tabular-nums border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-1"
+                  placeholder="0"
+                  value={newTicket1Count || null}
+                  onChange={(val) => setNewTicket1Count(Number(val))}
+                />
+                <span className="text-[10px] text-neutral-400">{t('settings.ticket1')}</span>
+                <CustomNumberInput
+                  min={0}
+                  className="w-14 bg-transparent text-neutral-700 dark:text-neutral-300 outline-none tabular-nums border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-1"
+                  placeholder="0"
+                  value={newTicket10Count || null}
+                  onChange={(val) => setNewTicket10Count(Number(val))}
+                />
+                <span className="text-[10px] text-neutral-400">{t('settings.ticket10')}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddTicketBatch}
+                title={t('common.add')}
+                className="px-3.5 flex items-center justify-center text-neutral-400 hover:bg-ba-btn-blue hover:text-[#06262f] transition-colors border-l border-neutral-200 dark:border-neutral-700 shrink-0"
+              >
+                <FaPlus size={11} />
+              </button>
+            </div>
+          </div>
+
+          {manualTicketBatches.length > 0 && (
+            <div className="rounded-lg border border-neutral-100 dark:border-neutral-800 overflow-hidden mb-2">
+              <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-32 overflow-y-auto custom-scrollbar">
+                {manualTicketBatches.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors group text-xs">
+                    <span className="tabular-nums text-neutral-400 dark:text-neutral-500 shrink-0" style={monoStyle}>
+                      {item.expiresAt ? item.expiresAt.slice(5).replace('-', '/') : t('settings.ticket_batches_unlimited')}
+                    </span>
+                    <span className="flex-1 min-w-0 truncate text-neutral-700 dark:text-neutral-300">
+                      {item.ticket1Count > 0 && `${t('settings.ticket1')} ${item.ticket1Count}`}
+                      {item.ticket1Count > 0 && item.ticket10Count > 0 && ' · '}
+                      {item.ticket10Count > 0 && `${t('settings.ticket10')} ${item.ticket10Count}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTicketBatch(item.id)}
+                      className="p-1.5 -m-1.5 text-neutral-400 dark:text-neutral-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                    >
+                      <FaTrash size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('settings.ticket_batches_consume_policy_label')}</span>
+            <Toggle on={config.consumeExpiringTickets ?? true} onClick={() => set({ consumeExpiringTickets: !(config.consumeExpiringTickets ?? true) })} />
+          </div>
+        </div>
 
         {/* Monthly Pass */}
         <div className="flex items-center justify-between py-2.5">
@@ -195,6 +337,59 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, pyroxeneIcon
             ))}
           </select>
         </div>
+
+        <div className="py-3">
+          <div className="flex items-center justify-between gap-3">
+            <RowLabel icon={pyroxeneIcon ? <GameImg src={pyroxeneIcon} /> : <FaGem size={15} />}>
+              {t('settings.unclaimed_main_story')}
+              <span className="text-xs font-normal text-neutral-400 dark:text-neutral-500">
+                ({selectedMainStoryPyroxene.toLocaleString()} {tGame('pyroxene')})
+              </span>
+            </RowLabel>
+            <button
+              type="button"
+              onClick={clearSelectedMainStories}
+              disabled={selectedMainStoryIds.size === 0}
+              className="shrink-0 px-1 py-1 text-[11px] font-medium text-neutral-400 transition-colors hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 dark:text-neutral-500 dark:hover:text-neutral-200"
+            >
+              {tUi('deselectAll')}
+            </button>
+          </div>
+          <div className="mt-2 max-h-40 divide-y divide-neutral-100 overflow-y-auto rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
+            {pastMainStories.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-neutral-400">{t('settings.no_past_main_story')}</p>
+            ) : (
+              pastMainStories.map((story) => {
+                const checked = selectedMainStoryIds.has(story.id);
+                return (
+                  <label
+                    key={story.id}
+                    className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-neutral-700 transition-colors dark:text-neutral-300 ${checked ? 'bg-neutral-50 dark:bg-neutral-800/60' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'}`}
+                  >
+                    <input type="checkbox" checked={checked} onChange={(event) => setMainStorySelected(story.id, event.currentTarget.checked)} className="accent-[#77e0ff]" />
+                    <span className="min-w-0 flex-1 truncate" title={story.name}>
+                      {story.name}
+                    </span>
+                    <span className="tabular-nums text-neutral-400">{(story.amount || 0).toLocaleString()}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <label className="flex items-center justify-between gap-3 py-2.5">
+          <RowLabel icon={pyroxeneIcon ? <GameImg src={pyroxeneIcon} /> : <FaGem size={15} />}>{t('settings.unclaimed_momotalk')}</RowLabel>
+          <span className="flex items-center gap-1.5">
+            <CustomNumberInput
+              value={config.momotalkCount || 0}
+              onChange={(val) => set({ momotalkCount: Math.max(0, val || 0) })}
+              className="w-20 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm font-semibold dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              style={monoStyle}
+            />
+            <span className="text-xs text-neutral-400">× 200 {tGame('pyroxene')}</span>
+          </span>
+        </label>
 
         {/* Custom Income/Expense */}
         <div className="pt-3 pb-1">

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Student } from '~/types/data';
 import { AutoplayIcon, RepeatIcon, StopIcon } from '~/routes/utils/jukeboxMetadata';
+import { useTranslation } from 'react-i18next';
 
 export interface StoryFiltersProps {
   // Data
@@ -77,14 +78,14 @@ const SectionHeader = ({
       {/* Select All (Show only when not all are selected) */}
       {activeCount < total && total > 0 && (
         <button onClick={onSelectAll} className="text-xs text-sky-500 hover:text-sky-600 dark:text-sky-400 dark:hover:text-sky-300 transition-colors">
-          {t('actions.select_all')}
+          {t('selectAll')}
         </button>
       )}
 
       {/* Deselect All (Show only when at least one is selected; use rose color for distinction) */}
       {activeCount > 0 && (
         <button onClick={onClear} className="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 transition-colors">
-          {t('actions.deselect_all')}
+          {t('deselectAll')}
         </button>
       )}
     </div>
@@ -121,6 +122,7 @@ export default function StoryFilters({
   t,
   matcher,
 }: StoryFiltersProps) {
+  const { t: t_ui } = useTranslation('ui');
   return (
     <div className="flex flex-col gap-5">
       {/* ── Options ── */}
@@ -131,7 +133,7 @@ export default function StoryFilters({
             onClick={() => setShowStoryNames((p) => !p)}
             className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${showStoryNames ? 'bg-sky-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}
           >
-            <span className={`inline-block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mt-[3px] ${showStoryNames ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            <span className={`inline-block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mt-0.75 ${showStoryNames ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </button>
         </div>
 
@@ -141,7 +143,7 @@ export default function StoryFilters({
             onClick={() => setAutoScrollEnabled((p) => !p)}
             className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${isAutoScrollEnabled ? 'bg-sky-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}
           >
-            <span className={`inline-block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mt-[3px] ${isAutoScrollEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            <span className={`inline-block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mt-0.75 ${isAutoScrollEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </button>
         </div>
 
@@ -181,7 +183,7 @@ export default function StoryFilters({
           total={mainStoryList.length}
           onClear={() => handleClearCategory('mainStories')}
           onSelectAll={() => handleSelectAllCategory('mainStories')}
-          t={t}
+          t={t_ui}
         />
         <SectionSearch value={sectionSearch.mainStories} onChange={(v) => setSectionSearch((p) => ({ ...p, mainStories: v }))} placeholder={t('search.placeholder')} />
         <div className="max-h-36 overflow-y-auto space-y-0.5 pr-1">
@@ -206,7 +208,7 @@ export default function StoryFilters({
           total={eventStoryList.length}
           onClear={() => handleClearCategory('eventStories')}
           onSelectAll={() => handleSelectAllCategory('eventStories')}
-          t={t}
+          t={t_ui}
         />
         <SectionSearch value={sectionSearch.eventStories} onChange={(v) => setSectionSearch((p) => ({ ...p, eventStories: v }))} placeholder={t('search.placeholder')} />
         <div className="max-h-36 overflow-y-auto space-y-0.5 pr-1">
@@ -236,7 +238,7 @@ export default function StoryFilters({
           total={studentFilterList.length}
           onClear={() => handleClearCategory('favorStudents')}
           onSelectAll={() => handleSelectAllCategory('favorStudents')}
-          t={t}
+          t={t_ui}
         />
         <SectionSearch value={sectionSearch.favorStudents} onChange={(v) => setSectionSearch((p) => ({ ...p, favorStudents: v }))} placeholder={t('search.student_name') || t('search.placeholder')} />
         <div className="max-h-36 overflow-y-auto pr-1">
@@ -269,7 +271,7 @@ export default function StoryFilters({
           total={studentFilterList.length}
           onClear={() => handleClearCategory('memorialStudents')}
           onSelectAll={() => handleSelectAllCategory('memorialStudents')}
-          t={t}
+          t={t_ui}
         />
         <SectionSearch
           value={sectionSearch.memorialStudents}

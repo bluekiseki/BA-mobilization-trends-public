@@ -42,6 +42,7 @@ export default [
     route('planner/gacha', 'routes/planner/Gacha_v2.tsx'), // Gacha budgeting (v2)
     route('planner/gacha_old', 'routes/planner/Gacha_old.tsx'), // Legacy gacha planner
     route('planner/resources', 'routes/planner/Resources.tsx'), // Resource leveling calculator
+    route('planner/inventory', 'routes/planner/Inventory.tsx'), // Resource inventory dashboard (all types, owned vs. target)
     route('planner/gacha-test', 'routes/debug-gacha.tsx'), // Debug gacha mechanics
     route('scanner/item', 'routes/planner/ItemScanner.tsx'), // Image-based inventory scanner
     route('scanner/student', 'routes/planner/StudentScanner.tsx'), // Video-based student roster scanner

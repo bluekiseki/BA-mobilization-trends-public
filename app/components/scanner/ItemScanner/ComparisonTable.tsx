@@ -20,22 +20,24 @@ function confidenceColor(c: number): string {
 
 export function ComparisonTable({ rows, editedValues, confirmedItems, onEdit }: Props) {
   const { i18n, t } = useTranslation('planner', { keyPrefix: 'itemScanner' });
+  const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
 
   const CATEGORY_LABELS: Record<string, string> = {
-    credits: t('categoryCredits'),
-    eligma: t('categoryEligma'),
-    xpReports: t('categoryXpReports'),
+    credits: t_g('credit'),
+    eligma: t_g('eligma'),
+    xpReports: t_g('report'),
     equipEnh: t('categoryEquipEnh'),
     uwGrowth: t('categoryUwGrowth'),
-    potential: t('categoryPotential'),
-    opart: t('categoryOpart'),
+    potential: t_g('potential'),
+    opart: t_g('opart'),
     tacticalBD: t('categoryTacticalBD'),
     techNote: t('categoryTechNote'),
-    equipment: t('categoryEquipment'),
+    equipment: t_g('equipment'),
     skill: t('categorySkill'),
-    eleph: t('categoryEleph'),
-    gifts: t('categoryGifts'),
-    other: t('categoryOther'),
+    eleph: t_g('eleph'),
+    gifts: t_g('gift'),
+    other: t_ui('etc'),
   };
   if (rows.length === 0) return null;
 

@@ -14,6 +14,7 @@ interface RaidConfigFieldsProps {
 
 export function RaidConfigFields({ config, isRaid, onChange }: RaidConfigFieldsProps) {
   const { t } = useTranslation('resources');
+  const { t: t_g } = useTranslation('game');
   const { normalCoin, premiumCoin, eligma } = calcRaidCoins(config, isRaid);
 
   return (
@@ -31,7 +32,7 @@ export function RaidConfigFields({ config, isRaid, onChange }: RaidConfigFieldsP
         </div>
 
         <div>
-          <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mb-1">{t('raid.trophy')}</p>
+          <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mb-1">{t_g('trophy')}</p>
           <select className={SELECT_CLS} value={config.trophy} onChange={(e) => onChange({ ...config, trophy: e.target.value as RaidDetailConfig['trophy'] })}>
             {RAID_TROPHIES.map((t) => (
               <option key={t} value={t}>
@@ -66,7 +67,7 @@ export function RaidConfigFields({ config, isRaid, onChange }: RaidConfigFieldsP
           {t('raid.premium')} <b className="text-neutral-700 dark:text-neutral-200">{premiumCoin}</b>
         </span>
         <span>
-          {t('raid.eligmaLabel')} <b className="text-neutral-700 dark:text-neutral-200">{eligma}</b>
+          {t_g('eligma')} <b className="text-neutral-700 dark:text-neutral-200">{eligma}</b>
         </span>
       </div>
     </div>

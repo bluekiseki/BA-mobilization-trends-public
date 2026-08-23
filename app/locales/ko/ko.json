@@ -3,40 +3,15 @@
     "greeting": "안녕하세요!",
     "about": "소개",
     "contact": "연락처",
-    "loading_txt": "데이터를 불러오는 중...",
-    "confirm": "확인",
-    "open": "열기",
-    "close": "접기",
     "viewAll": "전체 보기",
-    "etc": "기타",
-    "selectAll": "전체",
-    "total": "전체",
     "page": "페이지",
     "times": "회",
     "show_count": "페이지당 항목 수",
-    "load_more": "더 보기",
-    "raid": "총력전",
-    "eraid": "대결전",
-    "raidAndEraid": "총력전·대결전",
-    "event": "이벤트",
-    "campaign": "캠페인",
-    "multifloor": "제약해제결전",
     "dataWarning": "본 사이트에서 제공하는 데이터는 외부 정보를 2차 가공한 자료이며, 이 과정에서 오류가 발생하여 부정확한 정보가 포함될 수 있습니다. 사이트 운영자는 본 데이터의 이용으로 인해 발생하는 어떠한 문제에 대해서도 책임을 지지 않으므로, 정보 이용에 참고하시기 바랍니다.",
     "viewMore": "자세히 보기",
     "viewSimple": "간략히 보기",
-    "start": "시작",
-    "end": "종료",
-    "acquire": "획득",
-    "loop": "회차",
-    "rerun": "복각",
-    "fest": "페스",
-    "limited": "한정",
     "clear": "클리어",
-    "period": "기간",
-    "jfd": "종합전술시험",
-    "tacticalChallenge": "전술대항전",
     "finalRestrictionWB": "능력 개방 WB",
-    "expertPermit": "숙련 증서",
     "pred": "예상",
     "title": "유즈 Trends",
     "site-title": "유즈 Trends",
@@ -63,20 +38,17 @@
     "currentLocale": "ko",
     "navigation": {
       "heatmap": "동향",
-      "ranking": "순위",
       "home": "홈",
       "dashboard": "대시보드",
       "planner": "플래너",
       "help": "도움말",
       "viewDescription": "기능 해설",
       "reportBug": "의견 보내기",
-      "email": "이메일",
       "viewCode": "코드 보기",
       "theme": "테마",
       "lightMode": "라이트 모드",
       "darkMode": "다크 모드",
       "systemTheme": "시스템 설정",
-      "language": "언어",
       "serverSettings": "서버 설정",
       "jukebox": "BGM 플레이어",
       "notices": "공지사항 아카이브",
@@ -84,7 +56,6 @@
       "studentScanner": "학생 육성 스캐너",
       "eventPlanner": "이벤트 재화 플래너",
       "gachaPlanner": "청휘석 및 모집/가챠 플래너",
-      "studentGrowthPlanner": "학생 성장 플래너",
       "equipmentFarmingPlanner": "장비 파밍 플래너",
       "favorCalculator": "인연 랭크 계산기"
     },
@@ -102,6 +73,7 @@
       "en": "영어",
       "ko": "한국어",
       "ja": "일본어",
+      "zh_Hant": "중국어 번체",
       "label": "label"
     },
     "language_banner": {
@@ -119,8 +91,7 @@
       "startGuide": "가이드 시작하기",
       "driver": {
         "next": "다음 ➔",
-        "prev": "⬅ 이전",
-        "done": "완료"
+        "prev": "⬅ 이전"
       }
     },
     "promoBanner": {
@@ -138,7 +109,6 @@
       "inputDesc": "상세 내용을 적어주세요",
       "inputEmail": "답변 받을 이메일 (선택)",
       "submitBtn": "제보하기",
-      "submittingBtn": "전송 중...",
       "errorMsg": "전송에 실패했습니다. 다시 시도해주세요.",
       "githubIssue": "GitHub 이슈에서 제보하기",
       "poweredBy": "이 요청은 Web3Forms를 통해 전송됩니다."
@@ -176,7 +146,9 @@
     "scroll_to_prev_page": "이전 페이지",
     "scroll_to_next_page": "다음 페이지",
     "scroll_to_last_page": "마지막 페이지",
-    "scroll_to_top": "위로 스크롤"
+    "scroll_to_top": "위로 스크롤",
+    "exclude": "제외",
+    "viewOnSchaledb": "SchaleDB에서 보기"
   },
   "charts": {
     "ranking": {
@@ -185,39 +157,23 @@
       "control": {
         "bar_option": {
           "name": "막대 길이",
-          "percent": "최대",
           "absolute": "비례"
         },
-        "sum_option": {
-          "name": "횟수 계산",
-          "display_total": "전체",
-          "display_average": "평균"
-        },
         "squad_type": "스트라이커/스페셜:",
-        "squad_type_all": "모두",
-        "squad_type_main": "스트라이커",
-        "squad_type_support": "스페셜",
         "tactic_role": "역할:",
-        "tactic_role_All": "모두",
-        "tactic_role_DamageDealer": "딜러",
-        "tactic_role_Healer": "힐러",
-        "tactic_role_Supporter": "서포터",
-        "tactic_role_Tanker": "탱커",
-        "tactic_role_Vehicle": "T.S.",
         "rank": "조력자:",
-        "rank_all": "모두",
         "rank_normal": "소속 학생만",
         "rank_assist": "조력자만",
         "display_mode": "표시 형태",
         "raid": "총력전·대결전 기간 선택",
-        "difficulty": "난이도"
+        "sum_option": {
+          "name": "횟수 계산"
+        }
       },
       "desp_percent": "각 막대 길이는 전체 출전 수 대비 비율을 나타냅니다.",
       "desp_absolute": "각 막대 길이는 실제 출전수를 나타냅니다.",
       "unit_cnt": "회",
-      "loading_txt": "데이터를 불러오는 중...",
-      "total_x": "총 {x}건 선택됨",
-      "filters": "필터"
+      "total_x": "총 {x}건 선택됨"
     },
     "heatmap": {
       "title": "학생별 총력전·대결전 출전 동향 및 미래시",
@@ -234,7 +190,6 @@
         "heatmap_option_absolute": "출전율 (%)",
         "histogram_option_percent": "성급 비율 (%)",
         "histogram_option_absolute": "출전율 (%)",
-        "setButton": "설정",
         "displayOptions": {
           "title": "표시 옵션",
           "heatmap": "히트맵:",
@@ -242,16 +197,15 @@
           "rankWidth": "순위 집계 단위:",
           "X-Threshold": "총력전·대결전 표시 생략 기준:"
         },
+        "raidRange": {
+          "title": "총력전·대결전 기간 선택"
+        },
         "filterByStars": {
           "title": "성급으로 필터링",
           "all": "모두 선택",
           "none": "모두 해제",
           "count": "번"
-        },
-        "raidRange": {
-          "title": "총력전·대결전 기간 선택"
-        },
-        "difficulty": "난이도"
+        }
       },
       "draw": {
         "unit": {
@@ -264,7 +218,6 @@
     }
   },
   "raidInfo": {
-    "All": "모두",
     "allDifficulties": "모든 난이도",
     "Lunatic": "루나틱",
     "Torment": "토먼트",
@@ -289,7 +242,6 @@
     "StudentGrowthByRankTitle": "등수별 학생 성급 상태",
     "StudentGrowthByRank": "등수별 학생 성급 상태",
     "popularFormations": "많이 출전한 편성 (총 {x}건)",
-
     "rankingsAndTeams": "랭킹 & 팀 (총 {x}건)",
     "includeStudent": "포함시킬 학생",
     "excludeStudent": "제외할 학생",
@@ -305,13 +257,9 @@
     "filter_import": "붙여넣기로 불러오기",
     "filter_import_placeholder": "필터 JSON을 붙여넣으세요...",
     "filter_import_error": "올바른 형식이 아닙니다.",
-    "filter_import_apply": "적용",
-    "filter_reset": "초기화",
     "add_my_students": "미모집 학생 추가",
     "includableStudentTitle": "출전이 가능한 학생",
     "excludableStudentTitle": "출전이 어려운 학생",
-    "tagMustInclude": "필수",
-    "normal": "모집됨",
     "assist": "조력자",
     "mustBeIncluded": "무조건 포함",
     "usageCount": "출전 유형",
@@ -327,14 +275,11 @@
     "tagHardExclude": "제외",
     "tagAllowOnce": "조력자",
     "description": "리포트 임시 대체",
-    "dashboardList": "대시보드 목록",
     "selectBossPrompt": "분석하고 싶은 보스를 선택하세요.",
     "histogramTitle": "종합 점수 분포 (히스토그램)",
     "scoreRangeFilter": "점수 범위 필터",
     "binSize": "간격",
     "bracketFilter": "난이도 단계 필터",
-    "selectAll": "전체선택",
-    "deselectAll": "전체해제",
     "playerCount": "인원수",
     "donutChartTitle": "Tier / 난이도 조합 분포",
     "donutChartSubtitle": "도넛 차트의 내부 요소 클릭 시 상세 정보 확인 가능",
@@ -361,7 +306,6 @@
     "switchToRank": "랭크로 전환",
     "switchToScore": "점수로 전환",
     "tooltipCumulativeRank": "누적 등수: ~{{rank}}위",
-    "clearTime": "클리어 시간",
     "hideSettings": "설정 숨기기",
     "showSettings": "설정 보기",
     "rankRangeSettings": "등수 범위 설정",
@@ -369,7 +313,6 @@
     "maxRankPlaceholder": "최대 등수",
     "clearTimeDistribution": "클리어 시간 분포",
     "noData": "표시할 데이터가 없습니다. 설정을 확인해주세요.",
-    "headerDifficulty": "난이도",
     "headerInterval": "간격(분:초)",
     "headerTimeout": "타임아웃(분:초)",
     "headerShowTimeoutTitle": "타임아웃 초과 표시",
@@ -385,16 +328,12 @@
     "bestRank": "최고등수",
     "timeViewUnavailable": "시간별 분석은 모든 파티원이 동일 난이도일 때만 가능합니다.",
     "viewByStudent": "학생별 보기",
-    "viewAllStudents": "전체",
     "dataType": "데이터 종류",
     "byScore": "점수",
-    "byTime": "시간",
     "timeDistribution": "시간 분포",
-    "starRatingDistribution": "성급 분포",
     "timeViewUnavailableNotice": "난이도가 다른 기록이 섞여있어 시간별 조회가 불가능합니다.",
     "byRank": "등수",
     "rankDistribution": "등수 분포",
-    "byDefault": "기본",
     "byTotalPartyCount": "파티 수별",
     "byPartyPosition": "파티 순서별",
     "nPartyCount": "{{n}}파티",
@@ -404,8 +343,6 @@
     "lookupPlaceholder": "등수, 점수, 또는 시간 계산식 (e.g. 4:00 - 2:30.5) 입력",
     "lookupInFiltersPlaceholder": "필터 내에서 등수, 점수, 시간 계산식 (e.g. 4:00 - 2:30.5) 입력",
     "rankLookup": "{{rank}}위",
-    "recordBefore": "이전",
-    "recordAfter": "다음",
     "difficultyFilterPlaceholder": "난이도 필터 검색/추가...",
     "noMoreFilters": "추가할 필터 없음",
     "totalScoreSum": "합산 점수 근접 기록",
@@ -421,17 +358,10 @@
     "searchYouTube": {
       "title": "검색어 생성기",
       "searchYouTube": "YouTube 검색",
-      "language": "언어",
-      "difficulty": "난이도",
-      "none": "없음",
-      "include": "포함",
       "terrain": "지형",
       "defenseType": "방어타입",
       "attackType": "공격타입",
-      "student_name": "학생 이름",
-      "copy": "복사",
-      "copied": "복사됨!",
-      "dateRange": "기간"
+      "student_name": "학생 이름"
     },
     "composition": {
       "mode_team": "파티별",
@@ -446,7 +376,6 @@
       "usage_count": "{{counts}} 회",
       "click_to_collapse": "접기",
       "click_for_details": "상세 정보",
-      "load_more": "더 보기",
       "sort_count": "출전 많은 순",
       "sort_bestRank": "최고 점수 순",
       "ignore_position": "배치 순서 무시",
@@ -455,7 +384,6 @@
       "mulligan_view_order": "순서",
       "mopup_filter": "설거지 파티 필터"
     },
-    "videos": "공략영상",
     "videos_select_boss": "영상을 보려면 보스 타입을 선택하세요.",
     "videos_empty": "영상이 없습니다.",
     "videos_sort_score_desc": "점수 높은 순",
@@ -463,7 +391,6 @@
     "videos_sort_upload_desc": "업로드 최신순",
     "videos_sort_upload_asc": "업로드 오래된 순",
     "videos_score_min_placeholder": "최소",
-    "videos_score_max_placeholder": "최대",
     "videos_filter_tl": "TL만",
     "videos_filter_target_type": "속성 타입만",
     "videos_missing_note": "자동 처리로 일부 영상이 누락될 수 있습니다.",
@@ -471,22 +398,19 @@
     "videos_external_sites": "참고하면 좋은 외부 사이트:",
     "video_source_cv": "썸네일에서 자동 추출",
     "video_source_text": "영상 설명에서 추출",
-    "video_extraction_note": "학생 편성은 썸네일 이미지 인식(cv) 또는 영상 설명 텍스트(text)에서 자동 추출됩니다. 부정확할 수 있습니다."
+    "video_extraction_note": "학생 편성은 썸네일 이미지 인식(cv) 또는 영상 설명 텍스트(text)에서 자동 추출됩니다. 부정확할 수 있습니다.",
+    "normal": "보유"
   },
   "dashboardIndex": {
-    "title": "대시보드 목록",
     "description": "진행되었던 총력전 및 대결전의 통계 대시보드 목록",
     "pinnedGlobalTitle": "현재 진행중인 글로벌 서버 총력전·대결전",
     "liveBetaTitle": "실시간 대시보드 (베타)",
-    "searchPlaceholder": "보스 이름 또는 ID로 검색...",
-    "filterAll": "전체"
+    "searchPlaceholder": "보스 이름 또는 ID로 검색..."
   },
   "liveDashboard": {
     "description": "현재 진행중인 총력전 및 대결전의 실시간 통계",
-    "total_clear": "전체 클리어",
     "hourly_change": "시간당 변화",
     "platinum_tier_distribution": "플레티넘 구간 분포도",
-    "total_score": "합산 점수",
     "ranking_cutoff_fluctuation": "등수 커트라인 변화",
     "highscore_change_by_difficulty": "난이도별 최고기록 변화",
     "service_discontinuation_notice": "본 서비스는 언제든지 중단될 수 있습니다.",
@@ -494,7 +418,6 @@
     "changePerHourLabel": "증가량 (명/시간)",
     "playersPerHourUnit": "명/시간",
     "playersUnit": "명",
-    "hoursUnit": "시간",
     "show_prediction_cutoff": "플래티넘 컷 예측 표시",
     "prediction_mode_stats": "평균/최대·최소 범위",
     "prediction_mode_compare": "과거 시즌 비교",
@@ -507,8 +430,6 @@
     "data_unavailable_contact_email": "이메일로 제보",
     "data_unavailable_contact_anon": "익명으로 제보",
     "platinum_cut_est": "플래티넘 컷 예상 (통계 기반)",
-    "hours_remaining_suffix": "남음",
-    "video_fallback_title": "공략영상",
     "video_fallback_note_crawl": "영상 크롤링은 아직 수동이라 최대 1~2일 간격으로 업데이트됩니다.",
     "video_fallback_note_live_only": "현재 진행 중인 레이드 영상만 표시됩니다. 더 많은 영상:",
     "score_time_converter_title": "점수·시간 변환기",
@@ -546,7 +467,6 @@
     "bySchool": "학원별",
     "school": "학원별",
     "percentage": "%",
-    "count": "횟수",
     "change": "증감",
     "emblemSummary": "총 {{counts}}건, 설정률: {{rate}}%"
   },
@@ -560,37 +480,12 @@
       "prediction": "빗금 처리된 항목은 선행 서버 기준의 예측 일정으로 변경될 수 있습니다."
     },
     "distribute": "(배포: {{name}})",
-    "fest": "Fes",
-    "limited": "한정",
     "track": {
       "raid": "총력전·대결전",
-      "event": "이벤트",
-      "multifloor": "제약해제결전",
-      "campaign": "캠페인",
-      "pickup": "모집",
       "birthday": "생일",
       "birthday-suffix": "생일",
-      "story": "스토리",
-      "misc": "기타",
       "maintenance": "점검",
       "patch": "패치"
-    },
-    "campaign": {
-      "hard": "하드",
-      "bounty": "현상수배",
-      "schedule": "스케쥴",
-      "scrimmage": "학원교류회",
-      "normal": "노멀",
-      "commission": "특별의뢰"
-    },
-    "jfd": {
-      "shooting": "사격시험",
-      "defense": "방어시험",
-      "breakthrough": "돌파시험",
-      "escort": "호위시험"
-    },
-    "story": {
-      "mini": "미니스토리: {{title}}"
     },
     "misc": {
       "shop-reset": "일반 상점 초기화"
@@ -598,6 +493,16 @@
     "widget": {
       "view-more": "전체 일정 보기"
     },
-    "scrollToNow": "현재 시간으로 스크롤"
+    "scrollToNow": "현재 시간으로 스크롤",
+    "campaign": {
+      "hard": "하드",
+      "bounty": "현상수배",
+      "scrimmage": "학원교류회",
+      "normal": "노멀",
+      "commission": "특별의뢰"
+    },
+    "story": {
+      "mini": "미니스토리: {{title}}"
+    }
   }
 }

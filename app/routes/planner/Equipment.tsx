@@ -39,6 +39,18 @@ import { CustomNumberInput } from '~/components/CustomInput';
 import type { AppHandle } from '~/types/link';
 import { StatCard, MultiplierSeg, PaneHeader } from '~/components/planner/Equipment/EquipmentPrimitives';
 
+const equipmentTypeLabelKey = {
+  Hat: 'equipments.hat',
+  Gloves: 'equipments.gloves',
+  Shoes: 'equipments.shoes',
+  Bag: 'equipments.bag',
+  Badge: 'equipments.badge',
+  Hairpin: 'equipments.hairpin',
+  Charm: 'equipments.charm',
+  Watch: 'equipments.watch',
+  Necklace: 'equipments.necklace',
+} as const;
+
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
@@ -103,6 +115,8 @@ export const handle: AppHandle = {
 export default function EquipmentPlannerV2() {
   const { title } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
 
@@ -615,7 +629,7 @@ export default function EquipmentPlannerV2() {
         >
           {/* Settings */}
           <div className="shrink-0 border-b border-neutral-100 dark:border-neutral-800">
-            <PaneHeader>{t('equipment.settings')}</PaneHeader>
+            <PaneHeader>{t_ui('settings')}</PaneHeader>
             <div className="px-3 py-2 grid grid-cols-[72px_1fr] gap-x-2 gap-y-2 text-xs">
               <label className="text-neutral-500 dark:text-neutral-400 flex items-center">{t('equipment.source')}</label>
               <select
@@ -650,13 +664,13 @@ export default function EquipmentPlannerV2() {
               </div>
               <div className="flex gap-1">
                 <button onClick={handleSelectAllPlans} className="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200">
-                  {t('equipment.studentPlanSelectAll')}
+                  {t_ui('selectAll')}
                 </button>
                 <button
                   onClick={handleDeselectAllPlans}
                   className="text-[10px] px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600"
                 >
-                  {t('equipment.studentPlanDeselectAll')}
+                  {t_ui('deselectAll')}
                 </button>
               </div>
             </div>
@@ -714,7 +728,7 @@ export default function EquipmentPlannerV2() {
                       );
                     })}
                   </div>
-                  {filteredGrowthPlans.length === 0 && <p className="text-center text-xs text-neutral-400 py-4">{t('equipment.studentSearchEmpty')}</p>}
+                  {filteredGrowthPlans.length === 0 && <p className="text-center text-xs text-neutral-400 py-4">{t_ui('searchStudents')}</p>}
                 </>
               )}
             </div>
@@ -760,7 +774,7 @@ export default function EquipmentPlannerV2() {
                       {equipmentTypeToBlueprint[type] && iconData.Equipment?.[String(equipmentTypeToBlueprint[type])] && (
                         <img src={`data:image/webp;base64,${iconData.Equipment[String(equipmentTypeToBlueprint[type])]}`} alt={type} className="w-8 h-8 shrink-0" loading="lazy" />
                       )}
-                      <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 truncate min-w-12">{t(`common.${type}`)}</span>
+                      <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 truncate min-w-12">{t_g(equipmentTypeLabelKey[type])}</span>
                       <CustomNumberInput
                         value={owned}
                         onChange={(e) => setBlueprint(type, Math.max(0, Math.min(9999, e || 0)))}

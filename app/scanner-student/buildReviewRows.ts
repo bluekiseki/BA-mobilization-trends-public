@@ -26,14 +26,7 @@ function toReviewRow(result: StudentResult, growthPlans: GrowthPlan[], portraits
   };
 }
 
-// A video scroll can pass the same student more than once, or a stable frame can misfire —
-// dedupe by studentId, keeping the highest-confidence result per student. Unmatched results
-// (student === null) are kept individually since there is no id to dedupe on.
-//
-// Called once per recognized frame as results stream in live (see StudentScanCallbacks.onResult
-// in pipeline.client.ts), so a row the user has already hand-edited (row.edited) is left alone
-// instead of being silently overwritten by a later, possibly-lower-quality detection of the
-// same student.
+// Dedupe by studentId (keeping highest-confidence), but leave already-edited rows untouched.
 export function mergeReviewRow(
   rows: StudentReviewRow[],
   result: StudentResult,

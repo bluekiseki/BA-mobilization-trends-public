@@ -36,12 +36,6 @@ type StoreActions = {
 
 type RenderItemIcon = (key: string, size: number, amount: number) => ReactNode;
 
-// function computeCost(units: number, todayPurchases: number, costFirst: number, costAfter: number | undefined): number {
-//   if (!costAfter) return units * costFirst;
-//   const firstSlots = Math.max(0, 1 - todayPurchases);
-//   return Math.min(units, firstSlots) * costFirst + Math.max(0, units - firstSlots) * costAfter;
-// }
-
 function CoinShopCard({
   entry,
   date,
@@ -55,6 +49,7 @@ function CoinShopCard({
   refreshCost,
 }: { entry: PurchasePanelEntry; date: string; rangeMin?: string; rangeMax?: string; renderItemIcon?: RenderItemIcon; refreshCost?: number } & StoreActions) {
   const { t } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
   const { gainItemKey, label, shopItem, coinKey, availableFrom, sourceType, isAtMax } = entry;
   const { gainAmount, costPerBundle, /*tierCostAfterFirst,*/ monthlyLimit, dailyLimit } = shopItem;
   const isRange = !!(rangeMin && rangeMax && rangeMin !== rangeMax);
@@ -141,7 +136,7 @@ function CoinShopCard({
               onClick={handleAdd}
               className="px-2 py-0.5 text-[10px] rounded bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {t('purchasePanel.apply')}
+              {t_ui('apply')}
             </button>
             <span className="text-[10px] text-neutral-400 dark:text-neutral-500 flex-1 min-w-0 truncate">
               {/* +{count * gainAmount} · −{cost.toLocaleString()} */}
@@ -154,7 +149,7 @@ function CoinShopCard({
                     onClick={() => (isRange ? removePurchasesInRange(gainItemKey, coinKey, rangeMin, rangeMax) : removePurchaseEvent(ev.id))}
                     className="px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 text-xs font-semibold transition-colors"
                   >
-                    {t('purchasePanel.cancel')}
+                    {t_ui('cancel')}
                   </button>
                 </span>
               ))}

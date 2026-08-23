@@ -17,8 +17,9 @@ interface RaidHeaderProps {
   showType?: boolean;
 }
 export default function RaidHeader({ raidInfo, server, isGrandAssault, allData, showType }: RaidHeaderProps) {
-  const { t: t_c, i18n } = useTranslation('common');
-  const raidTypeLabel = isGrandAssault ? t_c('eraid') : t_c('raid');
+  const { i18n } = useTranslation('common');
+  const { t: t_g } = useTranslation('game');
+  const raidTypeLabel = isGrandAssault ? t_g('eraid') : t_g('raid');
 
   return (
     <header className="w-full">

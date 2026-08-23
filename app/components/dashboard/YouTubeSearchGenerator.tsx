@@ -66,6 +66,8 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
   const { t, i18n } = useTranslation('dashboard', {
     keyPrefix: 'searchYouTube',
   });
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const locale = i18n.language as Locale;
 
   const isGrandAssault = !isTotalAssault(raidInfo);
@@ -290,7 +292,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
             <div className="space-y-4">
               {/* Language Selection */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold shrink-0 text-neutral-600 dark:text-neutral-400">{t('language')}:</span>
+                <span className="text-sm font-semibold shrink-0 text-neutral-600 dark:text-neutral-400">{t_ui('language')}:</span>
                 <div className="flex gap-2 flex-wrap">
                   {SUPORTED_LOCALES.map((lang) => (
                     <button
@@ -306,7 +308,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
 
               {/* Difficulty Selection */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold shrink-0 text-neutral-600 dark:text-neutral-400">{t('difficulty')}:</span>
+                <span className="text-sm font-semibold shrink-0 text-neutral-600 dark:text-neutral-400">{t_g('difficulty')}:</span>
                 <div className="flex gap-2 flex-wrap">
                   {searchableDifficulties.map((diff) => (
                     <button
@@ -356,7 +358,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
 
                   <label className="flex items-center gap-1.5 cursor-pointer hover:text-blue-500 transition-colors">
                     <input type="checkbox" checked={includeDateRange} onChange={() => setIncludeDateRange((v) => !v)} className="rounded accent-blue-500 w-4 h-4" />
-                    <span>{t('dateRange')}</span>
+                    <span>{t_ui('period')}</span>
                   </label>
 
                   {/* Defense/Attack type toggle (renders only when showType is active) */}
@@ -391,7 +393,7 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
                 className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition-colors ${copied ? 'bg-green-500 text-white shadow-md' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
               >
                 {copied ? <FiCheck size={18} /> : <FiClipboard size={18} />}
-                {copied ? t('copied') : t('copy')}
+                {copied ? t_ui('copied') : t_ui('copy')}
               </button>
               <button
                 onClick={handleYouTubeSearch}

@@ -149,7 +149,7 @@ const GiftItem = React.memo(
 
     return (
       <div
-        className={`group flex flex-col p-1.5 w-full max-w-[110px] mx-auto bg-white dark:bg-neutral-800 rounded-md transition-colors ${isSelected ? 'ring-2 ring-pink-400 dark:ring-pink-500' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/50'}`}
+        className={`group flex flex-col p-1.5 w-full max-w-27.5 mx-auto bg-white dark:bg-neutral-800 rounded-md transition-colors ${isSelected ? 'ring-2 ring-pink-400 dark:ring-pink-500' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/50'}`}
       >
         <div
           onClick={onSelect}

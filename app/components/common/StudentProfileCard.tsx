@@ -30,11 +30,13 @@ interface Props {
 export default function StudentProfileCard({ portraitData }: Props) {
   const [studentData, setStudentsData] = useState<Record<string, Student>>({});
   // const { t, i18n } = useTranslation('planner');
-  const { t, i18n } = useTranslation(['planner', 'stat']);
+  const { t, i18n } = useTranslation(['planner', 'game', 'stat']);
   const { t: t_club } = useTranslation('club');
-  const { t: t_chart } = useTranslation('charts');
+  const { t: t_chart } = useTranslation('game');
+  const { t: t_g } = useTranslation('game');
 
   const locale = i18n.language as Locale;
+  const lowerFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
   const t_chart_dynamic = t_chart as (key: string) => string;
 
   const { selectedStudentId: studentId } = useChartControlsStore(
@@ -152,6 +154,15 @@ export default function StudentProfileCard({ portraitData }: Props) {
     Sub: 'bg-neutral-400 text-white',
   };
 
+  const getSkillTypeKey = (type: string): 'game:skill.ex' | 'game:skill.normal' | 'game:skill.passive' | 'game:skill.sub' => {
+    const baseType = type.replace('+', '').toLowerCase();
+    if (baseType === 'ex') return 'game:skill.ex';
+    if (baseType === 'normal') return 'game:skill.normal';
+    if (baseType === 'passive') return 'game:skill.passive';
+    if (baseType === 'sub') return 'game:skill.sub';
+    return 'game:skill.normal';
+  };
+
   return (
     <div className="flex flex-col w-full text-left">
       {/* 1. Header Area: Layout photo and information side-by-side */}
@@ -213,10 +224,10 @@ export default function StudentProfileCard({ portraitData }: Props) {
             {/* Unit Type / Tactical Role */}
             <div className="flex items-center gap-1.5 rounded overflow-hidden">
               <span className="text-xs font-bold text-white px-2 py-1" style={{ backgroundColor: squadTypeColors[student.SquadType] || '#666' }}>
-                {t_chart_dynamic(`ranking.control.squad_type_${student.SquadType.toLowerCase()}`)}
+                {t_chart_dynamic(`squad_type.${lowerFirst(student.SquadType)}`)}
               </span>
               <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 px-2 py-1 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                {t_chart_dynamic(`ranking.control.tactic_role_${student.TacticRole}`)}
+                {t_chart_dynamic(`tactic_roles.${lowerFirst(student.TacticRole)}`)}
               </span>
             </div>
           </div>
@@ -227,7 +238,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
       {displayedGifts.length > 0 && (
         <div className="border-b border-neutral-200 dark:border-neutral-700">
           <div onClick={() => setIsGiftsOpen(!isGiftsOpen)} className="flex justify-between items-center w-full px-3 py-3 hover:opacity-70 transition-opacity cursor-pointer">
-            <span className="text-base font-semibold text-neutral-700 dark:text-neutral-200">{t('label.favorGifts')}</span>
+            <span className="text-base font-semibold text-neutral-700 dark:text-neutral-200">{t_g('gift')}</span>
             <div className="flex items-center gap-2">
               <Link
                 to={localeLink(locale, '/utils/favor')}
@@ -303,7 +314,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
               }}
               className={`text-xs font-bold px-2 py-1 rounded-sm border transition-colors ${showUW ? 'bg-amber-500 text-white border-amber-500' : 'bg-transparent text-neutral-400 border-neutral-300 dark:border-neutral-600 hover:border-amber-400'}`}
             >
-              {t('common.uniqueWeapon')}
+              {t('game:uniqueWeapon')}
             </button>
             {hasGear && (
               <button
@@ -313,7 +324,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                 }}
                 className={`text-xs font-bold px-2 py-1 rounded-sm border transition-colors ${showUE ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-transparent text-neutral-400 border-neutral-300 dark:border-neutral-600 hover:border-emerald-400'}`}
               >
-                {t('common.gear')}
+                {t('game:gear')}
               </button>
             )}
             {isSkillsOpen ? <HiChevronUp className="text-neutral-400" /> : <HiChevronDown className="text-neutral-400" />}
@@ -327,7 +338,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm ${SKILL_BADGE[skill.type] ?? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500'}`}>
-                      {skill.type.includes('+') ? t(`common.${skill.type.replace('+', '').toLowerCase() as 'ex' | 'sub'}`) + '+' : t(`common.${skill.type.toLowerCase() as 'ex' | 'sub'}`)}
+                      {skill.type.includes('+') ? t(getSkillTypeKey(skill.type)) + '+' : t(getSkillTypeKey(skill.type))}
                     </span>
                     <span className="text-sm font-bold text-neutral-700 dark:text-neutral-200 truncate leading-tight">{skill.Name}</span>
                   </div>
@@ -338,7 +349,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                   >
                     {Array.from({ length: skill.type === 'EX' ? 5 : 10 }, (_, i) => (
                       <option key={i + 1} value={i + 1} className="dark:bg-neutral-800 text-black dark:text-white">
-                        {t('common.level')} {i + 1}
+                        {t('game:level')} {i + 1}
                       </option>
                     ))}
                   </select>
@@ -347,7 +358,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                 {skill.type === 'EX' && skill.Cost && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-black text-blue-500/80 uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 px-1 rounded-sm">
-                      {t('common.cost')} {skill.Cost[(skill.type === 'EX' ? exLevel : normalLevel) - 1]}
+                      {t('game:cost')} {skill.Cost[(skill.type === 'EX' ? exLevel : normalLevel) - 1]}
                     </span>
                   </div>
                 )}
@@ -397,7 +408,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                       }}
                       className="text-xs font-bold px-2 py-1 rounded-sm border transition-colors bg-transparent text-neutral-400 border-neutral-300 dark:border-neutral-600 hover:border-blue-400"
                     >
-                      {isTitlesRevealed ? t('label.story_rank_title') : t('label.story_rank_only')}
+                      {isTitlesRevealed ? t('label.story_rank_title') : t_g('rank')}
                     </button>
                     <button
                       onClick={() => {
@@ -451,9 +462,9 @@ export default function StudentProfileCard({ portraitData }: Props) {
                       >
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="font-bold text-blue-600 dark:text-blue-400">
-                            {t('common.rank')} {story.favor_rank}
+                            {t('game:rank')} {story.favor_rank}
                           </span>
-                          {isGear && <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{t('common.gear')}</span>}
+                          {isGear && <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">{t('game:gear')}</span>}
                           {story.memorial && (
                             <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">{t('label.story_memorial')}</span>
                           )}

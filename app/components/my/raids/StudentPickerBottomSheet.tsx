@@ -16,7 +16,7 @@ interface StudentPickerBottomSheetProps {
 }
 
 export function StudentPickerBottomSheet({ isOpen, students, portraitData, locale, onSelect, onClose }: StudentPickerBottomSheetProps) {
-  const { t: tc } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const { t: tch } = useTranslation('charts');
   if (!isOpen) return null;
 
@@ -30,7 +30,7 @@ export function StudentPickerBottomSheet({ isOpen, students, portraitData, local
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
           <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{tch('heatmap.control.selectStudent')}</h3>
-          <button type="button" onClick={onClose} className="rounded-full p-2 text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800" aria-label={tc('close')}>
+          <button type="button" onClick={onClose} className="rounded-full p-2 text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800" aria-label={t_ui('close')}>
             <HiOutlineXMark className="h-5 w-5" />
           </button>
         </div>

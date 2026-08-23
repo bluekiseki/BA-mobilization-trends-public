@@ -20,7 +20,7 @@ export const CATEGORY_I18N: Record<string, string> = {
   eleph: 'item.eleph',
   xpReports: 'label.xpReports',
   equipEnh: 'label.equipEnh',
-  uwGrowth: 'common.uniqueWeapon',
+  uwGrowth: 'game:uniqueWeapon',
   potential: 'label.potential',
   opart: 'label.opart',
   tacticalBD: 'label.tacticalBD',
@@ -76,7 +76,7 @@ export const NeedsGrid = ({
   sortByDeficit = false,
   showFulfillmentBadge = false,
 }: NeedsGridProps) => {
-  const { t } = useTranslation('planner');
+  const { t } = useTranslation(['planner', 'game']);
   const tStr = t as (k: string) => string;
   const hasAnyInventory = Object.keys(materialInventory).length > 0;
 

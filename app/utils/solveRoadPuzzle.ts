@@ -14,11 +14,8 @@
 //   - G's door side is auto-detected (single accessible neighbor) or overridden.
 //   - When inventory is supplied only tile types with remaining > 0 are used,
 //     and per-type usage is tracked.
-//
-// Algorithm: DFS with cost-bound pruning and goal-directed move ordering.
-// Goal-directed ordering: moves whose next cell is closer to G (Manhattan)
-// are tried first. This finds a good first solution quickly, making the
-// cost-bound prune most of the remaining search space.
+
+// Pre-placed rails mandatory; each cell visited once.
 
 export type Cell =
   | { type: 'x' } // wall (impassable)
@@ -79,9 +76,8 @@ function getExits(entry: number, tileType: 1 | 2 | 3): number[] {
 // [remaining type1, remaining type2, remaining type3]; -1 = unlimited
 type Rem = [number, number, number];
 
-// inventory: tileType → available count (undefined = no limit)
-// goalEntryOverride: explicit door side for G (auto-detected when omitted)
-// startEntryOverride: restrict the first move out of S to a single side (all 6 sides tried when omitted)
+// inventory: tileType → available count (undefined = no limit). goalEntryOverride/startEntryOverride
+// restrict G's door / S's first exit to one side (all sides tried when omitted).
 export function solveRoadPuzzle(grid: Grid, rowOffset: 0 | 1 = 0, inventory?: Record<number, number>, goalEntryOverride?: number, startEntryOverride?: number): SolveResult {
   const rows = grid.length;
   const cols = rows > 0 ? grid[0].length : 0;

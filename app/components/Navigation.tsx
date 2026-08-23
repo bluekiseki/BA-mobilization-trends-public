@@ -85,7 +85,7 @@ const LanguageBannerAnimationWrapper = ({ show, onExited, children }: { show: bo
   return (
     // Outer: Height animation. overflow-hidden while opening, overflow-visible after fully opened (for dropdowns)
     <div
-      className={`transition-[max-height,opacity] duration-1000 ease-in-out ${animate ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'} ${isFullyOpen ? 'overflow-visible' : 'overflow-hidden'}`}
+      className={`transition-[max-height,opacity] duration-1000 ease-in-out ${animate ? 'max-h-50 opacity-100' : 'max-h-0 opacity-0'} ${isFullyOpen ? 'overflow-visible' : 'overflow-hidden'}`}
       onTransitionEnd={() => {
         if (animate) setIsFullyOpen(true);
       }}
@@ -187,6 +187,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
   const openSidebar = useHelpStore((state) => state.openSidebar);
 
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_ui } = useTranslation('ui');
 
   // Close dropdown on outside click
   useOutsideClick(ref, () => setIsOpen(false));
@@ -233,7 +234,7 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
                 // onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
               >
-                <HiOutlineMail className="text-lg" /> {t('email')}
+                <HiOutlineMail className="text-lg" /> {t_ui('email')}
               </span>
             </ContactButton>
 
@@ -257,6 +258,7 @@ const MoreDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; i
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   // Nav labels live under common:navigation (not the jukebox/notices/planner namespaces they
   // link to) so opening the nav doesn't drag in those whole namespaces just for one label each.
   const { t: t_nav } = useTranslation('common', { keyPrefix: 'navigation' });
@@ -281,7 +283,7 @@ const MoreDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; i
           isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
         }`}
       >
-        {t_c('etc')}
+        {t_ui('etc')}
         <HiChevronDown className={`text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -307,13 +309,14 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_ui } = useTranslation('ui');
 
   useOutsideClick(ref, () => setIsOpen(false));
 
   const plannerItems = [
     { key: 'event', to: '/planner/event', label: t('eventPlanner') },
     { key: 'gacha', to: '/planner/gacha', label: t('gachaPlanner') },
-    { key: 'students', to: '/planner/students', label: t('studentGrowthPlanner') },
+    { key: 'students', to: '/planner/students', label: t_ui('studentGrowthPlanner') },
     { key: 'equipment', to: '/planner/equipment', label: t('equipmentFarmingPlanner') },
     { key: 'favor', to: '/utils/favor', label: t('favorCalculator') },
   ];
@@ -350,12 +353,13 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
 
 const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_ui } = useTranslation('ui');
   const isPlannerActive = /\/planner\/|\/utils\/favor/.test(pathname);
 
   const plannerItems = [
     { key: 'event', to: '/planner/event', label: t('eventPlanner') },
     { key: 'gacha', to: '/planner/gacha', label: t('gachaPlanner') },
-    { key: 'students', to: '/planner/students', label: t('studentGrowthPlanner') },
+    { key: 'students', to: '/planner/students', label: t_ui('studentGrowthPlanner') },
     { key: 'equipment', to: '/planner/equipment', label: t('equipmentFarmingPlanner') },
     { key: 'favor', to: '/utils/favor', label: t('favorCalculator') },
   ];
@@ -385,6 +389,7 @@ const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pat
 const MobileMoreGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
   const { t: t_c } = useTranslation('common');
   const { t: t_nav } = useTranslation('common', { keyPrefix: 'navigation' });
+  const { t: t_ui } = useTranslation('ui');
   const isMoreActive = /\/utils\/jukebox|\/notices|\/calendar(?:\/|$)|\/scanner\//.test(pathname);
 
   const calendarPath = '/calendar';
@@ -399,7 +404,7 @@ const MobileMoreGroup = ({ locale, pathname, onClose }: { locale: Locale; pathna
 
   return (
     <div className="flex flex-col gap-2">
-      <span className={`text-base font-bold ${isMoreActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>{t_c('etc')}</span>
+      <span className={`text-base font-bold ${isMoreActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>{t_ui('etc')}</span>
       <div className="flex flex-col gap-3 pl-3 border-l-2 border-neutral-100 dark:border-neutral-800">
         {moreItems.map((item) => {
           const isActive = pathname.includes(item.to);
@@ -427,6 +432,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
   const { t, i18n } = useTranslation('common', { keyPrefix: 'navigation' });
   const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { pathname } = useLocation();
 
@@ -482,7 +488,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                   to={localeLink(locale, link.path(country))}
                   className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'}`}
                 >
-                  {t(link.label)}
+                  {link.label == 'ranking' ? t_ui('ranking') : t(link.label)}
                 </Link>
               );
             })}
@@ -523,7 +529,7 @@ export const Navigation = ({ reqLocale }: { reqLocale: Locale }) => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`text-base font-bold transition-colors ${isActive ? 'text-neutral-900 dark:text-white underline decoration-yellow-500 decoration-2 underline-offset-4' : 'text-neutral-500 dark:text-neutral-400'}`}
                   >
-                    {t(link.label)}
+                    {link.label == 'ranking' ? t_ui('ranking') : t(link.label)}
                   </Link>
                 );
               })}

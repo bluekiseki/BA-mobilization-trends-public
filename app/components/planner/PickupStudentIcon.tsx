@@ -25,7 +25,7 @@ interface PickupStudentIconProps {
 }
 
 export function PickupStudentIcon({ portrait, name, studentId, rerun, fest, limited, bulletType, locale }: PickupStudentIconProps) {
-  const { t: tc } = useTranslation('common');
+  const { t: tg } = useTranslation('game');
 
   return (
     <Tooltip placement="top" overlay={<span className="text-xs font-bold">{name}</span>} mouseEnterDelay={0.05}>
@@ -33,10 +33,10 @@ export function PickupStudentIcon({ portrait, name, studentId, rerun, fest, limi
         {portrait && <img src={`data:image/webp;base64,${portrait}`} alt={name} className="w-full h-full object-cover object-top" />}
         {bulletType && <div className="h-1 w-full absolute bottom-0" style={{ backgroundColor: BULLET_COLORS[bulletType] }} />}
         <div className="absolute top-0 -left-0.5 -right-0.5 flex justify-between px-0.5 pointer-events-none">
-          {rerun ? <span className="bg-blue-600/90 text-white text-[9px] font-black px-1 rounded-sm backdrop-blur-[1px] whitespace-nowrap">{tc('rerun')}</span> : <span />}
+          {rerun ? <span className="bg-blue-600/90 text-white text-[9px] font-black px-1 rounded-sm backdrop-blur-[1px] whitespace-nowrap">{tg('rerun')}</span> : <span />}
           <div className="flex gap-px">
-            {fest && <span className="bg-amber-500/90 text-white text-[8px] font-black px-1 rounded-sm whitespace-nowrap">{tc('fest')}</span>}
-            {!fest && limited && <span className="bg-pink-600/90 text-white text-[8px] font-black px-1 rounded-sm whitespace-nowrap">{tc('limited')}</span>}
+            {fest && <span className="bg-amber-500/90 text-white text-[8px] font-black px-1 rounded-sm whitespace-nowrap">{tg('fest')}</span>}
+            {!fest && limited && <span className="bg-pink-600/90 text-white text-[8px] font-black px-1 rounded-sm whitespace-nowrap">{tg('limitedShort')}</span>}
           </div>
         </div>
       </Link>

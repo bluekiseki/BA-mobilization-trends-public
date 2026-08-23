@@ -115,7 +115,7 @@ export const StudentGridCard = ({ plan, studentInfo, portraitBase64, onClick }: 
         </div>
       </div>
 
-      <div className="mt-auto border-t border-neutral-100 pt-1.5 font-mono text-[10px] leading-snug dark:border-neutral-700">
+      <div className="mt-auto border-t h-13 border-neutral-100 pt-1.5 font-mono text-[10px] leading-snug dark:border-neutral-700">
         <div className="mb-1 flex justify-between gap-0.5">
           <StatChange label="Lv" current={plan.current.level} target={plan.target.level} />
           <StatChange label={<FaHeart className="inline text-pink-400" size={8} />} current={plan.current.affection} target={plan.target.affection} />

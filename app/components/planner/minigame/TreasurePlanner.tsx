@@ -391,6 +391,7 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
   const [isSimulating, setIsSimulating] = useState(false);
 
   const { t } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
 
   const {
     treasureSimConfig: config,
@@ -579,7 +580,7 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400' : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600'}`}
               >
-                {t(tabKey)}
+                {tabKey == 'treasure.tabCalculator' ? t_ui('calculator') : t(tabKey)}
               </button>
             );
           })}

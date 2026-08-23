@@ -119,6 +119,8 @@ function JfdSection({ jfd }: { jfd: JfdProps }) {
 
 function RaidSection({ raid }: { raid: RaidProps }) {
   const { t, i18n } = useTranslation('resources');
+  const { t: t_ui } = useTranslation('ui');
+
   const { isRaid } = raid;
   const locale = i18n.language as Locale;
   const globalConfig = isRaid ? raid.raidGlobalConfig : raid.eraidGlobalConfig;
@@ -137,7 +139,7 @@ function RaidSection({ raid }: { raid: RaidProps }) {
               onClick={() => raid.onUpdate({ [globalKey]: null })}
               className="px-2 py-0.5 text-[11px] font-semibold rounded text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
-              {t('income.clear')}
+              {t_ui('delete')}
             </button>
           )}
         </div>
@@ -314,7 +316,7 @@ function WBSection({ wb }: { wb: WBProps }) {
 
 export function ItemIncomeSection({ selectedItemKey, pvp, jfd, raid, expertPermit, wb }: ItemIncomeSectionProps) {
   const { t } = useTranslation('resources');
-  const { t: tCommon } = useTranslation('common');
+  const { t: tGame } = useTranslation('game');
   const isRaidKey = selectedItemKey === 'Item_7' || selectedItemKey === 'Item_9';
   const isEraidKey = selectedItemKey === 'Item_70' || selectedItemKey === 'Item_71';
   const isPvpKey = selectedItemKey === 'Item_8';
@@ -325,13 +327,13 @@ export function ItemIncomeSection({ selectedItemKey, pvp, jfd, raid, expertPermi
   const isVisible = isRaidKey || isEraidKey || isPvpKey || isJfdKey || isExpertKey || isWBKey;
 
   const sectionTitle = useMemo(() => {
-    if (isPvpKey) return tCommon('tacticalChallenge');
-    if (isJfdKey) return tCommon('jfd');
-    if (isRaidKey) return tCommon('raid');
-    if (isEraidKey) return tCommon('eraid');
-    if (isWBKey) return tCommon('finalRestrictionWB');
-    return tCommon('expertPermit');
-  }, [isPvpKey, isJfdKey, isRaidKey, isEraidKey, isWBKey, tCommon]);
+    if (isPvpKey) return tGame('tacticalChallenge');
+    if (isJfdKey) return tGame('jfd');
+    if (isRaidKey) return tGame('raid');
+    if (isEraidKey) return tGame('eraid');
+    if (isWBKey) return tGame('multifloor');
+    return tGame('expertPermit');
+  }, [isPvpKey, isJfdKey, isRaidKey, isEraidKey, isWBKey, tGame]);
 
   if (!isVisible) return null;
 

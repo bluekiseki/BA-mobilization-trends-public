@@ -76,6 +76,7 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
   const [isExpanded, setIsExpanded] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState<number>(() => {
+    if (typeof window === 'undefined') return 100;
     const saved = localStorage.getItem('jukebox-volume');
     return saved !== null ? Number(saved) : 100;
   });

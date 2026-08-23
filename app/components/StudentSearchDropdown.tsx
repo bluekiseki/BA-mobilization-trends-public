@@ -18,14 +18,21 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
   const [showDropdown, setShowDropdown] = useState(false);
   const selectedStudent = selectedStudentId ? students[selectedStudentId] : null;
   const { t, i18n } = useTranslation('charts', { keyPrefix: 'heatmap.control' });
-  const { t: t_student } = useTranslation('charts', {
-    keyPrefix: 'ranking.control',
+  const { t: t_tactic_role } = useTranslation('game', {
+    keyPrefix: 'tactic_roles',
+  });
+  const { t: t_squad_type } = useTranslation('game', {
+    keyPrefix: 'squad_type',
   });
   const { t: t_club } = useTranslation('club');
 
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
-  const t_student_dynamic = t_student as (key: string) => string;
+  const lowerFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
+
+  // const t_student_dynamic = t_student as (key: string) => string;
+  const t_tactic_role_dynamic = t_tactic_role as (key: string) => string;
+  const t_squad_type_dynamic = t_squad_type as (key: string) => string;
 
   const squadTypeColors: Record<string, string> = {
     Main: '#cc1a25',
@@ -53,9 +60,9 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
       const tagsMatch = student.SearchTags.some((tag) => matcher(tag, searchText));
       const familyNameMatch = matcher(student.FamilyName || '', searchText);
       const schoolMatch = matcher(t_club(student.School, student.School), t_club(searchText, searchText));
-      const roleString = t_student_dynamic(`tactic_role_${student.TacticRole}`);
+      const roleString = t_tactic_role_dynamic(lowerFirst(student.TacticRole));
       const roleMatch = matcher(roleString, searchText);
-      const squadTypeString = t_student_dynamic(`squad_type_${student.SquadType.toLowerCase()}`);
+      const squadTypeString = t_squad_type_dynamic(lowerFirst(student.SquadType));
       const squadTypeMatch = matcher(squadTypeString, searchText);
 
       const isMatch = nameMatch || tagsMatch || familyNameMatch || schoolMatch || roleMatch || squadTypeMatch;
@@ -164,9 +171,9 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
                       </span>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-xs font-semibold rounded-full px-2 py-0.5 text-white" style={{ backgroundColor: squadTypeColors[student.SquadType] || '#666' }}>
-                          {t_student_dynamic(`squad_type_${student.SquadType.toLowerCase()}`)}
+                          {t_squad_type_dynamic(lowerFirst(student.SquadType))}
                         </span>
-                        <span className="text-sm text-neutral-600 dark:text-neutral-400 font-medium transition-colors duration-300">{t_student_dynamic(`tactic_role_${student.TacticRole}`)}</span>
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400 font-medium transition-colors duration-300">{t_tactic_role_dynamic(lowerFirst(student.TacticRole))}</span>
                       </div>
                     </div>
 

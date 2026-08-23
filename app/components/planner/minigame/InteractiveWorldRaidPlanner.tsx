@@ -104,6 +104,8 @@ function RewardIcons({ rewards, eventData, iconData }: { rewards: Record<string,
 export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'interactive_world_raid' });
 
+  const { t: t_g } = useTranslation('game');
+
   const [activeTab, setActiveTab] = useState<'calc' | 'ticket'>('calc');
   const [activePhase, setActivePhase] = useState(INITIAL_ACTIVE_PHASE);
   const [maxRevealedPhase, setMaxRevealedPhase] = useState(INITIAL_REVEALED_PHASE);
@@ -460,7 +462,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
             className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
           />
           <span className="text-sm font-bold text-neutral-700 dark:text-neutral-200">{bossName}</span>
-          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t('story')}</span>
+          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t_g('story')}</span>
         </label>
         {hasRewards && <RewardIcons rewards={storyRewards} eventData={eventData} iconData={iconData} />}
       </div>
@@ -482,7 +484,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
             className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500 accent-blue-500"
           />
           <span className="text-sm font-bold text-neutral-700 dark:text-neutral-200">{name}</span>
-          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t('story')}</span>
+          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t_g('story')}</span>
         </label>
         {hasRewards && <RewardIcons rewards={rewards} eventData={eventData} iconData={iconData} />}
       </div>
@@ -706,7 +708,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
                       </button>
                       {pyroCostPerDay > 0 && (
                         <span className="text-xs text-neutral-400 ml-auto tabular-nums">
-                          {pyroCostPerDay.toLocaleString()} {t('pyro_unit')}/{t('days_unit')}
+                          {pyroCostPerDay.toLocaleString()} {t_g('pyro_unit')}/{t('days_unit')}
                         </span>
                       )}
                     </div>

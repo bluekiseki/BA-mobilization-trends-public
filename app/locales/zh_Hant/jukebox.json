@@ -9,9 +9,6 @@
     "hide_story_names": "隱藏故事標題",
     "view_all_details": "展開所有詳情",
     "hide_all_details": "收合所有詳情",
-    "close": "關閉",
-    "select_all": "全選",
-    "deselect_all": "全不選",
     "deselect_all_searched": "取消選取所有搜尋到的學生",
     "select_all_searched": "選取所有搜尋到的學生"
   },
@@ -38,7 +35,6 @@
     "stop_after": "播放後停止"
   },
   "status": {
-    "loading": "載入資料中...",
     "error": "發生錯誤。"
   },
   "meta": {
@@ -50,12 +46,11 @@
     "sort_order": "排序順序"
   },
   "category": {
-    "work": "任務",
-    "raid": "總力戰",
     "group_story": "社團故事",
     "mini_story": "迷你故事",
     "work_story": "工作劇情(Work Story)",
-    "other": "其他（UI 等）"
+    "other": "其他（UI 等）",
+    "work": "任務"
   },
   "prefix": {
     "main_story": "[主線]",
@@ -71,32 +66,34 @@
     "work_story": "[工作]"
   },
   "main_story": {
-    "vol1_ch1": "Vol.1 Ch.1",
-    "vol1_ch2": "Vol.1 Ch.2",
-    "vol1_ch3": "Vol.1 Ch.3",
-    "vol2_ch1": "Vol.2 Ch.1",
-    "vol2_ch2": "Vol.2 Ch.2",
-    "vol3_ch1": "Vol.3 Ch.1",
-    "vol3_ch2": "Vol.3 Ch.2",
-    "vol3_ch3": "Vol.3 Ch.3",
-    "vol3_ch4": "Vol.3 Ch.4",
-    "vol4_ch1": "Vol.4 Ch.1",
-    "vol4_ch2": "Vol.4 Ch.2",
-    "vol5_ch1": "Vol.5 Ch.1",
-    "vol5_ch2": "Vol.5 Ch.2",
-    "vol6_ch1": "Vol.6 Ch.1",
-    "vol6_ch2": "Vol.6 Ch.2",
-    "vol6_ch3": "Vol.6 Ch.3",
-    "ex_deca_ch0": "Ex. Decagrammaton Ch.0",
-    "ex_deca_ch1": "Ex. Decagrammaton Ch.1",
-    "ex_deca_ch2": "Ex. Decagrammaton Ch.2",
-    "final_ch1": "Final Vol. Ch.1",
-    "final_ch2": "Final Vol. Ch.2",
-    "final_ch3": "Final Vol. Ch.3",
-    "final_ch4": "Final Vol. Ch.4",
-    "part2_prologue": "Part.2 Prologue",
-    "part2_vol0_ch1": "Part.2 Vol.0 Ch.1",
-    "part2_ex_lore_ch1": "Part.2 Ex. Lore Ch.1",
-    "part2_ex_lore_ch2": "Part.2 Ex. Lore Ch.2"
+    "vol1_ch1": "第1部第1篇第1章對策委員會奇妙的一天",
+    "vol1_ch2": "第1部第1篇第2章失去的事物，未曾放棄的事物",
+    "vol1_ch3": "第1部第1篇第3章夢留下的痕跡",
+    "vol2_ch1": "第1部第2篇第1章復古．浪漫",
+    "vol2_ch2": "第1部第2篇第2章友情與勇氣與希望的浪漫",
+    "vol3_ch1": "第1部第3篇第1章補課開始！",
+    "vol3_ch2": "第1部第3篇第2章無法證明的難題",
+    "vol3_ch3": "第1部第3篇第3章我們的故事",
+    "vol3_ch4": "第1部第3篇第4章為了被遺忘的神祇們的垂憐經",
+    "vol4_ch1": "第1部第4篇第1章RABBIT小隊開始行動！",
+    "vol4_ch2": "第1部第4篇第2章We Were RABBITs！",
+    "vol5_ch1": "第1部第5篇第1章宛如盼望綻放的花蕾",
+    "vol5_ch2": "第1部第5篇第2章致試圖獨自綻放的你",
+    "vol6_ch1": "第1部第6篇第1章境界彼岸的風景",
+    "vol6_ch2": "第1部第6篇第2章與往日訣別",
+    "vol6_ch3": "第1部第6篇第3章獻給不逝之物的召會",
+    "ex_deca_ch0": "第1部Ex.十字神名篇第1章智慧之蛇",
+    "ex_deca_ch1": "第1部Ex.十字神名篇第2章炎之劍",
+    "ex_deca_ch2": "第1部Ex.十字神名篇第3章合一之空",
+    "final_ch1": "第1部Final篇第1章夏萊奪還作戰",
+    "final_ch2": "第1部Final篇第2章虛假的聖所攻略戰",
+    "final_ch3": "第1部Final篇第3章阿特拉哈西斯的方舟占領戰",
+    "final_ch4": "第1部Final篇第4章誘騙者決戰",
+    "part2_prologue": "第2部序幕",
+    "part2_vol0_ch1": "第2部第0篇第1章於杏花綻放的某個春日",
+    "part2_vol1_ch1": "第2部第1篇第1章",
+    "part2_vol1_ch2": "第2部第1篇第2章",
+    "part2_ex_lore_ch1": "第2部Ex.怪談追蹤篇第1章正午的陽炎",
+    "part2_ex_lore_ch2": "第2部Ex.怪談追蹤篇第2章潛伏於鐵桶之物"
   }
 }

@@ -2,7 +2,7 @@
 
 import { raidToString } from '../components/raid/raidToString';
 import { difficultyInfo } from '../components/raid/Difficulty';
-import type { DifficultySelect } from '../components/raid/Difficulty';
+import type { DifficultyName, DifficultySelect } from '../components/raid/Difficulty';
 import type { BinnedDataRow, ChartData, GameServer, RaidInfoFiltered, RawDataRow } from '~/types/data';
 import { tsvParseRows } from 'd3-dsv';
 import type { fetchCacheProcessor } from './cache';
@@ -15,7 +15,7 @@ export interface ProcessChartDataParams {
   xRange: [number, number];
   heatmapMode: 'absolute' | 'percent';
   histogramMode: 'absolute' | 'percent';
-  difficulty: DifficultySelect;
+  selectedDifficulties: Set<string>;
   xLabels: RaidInfoFiltered[];
   rawTsvData: RawDataRow[];
   locale: Locale;
@@ -74,6 +74,13 @@ function getAllCountOfHistogramclass(raindInfo: RaidInfoFiltered, difficulty: Di
   return 0;
 }
 
+function getSelectedCountOfHistogramClass(raidInfo: RaidInfoFiltered, difficulties: ReadonlySet<string>, rankStart: number, rankEnd: number, rankWidth: number) {
+  return Array.from(difficulties).reduce((count, difficulty) => {
+    if (!(difficulty in raidInfo.Cnt)) return count;
+    return count + getAllCountOfHistogramclass(raidInfo, difficulty as DifficultySelect, rankStart, rankEnd, rankWidth);
+  }, 0);
+}
+
 export const getRawTsvData = async (server: GameServer, selectedStudentId: number | null, fetchAndProcessWithCache: fetchCacheProcessor<string>) => {
   const mainDataUrl = cdn(`/w/map/${server}/${selectedStudentId}.bin`);
 
@@ -97,7 +104,7 @@ export const processChartData = ({
   xRange,
   heatmapMode,
   histogramMode,
-  difficulty: selectedDifficulty,
+  selectedDifficulties,
   xLabels,
   rawTsvData,
   locale,
@@ -126,13 +133,10 @@ export const processChartData = ({
   const maxX = allXBase.length > 0 ? Math.max(...allXBase, 0) : 150;
   const fullXRange: [number, number] = [minX, maxX];
 
+  const difficultiesToInclude = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
+
   // 1st filtering
-  const binnedData = binnedRawData
-    .filter(({ difficulty }) => {
-      if (selectedDifficulty == 'All') return true;
-      return selectedDifficulty == difficulty;
-    })
-    .filter(({ x }) => x >= xRange[0] && x <= xRange[1]);
+  const binnedData = binnedRawData.filter(({ difficulty }) => difficultiesToInclude.has(difficulty)).filter(({ x }) => x >= xRange[0] && x <= xRange[1]);
 
   const rawXTotals = new Map<number, number>();
   binnedData.forEach(({ x }) => {
@@ -197,9 +201,9 @@ export const processChartData = ({
         } else {
           const [rankStart, rankEnd] = y_prime.split('-').map((v) => parseInt(v));
           // return (xLabels[x].MaxLv > 0) ? wSum / getAllCountOfHistogramclass(
-          const count = getAllCountOfHistogramclass(xLabels[x], selectedDifficulty, rankStart, rankEnd, rankWidth);
+          const count = getSelectedCountOfHistogramClass(xLabels[x], difficultiesToInclude, rankStart, rankEnd, rankWidth);
           if (wSum / count > 2) {
-            console.log('error, a/b>2', x, xLabels[x].Alias, [wSum, count], [rankStart, rankEnd], xLabels[x].Cnt, selectedDifficulty, xLabels[x]);
+            console.log('error, a/b>2', x, xLabels[x].Alias, [wSum, count], [rankStart, rankEnd], xLabels[x].Cnt, difficultiesToInclude, xLabels[x]);
             // throw "error, a/b>2"
           }
           return (100 * wSum) / count;
@@ -225,8 +229,8 @@ export const processChartData = ({
       } else {
         // if (x < 10) return numerator / 15000;
         // else return numerator / 20000
-        if (selectedDifficulty == 'All') return (100 * numerator) / xLabels[x].Cnt.All;
-        return (100 * numerator) / (xLabels[x].Cnt[selectedDifficulty] || xLabels[x].Cnt.All);
+        const count = Array.from(difficultiesToInclude).reduce((total, difficulty) => total + (xLabels[x].Cnt[difficulty as DifficultyName] || 0), 0);
+        return count > 0 ? (100 * numerator) / count : 0;
       }
     });
 

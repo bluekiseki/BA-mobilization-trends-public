@@ -14,6 +14,8 @@ interface SpreadsheetHeaderProps {
 
 export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, screenWidth }: SpreadsheetHeaderProps) {
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
+  const { t: t_game } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const showIdentityColumns = screenWidth > 600;
 
   return (
@@ -40,21 +42,21 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
           {t('headerGroup.equipmentTarget')}
         </th>
         <th colSpan={5} className={`${hGroup} bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300`}>
-          {t('headerGroup.other')}
+          {t_ui('etc')}
         </th>
       </tr>
 
       {/* Field row */}
       <tr>
         <th className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700`} style={{ left: L.add, width: 40, minWidth: 40, maxWidth: 40 }}>
-          {t('headerField.add')}
+          {t_ui('add')}
         </th>
         <th
           className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-600`}
           style={{ left: L.sel, width: 40, minWidth: 40, maxWidth: 40 }}
           onClick={() => handleSort('isSelected')}
         >
-          {t('headerField.select')}
+          {t_ui('select')}
           {getSortIcon('isSelected')}
         </th>
         <th className={`${hField} sticky z-40 bg-neutral-100 dark:bg-neutral-700`} style={{ left: L.icon, width: 32, minWidth: 32, maxWidth: 32 }} />
@@ -73,17 +75,17 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
               style={{ left: L.school, width: 70, minWidth: 70, maxWidth: 70 }}
               onClick={() => handleSort('school')}
             >
-              {t('headerField.school')}
+              {t_game('school')}
               {getSortIcon('school')}
             </th>
           </>
         )}
         <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('level')}>
-          {t('headerField.level')}
+          {t_game('level')}
           {getSortIcon('level')}
         </th>
         <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('star')}>
-          {t('headerField.rank')}
+          {t_game('rank')}
           {getSortIcon('star')}
         </th>
         <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('uwLevel')}>
@@ -99,11 +101,11 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
           {getSortIcon('affectionExp')}
         </th>
         <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetLevel')}>
-          {t('headerField.level')}
+          {t_game('level')}
           {getSortIcon('targetLevel')}
         </th>
         <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetStar')}>
-          {t('headerField.rank')}
+          {t_game('rank')}
           {getSortIcon('targetStar')}
         </th>
         <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetUwLevel')}>
@@ -139,7 +141,7 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
           {getSortIcon('currentEquipment2')}
         </th>
         <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('currentGear')}>
-          {t('headerField.bondGear')}
+          {t_game('gear')}
           {getSortIcon('currentGear')}
         </th>
         <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetEquipment0')}>
@@ -155,7 +157,7 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
           {getSortIcon('targetEquipment2')}
         </th>
         <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetGear')}>
-          {t('headerField.bondGear')}
+          {t_game('gear')}
           {getSortIcon('targetGear')}
         </th>
         <th className={`${hField} bg-purple-50 dark:bg-purple-900/10`}>{t('headerField.acquiredDate')}</th>

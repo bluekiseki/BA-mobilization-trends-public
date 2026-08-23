@@ -64,7 +64,8 @@ function seasonLabel(item: SeasonItem, raidLabel: string, eraidLabel: string, lo
 
 export function NetworkControls({ filters, onChange, seasons, initialSeasonId, simplified, studentMode, onRaidChange }: NetworkControlsProps) {
   const { t, i18n } = useTranslation('network');
-  const { t: t_common } = useTranslation('common');
+  const { t: t_game } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const locale = getLocaleShortName(i18n.language as Locale);
   const { t: t_raidInfo } = useTranslation('raidInfo');
   const { t: t_dashboard } = useTranslation('dashboard');
@@ -194,7 +195,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
               >
                 {seasons.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {seasonLabel(s, t_common('raid'), t_common('eraid'), locale)}
+                    {seasonLabel(s, t_game('raid'), t_game('eraid'), locale)}
                   </option>
                 ))}
               </select>
@@ -211,7 +212,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
               >
                 {seasons.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {seasonLabel(s, t_common('raid'), t_common('eraid'), locale)}
+                    {seasonLabel(s, t_game('raid'), t_game('eraid'), locale)}
                   </option>
                 ))}
               </select>
@@ -230,7 +231,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
                 clearRaidQuery();
               }}
             >
-              {t_common('selectAll')}
+              {t_ui('selectAll')}
             </ToggleBtn>
             <ToggleBtn
               active={typeFilter === 'raid'}
@@ -239,7 +240,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
                 clearRaidQuery();
               }}
             >
-              {t_common('raid')}
+              {t_game('raid')}
             </ToggleBtn>
             <ToggleBtn
               active={typeFilter === 'eraid'}
@@ -248,7 +249,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
                 clearRaidQuery();
               }}
             >
-              {t_common('eraid')}
+              {t_game('eraid')}
             </ToggleBtn>
           </div>
         </>
@@ -261,16 +262,16 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
           <div className="flex flex-wrap gap-1 px-4 pb-3">
             {([null, 1000, 10000, 20000] as const).map((v) => (
               <ToggleBtn key={v ?? 'all'} active={filters.rankCutoff === v} onClick={() => set('rankCutoff', v)}>
-                {v === null ? t_common('selectAll') : t('controls.topRank', { value: v.toLocaleString() })}
+                {v === null ? t_ui('selectAll') : t('controls.topRank', { value: v.toLocaleString() })}
               </ToggleBtn>
             ))}
           </div>
           <div className="border-t border-neutral-200 dark:border-neutral-800" />
-          <SectionLabel>{t_dashboard('searchYouTube.difficulty')}</SectionLabel>
+          <SectionLabel>{t_game('difficultyShort')}</SectionLabel>
           <div className="flex flex-wrap gap-1 px-4 pb-3">
             {([null, 'Lunatic', 'Torment', 'Insane', 'Extreme', 'Hardcore'] as const).map((d) => (
               <ToggleBtn key={d ?? 'all'} active={filters.difficulty === d} onClick={() => set('difficulty', d)}>
-                {d === null ? t_common('selectAll') : t_raidInfo(d)}
+                {d === null ? t_ui('selectAll') : t_raidInfo(d)}
               </ToggleBtn>
             ))}
           </div>
@@ -283,7 +284,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
           <SectionLabel>{t_dashboard('searchYouTube.defenseType')}</SectionLabel>
           <div className="flex flex-wrap gap-1 px-4 pb-3">
             <ToggleBtn active={filters.armorTypes === null} onClick={() => set('armorTypes', null)}>
-              {t_common('selectAll')}
+              {t_ui('selectAll')}
             </ToggleBtn>
             {ARMOR_TYPES.map((a) => (
               <ToggleBtn key={a} active={filters.armorTypes?.includes(a) ?? false} onClick={() => toggleArmor(a)}>

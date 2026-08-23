@@ -18,6 +18,7 @@ codeql-repo
 /ql/
 .wrangler
 .dev.vars
+*.xml
 
 *.onnx
 *.wasm

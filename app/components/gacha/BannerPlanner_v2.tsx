@@ -3,7 +3,7 @@ import { useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CustomNumberInput } from '../CustomInput';
 import { FaHistory, FaChevronDown, FaChevronUp, FaGem } from 'react-icons/fa';
-import { TbCalendarOff } from 'react-icons/tb';
+import { TbCalendarOff, TbAlertTriangle } from 'react-icons/tb';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
@@ -18,6 +18,7 @@ interface Props {
   onUpdateStrategy: (bannerId: string, updates: Partial<BannerStrategy>) => void;
   onUpdateStudentConfig: (bannerId: string, studentId: number, updates: Partial<StudentStrategyConfig>) => void;
   gachaSimResult?: GlobalAggregatedResult | null;
+  onResetPlannerData?: () => void;
 }
 
 const monoStyle = { fontFamily: 'inherit' };
@@ -27,6 +28,7 @@ type ModeKey = 'skip' | 'must' | 'opportunistic';
 
 function ModeSegment({ value, onChange }: { value: ModeKey; onChange: (m: ModeKey) => void }) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.banner_planner.mode' });
+  const { t: t_ui } = useTranslation('ui');
   const modes: ModeKey[] = ['must', 'opportunistic', 'skip'];
   return (
     <div className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
@@ -47,7 +49,7 @@ function ModeSegment({ value, onChange }: { value: ModeKey; onChange: (m: ModeKe
             style={sty}
             className={`rounded-md py-1.5 text-xs font-bold transition whitespace-nowrap ${on ? '' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'}`}
           >
-            {t(m)}
+            {m == 'must' ? t_ui('required') : t(m)}
           </button>
         );
       })}
@@ -63,9 +65,10 @@ function GameImg({ src, size = 24 }: { src: string; size?: number }) {
   );
 }
 
-export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyroxeneIcon, onUpdateStrategy, onUpdateStudentConfig, gachaSimResult }: Props) {
+export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyroxeneIcon, onUpdateStrategy, onUpdateStudentConfig, gachaSimResult, onResetPlannerData }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.banner_planner' });
   const { t: tResultView } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
+  const { t: t_g } = useTranslation('game');
   const [showOldBanners, setShowOldBanners] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const bannerRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -121,9 +124,18 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
 
   return (
     <div className="space-y-2">
-      {/* Toggle old banners + deactivate past banners */}
-      {(hiddenCount > 0 || showOldBanners || activePastBannerIds.length > 0) && (
+      {/* Toggle old banners + deactivate past banners + reset planner data */}
+      {(hiddenCount > 0 || showOldBanners || activePastBannerIds.length > 0 || onResetPlannerData) && (
         <div className="flex justify-end gap-2">
+          {onResetPlannerData && (
+            <button
+              onClick={onResetPlannerData}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-red-300 dark:border-red-700 text-red-500 dark:text-red-400 hover:border-red-400 dark:hover:border-red-600 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+            >
+              <TbAlertTriangle size={13} />
+              {t('header.reset_planner')}
+            </button>
+          )}
           {activePastBannerIds.length > 0 && (
             <button
               onClick={() => activePastBannerIds.forEach((id) => onUpdateStrategy(id, { isActive: false }))}
@@ -174,6 +186,7 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
             if (skipA !== skipB) return skipA ? 1 : -1;
             return (cfgA?.priority ?? 99) - (cfgB?.priority ?? 99);
           });
+
           const targetingIds = sortedPickupStudents.filter((s) => strat.studentConfigs[s.id]?.mode !== 'skip').map((s) => s.id);
 
           const swapPriority = (idA: number, idB: number) => {
@@ -242,7 +255,7 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                     </span>
                     {banner.isLimitedBanner && !banner.isFes && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#f6e94b', color: '#3a3304' }}>
-                        {t('badge.limited')}
+                        {t_g('limitedShort')}
                       </span>
                     )}
                     {banner.isFes && (
@@ -323,7 +336,7 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                               <span className="text-neutral-400">
                                 {' '}
                                 +{Math.round(stat.avgEleph)}
-                                {tResultView('student_stats.chart_x_eleph')}
+                                {t_g('eleph')}
                               </span>
                             )}
                           </span>
@@ -581,7 +594,7 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                                 {stat.avgEleph > 0 && (
                                   <span className="text-neutral-400">
                                     +{Math.round(stat.avgEleph)}
-                                    {tResultView('student_stats.chart_x_eleph')}
+                                    {t_g('eleph')}
                                   </span>
                                 )}
                               </span>

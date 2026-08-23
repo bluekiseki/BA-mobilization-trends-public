@@ -48,7 +48,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
   } = usePlanForEvent(eventId);
 
   const { t } = useTranslation('planner');
-  const { t: t_c, i18n } = useTranslation('common');
+  const { t: t_ui, i18n } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const farmingItemsForCost = useMemo(() => {
@@ -379,7 +379,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
               {displayedItems.length === 0 && <div className="w-full text-center text-neutral-500 py-4">{t('ui.searchNoResult')}</div>}
             </div>
             <button onClick={handleCloseModal} className="w-full mt-4 bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 py-2 rounded-md">
-              {t_c('close')}
+              {t_ui('close')}
             </button>
           </div>
         </div>

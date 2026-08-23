@@ -209,7 +209,7 @@ function distributionDataToPmf(dist: DistributionData[]): ResourceDistributionEn
   return dist
     .filter((bin) => bin.pdf > 0)
     .map((bin) => ({
-      amount: bin.binEnd,
+      amount: bin.binStart,
       probability: bin.pdf,
     }));
 }
@@ -237,8 +237,8 @@ function buildGachaItemDistributionMap(gachaResult: GlobalAggregatedResult, stud
   const byBanner: GachaItemDistributionMap = {};
 
   if (includeEligma) {
-    for (const [bannerId, dist] of Object.entries(gachaResult.distEligmaMap ?? {})) {
-      const entries = gachaResult.distEligmaExactMap?.[bannerId] ?? distributionDataToPmf(dist);
+    for (const bannerId of gachaResult.eligmaIncremental.keys()) {
+      const entries = distributionDataToPmf(gachaResult.eligmaIncremental.dist(bannerId));
       if (entries.length > 0) byBanner[bannerId] = { ...(byBanner[bannerId] ?? {}), Item_23: entries };
     }
   }
@@ -546,9 +546,7 @@ export function eventsFromExpertPermit(mode: 'weekly_max' | 'daily', weeklyMax: 
 
 // ---------------------------------------------------------------------------
 // MULTIFLOOR WB (Item_2000/2001/2002) adapter
-// Talent Unlock HP WB / Talent Unlock ATK WB / Talent Unlock Healing WB
-// Cycle per floor starting at 14: type = (floor - 14) % 3 → 0=HP, 1=ATK, 2=Healing
-// Amount per floor: ≤28 → 1, ≤34 → 2, ≤97 → 3
+// Floor 14+ cycles HP/ATK/Healing WB every 3 floors; amount scales with floor (1/2/3).
 // ---------------------------------------------------------------------------
 
 export const MULTIFLOOR_WB_KEYS = ['Item_2000', 'Item_2001', 'Item_2002'] as const;

@@ -21,7 +21,9 @@ import {
   type ApSegment,
   type ResourceApIndex,
   type SourceLabelKey,
+  type FarmingPlanEntry,
 } from '~/utils/resourceApCost';
+import { ApFlowSankeyChart } from './common/ApFlowSankeyChart';
 import type { TotalBonusMap } from './BonusSelector';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { calcElephNeeded } from '~/utils/elephEligmaCalc';
@@ -32,12 +34,29 @@ import { runAsync } from '~/utils/runAsync';
 // used only as a floor for how far right the graph extends when the player hasn't entered their own AP supply.
 const ESTIMATED_AP_PER_DAY = 1700;
 
-// Module-level (not React state) cache for the simulation-based index — this survives the panel's own
-// mount/unmount, so switching to another tab and back (or navigating to a different event and returning)
-// doesn't force re-running the simulation every time. Keyed by eventId + a value snapshot of totalBonus
-// (NOT a reference check: BonusSelector.tsx's own useEffect calls its onBonusCalculate callback on every
-// mount — i.e. every visit to the Bonus tab — handing back a brand-new object even when the percentages
-// are unchanged, which would otherwise invalidate this cache on nearly every tab switch).
+interface FarmingPlanGroup {
+  category: 'stage' | 'story';
+  fromLabel: string;
+  toLabel: string;
+  repeatsForever: boolean;
+}
+
+// Collapses per-stage entries into ranges; ongoing repeat target stays separate.
+function groupFarmingPlan(entries: FarmingPlanEntry[]): FarmingPlanGroup[] {
+  const groups: FarmingPlanGroup[] = [];
+  for (const e of entries) {
+    const num = Number(e.stageNumber);
+    const last = groups[groups.length - 1];
+    if (last && !last.repeatsForever && !e.repeatsForever && last.category === e.category && num === Number(last.toLabel) + 1) {
+      last.toLabel = e.stageNumber;
+    } else {
+      groups.push({ category: e.category, fromLabel: e.stageNumber, toLabel: e.stageNumber, repeatsForever: e.repeatsForever });
+    }
+  }
+  return groups;
+}
+
+// Module-level cache (survives mount/unmount) — keyed by eventId + totalBonus value snapshot, not reference.
 const simIndexCache = new Map<number, { totalBonusKey: string; index: ResourceApIndex }>();
 
 interface ResourceEfficiencyPanelProps {
@@ -61,10 +80,7 @@ function renderSourceLabel(label: SourceLabelKey, t: ReturnType<typeof useTransl
     .join('');
 }
 
-// Compact axis tick label (e.g. 12500 -> "12.5k", 2_000_000 -> "2M") — AP routinely runs into the tens of
-// thousands on this graph, so raw digit strings would crowd the axis. Below 10 of the chosen unit (e.g.
-// 1k-9.9k, 1M-9.9M) the decimal is kept rather than stripped, so a round value like 1000 shows "1.0k" and
-// not a bare "1k" — guarantees at least 2 significant digits everywhere instead of just 1 in that band.
+// Format axis tick as compact label; keep 2 significant digits (e.g. 1.0k, 12.5k, 2M).
 function formatAxisTick(value: number): string {
   const abs = Math.abs(value);
   if (abs >= 1_000_000) {
@@ -78,7 +94,7 @@ function formatAxisTick(value: number): string {
   return value.toLocaleString();
 }
 
-function resolveLabel(key: string, eventData: EventData, allStudents: StudentData, locale: Locale): string {
+export function resolveLabel(key: string, eventData: EventData, allStudents: StudentData, locale: Locale): string {
   const sep = key.lastIndexOf('_');
   if (sep < 0) return key;
   const type = key.slice(0, sep);
@@ -88,7 +104,7 @@ function resolveLabel(key: string, eventData: EventData, allStudents: StudentDat
 }
 
 export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconData, allStudents, studentPortraits, availableAp, totalBonus, onNavigateToTab }: ResourceEfficiencyPanelProps) => {
-  const { t, i18n } = useTranslation('planner');
+  const { t, i18n } = useTranslation(['planner', 'game']);
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
   const [search, setSearch] = useState('');
@@ -104,17 +120,7 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
     return () => document.removeEventListener('mousedown', handler);
   }, [isOpen]);
 
-  // Monte-Carlo-simulation-based sources (dice_race/treasure/concentration/minigame_dream/fortune_gacha/
-  // minigame_road_puzzle) are excluded by default — road_puzzle alone measured ~2.3s per event, far too
-  // slow to run just from opening this tab. The player must explicitly opt in via the button below.
-  //
-  // Deliberately NOT a useMemo keyed on an `includeSimulations` boolean: React StrictMode (enabled in
-  // entry.client.tsx) double-invokes render-phase work in development, including useMemo factories — so an
-  // expensive computation living in one would silently run twice per commit. Every other minigame planner
-  // in this app instead runs its simulation inside a plain click-handler function body (e.g.
-  // RoadPuzzlePlanner.tsx's handleRunMC), which StrictMode never double-invokes since event handlers aren't
-  // part of the render phase — this follows that same pattern, computing the expensive index once inside
-  // the handler and caching the result in state rather than deriving it from render-time inputs.
+  // Simulations opt-in (expensive). Computed in click handler to avoid StrictMode double-invoke.
   const [simIndex, setSimIndex] = useState<ResourceApIndex | null>(() => {
     const cached = simIndexCache.get(eventId);
     return cached && cached.totalBonusKey === JSON.stringify(totalBonus) ? cached.index : null;
@@ -132,16 +138,11 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
   }, [allStages, eventData, eventId, totalBonus]);
   const includeSimulations = simIndex !== null;
 
-  // Fast path (no simulations) is cheap enough that StrictMode's double-invoke doesn't matter — safe to
-  // leave as a plain useMemo. Once the player opts in, `simIndex` (computed once above) takes over.
+  // Fast path safe as useMemo; simIndex takes over after opt-in.
   const fastIndex = useMemo(() => buildResourceApIndex({ allStages, eventData, eventId, totalBonus, includeSimulations: false }), [allStages, eventData, eventId, totalBonus]);
   const resourceApIndex = simIndex ?? fastIndex;
   const resourceKeys = resourceApIndex.resourceKeys;
-  // Prefer a farmable "Item_{studentId}" Eleph/shard resource over the one-time "Character_{studentId}"
-  // free-recruit grant as the default: Character only ever has one guaranteed one-time source, while the
-  // same student's Eleph (same numeric id, "Item" parcel type) is what's actually repeatably farmable via
-  // stages/minigames — that's the graph this tab exists to show. Don't anchor on a Character_ key existing
-  // first (reruns commonly have no free-recruit grant at all, only the Eleph farming route).
+  // Prefer farmable Item_id Eleph over one-time Character_id.
   const defaultKey = useMemo(() => {
     const studentElephKey = resourceKeys.find((k) => {
       if (!k.startsWith('Item_')) return false;
@@ -155,6 +156,22 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const activeKey = selectedKey ?? defaultKey;
 
+  // Sankey diagram: trace AP flow (debug only, collapsed by default).
+  const [showApFlow, setShowApFlow] = useState(false);
+  const [apFlowTargetAmount, setApFlowTargetAmount] = useState(200);
+  const apFlow = useMemo(() => {
+    if (!showApFlow || !activeKey) return null;
+    // Reuses resourceApIndex's already-extracted data (see ResourceApIndex.buildSankey) instead of running
+    // extractAll a second time — with simulations included, a fresh extraction can take seconds.
+    return resourceApIndex.buildSankey(activeKey, apFlowTargetAmount);
+  }, [showApFlow, activeKey, resourceApIndex, apFlowTargetAmount]);
+
+  // Farming plan: show which stages are needed and which is the repeat target.
+  const farmingPlan = useMemo((): FarmingPlanEntry[] => {
+    if (!activeKey) return [];
+    return resourceApIndex.buildFarmingPlan(activeKey);
+  }, [activeKey, resourceApIndex]);
+
   const searchResults = useMemo(() => {
     const q = search.trim();
     if (!q) return [];
@@ -163,8 +180,7 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
       .filter((r) => {
         if (matcher(r.label, q)) return true;
         if (r.key.toLowerCase().includes(q.toLowerCase())) return true;
-        // Eleph/shard items are keyed by student ID (`Item_{studentId}`) but carry the item's own
-        // (often untranslated) name — also match by the student's known nicknames, same as TrackedItemsBar.
+        // Match by student nicknames for Eleph/shard items.
         const sep = r.key.lastIndexOf('_');
         const id = Number(r.key.slice(sep + 1));
         const student = allStudents[id];
@@ -179,13 +195,9 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
     return resourceApIndex.resolveProfile(activeKey);
   }, [activeKey, resourceApIndex]);
 
-  // When the selected resource is a student's Eleph, mark each star/UW-upgrade threshold
-  // (2-star to 5-star, then Unique Weapon 1–4) as a horizontal line — same milestone sequence and `calcElephNeeded`
-  // cost formula the Resources.tsx / StudentElephCard.tsx planner already uses, starting from that
-  // student's saved current star/uw/eleph progress if a growth plan exists for them (else 1★, 0 eleph).
+  // Mark star/UW upgrade thresholds as horizontal lines for student Eleph.
   const { growthPlans, materialInventory, updateMaterialInventory } = useGlobalStore();
-  // Owned-amount is the same global inventory Resources.tsx / StudentGrowth already read/write
-  // (`materialInventory[key]`), not a fresh local counter — so entering it here shows up there too.
+  // Owned-amount is global inventory; changes reflect elsewhere.
   const ownedAmount = activeKey ? (materialInventory[activeKey] ?? 0) : 0;
   const isStudentEleph = activeKey?.startsWith('Item_') && !!allStudents[Number(activeKey.slice('Item_'.length))];
   const elephStarLines = useMemo(() => {
@@ -194,11 +206,9 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
     const plan = growthPlans.find((p) => p.studentId === studentId);
     const currentStar = plan?.current.star ?? 1;
     const currentUw = plan?.current.uw ?? 0;
-    // Same precedence Resources.tsx uses: the global material inventory count wins over the growth
-    // plan's own saved `current.eleph` snapshot when both exist.
+    // Global inventory takes precedence over growth plan snapshot.
     const currentEleph = materialInventory[activeKey] ?? plan?.current.eleph ?? 0;
-    // Star/UW ceilings come straight from the cost tables' own keys, not a hardcoded scale — if the
-    // data ever added a 6th star or a 5th UW tier, this picks it up without touching this file.
+    // Derive star/UW ceilings from cost tables, not hardcoded.
     const maxStar = Math.max(...Object.keys(starGrowthCost).map(Number));
     const maxUw = Math.max(...Object.keys(uwGrowthCost).map(Number));
     const starLines: { label: string; threshold: number }[] = [];
@@ -209,17 +219,14 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
     const uwLines: { label: string; threshold: number }[] = [];
     for (let uw = currentUw + 1; uw <= maxUw; uw++) {
       const threshold = calcElephNeeded(currentStar, maxStar, currentUw, uw) - currentEleph;
-      if (threshold > 0) uwLines.push({ label: `${t('common.ue')}${uw}`, threshold });
+      if (threshold > 0) uwLines.push({ label: `${t('game:ue')}${uw}`, threshold });
     }
-    // UW1 costs no extra eleph beyond maxStar itself, so its threshold coincides exactly with the
-    // last star line — drop the redundant star label in favor of the more specific UW one.
+    // Drop redundant star label if UW threshold coincides.
     const uwThresholds = new Set(uwLines.map((l) => l.threshold));
     return [...starLines.filter((l) => !uwThresholds.has(l.threshold)), ...uwLines];
   }, [activeKey, isStudentEleph, growthPlans, materialInventory]);
 
-  // One-time contributions that still cost AP (e.g. a stage's FirstClear bonus) belong on the same
-  // AP curve as repeatable segments — otherwise a resource that's only obtainable via a one-time clear
-  // would render no graph at all, even though "AP 10 -> N once" is exactly as graphable as a repeating rate.
+  // Include one-time AP contributions in graph.
   const graphSegments = useMemo(() => {
     if (!profile) return [] as ApSegment[];
     const extra: ApSegment[] = profile.oneTimeContributions
@@ -228,12 +235,10 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
     return [...profile.segments, ...extra].sort((a, b) => b.amount / b.apCost - a.amount / a.apCost);
   }, [profile]);
 
-  // Free contributions (missions, field quests) plus whatever the player already owns are obtained
-  // regardless of AP spent — both added as a flat baseline shifting the whole curve up.
+  // Free contributions + owned amount form baseline.
   const freeBaseline = useMemo(() => (profile?.oneTimeContributions.filter((o) => o.apCost === undefined).reduce((a, o) => a + o.amount, 0) ?? 0) + ownedAmount, [profile, ownedAmount]);
 
-  // How far right the graph extends: event duration * a rough daily-AP estimate, or the player's actual
-  // AP supply (from the "4. AP/Currency Supply" tab) if that's larger — whichever gives more farming room.
+  // Graph width: max of event duration or player's AP supply.
   const maxAp = useMemo(() => {
     const finiteCost = graphSegments.filter((s) => !s.repeatsForever).reduce((a, s) => a + s.apCost, 0);
     const eventWindowAp = getEventDurationDays({ allStages, eventData, eventId }) * ESTIMATED_AP_PER_DAY;
@@ -250,9 +255,7 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
     return <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('ui.resourceEfficiencyNoData')}</p>;
   }
 
-  // Not just the graph/transparency section — the resource picker and the owned-amount input are also
-  // pre-calculation UI that shouldn't be touched until the player opts into the simulation, so the same
-  // light-blur + no-pointer-events treatment covers all of it, not just the results below.
+  // Resource picker and owned-amount input are also pre-calculation UI, so the blur + no-pointer-events treatment covers them too, not just the results below.
   const awaitingSimulation = canIncludeSimulations && !includeSimulations;
   const disabledUntilCalculated = awaitingSimulation ? 'pointer-events-none blur-sm' : '';
 
@@ -271,9 +274,7 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
         {t('ui.resourceEfficiencyDescriptionAfter')}
       </p>
 
-      {/* Simulated-minigame opt-in: dice_race/treasure/concentration/minigame_dream/fortune_gacha/
-          minigame_road_puzzle are excluded from the numbers below until this runs (road_puzzle alone
-          measured ~2.3s/event) — everything below stays visibly disabled until the player opts in. */}
+      {/* Simulated minigame opt-in (excluded until player runs calculation) */}
       {awaitingSimulation && (
         <div className="flex flex-wrap items-center gap-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
           <p className="text-amber-800 dark:text-amber-300">{t('ui.resourceEfficiencySimPrompt')}</p>
@@ -288,9 +289,7 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
       )}
 
       <div className="relative">
-        {/* `pointer-events-none` on the blurred content means hovering it never registers, so the cursor
-            would just show whatever's underneath — this transparent overlay sits on top instead, catching
-            the hover to show cursor-not-allowed while still blocking every click/keystroke beneath it. */}
+        {/* Transparent overlay catches hover (cursor-not-allowed) + blocks all input */}
         {awaitingSimulation && <div className="absolute inset-0 z-10 cursor-not-allowed" />}
         <div className={`space-y-6 ${disabledUntilCalculated}`}>
           {/* Resource picker */}
@@ -343,9 +342,7 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
 
           {activeLabel && activeKey && (
             <div className="flex flex-wrap items-center gap-3 border-t border-neutral-200 pt-3 dark:border-neutral-700">
-              {/* `key={activeKey}` forces a fresh instance on every resource switch — ItemIcon's internal hook
-                calls differ by `type` (Character/GachaGroup take early-return branches), so reusing the same
-                instance across a type change would violate React's hooks-order rule. */}
+              {/* key={activeKey} forces fresh instance to preserve hook order */}
               <ItemIcon
                 key={activeKey}
                 type={activeKey.slice(0, activeKey.lastIndexOf('_'))}
@@ -456,6 +453,23 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
                 </ul>
               </div>
             )}
+            {farmingPlan.length > 0 && (
+              <div>
+                <h3 className="mb-1 text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">{t('ui.resourceEfficiencyFarmingPlan')}</h3>
+                <ul className="space-y-1">
+                  {groupFarmingPlan(farmingPlan).map((g, i) => (
+                    <li key={i} className="flex flex-wrap items-baseline gap-x-2 text-neutral-700 dark:text-neutral-300">
+                      <span>
+                        {t(g.category === 'story' ? 'game:story' : 'common.stage')} {g.fromLabel === g.toLabel ? g.fromLabel : `${g.fromLabel}~${g.toLabel}`}
+                      </span>
+                      <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                        {g.repeatsForever ? t('ui.resourceEfficiencyRepeats') : t('ui.resourceEfficiencyOneTimeTag')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {profile && profile.oneTimeContributions.length > 0 && (
               <div>
                 <h3 className="mb-1 text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">{t('ui.resourceEfficiencyOneTime')}</h3>
@@ -478,6 +492,32 @@ export const ResourceEfficiencyPanel = ({ eventId, eventData, allStages, iconDat
             {profile && profile.segments.length === 0 && profile.oneTimeContributions.length === 0 && <p className="text-neutral-500 dark:text-neutral-400">{t('ui.resourceEfficiencyNoData')}</p>}
           </div>
         </div>
+      </div>
+
+      {/* Debug: AP flow Sankey (verification tool, independent of sim gate) */}
+      <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
+        <button
+          type="button"
+          onClick={() => setShowApFlow((v) => !v)}
+          className="text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300"
+        >
+          {showApFlow ? '▾' : '▸'} Debug: AP flow (Sankey)
+        </button>
+        {showApFlow && activeKey && (
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+              <span>Target amount of {activeKey}:</span>
+              <div className="w-24">
+                <NumberInput value={apFlowTargetAmount} onChange={setApFlowTargetAmount} min={1} max={Infinity} narrowButtonType="plus_only" />
+              </div>
+            </div>
+            {apFlow && apFlow.labels.length > 0 ? (
+              <ApFlowSankeyChart flow={apFlow} eventData={eventData} allStudents={allStudents} locale={locale} />
+            ) : (
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">No flow to show for this amount.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

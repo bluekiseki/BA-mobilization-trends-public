@@ -1,6 +1,4 @@
-// Sentinel token used to carry an <img> reference through the plain-text diff pipeline,
-// so an image shows up as its own line in the same unified diff as the surrounding text
-// instead of a separate, disconnected "images changed" block.
+// Sentinel token carrying an <img> reference through the plain-text diff pipeline, so images show up inline in the unified diff.
 const IMAGE_LINE_RE = /^⟦IMG:(.+)⟧$/;
 
 export function imageLineToken(src: string): string {

@@ -1,10 +1,9 @@
 // app/components/ThemeToggleButton.tsx
 
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineComputerDesktop, HiOutlineMoon, HiOutlineSun } from 'react-icons/hi2';
 import { useIsDarkState } from '~/store/isDarkState';
-import { useOutsideClick } from '~/utils/useOutsideClick';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -88,34 +87,16 @@ export function useTheme() {
   return context;
 }
 
-// [Theme Dropdown]
+// Cycle through the available theme modes with a single click.
 export const ThemeDropdown = ({ isMobileText = false }: { isMobileText?: boolean }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-  const { setIsDark } = useIsDarkState();
-  const ref = useRef<HTMLDivElement>(null);
+  const { theme, setTheme } = useTheme();
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
-  useOutsideClick(ref, () => setIsOpen(false));
 
-  const isValidTheme = (value: string | null): value is Theme => {
-    return value === 'light' || value === 'dark' || value === 'system';
+  const nextTheme: Record<Theme, Theme> = {
+    light: 'dark',
+    dark: 'system',
+    system: 'light',
   };
-
-  const applyTheme = (newTheme: Theme) => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    const effectiveTheme = newTheme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : newTheme;
-    root.classList.add(effectiveTheme);
-    setIsDark(effectiveTheme);
-    localStorage.setItem('theme', newTheme);
-  };
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem('theme');
-    const themeValue: Theme = isValidTheme(storedTheme) ? storedTheme : 'system';
-    setTheme(themeValue);
-    applyTheme(themeValue);
-  }, []);
 
   const currentIcon =
     theme === 'light' ? (
@@ -127,35 +108,17 @@ export const ThemeDropdown = ({ isMobileText = false }: { isMobileText?: boolean
     );
 
   return (
-    <div className="relative flex items-center" ref={ref}>
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors">
+    <div className="flex items-center">
+      <button
+        type="button"
+        onClick={() => setTheme(nextTheme[theme])}
+        aria-label={t(theme === 'light' ? 'lightMode' : theme === 'dark' ? 'darkMode' : 'systemTheme')}
+        title={t(theme === 'light' ? 'lightMode' : theme === 'dark' ? 'darkMode' : 'systemTheme')}
+        className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
+      >
         {currentIcon}
         <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('theme')}</span>
       </button>
-
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
-          {(
-            [
-              { id: 'light' as const, label: t('lightMode'), icon: <HiOutlineSun /> },
-              { id: 'dark' as const, label: t('darkMode'), icon: <HiOutlineMoon /> },
-              { id: 'system' as const, label: t('systemTheme'), icon: <HiOutlineComputerDesktop /> },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setTheme(item.id);
-                applyTheme(item.id);
-                setIsOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
-            >
-              <span className="text-lg">{item.icon}</span> {item.label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

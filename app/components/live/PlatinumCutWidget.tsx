@@ -61,6 +61,7 @@ function PredictionCard({
 }) {
   const rangePct = Math.max(0.5, maxPct - minPct);
   const rangeStartPct = Math.min(minPct, 100 - rangePct);
+  const { t: t_ui } = useTranslation('ui');
 
   return (
     <div className="space-y-2 border border-neutral-200 p-3 dark:border-neutral-700">
@@ -81,7 +82,7 @@ function PredictionCard({
           <span className="font-medium text-neutral-400 dark:text-neutral-500">{t('road_puzzle.mcMin', { ns: 'planner' })}:</span> {prediction.min.toLocaleString()}
         </span>
         <span className="min-w-0 whitespace-nowrap text-center text-[#6b21a8] dark:text-[#e9d5ff]">
-          <span className="font-medium text-[#7e22ce] dark:text-[#d8b4fe]">{t('panel.avg', { ns: 'resources' })}:</span> {prediction.avg.toLocaleString()}
+          <span className="font-medium text-[#7e22ce] dark:text-[#d8b4fe]">{t_ui('avg')}:</span> {prediction.avg.toLocaleString()}
         </span>
         <span className="min-w-0 whitespace-nowrap text-right text-neutral-600 dark:text-neutral-300">
           <span className="font-medium text-neutral-400 dark:text-neutral-500">{t('road_puzzle.mcMax', { ns: 'planner' })}:</span> {prediction.max.toLocaleString()}
@@ -105,6 +106,7 @@ export function PlatinumCutWidget({
   eliminationRaidTrajectories: unknown;
 }) {
   const { t, i18n } = useTranslation(['liveDashboard', 'planner', 'resources']);
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const localeShort = getLocaleShortName(locale);
 
@@ -168,7 +170,7 @@ export function PlatinumCutWidget({
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('platinum_cut_est')}</span>
         <span className="text-xs text-neutral-500 dark:text-neutral-400 sm:text-neutral-400 sm:dark:text-neutral-500">
           {prediction.observedAtLabel}(KST) · {prediction.hoursRemaining}
-          {t('hoursUnit')} {t('hours_remaining_suffix')}
+          {t_ui('hour')} {t_ui('remaining')}
         </span>
       </div>
 

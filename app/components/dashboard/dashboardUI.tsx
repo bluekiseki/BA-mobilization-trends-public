@@ -74,7 +74,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
 
   const { t, i18n } = useTranslation('dashboard');
   const { t: t_network } = useTranslation('network');
-  const { t: t_common } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   // --- Rank Range Initialization Logic ---
@@ -404,7 +404,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
         <button
           onClick={() => setIsNavOpen(true)}
           className="p-4 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 rounded-full shadow-lg ring-1 ring-black/5 dark:ring-white/10 hover:bg-neutral-50 dark:hover:bg-neutral-700 active:scale-95 transition-all"
-          aria-label={t_common('open')}
+          aria-label={t_ui('open')}
         >
           <HiOutlineBars3 className="w-6 h-6" />
         </button>
@@ -422,7 +422,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
       >
         <div className="flex justify-between items-center p-4 border-b border-neutral-200 dark:border-neutral-700">
           <h3 className="text-lg font-semibold">{t('quickNavigation')}</h3>
-          <button onClick={() => setIsNavOpen(false)} className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full" aria-label={t_common('close')}>
+          <button onClick={() => setIsNavOpen(false)} className="p-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full" aria-label={t_ui('close')}>
             <HiOutlineXMark className="w-6 h-6" />
           </button>
         </div>
@@ -558,7 +558,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
                 <StudentNetworkGraphClient embedded={true} seasons={networkSeasons} initialSeasonId={raidInfo.Type ? `${raidInfo.Id}-${raidInfo.Type}` : raidInfo.Id} simplified={true} height={560} />
               </div>
             ) : (
-              <div className="flex items-center justify-center h-24 text-sm text-neutral-400">{t_common('loading_txt')}</div>
+              <div className="flex items-center justify-center h-24 text-sm text-neutral-400">{t_ui('loading')}</div>
             )}
           </Card>
         )}

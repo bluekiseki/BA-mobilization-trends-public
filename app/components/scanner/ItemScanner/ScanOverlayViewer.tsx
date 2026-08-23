@@ -348,6 +348,7 @@ function sortByGridPosition(items: ScanResult[]): ScanResult[] {
 
 function PerImageItemList({ results, editedValues, confirmedItems, activeKey, onEdit, onConfirm, onUnconfirm, onHoverKey, onConfirmAll, onNext }: PerImageItemListProps) {
   const { i18n, t } = useTranslation('planner', { keyPrefix: 'itemScanner' });
+  const { t: t_ui } = useTranslation('ui');
   // Deduplicate recognized items by inventoryKey (keep highest similarity)
   const seen = new Map<string, ScanResult>();
   for (const r of results) {
@@ -447,7 +448,7 @@ function PerImageItemList({ results, editedValues, confirmedItems, activeKey, on
                         onUnconfirm(key);
                       }}
                       className="ml-0.5 rounded p-0.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                      title={t('cancelTitle')}
+                      title={t_ui('cancel')}
                     >
                       <FaTimes className="text-[10px]" />
                     </button>
@@ -470,7 +471,7 @@ function PerImageItemList({ results, editedValues, confirmedItems, activeKey, on
                       className="shrink-0 px-2 py-0.5 text-xs font-semibold text-neutral-900 transition-colors hover:opacity-90"
                       style={{ backgroundColor: 'var(--color-ba-btn-blue)' }}
                     >
-                      {t('okButton')}
+                      {t_ui('confirm')}
                     </button>
                   </>
                 )}

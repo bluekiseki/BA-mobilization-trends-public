@@ -8,7 +8,7 @@ mod stats;
 mod strategy;
 
 use pool::GachaPools;
-use simulation::{run_chunk, run_strategies_chunk, Rng};
+use simulation::{run_charge_chunk, run_chunk, run_strategies_chunk, Rng, TicketBatch};
 use wasm_bindgen::prelude::*;
 
 use crate::stats::WasmStats;
@@ -40,6 +40,37 @@ pub fn gacha_run_chunk(
     )
 }
 
+/// Raw recruit-charge simulation for debug/testing (single banner, no strategy logic).
+#[wasm_bindgen]
+pub fn gacha_run_charge_chunk(
+    grade3_ids: &[u32],
+    grade2_ids: &[u32],
+    grade1_ids: &[u32],
+    fes_ids: &[u32],
+    fes_excluded_ids: &[u32],
+    banner_pickup_ids: &[u32],
+    pickup_id: u32,
+    is_fes: bool,
+    pull_count: u32,
+    initial_charge: u32,
+    checkpoint_test_mode: bool,
+    rng_seed: u64,
+) -> WasmStats {
+    let pools = GachaPools::new(grade3_ids, grade2_ids, grade1_ids, fes_ids);
+    let mut rng = Rng::new(rng_seed);
+    run_charge_chunk(
+        &pools,
+        banner_pickup_ids,
+        fes_excluded_ids,
+        pickup_id,
+        is_fes,
+        pull_count,
+        initial_charge,
+        checkpoint_test_mode,
+        &mut rng,
+    )
+}
+
 /// Full strategy simulation (multi-banner, spark, targeting).
 /// strategies_json: JSON array of BannerStrategy (targets sorted by priority)
 /// banner_pools_json: JSON object mapping bannerId → BannerPoolData
@@ -50,6 +81,9 @@ pub fn simulate_strategies_chunk(
     banner_pools_json: &str,
     sim_count: u32,
     rng_seed: u64,
+    initial_owned_ids: &[u32],
+    ticket_batches_json: &str,
+    consume_expiring_tickets: bool,
 ) -> String {
     let strategies: Vec<strategy::BannerStrategy> = match serde_json::from_str(strategies_json) {
         Ok(v) => v,
@@ -66,8 +100,23 @@ pub fn simulate_strategies_chunk(
             }
         };
 
+    let ticket_batches: Vec<TicketBatch> = match serde_json::from_str(ticket_batches_json) {
+        Ok(v) => v,
+        Err(e) => {
+            return format!("{{\"error\":\"ticket_batches parse error: {}\"}}", e);
+        }
+    };
+
     let mut rng = Rng::new(rng_seed);
-    let result = run_strategies_chunk(&strategies, &banner_pools, sim_count, &mut rng);
+    let result = run_strategies_chunk(
+        &strategies,
+        &banner_pools,
+        sim_count,
+        &mut rng,
+        initial_owned_ids,
+        &ticket_batches,
+        consume_expiring_tickets,
+    );
 
     match serde_json::to_string(&result) {
         Ok(s) => s,

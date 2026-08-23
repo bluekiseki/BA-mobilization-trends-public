@@ -16,9 +16,10 @@ interface RaidStudentPickerProps {
 }
 
 export function RaidStudentPicker({ students, portraitData, locale, onSelect }: RaidStudentPickerProps) {
-  const { t: tm } = useTranslation('mypage');
   const { t: td } = useTranslation('dashboard');
-  const { t: tp } = useTranslation('planner');
+  const { t: tp } = useTranslation(['planner', 'game']);
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_g } = useTranslation('game');
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
@@ -53,7 +54,7 @@ export function RaidStudentPicker({ students, portraitData, locale, onSelect }: 
         onChange={setQuery}
         isOpen={isOpen}
         onOpenChange={setIsOpen}
-        placeholder={tp('ui.searchStudentPlaceholder')}
+        placeholder={t_ui('searchStudents')}
         inputClassName="w-full rounded border border-neutral-300 bg-white px-3 py-2.5 text-base text-neutral-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:ring-blue-900"
         className="relative"
         itemCount={filteredStudents.length}
@@ -105,7 +106,7 @@ export function RaidStudentPicker({ students, portraitData, locale, onSelect }: 
             </div>
           </div>
           <div className="space-y-2">
-            <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{tm('raids.slotPicker.starGrade')}</div>
+            <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t_g('starRank')}</div>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -120,7 +121,7 @@ export function RaidStudentPicker({ students, portraitData, locale, onSelect }: 
             </div>
           </div>
           <div className="space-y-2">
-            <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{tp('common.uniqueWeapon')}</div>
+            <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{tp('game:uniqueWeapon')}</div>
             <div className="flex gap-1">
               {[0, 1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -139,7 +140,7 @@ export function RaidStudentPicker({ students, portraitData, locale, onSelect }: 
             onClick={() => onSelect({ id: selectedStudentId, star, hasWeapon: weaponStar > 0, weaponStar })}
             className="w-full rounded bg-ba-btn-blue px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-ba-btn-blue-dark"
           >
-            {tm('raids.modal.clearTimePlaceholder')}
+            {t_ui('select')}
           </button>
         </div>
       )}

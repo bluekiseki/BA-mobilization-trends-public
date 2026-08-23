@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { DifficultySelect } from '~/components/raid/Difficulty';
+import { difficultyInfo, type DifficultySelect } from '~/components/raid/Difficulty';
 import type { ChartData, GameServer, RaidInfo, RaidInfoFiltered } from '~/types/data';
 import type { fetchCacheProcessor } from '~/utils/cache';
 import { getRawTsvData, processChartData } from '~/utils/chartDataProcessor';
@@ -19,7 +19,7 @@ interface State {
   isLoading: boolean;
   chartDataByZ: Map<number, ChartData>;
   error: string | null;
-  difficulty: DifficultySelect;
+  selectedDifficulties: Set<DifficultySelect>;
   raidInfo: RaidInfo[];
 }
 
@@ -32,7 +32,7 @@ interface Actions {
   setHistogramMode: (mode: 'percent' | 'absolute') => void;
   setHideXThreshold: (threshold: number) => void;
   setXRange: (range: [number, number]) => void;
-  setDifficulty: (difficulty: DifficultySelect) => void;
+  setSelectedDifficulties: (difficulties: Set<DifficultySelect>) => void;
   fetchAndProcessChartData: (server: GameServer, fetchAndProcessWithCache: fetchCacheProcessor<string>, locale: Locale) => Promise<void>;
   getFilteredRaidInfoByDifficulty: () => RaidInfoFiltered[];
   setRaidInfo: (raidInfo: RaidInfo[]) => void;
@@ -46,13 +46,13 @@ const initialState: State = {
   heatmapMode: 'absolute',
   histogramMode: 'absolute',
   hideXThreshold: 0,
-  xRange: [0, 150],
-  fullXRange: [0, 150],
+  xRange: [0, 999],
+  fullXRange: [0, 999],
   availableZValueCounter: new Map<number, number>(),
   isLoading: false,
   chartDataByZ: new Map(),
   error: null,
-  difficulty: 'All',
+  selectedDifficulties: new Set(['All']),
   raidInfo: [],
 };
 
@@ -67,7 +67,7 @@ export const useChartControlsStore = create<State & Actions>()(
     setHistogramMode: (mode) => set({ histogramMode: mode }),
     setHideXThreshold: (threshold) => set({ hideXThreshold: threshold }),
     setXRange: (range) => set({ xRange: range }),
-    setDifficulty: (difficulty) => set({ difficulty: difficulty }),
+    setSelectedDifficulties: (difficulties) => set({ selectedDifficulties: difficulties }),
     handleZSelectionChange: (z) =>
       set((state) => {
         const newSet = new Set(state.selectedZValues);
@@ -84,19 +84,22 @@ export const useChartControlsStore = create<State & Actions>()(
         return { selectedZValues: newSet };
       }),
     getFilteredRaidInfoByDifficulty: () => {
-      const { raidInfo, difficulty } = get();
+      const { raidInfo, selectedDifficulties } = get();
+      const difficultiesToShow = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
       return raidInfo
         .map((raid, index) => ({ ...raid, index }))
         .filter((raidInfo) => {
-          if (difficulty == 'All') return true;
-          return difficulty in raidInfo.Cnt;
+          for (const difficulty of difficultiesToShow) {
+            if (difficulty in raidInfo.Cnt) return true;
+          }
+          return false;
         });
     },
     setRaidInfo: (raidInfo: RaidInfo[]) => {
       set({ raidInfo });
     },
     fetchAndProcessChartData: async (server, fetchAndProcessWithCache, locale) => {
-      const { selectedStudentId, rankWidth, hideXThreshold, xRange, heatmapMode, histogramMode, difficulty, getFilteredRaidInfoByDifficulty } = get();
+      const { selectedStudentId, rankWidth, hideXThreshold, xRange, heatmapMode, histogramMode, selectedDifficulties, getFilteredRaidInfoByDifficulty } = get();
 
       const xLabels = getFilteredRaidInfoByDifficulty();
 
@@ -116,7 +119,7 @@ export const useChartControlsStore = create<State & Actions>()(
           xRange,
           heatmapMode,
           histogramMode,
-          difficulty,
+          selectedDifficulties,
           xLabels,
           rawTsvData,
           locale,

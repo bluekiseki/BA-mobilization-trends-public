@@ -1,6 +1,5 @@
-// Hex grid SVG renderer for Road Puzzle maps.
-// Uses pointy-top hexagons with offset coordinates matching the solver's side numbering:
-//   1=UL, 2=UR, 3=R, 4=LR, 5=LL, 6=L
+// Hex grid SVG renderer for Road Puzzle maps (pointy-top hexes, offset coords).
+// Side numbering matches the solver: 1=UL, 2=UR, 3=R, 4=LR, 5=LL, 6=L
 import type { Grid, PathStep } from '~/utils/solveRoadPuzzle';
 
 const HEX_R = 18; // circumradius (center to vertex)

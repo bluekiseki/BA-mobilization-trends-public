@@ -23,7 +23,7 @@ export function loader({ context, params }: LoaderFunctionArgs) {
   }
   const i18n = getInstance(context);
   return data({
-    title: i18n.t('dashboard:videos'),
+    title: i18n.t('ui:clearVideos'),
     siteTitle: i18n.t('common:title'),
   });
 }
@@ -35,8 +35,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export default function RaidVideosPage() {
   const { server } = useParams<{ server: string }>();
   const { title } = useLoaderData<typeof loader>();
-  const { t } = useTranslation('dashboard');
-  const { t: t_c, i18n } = useTranslation('common');
+  const { t, i18n } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -52,9 +52,7 @@ export default function RaidVideosPage() {
     const allData = loadRaidInfos(server as GameServer, locale);
     const liveData = getLiveRaidInfo(locale);
 
-    // Once a raid concludes, its finalized (and properly localized) entry lands in allData
-    // while the temporary placeholder stays in liveData. Put allData first so the finalized
-    // entry wins the dedupe below instead of the untranslated live placeholder.
+    // allData first so a raid's finalized/localized entry wins the dedupe below over liveData's temporary placeholder.
     const merged: RaidInfo[] = [...allData, ...liveData];
 
     // Dedupe by Id+Type so a raid still tracked in liveData after its official data has
@@ -183,11 +181,11 @@ export default function RaidVideosPage() {
           <p>{t('videos_select_boss')}</p>
         </div>
       ) : loading ? (
-        <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_c('loading_txt')}</div>
+        <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
       ) : raidInfo ? (
         <VideoPageView raidInfo={raidInfo} server={server as GameServer} portraitData={portraitData} studentData={studentData} isGrandAssault={isGrandAssault} activeTab={selectedType || 'All'} />
       ) : (
-        <div className="text-center py-12 text-neutral-400">{t_c('loading_txt')}</div>
+        <div className="text-center py-12 text-neutral-400">{t_ui('loading')}</div>
       )}
     </div>
   );

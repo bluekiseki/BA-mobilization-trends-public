@@ -65,6 +65,7 @@ const getLocalizedDesc = (
 // --- Component ---
 export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }: ClueSearchPlannerProps) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'clue_search' });
+  const { t: t_ui } = useTranslation('ui');
   const [activeHint, setActiveHint] = useState<number | null>(null);
 
   const { clueSearchActiveTab: activeTab, setClueSearchActiveTab: setActiveTab, clueSearchDisplayResult: displayResult, setClueSearchDisplayResult: setDisplayResult } = useEventSettings(eventId);
@@ -235,7 +236,7 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
 
   const tabs: { id: ClueSearchTab; name: string }[] = [
     { id: 'info', name: t('tabInfo') },
-    { id: 'calculator', name: t('tabCalculator') },
+    { id: 'calculator', name: t_ui('calculator') },
   ];
 
   return (

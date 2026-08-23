@@ -5,9 +5,7 @@ import { cdn } from '~/utils/cdn';
 let sessionPromise: Promise<ort.InferenceSession> | null = null;
 let charactersPromise: Promise<string[]> | null = null;
 
-// modelBytes is fetched by modelLoader.client.ts up front, in parallel with the other
-// model/data files — passing bytes directly (instead of a URL) means onnxruntime-web never
-// issues its own redundant fetch for this file.
+// modelBytes is fetched by modelLoader.client.ts up front; passing bytes directly avoids a redundant fetch by onnxruntime-web.
 export const initOCR = (providers: string[], modelBytes: Uint8Array): Promise<ort.InferenceSession> => {
   if (!sessionPromise) {
     // One thread works on ordinary static hosting without COOP/COEP headers.

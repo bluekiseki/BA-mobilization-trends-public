@@ -5,6 +5,7 @@ import { ExportImportPanel } from '~/components/planner/ExportImportPanel';
 
 export const PlannerJsonExchange = () => {
   const { t } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const [open, setOpen] = useState(false);
 
   return (
@@ -23,7 +24,7 @@ export const PlannerJsonExchange = () => {
           <div className="w-full max-w-lg relative border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setOpen(false)}
-              aria-label={t('common.close')}
+              aria-label={t_ui('close')}
               className="absolute top-3.5 right-4 z-10 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 text-base leading-none"
             >
               ✕

@@ -11,7 +11,8 @@ interface Props {
 }
 
 export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }: Props) {
-  const { t } = useTranslation('planner');
+  const { t } = useTranslation(['planner', 'game']);
+  const { t: t_g } = useTranslation('game');
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -33,36 +34,36 @@ export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }
         'Student ID',
         t('spreadsheet.headerField.name') || 'Name',
         // Base stats (Current)
-        t('spreadsheet.headerField.level') || 'Level',
-        t('spreadsheet.headerField.rank') || 'Rank',
+        t_g('level') || 'Level',
+        t_g('rank') || 'Rank',
         t('spreadsheet.headerField.ueLevel') || 'UE Lv',
-        t('spreadsheet.headerField.affection') || 'Bond Lv',
+        t('game:affection') || 'Bond Lv',
         t('spreadsheet.headerField.experience') || 'Bond exp',
         // Base stats (Target)
-        t('spreadsheet.headerField.level') || 'Level',
-        t('spreadsheet.headerField.rank') || 'Rank',
+        t_g('level') || 'Level',
+        t_g('rank') || 'Rank',
         t('spreadsheet.headerField.ueLevel') || 'UE Lv',
-        t('spreadsheet.headerField.affection') || 'Bond Lv',
+        t('game:affection') || 'Bond Lv',
         // Skills (Current)
-        t('common.ex') || 'EX',
-        t('common.normal') || 'Normal',
-        t('common.passive') || 'Passive',
-        t('common.sub') || 'Sub',
+        t('game:skill.ex') || 'EX',
+        t('game:skill.normal') || 'Normal',
+        t('game:skill.passive') || 'Passive',
+        t('game:skill.sub') || 'Sub',
         // Skills (Target)
-        t('common.ex') || 'EX',
-        t('common.normal') || 'Normal',
-        t('common.passive') || 'Passive',
-        t('common.sub') || 'Sub',
+        t('game:skill.ex') || 'EX',
+        t('game:skill.normal') || 'Normal',
+        t('game:skill.passive') || 'Passive',
+        t('game:skill.sub') || 'Sub',
         // Equipment (Current)
         t('spreadsheet.headerField.equipment1') || 'Equip. 1',
         t('spreadsheet.headerField.equipment2') || 'Equip. 2',
         t('spreadsheet.headerField.equipment3') || 'Equip. 3',
-        t('spreadsheet.headerField.bondGear') || 'Bond Gear',
+        t_g('gear') || 'Bond Gear',
         // Equipment (Target)
         t('spreadsheet.headerField.equipment1') || 'Equip. 1',
         t('spreadsheet.headerField.equipment2') || 'Equip. 2',
         t('spreadsheet.headerField.equipment3') || 'Equip. 3',
-        t('spreadsheet.headerField.bondGear') || 'Bond Gear',
+        t_g('gear') || 'Bond Gear',
         // Others
         t('spreadsheet.headerField.acquiredDate') || 'Acquired Date',
         t('spreadsheet.headerField.useEligma') || 'Use Eligma',

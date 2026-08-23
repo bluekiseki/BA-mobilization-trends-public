@@ -21,7 +21,9 @@ interface OnetimeTabProps {
 }
 
 export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handleRunCountChange, handleToggleAllOneTimeRuns, allOneTimeRunsState, eventData, iconData }: OnetimeTabProps) => {
-  const { t, i18n } = useTranslation('planner');
+  const { t, i18n } = useTranslation(['planner', 'game']);
+  const { t: t_ui } = useTranslation('ui');
+
   const locale = i18n.language as Locale;
 
   return (
@@ -45,7 +47,7 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                 <div className="flex flex-row justify-between items-center sm:contents sm:flex-1">
                   <div className="grow sm:shrink-0 min-w-0">
                     <h4 className="font-bold text-base text-indigo-600 dark:text-indigo-400 truncate">
-                      {(s.type === 'story' ? t('common.story') + ' ' : t('common.challenge') + ' ') + String(s.Name.split('_').pop()?.replace('Stage', ' '))}
+                      {(s.type === 'story' ? t('game:story') + ' ' : t('common.challenge') + ' ') + String(s.Name.split('_').pop()?.replace('Stage', ' '))}
                     </h4>
                     <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                       <span>{s.StageEnterCostAmount}AP</span>
@@ -67,7 +69,7 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                           }
                         >
                           <span className="font-bold text-yellow-600 dark:text-yellow-500 cursor-help shrink-0">
-                            <FaTrophy className="inline mr-1" /> {t('common.mission')}
+                            <FaTrophy className="inline mr-1" /> {t_ui('mission')}
                           </span>
                         </Tooltip>
                       )}
@@ -139,7 +141,7 @@ export const OnetimeTab = ({ oneTimeStages, missionsByStageId, runCounts, handle
                 </div>
 
                 <div className="hidden sm:flex items-center gap-2 shrink-0 w-full sm:w-24 justify-end">
-                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('common.count')}</label>
+                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t_ui('count')}</label>
                   <CustomNumberInput
                     min={0}
                     max={1}

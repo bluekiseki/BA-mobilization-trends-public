@@ -14,6 +14,7 @@ import { StarRating } from '../StarRating';
 import { raidToString } from '../raid/raidToString';
 import type { Locale } from '~/utils/i18n/config';
 import { difficultyInfo, type DifficultySelect } from '../raid/Difficulty';
+import { CheckboxSelect, type CheckboxSelectOption } from '../common/CheckboxSelect';
 
 interface RaidUsageData {
   raidId: string;
@@ -37,14 +38,19 @@ export const RaidUsageStackChart: React.FC = () => {
   const { t: t_chart } = useTranslation('charts', {
     keyPrefix: 'ranking.control',
   });
+  const { t: t_ui } = useTranslation('ui');
   const { t: t_raids } = useTranslation('raidInfo');
+  const difficultyOptions = useMemo<CheckboxSelectOption<DifficultySelect>[]>(
+    () => difficultyInfo.filter(({ name }) => name !== 'Extreme').map(({ name }) => ({ value: name, label: t_raids(name) })),
+    [t_raids],
+  );
 
-  const { chartDataByZ, getFilteredRaidInfoByDifficulty, difficulty, setDifficulty } = useChartControlsStore(
+  const { chartDataByZ, getFilteredRaidInfoByDifficulty, selectedDifficulties, setSelectedDifficulties } = useChartControlsStore(
     useShallow((state) => ({
       chartDataByZ: state.chartDataByZ,
       getFilteredRaidInfoByDifficulty: state.getFilteredRaidInfoByDifficulty,
-      difficulty: state.difficulty,
-      setDifficulty: state.setDifficulty,
+      selectedDifficulties: state.selectedDifficulties,
+      setSelectedDifficulties: state.setSelectedDifficulties,
     })),
   );
 
@@ -224,7 +230,7 @@ export const RaidUsageStackChart: React.FC = () => {
             const color = entry.color ?? '#8884d8';
 
             return (
-              <div key={index} className="flex items-center gap-3 mb-1 min-w-[120px]">
+              <div key={index} className="flex items-center gap-3 mb-1 min-w-30">
                 <div className="flex items-center gap-1 w-16">
                   <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }}></span>
                   <span className="text-neutral-600 dark:text-neutral-300">
@@ -333,23 +339,19 @@ export const RaidUsageStackChart: React.FC = () => {
                 onClick={() => setAssistantFilter(mode)}
                 className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${assistantFilter === mode ? 'bg-white dark:bg-neutral-600 shadow-sm text-blue-600 dark:text-blue-300' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}
               >
-                {mode === 'all' ? t_chart('rank_all') : mode === 'own' ? t_chart('rank_normal') : t_chart('rank_assist')}
+                {mode === 'all' ? t_ui('all') : mode === 'own' ? t_chart('rank_normal') : t_chart('rank_assist')}
               </button>
             ))}
           </div>
 
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value as DifficultySelect)}
-            className="h-8 px-2 rounded-md bg-neutral-100 dark:bg-neutral-700 text-xs font-medium text-neutral-500 dark:text-neutral-400 border-0 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-          >
-            <option value="All">{t_raids('allDifficulties')}</option>
-            {difficultyInfo.map(({ name }) => (
-              <option value={name} key={name}>
-                {t_raids(name)}
-              </option>
-            ))}
-          </select>
+          <CheckboxSelect<DifficultySelect>
+            ariaLabel={t_raids('allDifficulties')}
+            options={difficultyOptions}
+            selectedValues={selectedDifficulties}
+            onChange={(next) => setSelectedDifficulties(next.size === 0 ? new Set(['All']) : next)}
+            allOption={{ value: 'All', label: t_ui('all') }}
+            className="w-32"
+          />
         </div>
       </div>
 

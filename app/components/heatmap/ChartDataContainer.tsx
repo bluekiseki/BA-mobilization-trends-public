@@ -49,7 +49,7 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
       xRange: state.xRange,
       histogramMode: state.histogramMode,
       heatmapMode: state.heatmapMode,
-      difficulty: state.difficulty,
+      selectedDifficulties: state.selectedDifficulties,
     })),
   );
   const fetchAndProcessWithCache = useDataCache<string>();
@@ -64,7 +64,7 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
     processingParams.xRange,
     processingParams.heatmapMode,
     processingParams.histogramMode,
-    processingParams.difficulty,
+    processingParams.selectedDifficulties,
     // xLabels,
     fetchAndProcessWithCache,
   ]);

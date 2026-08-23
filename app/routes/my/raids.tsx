@@ -121,6 +121,7 @@ export function links() {
 export default function MyRaidHistoryPage() {
   const { raidOptions, serverOptions, locale, defaultServer } = useLoaderData<typeof loader>();
   const { t } = useTranslation('mypage');
+  const { t: t_ui } = useTranslation('ui');
   const { t: ta } = useTranslation('auth');
   const user = useAuthStore((s) => s.user);
   const activeProfileId = useAuthStore((s) => s.activeProfileId);
@@ -316,7 +317,7 @@ export default function MyRaidHistoryPage() {
           <div className="text-sm text-neutral-600 dark:text-neutral-300">{t('raids.filters.showing', { visible: filteredEntries.length, total: entries.length })}</div>
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-2 text-sm">
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">{t('raids.server')}</span>
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">{t_ui('server')}</span>
               <select
                 value={serverFilter}
                 onChange={(event) => setServerFilter(event.currentTarget.value as RaidHistoryServer | 'all')}

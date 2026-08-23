@@ -1,6 +1,7 @@
 // app/utils/gachaEngine.ts
 import type { BannerPeriod, BannerStrategy, Student } from '~/types/gacha';
-import { canSpook, FES_EXCLUSIONS_BY_PICKUP_ID, ARCHIVE_STUDENT_IDS, getRecruitCountReward, getNextTicketThreshold } from './gachaRules';
+import { canSpook, FES_EXCLUSIONS_BY_PICKUP_ID, ARCHIVE_STUDENT_IDS, getRecruitCountReward, getNextTicketThreshold, getRecruitBonusTicketExpiry } from './gachaRules';
+import type { TicketBatch } from './pyroxeneCalc';
 
 // ==========================================
 // 1. Constants and Type Definitions
@@ -83,20 +84,24 @@ export interface StudentSimulationStat {
 export interface GlobalAggregatedResult {
   simCount: number;
   successRate: number;
-  avgTotalPulls: number;
-  avgTotalCost: number;
-  avgTotalEligma: number;
-  distPulls: DistributionData[];
-  distCost: DistributionData[];
-  distEligma: DistributionData[];
-  /** Total eligma exact amount distribution across all banners. */
-  distEligmaExact?: Array<{ amount: number; probability: number }>;
-  // Cumulative cost distribution per banner (Key: BannerID)
-  distCostMap: Record<string, DistributionData[]>;
-  // Incremental eligma distribution per banner (Key: BannerID)
-  distEligmaMap: Record<string, DistributionData[]>;
-  /** bannerId → incremental eligma exact amount distribution for that banner */
-  distEligmaExactMap?: Record<string, Array<{ amount: number; probability: number }>>;
+  /** Cumulative net cost per checkpoint (bannerId or "inf") — query with .dist(checkpointId)/.avg(checkpointId), e.g. meanFromDist(result.cost.dist('inf')) for what used to be avgTotalCost. */
+  cost: SimMetricAccumulator;
+  /** Incremental (just-that-banner, not cumulative) net cost — real banners only, no "inf" checkpoint. */
+  costIncremental: SimMetricAccumulator;
+  /** Net cost crediting only gacha-earned ticket value — for the distribution chart's ticket-included cost view. Query via ticketCreditedDist(result.costWithGachaTickets, result.cost, checkpointId). */
+  costWithGachaTickets: SimMetricAccumulator;
+  /** Incremental version of costWithGachaTickets — real banners only. */
+  costWithGachaTicketsIncremental: SimMetricAccumulator;
+  /** Net cost crediting every held ticket regardless of source — for the timeline's balance-including-tickets lines. */
+  costWithTickets: SimMetricAccumulator;
+  /** Cumulative pull count per checkpoint (bannerId or "inf") — for the distribution chart's pull-count tab. */
+  pulls: SimMetricAccumulator;
+  /** Incremental pull count — real banners only. */
+  pullsIncremental: SimMetricAccumulator;
+  /** Cumulative eligma per checkpoint (bannerId or "inf") — for the distribution chart's eligma tab. */
+  eligmaCumulative: SimMetricAccumulator;
+  /** Incremental (not cumulative) eligma per banner — real banners only, never has an "inf" checkpoint. */
+  eligmaIncremental: SimMetricAccumulator;
   bannerStats: {
     bannerId: string;
     bannerLabel: string;
@@ -109,9 +114,29 @@ export interface GlobalAggregatedResult {
   distStudentElephMap: Record<string, Record<number, Array<{ amount: number; probability: number }>>>;
 }
 
+/** Returns a ticket-credited distribution when available, otherwise the matching net-cost distribution. */
+export const ticketCreditedDist = (ticketMetric: SimMetricAccumulator, netMetric: SimMetricAccumulator, checkpointId: string): DistributionData[] => {
+  const dist = ticketMetric.dist(checkpointId);
+  return dist.length > 0 ? dist : netMetric.dist(checkpointId);
+};
+
+/** A live ticket batch inside a running simulation — pullUnits is mutated down as it gets spent. */
+export interface TicketPoolEntry {
+  pullUnits: number;
+  /** Unix ms the batch stops being usable, or null for a batch that never expires. */
+  expiresAt: number | null;
+  /** Unix ms the batch starts being usable (0 = already held, usable from the very start). */
+  availableFrom: number;
+  /** Earned as a Recruitment Count Bonus reward (pulling), as opposed to an eraid/manual batch seeded before the run. Needed to tell "spent" from "expired unused" apart for eraid/manual batches specifically (see nonGachaTicketValueSpent) — a gacha-earned batch doesn't need that distinction, since either way it just stops being held. */
+  fromGacha: boolean;
+}
+
 // For internal simulation state management
 export interface SimState {
+  /** Students owned before the simulation or acquired while pulling, used only for duplicate rewards. */
   owned: Set<number>;
+  /** Students that appeared in a pull or spark during this simulation, used for target completion. */
+  obtainedInSim: Set<number>;
   acquiredInSim: Set<number>;
   eleph: Map<number, number>;
   totalEligma: number;
@@ -121,6 +146,10 @@ export interface SimState {
   // Persist across every banner of the matching track — reset only on actually obtaining that track's pickup.
   chargeNormal: number;
   chargeLimited: number;
+  /** Term-limited 10-pull ticket batches, spent before pyroxene. Persists across every banner in the strategy (chronological order). */
+  ticketPool: TicketPoolEntry[];
+  /** Pyroxene-equivalent value of eraid/manual (non-gacha) tickets actually spent so far — NOT tickets that merely expired unused. Running total, only ever increases. */
+  nonGachaTicketValueSpent: number;
 }
 
 export interface GachaPools {
@@ -203,14 +232,7 @@ export const createPoolForBanner = (allStudents: Student[], bannerStartTime: str
   };
 };
 
-// const initializePools = (allStudents: Student[]): GachaPools => {
-//   return {
-//     grade3: allStudents.filter((s) => getStudentGrade(s.id) === 3 && canSpook(s.id, s.isLimited, s.isFes)),
-//     grade2: allStudents.filter((s) => getStudentGrade(s.id) === 2),
-//     grade1: allStudents.filter((s) => getStudentGrade(s.id) === 1),
-//     fes: allStudents.filter((s) => s.isFes),
-//   };
-// };
+// Old pool initializer, superseded by createPoolForBanner above (kept for reference).
 
 // ==========================================
 // 3. Core Logic: Gacha execution and acquisition processing
@@ -231,10 +253,7 @@ export const rollSingle = (
   if (forcedOutcome === 'pickup') return { id: pickupId, grade: 3, isPickup: true };
 
   if (forcedOutcome === 'random3star') {
-    // The 100-count soft pity's ★3 table is independent from the normal-pull table, not a rescale of it:
-    // each off-banner FES student keeps the same flat per-character rate as a normal pull (FES_SPOOK),
-    // and only the leftover mass goes to the regular ★3 pool. Since the checkpoint's pickup/random3star
-    // coin-flip is a 50/50 split, the FES share conditional on landing here is 2x the normal-pull constant.
+    // FES soft-pity ★3 table: independent from normal-pull, FES rate is 2x due to 50/50 split.
     if (isFes && Math.random() < (RATES.FES.FES_SPOOK || 0) * 2) {
       const excludedIds = [...new Set(bannerPickupIds.flatMap((id) => FES_EXCLUSIONS_BY_PICKUP_ID[id] ?? []))];
       const fesPool = pools.fes.filter((s) => s.id !== pickupId && !excludedIds.includes(s.id));
@@ -250,9 +269,7 @@ export const rollSingle = (
 
   if (rng < rates.R3) {
     if (rng < rates.PICKUP) return { id: pickupId, grade: 3, isPickup: true };
-    // FES banner: other pickup students belong only to the FES spook pool, not the normal pool.
-    // Normal banner: other pickup students can appear as normal spooks. Dedupe — a co-pickup that isn't
-    // flagged `limited` is already present in pools.grade3, and without this it would double-count there.
+    // FES: co-pickups in spook pool only. Normal: dedupe co-pickups that might double-count.
     const validSpooks = isFes ? pools.grade3.map((v) => v.id).filter((id) => id !== pickupId) : [...new Set([...pools.grade3.map((v) => v.id), ...bannerPickupIds])].filter((id) => id !== pickupId);
     if (isFes) {
       const fesSpookChance = rates.PICKUP + (RATES.FES.FES_SPOOK || 0);
@@ -276,6 +293,8 @@ export const rollSingle = (
 
 // To handle recall pickups, returns true if it is the first acquisition.
 const recordResult = (state: SimState, id: number, grade: number, isPickup: boolean, /*isSpark: boolean = false,*/ isRecall: false | 'ACQUIRED' | 'NOT_ACQUIRED' = false) => {
+  // A pre-owned student is still a valid target result when pulled in this simulation.
+  state.obtainedInSim.add(id);
   // For recall pickups, since there is no PICKUP_NEW_BONUS, a duplicate effect is applied.
   const isDupe = state.owned.has(id);
   if (!isDupe) {
@@ -301,20 +320,78 @@ const recordResult = (state: SimState, id: number, grade: number, isPickup: bool
 };
 
 // ==========================================
+// 3b. Term-limited ticket pool
+// ==========================================
+
+export const PULL_UNITS_PER_10PULL = 10;
+export const PYROXENE_PER_10PULL = 1200;
+export const PYROXENE_PER_PULL_UNIT = PYROXENE_PER_10PULL / PULL_UNITS_PER_10PULL;
+
+// banner.startTime is the same string across every simulation run for a given banner, so parsing it with
+// `new Date(...)` per run (hot: called once per run x per banner) is pure waste. Cached by string.
+const bannerStartTimeMsCache = new Map<string, number>();
+const getBannerStartTimeMs = (startTime: string): number => {
+  let ms = bannerStartTimeMsCache.get(startTime);
+  if (ms === undefined) {
+    ms = new Date(startTime).getTime();
+    bannerStartTimeMsCache.set(startTime, ms);
+  }
+  return ms;
+};
+
+/** Whether a batch is usable for a 10-pull happening at `bannerStartTime`: on/after its availableFrom, and (if it has an expiry) not yet past it. */
+const isTicketUsableAt = (batch: { availableFrom: number; expiresAt: number | null }, bannerStartTime: number): boolean =>
+  bannerStartTime >= batch.availableFrom && (batch.expiresAt === null || batch.expiresAt > bannerStartTime);
+
+/* Consume from ticket pool (expiring soonest first) or return false for pyroxene fallback */
+const consumeTicketOrPyroxene = (state: SimState, bannerStartTime: number): boolean => {
+  if (state.ticketPool.length === 0) return false;
+  const usable = state.ticketPool.filter((b) => b.pullUnits > 0 && isTicketUsableAt(b, bannerStartTime));
+  const totalAvailable = usable.reduce((sum, b) => sum + b.pullUnits, 0);
+  if (totalAvailable < PULL_UNITS_PER_10PULL) return false;
+
+  usable.sort((a, b) => {
+    if (a.expiresAt === null) return b.expiresAt === null ? 0 : 1;
+    if (b.expiresAt === null) return -1;
+    return a.expiresAt - b.expiresAt;
+  });
+  let remaining = PULL_UNITS_PER_10PULL;
+  for (const batch of usable) {
+    if (remaining <= 0) break;
+    const take = Math.min(batch.pullUnits, remaining);
+    batch.pullUnits -= take;
+    remaining -= take;
+    if (!batch.fromGacha) state.nonGachaTicketValueSpent += take * PYROXENE_PER_PULL_UNIT;
+  }
+  return true;
+};
+
+/** Pyroxene-equivalent value of the pool's currently-usable pull-units as of `atTime` — excludes batches not yet available (e.g. a future eraid ticket before its grant date) as well as expired ones. `gachaOnly` further restricts to Recruitment-Count-Bonus batches. */
+const heldPyroxeneValue = (pool: TicketPoolEntry[], atTime: number, gachaOnly = false): number =>
+  pool.reduce((sum, b) => (isTicketUsableAt(b, atTime) && (!gachaOnly || b.fromGacha) ? sum + b.pullUnits : sum), 0) * PYROXENE_PER_PULL_UNIT;
+
+/** Whether any non-infinite batch expires within THIS banner's own window (start, end] and still has a full 10-pull worth of units — the simple "drain it in the banner its expiry actually falls in, or let it lapse" policy. */
+const hasExpiringTicketToDrain = (state: SimState, bannerStartTime: number, bannerEndTime: number): boolean =>
+  state.ticketPool.length > 0 && state.ticketPool.some((b) => b.pullUnits >= PULL_UNITS_PER_10PULL && b.expiresAt !== null && isTicketUsableAt(b, bannerStartTime) && b.expiresAt <= bannerEndTime);
+
+/* Remove spent + expired tickets (but keep unavailable ones for future banners) */
+const pruneTicketPool = (state: SimState, bannerStartTime: number): void => {
+  state.ticketPool = state.ticketPool.filter((b) => b.pullUnits > 0 && (b.expiresAt === null || b.expiresAt > bannerStartTime));
+};
+
+/** Context shared across banners within one simulation run — static across every run of a given strategy set, only RNG outcomes differ. */
+export interface TicketSimContext {
+  consumeExpiringTickets: boolean;
+}
+
+const EMPTY_TICKET_CONTEXT: TicketSimContext = { consumeExpiringTickets: false };
+
+// ==========================================
 // 4. Banner Simulation Logic
 // ==========================================
 
-/**
- * New "recruit charge" pity system (post Makoto (Swimsuit) patch), used when banner.useChargeSystem is true.
- * Two counters are tracked and must not be confused:
- * - state.chargeNormal / state.chargeLimited (SimState, shared across every banner of that track): drives the
- *   100-count soft pity (guaranteed 3-star, 50% Pick-Up) and 200-count hard pity (guaranteed Pick-Up). Resets only on Pick-Up.
- * - pullsThisBanner (local to this call): the per-banner-strategy spending budget (strat.maxHalfCharges, in 100-pull units).
- * "Intentional Spark" (intentionalSpark) has no direct equivalent here—the new system's pity checkpoints are automatic,
- * not opt-in. The closest equivalent is `claimRecruitBonus`/`recruitBonusThreshold`: an opt-in that keeps pulling
- * past other stop conditions when the next "Recruitment Count Bonus" ticket milestone is within reach (see stage 2 below).
- */
-export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrategy, banner: BannerPeriod, pools: GachaPools) => {
+/* Recruit charge pity system: two counters (chargeNormal/chargeLimited) drive soft (100) and hard (200) pity */
+export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrategy, banner: BannerPeriod, pools: GachaPools, ticketCtx: TicketSimContext = EMPTY_TICKET_CONTEXT) => {
   let pullsThisBanner = 0;
   let currentFreePulls = banner.freePulls || 0;
   const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
@@ -323,6 +400,18 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
   const maxHalfCharges = strat.maxHalfCharges ?? 2;
   const claimRecruitBonus = strat.claimRecruitBonus ?? false;
   const recruitBonusThreshold = strat.recruitBonusThreshold ?? 10;
+  const bannerStartTimeMs = getBannerStartTimeMs(banner.startTime);
+  const bannerEndTimeMs = getBannerStartTimeMs(banner.endTime);
+  const { consumeExpiringTickets } = ticketCtx;
+  const spendOrCharge = () => {
+    if (!consumeTicketOrPyroxene(state, bannerStartTimeMs)) state.totalCost += PYROXENE_PER_10PULL;
+  };
+  const earnRecruitBonusReward = () => {
+    const countReward = getRecruitCountReward(pullsThisBanner);
+    if (countReward.ticket > 0)
+      state.ticketPool.push({ pullUnits: countReward.ticket * PULL_UNITS_PER_10PULL, expiresAt: getRecruitBonusTicketExpiry(banner.startTime), availableFrom: 0, fromGacha: true });
+    if (countReward.eligma > 0) state.totalEligma += countReward.eligma;
+  };
 
   const targets = Object.values(strat.studentConfigs)
     .filter((c) => c.mode !== 'skip')
@@ -343,16 +432,14 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
 
   // 1. Simulation per target
   for (const targetConfig of targets) {
-    if (state.owned.has(targetConfig.studentId)) continue;
+    if (state.obtainedInSim.has(targetConfig.studentId)) continue;
 
     const currentTargetId = targetConfig.studentId;
-    // 'opportunistic' under the new system spends a dedicated pull budget on this target (opportunisticThreshold
-    // pulls), rather than gating on distance to the shared charge counter's next checkpoint — that distance is no
-    // longer a predictable per-banner quantity, since the counter persists indefinitely until any pickup lands.
+    // 'opportunistic': spends dedicated pull budget on target, not tied to shared charge counter's distance.
     let pullsForThisTarget = 0;
 
     while (true) {
-      const isObtained = state.owned.has(currentTargetId);
+      const isObtained = state.obtainedInSim.has(currentTargetId);
       const hasFree = currentFreePulls >= 10;
       if (!hasFree) {
         if (Math.floor(pullsThisBanner / 100) >= maxHalfCharges) break;
@@ -367,43 +454,38 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
       pullsThisBanner += 10;
       pullsForThisTarget += 10;
       if (hasFree) currentFreePulls -= 10;
-      else state.totalCost += 1200;
+      else spendOrCharge();
 
-      // "Recruitment Count Bonus" — only the ticket/Eligma reward types are tracked; the earned
-      // ticket directly offsets pyroxene cost, eligma folds straight into the existing totalEligma stat.
-      const countReward = getRecruitCountReward(pullsThisBanner);
-      if (countReward.ticket > 0) state.totalCost -= countReward.ticket * 1200;
-      if (countReward.eligma > 0) state.totalEligma += countReward.eligma;
+      // "Recruitment Count Bonus": track ticket/Eligma rewards, pool tickets, fold eligma into total.
+      earnRecruitBonusReward();
 
       pullTenWithCharge(currentTargetId);
 
-      if (!hasFree && state.owned.has(currentTargetId)) break;
+      if (!hasFree && state.obtainedInSim.has(currentTargetId)) break;
     }
   }
 
   // 2. Minimum pull guarantee + spend any remaining free pulls (even with no target set, so their charge
   // progress — which persists into later banners via state[chargeKey] — isn't wasted).
   const minPulls = strat.minPulls || 0;
-  // Re-evaluated each iteration: goes false the instant a milestone is claimed (the next one is always
-  // >= 20 pulls further, since consecutive entries in the reward table are never closer than 20 apart)
-  // or once thresholds run out past 370. Bounded — no infinite loop is possible. A threshold of 0 can
-  // never satisfy `next - pullsThisBanner <= 0` (the gap is always >= 10), so it behaves as disabled;
-  // this needs no special case since any pull that lands exactly on a threshold already claims it for free.
+  // Re-evaluated each iteration: check if near next recruitment bonus milestone (bounded, no infinite loop).
   const isNearRecruitBonus = () => {
     if (!claimRecruitBonus) return false;
     const next = getNextTicketThreshold(pullsThisBanner);
     return next !== undefined && next - pullsThisBanner <= recruitBonusThreshold;
   };
-  while ((pullsThisBanner < minPulls || currentFreePulls >= 10 || isNearRecruitBonus()) && Math.floor(pullsThisBanner / 100) < maxHalfCharges) {
+  // Drain expiring tickets within this banner's window via extra filler pulls when consumeExpiringTickets is on.
+  while (
+    (pullsThisBanner < minPulls || currentFreePulls >= 10 || isNearRecruitBonus() || (consumeExpiringTickets && hasExpiringTicketToDrain(state, bannerStartTimeMs, bannerEndTimeMs))) &&
+    Math.floor(pullsThisBanner / 100) < maxHalfCharges
+  ) {
     const hasFree = currentFreePulls >= 10;
     state.totalPulls += 10;
     pullsThisBanner += 10;
     if (hasFree) currentFreePulls -= 10;
-    else state.totalCost += 1200;
+    else spendOrCharge();
 
-    const countReward = getRecruitCountReward(pullsThisBanner);
-    if (countReward.ticket > 0) state.totalCost -= countReward.ticket * 1200;
-    if (countReward.eligma > 0) state.totalEligma += countReward.eligma;
+    earnRecruitBonusReward();
 
     const fillerTargetId = bannerPickupIds[0] || (targets[0] ? targets[0].studentId : 0);
     pullTenWithCharge(fillerTargetId);
@@ -411,11 +493,13 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
 
   // 3. Spark exchange does not apply under the new system — the 200-count hard pity above already
   // guarantees the pickup automatically as a real roll, so there is nothing left to exchange.
+
+  pruneTicketPool(state, bannerStartTimeMs);
 };
 
-const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: BannerPeriod, pools: GachaPools) => {
+const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: BannerPeriod, pools: GachaPools, ticketCtx: TicketSimContext = EMPTY_TICKET_CONTEXT) => {
   if (banner.useChargeSystem) {
-    simulateSingleBannerCharge(state, strat, banner, pools);
+    simulateSingleBannerCharge(state, strat, banner, pools, ticketCtx);
     return;
   }
   let sparkPoints = 0;
@@ -423,6 +507,11 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
   const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
   let recallFlag: false | 'ACQUIRED' | 'NOT_ACQUIRED' = banner.isRecall ? 'NOT_ACQUIRED' : false;
   const pickuphistory = [];
+  const bannerStartTimeMs = getBannerStartTimeMs(banner.startTime);
+  const bannerEndTimeMs = getBannerStartTimeMs(banner.endTime);
+  const spendOrCharge = () => {
+    if (!consumeTicketOrPyroxene(state, bannerStartTimeMs)) state.totalCost += PYROXENE_PER_10PULL;
+  };
 
   const targets = Object.values(strat.studentConfigs)
     .filter((c) => c.mode !== 'skip')
@@ -431,21 +520,21 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
 
   // 1. Simulation per target
   for (const targetConfig of targets) {
-    if (state.owned.has(targetConfig.studentId) && !targetConfig.intentionalSpark) continue;
+    if (state.obtainedInSim.has(targetConfig.studentId) && !targetConfig.intentionalSpark) continue;
 
     // Number of targets not yet acquired
-    const remainTargetCnt = targets.filter((t) => !state.owned.has(t.studentId)).length;
+    const remainTargetCnt = targets.filter((t) => !state.obtainedInSim.has(t.studentId)).length;
     // If remaining targets can be exchanged with spark points, proceed to next
     if (Math.floor(sparkPoints / 200) >= remainTargetCnt) break;
 
     const currentTargetId = targetConfig.studentId;
 
     while (true) {
-      const isObtained = state.owned.has(currentTargetId);
+      const isObtained = state.obtainedInSim.has(currentTargetId);
       const hasFree = currentFreePulls >= 10;
       if (!hasFree) {
         // Number of targets not yet acquired
-        const remainTargetCnt = targets.filter((t) => !state.owned.has(t.studentId)).length;
+        const remainTargetCnt = targets.filter((t) => !state.obtainedInSim.has(t.studentId)).length;
         if (Math.floor(sparkPoints / 200) >= remainTargetCnt) break;
 
         if (Math.floor(sparkPoints / 200) >= strat.maxSparks) break;
@@ -462,7 +551,7 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
       state.totalPulls += 10;
       sparkPoints += 10;
       if (hasFree) currentFreePulls -= 10;
-      else state.totalCost += 1200;
+      else spendOrCharge();
 
       for (let i = 0; i < 10; i++) {
         const result = rollSingle(i == 9, banner.isFes, currentTargetId, pools, bannerPickupIds);
@@ -473,19 +562,19 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
         // if(currentTargetId==10021 && result.isPickup) console.log('result.isPickup', state.eleph.get(10021), result, )
       }
 
-      if (!hasFree && state.owned.has(currentTargetId) && !targetConfig.intentionalSpark) break;
+      if (!hasFree && state.obtainedInSim.has(currentTargetId) && !targetConfig.intentionalSpark) break;
       // if (!hasFree && sparkPoints % 200 === 0 && !state.owned.has(currentTargetId)) break;
     }
   }
 
-  // 2. Minimum pull guarantee
+  // 2. Minimum pull guarantee; also drain expiring tickets when consumeExpiringTickets is on.
   const minPulls = strat.minPulls || 0;
-  while (sparkPoints < minPulls && Math.floor(sparkPoints / 200) < strat.maxSparks) {
+  while ((sparkPoints < minPulls || (ticketCtx.consumeExpiringTickets && hasExpiringTicketToDrain(state, bannerStartTimeMs, bannerEndTimeMs))) && Math.floor(sparkPoints / 200) < strat.maxSparks) {
     const hasFree = currentFreePulls >= 10;
     state.totalPulls += 10;
     sparkPoints += 10;
     if (hasFree) currentFreePulls -= 10;
-    else state.totalCost += 1200;
+    else spendOrCharge();
 
     const fillerTargetId = bannerPickupIds[0] || (targets[0] ? targets[0].studentId : 0);
     for (let i = 0; i < 10; i++) {
@@ -500,8 +589,8 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
   const availableSparks = Math.floor(sparkPoints / 200);
   for (let i = 0; i < availableSparks; i++) {
     const sparkTarget =
-      allTargets.find((t) => t.mode === 'must' && !state.owned.has(t.studentId)) ||
-      allTargets.find((t) => t.mode === 'opportunistic' && !state.owned.has(t.studentId)) ||
+      allTargets.find((t) => t.mode === 'must' && !state.obtainedInSim.has(t.studentId)) ||
+      allTargets.find((t) => t.mode === 'opportunistic' && !state.obtainedInSim.has(t.studentId)) ||
       allTargets.find((t) => t.intentionalSpark) ||
       allTargets.find((_t) => true);
 
@@ -511,59 +600,138 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
       }
     }
   }
+
+  pruneTicketPool(state, bannerStartTimeMs);
 };
 
 // ==========================================
 // 5. Distribution + Result Assembly (exported for worker use)
 // ==========================================
 
-export const createDistribution = (data: number[], binSize: number, total?: number): DistributionData[] => {
-  const sortedData = [...data].sort((a, b) => a - b);
-  if (sortedData.length === 0) return [];
-  const n = total ?? sortedData.length;
-  const maxVal = sortedData[sortedData.length - 1];
-  const binCount = Math.floor(maxVal / binSize) + 2;
-  const dist: DistributionData[] = [];
-  let cumulativeCount = 0;
-  let idx = 0;
-  for (let i = 0; i < binCount; i++) {
-    const end = (i + 1) * binSize;
-    let count = 0;
-    while (idx < sortedData.length && sortedData[idx] < end) {
-      count++;
-      idx++;
-    }
-    cumulativeCount += count;
-    dist.push({ binStart: i * binSize, binEnd: end, count, pdf: (count / n) * 100, cdf: (cumulativeCount / n) * 100 });
+/** One checkpoint's running stats within a SimMetricAccumulator — plain data (no methods), so it survives postMessage structured clone as-is. dist maps a bin index (value / bin, always exact — see SimMetricAccumulator) to how many pushes landed there. */
+export interface SimMetricBucket {
+  dist: Record<number, number>;
+  sum: number;
+  count: number;
+}
+
+/* Tracks random variables across checkpoints with exact binning (no rounding loss) */
+export class SimMetricAccumulator {
+  readonly bin: number;
+  readonly data = new Map<string, SimMetricBucket>();
+
+  constructor(bin: number) {
+    this.bin = bin;
   }
-  return dist;
-};
 
-const createExactAmountDistribution = (data: number[], total: number): Array<{ amount: number; probability: number }> => {
-  if (total <= 0) return [];
-  const counts: Record<number, number> = {};
-  for (const amount of data) counts[amount] = (counts[amount] ?? 0) + 1;
-  const observed = Object.values(counts).reduce((sum, count) => sum + count, 0);
-  if (observed < total) counts[0] = (counts[0] ?? 0) + (total - observed);
-  return Object.entries(counts)
-    .map(([amount, count]) => ({ amount: Number(amount), probability: (100 * count) / total }))
-    .filter((entry) => entry.probability > 0)
-    .sort((a, b) => a.amount - b.amount);
-};
+  private bucket(key: string): SimMetricBucket {
+    let b = this.data.get(key);
+    if (!b) {
+      b = { dist: {}, sum: 0, count: 0 };
+      this.data.set(key, b);
+    }
+    return b;
+  }
 
+  push(key: string, value: number): void {
+    const b = this.bucket(key);
+    b.count++;
+    b.sum += value;
+    const binIdx = value / this.bin;
+    b.dist[binIdx] = (b.dist[binIdx] ?? 0) + 1;
+  }
+
+  count(key: string): number {
+    return this.data.get(key)?.count ?? 0;
+  }
+
+  avg(key: string): number {
+    const b = this.data.get(key);
+    return b && b.count > 0 ? b.sum / b.count : 0;
+  }
+
+  /** Dense, chart-ready distribution for one checkpoint — bins normally start at 0, only extending leftward when values actually go negative. */
+  dist(key: string): DistributionData[] {
+    const b = this.data.get(key);
+    if (!b || b.count === 0) return [];
+    const indices = Object.keys(b.dist).map(Number);
+    const minIdx = Math.min(0, ...indices);
+    const maxIdx = Math.max(...indices);
+    const result: DistributionData[] = [];
+    let cumulativeCount = 0;
+    for (let i = minIdx; i <= maxIdx; i++) {
+      const count = b.dist[i] ?? 0;
+      cumulativeCount += count;
+      result.push({ binStart: i * this.bin, binEnd: (i + 1) * this.bin, count, pdf: (count / b.count) * 100, cdf: (cumulativeCount / b.count) * 100 });
+    }
+    return result;
+  }
+
+  /** Which checkpoints have at least one pushed value. */
+  keys(): string[] {
+    return [...this.data.keys()];
+  }
+
+  /** Folds another accumulator's (or a transmitted plain Map of) bucket data into this one. */
+  merge(other: SimMetricAccumulator | Map<string, SimMetricBucket>): void {
+    const otherData = other instanceof SimMetricAccumulator ? other.data : other;
+    for (const [key, incoming] of otherData) {
+      const b = this.bucket(key);
+      b.count += incoming.count;
+      b.sum += incoming.sum;
+      for (const [binIdxStr, c] of Object.entries(incoming.dist)) {
+        const binIdx = Number(binIdxStr);
+        b.dist[binIdx] = (b.dist[binIdx] ?? 0) + c;
+      }
+    }
+  }
+}
+
+/** Exact mean of an already-built distribution — see SimMetricAccumulator.avg for the same computation off a live accumulator. */
+export const meanFromDist = (dist: DistributionData[]): number => dist.reduce((sum, d) => sum + d.binStart * (d.pdf / 100), 0);
+
+/** Live accumulator, one SimMetricAccumulator per tracked variable — the JS engine pushes into these directly as it runs; a WASM worker's transmitted bucket data (SimChunkAcc, plain Maps) gets folded in via mergeSimAccumulator. costWithTickets/costWithGachaTickets use PYROXENE_PER_PULL_UNIT (120) as their bin, not PYROXENE_PER_10PULL (1200), because held ticket value can be a partial pull-unit even though net cost itself always lands on full-10-pull multiples. */
 export interface SimRawAccumulator {
-  resultsPulls: number[];
-  resultsCost: number[];
-  resultsEligma: number[];
-  bannerCumulativeCosts: Record<string, number[]>;
-  bannerCumulativeEligma: Record<string, number[]>;
+  cost: SimMetricAccumulator;
+  /** Incremental (not cumulative) net cost for just that banner — real banners only, no 'inf' entry. */
+  costIncremental: SimMetricAccumulator;
+  /** Net cost crediting only gacha-earned (Recruitment Count Bonus) ticket value — for the distribution chart's "how much did my gacha cost" metric. */
+  costWithGachaTickets: SimMetricAccumulator;
+  /** Incremental version of costWithGachaTickets — real banners only. */
+  costWithGachaTicketsIncremental: SimMetricAccumulator;
+  /** Same idea but crediting every held ticket regardless of source — for the timeline's balance-including-tickets lines. */
+  costWithTickets: SimMetricAccumulator;
+  pulls: SimMetricAccumulator;
+  /** Incremental pull count for just that banner — real banners only. */
+  pullsIncremental: SimMetricAccumulator;
+  eligmaCumulative: SimMetricAccumulator;
+  /** Incremental (not cumulative) eligma gained during just that banner — source for distEligmaMap/distEligmaExactMap. Real banners only, no 'inf' entry. */
+  eligmaIncremental: SimMetricAccumulator;
   bannerStatsSum: Record<string, { pulls: number; cost: number }>;
   studentAcquired: Record<number, number>;
   studentElephTotal: Record<number, number>;
   studentElephDist: Record<number, Record<number, number>>;
   /** bannerId → studentId → incremental_eleph_amount → count of simulations */
   bannerStudentElephDist: Record<string, Record<number, Record<number, number>>>;
-  totalEligmaSum: number;
+  successCount: number;
+}
+
+/** Wire-format shape of one compact WASM chunk. Rust bins each metric before serializing; the worker only turns JSON objects into Maps so structured clone can carry them, and mergeSimAccumulator folds them into the live accumulators. */
+export interface SimChunkAcc {
+  cost: Map<string, SimMetricBucket>;
+  costIncremental: Map<string, SimMetricBucket>;
+  costWithTickets?: Map<string, SimMetricBucket>;
+  costWithGachaTickets?: Map<string, SimMetricBucket>;
+  costWithGachaTicketsIncremental?: Map<string, SimMetricBucket>;
+  pulls: Map<string, SimMetricBucket>;
+  pullsIncremental?: Map<string, SimMetricBucket>;
+  eligmaCumulative: Map<string, SimMetricBucket>;
+  eligmaIncremental: Map<string, SimMetricBucket>;
+  bannerStatsSum: Record<string, { pulls: number; cost: number }>;
+  studentAcquired: Record<number, number>;
+  studentElephTotal: Record<number, number>;
+  studentElephDist: Record<number, Record<number, number>>;
+  bannerStudentElephDist: Record<string, Record<number, Record<number, number>>>;
   successCount: number;
 }
 
@@ -571,9 +739,19 @@ export interface WasmPayload {
   strategiesJson: string;
   bannerPoolsJson: string;
   activeBannerIds: string[];
+  initialOwnedIds: number[];
+  ticketBatchesJson: string;
+  consumeExpiringTickets: boolean;
 }
 
-export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Record<string, BannerPeriod>, allStudents: Student[]): WasmPayload => {
+export const buildWasmPayload = (
+  strategies: BannerStrategy[],
+  bannersMap: Record<string, BannerPeriod>,
+  allStudents: Student[],
+  initialOwnedIds: number[] = [],
+  initialTicketBatches: TicketBatch[] = [],
+  consumeExpiringTickets: boolean = true,
+): WasmPayload => {
   const activeStrategies = strategies.filter((s) => s.isActive);
   const releaseDateMap = preprocessReleaseDates(bannersMap);
 
@@ -581,7 +759,9 @@ export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Recor
     string,
     {
       isFes: boolean;
+      isLimitedBanner: boolean;
       isRecall: boolean;
+      useChargeSystem: boolean;
       freePulls: number;
       grade3: number[];
       grade2: number[];
@@ -589,6 +769,9 @@ export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Recor
       fes: number[];
       bannerPickupIds: number[];
       fesExcludedIds: number[];
+      startTime: number;
+      endTime: number;
+      recruitBonusTicketExpiry: number;
     }
   > = {};
 
@@ -600,7 +783,9 @@ export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Recor
     const fesExcludedIds = [...new Set(pickupIds.flatMap((id) => FES_EXCLUSIONS_BY_PICKUP_ID[id] ?? []))];
     bannerPoolsForWasm[strat.bannerId] = {
       isFes: banner.isFes,
+      isLimitedBanner: banner.isLimitedBanner,
       isRecall: banner.isRecall ?? false,
+      useChargeSystem: banner.useChargeSystem,
       freePulls: banner.freePulls ?? 0,
       grade3: pools.grade3.map((s) => s.id),
       grade2: pools.grade2.map((s) => s.id),
@@ -608,12 +793,18 @@ export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Recor
       fes: pools.fes.map((s) => s.id),
       bannerPickupIds: pickupIds,
       fesExcludedIds,
+      startTime: new Date(banner.startTime).getTime(),
+      endTime: new Date(banner.endTime).getTime(),
+      recruitBonusTicketExpiry: getRecruitBonusTicketExpiry(banner.startTime),
     };
   }
 
   const strategiesForWasm = activeStrategies.map((s) => ({
     bannerId: s.bannerId,
     maxSparks: s.maxSparks ?? 1,
+    maxHalfCharges: s.maxHalfCharges ?? 2,
+    claimRecruitBonus: s.claimRecruitBonus ?? false,
+    recruitBonusThreshold: s.recruitBonusThreshold ?? 10,
     minPulls: s.minPulls ?? 0,
     targets: Object.values(s.studentConfigs)
       .filter((c) => c.mode !== 'skip')
@@ -631,24 +822,33 @@ export const buildWasmPayload = (strategies: BannerStrategy[], bannersMap: Recor
     strategiesJson: JSON.stringify(strategiesForWasm),
     bannerPoolsJson: JSON.stringify(bannerPoolsForWasm),
     activeBannerIds: activeStrategies.map((s) => s.bannerId),
+    initialOwnedIds,
+    ticketBatchesJson: JSON.stringify(
+      initialTicketBatches.map((b) => ({
+        pullUnits: b.pullUnits,
+        expiresAt: b.expiresAt,
+        availableFrom: b.availableFrom,
+        fromGacha: false,
+      })),
+    ),
+    consumeExpiringTickets,
   };
 };
 
-export const mergeSimAccumulator = (base: SimRawAccumulator, other: SimRawAccumulator): void => {
-  for (let i = 0; i < other.resultsCost.length; i++) base.resultsCost.push(other.resultsCost[i]);
-  for (let i = 0; i < other.resultsPulls.length; i++) base.resultsPulls.push(other.resultsPulls[i]);
-  if (other.resultsEligma) for (let i = 0; i < other.resultsEligma.length; i++) base.resultsEligma.push(other.resultsEligma[i]);
-  base.successCount += other.successCount;
-  base.totalEligmaSum += other.totalEligmaSum;
-  for (const [bid, costs] of Object.entries(other.bannerCumulativeCosts)) {
-    if (!base.bannerCumulativeCosts[bid]) base.bannerCumulativeCosts[bid] = [];
-    for (let i = 0; i < costs.length; i++) base.bannerCumulativeCosts[bid].push(costs[i]);
-  }
-  for (const [bid, eligma] of Object.entries(other.bannerCumulativeEligma)) {
-    if (!base.bannerCumulativeEligma[bid]) base.bannerCumulativeEligma[bid] = [];
-    for (let i = 0; i < eligma.length; i++) base.bannerCumulativeEligma[bid].push(eligma[i]);
-  }
-  for (const [bid, s] of Object.entries(other.bannerStatsSum)) {
+/* Fold WASM worker chunk (already binned) into live main-thread accumulator */
+export const mergeSimAccumulator = (base: SimRawAccumulator, chunk: SimChunkAcc): void => {
+  base.cost.merge(chunk.cost);
+  base.costIncremental.merge(chunk.costIncremental);
+  if (chunk.costWithTickets) base.costWithTickets.merge(chunk.costWithTickets);
+  if (chunk.costWithGachaTickets) base.costWithGachaTickets.merge(chunk.costWithGachaTickets);
+  if (chunk.costWithGachaTicketsIncremental) base.costWithGachaTicketsIncremental.merge(chunk.costWithGachaTicketsIncremental);
+  base.pulls.merge(chunk.pulls);
+  if (chunk.pullsIncremental) base.pullsIncremental.merge(chunk.pullsIncremental);
+  base.eligmaCumulative.merge(chunk.eligmaCumulative);
+  base.eligmaIncremental.merge(chunk.eligmaIncremental);
+  base.successCount += chunk.successCount;
+
+  for (const [bid, s] of Object.entries(chunk.bannerStatsSum)) {
     if (base.bannerStatsSum[bid]) {
       base.bannerStatsSum[bid].pulls += s.pulls;
       base.bannerStatsSum[bid].cost += s.cost;
@@ -656,15 +856,15 @@ export const mergeSimAccumulator = (base: SimRawAccumulator, other: SimRawAccumu
       base.bannerStatsSum[bid] = { pulls: s.pulls, cost: s.cost };
     }
   }
-  for (const [idStr, cnt] of Object.entries(other.studentAcquired)) {
+  for (const [idStr, cnt] of Object.entries(chunk.studentAcquired)) {
     const id = Number(idStr);
     base.studentAcquired[id] = (base.studentAcquired[id] ?? 0) + cnt;
   }
-  for (const [idStr, total] of Object.entries(other.studentElephTotal)) {
+  for (const [idStr, total] of Object.entries(chunk.studentElephTotal)) {
     const id = Number(idStr);
     base.studentElephTotal[id] = (base.studentElephTotal[id] ?? 0) + total;
   }
-  for (const [idStr, dist] of Object.entries(other.studentElephDist)) {
+  for (const [idStr, dist] of Object.entries(chunk.studentElephDist)) {
     const id = Number(idStr);
     if (!base.studentElephDist[id]) base.studentElephDist[id] = {};
     for (const [amtStr, cnt] of Object.entries(dist)) {
@@ -672,7 +872,7 @@ export const mergeSimAccumulator = (base: SimRawAccumulator, other: SimRawAccumu
       base.studentElephDist[id][amt] = (base.studentElephDist[id][amt] ?? 0) + cnt;
     }
   }
-  for (const [bid, studentDists] of Object.entries(other.bannerStudentElephDist ?? {})) {
+  for (const [bid, studentDists] of Object.entries(chunk.bannerStudentElephDist ?? {})) {
     if (!base.bannerStudentElephDist[bid]) base.bannerStudentElephDist[bid] = {};
     for (const [sidStr, dist] of Object.entries(studentDists)) {
       const sid = Number(sidStr);
@@ -686,33 +886,6 @@ export const mergeSimAccumulator = (base: SimRawAccumulator, other: SimRawAccumu
 };
 
 export const buildGlobalResultFromRaw = (acc: SimRawAccumulator, simCount: number, allStudents: Student[], bannersMap: Record<string, BannerPeriod>): GlobalAggregatedResult => {
-  const distPulls = createDistribution(acc.resultsPulls, 10, simCount);
-  const distCost = createDistribution(acc.resultsCost, 1200, simCount);
-  const distEligma = acc.resultsEligma?.length ? createDistribution(acc.resultsEligma, 10, simCount) : [];
-  const distEligmaExact = acc.resultsEligma?.length ? createExactAmountDistribution(acc.resultsEligma, simCount) : [];
-
-  const distCostMap: Record<string, DistributionData[]> = {};
-  for (const [bannerId, costs] of Object.entries(acc.bannerCumulativeCosts)) {
-    distCostMap[bannerId] = createDistribution(costs, 1200, simCount);
-  }
-
-  // Per-banner incremental eligma distributions (sorted by date for correct subtraction)
-  const distEligmaMap: Record<string, DistributionData[]> = {};
-  const distEligmaExactMap: Record<string, Array<{ amount: number; probability: number }>> = {};
-  const sortedBannerIds = Object.keys(acc.bannerCumulativeEligma).sort((a, b) => {
-    const ta = new Date(bannersMap[a]?.startTime ?? 0).getTime();
-    const tb = new Date(bannersMap[b]?.startTime ?? 0).getTime();
-    return ta - tb;
-  });
-  let prevCumEligma: number[] = [];
-  for (const bid of sortedBannerIds) {
-    const cumulative = acc.bannerCumulativeEligma[bid] ?? [];
-    const incremental = cumulative.map((v, i) => v - (prevCumEligma[i] ?? 0));
-    distEligmaMap[bid] = createDistribution(incremental, 10, simCount);
-    distEligmaExactMap[bid] = createExactAmountDistribution(incremental, simCount);
-    prevCumEligma = cumulative;
-  }
-
   const bannerStats = Object.keys(acc.bannerStatsSum)
     .map((bid) => {
       const banner = bannersMap[bid];
@@ -778,16 +951,15 @@ export const buildGlobalResultFromRaw = (acc: SimRawAccumulator, simCount: numbe
   return {
     simCount,
     successRate: simCount > 0 ? (acc.successCount / simCount) * 100 : 0,
-    avgTotalPulls: simCount > 0 ? acc.resultsPulls.reduce((a, b) => a + b, 0) / simCount : 0,
-    avgTotalCost: simCount > 0 ? acc.resultsCost.reduce((a, b) => a + b, 0) / simCount : 0,
-    avgTotalEligma: simCount > 0 ? acc.totalEligmaSum / simCount : 0,
-    distPulls,
-    distCost,
-    distEligma,
-    distEligmaExact,
-    distCostMap,
-    distEligmaMap,
-    distEligmaExactMap,
+    cost: acc.cost,
+    costIncremental: acc.costIncremental,
+    costWithGachaTickets: acc.costWithGachaTickets,
+    costWithGachaTicketsIncremental: acc.costWithGachaTicketsIncremental,
+    costWithTickets: acc.costWithTickets,
+    pulls: acc.pulls,
+    pullsIncremental: acc.pullsIncremental,
+    eligmaCumulative: acc.eligmaCumulative,
+    eligmaIncremental: acc.eligmaIncremental,
     bannerStats,
     studentStats,
     distStudentElephMap,
@@ -804,6 +976,8 @@ export const runGlobalSimulation = (
   allStudents: Student[],
   config: SimulationConfig,
   initialOwnedIds: number[] = [],
+  initialTicketBatches: TicketBatch[] = [],
+  consumeExpiringTickets: boolean = true,
 ): GlobalAggregatedResult => {
   const { simCount } = config;
   // const pools = initializePools(allStudents);
@@ -819,23 +993,46 @@ export const runGlobalSimulation = (
     }
   });
 
-  // 1. Variables for aggregating overall statistics
-  const resultsPulls: number[] = [];
-  const resultsCost: number[] = [];
-  const resultsEligma: number[] = [];
-  let totalEligmaSum = 0;
-  let successCount = 0;
+  // Active banners, sorted (static per strategy set, only RNG differs); used for ticket-checkpoint anchoring.
+  const activeBannersSorted = strategies
+    .filter((s) => s.isActive && bannersMap[s.bannerId])
+    .map((s) => ({ id: s.bannerId, startTime: getBannerStartTimeMs(bannersMap[s.bannerId].startTime) }))
+    .sort((a, b) => a.startTime - b.startTime);
+  const ticketCtx: TicketSimContext = { consumeExpiringTickets };
 
-  // 2. For tracking cumulative data per banner
-  // key: bannerId, value: array of cumulative costs per simulation
-  const bannerCumulativeCosts: Record<string, number[]> = {};
-  const bannerCumulativeEligma: Record<string, number[]> = {};
-  strategies.forEach((s) => {
-    if (s.isActive) {
-      bannerCumulativeCosts[s.bannerId] = [];
-      bannerCumulativeEligma[s.bannerId] = [];
+  // Dates where held ticket value can change with no banner running: a Recruitment Count Bonus ticket's
+  // Group ticket checkpoint dates under latest banner at or before; extra snapshots filter by date, no re-sim needed.
+  const extraCheckpointsByBanner: Record<string, number[]> = {};
+  const ticketCheckpointDates = new Set<number>();
+  for (const s of strategies) {
+    if (s.isActive && bannersMap[s.bannerId]) ticketCheckpointDates.add(getRecruitBonusTicketExpiry(bannersMap[s.bannerId].startTime));
+  }
+  for (const batch of initialTicketBatches) {
+    if (batch.availableFrom > 0) ticketCheckpointDates.add(batch.availableFrom);
+    if (batch.expiresAt !== null) ticketCheckpointDates.add(batch.expiresAt);
+  }
+  for (const date of ticketCheckpointDates) {
+    let anchor: { id: string; startTime: number } | null = null;
+    for (const b of activeBannersSorted) {
+      if (b.startTime <= date) anchor = b;
+      else break;
     }
-  });
+    if (!anchor || date === anchor.startTime) continue; // before the first banner, or coincides with one — no extra checkpoint needed
+    (extraCheckpointsByBanner[anchor.id] ??= []).push(date);
+  }
+
+  // Per-checkpoint accumulators, one SimMetricAccumulator per tracked variable — checkpoints (banner ids,
+  // "ticket-<date>", "inf") are created lazily on first push, no upfront initialization needed.
+  const cost = new SimMetricAccumulator(PYROXENE_PER_10PULL);
+  const costIncremental = new SimMetricAccumulator(PYROXENE_PER_10PULL);
+  const costWithTickets = new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT);
+  const costWithGachaTickets = new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT);
+  const costWithGachaTicketsIncremental = new SimMetricAccumulator(PYROXENE_PER_PULL_UNIT);
+  const pulls = new SimMetricAccumulator(PULL_UNITS_PER_10PULL);
+  const pullsIncremental = new SimMetricAccumulator(PULL_UNITS_PER_10PULL);
+  const eligmaCumulative = new SimMetricAccumulator(1);
+  const eligmaIncremental = new SimMetricAccumulator(1);
+  let successCount = 0;
 
   const bannerStatsSum: Record<string, { pulls: number; cost: number }> = {};
   strategies.forEach((s) => {
@@ -856,8 +1053,12 @@ export const runGlobalSimulation = (
   // Simulation loop (N times)
   // ==========================
   for (let i = 0; i < simCount; i++) {
+    // Running total for this run only — costWithGachaTickets isn't tracked on `state` itself (it's computed
+    // from state + held ticket value at push time), so the incremental delta needs its own previous-value.
+    let prevCostWithGachaTicketsValue = 0;
     const state: SimState = {
       owned: new Set(initialOwnedIds),
+      obtainedInSim: new Set(),
       acquiredInSim: new Set(),
       eleph: new Map(),
       totalEligma: 0,
@@ -865,6 +1066,9 @@ export const runGlobalSimulation = (
       totalCost: 0,
       chargeNormal: 0,
       chargeLimited: 0,
+      // Deep-copied per sim run since consumeTicketOrPyroxene mutates pullUnits in place.
+      ticketPool: initialTicketBatches.map((b) => ({ pullUnits: b.pullUnits, expiresAt: b.expiresAt, availableFrom: b.availableFrom, fromGacha: false })),
+      nonGachaTicketValueSpent: 0,
     };
 
     // Execution by strategy
@@ -884,8 +1088,9 @@ export const runGlobalSimulation = (
       const prevPulls = state.totalPulls;
       const prevCost = state.totalCost;
       const prevEleph = new Map(state.eleph);
+      const prevEligma = state.totalEligma;
 
-      simulateSingleBanner(state, strat, banner, currentBannerPool);
+      simulateSingleBanner(state, strat, banner, currentBannerPool, ticketCtx);
 
       // Accumulate statistics
       if (bannerStatsSum[strat.bannerId]) {
@@ -906,25 +1111,42 @@ export const runGlobalSimulation = (
         }
       }
 
-      // Add cumulative cost and eligma up to this point to the relevant banner statistics
-      if (bannerCumulativeCosts[strat.bannerId]) {
-        bannerCumulativeCosts[strat.bannerId].push(state.totalCost);
-      }
-      if (bannerCumulativeEligma[strat.bannerId]) {
-        bannerCumulativeEligma[strat.bannerId].push(state.totalEligma);
+      // Push cumulative cost/pulls/eligma up to this point, plus the incremental (just-this-banner) values,
+      // to this banner's checkpoint.
+      const atTime = getBannerStartTimeMs(banner.startTime);
+      cost.push(strat.bannerId, state.totalCost);
+      costIncremental.push(strat.bannerId, state.totalCost - prevCost);
+      costWithTickets.push(strat.bannerId, state.totalCost - heldPyroxeneValue(state.ticketPool, atTime));
+      const costWithGachaTicketsValue = state.totalCost + state.nonGachaTicketValueSpent - heldPyroxeneValue(state.ticketPool, atTime, true);
+      costWithGachaTickets.push(strat.bannerId, costWithGachaTicketsValue);
+      costWithGachaTicketsIncremental.push(strat.bannerId, costWithGachaTicketsValue - prevCostWithGachaTicketsValue);
+      prevCostWithGachaTicketsValue = costWithGachaTicketsValue;
+      pulls.push(strat.bannerId, state.totalPulls);
+      pullsIncremental.push(strat.bannerId, state.totalPulls - prevPulls);
+      eligmaCumulative.push(strat.bannerId, state.totalEligma);
+      eligmaIncremental.push(strat.bannerId, state.totalEligma - prevEligma);
+      // Extra ticket-event checkpoints anchored to this banner: net cost is unchanged, but held ticket
+      // value is re-evaluated at each date so expiry/grant events still show up.
+      for (const date of extraCheckpointsByBanner[strat.bannerId] ?? []) {
+        const id = `ticket-${date}`;
+        cost.push(id, state.totalCost);
+        costWithTickets.push(id, state.totalCost - heldPyroxeneValue(state.ticketPool, date));
+        costWithGachaTickets.push(id, state.totalCost + state.nonGachaTicketValueSpent - heldPyroxeneValue(state.ticketPool, date, true));
       }
     }
 
-    resultsPulls.push(state.totalPulls);
-    resultsCost.push(state.totalCost);
-    resultsEligma.push(state.totalEligma);
-    totalEligmaSum += state.totalEligma;
+    // "inf" checkpoint: final state at time=Infinity; only unlimited batches (expiresAt: null) count as held.
+    cost.push('inf', state.totalCost);
+    costWithTickets.push('inf', state.totalCost - heldPyroxeneValue(state.ticketPool, Infinity));
+    costWithGachaTickets.push('inf', state.totalCost + state.nonGachaTicketValueSpent - heldPyroxeneValue(state.ticketPool, Infinity, true));
+    pulls.push('inf', state.totalPulls);
+    eligmaCumulative.push('inf', state.totalEligma);
 
     let isSuccess = true;
     for (const strat of strategies) {
       if (!strat.isActive) continue;
       for (const conf of Object.values(strat.studentConfigs)) {
-        if (conf.mode === 'must' && !state.owned.has(conf.studentId)) {
+        if (conf.mode === 'must' && !state.obtainedInSim.has(conf.studentId)) {
           isSuccess = false;
           break;
         }
@@ -947,17 +1169,20 @@ export const runGlobalSimulation = (
 
   return buildGlobalResultFromRaw(
     {
-      resultsPulls,
-      resultsCost,
-      resultsEligma,
-      bannerCumulativeCosts,
-      bannerCumulativeEligma,
+      cost,
+      costIncremental,
+      costWithTickets,
+      costWithGachaTickets,
+      costWithGachaTicketsIncremental,
+      pulls,
+      pullsIncremental,
+      eligmaCumulative,
+      eligmaIncremental,
       bannerStatsSum,
       studentAcquired: Object.fromEntries(Object.entries(studentRawStats).map(([id, r]) => [Number(id), r.acquiredCount])),
       studentElephTotal: Object.fromEntries(Object.entries(studentRawStats).map(([id, r]) => [Number(id), r.totalEleph])),
       studentElephDist: Object.fromEntries(Object.entries(studentRawStats).map(([id, r]) => [Number(id), Object.fromEntries(r.elephCounts)])),
       bannerStudentElephDist,
-      totalEligmaSum,
       successCount,
     },
     simCount,

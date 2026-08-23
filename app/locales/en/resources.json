@@ -11,10 +11,8 @@
     "oneYear": "1 year"
   },
   "tabs": {
-    "overview": "Overview",
     "resources": "Resources",
     "income": "Sources & Spending",
-    "incomeShort": "Setup",
     "students": "Student Goals",
     "studentsShort": "Goals"
   },
@@ -26,7 +24,6 @@
     "openButton": "Student Goals",
     "sectionTitle": "Student goals",
     "emptyState": "Add student goals to see whether natural eleph income is enough or eligma is needed.",
-    "statusAtRisk": "At risk",
     "statusCovered": "Eligma covers it",
     "statusOnTrack": "On track",
     "statusNoDeadline": "No deadline",
@@ -54,7 +51,6 @@
   "trackedItems": {
     "title": "Tracked Items",
     "searchPlaceholder": "Search items or student aliases...",
-    "noResults": "No results",
     "activeTarget": "Active target",
     "noGoalsSet": "No content goals set. Add goals via Student Goals below.",
     "displayByGrowthPlan": "Display by growth plan",
@@ -72,7 +68,6 @@
     "noDefaultSet": "No default set — not tracking this period.",
     "usingDefaultConfig": "Using default config.",
     "defaultAllPeriods": "Default (all periods)",
-    "clear": "Clear",
     "weeklyMax": "Weekly max",
     "dailyMode": "Daily",
     "weeklyIncome": "Weekly income",
@@ -83,7 +78,6 @@
   },
   "elephCard": {
     "contentMode": "Content",
-    "dateMode": "Date",
     "timingStart": "Start",
     "timingEnd": "End",
     "selectContent": "— Select content —",
@@ -110,15 +104,12 @@
     "extraWeeklyIncome": "Extra weekly income",
     "miscSources": "misc sources",
     "daily": "Daily:",
-    "weekly": "Weekly:",
-    "coins": "coins"
+    "weekly": "Weekly:"
   },
   "raid": {
     "killDifficulty": "Kill difficulty",
-    "trophy": "Trophy",
     "normal": "Normal:",
-    "premium": "Premium:",
-    "eligmaLabel": "Eligma:"
+    "premium": "Premium:"
   },
   "panel": {
     "title": "Resources",
@@ -126,14 +117,11 @@
     "gachaSimulation": "Gacha simulation",
     "noSimDataPre": "No simulation data.",
     "noSimDataPost": "first.",
-    "runSim": "Run a simulation",
     "planAt": "Plan at",
-    "avg": "Avg",
     "eventIncome": "Event Income (from Event Planner)",
     "noEventDataPre": "No event income linked.",
     "goToEventPlanner": "Set up the Event Planner",
     "noEventDataPost": "to include event drops.",
-    "total": "Total",
     "coinShopNote": "Coin shop, Expert Permit purchases, and hard stage runs configured in Schedule section below."
   },
   "schedule": {
@@ -145,16 +133,13 @@
   },
   "stageFarming": {
     "runsPerDay": "runs/day",
-    "apply": "Apply",
     "remove": "Remove",
     "runsScheduled_one": "{{count}} run scheduled",
     "runsScheduled_other": "{{count}} runs scheduled"
   },
   "purchasePanel": {
     "shopNotOpen": "Shop not yet open · available from {{date}}",
-    "targetReached": "Target reached",
-    "apply": "Apply",
-    "cancel": "Cancel"
+    "targetReached": "Target reached"
   },
   "eventLabels": {
     "title": "{{title}}",

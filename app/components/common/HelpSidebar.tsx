@@ -69,6 +69,7 @@ export const HelpSidebar = () => {
   const { isOpen, activeHelpKey, closeSidebar, highlightedTour, setHighlightedTour } = useHelpStore();
   const { t: t_c } = useTranslation('common', { keyPrefix: 'helpSidebar' });
   const { t } = useTranslation('help');
+  const { t: t_ui } = useTranslation('ui');
 
   const startTour = useCallback(
     (tourSteps: TourStep[]) => {
@@ -80,7 +81,7 @@ export const HelpSidebar = () => {
         allowClose: true,
         nextBtnText: t_c('driver.next'),
         prevBtnText: t_c('driver.prev'),
-        doneBtnText: t_c('driver.done'),
+        doneBtnText: t_ui('done'),
         steps: tourSteps.map((step) => ({
           element: getVisibleElement(step.element),
           popover: { title: step.popover.title, description: stringToElement(step.popover.description) },

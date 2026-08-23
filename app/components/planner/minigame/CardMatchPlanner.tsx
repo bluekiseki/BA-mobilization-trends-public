@@ -441,14 +441,7 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
     return firstDropId ? { type: 'Item', id: firstDropId } : null;
   }, [concentrationData, eventData, droppableItemIds]);
 
-  // const rewardTable = useMemo(() => {
-  //   const byRound: Record<number, ConcentrationReward[]> = {};
-  //   concentrationData.reward.forEach((r) => {
-  //     if (!byRound[r.Round]) byRound[r.Round] = [];
-  //     byRound[r.Round].push(r);
-  //   });
-  //   return byRound;
-  // }, [concentrationData]);
+  // Unused: rewardTable grouped by round (kept for reference).
 
   // Initial run
   useEffect(() => {

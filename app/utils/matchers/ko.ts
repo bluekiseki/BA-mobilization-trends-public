@@ -12,9 +12,7 @@ export default function match(target: string, query: string): boolean {
     return true;
   }
 
-  // 2. [Choseong] Initial consonant search (when the query consists only of initials)
-  // e.g., '라면' -> 'ㄹㅁ'
-  // Check when the query contains only Hangul consonants (ㄱ-ㅎ) without full syllables (가-힣)
+  // 2. Choseong (initial consonant) search, e.g. '라면' -> 'ㄹㅁ'.
   const isChoseongQuery = /[ㄱ-ㅎ]/.test(q) && !/[가-힣]/.test(q);
   if (isChoseongQuery) {
     const tChoseong = getChoseong(t); // '라면' -> 'ㄹㅁ'

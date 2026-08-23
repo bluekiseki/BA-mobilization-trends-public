@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaCompressArrowsAlt, FaExpandArrowsAlt, FaSearch, FaPlus, FaArrowLeft, FaSortAmountDown, FaTable, FaTh, FaList } from 'react-icons/fa';
-import { data, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router';
+import { data, Link, useLoaderData, useLocation, type LoaderFunctionArgs } from 'react-router';
 
 // Utils & Stores
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
@@ -65,10 +65,13 @@ export const StudentPlannerPage = () => {
 
   const [sortOrder, setSortOrder] = useState<'name' | 'level' | 'date' | 'currentStar' | 'targetStar' | 'id'>('date');
   const [showOnlySelected, setShowOnlySelected] = useState(false);
-  const [viewMode, setViewMode] = useState<'card' | 'table' | 'content'>('card');
+  const location = useLocation();
+  // Deep-linked via Link `state={{ view: 'table' }}` (e.g. gacha planner's shortcut) to land on the table view.
+  const [viewMode, setViewMode] = useState<'card' | 'table' | 'content'>(() => ((location.state as { view?: string } | null)?.view === 'table' ? 'table' : 'card'));
 
   const { t, i18n } = useTranslation('planner');
-  const { t: t_c } = useTranslation('common');
+  // const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { growthPlans, addPlan, selectAllPlans, setGrowthPlans } = useGlobalStore();
   const matcher = useSearchMatcher(locale);
@@ -182,14 +185,6 @@ export const StudentPlannerPage = () => {
     return result;
   }, [growthPlans, searchTerm, sortOrder, allStudents, showOnlySelected]);
 
-  if (loading || !iconInfoData) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-neutral-50 dark:bg-neutral-900">
-        <p className="text-neutral-500">{t_c('loading_txt')}</p>
-      </div>
-    );
-  }
-
   if (selectedPlanUuid && selectedPlan) {
     return (
       <div className="bg-neutral-100 dark:bg-neutral-900 min-h-screen p-2 md:p-4">
@@ -227,7 +222,7 @@ export const StudentPlannerPage = () => {
                   <FaSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-xs" />
                   <input
                     type="text"
-                    placeholder={t('ui.searchStudentPlaceholder')}
+                    placeholder={t_ui('searchStudents')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-8 pr-3 py-2 text-xs border border-neutral-200 rounded-lg bg-white dark:bg-neutral-800 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -306,7 +301,7 @@ export const StudentPlannerPage = () => {
                   className="flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 px-2.5 py-1.5 rounded transition-colors whitespace-nowrap"
                 >
                   {isSummaryExpanded ? <FaCompressArrowsAlt size={13} /> : <FaExpandArrowsAlt size={13} />}
-                  {isSummaryExpanded ? t_c('close') : `${t('ui.totalNeededTitle')} (${selectedPlansCount})`}
+                  {isSummaryExpanded ? t_ui('close') : `${t('ui.totalNeededTitle')} (${selectedPlansCount})`}
                 </button>
                 <Link
                   to={localeLink(locale, '/planner/equipment')}
@@ -350,7 +345,12 @@ export const StudentPlannerPage = () => {
           </button>
         </div>
 
-        {viewMode === 'content' ? (
+        {loading || !iconInfoData ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16">
+            <div className="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-neutral-500">{t_ui('loading')}</p>
+          </div>
+        ) : viewMode === 'content' ? (
           <ContentGroupedStudentView contentItems={contentItems} growthPlans={growthPlans} allStudents={allStudents} />
         ) : viewMode === 'table' ? (
           <div className="space-y-3">
@@ -360,7 +360,7 @@ export const StudentPlannerPage = () => {
         ) : (
           <div className="grid gap-2 sm:gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))' }}>
             {filteredAndSortedPlans.map((plan) => (
-              <div key={plan.uuid} className="h-44">
+              <div key={plan.uuid} className="">
                 <StudentGridCard
                   plan={plan}
                   studentInfo={plan.studentId ? allStudents[plan.studentId] : null}

@@ -8,7 +8,7 @@ Allow: /dashboard/
 Allow: /planner/
 Allow: /scanner/
 Allow: /utils/
-Allow: /calendar/
+Allow: /calendar
 Allow: /notices$
 Disallow: /notices/
 
@@ -18,7 +18,7 @@ Allow: /ko/dashboard/
 Allow: /ko/planner/
 Allow: /ko/scanner/
 Allow: /ko/utils/
-Allow: /ko/calendar/
+Allow: /ko/calendar
 Allow: /ko/notices$
 Disallow: /ko/notices/
 
@@ -28,7 +28,7 @@ Allow: /ja/dashboard/
 Allow: /ja/planner/
 Allow: /ja/scanner/
 Allow: /ja/utils/
-Allow: /ja/calendar/
+Allow: /ja/calendar
 Allow: /ja/notices$
 Disallow: /ja/notices/
 
@@ -38,6 +38,6 @@ Allow: /zh-Hant/dashboard/
 Allow: /zh-Hant/planner/
 Allow: /zh-Hant/scanner/
 Allow: /zh-Hant/utils/
-Allow: /zh-Hant/calendar/
+Allow: /zh-Hant/calendar
 Allow: /zh-Hant/notices$
 Disallow: /zh-Hant/notices/

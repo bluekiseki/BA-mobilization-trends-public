@@ -20,7 +20,7 @@ interface OverviewDashboardUIProp {
 // overviewLoading: topOverviewLoading, setOverviewLoading: SetTopOverviewLoading
 const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: OverviewDashboardUIProp) => {
   const { t } = useTranslation('dashboard');
-  const { t: t_c } = useTranslation('common');
+  const { t: t_ui } = useTranslation('ui');
 
   const id = raidInfos[0].Id;
   const isGrandAssault = raidInfos.length > 1;
@@ -69,7 +69,7 @@ const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: Overvie
   if (isCalculating) {
     return (
       <>
-        <div className="min-h-[250px] flex justify-center items-center text-2xl cursor-progress">{t_c('loading_txt')}</div>
+        <div className="min-h-62.5 flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
       </>
     );
   }

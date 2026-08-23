@@ -304,11 +304,6 @@ function arePropsEqual(prev: SpreadsheetTableRowProps, next: SpreadsheetTableRow
     JSON.stringify(prev.plan) == JSON.stringify(next.plan) &&
     prev.screenWidth === next.screenWidth;
   if (planEqual) return true;
-  // console.log('[TableRow] memo check:', {prev, next}, prev.row.studentId === next.row.studentId ,
-  // prev.plan?.uuid === next.plan?.uuid ,
-  // prev.plan?.uuid === next.plan?.uuid ,
-  // JSON.stringify(prev.plan) == JSON.stringify(next.plan),
-  // prev.screenWidth === next.screenWidth);
   return false;
 }
 

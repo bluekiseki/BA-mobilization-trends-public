@@ -25,6 +25,8 @@ export interface PvpCoinSectionProps {
 
 export default function PvpCoinSection({ pvpAverageRank, pvpDailyDefenseWins, pvpExtraWeeklyIncome, onUpdate }: PvpCoinSectionProps) {
   const { t } = useTranslation('resources');
+
+  const { t: t_g } = useTranslation('game');
   const rankingCoins = rankToDailyCoins(pvpAverageRank);
   const defenseCoins = Math.min(pvpDailyDefenseWins * 3, 30);
   const dailyIncome = rankingCoins + defenseCoins;
@@ -69,12 +71,12 @@ export default function PvpCoinSection({ pvpAverageRank, pvpDailyDefenseWins, pv
         <span>
           <span className="text-neutral-500 dark:text-neutral-400">{t('pvp.daily')} </span>
           <span className="font-bold text-neutral-800 dark:text-neutral-100">{dailyIncome}</span>
-          <span className="text-neutral-400 dark:text-neutral-500 text-xs ml-0.5">{t('pvp.coins')}</span>
+          <span className="text-neutral-400 dark:text-neutral-500 text-xs ml-0.5">{t_g('coin')}</span>
         </span>
         <span>
           <span className="text-neutral-500 dark:text-neutral-400">{t('pvp.weekly')} </span>
           <span className="font-bold text-neutral-800 dark:text-neutral-100">{weeklyIncome}</span>
-          <span className="text-neutral-400 dark:text-neutral-500 text-xs ml-0.5">{t('pvp.coins')}</span>
+          <span className="text-neutral-400 dark:text-neutral-500 text-xs ml-0.5">{t_g('coin')}</span>
         </span>
       </div>
     </div>

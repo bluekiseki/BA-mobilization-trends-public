@@ -16,6 +16,7 @@ interface Props {
 
 export function NewProfileModal({ onClose }: Props) {
   const { t, i18n } = useTranslation('auth');
+  const { t: t_ui } = useTranslation('ui');
   const defaultServer = getDefaultProfileServer(i18n.language);
   const [name, setName] = useState('');
   const [group, setGroup] = useState<ServerGroup>(defaultServer === 'jp' ? 'JP' : 'GLKR');
@@ -98,7 +99,7 @@ export function NewProfileModal({ onClose }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('settings.profiles.server')}</label>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t_ui('server')}</label>
             <div className="flex gap-2 mb-3">
               {(
                 [

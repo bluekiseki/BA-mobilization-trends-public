@@ -37,10 +37,10 @@ interface SortedEvent {
   closeTime: string;
 }
 
-export function eventTagTranslation(tag: string, t: TFunction<'planner'>) {
+export function eventTagTranslation(tag: string, t: TFunction<['planner', 'game', 'ui', 'common']>) {
   if (tag == 'Stage') return t('common.stage');
   else if (tag == 'Shop') return t('common.shop');
-  else if (tag == 'Mission') return t('common.mission');
+  else if (tag == 'Mission') return t('ui:mission');
   else if (tag == 'BoxGacha') return `${t('ui.minigame')} - ${t('minigame.roulette')}`;
   else if (tag == 'FortuneGachaShop') return `${t('ui.minigame')} - ${t('minigame.omikuji')}`;
   else if (tag == 'DiceRace') return `${t('ui.minigame')} - ${t('minigame.diceRace')}`;
@@ -59,7 +59,7 @@ export function eventTagTranslation(tag: string, t: TFunction<'planner'>) {
 }
 
 export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeStr }: EventInfoProps) => {
-  const { t, i18n } = useTranslation('planner');
+  const { t, i18n } = useTranslation(['planner', 'game', 'common']);
   const { t: t_c } = useTranslation('common');
   const { t: t_d } = useTranslation('dashboard');
   const locale = i18n.language as Locale;
@@ -136,7 +136,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
         className="flex w-full items-center justify-between gap-4 rounded-lg bg-white dark:bg-neutral-800 p-4 text-left shadow-sm ring-1 ring-black/5 dark:ring-white/10 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-sky-500"
       >
         <span className="flex-1">
-          {currentEvent.isRerun && <span className="block text-xs font-medium text-sky-600 dark:text-sky-400">{t('common.rerun')}</span>}
+          {currentEvent.isRerun && <span className="block text-xs font-medium text-sky-600 dark:text-sky-400">{t('game:rerun')}</span>}
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-800 dark:text-neutral-100">{currentEvent.name}</h1>
         </span>
         <HiChevronDown className="h-6 w-6 shrink-0 text-neutral-400" />
@@ -147,7 +147,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
         <div className="flex flex-col gap-1.5 text-sm text-neutral-600 dark:text-neutral-400">
           {/* JP Schedule */}
           <div className="flex items-start gap-2">
-            <div className="flex items-center gap-1.5 min-w-[50px] shrink-0 mt-0.5 font-bold text-neutral-500 dark:text-neutral-300">
+            <div className="flex items-center gap-1.5 min-w-12.5 shrink-0 mt-0.5 font-bold text-neutral-500 dark:text-neutral-300">
               <HiOutlineCalendarDays className="h-4 w-4" />
               <span>JP</span>
             </div>
@@ -156,7 +156,7 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
 
           {/* GL Schedule */}
           <div className="flex items-start gap-2">
-            <div className="flex items-center gap-1.5 min-w-[50px] shrink-0 mt-0.5 font-bold text-neutral-500 dark:text-neutral-300">
+            <div className="flex items-center gap-1.5 min-w-12.5 shrink-0 mt-0.5 font-bold text-neutral-500 dark:text-neutral-300">
               <HiOutlineGlobeAlt className="h-4 w-4" />
               <span>GL</span>
             </div>
@@ -254,9 +254,9 @@ export const EventInfo = ({ name, eventId, startTime, endTime, eventContentTypeS
                       <div className="flex items-center gap-2 max-w-full">
                         <span
                           className={`truncate flex-1 text-neutral-900 dark:text-neutral-100 ${event.id % 100000 === eventId ? 'font-bold' : 'font-medium'}`}
-                          title={(((event.id / 10000) | 0) == 1 ? `[${t('common.rerun')}] ` : '') + event.name}
+                          title={(((event.id / 10000) | 0) == 1 ? `[${t('game:rerun')}] ` : '') + event.name}
                         >
-                          {(((event.id / 10000) | 0) == 1 ? `[${t('common.rerun')}] ` : '') + event.name}
+                          {(((event.id / 10000) | 0) == 1 ? `[${t('game:rerun')}] ` : '') + event.name}
                         </span>
                       </div>
 

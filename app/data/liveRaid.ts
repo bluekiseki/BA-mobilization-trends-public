@@ -15,7 +15,10 @@ type BossDataMap = Record<string, BossDataEntry>;
 export const LIVE_RAID_DURATION = 7;
 
 export const LiveRaidInfos = [
-  { Id: 'R91', Boss: 'Hieronymus_Street', Location: 'Street', Date: '2026-08-05 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
+  { Id: 'E36', Boss: 'Binah', Location: 'Outdoor', Type: 'LightArmor', Date: '2026-08-19 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  { Id: 'E36', Boss: 'Binah', Location: 'Outdoor', Type: 'HeavyArmor', Date: '2026-08-19 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
+  { Id: 'E36', Boss: 'Binah', Location: 'Outdoor', Type: 'ElasticArmor', Date: '2026-08-19 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },
+  // { Id: 'R91', Boss: 'Hieronymus_Street', Location: 'Street', Date: '2026-08-05 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Lunatic: 1, Torment: 1, Insane: 1 } },
   // { Id: 'E35', Boss: 'HOD_Indoor', Location: 'Indoor', Type: 'HeavyArmor', Date: '2026-07-15 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
   // { Id: 'E35', Boss: 'HOD_Indoor', Location: 'Indoor', Type: 'ElasticArmor', Date: '2026-07-15 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Torment: 1, Insane: 1 } },
   // { Id: 'E35', Boss: 'HOD_Indoor', Location: 'Indoor', Type: 'LightArmor', Date: '2026-07-15 11:00:00', Alias: '', MaxLv: 90, Cnt: { All: 20000, Insane: 1 } },

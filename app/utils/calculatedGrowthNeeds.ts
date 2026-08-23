@@ -229,6 +229,23 @@ export const calcRankNeeds = (currentStar: number, targetStar: number, currentUW
   return needs;
 };
 
+// Every distinct potential-material "tier" offset — used to check whether a given Opart id could
+// ever be a student's potential material, regardless of what level any growth plan currently sets.
+const POTENTIAL_OPART_TIERS = [...new Set(potentialLevelCost.map((c) => c.opartTier))];
+
+// Which students' kits reference this item id as a skill/potential material, independent of any growth plan's levels.
+// Generic: works for any id in SkillMaterial/SkillExMaterial/PotentialMaterial, no per-type branching.
+export function getStudentsUsingMaterial(itemId: number, allStudents: StudentData): number[] {
+  const result: number[] = [];
+  for (const [idStr, student] of Object.entries(allStudents)) {
+    const skillMats = [...(student.SkillMaterial ?? []), ...(student.SkillExMaterial ?? [])].flat();
+    const usesSkillMat = skillMats.includes(itemId);
+    const usesPotentialMat = student.PotentialMaterial != null && POTENTIAL_OPART_TIERS.some((tier) => student.PotentialMaterial + tier === itemId);
+    if (usesSkillMat || usesPotentialMat) result.push(Number(idStr));
+  }
+  return result;
+}
+
 export const calculatedGrowthNeeds = (plansForThisEvent: GrowthPlan[], allStudents: StudentData) => {
   const needs: Record<string, number> = {};
   for (const plan of plansForThisEvent) {

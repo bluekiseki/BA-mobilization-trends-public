@@ -5,11 +5,8 @@ import { projectReviewRow } from './reviewImpact';
 
 const NUMERIC_FIELDS = ['level', 'star', 'uw', 'uwLevel', 'ex', 'normal', 'passive', 'sub', 'affection', 'gear'] as const;
 
-// Merges recognized (non-null) fields into each row's GrowthPlan.current via the global
-// store's own updatePlan action — reused as-is (not reimplemented) so the same
-// target-invariant correction manual spreadsheet edits already get (current never exceeds
-// target) applies to scanner-applied values too. Unrecognized (null) fields are left
-// untouched, never coerced to 0. Returns the number of students applied.
+// Merges recognized (non-null) fields into each row's GrowthPlan.current via the global store's updatePlan action,
+// reusing its target-invariant correction. Unrecognized (null) fields are left untouched. Returns the number applied.
 export function applyReviewRows(rows: StudentReviewRow[]): number {
   const applicable = rows.filter((row) => row.apply && row.studentId !== null);
   if (!applicable.length) return 0;

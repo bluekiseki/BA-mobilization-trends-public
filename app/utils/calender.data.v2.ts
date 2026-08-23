@@ -66,6 +66,7 @@ export interface ScheduleItemDetailsV2 {
   storyTitleMulti?: MultiLang;
   ministoryTitle?: MultiLang;
   part?: number;
+  id?: number; // for mini-story
 }
 
 export interface ScheduleItemV2 {
@@ -152,6 +153,7 @@ interface StoryItemBase {
   titleKo?: string;
   titleTw?: string;
   prediction?: boolean;
+  id: number; // for mini story
 }
 interface PatchItem extends StoryItemBase {
   startTime: string;
@@ -348,7 +350,7 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
         type: 'jointFiringDrill',
         startTime: item.startTime,
         endTime: item.endTime,
-        i18nKey: `calendar:jfd.${item.type}`,
+        i18nKey: `game:jfds.${item.type}`,
         season: item.season,
         details: { jfdType: item.type, terrain: item.teran, armorType: item.armorType, prediction: !!item.prediction, jfd3rd: buildML('3nd'), jfd4th: buildML('4nd') },
       });
@@ -457,7 +459,7 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
         startTime: item.startTime,
         endTime: endTimeISO,
         i18nKey: 'calendar:story.mini',
-        details: { isPointEvent: true, ministoryTitle: Object.keys(ministoryTitle).length > 0 ? ministoryTitle : undefined, prediction: !!item.prediction },
+        details: { isPointEvent: true, id: item?.id, ministoryTitle: Object.keys(ministoryTitle).length > 0 ? ministoryTitle : undefined, prediction: !!item.prediction },
       });
     });
   }

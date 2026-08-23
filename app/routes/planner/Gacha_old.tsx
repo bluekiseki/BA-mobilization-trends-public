@@ -102,7 +102,8 @@ function isStrategyModified(s: BannerStrategy): boolean {
 export default function GachaMain() {
   const { scheduleData } = useLoaderData<typeof loader>();
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
-  const { t: t_planner } = useTranslation('planner');
+  // const { t: t_planner } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const syncPush = useSyncStore((s) => s.push);
@@ -212,7 +213,7 @@ export default function GachaMain() {
   // Stats with gacha expense merged from sim result
   const displayStats = useMemo((): SimulationStats => {
     if (!includeGacha || !gachaSimResult) return stats;
-    return { ...stats, expense: { ...stats.expense, gacha: gachaSimResult.avgTotalCost } };
+    return { ...stats, expense: { ...stats.expense, gacha: gachaSimResult.cost.avg('inf') } };
   }, [stats, includeGacha, gachaSimResult]);
 
   // --- Probability timeline (percentile balance lines) ---
@@ -228,8 +229,8 @@ export default function GachaMain() {
       if (activeOrPastBanners.length) {
         const latestTime = activeOrPastBanners[0].startTime;
         for (const lb of activeOrPastBanners.filter((b) => b.startTime === latestTime)) {
-          if (strategies[lb.id]?.isActive && gachaSimResult?.distCostMap[lb.id]) {
-            currentDist = gachaSimResult.distCostMap[lb.id];
+          if (strategies[lb.id]?.isActive && gachaSimResult && gachaSimResult.cost.count(lb.id) > 0) {
+            currentDist = gachaSimResult.cost.dist(lb.id);
           }
         }
       }
@@ -414,7 +415,7 @@ export default function GachaMain() {
             )}
             {t('tabs.strategy')}
             {activeStrategyCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-yellow-400 text-[10px] font-black text-neutral-900 flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full bg-yellow-400 text-[10px] font-black text-neutral-900 flex items-center justify-center">
                 {activeStrategyCount}
               </span>
             )}
@@ -529,7 +530,7 @@ export default function GachaMain() {
         ) : (
           <div className="h-48 flex items-center justify-center text-neutral-400 dark:text-neutral-500 bg-neutral-50 dark:bg-neutral-900 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
             <FaSpinner className="animate-spin mr-2" />
-            {t_planner('equipment.inventoryLoadingData')}
+            {t_ui('loading')}
           </div>
         )}
       </section>
@@ -563,7 +564,7 @@ export default function GachaMain() {
         onClick={() => setStrategyDrawerOpen(false)}
       />
       <div
-        className={`fixed top-0 right-0 h-full z-50 w-full md:w-[520px] bg-white dark:bg-neutral-900 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full z-50 w-full md:w-130 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
           strategyDrawerOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

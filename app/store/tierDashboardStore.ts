@@ -18,8 +18,4 @@ export const useTierDashboardStore = create<TierDashboardState>()(
     setSelectedDiffs: (diffs) => set({ selectedDiffs: diffs }),
     setDateRangeIndex: (range) => set({ dateRangeIndex: range }),
   }),
-  //   {
-  //     name: 'tier-dashboard-storage', // unique name for localStorage
-  //   }
-  // )
 );

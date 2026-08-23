@@ -125,13 +125,8 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
   }, [scrollToTime]);
 
   // --- Markers ---
-  // These gridlines intentionally align to the *viewer's own* local calendar (local midnight/4am),
-  // using local-time Date methods (setHours, setDate, getDay, ...) — not a fixed server timezone.
-  // SSR (Cloudflare Workers, always UTC) and the browser (the viewer's real local zone) will
-  // therefore legitimately disagree on the exact values. That's expected, not a bug: GanttChart
-  // marks these specific elements with suppressHydrationWarning so React shows the server's guess
-  // immediately (real SSR content, no blank flash) and quietly swaps in the client's correct
-  // local-time value on the next render, instead of discarding/regenerating the whole subtree.
+  // Gridlines align to viewer's local calendar (not UTC). SSR/client may show different values initially;
+  // suppressHydrationWarning prevents regenerating DOM, letting React swap in client's correct local time.
   const markers = useMemo(() => {
     if (!timeRange.min) return { daily: [], weekly: [], monthly: [] };
     const daily: number[] = [];
@@ -207,10 +202,9 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     return () => el.removeEventListener('scroll', handleScroll);
   }, [timeRange.min, timeRange.max, locale, pixelsPerHour]); // Dependency required because offset calculation changes as pixelsPerHour changes
 
-  // 2a. One-time initial positioning (layout effect — before paint, avoids a flash of scrollLeft=0 /
-  // an unmeasured empty chart). Guarded to only ever run once: this is the only case where blocking
-  // the frame is worth it. Runs once per real mount; the `[]` deps are intentional (see effect 2c
-  // below for how the chart stays positioned when timeRange changes afterward, e.g. lazy-loaded scroll extension).
+  // 2a. One-time initial positioning (layout effect, before paint, avoids a flash of
+  // scrollLeft=0 / unmeasured chart). Guarded to run once per real mount; see effect 2c
+  // for how positioning stays correct when timeRange changes afterward.
   useIsomorphicLayoutEffect(() => {
     const el = scrollContainerRef.current;
     if (!el || !timeRange.min || isInitialized.current) return;
@@ -233,9 +227,8 @@ export function useGanttController({ timeRange, server, initialTime }: UseGanttC
     return () => resizeObserver.disconnect();
   }, []);
 
-  // 2c. Re-center after timeRange changes post-init (server switch, or useLazySchedule extending the
-  // range while scrolling) — a regular effect is fine here since the chart is already visible and
-  // correctly positioned; this just keeps the absolute time under the viewport stable.
+  // 2c. Re-center after timeRange changes post-init (server switch, or useLazySchedule extending
+  // the range while scrolling); keeps the absolute time under the viewport stable.
   useEffect(() => {
     if (!isInitialized.current || !timeRange.min) return;
     setNowMarkerLeft(calculateLeftPx(new Date(Date.now()).toISOString()));

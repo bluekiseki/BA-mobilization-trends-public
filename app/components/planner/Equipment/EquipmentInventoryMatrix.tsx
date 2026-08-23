@@ -38,6 +38,7 @@ export const EquipmentInventoryMatrix: React.FC<EquipmentInventoryMatrixProps> =
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnTo)}`;
@@ -70,7 +71,7 @@ export const EquipmentInventoryMatrix: React.FC<EquipmentInventoryMatrixProps> =
   };
 
   if (availableTiers.length === 0) {
-    return <div className="px-3 py-4 text-[11px] text-neutral-400 dark:text-neutral-500 text-center">{t('equipment.inventoryLoadingData')}</div>;
+    return <div className="px-3 py-4 text-[11px] text-neutral-400 dark:text-neutral-500 text-center">{t_ui('loading')}</div>;
   }
 
   const hasAnyInventory = Object.values(inventory).some((v) => v > 0);
@@ -90,7 +91,7 @@ export const EquipmentInventoryMatrix: React.FC<EquipmentInventoryMatrixProps> =
         </button>
         {hasAnyInventory && (
           <button onClick={onClearAll} className="text-[10px] text-red-400 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors">
-            {t('equipment.inventoryClear')}
+            {t_ui('reset')}
           </button>
         )}
       </div>

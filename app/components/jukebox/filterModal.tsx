@@ -25,6 +25,7 @@ interface FilterModalProps {
 
 export const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, title, items, selectedItems, onToggleItem, onToggleAll }) => {
   const { t, i18n } = useTranslation('jukebox');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
 
@@ -61,7 +62,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, title
               className="flex items-center gap-1.5 text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <FaCheckDouble size={14} />
-              {areAllVisibleSelected ? t('actions.deselect_all') : t('actions.select_all')}
+              {areAllVisibleSelected ? t_ui('deselectAll') : t_ui('selectAll')}
             </button>
           </div>
 
@@ -111,7 +112,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, title
             onClick={onClose}
             className="w-full py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 text-sm font-semibold rounded-xl transition-colors"
           >
-            {t('actions.close')}
+            {t_ui('close')}
           </button>
         </div>
       </div>
@@ -134,6 +135,7 @@ interface StudentFilterModalProps {
 
 export const StudentFilterModal: React.FC<StudentFilterModalProps> = ({ isOpen, onClose, title, items, selectedItems, onToggleItem, onToggleAll }) => {
   const { t, i18n } = useTranslation('jukebox');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const matcher = useSearchMatcher(locale);
   const [filterTerm, setFilterTerm] = useState('');
@@ -212,7 +214,7 @@ export const StudentFilterModal: React.FC<StudentFilterModalProps> = ({ isOpen, 
             onClick={onClose}
             className="w-full py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 text-sm font-semibold rounded-xl transition-colors"
           >
-            {t('actions.close')}
+            {t_ui('close')}
           </button>
         </div>
       </div>

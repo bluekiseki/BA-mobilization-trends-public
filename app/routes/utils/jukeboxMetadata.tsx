@@ -79,7 +79,7 @@ export const StopIcon = () => (
 
 export const GENERAL_CATEGORIES = {
   Work: 'category.work',
-  Raid: 'category.raid',
+  Raid: 'game:raid',
   GroupStory: 'category.group_story',
   MiniStory: 'category.mini_story',
   WorkStory: 'category.work_story',

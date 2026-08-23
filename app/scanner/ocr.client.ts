@@ -7,9 +7,7 @@ const CHARS = ['', 'x', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'K'];
 
 let session: ort.InferenceSession | null = null;
 
-// modelBytes is fetched by modelLoader.client.ts up front, in parallel with the other
-// model/data files — passing bytes directly (instead of a URL) means onnxruntime-web never
-// issues its own redundant fetch for this file.
+// modelBytes is fetched by modelLoader.client.ts up front; passing bytes directly avoids a redundant fetch by onnxruntime-web.
 export async function initOCR(modelBytes: Uint8Array): Promise<void> {
   session = await ort.InferenceSession.create(modelBytes, {
     executionProviders: ['wasm'], // OCR is lightweight; always use WASM

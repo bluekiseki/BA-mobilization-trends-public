@@ -19,7 +19,6 @@
     "modified": "最近更新"
   },
   "noResults": "無搜尋結果。",
-  "loading": "資料載入中...",
   "postedAt": "發布",
   "modifiedAt": "更新",
   "prev": "上一頁",
@@ -29,7 +28,6 @@
   "apiCreated": "建立時間",
   "apiModified": "修改時間",
   "copy": "複製",
-  "copied": "✓ 已複製",
   "noContent": "無正文內容。",
   "historyTitle": "修改歷程時間軸",
   "currentlyViewing": "目前檢視中",

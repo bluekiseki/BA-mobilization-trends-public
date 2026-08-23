@@ -24,6 +24,9 @@ pub struct TargetConfig {
 pub struct BannerStrategy {
     pub banner_id: String,
     pub max_sparks: u32,
+    pub max_half_charges: u32,
+    pub claim_recruit_bonus: bool,
+    pub recruit_bonus_threshold: u32,
     pub min_pulls: u32,
     pub targets: Vec<TargetConfig>,
 }

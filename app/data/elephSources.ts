@@ -1,12 +1,10 @@
 // app/data/elephSources.ts
-// Item_7=Total Assault, Item_8=Tactical Challenge, Item_9=Rare Total Assault
-// Item_60=Joint Firing Drill, Item_70=Grand Assault, Item_71=Rare Grand Assault
-// Item_23=Eligma (Expert Permit Shop), Currency_18=Expert Permit
+// Coin legend: 7=Total Assault, 8=Tactical Challenge, 9=Rare Total Assault, 60=Joint Firing
+// Drill, 70=Grand Assault, 71=Rare Grand Assault, 23=Eligma, Currency_18=Expert Permit.
 export type CoinItemId = 'Item_7' | 'Item_8' | 'Item_9' | 'Item_60' | 'Item_70' | 'Item_71' | 'Item_23' | 'Currency_18';
 
-// BD item ID pattern: 3000 + school*10 + grade  (grade: 0=basic, 1=normal, 2=advanced, 3=premium; school 0–10)
-// Note item ID pattern: 4000 + school*10 + grade
-// e.g. Item_3000/3010/3020/.../3100 are all "basic" BD; Item_3003/3013/.../3103 are all "premium" BD.
+// BD item ID pattern: 3000 + school*10 + grade; Note items: 4000 + school*10 + grade
+// (grade: 0=basic, 1=normal, 2=advanced, 3=premium; school 0–10)
 export type ItemGrade = 'basic' | 'normal' | 'advanced' | 'premium';
 
 const GRADE_LABELS: ItemGrade[] = ['basic', 'normal', 'advanced', 'premium'];

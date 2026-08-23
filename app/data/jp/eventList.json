@@ -22,7 +22,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡·庫帕拉",
+    "Tw": "革命的伊凡．庫帕拉",
     "OpenTime": "2021-04-29 12:30:00",
     "CloseTime": "2021-05-13 12:00:00"
   },
@@ -84,7 +84,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♡ Valentine Patrol",
+    "En": "Schale's Happy ♥ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2022-01-26 12:30:00",
     "CloseTime": "2022-02-09 12:00:00"
@@ -263,7 +263,7 @@
   "832": {
     "Name": "Event_Name_832",
     "Kr": "전뇌신춘행진곡",
-    "Jp": "電脳新春行進曲",
+    "Jp": "（電脳）新春行進曲",
     "En": "Cyber New Year March",
     "Tw": "電腦新春行進曲",
     "OpenTime": "2023-12-27 11:00:00",
@@ -389,7 +389,7 @@
   "846": {
     "Name": "Event_Name_846",
     "Kr": "하이랜더 철도 폭주 사건 ~그리고 기차는 없었다~",
-    "Jp": "ハイランダー鉄道爆走事件 〜そして列車はなくなった〜",
+    "Jp": "ハイランダー鉄道爆走事件〜そして列車はなくなった〜",
     "En": "Highlander Railroad Runaway Incident: And the Train Disappeared",
     "Tw": "高地人鐵道暴走事件～於是列車消失了～",
     "OpenTime": "2025-04-22 11:00:00",
@@ -452,7 +452,7 @@
   "853": {
     "Name": "Event_Name_853",
     "Kr": "불인의 길 ~패션쇼 경호 임무!의 서~",
-    "Jp": "不忍ノ道 ～ファッションショー警護任務！の巻～",
+    "Jp": "不忍ノ道～ファッションショー警護任務！の巻～",
     "En": "An Unconcealed Path - Episode: Fashion Show Security Duty!",
     "Tw": "不忍之道～時裝秀警備任務！之卷～",
     "OpenTime": "2025-12-24 11:00:00",
@@ -489,8 +489,8 @@
     "Name": "Event_Name_857",
     "Kr": "특수작전: 로어추적 편",
     "Jp": "特殊作戦：ロア追跡編",
-    "En": null,
-    "Tw": null,
+    "En": "Special Mission: Lore Pursuit",
+    "Tw": "特殊作戰：怪談追蹤篇",
     "OpenTime": "2026-04-21 11:00:00",
     "CloseTime": "2026-05-06 10:59:59"
   },
@@ -498,8 +498,8 @@
     "Name": "Event_Name_857",
     "Kr": "특수작전: 로어추적 편",
     "Jp": "特殊作戦：ロア追跡編",
-    "En": null,
-    "Tw": null,
+    "En": "Special Mission: Lore Pursuit",
+    "Tw": "特殊作戰：怪談追蹤篇",
     "OpenTime": "2026-05-27 11:00:00",
     "CloseTime": "2026-06-10 10:59:59"
   },
@@ -535,7 +535,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡·庫帕拉",
+    "Tw": "革命的伊凡．庫帕拉",
     "OpenTime": "2022-03-09 11:30:00",
     "CloseTime": "2022-03-16 10:59:59"
   },
@@ -597,7 +597,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♡ Valentine Patrol",
+    "En": "Schale's Happy ♥ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2023-01-11 11:00:00",
     "CloseTime": "2023-01-24 10:59:59"
@@ -749,7 +749,7 @@
   "10832": {
     "Name": "Event_Name_832",
     "Kr": "전뇌신춘행진곡",
-    "Jp": "電脳新春行進曲",
+    "Jp": "（電脳）新春行進曲",
     "En": "Cyber New Year March",
     "Tw": "電腦新春行進曲",
     "OpenTime": "2025-02-12 11:00:00",
@@ -861,8 +861,7 @@
     "En": "Pandemic Hazard: Miraculous Pancake",
     "Tw": "瘟疫危機～奇蹟的鬆餅～",
     "OpenTime": "2026-08-12 11:00:00",
-    "CloseTime": "2026-08-26 10:59:59",
-    "Planable": true
+    "CloseTime": "2026-08-26 10:59:59"
   },
   "10845": {
     "Name": "Event_Name_845",
@@ -876,7 +875,7 @@
   "10846": {
     "Name": "Event_Name_846",
     "Kr": "하이랜더 철도 폭주 사건 ~그리고 기차는 없었다~",
-    "Jp": "ハイランダー鉄道爆走事件 〜そして列車はなくなった〜",
+    "Jp": "ハイランダー鉄道爆走事件〜そして列車はなくなった〜",
     "En": "Highlander Railroad Runaway Incident: And the Train Disappeared",
     "Tw": "高地人鐵道暴走事件～於是列車消失了～",
     "OpenTime": "2026-07-08 11:00:00",
