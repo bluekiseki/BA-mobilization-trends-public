@@ -362,7 +362,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                 <select
                   value={config.equipmentTargetTier}
                   onChange={(e) => setMinigameJankenConfig({ ...config, equipmentTargetTier: Number(e.target.value) })}
-                  className="p-1.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm"
+                  className="p-1.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm ios-compact-14"
                 >
                   {Array.from({ length: equipmentMaxTier }, (_, i) => i + 1).map((tier) => (
                     <option key={tier} value={tier}>
@@ -559,7 +559,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                     const maxScore = Math.max(...challengeLadder.map((tier) => tier.requiredScore));
                     setMinigameJankenConfig({ ...config, challengeTargetScore: maxScore });
                   }}
-                  className="shrink-0 h-[30px] px-2 text-xs font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 rounded dark:bg-blue-900 dark:text-blue-300 transition-colors"
+                  className="shrink-0 h-7.5 px-2 text-xs font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 rounded dark:bg-blue-900 dark:text-blue-300 transition-colors"
                 >
                   MAX
                 </button>
@@ -637,7 +637,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                 </button>
               </div>
             </div>
-            <div className="divide-y divide-neutral-100 dark:divide-neutral-700 max-h-[500px] overflow-y-auto">
+            <div className="divide-y divide-neutral-100 dark:divide-neutral-700 max-h-125 overflow-y-auto">
               {missions.map((mission) => {
                 const isChecked = missionStatusSafe[mission.Id] ?? false;
                 return (

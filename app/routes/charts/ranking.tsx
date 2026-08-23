@@ -435,7 +435,7 @@ export default function RankingChartPage() {
                   id="student-type-select"
                   value={selectedStudentType}
                   onChange={(e) => setSelectedStudentType(e.target.value)}
-                  className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
+                  className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm ios-compact-14 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                 >
                   <option value="All">{t_ui('all')}</option>
                   <option value="Normal">{t('control.rank_normal')}</option>
@@ -451,7 +451,7 @@ export default function RankingChartPage() {
                   id="squad-type-select"
                   value={selectedSquadType}
                   onChange={(e) => setSelectedSquadType(e.target.value)}
-                  className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
+                  className="p-1 border border-neutral-300 dark:border-neutral-600 rounded-md text-sm ios-compact-14 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-700 dark:text-white"
                 >
                   <option value="All">{t_ui('all')}</option>
                   <option value="Main">{t_g('squad_type.main')}</option>

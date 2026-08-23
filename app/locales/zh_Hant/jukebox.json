@@ -10,7 +10,8 @@
     "view_all_details": "展開所有詳情",
     "hide_all_details": "收合所有詳情",
     "deselect_all_searched": "取消選取所有搜尋到的學生",
-    "select_all_searched": "選取所有搜尋到的學生"
+    "select_all_searched": "選取所有搜尋到的學生",
+    "view_on_wiki": "無法播放 — 於蔚藍檔案 Wiki 查看"
   },
   "selection": {
     "main_story": "選擇主線故事",

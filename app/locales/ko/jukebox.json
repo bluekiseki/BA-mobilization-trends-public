@@ -10,7 +10,8 @@
     "view_all_details": "모든 상세정보 펼치기",
     "hide_all_details": "모든 상세정보 닫기",
     "deselect_all_searched": "검색된 학생 전체 해제",
-    "select_all_searched": "검색된 학생 전체 선택"
+    "select_all_searched": "검색된 학생 전체 선택",
+    "view_on_wiki": "재생 불가 — 블루 아카이브 위키에서 보기"
   },
   "selection": {
     "main_story": "메인 스토리 선택",

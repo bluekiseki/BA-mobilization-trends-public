@@ -345,7 +345,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export function links() {
-  return [...createLinkHreflang('home-v2')];
+  return [...createLinkHreflang('/')];
 }
 
 export const handle: AppHandle = {
@@ -370,7 +370,6 @@ export const handle: AppHandle = {
         rel: 'preload',
         href: `/api/notices?region=${newsServer}&sort=new&type=ALL&limit=5`,
         as: 'fetch',
-        crossOrigin: 'use-credentials',
       },
     ];
   },

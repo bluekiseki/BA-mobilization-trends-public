@@ -25,7 +25,7 @@ let initialized = false;
 self.onmessage = async (e: MessageEvent<SimWorkerInMsg>) => {
   try {
     if (!initialized) {
-      await wasmInit({ module_or_path: cdn('/wasm/gacha_engine_bg.wasm') });
+      await wasmInit({ module_or_path: cdn('/wasm/gacha_engine_bg.wasm', true) });
       initialized = true;
     }
 

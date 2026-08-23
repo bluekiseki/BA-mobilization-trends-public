@@ -98,7 +98,7 @@ function EnvelopeCard({ pull, portraits, delayMs, fromBottom }: { pull: PullResu
       {pull.grade === 3 && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-1/2 h-[240%] -translate-y-1/2 -skew-x-6 bg-gradient-to-b from-transparent via-[#f4c6ff]/80 to-transparent blur-[3px] mix-blend-screen"
+          className="pointer-events-none absolute inset-x-0 top-1/2 h-[240%] -translate-y-1/2 -skew-x-6 bg-linear-to-b from-transparent via-[#f4c6ff]/80 to-transparent blur-[3px] mix-blend-screen"
         />
       )}
       <div
@@ -332,7 +332,15 @@ export default function DebugGachaPage() {
       remaining -= chunkCount;
 
       const newBatches: PullResult[][] = [];
-      const newStats = currentStats;
+      // Fresh references each chunk so the rewardTotals useMemo actually detects the change.
+      const newStats: CumulativeStats = {
+        ...currentStats,
+        studentCounts: {
+          1: { ...currentStats.studentCounts[1] },
+          2: { ...currentStats.studentCounts[2] },
+          3: { ...currentStats.studentCounts[3] },
+        },
+      };
 
       for (let b = 0; b < chunkCount / 10; b++) {
         const batch: PullResult[] = [];
@@ -821,7 +829,7 @@ export default function DebugGachaPage() {
                   <div className="space-y-1">
                     <div
                       key={latestResultKey}
-                      className="grid perspective-[900px] grid-cols-[repeat(5,var(--gacha-card-w))] justify-center gap-[calc(var(--gacha-card-w)/4.5)] overflow-hidden rounded-lg bg-gradient-to-b from-[#b5e1f4] via-[#cae6f8] to-[#d8e1ed] p-5 px-9"
+                      className="grid perspective-[900px] grid-cols-[repeat(5,var(--gacha-card-w))] justify-center gap-[calc(var(--gacha-card-w)/4.5)] overflow-hidden rounded-lg bg-linear-to-b from-[#b5e1f4] via-[#cae6f8] to-[#d8e1ed] p-5 px-9"
                       style={{ '--gacha-card-w': 'min(9rem, calc((100% - 2rem) / 5))' } as React.CSSProperties}
                     >
                       {batch.map((pull, pIdx) => (

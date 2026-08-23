@@ -320,7 +320,7 @@ export const FieldEventPlanner = ({ eventId, eventData, iconData, onCalculate, r
                   setFromDayValue(val);
                   if (val !== '') setFromDayCompletion(Number(val), true);
                 }}
-                className="text-xs border rounded px-2 py-1 border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 focus:outline-none focus:border-blue-400"
+                className="text-xs ios-compact-12 border rounded px-2 py-1 border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 focus:outline-none focus:border-blue-400"
               >
                 <option value="" disabled>
                   —

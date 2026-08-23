@@ -263,7 +263,7 @@ export const StudentPlannerPage = () => {
                       <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value as 'date' | 'name' | 'level' | 'currentStar' | 'targetStar' | 'id')}
-                        className="text-xs font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-neutral-700 dark:text-neutral-200 pr-5 pl-0"
+                        className="text-xs ios-compact-12 font-medium bg-transparent border-none focus:ring-0 cursor-pointer text-neutral-700 dark:text-neutral-200 pr-5 pl-0"
                       >
                         <option value="date">{t('ui.sortByDate')}</option>
                         <option value="name">{t('ui.sortByName')}</option>

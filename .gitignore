@@ -24,3 +24,4 @@ codeql-repo
 *.wasm
 public/scanner/*.json
 public/**/*.txt
+wasm/gacha-engine/target/

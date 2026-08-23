@@ -10,7 +10,8 @@
     "view_all_details": "すべての詳細を開く",
     "hide_all_details": "すべての詳細を閉じる",
     "deselect_all_searched": "検索された学生をすべて選択解除",
-    "select_all_searched": "検索された学生をすべて選択"
+    "select_all_searched": "検索された学生をすべて選択",
+    "view_on_wiki": "再生不可 — ブルーアーカイブWikiで見る"
   },
   "selection": {
     "main_story": "メインストーリー選択",

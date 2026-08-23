@@ -184,7 +184,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
           <SectionLabel>{t('controls.range')}</SectionLabel>
           <div className="flex flex-col gap-2 px-4 pb-3">
             <label className="flex flex-col gap-1">
-              <span className="text-sm text-neutral-500">{t('controls.from')}</span>
+              <span className="text-sm ios-compact-14 text-neutral-500">{t('controls.from')}</span>
               <select
                 value={fromId}
                 onChange={(e) => {
@@ -201,7 +201,7 @@ export function NetworkControls({ filters, onChange, seasons, initialSeasonId, s
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm text-neutral-500">{t('controls.to')}</span>
+              <span className="text-sm ios-compact-14 text-neutral-500">{t('controls.to')}</span>
               <select
                 value={toId}
                 onChange={(e) => {

@@ -10,7 +10,8 @@
     "view_all_details": "Expand All Details",
     "hide_all_details": "Collapse All Details",
     "deselect_all_searched": "Deselect All Searched Students",
-    "select_all_searched": "Select All Searched Students"
+    "select_all_searched": "Select All Searched Students",
+    "view_on_wiki": "No player available — view on Blue Archive Wiki"
   },
   "selection": {
     "main_story": "Select Main Stories",

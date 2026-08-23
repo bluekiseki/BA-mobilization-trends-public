@@ -46,7 +46,9 @@ export const ARCHIVE_STUDENT_IDS = new Set([
   10024, // shiroko_cycling
   10025, // shun_small
   10029, // natsu
+  10030, // chinatsu_onsen
 
+  20000, // hibiki
   20001, // karin
   20002, // saya
   20003, // mashiro
@@ -59,8 +61,10 @@ export const ARCHIVE_STUDENT_IDS = new Set([
   20011, // serika_newyear
   20012, // sena
   20013, // chihiro
+  20019, // akane_bunnygirl
 
   10099, // hoshino_battle (variant, excluded from all gacha)
+  10144, // shunling_swimsuit_small (variant, excluded from all gacha)
 ]);
 
 /**

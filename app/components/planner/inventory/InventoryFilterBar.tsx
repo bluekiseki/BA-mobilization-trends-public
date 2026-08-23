@@ -228,7 +228,7 @@ export function InventoryFilterBar({
           <select
             value={sortBy}
             onChange={(e) => onChangeSortBy(e.target.value as SortKey)}
-            className="w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-700 text-sm p-1 text-neutral-900 dark:text-white"
+            className="w-full rounded-md border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-700 text-sm ios-compact-14 p-1 text-neutral-900 dark:text-white"
           >
             {sortOptions
               .filter((o) => o.value !== 'deficit' || showTarget)
@@ -284,7 +284,7 @@ export function InventoryFilterBar({
             <select
               value={displayMode}
               onChange={(e) => onChangeDisplayMode(e.target.value as DisplayMode)}
-              className="rounded-md border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-700 text-xs p-1 text-neutral-900 dark:text-white"
+              className="rounded-md border border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-neutral-700 text-xs ios-compact-12 p-1 text-neutral-900 dark:text-white"
             >
               {DISPLAY_MODE_OPTIONS.map((m) => (
                 <option key={m} value={m}>

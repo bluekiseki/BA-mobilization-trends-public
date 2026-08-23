@@ -113,6 +113,12 @@
       "githubIssue": "GitHub 이슈에서 제보하기",
       "poweredBy": "이 요청은 Web3Forms를 통해 전송됩니다."
     },
+    "devConsole": {
+      "hostingNotice": "이 사이트는 무료 호스팅으로 운영되고 있으며, 실제로 가끔 다운되거나 오류가 발생하기도 합니다.",
+      "analysisNotice": "사이트를 분석하고 싶다면 GitHub 저장소를 클론한 뒤 로컬에서 실행해주세요. CDN은 localhost:5173에 대해 CORS를 이미 비활성화해두었습니다.",
+      "cdnUsageNotice": "CDN 자료는 다른 사이트를 개발하는 데 사용해도 좋습니다. 다만 잘못된 정보가 있을 수 있으니 출처를 남겨주시고, 부하가 크게 걸리지 않도록 캐시 서버를 이용해주세요. 또한 예고 없이 구조가 바뀔 수 있으며 이에 대해 책임지지 않습니다.",
+      "bugReportNotice": "개발을 할 줄 아시는군요? 버그를 발견하셨다면 GitHub 이슈에서 제보해주세요."
+    },
     "yesterday": "어제",
     "today": "오늘",
     "tomorrow": "내일",

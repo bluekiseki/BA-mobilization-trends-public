@@ -1,10 +1,34 @@
 [
   {
+    "date": "2026-08-23",
+    "changes": {
+      "en": [
+        "[Issue #10] Gacha Planner: Fixed Chinatsu (Hot Spring), Asuna (Bunny Girl), Hibiki, and Small　Shun (Swimsuit) incorrectly appearing in the standard gacha pool",
+        "[Issue #10] Gacha Debug: Fixed total Eligma sum calculation error",
+        "When browser developer tools are detected, the site now shows a message in the console instead of closing the tab",
+        "BGM Player: Tracks without a video now show a link icon to the Blue Archive Wiki (bluearchive.wiki) instead of an unresponsive play button"
+      ],
+      "ko": [
+        "[Issue #10] 모집/가챠 플래너: 치나츠(온천), 아스나(버니걸), 히비키, 슈에링(수영복)이 통상 모집에 잘못 등장하던 문제 수정",
+        "[Issue #10] 가챠 디버그: 엘리그마 총 합 계산 오류 수정",
+        "브라우저 개발자 도구가 감지된 경우, 창을 닫는 대신 편지를 전달합니다.",
+        "BGM 플레이어: 영상이 없는 트랙은 반응 없는 재생 버튼 대신 블루 아카이브 위키(bluearchive.wiki)로 이동하는 링크 아이콘을 표시합니다"
+      ],
+      "ja": [
+        "[Issue #10] 募集/ガチャプランナー: チナツ(温泉)、アスナ(バニーガール)、ヒビキ、幼女シュン(水着)が通常募集に誤って出現する問題を修正",
+        "[Issue #10] ガチャデバッグ: エリグマ合計計算エラーを修正",
+        "ブラウザの開発者ツールが検出された場合、ウィンドウを閉じる代わりにお手紙を表示します。",
+        "BGMプレーヤー: 動画がないトラックは反応しない再生ボタンの代わりに、ブルーアーカイブWiki（bluearchive.wiki）へのリンクアイコンを表示します"
+      ]
+    },
+    "to": ["/planner/gacha", "/planner/gacha-test", "/utils/jukebox"]
+  },
+  {
     "date": "2026-08-22",
     "changes": {
-      "en": ["[제보] Item Scanner: Fixed low recognition rate — some files were not uploaded to the server", "Item Scanner: Improved classification accuracy"],
+      "en": ["[Report] Item Scanner: Fixed low recognition rate — some files were not uploaded to the server", "Item Scanner: Improved classification accuracy"],
       "ko": ["[제보] 아이템 스캐너: 인식률이 낮은 오류 수정 - 서버 업로드 문제로 일부 파일이 업로드되지 않은 문제", "아이템 스캐너: 아이템 분류 정확도 개선"],
-      "ja": ["[제報] アイテムスキャナー: 認識率が低い問題を修正 - サーバー配布問題で一部ファイルがアップロードされなかった問題", "アイテムスキャナー: アイテム分類精度を向上"]
+      "ja": ["[報告] アイテムスキャナー: 認識率が低い問題を修正 - サーバー配布問題で一部ファイルがアップロードされなかった問題", "アイテムスキャナー: アイテム分類精度を向上"]
     },
     "to": ["/scanner/item"]
   },

@@ -124,7 +124,7 @@ export default function RaidVideosPage() {
 
         {/* Raid Selector */}
         <div className="flex flex-col gap-3">
-          <label htmlFor="raid-select" className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+          <label htmlFor="raid-select" className="text-sm ios-compact-14 font-semibold text-neutral-700 dark:text-neutral-200">
             Select Raid:
           </label>
           <select

@@ -991,7 +991,7 @@ export default function ResourcePlanner() {
         <select
           value={planDays}
           onChange={(e) => setPlanDays(Number(e.target.value))}
-          className="px-2 py-1 text-sm rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+          className="px-2 py-1 text-sm ios-compact-12 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
         >
           {HORIZON_OPTIONS.map((o) => (
             <option key={o.days} value={o.days}>

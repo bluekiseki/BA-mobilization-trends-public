@@ -159,34 +159,6 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
             <span className="text-sm text-neutral-600 dark:text-neutral-300">{t('settings.ticket_batches_title')}</span>
           </div>
 
-          {/* Past eraid tickets — checked = still holding an unspent ticket from that raid */}
-          <div className="mb-2">
-            <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1">{t('settings.ticket_batches_eraid_label')}</div>
-            <div className="max-h-32 divide-y divide-neutral-100 overflow-y-auto rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
-              {pastEraidTickets.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-neutral-400">{t('settings.ticket_batches_eraid_empty')}</p>
-              ) : (
-                pastEraidTickets.map((item) => {
-                  const checked = selectedEraidTicketIds.has(item.id);
-                  return (
-                    <label
-                      key={item.id}
-                      className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-neutral-700 transition-colors dark:text-neutral-300 ${checked ? 'bg-neutral-50 dark:bg-neutral-800/60' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'}`}
-                    >
-                      <input type="checkbox" checked={checked} onChange={(event) => setEraidTicketSelected(item.id, event.currentTarget.checked)} className="accent-[#77e0ff]" />
-                      <span className="min-w-0 flex-1 truncate" title={item.name}>
-                        {item.name}
-                      </span>
-                      <span className="tabular-nums text-neutral-400 shrink-0 whitespace-nowrap">
-                        {item.end.slice(5, 10)} → {formatMD(getEraidTicketExpiry(item.end))}
-                      </span>
-                    </label>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
           {/* Manually entered batches — expiry optional (blank = never expires) */}
           <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-900 mb-2">
             <div className="flex items-stretch border-b border-neutral-200 dark:border-neutral-700">
@@ -236,6 +208,34 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
             </div>
           </div>
 
+          {/* Past eraid tickets — checked = still holding an unspent ticket from that raid */}
+          <div className="mb-2">
+            <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1">{t('settings.ticket_batches_eraid_label')}</div>
+            <div className="max-h-32 divide-y divide-neutral-100 overflow-y-auto rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
+              {pastEraidTickets.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-neutral-400">{t('settings.ticket_batches_eraid_empty')}</p>
+              ) : (
+                pastEraidTickets.map((item) => {
+                  const checked = selectedEraidTicketIds.has(item.id);
+                  return (
+                    <label
+                      key={item.id}
+                      className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-neutral-700 transition-colors dark:text-neutral-300 ${checked ? 'bg-neutral-50 dark:bg-neutral-800/60' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'}`}
+                    >
+                      <input type="checkbox" checked={checked} onChange={(event) => setEraidTicketSelected(item.id, event.currentTarget.checked)} className="accent-ba-btn-blue" />
+                      <span className="min-w-0 flex-1 truncate" title={item.name}>
+                        {item.name}
+                      </span>
+                      <span className="tabular-nums text-neutral-400 shrink-0 whitespace-nowrap">
+                        {item.end.slice(5, 10)} → {formatMD(getEraidTicketExpiry(item.end))}
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
           {manualTicketBatches.length > 0 && (
             <div className="rounded-lg border border-neutral-100 dark:border-neutral-800 overflow-hidden mb-2">
               <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-32 overflow-y-auto custom-scrollbar">
@@ -252,7 +252,7 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
                     <button
                       type="button"
                       onClick={() => handleRemoveTicketBatch(item.id)}
-                      className="p-1.5 -m-1.5 text-neutral-400 dark:text-neutral-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                      className="p-1.5 -m-1.5 text-neutral-400 dark:text-neutral-500 hover:text-red-400 transition-colors  shrink-0"
                     >
                       <FaTrash size={13} />
                     </button>
@@ -326,7 +326,7 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
         <div className="py-3">
           <RowLabel icon={<FaTrophy size={15} />}>{t('settings.pvp_ranking')}</RowLabel>
           <select
-            className="mt-2 w-full border border-neutral-200 dark:border-neutral-700 rounded-md px-2 py-1.5 text-xs bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-ba-btn-blue"
+            className="mt-2 w-full border border-neutral-200 dark:border-neutral-700 rounded-md px-2 py-1.5 text-xs ios-compact-12 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-ba-btn-blue"
             value={config.pvpRankTier}
             onChange={(e) => set({ pvpRankTier: Number(e.target.value) })}
           >
@@ -366,7 +366,7 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
                     key={story.id}
                     className={`flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-neutral-700 transition-colors dark:text-neutral-300 ${checked ? 'bg-neutral-50 dark:bg-neutral-800/60' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'}`}
                   >
-                    <input type="checkbox" checked={checked} onChange={(event) => setMainStorySelected(story.id, event.currentTarget.checked)} className="accent-[#77e0ff]" />
+                    <input type="checkbox" checked={checked} onChange={(event) => setMainStorySelected(story.id, event.currentTarget.checked)} className="accent-ba-btn-blue" />
                     <span className="min-w-0 flex-1 truncate" title={story.name}>
                       {story.name}
                     </span>

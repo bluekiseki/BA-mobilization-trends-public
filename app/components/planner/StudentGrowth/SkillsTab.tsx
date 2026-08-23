@@ -95,7 +95,7 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
             </div>
 
             {}
-            <div className="w-full md:w-[280px] shrink-0 md:self-center">
+            <div className="w-full md:w-70 shrink-0 md:self-center">
               <div className="grid grid-cols-2 gap-3">
                 {/* Current */}
                 <div>
@@ -103,7 +103,7 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
                   <select
                     value={plan.current[id]}
                     onChange={(e) => handlePlanChange(`current.${id}`, e.target.value, true)}
-                    className="w-full p-1.5 text-sm border border-neutral-200 rounded bg-white dark:bg-neutral-700 dark:border-neutral-600 text-center"
+                    className="w-full p-1.5 text-sm ios-compact-14 border border-neutral-200 rounded bg-white dark:bg-neutral-700 dark:border-neutral-600 text-center"
                   >
                     {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
                       <option key={level} value={level}>
@@ -119,7 +119,7 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
                   <select
                     value={plan.target[id]}
                     onChange={(e) => handlePlanChange(`target.${id}`, e.target.value, true)}
-                    className="w-full p-1.5 text-sm border border-blue-200 rounded bg-white text-blue-600 font-bold dark:bg-neutral-700 dark:border-blue-900/50 dark:text-blue-400 text-center"
+                    className="w-full p-1.5 text-sm ios-compact-14 border border-blue-200 rounded bg-white text-blue-600 font-bold dark:bg-neutral-700 dark:border-blue-900/50 dark:text-blue-400 text-center"
                   >
                     {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
                       <option key={level} value={level} disabled={level < plan.current[id]}>

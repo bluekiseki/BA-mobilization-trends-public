@@ -321,7 +321,7 @@ export default function MyRaidHistoryPage() {
               <select
                 value={serverFilter}
                 onChange={(event) => setServerFilter(event.currentTarget.value as RaidHistoryServer | 'all')}
-                className="rounded border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+                className="rounded border border-neutral-300 bg-white px-3 py-2 text-sm ios-compact-14 dark:border-neutral-700 dark:bg-neutral-900"
               >
                 <option value="all">All</option>
                 {serverOptions.map((server) => (
@@ -337,7 +337,7 @@ export default function MyRaidHistoryPage() {
                 <select
                   value={sortOrder}
                   onChange={(event) => setSortOrder(event.currentTarget.value as RaidHistorySort)}
-                  className="rounded border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+                  className="rounded border border-neutral-300 bg-white px-3 py-2 text-sm ios-compact-14 dark:border-neutral-700 dark:bg-neutral-900"
                 >
                   <option value="date_desc">{t('raids.filters.sortByDateDesc')}</option>
                   <option value="date_asc">{t('raids.filters.sortByDateAsc')}</option>

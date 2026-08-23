@@ -171,7 +171,7 @@ export default function NoticesIndex() {
           <select
             value={sort}
             onChange={(e) => setFilter({ sort: e.target.value })}
-            className="text-[11px] font-bold text-neutral-400 dark:text-neutral-500 bg-transparent outline-none cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-300"
+            className="text-[11px] ios-compact-11 font-bold text-neutral-400 dark:text-neutral-500 bg-transparent outline-none cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-300"
           >
             <option value="new">{t('sort.new')}</option>
             <option value="modified">{t('sort.modified')}</option>

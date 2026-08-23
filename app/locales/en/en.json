@@ -113,6 +113,12 @@
       "githubIssue": "Report via GitHub Issues",
       "poweredBy": "This request is sent via Web3Forms."
     },
+    "devConsole": {
+      "hostingNotice": "This site runs on free hosting, and it does occasionally go down or error out.",
+      "analysisNotice": "If you want to analyze the site, please clone the GitHub repo and run it locally. The CDN already has CORS disabled for localhost:5173.",
+      "cdnUsageNotice": "CDN assets are free to use for developing other sites. Please credit the source (some info may be inaccurate) and use a cache layer to avoid heavy load. The structure may also change without notice, and no liability is accepted.",
+      "bugReportNotice": "Looks like you know your way around code. If you spot a bug, please report it via GitHub Issues."
+    },
     "yesterday": "Yesterday",
     "today": "Today",
     "tomorrow": "Tomorrow",

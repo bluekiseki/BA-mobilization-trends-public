@@ -20,7 +20,7 @@ import { useSearchMatcher } from '~/utils/useSearchMatcher';
 import Player from '~/components/jukebox/Player';
 import StoryFilters from '~/components/jukebox/StoryFilters';
 import type { StudentPortraitData } from '~/types/plannerData';
-import { FiChevronDown } from 'react-icons/fi';
+import { FiChevronDown, FiExternalLink } from 'react-icons/fi';
 import { PageHeader } from '~/components/common/PageHeader';
 
 // --- TYPE DEFINITIONS ---
@@ -120,7 +120,7 @@ const BgmItem = memo(function BgmItem({
       id={`bgm-item-${bgm.id}`}
       className={`scroll-mt-24 md:scroll-mt-16 px-4 py-3 transition-colors duration-150 ${isPlaying ? 'bg-sky-50 dark:bg-sky-950/30' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/30'}`}
     >
-      <div className="flex items-center gap-3 cursor-pointer" onClick={() => onSelect(bgm)}>
+      <div className={`flex items-center gap-3 ${bgm.youtube_url ? 'cursor-pointer' : ''}`} onClick={() => bgm.youtube_url && onSelect(bgm)}>
         <span className={`font-mono text-base font-bold w-10 shrink-0 tabular-nums ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-400 dark:text-neutral-500'}`}>
           {Number(bgm.id) < 10000 ? bgm.id : 'N/A'}
         </span>
@@ -128,7 +128,22 @@ const BgmItem = memo(function BgmItem({
           <p className={`text-sm font-semibold leading-tight ${isPlaying ? 'text-sky-700 dark:text-sky-300' : 'text-neutral-800 dark:text-neutral-100'}`}>{bgm.title || `BGM #${bgm.id}`}</p>
           <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate mt-0.5">{bgm.composer}</p>
         </div>
-        {bgm.youtube_url && <div className={`shrink-0 ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-300 dark:text-neutral-600'}`}>{isPlaying ? <SoundWaveIcon /> : <PlayIcon />}</div>}
+        {bgm.youtube_url ? (
+          <div className={`shrink-0 ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-300 dark:text-neutral-600'}`}>{isPlaying ? <SoundWaveIcon /> : <PlayIcon />}</div>
+        ) : (
+          Number(bgm.id) < 10000 && (
+            <a
+              href={`https://bluearchive.wiki/wiki/Music#track${bgm.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title={t('actions.view_on_wiki')}
+              className="shrink-0 text-neutral-300 dark:text-neutral-600 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+            >
+              <FiExternalLink className="w-7 h-7" />
+            </a>
+          )
+        )}
       </div>
 
       {matchingXrefs.length > 0 && (

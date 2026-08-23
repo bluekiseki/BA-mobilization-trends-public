@@ -635,7 +635,7 @@ export default function EquipmentPlannerV2() {
               <select
                 value={campaignSource}
                 onChange={(e) => setCampaignSource(e.target.value as 'kr' | 'jp')}
-                className="w-full rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-200 text-xs py-1 px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-200 text-xs ios-compact-12 py-1 px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="kr">{t('equipment.sourceKR')}</option>
                 <option value="jp">{t('equipment.sourceJPNew')}</option>

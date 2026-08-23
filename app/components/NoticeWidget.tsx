@@ -108,7 +108,7 @@ export function NoticeWidget() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="text-xs font-bold text-neutral-400 dark:text-neutral-500 bg-transparent outline-none cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-300"
+            className="text-xs ios-compact-12 font-bold text-neutral-400 dark:text-neutral-500 bg-transparent outline-none cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-300"
           >
             <option value="new">{t('sort.new')}</option>
             <option value="modified">{t('sort.modified')}</option>

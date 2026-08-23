@@ -81,6 +81,19 @@ button {
   }
 }
 
+/* ios-compact-<px>: bakes font-size 16px (no iOS zoom) and a matching transform: scale()
+   into one class, for controls that need a specific visual size smaller than 16px.
+   e.g. ios-compact-10 renders like 10px while the real font-size stays 16px. */
+@utility ios-compact-* {
+  @supports (-webkit-touch-callout: none) {
+    @media (max-width: 639px) {
+      font-size: 16px !important;
+      transform: scale(calc(--value(integer) / 16));
+      transform-origin: left center;
+    }
+  }
+}
+
 html,
 body {
   @apply bg-white dark:bg-neutral-950;

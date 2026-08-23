@@ -15,17 +15,28 @@ All copyright of <a href='https://bluearchive.jp/' target="_blank" rel="noopener
 
 ## Setup
 
+### Prerequisites
+
+- Node.js >= 24
+- `pnpm`
+- Rust nightly toolchain
+- Rust target: `wasm32-unknown-unknown`
+- `wasm-pack` 0.13.1
+
 ### Local Development
 
 ```bash
 # First time after cloning
 chmod +x ./scripts/setup-mock-data.sh
+chmod +x ./wasm/gacha-engine/build.sh
 ./scripts/setup-mock-data.sh
+./wasm/gacha-engine/build.sh
 
 pnpm install
 pnpm react-router typegen
 pnpx wrangler types
 
+pnpm copy-ort-wasm
 pnpm dev:cdn
 ```
 

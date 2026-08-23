@@ -82,7 +82,7 @@ function FinalGoalDeadlineRowCard({ schedule, contentItems, onChange }: FinalGoa
         <select
           value={schedule?.contentRef?.id ?? ''}
           onChange={(e) => onChange(e.target.value ? { contentRef: { id: e.target.value } } : null)}
-          className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+          className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] ios-compact-11 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
         >
           <option value="">— None —</option>
           {contentItems.map((ci) => (
@@ -164,7 +164,7 @@ function PendingGoalRowCard({ minStar, maxStar, defaultStar, defaultUw, contentI
             onChange={(e) => {
               if (e.target.value) onAdd({ targetStar: star, targetUw: uw, contentRef: { id: e.target.value } });
             }}
-            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] ios-compact-11 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
           >
             <option value="">— Select content —</option>
             {contentItems.map((ci) => (
@@ -246,7 +246,7 @@ function GoalRowCard({ goal, visibleSVs, contentItems, starBtnCls, onUpdate, onR
           <select
             value={goal.contentRef?.id ?? ''}
             onChange={(e) => onUpdate({ contentRef: e.target.value ? { id: e.target.value } : undefined })}
-            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[11px] ios-compact-11 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
           >
             <option value="">— Select content —</option>
             {contentItems.map((ci) => (

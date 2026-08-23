@@ -681,7 +681,7 @@ export default function SettingsPage() {
                     <select
                       value={profileServerDraft}
                       onChange={(e) => setProfileServerDraft(e.target.value as ProfileServer)}
-                      className="w-full px-2 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-sm ios-compact-14 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {PROFILE_SERVER_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>

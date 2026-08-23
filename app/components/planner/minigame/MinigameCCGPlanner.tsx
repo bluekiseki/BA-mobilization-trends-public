@@ -315,7 +315,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
               </div>
             </div>
 
-            <div className="divide-y divide-neutral-100 dark:divide-neutral-700 max-h-[500px] overflow-y-auto">
+            <div className="divide-y divide-neutral-100 dark:divide-neutral-700 max-h-125 overflow-y-auto">
               {missions.map((mission) => {
                 const desc = formatMissionDesc(mission);
                 const isChecked = minigameMissionStatus[mission.Id] ?? false;
@@ -354,12 +354,12 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
             <div className="space-y-2">
               {runInputs.map((input) => (
                 <div key={input.id} className="flex flex-row gap-2 items-end bg-neutral-50 dark:bg-neutral-700/50 p-2 rounded-lg border border-neutral-100 dark:border-neutral-600">
-                  <div className="w-[30%] sm:w-auto min-w-[80px]">
+                  <div className="w-[30%] sm:w-auto min-w-20">
                     <label className="text-xs text-neutral-500 dark:text-neutral-400 block mb-1 font-semibold">Stage</label>
                     <select
                       value={input.stage}
                       onChange={(e) => updateRunInput(input.id, 'stage', Number(e.target.value))}
-                      className="w-full p-1.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm focus:ring-1 focus:ring-blue-500"
+                      className="w-full p-1.5 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm ios-compact-14 focus:ring-1 focus:ring-blue-500"
                     >
                       {stageOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -381,7 +381,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                       />
                       <button
                         onClick={() => setMaxRunCount(input.id)}
-                        className="h-[34px] px-2 text-xs font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 rounded dark:bg-blue-900 dark:text-blue-300 transition-colors shrink-0"
+                        className="h-8.5 px-2 text-xs font-bold bg-blue-100 text-blue-700 hover:bg-blue-200 rounded dark:bg-blue-900 dark:text-blue-300 transition-colors shrink-0"
                         title="Use remaining currency"
                       >
                         MAX
@@ -389,7 +389,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                     </div>
                   </div>
 
-                  <div className="shrink-0 pb-[3px]">
+                  <div className="shrink-0 pb-0.75">
                     <button
                       onClick={() => removeRunInput(input.id)}
                       className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded dark:hover:bg-red-900/30 transition-colors"

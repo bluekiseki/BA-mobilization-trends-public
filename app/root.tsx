@@ -188,13 +188,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* </I18nextProvider> */}
         <NoScript />
+        <ClientOnly>
+          <Suspense fallback={null}>
+            <DynamicDevtoolsdetector />
+          </Suspense>
+        </ClientOnly>
         {process.env.NODE_ENV === 'production' && (
           <>
             {/* <SpeedInsights /> */}
             {/* <Analytics /> */}
             <ClientOnly>
               <Suspense fallback={null}>
-                <DynamicDevtoolsdetector />
                 <DynamicPostHogInit envData={data?.env} />
               </Suspense>
             </ClientOnly>

@@ -113,6 +113,12 @@
       "githubIssue": "透過 GitHub Issues 回報",
       "poweredBy": "此請求透過 Web3Forms 傳送。"
     },
+    "devConsole": {
+      "hostingNotice": "本網站使用免費主機營運，實際上偶爾會發生當機或錯誤。",
+      "analysisNotice": "若想分析本網站，請將 GitHub 儲存庫複製下來後在本機執行。CDN 已針對 localhost:5173 停用 CORS 限制。",
+      "cdnUsageNotice": "CDN 素材也歡迎用於開發其他網站。但資料可能有誤，請務必標註出處，並使用快取伺服器以避免造成過大負載。此外，架構可能會在未事先通知的情況下變更，恕不負相關責任。",
+      "bugReportNotice": "看來您也懂開發？如果發現錯誤，歡迎在 GitHub Issues 回報。"
+    },
     "yesterday": "昨天",
     "today": "今天",
     "tomorrow": "明天",

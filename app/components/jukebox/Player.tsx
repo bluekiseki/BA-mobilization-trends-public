@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { VolumeIcon } from '~/routes/utils/jukeboxMetadata';
 import MarqueeText from './MarqueeText';
-import { TbPlayerTrackNextFilled } from 'react-icons/tb';
 
 interface Song {
   id: string;
@@ -113,6 +112,11 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
     return () => document.removeEventListener('mousedown', handler);
   }, [showVolume]);
 
+  const onSongEndRef = useRef(onSongEnd);
+  useEffect(() => {
+    onSongEndRef.current = onSongEnd;
+  }, [onSongEnd]);
+
   useEffect(() => {
     const videoId = song?.youtube_url ? getYouTubeId(song.youtube_url) : null;
     if (!videoId) {
@@ -139,7 +143,7 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
             else if (e.data === window.YT.PlayerState.PAUSED) setIsPlaying(false);
             else if (e.data === window.YT.PlayerState.ENDED) {
               setIsPlaying(false);
-              onSongEnd(e.target);
+              onSongEndRef.current(e.target);
             }
           },
         },
@@ -147,7 +151,9 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
     };
     if (window.YT?.Player) initPlayer();
     else window.onYouTubeIframeAPIReady = initPlayer;
-  }, [song, onSongEnd]);
+    // onSongEnd is read via onSongEndRef so playback-option changes don't restart the video
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [song]);
 
   const handleVolumeChange = (v: number) => {
     setVolume(v);
@@ -161,21 +167,21 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
     <div className="fixed bottom-0 left-0 right-0 z-50 md:bottom-4 md:right-4 md:left-auto md:w-100 md:rounded-xl md:overflow-hidden md:shadow-2xl">
       {/* YouTube iframe — collapsed via max-height so audio/ads remain accessible */}
       <div className="overflow-hidden transition-all duration-300 ease-in-out bg-black" style={{ maxHeight: isExpanded ? '360px' : 0 }}>
-        <div className="relative aspect-video w-full max-h-[360px] max-w-[640px] mx-auto">
+        <div className="relative aspect-video w-full max-h-90 max-w-160 mx-auto">
           <div id="youtube-player" className="absolute inset-0 w-full h-full" />
           <div ref={volumeRef} className="absolute bottom-2 left-2 flex items-center gap-1.5 z-10">
-            {showVolume && (
-              <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-sm rounded-lg px-2 py-1">
-                <input type="range" min={0} max={100} value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="w-20 h-1 accent-sky-400 cursor-pointer" />
-                <span className="text-[10px] text-white/80 w-5 text-right">{volume}</span>
-              </div>
-            )}
             <button
               onClick={() => setShowVolume((v) => !v)}
               className={`p-1.5 rounded-md backdrop-blur-sm transition-colors ${showVolume ? 'bg-sky-500/80 text-white' : 'bg-black/60 text-white/70 hover:text-white'}`}
             >
               <VolumeIcon volume={volume} />
             </button>
+            {showVolume && (
+              <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-sm rounded-lg px-2 py-1">
+                <input type="range" min={0} max={100} value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="w-20 h-1 accent-sky-400 cursor-pointer" />
+                <span className="text-[10px] text-white/80 w-5 text-right">{volume}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -251,10 +257,9 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
 
         {/* Next song */}
         <button onClick={onNextSong} className="shrink-0 p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors" title="Next">
-          {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M6 18l8.5-6L6 6v12zm8.5-6L23 6v12l-8.5-6z" />
-          </svg> */}
-          <TbPlayerTrackNextFilled className="h-4 w-4" />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+          </svg>
         </button>
 
         {/* Close */}

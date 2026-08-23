@@ -329,7 +329,7 @@ export default function SimulationResultView_v2({
               <div className="flex flex-wrap items-center gap-1.5">
                 {selectableBanners.length > 0 && (
                   <select
-                    className="text-[10px] border border-neutral-200 dark:border-neutral-700 rounded-md py-1 px-1.5 bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 outline-none focus:ring-2 focus:ring-ba-btn-blue cursor-pointer"
+                    className="text-[10px] ios-compact-10 border border-neutral-200 dark:border-neutral-700 rounded-md py-1 px-1.5 bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 outline-none focus:ring-2 focus:ring-ba-btn-blue cursor-pointer"
                     style={monoStyle}
                     value={effectiveBannerId ?? ''}
                     onChange={(e) => setSelectedBannerId(e.target.value || null)}
