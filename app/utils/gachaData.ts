@@ -14,7 +14,7 @@ export interface SchaleStudent {
   School: string;
   BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic' | 'Chemical';
   StarGrade: number;
-  IsLimited: (0 | 1 | 2 | 3)[]; // 0: Permanent, 1: Limited, 2: Welfare/Event, 3: Limited (SchaleDB standard)
+  IsLimited: (0 | 1 | 2 | 3 | 4)[]; // 0: Permanent, 1: Limited, 2: Welfare/Event, 3: FES, 4: Archive
 }
 
 // --- Types: Unified student structure for internal simulator use ---
@@ -197,15 +197,9 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
   return sortedBanners;
 };
 
-/* Mirror CSV portrait keys (x10148) under normalized numeric key (10148) for lookups */
-export const normalizePortraitMap = (raw: Record<string, string>): Record<string, string> => {
-  const normalized = { ...raw };
-  for (const key of Object.keys(raw)) {
-    const match = /^x(\d+)$/i.exec(key);
-    if (match && !(match[1] in normalized)) normalized[match[1]] = raw[key];
-  }
-  return normalized;
-};
+/* Portrait key normalizer moved to a lightweight module so nav/auth code can reuse it
+   without pulling papaparse + CSV assets into their bundle. */
+export { normalizePortraitMap } from './studentPortraitMap';
 
 /**
  * Retrieves the list of all students (used to configure the 'regular pool' in the simulator).

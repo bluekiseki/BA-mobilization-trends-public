@@ -2,18 +2,21 @@ import { lazy, Suspense, useState } from 'react';
 import { redirect, Link, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { Route } from './+types/login';
-import { LoginForm } from '~/components/auth/LoginForm';
-import { MagicLinkForm } from '~/components/auth/MagicLinkForm';
-import { GithubButton } from '~/components/auth/GithubButton';
+import { LoginForm } from '~/features/account/components/LoginForm';
+import { MagicLinkForm } from '~/features/account/components/MagicLinkForm';
+import { GithubButton } from '~/features/account/components/GithubButton';
+import { MethodTabs } from '~/features/account/components/MethodTabs';
+import { PasskeyButtonShell } from '~/features/account/components/PasskeyButtonShell';
 import { localeLink } from '~/utils/localeLink';
 import { magicLinkLogin } from '~/data/livedataServer.json';
 import { env } from 'cloudflare:workers';
 import { getInstance } from '~/middleware/i18next';
-import { createMetaDescriptor, createLinkHreflang } from '~/components/head';
+import { createMetaDescriptor, createLinkHreflang } from '~/components/shell/head';
 import { createInternalSessionRequest } from '~/utils/internalSessionRequest';
+import { ClientOnly } from '~/components/common/ClientOnly';
 
 // WebAuthn only works client-side, so this is excluded from the SSR bundle entirely.
-const PasskeyLoginButton = lazy(() => import('~/components/auth/PasskeyLoginButton.client').then((m) => ({ default: m.PasskeyLoginButton })));
+const PasskeyLoginButton = lazy(() => import('~/features/account/components/PasskeyLoginButton.client').then((m) => ({ default: m.PasskeyLoginButton })));
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   try {
@@ -23,12 +26,15 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const i18n = getInstance(context);
   return {
     pageTitle: `${i18n.t('auth:common.signIn')} - Yuzu Trends`,
-    headers: { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' },
   };
 }
 
+export function headers() {
+  return { 'Cache-Control': 'private, no-store' };
+}
+
 export function meta({ loaderData }: Route.MetaArgs) {
-  const title = loaderData?.pageTitle ?? 'Sign in - Yuzu Trends';
+  const title = loaderData?.pageTitle ?? 'Log in - Yuzu Trends';
   return createMetaDescriptor(title, '');
 }
 
@@ -42,59 +48,46 @@ export default function LoginPage() {
   const { t } = useTranslation('auth');
   const { locale } = useParams();
   const [method, setMethod] = useState<LoginMethod>('password');
+  const loginTabs = [
+    { key: 'password', label: t('login.tabs.password') },
+    { key: 'magic-link', label: t('login.tabs.magicLink') },
+  ] as const;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen flex justify-center px-4 pt-8 sm:pt-16 pb-8">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-1">{t('common.signIn')}</h1>
         </div>
 
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-          {magicLinkLogin && <MethodTabs method={method} onChange={setMethod} />}
+        <div className="sm:bg-white sm:dark:bg-neutral-800 sm:rounded-lg sm:border sm:border-neutral-200 sm:dark:border-neutral-700 overflow-hidden">
+          {magicLinkLogin && <MethodTabs tabs={loginTabs} value={method} onChange={setMethod} />}
 
-          <div className="p-6 space-y-5">
+          <div className="sm:p-6 space-y-5">
             {magicLinkLogin && method === 'magic-link' ? <MagicLinkForm /> : <LoginForm />}
 
             <Divider />
 
-            <GithubButton />
-            <Suspense fallback={null}>
-              <PasskeyLoginButton enableAutofill={!magicLinkLogin || method === 'password'} />
-            </Suspense>
+            <div className="space-y-3">
+              <GithubButton label={t('buttons.logInWithGithub')} />
+              {/* ClientOnly keeps the lazy boundary from being evaluated during SSR,
+                  where the .client module's export resolves to undefined. */}
+              <ClientOnly fallback={<PasskeyButtonShell />}>
+                <Suspense fallback={<PasskeyButtonShell />}>
+                  <PasskeyLoginButton enableAutofill={!magicLinkLogin || method === 'password'} />
+                </Suspense>
+              </ClientOnly>
+            </div>
 
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
+            <p className="border-t border-neutral-200 dark:border-neutral-700 pt-4 text-sm text-neutral-500 dark:text-neutral-400 text-center">
               {t('common.noAccount')}{' '}
-              <Link to={localeLink(locale, '/signup')} className="text-blue-500 hover:underline font-medium">
+              <Link to={localeLink(locale, '/signup')} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                 {t('common.signUp')}
               </Link>
             </p>
-            <p className="text-xs text-neutral-400 dark:text-neutral-500 text-center">{t('signup.benefits.noLoginNote')}</p>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function MethodTabs({ method, onChange }: { method: LoginMethod; onChange: (m: LoginMethod) => void }) {
-  const { t } = useTranslation('auth');
-  return (
-    <div className="flex border-b border-neutral-200 dark:border-neutral-700">
-      {(['password', 'magic-link'] as const).map((m) => (
-        <button
-          key={m}
-          type="button"
-          onClick={() => onChange(m)}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
-            method === m
-              ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 -mb-px'
-              : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
-          }`}
-        >
-          {m === 'password' ? t('login.tabs.password') : t('login.tabs.magicLink')}
-        </button>
-      ))}
     </div>
   );
 }

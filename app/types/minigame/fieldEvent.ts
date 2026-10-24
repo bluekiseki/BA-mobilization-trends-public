@@ -40,3 +40,10 @@ const FIELD_STAGE_COST_OVERRIDE: Record<string, number> = {
 };
 
 export const getStageCost = (eventId: number, stageId: string): number => FIELD_STAGE_COST_OVERRIDE[stageId] ?? FIELD_STAGE_COST[eventId] ?? 300;
+
+export type FieldEventTab = 'quest' | 'mastery' | 'stage';
+
+export type FieldEventResult = {
+  cost: Record<string, number>;
+  rewards: Record<string, number>;
+};

@@ -18,3 +18,8 @@ export const DefaultTreasureSimConfig: TreasureSimConfig = {
   goal: 'clear_all',
   simRuns: 1000,
 };
+
+export type TreasureResult = {
+  cost: { key: string; amount: number };
+  rewards: Record<string, number>;
+};

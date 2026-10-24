@@ -1,14 +1,14 @@
 // app/components/gacha/BannerPlanner_v2.tsx
 import { useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CustomNumberInput } from '../CustomInput';
-import { FaHistory, FaChevronDown, FaChevronUp, FaGem } from 'react-icons/fa';
+import { CustomNumberInput } from '../common/CustomInput';
+import { FaHistory, FaChevronDown, FaChevronUp, FaGem, FaInfoCircle } from 'react-icons/fa';
 import { TbCalendarOff, TbAlertTriangle } from 'react-icons/tb';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
-import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
+import { resolveMaxPull, type GlobalAggregatedResult } from '~/utils/gachaEngine';
 
 interface Props {
   banners: BannerPeriod[];
@@ -102,15 +102,15 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
 
   // All pickup student IDs across all banners (for non-pickup detection)
   const handleModeChange = (banner: BannerPeriod, strat: BannerStrategy, studentId: number, newMode: ModeKey) => {
-    const needMaxSparks = Object.entries(strat.studentConfigs).filter(([id, cfg]) => (studentId === Number(id) ? newMode : cfg.mode) === 'must').length;
-    const needMaxHalfCharges = needMaxSparks * 2; // 1 spark == 200 pulls == 2 half-charges
+    const mustCount = Object.entries(strat.studentConfigs).filter(([id, cfg]) => (studentId === Number(id) ? newMode : cfg.mode) === 'must').length;
+    const needMaxPull = mustCount * 200; // one hard-pity guarantee (200 pulls) per must-target
+    const curMaxPull = resolveMaxPull(strat, banner.useChargeSystem);
     const autoEnable = newMode !== 'skip' && !strat.isActive;
-    if (autoEnable || needMaxSparks > strat.maxSparks || needMaxHalfCharges > strat.maxHalfCharges) {
+    if (autoEnable || needMaxPull > curMaxPull) {
       onUpdateStrategy(banner.id, {
         ...strat,
         isActive: autoEnable ? true : strat.isActive,
-        maxSparks: Math.max(strat.maxSparks, needMaxSparks),
-        maxHalfCharges: Math.max(strat.maxHalfCharges, needMaxHalfCharges),
+        maxPull: Math.max(curMaxPull, needMaxPull),
         studentConfigs: {
           ...strat.studentConfigs,
           [studentId]: { ...strat.studentConfigs[studentId], mode: newMode },
@@ -158,7 +158,9 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
         </div>
       )}
 
-      <div className="rounded-md border border-neutral-200 dark:border-neutral-800 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden">
+      {/* Full-bleed on mobile (page wraps content in px-2) so the row padding isn't doubled up against
+          the screen edge; a plain white surface in light mode. */}
+      <div className="-mx-2 overflow-hidden border-y border-neutral-200 bg-white divide-y divide-neutral-200 sm:mx-0 dark:border-neutral-800 dark:bg-neutral-900 dark:divide-neutral-700">
         {visibleBanners.map((banner) => {
           const strat = strategies[banner.id];
           if (!strat) return null;
@@ -188,6 +190,11 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
           });
 
           const targetingIds = sortedPickupStudents.filter((s) => strat.studentConfigs[s.id]?.mode !== 'skip').map((s) => s.id);
+
+          // Deterministic budget check: each "must" pick needs one hard-pity guarantee (200 pulls). If the
+          // max budget can't cover them all, the plan cannot guarantee every "must" student (no sim needed).
+          const mustCount = sortedPickupStudents.filter((s) => strat.studentConfigs[s.id]?.mode === 'must').length;
+          const budgetBelowPity = mustCount > 0 && mustCount * 200 > resolveMaxPull(strat, banner.useChargeSystem);
 
           const swapPriority = (idA: number, idB: number) => {
             const pA = strat.studentConfigs[idA]?.priority ?? 1;
@@ -253,16 +260,8 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                     <span className="font-bold text-neutral-900 dark:text-neutral-100 truncate" title={banner.pickupStudents.map((s) => s.name).join(' · ')}>
                       {banner.pickupStudents.map((s) => s.name).join(' · ')}
                     </span>
-                    {banner.isLimitedBanner && !banner.isFes && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#f6e94b', color: '#3a3304' }}>
-                        {t_g('limitedShort')}
-                      </span>
-                    )}
-                    {banner.isFes && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-[#06262f]" style={{ background: '#77e0ff' }}>
-                        {t('badge.fes')}
-                      </span>
-                    )}
+                    {banner.isLimitedBanner && !banner.isFes && <span className="rounded bg-ba-btn-yellow px-1.5 py-0.5 text-[10px] font-bold text-[#3a3304]">{t_g('limitedShort')}</span>}
+                    {banner.isFes && <span className="rounded bg-ba-btn-blue px-1.5 py-0.5 text-[10px] font-bold text-[#06262f]">{t('badge.fes')}</span>}
                     {banner.freePulls > 0 && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-green-300 dark:border-green-700 text-green-700 dark:text-green-400">
                         {t('free_pulls_label', { count: banner.freePulls })}
@@ -302,8 +301,19 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
               {isParticipating && (
                 <div className="px-3 pb-2 -mt-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2 text-xs" style={monoStyle}>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-400 mr-1">
-                      {t('max_pity_label', { count: banner.useChargeSystem ? strat.maxHalfCharges / 2 : strat.maxSparks })}
+                    <span className="mr-1 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-neutral-400">
+                      {t('max_budget_label', { count: resolveMaxPull(strat, banner.useChargeSystem) })}
+                      {budgetBelowPity && (
+                        <Tooltip
+                          placement="top"
+                          trigger={['hover', 'click']}
+                          overlay={<span className="block max-w-xs text-[11px] leading-relaxed normal-case tracking-normal">{t('settings.budget_below_pity')}</span>}
+                        >
+                          <span className="inline-flex cursor-help text-amber-500">
+                            <FaInfoCircle size={10} />
+                          </span>
+                        </Tooltip>
+                      )}
                     </span>
                     {activeStudents.map((s) => {
                       const cfg = strat.studentConfigs[s.id];
@@ -349,70 +359,53 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
 
               {/* Expanded strategy editor */}
               {isExpanded && (
-                <div className="border-t border-neutral-200 dark:border-neutral-800 p-3 space-y-3">
-                  {/* Banner-level: maxSparks + minPulls */}
-                  <div className="grid sm:grid-cols-2 gap-3">
+                <div className="@container border-t border-neutral-200 dark:border-neutral-800 p-3 space-y-3">
+                  {/* Banner-level: max pull budget + minPulls. Container query (not viewport): the banner
+                      column is user-resizable, so this splits by its own width, not the screen's. */}
+                  <div className="grid @min-[400px]:grid-cols-2 gap-3">
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1.5" style={monoStyle}>
                         {t('settings.max_budget')}
                       </div>
-                      {banner.useChargeSystem ? (
-                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
-                          {Array.from({ length: Math.max(4, banner.pickupStudents.length * 2) }, (_, i) => i + 1).map((n) => (
-                            <button
-                              key={n}
-                              type="button"
-                              onClick={() => onUpdateStrategy(banner.id, { maxHalfCharges: n })}
-                              className={`rounded-md py-1.5 text-xs font-bold transition ${strat.maxHalfCharges === n ? 'text-[#06262f]' : 'text-neutral-500'}`}
-                              style={strat.maxHalfCharges === n ? { background: '#77e0ff' } : {}}
+                      {(() => {
+                        // Presets step by soft-pity (100) on the charge system, by spark (200) on the legacy system.
+                        const step = banner.useChargeSystem ? 100 : 200;
+                        const presetCount = banner.useChargeSystem ? Math.max(4, banner.pickupStudents.length * 2) : Math.max(2, banner.pickupStudents.length);
+                        const presets = Array.from({ length: presetCount }, (_, i) => (i + 1) * step);
+                        const curBudget = resolveMaxPull(strat, banner.useChargeSystem);
+                        return (
+                          <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
+                            {presets.map((n) => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => onUpdateStrategy(banner.id, { maxPull: n })}
+                                className={`rounded-md py-1.5 text-xs font-bold transition ${curBudget === n ? 'text-[#06262f]' : 'text-neutral-500'}`}
+                                style={curBudget === n ? { background: '#77e0ff' } : {}}
+                              >
+                                {t('budget_option', { pulls: n })}
+                              </button>
+                            ))}
+                            <div
+                              className="rounded-md px-2 py-1.5 flex items-center justify-center gap-2 text-xs font-bold transition"
+                              style={!presets.includes(curBudget) ? { background: '#77e0ff', color: '#06262f' } : { color: '#737373' }}
                             >
-                              {t('pity_format', { pity: n / 2, pulls: n * 100 })}
-                            </button>
-                          ))}
-                          <div
-                            className="rounded-md px-2 py-1.5 flex items-center justify-center gap-2 text-xs font-bold transition"
-                            style={strat.maxHalfCharges > Math.max(4, banner.pickupStudents.length * 2) ? { background: '#77e0ff', color: '#06262f' } : { color: '#737373' }}
-                          >
-                            <span className="whitespace-nowrap">{t('settings.manual_sparks')}</span>
-                            <CustomNumberInput
-                              min={0}
-                              aria-label={t('settings.manual_sparks')}
-                              className="w-12 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center font-bold text-neutral-800 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
-                              style={monoStyle}
-                              value={strat.maxHalfCharges || 0}
-                              onChange={(val) => onUpdateStrategy(banner.id, { maxHalfCharges: Math.max(0, val || 0) })}
-                            />
+                              <span className="whitespace-nowrap">{t('settings.manual_sparks')}</span>
+                              <CustomNumberInput
+                                min={0}
+                                step={10}
+                                aria-label={t('settings.manual_sparks')}
+                                className="w-14 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center font-bold text-neutral-800 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                                style={monoStyle}
+                                value={curBudget}
+                                onChange={(val) => onUpdateStrategy(banner.id, { maxPull: Math.max(0, val || 0) })}
+                                // Pulls only ever advance in 10s, so snap the free-form value to a multiple of 10 on commit.
+                                onBlur={() => onUpdateStrategy(banner.id, { maxPull: Math.round(Math.max(0, curBudget) / 10) * 10 })}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1">
-                          {Array.from({ length: Math.max(2, banner.pickupStudents.length) }, (_, i) => i + 1).map((n) => (
-                            <button
-                              key={n}
-                              type="button"
-                              onClick={() => onUpdateStrategy(banner.id, { maxSparks: n })}
-                              className={`rounded-md py-1.5 text-xs font-bold transition ${strat.maxSparks === n ? 'text-[#06262f]' : 'text-neutral-500'}`}
-                              style={strat.maxSparks === n ? { background: '#77e0ff' } : {}}
-                            >
-                              {t('pity_format', { pity: n, pulls: n * 200 })}
-                            </button>
-                          ))}
-                          <div
-                            className="rounded-md px-2 py-1.5 flex items-center justify-center gap-2 text-xs font-bold transition"
-                            style={strat.maxSparks > Math.max(2, banner.pickupStudents.length) ? { background: '#77e0ff', color: '#06262f' } : { color: '#737373' }}
-                          >
-                            <span className="whitespace-nowrap">{t('settings.manual_sparks')}</span>
-                            <CustomNumberInput
-                              min={0}
-                              aria-label={t('settings.manual_sparks')}
-                              className="w-12 rounded border border-neutral-300 bg-white px-1.5 py-1 text-center font-bold text-neutral-800 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
-                              style={monoStyle}
-                              value={strat.maxSparks || 0}
-                              onChange={(val) => onUpdateStrategy(banner.id, { maxSparks: Math.max(0, val || 0) })}
-                            />
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1.5" style={monoStyle}>
@@ -478,7 +471,24 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                             ) : (
                               <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />
                             )}
-                            <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100">{student.name}</span>
+                            <div className="flex min-w-0 flex-wrap items-center gap-1">
+                              <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100">{student.name}</span>
+                              {student.isRerun && (
+                                <span className="rounded-sm border border-blue-300 bg-blue-50 px-1 text-[9px] font-black text-blue-700 whitespace-nowrap dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                  {t_g('rerun')}
+                                </span>
+                              )}
+                              {student.isFes && (
+                                <span className="rounded-sm border border-ba-btn-blue-dark bg-ba-btn-blue/15 px-1 text-[8px] font-black text-[#15566a] whitespace-nowrap dark:text-ba-btn-blue">
+                                  {t_g('fest')}
+                                </span>
+                              )}
+                              {!student.isFes && student.isLimited && (
+                                <span className="rounded-sm border border-[#d8ca25] bg-ba-btn-yellow/20 px-1 text-[8px] font-black text-[#6b5f00] whitespace-nowrap dark:text-ba-btn-yellow">
+                                  {t_g('limitedShort')}
+                                </span>
+                              )}
+                            </div>
                             {isTargeting && (
                               <div className="flex items-center gap-2 ml-auto">
                                 <span className="text-[10px] font-bold text-neutral-400 tabular-nums" style={monoStyle}>

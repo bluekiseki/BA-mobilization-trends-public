@@ -10,8 +10,12 @@ function isScannerSource(value: string | null): value is ScannerSource {
   return value === 'item' || value === 'student';
 }
 
+// The item scanner accepts screenshots and inventory scroll recordings; the student scanner accepts recordings only.
+// Image types are an explicit list: `image/svg+xml` would be stored with its own content type and can carry script.
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
 function isAllowedContentType(source: ScannerSource, contentType: string): boolean {
-  return source === 'item' ? contentType.startsWith('image/') : contentType.startsWith('video/');
+  return contentType.startsWith('video/') || (source === 'item' && ALLOWED_IMAGE_TYPES.has(contentType));
 }
 
 function safeModelVersion(value: string | null): string {
@@ -40,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: 'Unsupported scanner source or file type' }, { status: 415 });
   }
 
-  const maxBytes = source === 'item' ? MAX_IMAGE_BYTES : MAX_VIDEO_BYTES;
+  const maxBytes = contentType.startsWith('video/') ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
   if (!Number.isSafeInteger(declaredSize) || !Number.isSafeInteger(contentLength) || declaredSize <= 0 || declaredSize !== contentLength || declaredSize > maxBytes) {
     return Response.json({ error: 'Invalid or oversized file' }, { status: 413 });
   }
@@ -53,15 +57,10 @@ export async function action({ request }: ActionFunctionArgs) {
   const datePath = now.toISOString().slice(0, 10);
   const modelVersion = safeModelVersion(request.headers.get('X-Scanner-Model-Version'));
   const extension =
-    source === 'item'
-      ? contentType
-          .split('/')[1]
-          ?.replace(/[^a-z0-9]/g, '')
-          .slice(0, 8) || 'image'
-      : contentType
-          .split('/')[1]
-          ?.replace(/[^a-z0-9]/g, '')
-          .slice(0, 8) || 'video';
+    contentType
+      .split('/')[1]
+      ?.replace(/[^a-z0-9]/g, '')
+      .slice(0, 8) || (contentType.startsWith('video/') ? 'video' : 'image');
   const key = `scanner-contributions/${source}/${modelVersion}/${datePath}/${crypto.randomUUID()}.${extension}`;
 
   await env.SCANNER_CONTRIBUTIONS.put(key, request.body, {

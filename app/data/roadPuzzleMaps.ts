@@ -1,4 +1,4 @@
-import type { Grid } from '~/utils/solveRoadPuzzle';
+import type { Grid } from '~/types/minigame/roadPuzzle';
 
 // Hexagon side numbering used by rail (r) and goalEntry: 1=UL, 2=UR, 3=R, 4=LR, 5=LL, 6=L.
 //

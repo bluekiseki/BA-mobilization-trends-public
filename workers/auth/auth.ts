@@ -1,10 +1,17 @@
 import { betterAuth } from 'better-auth';
-import { createAuthMiddleware } from 'better-auth/api';
+import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
 import { magicLink, username } from 'better-auth/plugins';
 import { passkey } from '@better-auth/passkey';
 import { validatePassword } from './password-validate';
 import { getMagicLinkEmail, getVerifyEmailTemplate } from './emailTemplates';
 import { localUrl, productionUrl, localAuthUrl, authEmail, magicLinkLogin } from '~/data/livedataServer.json';
+
+// Account-level actions (passkey add/remove, password link, unlink, delete) require a login newer than this.
+export const SESSION_FRESH_AGE_SECONDS = 600;
+
+export function isSessionFresh(createdAt: Date | string | number, now = Date.now()): boolean {
+  return now - new Date(createdAt).getTime() < SESSION_FRESH_AGE_SECONDS * 1000;
+}
 
 let authInstance: ReturnType<typeof createAuthInstance> | null = null;
 let authDb: D1Database | null = null;
@@ -40,7 +47,7 @@ export const createAuthInstance = (env: Env) => {
     baseURL: baseUrl,
     basePath: '/api/auth',
     secret: env.AUTH_SECRET || 'dev-secret-key-32-chars-minimum-for-dev-only-change-prod',
-    trustedOrigins: [localUrl, localAuthUrl, productionUrl],
+    trustedOrigins: isProd ? [productionUrl] : [localUrl, localAuthUrl],
     // emailAndPassword must be enabled so /sign-up/email exists for the username plugin hook
     emailAndPassword: {
       enabled: true,
@@ -88,10 +95,25 @@ export const createAuthInstance = (env: Env) => {
       },
       skipStateCookieCheck: false,
     },
+    session: {
+      freshAge: SESSION_FRESH_AGE_SECONDS,
+      // Serve session/user from a signed short-lived cookie to avoid a D1 read on every request.
+      // Session revocation from other devices/admin lags by at most maxAge; same-client sign-out
+      // and user updates refresh/clear this cookie immediately.
+      cookieCache: {
+        enabled: true,
+        maxAge: 300, // seconds
+      },
+    },
     hooks: {
-      // eslint-disable-next-line @typescript-eslint/require-await
       before: createAuthMiddleware(async (ctx) => {
         const path = ctx.path ?? '';
+        // Passkey delete/rename have no freshness check in the plugin; require a recent login and a live DB session.
+        if (path === '/passkey/delete-passkey' || path === '/passkey/update-passkey') {
+          const session = await getSessionFromCtx(ctx, { disableCookieCache: true });
+          if (!session?.session) throw APIError.from('UNAUTHORIZED', { message: 'Unauthorized', code: 'UNAUTHORIZED' });
+          if (!isSessionFresh(session.session.createdAt)) throw APIError.from('FORBIDDEN', { message: 'Session is not fresh', code: 'SESSION_NOT_FRESH' });
+        }
         if (path === '/sign-up/email' || path === '/change-password') {
           try {
             const body = (ctx.body ?? {}) as Record<string, unknown>;
@@ -149,23 +171,22 @@ export async function checkRateLimit(db: D1Database, ip: string, endpoint: strin
   const now = Date.now();
   const windowStart = now - windowMs;
 
-  const row = await db.prepare('SELECT count, lastRequest FROM rate_limit WHERE key = ?').bind(key).first<{ count: number; lastRequest: number }>();
+  // Single atomic statement: reset the window if it expired, otherwise increment, and read back the new count.
+  // The count stops at maxCount + 1 (the "blocked" marker) and a blocked call does not slide the window,
+  // so a block expires on schedule even while the client keeps retrying.
+  const row = await db
+    .prepare(
+      `INSERT INTO rate_limit (id, key, count, lastRequest) VALUES (?1, ?2, 1, ?3)
+       ON CONFLICT(key) DO UPDATE SET
+         count = CASE WHEN rate_limit.lastRequest < ?4 THEN 1 WHEN rate_limit.count > ?5 THEN rate_limit.count ELSE rate_limit.count + 1 END,
+         lastRequest = CASE WHEN rate_limit.lastRequest >= ?4 AND rate_limit.count > ?5 THEN rate_limit.lastRequest ELSE excluded.lastRequest END
+       RETURNING count`,
+    )
+    .bind(crypto.randomUUID(), key, now, windowStart, maxCount)
+    .first<{ count: number }>();
 
-  if (!row || row.lastRequest < windowStart) {
-    await db
-      .prepare('INSERT INTO rate_limit (id, key, count, lastRequest) VALUES (?, ?, 1, ?) ON CONFLICT(key) DO UPDATE SET count=1, lastRequest=excluded.lastRequest')
-      .bind(crypto.randomUUID(), key, now)
-      .run();
-    return { allowed: true, remaining: maxCount - 1 };
-  }
-
-  if (row.count >= maxCount) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  await db.prepare('UPDATE rate_limit SET count = count + 1, lastRequest = ? WHERE key = ?').bind(now, key).run();
-
-  return { allowed: true, remaining: maxCount - row.count - 1 };
+  const count = row?.count ?? 1;
+  return { allowed: count <= maxCount, remaining: Math.max(0, maxCount - count) };
 }
 
 async function sendEmailViaResend({ apiKey, to, subject, html }: { apiKey: string; to: string; subject: string; html: string }) {

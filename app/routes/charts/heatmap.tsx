@@ -1,19 +1,19 @@
 // app/page.tsx
 import { useTranslation } from 'react-i18next';
-import ClientHeatmapLoader from '~/components/heatmap/ClientHeatmapLoader';
+import ClientHeatmapLoader from '~/features/raid-stats/charts/heatmap/ClientHeatmapLoader';
 import { PageHeader } from '~/components/common/PageHeader';
 
 import type { Route } from './+types/heatmap';
 import { useParams, type LoaderFunctionArgs } from 'react-router'; // useRouteLoaderData, type LoaderFunctionArgs,
 import type { AppHandle } from '~/types/link';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 
 import { GAMESERVER_LIST, type GameServer, type GameServerParams } from '~/types/data';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/utils/usePageHelp';
+import { useHelpKey } from '~/hooks/usePageHelp';
 
 export const links: Route.LinksFunction = () => {
   return [

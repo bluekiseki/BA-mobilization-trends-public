@@ -1,4 +1,10 @@
 {
+  "externalEdit": {
+    "copyPrompt": "Edit prompt",
+    "copied": "Prompt copied",
+    "copyFailed": "Copy failed",
+    "description": "Copy an editing prompt to paste into an external AI tool with the exported JSON."
+  },
   "raids": {
     "title": "My Clear Records",
     "description": "Save your clear records for Total Assault, Grand Assault, Joint Firing Drill, and Final Restriction Rls.",
@@ -40,8 +46,8 @@
       "floorInvalid": "Final Restriction Rls. floor must be between 1 and 124.",
       "guideLinkInvalid": "Guide link must start with http:// or https://.",
       "armorGuideLinkInvalid": "Armor guide link must start with http:// or https://.",
-      "assistDuplicate": "This student is already used as an assist in this raid.",
-      "assistDuplicateArmor": "This student is already used as an assist for this armor type.",
+      "assistDuplicate": "This student is already mobilized as an assist in this raid.",
+      "assistDuplicateArmor": "This student is already mobilized as an assist for this armor type.",
       "studentDuplicate": "The same student cannot be placed twice.",
       "studentDuplicateWithoutAssist": "The same student cannot be placed again unless borrowed as an assist."
     },
@@ -77,7 +83,7 @@
     "stats": {
       "totalRecords": "Records",
       "uniqueStudents": "Students Used",
-      "assistCount": "Assist Uses",
+      "assistCount": "Assistants Borrowed",
       "noData": "No data available.",
       "content": "Content",
       "boss": "Boss",
@@ -89,8 +95,8 @@
       "starDist": "Star Distribution",
       "levelDist": "Level Distribution",
       "assistTimes": "Assist ×{{count}}",
-      "studentDeployment": "Student Deployment",
-      "totalDeployments": "{{count}} deployments",
+      "studentDeployment": "Student Mobilization",
+      "totalDeployments": "{{count}} mobilizations",
       "scoreLabel": "Score {{score}}",
       "rankLabel": "Rank {{rank}}",
       "scoreChart": {
@@ -105,9 +111,9 @@
         "empty": "No Joint Firing Drill records found."
       },
       "usageChart": {
-        "title": "Most Deployed Students",
+        "title": "Most Mobilized Students",
         "desc": "Filter by content type and assist status.",
-        "empty": "No student usage records match the selected filters."
+        "empty": "No student mobilization records match the selected filters."
       },
       "restrictionChart": {
         "title": "Final Restriction Rls. Progress",
@@ -115,6 +121,88 @@
         "empty": "No Final Restriction Rls. records match the selected filters."
       },
       "countTimes": "×{{count}}"
+    }
+  },
+  "gacha": {
+    "title": "My Recruitment History",
+    "description": "Record your recruitment results and see just how good (or bad) your luck really is.",
+    "importInvalid": "The recruitment history JSON format is invalid.",
+    "source": {
+      "normal": "Normal Recruitment",
+      "halfPity": "Half Pity (100 calls)",
+      "hardPity": "Pity (200 calls)",
+      "pointExchange": "Recruitment Point Exchange"
+    },
+    "bannerType": {
+      "chargeSystem": "Call Charge",
+      "pointSystem": "Recruitment Points"
+    },
+    "tabs": {
+      "studentStats": "Student Stats"
+    },
+    "studentStats": {
+      "mostRecruited": "Top 3 Recruited Students",
+      "recordedThreeStarNote": "Based on recorded 3★ students",
+      "allAcquisitions": "All Acquisitions"
+    },
+    "summary": {
+      "heading": "All-Time Summary",
+      "totalPulls": "Total Recruitments",
+      "recordedBanners": "Recorded Recruitments",
+      "threeStarAcquired": "3★ Recruited",
+      "pickupAcquired": "Pickups Recruited",
+      "newRecruits": "{{n}} new recruits",
+      "pickupShareOfThreeStar": "{{percent}}% of 3★"
+    },
+    "records": {
+      "empty": "No recruitment records saved yet.",
+      "unknownBanner": "Unknown recruitment",
+      "entryMeta": "{{date}} · <1>{{pulls}} pulls</1> · {{threeStar}} × 3★ · {{goal}} goal",
+      "edit": "Edit"
+    },
+    "stats": {
+      "scopeHeading": "Stat Scope",
+      "scopeAll": "All-time cumulative",
+      "scopeBanner": "Specific recruitment",
+      "methodInfo": "Calculation method",
+      "median": "Median",
+      "topPercent": "Top %",
+      "topPercentLowerTitle": "Probability of reaching the same goal for fewer than this",
+      "topPercentHigherTitle": "Probability of getting more than this under the same conditions",
+      "distributionAria": "{{title}} probability and cumulative distribution",
+      "pointAria": "Probability of {{value}}{{unit}}: {{percent}}%",
+      "byBanner": "Luck by recruitment",
+      "threeStarTitle": "3★ Recruited",
+      "threeStarSubtitle": "{{pulls}} eligible pulls · binomial",
+      "threeStarDescription": "Only normal recruitment results are counted; half-pity/pity calls and recruitment point exchanges are excluded.",
+      "goalTicketsTitle": "Recruitment Pulls Used",
+      "goalTicketsSubtitle": "{{n}} goal students",
+      "halfPityTitle": "Half-Pity Pickups",
+      "halfPitySubtitle": "{{hit}} / {{total}} · binomial",
+      "halfPityDescription": "Calculated assuming a 50% pickup chance at each half-pity."
+    },
+    "form": {
+      "addTitle": "Add Recruitment Record",
+      "editTitle": "Edit Recruitment Record",
+      "bannerLabel": "Select Recruitment",
+      "bannerSearchPlaceholder": "Search by student name or date",
+      "initialChargeLabel": "Starting Call Charge",
+      "initialChargeNormalLabel": "Starting Call Charge (Normal)",
+      "initialChargeLimitedLabel": "Starting Call Charge (Limited)",
+      "resultsHeading": "3★ Results",
+      "selectBannerFirst": "Select a recruitment first.",
+      "unknownStudent": "Student #{{id}}",
+      "deleteResult": "Delete 3★ result",
+      "errorNoBanner": "Please select a recruitment.",
+      "errorPullCount": "Total recruitments must be an integer of 1 or more.",
+      "errorInitialCharge": "Starting call charge must be between 0 and 199.",
+      "errorGuaranteed": "The number of guaranteed results exceeds the total recruitments.",
+      "errorDuplicateFirst": "A student can only be recorded once as a first acquisition.",
+      "errorPickupNotInBanner": "Pickup can only be a student featured in this recruitment.",
+      "errorGoalNotInBanner": "Goal students can only be students featured in this recruitment.",
+      "errorPickupMustBeGoal": "A student obtained as a pickup must be included as a goal student.",
+      "errorNoPointExchange": "Recruitment point exchange cannot be recorded under the Call Charge system.",
+      "errorNoPity": "Half-pity/pity cannot be recorded under the legacy Recruitment Points system."
     }
   }
 }

@@ -2,14 +2,22 @@ import { lazy, Suspense } from 'react';
 import { data, type LoaderFunctionArgs } from 'react-router';
 import { getInstance } from '~/middleware/i18next';
 import { ClientOnly } from '~/components/common/ClientOnly';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/StudentScanner';
 
 const StudentScannerPage = lazy(() =>
-  import('~/components/scanner/StudentScanner/StudentScannerPage').then((m) => ({
+  import('~/features/scanner/student/StudentScannerPage').then((m) => ({
     default: m.StudentScannerPage,
   })),
 );
+
+// SharedArrayBuffer enables the adaptive WASM thread pool for this document.
+export function headers() {
+  return {
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'credentialless',
+  };
+}
 
 export function links() {
   return [...createLinkHreflang(`/scanner/student`)];

@@ -1,7 +1,33 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-jp-dynamic-subset.min.css');
-/* Inter(en) + Noto San(ko) + M PLUS 1p(ja) by orioncactus*/
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
+
+.navigation-progress {
+  opacity: 1;
+  transition: opacity 200ms ease-out;
+}
+
+.navigation-progress[data-pending='false'] {
+  opacity: 0;
+}
+
+.navigation-progress-bar {
+  transition: transform 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navigation-progress,
+  .navigation-progress-bar {
+    transition: none;
+  }
+
+  .navigation-progress-bar {
+    transform: scaleX(1) !important;
+  }
+
+  .navigation-progress[data-pending='false'] {
+    display: none;
+  }
+}
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -66,8 +92,12 @@
   }
 }
 
-button {
+button:not(:disabled) {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 /* Prevent iOS from zooming the viewport when a small form control receives focus. */
@@ -78,6 +108,23 @@ button {
     textarea {
       font-size: 16px !important;
     }
+  }
+}
+
+/* Safari's native <select> chrome adds its own internal padding/line-height on top of whatever
+   padding classes we apply, so it renders taller than a sibling <button> using the same classes.
+   Normalize it to a plain box (like Chrome/Firefox already render) and redraw a minimal chevron,
+   since -webkit-appearance: none drops the native one. Safari-only — other browsers are unaffected. */
+@supports (-webkit-touch-callout: none) {
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: normal;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5,7.5 10,12.5 15,7.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.4em center;
+    background-size: 0.7em;
+    padding-right: 1.4em !important;
   }
 }
 

@@ -89,5 +89,8 @@
   "opart": "오파츠",
   "pyro_unit": "청휘석",
   "limitedShort": "한정",
-  "difficultyShort": "난이도"
+  "difficultyShort": "난이도",
+  "recruitNormal": "통상",
+  "recruitArchive": "아카이브",
+  "recruitWelfare": "배포"
 }

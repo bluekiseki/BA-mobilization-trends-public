@@ -3,6 +3,20 @@ export const PROFILE_SERVERS = ['jp', 'kr', 'tw', 'asia', 'global', 'na'] as con
 export type ProfileServer = (typeof PROFILE_SERVERS)[number];
 export type GraphQLProfileServer = Uppercase<ProfileServer>;
 
+/** Shared profile limits — enforced client-side (input caps) and server-side (GraphQL). */
+export const MAX_PROFILE_NAME_LENGTH = 30;
+export const MAX_PROFILES_PER_USER = 5;
+
+/** Trim and length-check a user-supplied profile name. Throws on invalid input. */
+export function sanitizeProfileName(raw: unknown): string {
+  if (typeof raw !== 'string') throw new Error('Invalid profile name');
+  const name = raw.trim();
+  if (name.length < 1 || name.length > MAX_PROFILE_NAME_LENGTH) {
+    throw new Error(`Profile name must be 1-${MAX_PROFILE_NAME_LENGTH} characters`);
+  }
+  return name;
+}
+
 export function isProfileServer(value: string): value is ProfileServer {
   return PROFILE_SERVERS.some((server) => server === value);
 }

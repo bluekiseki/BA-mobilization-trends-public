@@ -1,6 +1,6 @@
 // app/types/data.ts
 
-import type { DifficultyName } from '~/components/raid/Difficulty';
+import type { DifficultyName } from '~/utils/difficultyPolicy';
 
 // The interface of initial data row after parsing the TSV file
 export interface RawDataRow {
@@ -41,7 +41,7 @@ export interface ChartData {
 export interface Student {
   Name: string;
   StarGrade: number;
-  IsLimited?: (0 | 1 | 2 | 3)[];
+  IsLimited?: (0 | 1 | 2 | 3 | 4)[]; // 0: Permanent, 1: Limited, 2: Welfare/Event, 3: FES, 4: Archive
   SearchTags: string[];
   Position: 'Back' | 'Front' | 'Middle';
   SquadType: 'Main' | 'Support';
@@ -53,6 +53,7 @@ export interface Student {
   FamilyName?: string;
   BirthDay: string;
   Id: number;
+  DefaultOrder: number;
 }
 
 export interface RaidInfo {

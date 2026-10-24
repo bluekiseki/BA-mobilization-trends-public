@@ -1,6 +1,6 @@
 // Copies onnxruntime-web's WASM runtime files into public/scanner/ort so they ship as
-// static assets in the Cloudflare Pages build (dev server serves them from node_modules
-// directly via the `serve-ort-wasm` Vite middleware instead).
+// static assets in the Cloudflare Pages build. The dev server serves the same copies
+// from public/, so rerun this after upgrading onnxruntime-web (`pnpm dev` does).
 import fs from 'fs';
 import path from 'path';
 

@@ -59,3 +59,8 @@ export const useEquipmentPlanStore = create<EquipmentPlanState>()(
     },
   ),
 );
+
+export function getEquipmentPlanSyncValue() {
+  const { runCounts, farmingDays, normalMultiplier, hardMultiplier, campaignSource } = useEquipmentPlanStore.getState();
+  return { runCounts, farmingDays, normalMultiplier, hardMultiplier, campaignSource };
+}

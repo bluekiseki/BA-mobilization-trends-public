@@ -20,7 +20,7 @@ export const FES_EXCLUSIONS = FES_EXCLUSIONS_BY_PICKUP_ID;
 
 // src/utils/gachaRules.ts
 
-/* Archived student IDs (farmable or old releases, excluded from off-rate pool) */
+/* Archive Recruitment student IDs, excluded from the off-rate pool after its regional introduction. */
 export const ARCHIVE_STUDENT_IDS = new Set([
   10000, // aru
   10001, // eimi
@@ -45,6 +45,7 @@ export const ARCHIVE_STUDENT_IDS = new Set([
   10020, // koharu
   10024, // shiroko_cycling
   10025, // shun_small
+  10028, // asuna_bunnygirl
   10029, // natsu
   10030, // chinatsu_onsen
 
@@ -54,18 +55,52 @@ export const ARCHIVE_STUDENT_IDS = new Set([
   20003, // mashiro
   20005, // hifumi_swimsuit
   20006, // saya_casual
-  20007, // hatsune_miku
   20008, // ako
   20009, // cherino_onsen
   20010, // nodoka_onsen
   20011, // serika_newyear
   20012, // sena
   20013, // chihiro
-  20019, // akane_bunnygirl
-
-  10099, // hoshino_battle (variant, excluded from all gacha)
-  10144, // shunling_swimsuit_small (variant, excluded from all gacha)
 ]);
+
+/* Costume/combat-style variant student IDs — never obtainable via any gacha pool, no date gating (unlike ARCHIVE_STUDENT_IDS). */
+export const STYLE_VARIANT_STUDENT_IDS = new Set([
+  10099, // hoshino_battle
+  10144, // shunling_swimsuit_small
+]);
+
+/**
+ * ★3 students present in the normal off-rate pool from each server's actual launch day (KR and JP
+ * share this roster). pickup.csv only starts tracking individual rate-up banners, so these students'
+ * first CSV row is often a much later "spotlight" pickup — using that as their release date would
+ * wrongly exclude them from any earlier banner's pool. Verified against real per-character
+ * implementation dates (JP launch 2021-02-04).
+ */
+export const LAUNCH_DAY_STUDENT_IDS = new Set([
+  10000, // aru
+  10001, // eimi
+  10002, // haruna
+  10003, // hifumi
+  10004, // hina
+  10005, // hoshino
+  10006, // iori
+  10007, // maki
+  10008, // neru
+  10009, // izumi
+  10010, // shiroko
+  10011, // shun
+  10012, // sumire
+  10013, // tsurugi
+  20000, // hibiki
+  20001, // karin
+  20002, // saya
+]);
+
+/** Archive Recruitment banner introduction date per region — before this, ARCHIVE_STUDENT_IDS were still part of the normal off-rate/fes pool. */
+export const ARCHIVE_RECRUITMENT_START_MS: Record<'KR' | 'JP', number> = {
+  JP: new Date('2025-07-22').getTime(),
+  KR: new Date('2025-09-23').getTime(),
+};
 
 /**
  * Checks if a student can be included in the 'regular off-rate' pool.
@@ -78,8 +113,8 @@ export const canSpook = (studentId: number, isLimited: boolean, isFes: boolean):
   // Limited/FES characters cannot be off-rates (except during FES periods, handled separately by the engine)
   if (isLimited || isFes) return false;
 
-  // Archive characters cannot be off-rates
-  if (ARCHIVE_STUDENT_IDS.has(studentId)) return false;
+  // Costume/style variants cannot be off-rates
+  if (STYLE_VARIANT_STUDENT_IDS.has(studentId)) return false;
 
   return true;
 };
@@ -114,24 +149,24 @@ export const getNextTicketThreshold = (count: number): number | undefined => {
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/* KST midnight for YYYY-MM-DD (pinned +9, not UTC or local) */
+/* GMT+9 midnight for YYYY-MM-DD (pinned +9, not UTC or local) */
 const kstMidnight = (dateStr: string): number => {
   const [year, month, day] = dateStr.split(/[-T: ]/).map(Number);
   return Date.UTC(year, month - 1, day) - KST_OFFSET_MS;
 };
 
-/** Expiry for a "Recruitment Count Bonus" 10-pull ticket: banner start + 40 days, 11:00 KST. */
+/** Expiry for a "Recruitment Count Bonus" 10-pull ticket: banner start + 40 days, 11:00 GMT+9. */
 export const getRecruitBonusTicketExpiry = (bannerStartTime: string): number => kstMidnight(bannerStartTime) + 40 * DAY_MS + 11 * 60 * 60 * 1000;
 
 /**
  * Expiry for an eraid 10-pull ticket: the last day of the month *following* the raid's end
- * month, 23:59 KST. (Month lengths vary, so unlike the +40-day case above this needs real calendar math —
- * done in KST via the same Date.UTC-then-subtract-offset trick.)
+ * month, 23:59 GMT+9. (Month lengths vary, so unlike the +40-day case above this needs real calendar math —
+ * done in GMT+9 via the same Date.UTC-then-subtract-offset trick.)
  */
 export const getEraidTicketExpiry = (eraidEndTime: string): number => {
   const [year, month] = eraidEndTime.split(/[-T: ]/).map(Number);
   return Date.UTC(year, month + 1, 0, 23, 59) - KST_OFFSET_MS; // day 0 of (month+1) = the month right after `month`'s last day
 };
 
-/* Eraid ticket available from 11:00 KST one day before nominal end date (buffer for banner timing mismatches) */
+/* Eraid ticket available from 11:00 GMT+9 one day before nominal end date (buffer for banner timing mismatches) */
 export const getEraidTicketAvailableFrom = (eraidEndTime: string): number => kstMidnight(eraidEndTime) - DAY_MS + 11 * 60 * 60 * 1000;

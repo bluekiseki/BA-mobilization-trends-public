@@ -1,0 +1,58 @@
+import type { Character } from '~/types/raidReport';
+import type { RaidInfo } from '~/types/data';
+
+export const Transparent_Image = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+
+const ratingColors: { [key: number]: string } = {
+  1: '#D90429',
+  2: '#F46F00',
+  3: '#F7B801',
+  4: '#00A36C',
+  5: '#00829B',
+  6: '#0052A2',
+  7: '#4A4293',
+  8: '#8C008C',
+  9: '#D40078',
+  10: '#E32249',
+};
+
+export function isTotalAssault(raid: RaidInfo) {
+  return raid.Id.startsWith('R');
+}
+
+export const getBackgroundRatingColor = (index: number, theme: 'light' | 'dark' | null) => {
+  const color = ratingColors[Math.abs(index)];
+  if (!color) {
+    return 'rgba(0, 0, 0, 0.1)';
+  }
+
+  const isDark = theme == 'dark';
+
+  if (index < 0) {
+    const r = parseInt(color.substring(1, 3), 16);
+    const g = parseInt(color.substring(3, 5), 16);
+    const b = parseInt(color.substring(5, 7), 16);
+    const alpha = 0.3;
+    const alpha_dark = 0.55;
+    const t = (x: number) => (isDark ? x * alpha_dark : 255 - (255 - x) * alpha);
+    // return `rgba(${r}, ${g}, ${b}, 0.15)`;
+    return `rgba(${t(r)}, ${t(g)}, ${t(b)})`;
+  }
+
+  return color;
+};
+
+export const getStarValue = (star: number, uw: number) => {
+  return getCharacterStarValue({
+    hasWeapon: uw > 0,
+    star: star,
+    weaponStar: uw,
+  } as Character);
+};
+
+export const getCharacterStarValue = (c: Character): number => {
+  let out = c.hasWeapon ? 6 + c.weaponStar : c.star;
+  if (c.hasWeapon && !c.weaponStar) out = 6;
+  if (c.isAssist) out *= -1;
+  return out;
+};

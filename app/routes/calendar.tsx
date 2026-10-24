@@ -6,12 +6,13 @@ import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 
-import { useGanttController } from '~/components/gantt/useGanttController';
-import { useLazySchedule } from '~/components/gantt/useLazySchedule';
-import { GanttChart } from '~/components/gantt/GanttChart';
+import { useGanttController } from '~/features/calendar/gantt/useGanttController';
+import { useLazySchedule } from '~/features/calendar/gantt/useLazySchedule';
+import { GanttChart } from '~/features/calendar/gantt/GanttChart';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
-import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import { PageHeader } from '~/components/common/PageHeader';
+import { textFeedUrl } from '~/data/textFeeds.meta';
 import type { AppHandle } from '~/types/link';
 import type { GameServer } from '~/types/data';
 import { getInstance } from '~/middleware/i18next';
@@ -198,7 +199,7 @@ export default function SchedulePageGantt() {
     <div className="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white min-h-screen flex flex-col">
       <div className="px-4 py-6 sm:px-8 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 backdrop-blur-sm top-0 z-40">
         <div className="max-w-7xl mx-auto">
-          <PageHeader title={`${t('title')} (${serverLabel})`} description={`${t('description.main')} / ${t('description.prediction')}`} />
+          <PageHeader title={`${t('title')} (${serverLabel})`} description={`${t('description.main')} / ${t('description.prediction')}`} textFeedHref={textFeedUrl.schedule(locale, loadedServer)} />
           <div className="flex items-center gap-3 mt-3">
             <div className="relative">
               <select

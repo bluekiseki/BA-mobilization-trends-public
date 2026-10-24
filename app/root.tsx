@@ -3,32 +3,38 @@ import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, 
 
 import type { Route } from './+types/root';
 import './app.css';
-import { NoScript, Title } from './components/head';
-import { Navigation } from './components/Navigation';
-import { ThemeProvider } from './components/ThemeToggleButton';
-import { CollectedLinks } from './components/CollectedLinks';
+import { NoScript, Title } from './components/shell/head';
+import { Navigation } from './components/shell/Navigation';
+import { NavigationProgress } from './components/common/NavigationProgress';
+import { ThemeProvider } from './components/shell/ThemeToggleButton';
+import { CollectedLinks } from './components/shell/CollectedLinks';
+import { REMAINING_TIME_PREHYDRATE_SCRIPT } from './components/common/RemainingTime';
 // import { SpeedInsights } from "@vercel/speed-insights/react" // for vercel
 // import { Analytics } from "@vercel/analytics/react" // for vercel
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { DEFAULT_LOCALE, type Locale } from './utils/i18n/config';
 import { getLocale, i18nextMiddleware } from './middleware/i18next';
 import { useTranslation } from 'react-i18next';
-import { getLocaleFromHeaders } from './utils/i18n/service';
 import { domain, cdn as cdn_domain } from './data/livedataServer.json';
 const DynamicDevtoolsdetector = lazy(() => import('./components/common/devtools-detector.client'));
 const DynamicHelpSidebar = lazy(() => import('./components/common/HelpSidebar').then((m) => ({ default: m.HelpSidebar })));
 // posthog-js is a browser-only analytics SDK; keeping it behind a .client.tsx boundary
 // excludes it from the SSR Worker bundle entirely (see PostHogInit.client.tsx).
-const DynamicPostHogInit = lazy(() => import('./components/analytics/PostHogInit.client').then((m) => ({ default: m.PostHogInit })));
+const DynamicPostHogInit = lazy(() => import('./components/shell/analytics/PostHogInit.client').then((m) => ({ default: m.PostHogInit })));
 import { env } from 'cloudflare:workers'; // for cloudflare
 // import { env } from 'node:process';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { ClientOnly } from './components/common/ClientOnly';
 import { useHelpStore } from './store/helpStore';
-// const DynamicBanner = lazy(() => import('~/components/FeatureBanner/FeatureBanner'));
-import { getActiveProfileStorageKey, useAuthStore, type UserProfile } from './store/authStore';
-import { useSyncStore } from './store/syncStore';
+import { useAuthStore, SESSION_HINT_KEY } from './store/authStore';
+import { applySession, type SessionPayload } from './store/applySession';
 import { useSyncWatcher } from './store/planner/useSyncWatcher';
+import { SyncConflictModal } from './features/account/components/SyncConflictModal';
+import { useCrossTabSync } from './hooks/useCrossTabSync';
+
+// useLayoutEffect warns when it runs during SSR (it never actually runs server-side); fall back to
+// useEffect there so this hook can be used in SSR routes without console noise.
+const useIsomorphicLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
 
 export function loader({ context, request, params }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -49,11 +55,10 @@ export function loader({ context, request, params }: Route.LoaderArgs) {
   };
 
   const locale = getLocale(context) as Locale;
-  const reqLocale = getLocaleFromHeaders(request);
 
   // Session is injected via <script id="__ba_session__"> in injectSessionData from workers/app.ts
   // Loader does not read the session to keep the cache key user-independent
-  return data({ context, locale, reqLocale, params, env: publicEnv });
+  return data({ context, locale, params, env: publicEnv });
 }
 
 export const middleware = [i18nextMiddleware];
@@ -107,6 +112,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* for fonts */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+        {/* Pretendard: Inter(en) + Noto Sans(ko) + M PLUS 1p(ja) by orioncactus. Linked here rather than
+            @import-ed from app.css so it downloads in parallel with the app stylesheet. */}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-jp-dynamic-subset.min.css" />
         <link rel="preconnect" href={`https://${cdn_domain}`} />
         <link rel="preconnect" href={(data?.env || import.meta.env).VITE_PUBLIC_POSTHOG_DIRECT_HOST || ''} />
         <link rel="preload" href={`https://${cdn_domain}/assets/fonts/GyeonggiTitle_Medium.woff2`} as="font" type="font/woff2" crossOrigin="anonymous"></link>
@@ -115,10 +123,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {`{
           "@context": "https://schema.org",
           "@type": "WebSite",
-          "url": https://${domain}/",
+          "url": "https://${domain}/",
           "name": "Yuzu Trends"
         }`.replace(/\s{2,}/gi, '')}
         </script>
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="Plain-text feeds for developers" />
 
         <Meta />
         <Links />
@@ -130,13 +139,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
         <ThemeProvider>
+          <NavigationProgress />
           <div className="bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-white transition-colors duration-300 font-ba">
-            <nav className="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
-              <Navigation reqLocale={data?.reqLocale || DEFAULT_LOCALE} />
-            </nav>
-            {/* <Suspense fallback={null}>
-                <DynamicBanner />
-              </Suspense> */}
+            <Navigation />
 
             <main className={isFullWidth ? '' : 'max-w-7xl mx-auto'} style={{ minHeight: 'calc(100vh - 170px)' }}>
               {children}
@@ -175,9 +180,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <FaExternalLinkAlt className="text-xs" />
                   </span>
                 </a>
+                {' · '}
+                <a className="hover:underline" href="/developers">
+                  Developers
+                </a>
               </p>
             </footer>
           </div>
+
+          <SyncConflictModal />
 
           {isHelpOpen && (
             <Suspense fallback={null}>
@@ -188,22 +199,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* </I18nextProvider> */}
         <NoScript />
-        <ClientOnly>
-          <Suspense fallback={null}>
-            <DynamicDevtoolsdetector />
-          </Suspense>
-        </ClientOnly>
         {process.env.NODE_ENV === 'production' && (
           <>
             {/* <SpeedInsights /> */}
             {/* <Analytics /> */}
             <ClientOnly>
               <Suspense fallback={null}>
+                <DynamicDevtoolsdetector />
                 <DynamicPostHogInit envData={data?.env} />
               </Suspense>
             </ClientOnly>
           </>
         )}
+        {/* Fill remaining-time labels with the client clock before hydration */}
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: REMAINING_TIME_PREHYDRATE_SCRIPT }} />
       </body>
       {/* </HelmetProvider> */}
     </html>
@@ -219,55 +228,52 @@ export default function App({ loaderData: { locale } }: Route.ComponentProps) {
 
   // Session initialization: reads data injected into <script id="__ba_session__"> by workers/app.ts
   // Execute only when activeProfileId does not exist yet (prevents reset on page navigation)
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the store is populated before the browser paints,
+  // avoiding a visible flash of empty profile data on first load.
+  useIsomorphicLayoutEffect(() => {
     if (useAuthStore.getState().activeProfileId) return; // Already initialized
 
     const el = document.getElementById('__ba_session__');
-    if (!el?.textContent) return;
-
-    try {
-      interface RawProfile {
-        id: string;
-        name: string;
-        server: string;
-        is_default: number;
-        sort_order: number;
-        created_at: number;
-        updated_at: number;
+    if (el?.textContent) {
+      try {
+        applySession(JSON.parse(el.textContent) as SessionPayload);
+      } catch {
+        // Session parsing failure is non-fatal (treated as non-logged-in state)
       }
-
-      const { user, profiles: rawProfiles } = JSON.parse(el.textContent) as {
-        user: { id: string; username: string; email?: string };
-        profiles: RawProfile[];
-      };
-      if (!user) return;
-
-      const profiles = rawProfiles.map((p) => ({
-        id: p.id,
-        name: p.name,
-        server: p.server as UserProfile['server'],
-        isDefault: p.is_default === 1,
-        sortOrder: p.sort_order,
-        createdAt: String(p.created_at),
-        updatedAt: String(p.updated_at),
-      }));
-      useAuthStore.getState().setUser({ ...user, profiles });
-
-      const storageKey = getActiveProfileStorageKey(user.id);
-      const savedProfileId = localStorage.getItem(storageKey) ?? localStorage.getItem('yuzu_activeProfileId');
-      const savedProfile = savedProfileId ? profiles.find((p) => p.id === savedProfileId) : null;
-      const defaultProfile = savedProfile ?? profiles.find((p) => p.isDefault) ?? profiles[0];
-      if (!defaultProfile) return;
-      useAuthStore.getState().setActiveProfile(defaultProfile.id);
-      localStorage.removeItem('yuzu_activeProfileId');
-      useSyncStore.getState().setCurrentProfileId(defaultProfile.id);
-      void useSyncStore.getState().pullAll(defaultProfile.id);
-    } catch {
-      // Session parsing failure is non-fatal (treated as non-logged-in state)
+      return;
     }
+
+    // No injected script: this HTML may be a page the browser cached (see app/utils/cacheControl.ts)
+    // before the user logged in, so it never got session-inject.ts's <script> appended. Only probe
+    // the server when this browser has applied a session before (SESSION_HINT_KEY) - real anonymous
+    // visitors never pay this extra request, and a 204 here clears the hint so it isn't repeated.
+    let hasLoggedInBefore = false;
+    try {
+      hasLoggedInBefore = localStorage.getItem(SESSION_HINT_KEY) !== null;
+    } catch {
+      // Storage may be unavailable (private browsing); treat as no hint.
+    }
+    if (!hasLoggedInBefore) return;
+
+    void fetch('/api/auth/session-recover')
+      .then(async (resp) => {
+        if (resp.status !== 200) {
+          try {
+            localStorage.removeItem(SESSION_HINT_KEY);
+          } catch {
+            // Storage may be unavailable; non-fatal.
+          }
+          return;
+        }
+        applySession(await resp.json());
+      })
+      .catch(() => {
+        // Network failure: leave the hint in place and try again on the next full load.
+      });
   }, []);
 
   useSyncWatcher();
+  useCrossTabSync();
 
   return <Outlet />;
 }

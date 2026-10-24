@@ -75,7 +75,7 @@
             "element": "#participation button:nth-child(3)",
             "popover": {
               "title": "3. 助っ人のみ表示",
-              "description": "ボタンをクリックすると、助っ人（レンタル）として\n最も多く使用された生徒の統計のみをまとめて確認できます。"
+              "description": "ボタンをクリックすると、助っ人（レンタル）として\n最も多く出撃した生徒の統計のみをまとめて確認できます。"
             },
             "actionOnNext": "click"
           }
@@ -83,7 +83,7 @@
       },
       {
         "title": "条件に合わせたパーティを検索する",
-        "description": "特定の生徒を除外したり、育成コストを抑えるために\n希望の条件に合う生徒を使用したパーティのみを絞り込んで検索します。",
+        "description": "特定の生徒を除外したり、育成コストを抑えるために\n希望の条件に合う生徒が出撃したパーティのみを絞り込んで検索します。",
         "tour": [
           {
             "element": "main nav button:nth-child(2)",
@@ -119,7 +119,7 @@
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
             "popover": {
               "title": "5. 除外する生徒 / 助っ人の設定",
-              "description": "未所持や育成不足で投入が難しい生徒を設定します。\n\n• 投入不可: パーティリストから完全に除外します。\n• 助っ人レンタル可能: 他の人から1回借りて使用する場合のみ検索に含めます。"
+              "description": "未所持や育成不足で投入が難しい生徒を設定します。\n\n• 投入不可: パーティリストから完全に除外します。\n• 助っ人レンタル可能: 他の人から1回借りて出撃させる場合のみ検索に含めます。"
             },
             "actionOnNext": "click"
           }
@@ -217,7 +217,7 @@
             "element": "#participation button:nth-child(3)",
             "popover": {
               "title": "3. 助っ人のみ表示",
-              "description": "ボタンをクリックすると、助っ人（レンタル）として\n最も多く使用された生徒の統計のみをまとめて確認できます。"
+              "description": "ボタンをクリックすると、助っ人（レンタル）として\n最も多く出撃した生徒の統計のみをまとめて確認できます。"
             },
             "actionOnNext": "click"
           }
@@ -225,7 +225,7 @@
       },
       {
         "title": "条件に合わせたパーティを検索する",
-        "description": "特定の生徒を除外したり、育成コストを抑えるために\n希望の条件に合う生徒を使用したパーティのみを絞り込んで検索합니다.",
+        "description": "特定の生徒を除外したり、育成コストを抑えるために\n希望の条件に合う生徒が出撃したパーティのみを絞り込んで検索します。",
         "tour": [
           {
             "element": "main nav button:nth-child(2)",
@@ -269,7 +269,7 @@
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
             "popover": {
               "title": "5. 除外する生徒 / 助っ人の設定",
-              "description": "未所持や育成不足で投入が難しい生徒を設定します。\n\n• 投入不可: パーティリストから完全に除外します。\n• 助っ人レンタル可能: 他の人から1回借りて使用する場合のみ検索に含めます。"
+              "description": "未所持や育成不足で投入が難しい生徒を設定します。\n\n• 投入不可: パーティリストから完全に除外します。\n• 助っ人レンタル可能: 他の人から1回借りて出撃させる場合のみ検索に含めます。"
             },
             "actionOnNext": "click"
           }
@@ -382,7 +382,7 @@
             "element": "div[data-component-name=RaidUsageStackChart]",
             "popover": {
               "title": "3. 採用統計の要約",
-              "description": "各総力戦および大決戦で、該当の生徒が\nどの星数でどのくらい多く使用されたか、ピック率を表示します。"
+              "description": "各総力戦および大決戦で、該当の生徒が\nどの星数でどのくらい多く出撃したか、ピック率を表示します。"
             }
           },
           {
@@ -413,7 +413,7 @@
     "ranking": [
       {
         "title": "未来視 総力戦/大決戦 生徒起用ランキング",
-        "description": "今後開催される総力戦および大決戦のシーズンで、どの生徒が最も多く起用されたか、\n主力として使用された平均星数はどの程度かを確認します。",
+        "description": "今後開催される総力戦および大決戦のシーズンで、どの生徒が最も多く起用されたか、\n主力として出撃した平均星数はどの程度かを確認します。",
         "tour": [
           {
             "element": "div[data-component-name=RankingChartPage_Slider]",

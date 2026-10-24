@@ -13,6 +13,12 @@ pub struct BannerPoolData {
     pub grade1: Vec<u32>,
     pub fes: Vec<u32>,
     pub banner_pickup_ids: Vec<u32>,
+    /// Subset of `banner_pickup_ids` flagged as limited-recruitment pickups. "Recruit charge" accrues on
+    /// two independent counters (normal / limited); a pull routes to `charge_limited` when its target id is
+    /// in this list, otherwise `charge_normal`. Empty (e.g. from an older JS payload) falls back to
+    /// `is_limited_banner` for the whole banner.
+    #[serde(default)]
+    pub limited_pickup_ids: Vec<u32>,
     pub fes_excluded_ids: Vec<u32>,
     /// Unix ms of this banner's start time — used only for the term-limited ticket pool (expiry checks
     /// and the "last eligible banner" determination). Not needed for anything else, since roll

@@ -1,4 +1,4 @@
-import type { DistributionData } from './gachaEngine';
+import type { DistributionData, TicketBatch } from './gachaEngine';
 import { getEraidTicketExpiry, getEraidTicketAvailableFrom } from './gachaRules';
 
 export const PYROXENE_PER_EVENT: Record<number, number> = {
@@ -24,6 +24,11 @@ export const PYROXENE_PER_EVENT: Record<number, number> = {
   10846: 2390, //highlander
   860: 1870, // makoto
   10844: 2080, //
+  861: 1905, //
+  10848: 1890, //
+  862: 1920, // It’s our Engine
+  10849: 1900, //
+  863: 960, //
 };
 
 export function getEventPyroxeneReward(eventSeason: number): number {
@@ -46,6 +51,7 @@ export const PYROXENE_PER_MAIN_STORY: Record<string, number> = {
   part2_ex_lore_ch2: 60 * 11,
   part2_vol1_ch1: 60 * 17,
   part2_vol1_ch2: 60 * 21,
+  part2_ex_lore_ch3: 60 * 11,
 };
 
 export const PYROXENE_PER_MINI_STORY: Record<number, number> = {
@@ -75,22 +81,6 @@ export interface PlannerSchedule {
 // Extended interface for Gantt chart rendering
 export interface PackedSchedule extends PlannerSchedule {
   rowIndex: number; // Assigned row number
-}
-
-/**
- * A pool of term-limited 10-pull tickets, normalized to "pull units" (1-pull ticket = 1 unit,
- * 10-pull ticket = 10 units) so the gacha engine can spend them against any 10-pull action
- * regardless of which ticket denomination originally funded it.
- */
-export interface TicketBatch {
-  id: string;
-  pullUnits: number;
-  /** Unix ms timestamp the batch stops being usable, or null for a batch that never expires. */
-  expiresAt: number | null;
-  /** Unix ms timestamp the batch starts being usable (0 = already held, usable from the very start). */
-  availableFrom: number;
-  source: 'eraid' | 'manual';
-  label?: string;
 }
 
 /** User-entered ticket batch, before normalization into a TicketBatch. */
@@ -363,7 +353,7 @@ export function calculatePyroxeneTimeline(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Track ticket grant/expiry dates in viewer's local time (not KST).
+  // Track ticket grant/expiry dates in viewer's local time (not GMT+9).
   const ticketBatches = buildInitialTicketBatches(config, schedules);
   const toLocalDateStr = (ms: number): string => {
     const d = new Date(ms);
@@ -455,7 +445,8 @@ export function calculatePyroxeneTimeline(
     }
     const activeSchedules = schedules.filter((s) => s.start <= dateStr && s.end >= dateStr);
     const activeEvt = activeSchedules.find((s) => s.type === 'Event');
-    const activeCampaign = activeSchedules.find((s) => s.type === 'Campaign');
+    // Account EXP campaigns do not change drops, so they must not shadow a drop campaign running at the same time.
+    const activeCampaign = activeSchedules.find((s) => s.type === 'Campaign' && s.campaignType !== 'Exp');
 
     endingSchedules.forEach((sch) => {
       let reward = 0;

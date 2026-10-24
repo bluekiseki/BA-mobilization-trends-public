@@ -1,5 +1,469 @@
 [
   {
+    "date": "2026-10-24",
+    "changes": {
+      "en": ["Relationship Rank Calculator: Improved gift conversion options", "Dashboard: Improved the list of formations including the selected party"],
+      "ko": ["인연 랭크 계산기: 선물 변환 옵션 개선", "대시보드: '이 파티가 포함된 편성' 목록 개선"],
+      "ja": ["絆ランク計算機: 贈り物の変換オプションを改善", "ダッシュボード: 「このパーティを含む編成」の一覧を改善"]
+    },
+    "to": ["/utils/favor", "/dashboard"]
+  },
+  {
+    "date": "2026-10-22",
+    "changes": {
+      "en": [
+        "[Suggested] Equipment Planner: Added a \"Select focus students\" button that selects only the students checked in the Student Growth Planner",
+        "Student Growth Planner: The checked students are now called \"Focus students\" across the planner, spreadsheet and inventory",
+        "Dashboard: Improved the actual combination (e.g. TTI, TIT) view in the Grand Assault difficulty combination chart, with tier and difficulty filters, score and rank ranges, and a table view",
+        "Added Favor Rank Status for JP Grand Assault E38 Gebura",
+        "Added JP Grand Assault E38 Gebura top-ranking team data (from Plana Stats)",
+        "Added JP Grand Assault E38 Gebura overall score data"
+      ],
+      "ko": [
+        "[건의] 장비 플래너: 학생 성장 플래너에서 체크한 학생만 선택하는 '관심 학생 선택' 버튼 추가",
+        "학생 성장 플래너: 체크한 학생의 명칭을 '관심 학생'으로 통일 (플래너, 스프레드시트, 인벤토리)",
+        "대시보드: 대결전 난이도 조합 분포의 실제 조합(TTI, TIT 등) 보기 개선 (티어·난이도 필터, 점수·등수 범위, 표 보기)",
+        "JP 대결전 E38 게부라 인연 칭호 설정 현황 추가",
+        "JP 대결전 E38 게부라 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 대결전 E38 게부라 전체 분포 데이터 추가"
+      ],
+      "ja": [
+        "[要望] 装備プランナー: 生徒育成プランナーでチェックした生徒だけを選択する「注目生徒を選択」ボタンを追加",
+        "生徒育成プランナー: チェックした生徒の呼称を「注目生徒」に統一（プランナー、スプレッドシート、インベントリ）",
+        "ダッシュボード: 大決戦の難易度組み合わせ分布の実際の組み合わせ（TTI、TITなど）表示を改善（ティア・難易度フィルター、スコア・順位の範囲、表表示）",
+        "JP 大決戦E38 ゲブラの絆ランク称号の状況を追加",
+        "JP 大決戦E38 ゲブラ 上位編成データを追加 (from Plana Stats)",
+        "JP 大決戦E38 ゲブラ 全体スコア分布データを追加"
+      ]
+    },
+    "to": ["/planner/equipment", "/planner/students", "/dashboard", "/charts/favor", "/dashboard/jp/E38?view=detail", "/dashboard/jp/E38"]
+  },
+  {
+    "date": "2026-10-20",
+    "changes": {
+      "en": [
+        "Item Scanner: Faster video scanning",
+        "Item Scanner: Videos the browser can't read directly (e.g. HEVC) now scan quickly too, and compatibility playback mode is faster",
+        "Student Growth Scanner: Faster recognition with parallel processing",
+        "Live Dashboard: Added a \"Current Pace\" option to the platinum cutoff prediction (Total Assault and Grand Assault), which estimates the final cutoff from the current pace and shows an 80% range",
+        "Live Dashboard: \"Avg / Min-Max Range\" in the platinum cutoff prediction now also shows the middle 50% of past seasons as a darker band",
+        "[Report] Event Planner: Card Open Simulator now shows card rates for normal and guaranteed slots",
+        "Dashboard: Grand Assault difficulty combination chart now shows the actual difficulty combinations (e.g. TTI, TIT) in the distribution chart, and selecting one highlights it in the score histogram"
+      ],
+      "ko": [
+        "아이템 스캐너: 영상 스캔 속도 개선",
+        "아이템 스캐너: HEVC 등 브라우저가 바로 읽지 못하는 영상도 빠르게 스캔, 호환 재생 모드 속도 개선",
+        "학생 육성 스캐너: 병렬 처리로 인식 속도 개선",
+        "실시간 대시보드: 플래티넘 컷 예측에 '현재 속도 반영' 옵션 추가(총력전·대결전), 현재 진행 속도로 최종 컷을 예측하고 80% 구간 표시",
+        "실시간 대시보드: 플래티넘 컷 예측의 '평균/최대·최소 범위'에 과거 시즌의 중간 50% 구간을 진하게 함께 표시",
+        "[제보] 이벤트 플래너: 카드깡 시뮬레이터에 일반 칸/확정 칸 카드 등장 확률 표시 추가",
+        "대시보드: 대결전 난이도 조합 분포에서 실제 조합(TTI, TIT 등) 보기 추가, 조합을 선택하면 점수 히스토그램에 강조 표시"
+      ],
+      "ja": [
+        "アイテムスキャナー: 動画スキャンを高速化",
+        "アイテムスキャナー: HEVCなどブラウザーが直接読み込めない動画も高速にスキャンでき、互換再生モードも高速化",
+        "生徒育成スキャナー: 並列処理で認識を高速化",
+        "リアルタイムダッシュボード: プラチナボーダー予測に「現在のペースを反映」を追加（総力戦・大決戦）、現在のペースから最終ボーダーを予測し、80%区間を表示",
+        "リアルタイムダッシュボード: プラチナボーダー予測の「平均/最大・最小範囲」に、過去シーズンの中央50%区間を濃く合わせて表示",
+        "[報告] イベントプランナー: カードショップシミュレーターに通常枠と確定枠のカード出現確率を追加",
+        "ダッシュボード: 大決戦の難易度組み合わせ分布で実際の組み合わせ（TTI、TITなど）を表示し、選択するとスコアヒストグラムで強調表示"
+      ]
+    },
+    "to": ["/scanner/item", "/scanner/item", "/scanner/student", "/live", "/live", "/planner/event", "/dashboard"]
+  },
+  {
+    "date": "2026-10-18",
+    "changes": {
+      "en": [
+        "[Issue #15] Fixed the English name for Special Armor",
+        "Fixed Japanese short armor labels",
+        "Live Dashboard: Day N now changes at the daily reset",
+        "Event Planner: Added a total for selected rounds in Clue Search Info"
+      ],
+      "ko": ["[Issue #15] 특수장갑 영어 표기 수정", "일본어 장갑 약칭 표기 수정", "실시간 대시보드: Day N이 일일 초기화 시점에 바뀌도록 변경", "이벤트 플래너: 단서찾기 정보 탭에 선택 회차 합계 추가"],
+      "ja": [
+        "[Issue #15] 特殊装甲の英語表記を修正",
+        "日本語の装甲略称表記を修正",
+        "リアルタイムダッシュボード: Day Nがデイリーリセット時に切り替わるように変更",
+        "イベントプランナー: 痕跡収集の情報タブに選択した周回の合計を追加"
+      ]
+    },
+    "to": [null, null, "/live", "/planner/event"]
+  },
+  {
+    "date": "2026-10-16",
+    "changes": {
+      "en": [
+        "Clear Videos, Top Teams: Game terms, boss and student names in video titles are shown in your language, with the original above each word (\"Original\" checkbox shows the full original title)",
+        "Gacha Planner: The default pyroxene margin now uses the bottom 96% instead of 90%, and the plan coverage chance turns red below 96%"
+      ],
+      "ko": [
+        "공략영상, 상위권 편성: 영상 제목의 게임 용어와 보스, 학생 이름을 현재 언어로 표시하고 단어 위에 원문 표시 (\"원문\" 체크 시 원래 제목)",
+        "모집/가챠 플래너: 청휘석 여유분 기본 기준을 하위 90%에서 96%로 변경하고, 전체 계획 충족 가능성이 96% 미만이면 빨간색으로 표시"
+      ],
+      "ja": [
+        "攻略動画、上位編成: 動画タイトルのゲーム用語やボス、生徒名を表示言語に置き換え、各単語の上に原文を表示 (「原文」をチェックすると元のタイトル)",
+        "募集/ガチャプランナー: 青輝石の余裕分の初期基準を下位90%から96%に変更し、全体計画の充足可能性が96%未満で赤色表示"
+      ]
+    },
+    "to": ["/dashboard/jp/videos", "/planner/gacha"]
+  },
+  {
+    "date": "2026-10-15",
+    "changes": {
+      "en": [
+        "Event Planner: Click an Oopart icon to see which students need it for growth, like the existing gift and furniture icons",
+        "Developers: Added plain-text feeds of students, events, schedules, raid seasons and notices for other programs and AI agents (/llms.txt)"
+      ],
+      "ko": [
+        "이벤트 플래너: 선물, 가구 아이콘처럼 오파츠 아이콘을 누르면 성장에 필요한 학생 표시",
+        "개발자용: 학생, 이벤트, 일정, 총력전 시즌, 공지를 다른 프로그램이나 AI 에이전트에서 읽을 수 있는 텍스트 피드 추가 (/llms.txt)"
+      ],
+      "ja": [
+        "イベントプランナー: ギフトや家具アイコンと同様に、オーパーツアイコンを押すと成長に必要な生徒を表示",
+        "開発者向け: 生徒、イベント、スケジュール、総力戦シーズン、お知らせを他のプログラムやAIエージェントから読めるテキストフィードを追加 (/llms.txt)"
+      ]
+    },
+    "to": ["/planner/event", "/developers"]
+  },
+  {
+    "date": "2026-10-14",
+    "changes": {
+      "en": [
+        "[Report] Equipment Planner: Removed the 9999 cap on Universal Blueprint input and fixed surplus not counting owned blueprints correctly",
+        "Dice Race Efficiency Calculator: Redesigned the settings layout, added automatic tile selection for Fixed Dice and an option to use two Fixed Dice in a row",
+        "[Report] Improved the sign-up and login screens (choose a method first, clearer password and username feedback)"
+      ],
+      "ko": [
+        "[제보] 장비 플래너: 만능 설계도 입력의 9999 제한을 없애고, 보유 설계도가 잉여 재화에 올바르게 반영되지 않던 문제 수정",
+        "주사위 돌리기 효율 계산기: 설정 화면 개편, 확정권 칸 자동 선택과 확정권 2장 연속 사용 옵션 추가",
+        "[제보] 회원가입, 로그인 화면 개선 (방법 먼저 선택, 비밀번호와 사용자명 안내 개선)"
+      ],
+      "ja": [
+        "[報告] 装備プランナー: 万能設計図の入力にあった9999の上限を撤廃し、所持設計図が余剰に正しく反映されない問題を修正",
+        "サイコロレース効率計算機: 設定画面を刷新し、確定チケットのマス自動選択と確定チケット2枚連続使用のオプションを追加",
+        "[報告] 新規登録とログイン画面を改善（先に方法を選択、パスワードとユーザー名の案内を改善）"
+      ]
+    },
+    "to": ["/planner/equipment", "/planner/event", "/signup", "/login"]
+  },
+  {
+    "date": "2026-10-05",
+    "changes": {
+      "en": [
+        "[Report] JP Total Assault S91 Hieronymus: Corrected the terrain from Indoor to Urban",
+        "[Report] Student Growth Planner: Brought back sorting (Type + ID / Rarity) for needed materials, sorted by type by default"
+      ],
+      "ko": ["[제보] JP 총력전 S91 예로니무스: 지형을 실내에서 시가지로 정정", "[제보] 학생 성장 플래너: 필요 재화 정렬(유형+ID / 희귀도) 다시 추가, 기본은 유형별"],
+      "ja": ["[報告] JP 総力戦S91 ヒエロニムス: 地形を屋内から市街地に訂正", "[報告] 生徒育成プランナー: 必要素材の並び替え（タイプ + ID / レアリティ）を再追加、初期表示はタイプ別"]
+    },
+    "to": ["/dashboard/jp/R91", "/planner/students"]
+  },
+  {
+    "date": "2026-10-04",
+    "changes": {
+      "en": ["Item Scanner: Improved video recognition speed (WebCodecs, about 20% less processing time)"],
+      "ko": ["아이템 스캐너: 영상 인식 속도 개선 (WebCodecs, 약 20% 단축)"],
+      "ja": ["アイテムスキャナー: 動画認識を高速化（WebCodecs、処理時間を約20%短縮）"]
+    },
+    "to": ["/scanner/item"]
+  },
+  {
+    "date": "2026-10-03",
+    "changes": {
+      "en": [
+        "Item Scanner: Improved digit recognition accuracy and added video support",
+        "[Report] Gacha Planner: Fixed Akane (Bunny) missing from the regular recruitment pool and corrected the Archive Recruitment roster"
+      ],
+      "ko": ["아이템 스캐너: 숫자 오인식 개선, 동영상 지원 추가", "[제보] 모집/가챠 플래너: 아카네(바니걸)가 일반 모집에서 누락되던 문제 수정 및 아카이브 모집 대상 목록 정정"],
+      "ja": ["アイテムスキャナー: 数字の誤認識を改善、動画に対応", "[報告] 募集/ガチャプランナー: アカネ(バニーガール)が通常募集から漏れる問題を修正し、アーカイブ募集対象の生徒一覧を訂正"]
+    },
+    "to": ["/scanner/item", "/planner/gacha"]
+  },
+  {
+    "date": "2026-10-01",
+    "changes": {
+      "en": [
+        "Student Growth Planner: Added star rank, level, and relationship rank filters",
+        "Item Scanner: Improved handling of items scanned more than once",
+        "Improved Student Growth Scanner, sync button, and Item Management UI",
+        "Gacha Planner: Redesigned (v3) with a simpler, more readable layout"
+      ],
+      "ko": [
+        "학생 성장 플래너: 성급, 레벨, 인연 랭크 필터 추가",
+        "아이템 스캐너: 중복 스캔된 아이템 처리 로직 개선",
+        "학생 육성 스캐너, 동기화 버튼, 아이템 관리 UI 개선",
+        "모집/가챠 플래너: v3로 개편, 화면을 더 간결하고 보기 쉽게 정리"
+      ],
+      "ja": [
+        "生徒育成プランナー: 星ランク、レベル、絆ランクのフィルターを追加",
+        "アイテムスキャナー: 重複してスキャンされたアイテムの処理を改善",
+        "生徒育成スキャナー、同期ボタン、アイテム管理のUIを改善",
+        "募集/ガチャプランナー: v3にリニューアル、画面をより簡潔で見やすく整理"
+      ]
+    },
+    "to": ["/planner/students", "/scanner/item", null, "/planner/gacha"]
+  },
+  {
+    "date": "2026-09-29",
+    "changes": {
+      "en": [
+        "Dashboard: Improved histogram/chart display for Raid and Grand Assault score distributions",
+        "Student Growth Planner: Improved unique weapon upgrade material calculation",
+        "Item Management: Reports and other resources can now be displayed carried up into their higher-tier resource"
+      ],
+      "ko": ["대시보드: 총력전/대결전 히스토그램 그래프 표시 개선", "학생 성장 플래너: 고유무기 강화 재료 계산 개선", "아이템 관리: 보고서 등 재화를 상위 재화로 올림하여 표시하는 기능 추가"],
+      "ja": [
+        "ダッシュボード: 総力戦/大決戦のヒストグラム表示を改善",
+        "生徒育成プランナー: 固有武器強化素材の計算を改善",
+        "アイテム管理: 報告書などのリソースを上位リソースに繰り上げて表示する機能を追加"
+      ]
+    },
+    "to": ["/dashboard/jp/E37", "/planner/students", "/planner/inventory"]
+  },
+  {
+    "date": "2026-09-28",
+    "changes": {
+      "en": [
+        "Location Planner: Added full i18n support for all UI elements and location names",
+        "Student Growth Planner: Added a filter for students with growth goals and fixed duplicate skill values on cards",
+        "Added a progress bar during page navigation"
+      ],
+      "ko": [
+        "스케줄 플래너: 모든 UI 요소 및 지역 이름에 완전한 다국어 지원 추가",
+        "학생 성장 플래너: 성장 목표가 있는 학생만 보는 필터를 추가하고 카드에 현재와 목표 스킬이 같게 중복 표시되던 문제 수정",
+        "페이지 이동 중 진행률 표시 바 추가"
+      ],
+      "ja": [
+        "スケジュールプランナー: すべてのUI要素と地点名に完全な多言語対応を追加",
+        "生徒育成プランナー: 育成目標がある生徒のみ表示するフィルターを追加し、カードで現在と目標のスキルが重複表示される問題を修正",
+        "ページ遷移中に進行状況バーを追加"
+      ]
+    },
+    "to": ["/planner/event/862", "/planner/students", null]
+  },
+  {
+    "date": "2026-09-25",
+    "changes": {
+      "en": [
+        "Added Favor Rank Status for JP Grand Assault E37 Shiro & Kuro",
+        "Added JP Grand Assault E37 Shiro & Kuro top-ranking team data (from Plana Stats)",
+        "Added JP Grand Assault E37 Shiro & Kuro overall score data"
+      ],
+      "ko": ["JP 대결전 E37 시로&쿠로 인연 칭호 설정 현황 추가", "JP 대결전 E37 시로&쿠로 상위권 편성 데이터 추가 (from Plana Stats)", "JP 대결전 E37 시로&쿠로 전체 분포 데이터 추가"],
+      "ja": ["JP 大決戦E37 シロ＆クロの絆ランク称号の状況を追加", "JP 大決戦E37 シロ＆クロ 上位編成データを追加 (from Plana Stats)", "JP 大決戦E37 シロ＆クロ 全体スコア分布データを追加"]
+    },
+    "to": ["/charts/favor", "/dashboard/jp/E37?view=detail", "/dashboard/jp/E37"]
+  },
+  {
+    "date": "2026-09-23",
+    "changes": {
+      "en": [
+        "[Report] Fixed a 404 error when clicking the site logo to return to the home page",
+        "[Report] Student Planner: Fixed misrecognition for Kurumi, Renge, and Natsu (Band)",
+        "Assault Dashboard: Added an Assist Available option to the mop-up party search filter, allowing one excluded student per team"
+      ],
+      "ko": [
+        "[제보] 사이트 로고를 클릭해 홈으로 이동할 때 404 오류가 발생하던 문제 수정",
+        "[제보] 학생 플래너: 쿠루미, 렌게, 나츠(밴드) 오인식 문제 해결",
+        "총력전 대시보드: 설거지 파티 검색 필터에 조력자 대여 가능 옵션 추가 — 파티당 제외 학생 1명까지 허용"
+      ],
+      "ja": [
+        "[報告] サイトロゴをクリックしてホームに戻る際に404エラーが発生する問題を修正",
+        "[報告] 生徒プランナー: クルミ、レンゲ、ナツ(バンド)の誤認識問題を修正",
+        "総力戦ダッシュボード: 残処理パーティ検索フィルターに助っ人レンタル可能オプションを追加 — 1部隊につき除外生徒1人まで許可"
+      ]
+    },
+    "to": ["/", "/planner/students", "/dashboard/jp/R89?view=detail"]
+  },
+  {
+    "date": "2026-09-22",
+    "changes": {
+      "en": [
+        "[Report] My Recruitment History: Fixed early-launch students (e.g. Maki) sometimes missing from the 3★ Results list when logging older recruitment banners",
+        "[Report] Added combat-style form support across the Student Growth Planner, Student Scanner, My Recruitment History, and Event Planner; My Raid History continues to show forms separately"
+      ],
+      "ko": [
+        "[제보] 내 모집 이력: 오래된 모집을 기록할 때 초기 출시 학생(예: 마키)이 3★ 결과 목록에서 누락되던 문제 수정",
+        "[제보] 학생 성장 플래너, 학생 육성 스캐너, 내 모집 이력, 이벤트 플래너에 전투 스타일 폼 변경 지원 추가. 내 총력전 이력에서는 계속 분리 표시"
+      ],
+      "ja": [
+        "[報告] 募集履歴: 過去の募集を記録する際、初期実装の生徒(例: マキ)が★3結果リストから漏れることがあった問題を修正",
+        "[報告] 生徒育成プランナー、生徒育成スキャナー、募集履歴、イベントプランナーに戦闘スタイルのフォーム変更対応を追加。総力戦履歴では引き続き別々に表示"
+      ]
+    },
+    "to": ["/my/gacha", "/planner/students"]
+  },
+  {
+    "date": "2026-09-17",
+    "changes": {
+      "en": [
+        "[Report] Gacha Planner: Made the recruitment ticket input UI more intuitive",
+        "[Issue #13] Event Planner: Fixed the auto-farm target double-counting currency needed for both a Shop (or other) cost and the Cumulative Rewards track",
+        "Item Management: Merged the old Resource Planner page in",
+        "Student Growth Planner: Material \"owned amount\" editing now links to the Item Management page instead of the old popup",
+        "Settings: Deleting a profile now asks for confirmation first",
+        "Settings / Sync: Added a manual \"Sync\" button to retry after a sync error",
+        "Resource Efficiency Calculator: Fixed AP-cost bugs where a shared prerequisite investment or certain minigame stages could be counted twice",
+        "Resource Efficiency Calculator: Eleph section now shows the student's current star / unique weapon rank",
+        "Farming Planner: Added a reset button to clear run-count inputs",
+        "AP Calculator: Removed the redundant \"Run\" button; added a reset-to-default button",
+        "Event Planner: Pickup mode now defaults to your active profile's server, and past events dim based on the selected server",
+        "Student Scanner: Fixed the target star sometimes being set incorrectly for newly recognized students"
+      ],
+      "ko": [
+        "[제보] 모집/가챠 플래너: 모집 티켓 입력 UI를 더 직관적으로 개선",
+        "[Issue #13] 이벤트 플래너: 상점(또는 다른 소비)과 누적 보상이 같은 재화를 필요로 할 때 자동 파밍 목표량이 중복 계산되던 문제 수정",
+        "아이템 관리: 기존 재화 플래너 페이지를 통합",
+        "학생 성장 플래너: 재료 \"보유량\" 편집이 기존 팝업 대신 아이템 관리 페이지로 연결됨",
+        "설정: 프로필 삭제 시 확인 대화상자를 거치도록 변경",
+        "설정 / 동기화: 동기화 오류 발생 시 수동으로 재시도할 수 있는 \"동기화\" 버튼 추가",
+        "재화 효율 계산기: 공유 선행투자나 일부 미니게임 스테이지가 AP 비용에 중복 계산되던 버그 수정",
+        "재화 효율 계산기: 엘레프 항목에 학생의 현재 성급 / 고유무기 랭크 표시",
+        "파밍 플래너: 주회 횟수 입력값을 초기화하는 버튼 추가",
+        "AP 계산기: 불필요한 \"실행\" 버튼 제거, 기본값으로 초기화하는 버튼 추가",
+        "이벤트 플래너: 픽업 모드가 활성 프로필의 서버를 기본값으로 사용하며, 선택한 서버 기준으로 종료된 이벤트가 흐리게 표시됨",
+        "학생 스캐너: 일부 학생 인식 시 목표 성급이 잘못 설정되는 문제 해결"
+      ],
+      "ja": [
+        "[報告] 募集/ガチャプランナー: 募集チケット入力UIをより直感的に改善",
+        "[Issue #13] イベントプランナー: ショップ(または他の消費)と累計報酬が同じ通貨を必要とする場合、自動周回目標量が重複計算されていた問題を修正",
+        "アイテム管理: 旧リソースプランナーページを統合",
+        "生徒育成プランナー: 素材の「所持数」編集が従来のポップアップの代わりにアイテム管理ページへリンクされるように変更",
+        "設定: プロフィール削除時に確認ダイアログを表示するよう変更",
+        "設定 / 同期: 同期エラー時に手動で再試行できる「同期」ボタンを追加",
+        "リソース効率計算機: 共有の先行投資や一部のミニゲームステージがAPコストに二重計算されていたバグを修正",
+        "リソース効率計算機: エレフ項目に生徒の現在の星ランク / 固有武器ランクを表示",
+        "周回プランナー: 周回回数の入力をリセットするボタンを追加",
+        "APカリキュレーター: 不要な「実行」ボタンを削除、初期値に戻すボタンを追加",
+        "イベントプランナー: ピックアップモードがアクティブプロフィールのサーバーをデフォルトで使用し、選択したサーバー基準で終了したイベントが薄く表示される",
+        "生徒スキャナー: 一部の生徒認識時に目標の星ランクが誤って設定される問題を修正"
+      ]
+    },
+    "to": [
+      "/planner/gacha",
+      "/planner/event",
+      "/planner/inventory",
+      "/planner/students",
+      "/settings",
+      "/settings",
+      "/planner/event",
+      "/planner/event",
+      "/planner/event",
+      "/planner/event",
+      "/planner/event",
+      "/scanner/student"
+    ]
+  },
+  {
+    "date": "2026-09-16",
+    "changes": {
+      "en": [
+        "Home: Moved \"My Clear Records\" and \"My Recruitment History\" into the Tools grid with screenshots",
+        "Fixed logout sometimes not fully signing you out — the account could reappear after logging out",
+        "Student Growth Planner: Header now shows total student, registered plan, and filtered result counts",
+        "Student Growth Scanner: Results review thumbnail list can now expand to show every thumbnail",
+        "Student Growth Scanner: Improved recognition algorithm",
+        "Settings: Fixed the Planner Profiles list sometimes appearing empty right after the page loads"
+      ],
+      "ko": [
+        "홈: '내 클리어 기록', '내 모집 이력'을 스크린샷과 함께 도구 그리드로 이동",
+        "로그아웃이 완전히 처리되지 않아 계정이 다시 나타나던 문제 수정",
+        "학생 성장 플래너: 헤더에 전체 학생 수 / 등록된 계획 수 / 필터링된 결과 수 표시",
+        "학생 육성 스캐너: 결과 검토 썸네일 목록을 펼쳐서 전체 썸네일을 볼 수 있도록 추가",
+        "학생 육성 스캐너: 인식 알고리즘 개선",
+        "설정: 페이지 로드 직후 플래너 프로필 목록이 비어 보이던 문제 수정"
+      ],
+      "ja": [
+        "ホーム: 「クリア記録」「募集履歴」をスクリーンショット付きのツールグリッドに移動",
+        "ログアウトが完全に処理されず、アカウントが再表示される問題を修正",
+        "生徒育成プランナー: ヘッダーに全生徒数 / 登録済みプラン数 / フィルター結果数を表示",
+        "生徒育成スキャナー: 結果確認のサムネイル一覧を展開して全てのサムネイルを表示できるように追加",
+        "生徒育成スキャナー: 認識アルゴリズムを改善",
+        "設定: ページ読み込み直後にプランナープロフィール一覧が空に見える問題を修正"
+      ]
+    },
+    "to": ["/", null, "/planner/students", "/scanner/student", "/scanner/student", "/settings"]
+  },
+  {
+    "date": "2026-09-10",
+    "changes": {
+      "en": [
+        "Live Dashboard Total Assault S92 (BETA) ended",
+        "Added Favor Rank Status",
+        "Added JP Total Assault S92 Perorodzilla top-ranking team data (from Plana Stats)",
+        "Added JP Total Assault S92 Perorodzilla overall score data"
+      ],
+      "ko": [
+        "라이브 대시보드 총력전 S92 (BETA) 종료",
+        "인연 칭호 설정 현황 추가",
+        "JP 총력전 S92 페로로지라 상위권 편성 데이터 추가 (from Plana Stats)",
+        "JP 총력전 S92 페로로지라 전체 분포 데이터 추가"
+      ],
+      "ja": [
+        "リアルタイムダッシュボード 総力戦S92 (BETA) 終了",
+        "絆ランク称号の状況追加",
+        "JP 総力戦S92 ペロロジラ 上位編成データをの追加 (from Plana Stats)",
+        "JP 総力戦S92 ペロロジラ 全体スコア分布データをの追加"
+      ]
+    },
+    "to": [null, "/charts/favor", "/dashboard/jp/R92?view=detail", "/dashboard/jp/R92"]
+  },
+  {
+    "date": "2026-09-09",
+    "changes": {
+      "en": [
+        "Mobilization Ranking: added a \"Recruitment type\" filter (Fest / Limited / Standard / Archive / Welfare)",
+        "Added Recruitment/Gacha Guide page",
+        "Gacha Planner: Added Compact mode",
+        "Event Shop: click a furniture icon to see which students interact with it",
+        "Relationship Rank Calculator: added \"Recommended Crafting Nodes\""
+      ],
+      "ko": [
+        "출전 횟수 순위: '모집 유형' 필터 추가 (페스 / 한정 / 통상 / 아카이브 / 배포)",
+        "모집/가챠 가이드 페이지 추가",
+        "모집/가챠 플래너: 간략 모드 추가",
+        "이벤트 상점: 가구 아이콘 클릭 시 상호작용하는 학생 표시",
+        "인연 랭크 계산기: '추천 제조 노드' 추가"
+      ],
+      "ja": [
+        "出撃回数順位: 「募集タイプ」フィルターを追加（フェス / 限定 / 恒常 / アーカイブ / 配布）",
+        "募集/ガチャガイドページを追加",
+        "募集/ガチャプランナー: 簡略モードを追加",
+        "イベントショップ: 家具アイコンをクリックするとインタラクションする生徒を表示",
+        "絆ランク計算機: 「おすすめ製造ノード」を追加"
+      ]
+    },
+    "to": ["charts/jp/ranking", "/planner/gacha/guide", "/planner/gacha", "/planner/event", "/utils/favor"]
+  },
+  {
+    "date": "2026-09-02",
+    "changes": {
+      "en": ["Favor Rank Status: click a student row to show its chart"],
+      "ko": ["인연 칭호 설정 현황: 학생 행 클릭 시 그래프 표시"],
+      "ja": ["絆ランク称号の状況: 生徒の行をクリックでグラフを表示"]
+    },
+    "to": ["charts/favor"]
+  },
+  {
+    "date": "2026-09-01",
+    "changes": {
+      "en": ["Gacha Planner: \"Max Budget\" is now entered as a pull count (e.g. 90). Free pulls count toward it, so you can plan to use only some of them.", "Added Favor Rank Status"],
+      "ko": ["모집/가챠 플래너: '최대 예산'을 연차 수로 입력합니다(예: 90). 무료 모집도 예산에 포함되어, 무료 뽑기를 일부만 쓰는 계획도 가능함", "인연 칭호 설정 현황 추가"],
+      "ja": ["募集/ガチャプランナー: 「予算上限」を回数で入力します（例: 90）。無料募集も予算に含まれるため、無料分を一部だけ使う計画も可能です。", "絆ランク称号の状況追加"]
+    },
+    "to": ["/planner/gacha", "charts/favor"]
+  },
+  {
+    "date": "2026-08-28",
+    "changes": {
+      "en": ["[Report] [Issue #12] Fixed the \"can't access property 'localeCompare'\" error on some pages — caused by diversifying data sources during a student information update"],
+      "ko": ["[제보] [Issue #12] 일부 페이지에서 \"can't access property 'localeCompare'\" 오류가 발생하던 문제 수정 - 학생 정보 업데이트 과정에서 데이터 소스를 다변화하며 발생한 오류"],
+      "ja": ["[報告] [Issue #12] 一部ページで\"can't access property 'localeCompare'\"エラーが発生していた問題を修正 - 生徒情報の更新過程でデータソースを多様化した際に発生したエラー"]
+    },
+    "to": [null]
+  },
+  {
     "date": "2026-08-23",
     "changes": {
       "en": [
@@ -12,7 +476,7 @@
         "[Issue #10] 모집/가챠 플래너: 치나츠(온천), 아스나(버니걸), 히비키, 슈에링(수영복)이 통상 모집에 잘못 등장하던 문제 수정",
         "[Issue #10] 가챠 디버그: 엘리그마 총 합 계산 오류 수정",
         "브라우저 개발자 도구가 감지된 경우, 창을 닫는 대신 편지를 전달합니다.",
-        "BGM 플레이어: 영상이 없는 트랙은 반응 없는 재생 버튼 대신 블루 아카이브 위키(bluearchive.wiki)로 이동하는 링크 아이콘을 표시합니다"
+        "BGM 플레이어: 영상이 없는 트랙은 반응 없는 재생 버튼 대신 블루 아카이브 위키(bluearchive.wiki)로 이동하는 링크 아이콘을 표시"
       ],
       "ja": [
         "[Issue #10] 募集/ガチャプランナー: チナツ(温泉)、アスナ(バニーガール)、ヒビキ、幼女シュン(水着)が通常募集に誤って出現する問題を修正",
@@ -118,13 +582,13 @@
       ],
       "ko": [
         "모집/가챠 플래너: 엘리프 획득 분포 툴팁에 비정상적으로 부풀려진 확률(예: 8409%)이 표시되던 문제 수정, 학생 목록 획득 확률 옆에 평균 엘리프 표시",
-        "모집/가챠 플래너: WASM 엔진에 모집 충전 시스템 반영",
+        "모집/가챠 플래너: WASM 엔진에 모집 챠지 시스템 반영",
         "가챠 디버그: New/Pick Up 라벨과 등장 애니메이션을 포함한 인게임 스타일 모집 결과 카드 추가",
         "모집/가챠 플래너, 총력전 순위, 인연 랭크 계산기, BGM 플레이어, 학생 성장 플래너: 로딩 속도 개선"
       ],
       "ja": [
         "募集/ガチャプランナー: エレフ獲得分布のツールチップで異常に大きい確率(例: 8409%)が表示される問題を修正、生徒リストの獲得確率の横に平均エレフを表示",
-        "募集/ガチャプランナー: WASMエンジンに募集チャージシステムを実装",
+        "募集/ガチャプランナー: WASMエンジンに呼び出しチャージシステムを実装",
         "ガチャデバッグ: New/Pick Upラベルと登場アニメーションを備えたゲーム風の募集結果カードを追加",
         "募集/ガチャプランナー、総力戦ランキング、絆ランク計算機、BGMプレイヤー、生徒育成プランナー: 読み込み速度を改善"
       ]
@@ -289,7 +753,7 @@
     "date": "2026-07-28",
     "changes": {
       "en": ["Gacha Planner: Recruit Count Bonus (ticket/eligma) reflected for the Call Charge system"],
-      "ko": ["모집/가챠 플래너: 호출 충전 방식에서 모집 횟수 특전(티켓·엘리그마) 반영"],
+      "ko": ["모집/가챠 플래너: 모집 챠지 방식에서 모집 횟수 특전(티켓·엘리그마) 반영"],
       "ja": ["ガチャプランナー: 呼び出しチャージ方式で募集回数特典(チケット・エリグマ)反映"]
     },
     "to": ["/planner/gacha"]
@@ -298,7 +762,7 @@
     "date": "2026-07-27",
     "changes": {
       "en": ["Gacha Planner: Added Call Charge system — JS engine only, Recruit Count Bonus not yet implemented"],
-      "ko": ["모집/가챠 플래너: 호출 충전 방식 지원 — JS 엔진에만 구현, 모집 횟수 특전 미반영"],
+      "ko": ["모집/가챠 플래너: 모집 챠지 방식 지원 — JS 엔진에만 구현, 모집 횟수 특전 미반영"],
       "ja": ["ガチャプランナー: 呼び出しチャージ方式に対応 — JSエンジンのみ実装、募集回数特典は未実装"]
     },
     "to": ["/planner/gacha"]
@@ -861,7 +1325,7 @@
         "ガチャのラインナップにノノミが出現する不具合を修正",
         "10連募集時の10枠目に★2以上確定を適用",
         "復刻・アンコール募集の初回神名文字100個ボーナスが1回のみ適用されるように修正",
-        "天井（募集ポイント）交換時に初回神名文字ボーナスが適用されない不具合を修正",
+        "天井（呼び出しポイント）交換時に初回神名文字ボーナスが適用されない不具合を修正",
         "開始日が同じ複数の募集バナーが同時に適用されない不具合を修正"
       ]
     },

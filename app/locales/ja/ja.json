@@ -33,7 +33,8 @@
       "noTranslation": "翻訳がありません",
       "newUpdate": "最近のアップデート",
       "feedbackPrompt": "バグ報告と機能提案をお待ちしています。",
-      "sendFeedback": "フィードバック送信"
+      "sendFeedback": "フィードバック送信",
+      "description": "機能追加・修正履歴"
     },
     "currentLocale": "ja",
     "navigation": {
@@ -57,10 +58,11 @@
       "eventPlanner": "イベント周回プランナー",
       "gachaPlanner": "青輝石・募集/ガチャ計画",
       "equipmentFarmingPlanner": "装備ファーミングプランナー",
+      "favorStats": "絆統計",
       "favorCalculator": "絆ランク計算機"
     },
     "homeFeatures": {
-      "eventPlannerDesc": "学生成長のための財貨消耗及びイベントでの財貨獲得シミュレーション",
+      "eventPlannerDesc": "生徒成長のための財貨消耗及びイベントでの財貨獲得シミュレーション",
       "gachaPlannerDesc": "未来視スケジュールに基づいて予想される青輝石の需給を計算し、希望する生徒のピックアップ戦略を立てて募集/ガチャの成功確率をシミュレーションします。",
       "studentGrowthPlannerDesc": "全ての生徒の育成計画を一元管理し、必要な素材を計算します。",
       "equipmentFarmingPlannerDesc": "生徒の育成計画に基づき、装備ファーミングを最適化します。",
@@ -93,10 +95,6 @@
         "next": "下一步 ➔",
         "prev": "⬅ 上一步"
       }
-    },
-    "promoBanner": {
-      "noMoreToday": "本日表示しない",
-      "noMoreThisWeek": "1週間表示しない"
     },
     "bugReport": {
       "title": "フィードバックを送信",
@@ -146,7 +144,8 @@
       "jpStats": "JP 統計",
       "kivotosPeace": "キヴォトスは現在平和な状態です",
       "noEvent": "現在イベントはありません。",
-      "monthEndReset": "ショップ月末リセット"
+      "monthEndReset": "ショップ月末リセット",
+      "loginAvailable": "ログインするとデータを端末間で同期できます。"
     },
     "scroll_to_first_page": "最初のページ",
     "scroll_to_prev_page": "前のページ",
@@ -174,7 +173,8 @@
         "raid": "総力戦・大決戦を選択",
         "sum_option": {
           "name": "回数計算"
-        }
+        },
+        "recruit_type": "募集タイプ"
       },
       "desp_percent": "各グラフの長さは、全体の出撃回数に対する割合（％）を表します。",
       "desp_absolute": "各グラフの長さは、実際の出撃回数を表します。",
@@ -188,7 +188,7 @@
       "processingMessage": "データの読み込み、解凍、処理中です...",
       "noDataMessage": "表示するデータがありません。フィルターでレアリティを1つ以上選択してください。",
       "usage_statistics": "採用率統計",
-      "usage_desc": "総力戦・大決戦レイドごとの星数別採用率を比較します。",
+      "usage_desc": "総力戦・大決戦ごとの星数別採用率を比較します。",
       "control": {
         "selectStudent": "生徒を選択",
         "studentSearchPlaceholder": "生徒名、役割、学園名などで検索",
@@ -202,6 +202,12 @@
           "histograms": "ヒストグラム：",
           "rankWidth": "順位の集計単位：",
           "X-Threshold": "総力戦・大決戦の表示省略する条件："
+        },
+        "combatStyleView": {
+          "title": "フォーム切替",
+          "mode": "集計方法",
+          "combined": "合算",
+          "separate": "分離"
         },
         "raidRange": {
           "title": "総力戦・大決戦を選択"
@@ -235,11 +241,27 @@
     "Normal": "NORMAL"
   },
   "dashboard": {
+    "actualStats": {
+      "context": "{{bracket}} 区間 · グループ化基準",
+      "incomplete": "不完全",
+      "more": "他{{count}}種類を表示",
+      "less": "閉じる",
+      "all": "全体",
+      "bracket": "スコア区間",
+      "zoom": "組み合わせの範囲に拡大",
+      "loading": "実際の組み合わせを読み込み中…",
+      "retry": "読み込み失敗 · 再試行",
+      "ratio": "対象範囲全体{{count}}人の{{percent}}%",
+      "order": "文字の順序：{{armors}}",
+      "share": "割合",
+      "viewChips": "チップ表示",
+      "viewTable": "表表示"
+    },
     "title": "総力戦・大決戦ダッシュボード",
     "shorttitle": "ダッシュボード",
     "description1": "それぞれの総力戦・大決戦の詳細を見る",
     "detailMetaTitle": "{{server}} {{season}} {{boss}} {{location}} {{raidType}} 攻略・統計",
-    "detailMetaDescription": "ブルーアーカイブ{{server}}サーバー {{season}} {{boss}} {{location}} {{raidType}}のスコア分布、難易度別クリア状況、上位編成、生徒使用率の統計です。",
+    "detailMetaDescription": "ブルーアーカイブ{{server}}サーバー {{season}} {{boss}} {{location}} {{raidType}}のスコア分布、難易度別クリア状況、上位編成、生徒出撃率の統計です。",
     "rankRange": "順位範囲",
     "subtitle": "総力戦・大決戦ダッシュボード ペロロジラ 2025.09",
     "scoreDistribution": "コア分布",
@@ -290,6 +312,13 @@
     "bracketFilter": "難易度段階フィルター",
     "playerCount": "人数",
     "donutChartTitle": "Tier / 難易度組み合わせ分布",
+    "actualStats.title": "実際の難易度組み合わせ",
+    "actualStats.open": "実際の組み合わせを見る",
+    "actualStats.close": "閉じる",
+    "actualStats.combination": "組み合わせ",
+    "actualStats.ratio": "割合",
+    "actualStats.bracketFilter": "{{bracket}}区間のみ表示",
+    "actualStats.noData": "ボス別データなし",
     "donutChartSubtitle": "ドーナツチャートの内部要素をクリックすると詳細情報を確認できます",
     "groupingCriteria": "グループ化基準",
     "actualCombination": "実際の組み合わせ",
@@ -385,19 +414,43 @@
       "sort_count": "出撃数順",
       "sort_bestRank": "最高スコア順",
       "ignore_position": "配置を無視",
+      "included_formations": "このパーティを含む編成",
+      "included_formations_count": "{{count}}件",
       "placement_variants": "配置パターン",
       "mulligan_variants": "初手(スキル)パターン",
       "mulligan_view_order": "ピック順",
-      "mopup_filter": "残処理パーティフィルター"
+      "mopup_filter": "残処理パーティフィルター",
+      "allow_assist": "助っ人レンタル可能",
+      "allow_assist_hint": "各パーティーにつき1人まで助っ人として許可できます。"
     },
     "videos_select_boss": "動画を見るにはボスタイプを選択してください。",
     "videos_empty": "動画がありません。",
+    "videos_scope_label": "動画の範囲",
+    "videos_scope_all": "すべて",
+    "videos_scope_current": "今回",
+    "videos_scope_reference": "{{raid}} 参考",
+    "videos_reference_title": "同条件の別サーバーのシーズンの動画",
+    "videos_candidate": "候補",
+    "videos_basic_analysis": "簡易解析",
+    "videos_basic_analysis_title": "タイトルのみからスコアと難易度を読み取りました",
     "videos_sort_score_desc": "スコア高い順",
     "videos_sort_score_asc": "スコア低い順",
     "videos_sort_upload_desc": "投稿日が新しい順",
     "videos_sort_upload_asc": "投稿日が古い順",
     "videos_score_min_placeholder": "最小",
+    "videos_filter_party_info": "生徒編成情報のある動画のみ",
+    "videos_party_info_missing": "生徒編成情報なし",
+    "videos_view_results": "動画を表示（{{count}}件）",
     "videos_filter_tl": "TLのみ",
+    "videos_show_original_title": "原文",
+    "videos_description": "概要欄",
+    "videos_copy_link": "リンクをコピー",
+    "videos_copy_failed": "コピーできませんでした。リンクを長押しするか、選択してコピーしてください。",
+    "videos_view_original": "原文を見る",
+    "videos_view_translation": "翻訳を見る",
+    "videos_description_translation_note": "生徒名・ボス名・ゲーム用語を翻訳しています。",
+    "videos_before_raid": "開催前",
+    "videos_after_raid": "終了後",
     "videos_filter_target_type": "ターゲットタイプのみ",
     "videos_missing_note": "自動処理のため、一部の動画が欠けている場合があります。",
     "videos_view_all": "収録した全動画を確認",
@@ -421,23 +474,27 @@
     "highscore_change_by_difficulty": "難易度別ハイスコアの変動",
     "service_discontinuation_notice": "本サービスは予告なく中断されることがあります。",
     "irregular_update_notice": "データは不定期に更新されます。",
+    "hide_abnormal_records": "ゲーム内システムの不正利用が疑われる記録を非表示",
     "changePerHourLabel": "増加量 (人/時間)",
     "playersPerHourUnit": "人/時間",
     "playersUnit": "人",
     "show_prediction_cutoff": "プラチナボーダー予測を表示",
+    "prediction_mode_model": "現在のペースを反映",
     "prediction_mode_stats": "平均/最大・最小範囲",
     "prediction_mode_compare": "過去シーズン比較",
     "platinum_prediction_avg": "{{rank}}位",
     "compare_cutoff": "{{name}} ボーダー ({{rank}}位)",
     "total_combined": "{{types}}",
     "predicted_score": "{{score}}点",
+    "prediction_fused_score": "{{score}} (80%区間 {{low}}~{{high}})",
     "data_unavailable_reason": "公式APIが提供されていないため、外部の提供者から非公式にデータを受け取り運営してきました。",
     "data_unavailable_status": "データ提供者の事情により供給が停止しており、現在ご利用いただけません。データを提供または提供のサポートができる方は、ご連絡ください。",
     "data_unavailable_contact_email": "メールで連絡",
     "data_unavailable_contact_anon": "匿名で連絡",
     "platinum_cut_est": "プラチナボーダー予測（統計ベース）",
+    "highest_cleared_difficulty": "最高クリア難易度",
     "video_fallback_note_crawl": "動画のクロールはまだ手動のため、最大1〜2日間隔で更新されます。",
-    "video_fallback_note_live_only": "現在開催中のレイドの動画のみ表示されます。さらに表示：",
+    "video_fallback_note_live_only": "現在開催中の総力戦・大決戦の動画のみ表示されます。さらに表示：",
     "score_time_converter_title": "スコア・タイム変換",
     "score_time_converter_placeholder": "スコア（例: 41230000）またはタイム（例: 3:45）を入力してください",
     "score_time_converter_error_invalid_time": "タイムの形式が正しくありません。mm:ss形式で入力してください（例: 3:45）。",
@@ -502,10 +559,11 @@
     "scrollToNow": "現在時刻へスクロール",
     "campaign": {
       "hard": "ハード",
-      "bounty": "報奨",
+      "bounty": "指名手配",
       "scrimmage": "学園交流会",
       "normal": "ノーマル",
-      "commission": "依頼"
+      "commission": "依頼",
+      "exp": "経験値"
     },
     "story": {
       "mini": "ミニストーリー: {{title}}"

@@ -4,19 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { FaGem, FaTicketAlt, FaCrown, FaShieldAlt, FaTrophy, FaPlus, FaTrash, FaCalendarAlt, FaInfoCircle } from 'react-icons/fa';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
-import { PVP_REWARDS } from '~/utils/pyroxeneCalc';
+import { PVP_REWARDS, type CustomIncome } from '~/utils/pyroxeneCalc';
 import type { PlannerSchedule, PyroxeneConfig, ManualTicketBatchInput } from '~/utils/pyroxeneCalc';
 import { getEraidTicketExpiry } from '~/utils/gachaRules';
-import { CustomNumberInput } from '../CustomInput';
-
-export interface CustomIncome {
-  id: string;
-  date: string;
-  title: string;
-  amount: number;
-}
+import { CustomNumberInput } from '../common/CustomInput';
 
 interface Props {
+  /** Simple-mode display: hides the auto-consume-policy toggle, unclaimed momotalk input, and
+      custom income/expense ledger — all advanced-planner detail with no effect on the default plan.
+      Ticket entry (counts, expiry batches, eraid checklist) stays visible in every mode since it has
+      no safe default. */
+  simple?: boolean;
   config: PyroxeneConfig & { customIncomes?: CustomIncome[] };
   setConfig: React.Dispatch<React.SetStateAction<PyroxeneConfig & { customIncomes?: CustomIncome[] }>>;
   pyroxeneIcon?: string | null;
@@ -51,13 +49,13 @@ export function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 
 function GameImg({ src, size = 24 }: { src: string; size?: number }) {
   return (
-    <span className="shrink-0 inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <span className="shrink-0 inline-flex items-center justify-center -translate-x-1" style={{ width: size, height: size }}>
       <img src={`data:image/webp;base64,${src}`} className="max-w-full max-h-full object-cover" />
     </span>
   );
 }
 
-export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, pyroxeneIcon, ticket1Icon: _ticket1Icon, ticket10Icon }: Props) {
+export default function IncomeSettingsPanel_v2({ simple = false, config, setConfig, schedules, pyroxeneIcon, ticket1Icon: _ticket1Icon, ticket10Icon }: Props) {
   const { t: _t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const t = _t as (key: string, opts?: Record<string, string | number>) => string;
   const { t: tIntro } = useTranslation('planner', { keyPrefix: 'gacha.intro.notes' });
@@ -72,6 +70,9 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
   const [newTicketExpiry, setNewTicketExpiry] = useState('');
   const [newTicket1Count, setNewTicket1Count] = useState<number | ''>('');
   const [newTicket10Count, setNewTicket10Count] = useState<number | ''>('');
+  // Default collapsed (permanent-ticket entry is the common case), but start expanded for anyone who
+  // already has an expiring batch saved, so their existing input path isn't hidden from them.
+  const [showExpiry, setShowExpiry] = useState(() => (config.manualTicketBatches ?? []).some((batch) => batch.expiresAt));
 
   useEffect(() => {
     const userAgent = navigator.userAgent;
@@ -112,6 +113,8 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
     set({ selectedMainStoryIds: [...next] });
   };
   const clearSelectedMainStories = () => set({ selectedMainStoryIds: [] });
+  const selectAllMainStories = () => set({ selectedMainStoryIds: pastMainStories.map((story) => story.id) });
+  const noMainStorySelected = selectedMainStoryIds.size === 0;
 
   // Term-limited tickets — past eraid events whose ticket hasn't expired yet (checked = "still holding it"),
   // plus manually-entered batches (from any other source, with an optional expiry — blank means it never expires).
@@ -126,6 +129,8 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
   };
 
   const manualTicketBatches = config.manualTicketBatches ?? [];
+  const hasTicketCount = (typeof newTicket1Count === 'number' && newTicket1Count > 0) || (typeof newTicket10Count === 'number' && newTicket10Count > 0);
+  const canAddTicketBatch = hasTicketCount && (!showExpiry || Boolean(newTicketExpiry));
   const handleAddTicketBatch = () => {
     const ticket1Count = typeof newTicket1Count === 'number' ? newTicket1Count : 0;
     const ticket10Count = typeof newTicket10Count === 'number' ? newTicket10Count : 0;
@@ -139,7 +144,7 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
   const handleRemoveTicketBatch = (id: string) => setConfig((prev) => ({ ...prev, manualTicketBatches: (prev.manualTicketBatches ?? []).filter((x) => x.id !== id) }));
 
   return (
-    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+    <div className="bg-white dark:bg-neutral-900">
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
         {/* Owned Pyroxenes */}
         <label className="flex items-center justify-between gap-3 py-2.5">
@@ -152,64 +157,122 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
           />
         </label>
 
-        {/* Term-limited tickets */}
+        {/* Recruitment tickets — permanent by default; expiry is opt-in via the toggle below */}
         <div className="py-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-ba-btn-blue inline-flex items-center justify-center">{ticket10Icon ? <GameImg src={ticket10Icon} /> : <FaTicketAlt size={15} />}</span>
             <span className="text-sm text-neutral-600 dark:text-neutral-300">{t('settings.ticket_batches_title')}</span>
           </div>
 
-          {/* Manually entered batches — expiry optional (blank = never expires) */}
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-900 mb-2">
-            <div className="flex items-stretch border-b border-neutral-200 dark:border-neutral-700">
-              <div className="relative w-32 shrink-0 border-r border-neutral-200 dark:border-neutral-700">
+          {/* Keep counts and actions on one compact line; expiry stays an optional secondary line. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <label className="flex items-center gap-1.5">
+              <span className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('settings.ticket1')}</span>
+              <CustomNumberInput
+                min={0}
+                aria-label={t('settings.ticket1')}
+                className="h-8 w-12 rounded-md border border-neutral-200 bg-neutral-50 px-1.5 text-sm tabular-nums text-neutral-800 focus:border-ba-btn-blue focus:ring-1 focus:ring-ba-btn-blue dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                placeholder="0"
+                value={newTicket1Count || null}
+                onChange={(val) => setNewTicket1Count(val ?? '')}
+              />
+            </label>
+            <label className="flex items-center gap-1.5">
+              <span className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('settings.ticket10')}</span>
+              <CustomNumberInput
+                min={0}
+                aria-label={t('settings.ticket10')}
+                className="h-8 w-12 rounded-md border border-neutral-200 bg-neutral-50 px-1.5 text-sm tabular-nums text-neutral-800 focus:border-ba-btn-blue focus:ring-1 focus:ring-ba-btn-blue dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                placeholder="0"
+                value={newTicket10Count || null}
+                onChange={(val) => setNewTicket10Count(val ?? '')}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setShowExpiry((visible) => !visible);
+                if (showExpiry) setNewTicketExpiry('');
+              }}
+              aria-label={t('settings.ticket_batches_set_expiry')}
+              aria-pressed={showExpiry}
+              title={t('settings.ticket_batches_set_expiry')}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ba-btn-blue ${
+                showExpiry
+                  ? 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'
+                  : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300'
+              }`}
+            >
+              <FaCalendarAlt size={13} aria-hidden="true" />
+            </button>
+            <span className={`inline-flex shrink-0 ${canAddTicketBatch ? '' : 'cursor-not-allowed'}`}>
+              <button
+                type="button"
+                onClick={handleAddTicketBatch}
+                disabled={!canAddTicketBatch}
+                className="h-8 rounded-md bg-ba-btn-blue px-2.5 text-xs font-semibold text-[#06262f] transition-colors hover:bg-ba-btn-blue-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ba-btn-blue disabled:pointer-events-none disabled:opacity-40"
+              >
+                {tUi('add')}
+              </button>
+            </span>
+          </div>
+
+          {showExpiry && (
+            <label className="mt-1.5 flex items-center gap-1.5">
+              <span className="shrink-0 text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('settings.ticket_batches_expiry_placeholder')}</span>
+              <span className="relative block min-w-0">
                 <input
                   type="date"
-                  aria-label="YYYY-MM-DD"
-                  className="h-full w-full px-2.5 py-2 bg-transparent text-neutral-600 dark:text-neutral-400 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
+                  aria-label={t('settings.ticket_batches_expiry_placeholder')}
+                  className="h-8 w-36 rounded-md border border-neutral-200 bg-neutral-50 px-2 text-xs text-neutral-700 outline-none focus:border-ba-btn-blue focus:ring-1 focus:ring-ba-btn-blue dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                   value={newTicketExpiry}
                   onChange={(e) => setNewTicketExpiry(e.target.value)}
                 />
                 {needsSafariDateHint && !newTicketExpiry && (
-                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 bg-white pr-1 text-[11px] text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
-                    {t('settings.ticket_batches_unlimited')}
-                  </span>
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 bg-neutral-50 pr-1 text-xs text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">YYYY-MM-DD</span>
                 )}
-              </div>
-              <div className="flex-1 min-w-0 px-2.5 py-2 text-[10px] text-neutral-300 dark:text-neutral-700 flex items-center select-none">{t('settings.ticket_batches_expiry_placeholder')}</div>
+              </span>
+            </label>
+          )}
+
+          {manualTicketBatches.length > 0 && (
+            <div className="mt-2.5 max-h-32 divide-y divide-neutral-100 overflow-y-auto border-t border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
+              {[...manualTicketBatches].reverse().map((item) => (
+                <div key={item.id} className="flex items-center gap-2 py-2 text-xs">
+                  <span className="shrink-0 tabular-nums text-neutral-500 dark:text-neutral-400" style={monoStyle}>
+                    {item.expiresAt ? item.expiresAt.slice(5).replace('-', '/') : t('settings.ticket_batches_unlimited')}
+                  </span>
+                  <span className="min-w-0 flex-1 text-neutral-700 dark:text-neutral-300">
+                    {item.ticket1Count > 0 &&
+                      t('settings.ticket_batch_count', {
+                        ticket: t('settings.ticket1'),
+                        count: item.ticket1Count,
+                        unit: t('unit_sheets'),
+                      })}
+                    {item.ticket1Count > 0 && item.ticket10Count > 0 && ' · '}
+                    {item.ticket10Count > 0 &&
+                      t('settings.ticket_batch_count', {
+                        ticket: t('settings.ticket10'),
+                        count: item.ticket10Count,
+                        unit: t('unit_sheets'),
+                      })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTicketBatch(item.id)}
+                    aria-label={tUi('delete')}
+                    title={tUi('delete')}
+                    className="-m-1.5 shrink-0 p-1.5 text-neutral-400 transition-colors hover:text-red-500 dark:text-neutral-500 dark:hover:text-red-400"
+                  >
+                    <FaTrash size={13} aria-hidden="true" />
+                  </button>
+                </div>
+              ))}
             </div>
-            <div className="flex items-stretch">
-              <div className="flex-1 flex items-center gap-1.5 px-2.5 py-1.5">
-                <CustomNumberInput
-                  min={0}
-                  className="w-14 bg-transparent text-neutral-700 dark:text-neutral-300 outline-none tabular-nums border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-1"
-                  placeholder="0"
-                  value={newTicket1Count || null}
-                  onChange={(val) => setNewTicket1Count(Number(val))}
-                />
-                <span className="text-[10px] text-neutral-400">{t('settings.ticket1')}</span>
-                <CustomNumberInput
-                  min={0}
-                  className="w-14 bg-transparent text-neutral-700 dark:text-neutral-300 outline-none tabular-nums border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-1"
-                  placeholder="0"
-                  value={newTicket10Count || null}
-                  onChange={(val) => setNewTicket10Count(Number(val))}
-                />
-                <span className="text-[10px] text-neutral-400">{t('settings.ticket10')}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleAddTicketBatch}
-                title={t('common.add')}
-                className="px-3.5 flex items-center justify-center text-neutral-400 hover:bg-ba-btn-blue hover:text-[#06262f] transition-colors border-l border-neutral-200 dark:border-neutral-700 shrink-0"
-              >
-                <FaPlus size={11} />
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* Past eraid tickets — checked = still holding an unspent ticket from that raid */}
-          <div className="mb-2">
+          <div className="mb-2 mt-2.5 border-t border-neutral-100 pt-2.5 dark:border-neutral-800">
             <div className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1">{t('settings.ticket_batches_eraid_label')}</div>
             <div className="max-h-32 divide-y divide-neutral-100 overflow-y-auto rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
               {pastEraidTickets.length === 0 ? (
@@ -236,36 +299,12 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
             </div>
           </div>
 
-          {manualTicketBatches.length > 0 && (
-            <div className="rounded-lg border border-neutral-100 dark:border-neutral-800 overflow-hidden mb-2">
-              <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-32 overflow-y-auto custom-scrollbar">
-                {manualTicketBatches.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors group text-xs">
-                    <span className="tabular-nums text-neutral-400 dark:text-neutral-500 shrink-0" style={monoStyle}>
-                      {item.expiresAt ? item.expiresAt.slice(5).replace('-', '/') : t('settings.ticket_batches_unlimited')}
-                    </span>
-                    <span className="flex-1 min-w-0 truncate text-neutral-700 dark:text-neutral-300">
-                      {item.ticket1Count > 0 && `${t('settings.ticket1')} ${item.ticket1Count}`}
-                      {item.ticket1Count > 0 && item.ticket10Count > 0 && ' · '}
-                      {item.ticket10Count > 0 && `${t('settings.ticket10')} ${item.ticket10Count}`}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTicketBatch(item.id)}
-                      className="p-1.5 -m-1.5 text-neutral-400 dark:text-neutral-500 hover:text-red-400 transition-colors  shrink-0"
-                    >
-                      <FaTrash size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+          {!simple && (
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('settings.ticket_batches_consume_policy_label')}</span>
+              <Toggle on={config.consumeExpiringTickets ?? true} onClick={() => set({ consumeExpiringTickets: !(config.consumeExpiringTickets ?? true) })} />
             </div>
           )}
-
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('settings.ticket_batches_consume_policy_label')}</span>
-            <Toggle on={config.consumeExpiringTickets ?? true} onClick={() => set({ consumeExpiringTickets: !(config.consumeExpiringTickets ?? true) })} />
-          </div>
         </div>
 
         {/* Monthly Pass */}
@@ -348,11 +387,11 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
             </RowLabel>
             <button
               type="button"
-              onClick={clearSelectedMainStories}
-              disabled={selectedMainStoryIds.size === 0}
+              onClick={noMainStorySelected ? selectAllMainStories : clearSelectedMainStories}
+              disabled={pastMainStories.length === 0}
               className="shrink-0 px-1 py-1 text-[11px] font-medium text-neutral-400 transition-colors hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40 dark:text-neutral-500 dark:hover:text-neutral-200"
             >
-              {tUi('deselectAll')}
+              {noMainStorySelected ? tUi('selectAll') : tUi('deselectAll')}
             </button>
           </div>
           <div className="mt-2 max-h-40 divide-y divide-neutral-100 overflow-y-auto rounded-md border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-700">
@@ -378,109 +417,115 @@ export default function IncomeSettingsPanel_v2({ config, setConfig, schedules, p
           </div>
         </div>
 
-        <label className="flex items-center justify-between gap-3 py-2.5">
-          <RowLabel icon={pyroxeneIcon ? <GameImg src={pyroxeneIcon} /> : <FaGem size={15} />}>{t('settings.unclaimed_momotalk')}</RowLabel>
-          <span className="flex items-center gap-1.5">
-            <CustomNumberInput
-              value={config.momotalkCount || 0}
-              onChange={(val) => set({ momotalkCount: Math.max(0, val || 0) })}
-              className="w-20 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm font-semibold dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
-              style={monoStyle}
-            />
-            <span className="text-xs text-neutral-400">× 200 {tGame('pyroxene')}</span>
-          </span>
-        </label>
+        {!simple && (
+          <label className="flex items-center justify-between gap-3 py-2.5">
+            <RowLabel icon={pyroxeneIcon ? <GameImg src={pyroxeneIcon} /> : <FaGem size={15} />}>{t('settings.unclaimed_momotalk')}</RowLabel>
+            <span className="flex items-center gap-1.5">
+              <CustomNumberInput
+                value={config.momotalkCount || 0}
+                onChange={(val) => set({ momotalkCount: Math.max(0, val || 0) })}
+                className="w-20 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm font-semibold dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                style={monoStyle}
+              />
+              <span className="text-xs text-neutral-400">× 200 {tGame('pyroxene')}</span>
+            </span>
+          </label>
+        )}
 
         {/* Custom Income/Expense */}
-        <div className="pt-3 pb-1">
-          <div className="flex items-center gap-2 mb-3">
-            <FaCalendarAlt size={12} className="text-ba-btn-blue shrink-0" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500" style={monoStyle}>
-              {t('settings.custom_income_title')}
-            </span>
-          </div>
+        {!simple && (
+          <div className="pt-3 pb-1">
+            <div className="flex items-center gap-2 mb-3">
+              <FaCalendarAlt size={12} className="text-ba-btn-blue shrink-0" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500" style={monoStyle}>
+                {t('settings.custom_income_title')}
+              </span>
+            </div>
 
-          {/* Unified input block — 2 rows */}
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-900 mb-2">
-            {/* Row 1: date + description (full width) */}
-            <div className="flex items-stretch border-b border-neutral-200 dark:border-neutral-700">
-              <div className="relative w-32 shrink-0 border-r border-neutral-200 dark:border-neutral-700">
+            {/* Unified input block — 2 rows */}
+            <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-900 mb-2">
+              {/* Row 1: date + description (full width) */}
+              <div className="flex items-stretch border-b border-neutral-200 dark:border-neutral-700">
+                <div className="relative w-32 shrink-0 border-r border-neutral-200 dark:border-neutral-700">
+                  <input
+                    type="date"
+                    aria-label="YYYY-MM-DD"
+                    className="h-full w-full px-2.5 py-2 bg-transparent text-neutral-600 dark:text-neutral-400 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
+                    value={newCustomDate}
+                    onChange={(e) => setNewCustomDate(e.target.value)}
+                  />
+                  {needsSafariDateHint && !newCustomDate && (
+                    <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 bg-white pr-1 text-[11px] text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
+                      YYYY-MM-DD
+                    </span>
+                  )}
+                </div>
                 <input
-                  type="date"
-                  aria-label="YYYY-MM-DD"
-                  className="h-full w-full px-2.5 py-2 bg-transparent text-neutral-600 dark:text-neutral-400 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
-                  value={newCustomDate}
-                  onChange={(e) => setNewCustomDate(e.target.value)}
+                  type="text"
+                  placeholder={t('settings.custom_income_desc')}
+                  className="flex-1 min-w-0 px-2.5 py-2 bg-transparent text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
+                  value={newCustomTitle}
+                  onChange={(e) => setNewCustomTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddCustom();
+                  }}
                 />
-                {needsSafariDateHint && !newCustomDate && (
-                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 bg-white pr-1 text-[11px] text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">YYYY-MM-DD</span>
-                )}
               </div>
-              <input
-                type="text"
-                placeholder={t('settings.custom_income_desc')}
-                className="flex-1 min-w-0 px-2.5 py-2 bg-transparent text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 outline-none focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors"
-                value={newCustomTitle}
-                onChange={(e) => setNewCustomTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddCustom();
-                }}
-              />
+              {/* Row 2: amount + add button (right-aligned) */}
+              <div className="flex items-stretch">
+                <div className="flex-1 px-2.5 py-1.5 text-[10px] text-neutral-300 dark:text-neutral-700 flex items-center select-none">{t('settings.custom_income_amount')}</div>
+                <CustomNumberInput
+                  min={-Infinity}
+                  max={Infinity}
+                  className="w-28 px-2.5 py-2 bg-transparent text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 outline-none text-right focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors border-l border-neutral-200 dark:border-neutral-700 tabular-nums"
+                  placeholder="±0"
+                  value={newCustomAmount || null}
+                  onChange={(val) => setNewCustomAmount(Number(val))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddCustom();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustom}
+                  title={t('common.add')}
+                  className="px-3.5 flex items-center justify-center text-neutral-400 hover:bg-ba-btn-blue hover:text-[#06262f] transition-colors border-l border-neutral-200 dark:border-neutral-700 shrink-0"
+                >
+                  <FaPlus size={11} />
+                </button>
+              </div>
             </div>
-            {/* Row 2: amount + add button (right-aligned) */}
-            <div className="flex items-stretch">
-              <div className="flex-1 px-2.5 py-1.5 text-[10px] text-neutral-300 dark:text-neutral-700 flex items-center select-none">{t('settings.custom_income_amount')}</div>
-              <CustomNumberInput
-                min={-Infinity}
-                max={Infinity}
-                className="w-28 px-2.5 py-2 bg-transparent text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-300 dark:placeholder:text-neutral-600 outline-none text-right focus:bg-neutral-50 dark:focus:bg-neutral-800/60 transition-colors border-l border-neutral-200 dark:border-neutral-700 tabular-nums"
-                placeholder="±0"
-                value={newCustomAmount || null}
-                onChange={(val) => setNewCustomAmount(Number(val))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddCustom();
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleAddCustom}
-                title={t('common.add')}
-                className="px-3.5 flex items-center justify-center text-neutral-400 hover:bg-ba-btn-blue hover:text-[#06262f] transition-colors border-l border-neutral-200 dark:border-neutral-700 shrink-0"
-              >
-                <FaPlus size={11} />
-              </button>
-            </div>
-          </div>
 
-          {/* Items list */}
-          {config.customIncomes && config.customIncomes.length > 0 && (
-            <div className="rounded-lg border border-neutral-100 dark:border-neutral-800 overflow-hidden">
-              <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-40 overflow-y-auto custom-scrollbar">
-                {[...config.customIncomes]
-                  .sort((a, b) => a.date.localeCompare(b.date))
-                  .map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors group text-xs">
-                      <span className="tabular-nums text-neutral-400 dark:text-neutral-500 shrink-0" style={monoStyle}>
-                        {item.date.slice(5).replace('-', '/')}
-                      </span>
-                      <span className="flex-1 min-w-0 truncate text-neutral-700 dark:text-neutral-300">{item.title}</span>
-                      <span className={`tabular-nums font-semibold shrink-0 ${item.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`} style={monoStyle}>
-                        {item.amount > 0 ? '+' : ''}
-                        {item.amount.toLocaleString()}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCustom(item.id)}
-                        className="text-neutral-300 dark:text-neutral-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                      >
-                        <FaTrash size={9} />
-                      </button>
-                    </div>
-                  ))}
+            {/* Items list */}
+            {config.customIncomes && config.customIncomes.length > 0 && (
+              <div className="rounded-lg border border-neutral-100 dark:border-neutral-800 overflow-hidden">
+                <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-40 overflow-y-auto custom-scrollbar">
+                  {[...config.customIncomes]
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors group text-xs">
+                        <span className="tabular-nums text-neutral-400 dark:text-neutral-500 shrink-0" style={monoStyle}>
+                          {item.date.slice(5).replace('-', '/')}
+                        </span>
+                        <span className="flex-1 min-w-0 truncate text-neutral-700 dark:text-neutral-300">{item.title}</span>
+                        <span className={`tabular-nums font-semibold shrink-0 ${item.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`} style={monoStyle}>
+                          {item.amount > 0 ? '+' : ''}
+                          {item.amount.toLocaleString()}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustom(item.id)}
+                          className="text-neutral-300 dark:text-neutral-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                        >
+                          <FaTrash size={9} />
+                        </button>
+                      </div>
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

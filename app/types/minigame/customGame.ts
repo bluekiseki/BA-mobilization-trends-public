@@ -6,3 +6,8 @@ export const customGameItemSchema = z.object({
   amount: z.number(),
 });
 export type CustomGameItem = z.infer<typeof customGameItemSchema>;
+
+export type CustomGameResult = {
+  cost: { key: string; amount: number } | null;
+  rewards: Record<string, number>;
+};

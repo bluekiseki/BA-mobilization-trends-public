@@ -5,13 +5,13 @@ import { data, Link, useLoaderData, useNavigate, type LoaderFunctionArgs } from 
 import { GAMESERVER_LIST, type GameServer, type RaidFullInfo } from '~/types/data';
 import { useTranslation } from 'react-i18next';
 import { getMostDifficultLevel, type_translation_sorted, typecolor } from '~/components/raid/raidToString';
-import { useSearchMatcher } from '~/utils/useSearchMatcher';
+import { useSearchMatcher } from '~/hooks/useSearchMatcher';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { loadRaidFullInfos } from '~/utils/loadRaidInfo';
 import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
-import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
-import { isTotalAssault } from '~/components/dashboard/common';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
+import { getLiveRaidDuration, getLiveRaidInfo } from '~/data/liveRaid';
+import { isTotalAssault } from '~/utils/raid/report';
 import type { Route } from './+types';
 import { getInstance } from '~/middleware/i18next';
 import { localeLink } from '~/utils/localeLink';
@@ -21,7 +21,8 @@ import { BsPinAngleFill } from 'react-icons/bs';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { getCurrentGlobalraid, getKstTime } from '~/data/globalRaidDates';
 import { PageHeader } from '~/components/common/PageHeader';
-// import { usePageHelp } from '~/utils/usePageHelp';
+import { textFeedUrl } from '~/data/textFeeds.meta';
+// import { usePageHelp } from '~/hooks/usePageHelp';
 
 // Define types: Total Assault is RaidInfo, Joint Firing Drill is RaidInfo array.
 type GroupedRaidInfo = RaidFullInfo | RaidFullInfo[];
@@ -196,13 +197,10 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
 }
 
 function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; locale: Locale }) {
-  // const { t: t_common } = useTranslation('common');
-
   // Use the first data entry as the representative info
   const primaryRaid = raidInfos[0];
   const { Id: id, Boss, Date: date, Location: location } = primaryRaid;
-  // console.log('date',date)
-  const liveExpired = getKstTime(date) /* GMT+9 11:00 */ + 3600_000 * 24 * LIVE_RAID_DURATION /* add 7 day */ - 3600_000 * 7 < Date.now();
+  const liveExpired = getKstTime(date) /* GMT+9 11:00 */ + 3600_000 * 24 * getLiveRaidDuration() - 3600_000 * 7 < Date.now();
 
   const israid = isTotalAssault(primaryRaid);
 
@@ -246,7 +244,6 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
       </div>
 
       {/* Footer: Details (Diff or Types) */}
-      {}
       <div className="mt-auto pt-2.5 border-t border-dashed border-neutral-200 dark:border-neutral-700 flex justify-between items-end gap-2">
         {israid ? (
           /* Case 1: Total Assault (Show Max Difficulty) */
@@ -254,7 +251,6 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
             <div className="px-1.5 py-0.5 rounded-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600">
               <span className="text-xs font-medium">{getMostDifficultLevel(primaryRaid)}</span>
             </div>
-            {}
           </div>
         ) : (
           /* Case 2: Grand Assault (Show Defense Types) */
@@ -263,7 +259,6 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
               if (!raid.Type) return null;
               return (
                 <div key={raid.Type} className="flex items-center gap-1.5 leading-none">
-                  {}
                   <div className="flex items-center px-1 py-0.5 rounded-xs text-white shadow-sm" style={{ backgroundColor: typecolor[raid.Type] }}>
                     <span className="mr-1 text-xs font-medium tracking-tight">{type_translation_sorted[raid.Type][getLocaleShortName(locale)]}</span>
                     <span className="text-xs font-normal">{getMostDifficultLevel(raid)}</span>
@@ -287,7 +282,7 @@ export default function DashboardIndex() {
   const { t: t_g } = useTranslation('game');
 
   // Sort grouped data by date
-  const sortedRaids = groupedRaidInfos.sort((a, b) => {
+  const sortedRaids = [...groupedRaidInfos].sort((a, b) => {
     const dateA = Array.isArray(a) ? a[0].Date : a.Date;
     const dateB = Array.isArray(b) ? b[0].Date : b.Date;
     return Number(new Date(dateB)) - Number(new Date(dateA));
@@ -318,10 +313,24 @@ export default function DashboardIndex() {
         return match(localeName, query) || match(raid.Boss, query) || match(raid.Id, query);
       }));
 
+  const showLive = typeFilter === 'all' && server === 'jp' && LiveRaidInfos.length > 0 && liveRaidMatches;
+
+  // The live card stays first by default. If the same season already has an official card
+  // (more up-to-date data), the official card goes first and the live card follows it.
+  const cards: { raidInfos: RaidFullInfo[]; isLive: boolean }[] = filteredRaids.map((raidGroup) => ({
+    raidInfos: Array.isArray(raidGroup) ? raidGroup : [raidGroup],
+    isLive: false,
+  }));
+  if (showLive) {
+    const liveCard = { raidInfos: LiveRaidInfos as RaidFullInfo[], isLive: true };
+    const officialIdx = cards.findIndex((card) => card.raidInfos[0].Id === liveCard.raidInfos[0].Id);
+    cards.splice(officialIdx >= 0 ? officialIdx + 1 : 0, 0, liveCard);
+  }
+
   return (
     <div className="bg-neutral-50 dark:bg-neutral-900 min-h-screen p-4 sm:p-6 lg:p-8 py-6">
       <div className="max-w-7xl mx-auto">
-        <PageHeader title={`${t_ui('dashboardList')} (${server.toUpperCase()})`} description={t_index('description')} />
+        <PageHeader title={`${t_ui('dashboardList')} (${server.toUpperCase()})`} description={t_index('description')} textFeedHref={textFeedUrl.raids(server)} />
 
         <div className="mb-6 flex gap-2">
           <input
@@ -359,12 +368,9 @@ export default function DashboardIndex() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {typeFilter === 'all' && server === 'jp' && LiveRaidInfos && LiveRaidInfos.length > 0 && liveRaidMatches && <LiveShortcutCard raidInfos={LiveRaidInfos as RaidFullInfo[]} locale={locale} />}
-
-          {filteredRaids.map((raidGroup) => {
-            const raidInfos = Array.isArray(raidGroup) ? raidGroup : [raidGroup];
-            return <RaidCard key={raidInfos[0].Id} region={server} raidInfos={raidInfos} locale={locale} />;
-          })}
+          {cards.map(({ raidInfos, isLive }) =>
+            isLive ? <LiveShortcutCard key="live" raidInfos={raidInfos} locale={locale} /> : <RaidCard key={raidInfos[0].Id} region={server} raidInfos={raidInfos} locale={locale} />,
+          )}
         </div>
       </div>
     </div>

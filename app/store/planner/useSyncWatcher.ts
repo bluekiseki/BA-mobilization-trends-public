@@ -1,54 +1,61 @@
 import { useEffect } from 'react';
-import { useGlobalStore } from './useGlobalStore';
+import { getGrowthPlansSyncValue, useGlobalStore } from './useGlobalStore';
 import { useEventPlanStore } from './useEventPlanStore';
-import { useEquipmentPlanStore } from './useEquipmentPlanStore';
+import { getEquipmentPlanSyncValue, useEquipmentPlanStore } from './useEquipmentPlanStore';
 import { getResourcePlanData, useResourcePlanStore } from './useResourcePlanStore';
-import { useSyncStore } from '../syncStore';
+import { getRaidHistorySyncValue, useRaidHistoryStore } from './useRaidHistoryStore';
+import { getGachaHistorySyncValue, useGachaHistoryStore } from './useGachaHistoryStore';
+import { resumeDeferredSyncRetry, useSyncStore } from '../syncStore';
 
 const STALE_THRESHOLD_MS = 5 * 60 * 1000; // Resync if idle for more than 5 minutes
+
+function watchJson<T>(read: () => T, subscribe: (listener: () => void) => () => void, emit: (value: T) => void): () => void {
+  let previous = JSON.stringify(read());
+  return subscribe(() => {
+    const value = read();
+    const serialized = JSON.stringify(value);
+    if (serialized === previous) return;
+    previous = serialized;
+    emit(value);
+  });
+}
 
 export function useSyncWatcher() {
   useEffect(() => {
     let prevEventPlans: Record<string, unknown> = useEventPlanStore.getState().plans;
+    const push = useSyncStore.getState().push;
 
     const unsubs = [
-      useGlobalStore.subscribe((state) => {
-        useSyncStore.getState().push(
-          'growthPlans',
-          {
-            growthPlans: state.growthPlans,
-            ownedGifts: state.ownedGifts,
-            materialInventory: state.materialInventory,
-          },
-          1,
-        );
-      }),
-
-      useEquipmentPlanStore.subscribe((state) => {
-        useSyncStore.getState().push(
-          'equipmentPlan',
-          {
-            runCounts: state.runCounts,
-            farmingDays: state.farmingDays,
-            normalMultiplier: state.normalMultiplier,
-            hardMultiplier: state.hardMultiplier,
-            // inventory: state.inventory,
-            campaignSource: state.campaignSource,
-            // blueprints: state.blueprints,
-          },
-          1,
-        );
-      }),
-
-      useResourcePlanStore.subscribe((state) => {
-        useSyncStore.getState().push('resourcePlan', getResourcePlanData(state), 1);
-      }),
+      watchJson(
+        getGrowthPlansSyncValue,
+        (listener) => useGlobalStore.subscribe(listener),
+        (value) => push('growthPlans', value),
+      ),
+      watchJson(
+        getEquipmentPlanSyncValue,
+        (listener) => useEquipmentPlanStore.subscribe(listener),
+        (value) => push('equipmentPlan', value),
+      ),
+      watchJson(
+        () => getResourcePlanData(useResourcePlanStore.getState()),
+        (listener) => useResourcePlanStore.subscribe(listener),
+        (value) => push('resourcePlan', value),
+      ),
+      watchJson(
+        getRaidHistorySyncValue,
+        (listener) => useRaidHistoryStore.subscribe(listener),
+        (value) => push('raidHistory', value, 1, true),
+      ),
+      watchJson(
+        getGachaHistorySyncValue,
+        (listener) => useGachaHistoryStore.subscribe(listener),
+        (value) => push('gachaHistory', value, 1, true),
+      ),
 
       useEventPlanStore.subscribe((state) => {
-        const { push } = useSyncStore.getState();
         Object.keys(state.plans).forEach((eventId) => {
           if (state.plans[eventId] !== prevEventPlans[eventId]) {
-            push(`eventPlans:${eventId}`, state.plans[eventId], 1);
+            push(`eventPlans:${eventId}`, state.plans[eventId]);
           }
         });
         prevEventPlans = state.plans;
@@ -59,10 +66,11 @@ export function useSyncWatcher() {
     // Automatically apply changes when returning to the PC tab after editing on mobile
     const handleVisibilityChange = () => {
       if (document.visibilityState !== 'visible') return;
-      const { currentProfileId, isPulling, isInitialized, lastSyncedAt } = useSyncStore.getState();
+      resumeDeferredSyncRetry();
+      const { currentProfileId, isPulling, isInitialized, lastPulledAt } = useSyncStore.getState();
       if (!currentProfileId || isPulling || !isInitialized) return;
-      if (!lastSyncedAt || Date.now() - lastSyncedAt > STALE_THRESHOLD_MS) {
-        void useSyncStore.getState().pullAll(currentProfileId);
+      if (!lastPulledAt || Date.now() - lastPulledAt > STALE_THRESHOLD_MS) {
+        void useSyncStore.getState().pullAll();
       }
     };
 

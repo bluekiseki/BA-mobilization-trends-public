@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Legend, ReferenceLine } from 'recharts';
 import { FaListUl, FaChevronDown, FaChevronUp, FaTimes, FaPlus } from 'react-icons/fa';
-import { CustomNumberInput } from '../CustomInput';
+import { CustomNumberInput } from '../common/CustomInput';
 
 interface LogEntry {
   i18nKey?: string;
@@ -110,7 +110,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const { t: t_ui } = useTranslation('ui');
   const { t: t_game } = useTranslation('game');
-  const t_dynamic = t as (key: string, options?: Record<string, string | number> & { interpolation?: { escapeValue: boolean } }) => string;
+  const t_dynamic = t as (key: string, options?: Record<string, string | number>) => string;
   const [showDetails, setShowDetails] = useState(false);
   const [newPercentile, setNewPercentile] = useState<number | null>(null);
   // This stores excluded groups. Fixed daily income is hidden by default.
@@ -120,11 +120,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
     if (log.i18nKey === 'log.multifloor' && log.params?.name != null) return String(log.params.name);
     if (!log.i18nKey) return log.title ?? '';
     if (!log.params) return t_dynamic(log.i18nKey);
-    // Date params (e.g. ticket expiry) shouldn't be HTML-escaped — never inserted via dangerouslySetInnerHTML.
-    const hasDate = 'date' in log.params;
-    const options: Record<string, string | number> & { interpolation?: { escapeValue: boolean } } = { ...log.params };
-    if (hasDate) options.interpolation = { escapeValue: false };
-    return t_dynamic(log.i18nKey, options);
+    return t_dynamic(log.i18nKey, log.params);
   };
   const logGroup = (log: LogEntry) => {
     if (log.i18nKey === 'log.multifloor') return 'game:multifloor';

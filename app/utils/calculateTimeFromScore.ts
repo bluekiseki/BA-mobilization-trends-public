@@ -1,4 +1,6 @@
-import { getDifficultyFromScoreAndBoss, type DifficultyName } from '~/components/raid/Difficulty';
+import { isNeedOldVersion } from './difficultyPolicy';
+export { isNeedOldVersion } from './difficultyPolicy';
+import { getDifficultyFromScoreAndBoss, type DifficultyName } from '~/utils/difficultyPolicy';
 import type { GameServer } from '~/types/data';
 
 const mat_4m = {
@@ -59,21 +61,6 @@ export function getTimeoutFromBoss(boss: string): 3 | 4 | 4.5 {
   if (bosses_limit_4_30m.includes(boss)) return 4.5;
 
   return 4;
-}
-
-export function isNeedOldVersion(server: GameServer, id: string): boolean {
-  const isRaid = id.startsWith('R');
-
-  if (server == 'jp') {
-    if (isRaid) {
-      if (Number(id.substring(1)) <= 47) return true;
-    }
-  } else {
-    if (isRaid) {
-      if (Number(id.substring(1)) <= 43) return true;
-    }
-  }
-  return false;
 }
 
 export function calculateTimeFromScore(score: number, boss: string, server: GameServer, id: string) {

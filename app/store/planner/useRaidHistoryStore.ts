@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { useSyncStore } from '~/store/syncStore';
 import type { RaidHistoryData, RaidHistoryEntry } from '~/types/raidHistory';
 
 interface RaidHistoryState extends RaidHistoryData {
@@ -10,33 +9,14 @@ interface RaidHistoryState extends RaidHistoryData {
   replaceEntries: (entries: RaidHistoryEntry[]) => void;
 }
 
-function pushRaidHistory(entries: RaidHistoryEntry[]) {
-  const sync = useSyncStore.getState();
-  if (sync.isInitialized) {
-    sync.push('raidHistory', { entries });
-  }
-}
-
 export const useRaidHistoryStore = create<RaidHistoryState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       entries: [],
-      addEntry: (entry) => {
-        set((state) => ({ entries: [...state.entries, entry] }));
-        pushRaidHistory(get().entries);
-      },
-      updateEntry: (entry) => {
-        set((state) => ({ entries: state.entries.map((current) => (current.id === entry.id ? entry : current)) }));
-        pushRaidHistory(get().entries);
-      },
-      deleteEntry: (id) => {
-        set((state) => ({ entries: state.entries.filter((entry) => entry.id !== id) }));
-        pushRaidHistory(get().entries);
-      },
-      replaceEntries: (entries) => {
-        set({ entries });
-        pushRaidHistory(get().entries);
-      },
+      addEntry: (entry) => set((state) => ({ entries: [...state.entries, entry] })),
+      updateEntry: (entry) => set((state) => ({ entries: state.entries.map((current) => (current.id === entry.id ? entry : current)) })),
+      deleteEntry: (id) => set((state) => ({ entries: state.entries.filter((entry) => entry.id !== id) })),
+      replaceEntries: (entries) => set({ entries }),
     }),
     {
       name: 'raid-history-v1',
@@ -45,3 +25,7 @@ export const useRaidHistoryStore = create<RaidHistoryState>()(
     },
   ),
 );
+
+export function getRaidHistorySyncValue(): RaidHistoryData {
+  return { entries: useRaidHistoryStore.getState().entries };
+}

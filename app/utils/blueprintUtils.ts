@@ -35,6 +35,33 @@ export const equipmentTypeToBlueprint: Record<string, number> = {
   Necklace: 509000,
 };
 
+export function calculateEquipmentSurplus({
+  materialInventory,
+  farmedByPlan,
+  totalEquipmentNeeds,
+  blueprintsUsed,
+}: {
+  materialInventory: Record<string, number>;
+  farmedByPlan: Record<string, number>;
+  totalEquipmentNeeds: Record<string, number>;
+  blueprintsUsed: Record<string, number>;
+}): Record<string, number> {
+  const available = { ...farmedByPlan };
+  // Unified inventory already includes owned universal blueprints.
+  for (const [key, amount] of Object.entries(materialInventory)) {
+    available[key] = (available[key] || 0) + amount;
+  }
+
+  const surplus: Record<string, number> = {};
+  for (const [key, amount] of Object.entries(available)) {
+    const id = Number(key.split('_')[1]);
+    const used = id in blueprintIdToType ? blueprintsUsed[blueprintIdToType[id]] || 0 : totalEquipmentNeeds[key] || 0;
+    const remaining = amount - used;
+    if (remaining > 0) surplus[key] = remaining;
+  }
+  return surplus;
+}
+
 export const tierReplacementCosts = [1, 2, 3, 5, 7, 10, 15, 20, 30, 50];
 
 export const getTierFromEquipmentId = (id: number): number => {
@@ -263,198 +290,6 @@ interface Step2Result {
   finalRemaining: Record<string, number>;
 }
 
-function step2UniversalReverseSubstitution(
-  stages: FarmingStage[],
-  step1Result: Step1Result,
-  userBlueprints: Record<string, number>,
-  originalRemaining: Record<string, number>,
-  normalMultiplier: number,
-): Step2Result {
-  const runCounts = { ...step1Result.runCounts };
-  const blueprintsUsed: Record<string, number> = {};
-
-  // Available universal blueprints: Step 1 byproduct + user possession
-  const availableUniversals: Record<string, number> = { ...step1Result.universalsGained };
-  for (const [type, amount] of Object.entries(userBlueprints)) {
-    availableUniversals[type] = (availableUniversals[type] || 0) + amount;
-  }
-
-  // Farming result state: accumulated normal blueprints obtained from current runCounts
-  // Universal blueprints are managed separately in availableUniversals
-  const farmed: Record<string, number> = {};
-  for (const [stageIdStr, runs] of Object.entries(runCounts)) {
-    const stage = stages.find((s) => s.id === Number(stageIdStr));
-    if (!stage) continue;
-    for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
-      const equipId = Number(dropKey.split('_')[1]);
-      const normalizeDropKey = dropKeyNormalize(dropKey);
-      if (!(equipId in blueprintIdToType)) {
-        farmed[normalizeDropKey] = (farmed[normalizeDropKey] || 0) + dropRate * normalMultiplier * runs;
-      }
-    }
-  }
-
-  // Quantity promised to be covered by blueprints in the while loop (prevents double deduction in finalRemaining)
-  const blueprintCoverage: Record<string, number> = {};
-
-  let removed = true;
-  while (removed) {
-    removed = false;
-
-    // console.log('farmed',farmed)
-
-    // Calculate current shortage (remainder not filled by farmed)
-    const shortage: Record<string, number> = {};
-    for (const [key, need] of Object.entries(originalRemaining)) {
-      const s = Math.max(0, need - (farmed[key] || 0));
-      if (s > 0) shortage[key] = s;
-    }
-
-    // console.log('shortage', shortage);
-
-    // Calculate the cost/efficiency of 1 removal per stage
-    let bestStageId: number | null = null;
-    let bestEfficiency = -Infinity;
-    let bestCostByType: Record<string, number> = {}; // Universal blueprint usage to fill the shortage
-    let bestLossByType: Record<string, number> = {}; // Universal blueprints lost by removing the stage
-
-    for (const [stageIdStr, runs] of Object.entries(runCounts)) {
-      if (runs <= 0) continue;
-      const stageId = Number(stageIdStr);
-      const stage = stages.find((s) => s.id === stageId);
-      if (!stage) continue;
-
-      const costByType: Record<string, number> = {};
-      const lossByType: Record<string, number> = {};
-
-      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
-        const equipId = Number(dropKey.split('_')[1]);
-        const gainedPerRun = dropRate * normalMultiplier;
-        const normalizeDropKey = dropKeyNormalize(dropKey);
-
-        if (equipId in blueprintIdToType) {
-          // Universal blueprint loss: no longer obtainable when the stage is removed
-          const eqType = blueprintIdToType[equipId];
-          lossByType[eqType] = (lossByType[eqType] || 0) + gainedPerRun;
-        } else {
-          // Normal blueprint loss: exhaust surplus resources first, and if still short, fill with universal blueprints
-          const currentFarmed = farmed[normalizeDropKey] || 0;
-          const need = originalRemaining[normalizeDropKey] || 0;
-          const oldShortage = shortage[normalizeDropKey] || 0; // 0 if surplus
-          const newShortage = Math.max(0, need - (currentFarmed - gainedPerRun));
-          const shortageIncrease = newShortage - oldShortage; // Exhausted surplus is automatically offset
-
-          if (shortageIncrease > 0) {
-            const tier = getTierFromEquipmentId(equipId);
-            const eqType = getEquipmentType(equipId);
-            const blueprintCost = calculateBlueprintCost(tier);
-            if (eqType && blueprintCost > 0) {
-              costByType[eqType] = (costByType[eqType] || 0) + Math.ceil(shortageIncrease * blueprintCost);
-            }
-          }
-        }
-      }
-
-      // canAfford: for each type, (cost + loss) <= availableUniversals
-      let canAfford = true;
-      const allTypes = new Set([...Object.keys(costByType), ...Object.keys(lossByType)]);
-      for (const type of allTypes) {
-        const total = (costByType[type] || 0) + (lossByType[type] || 0);
-        if (total > 0 && (availableUniversals[type] || 0) < total) {
-          canAfford = false;
-          break;
-        }
-      }
-      if (!canAfford) continue;
-
-      // efficiency = AP saved / total universal blueprint expenditure (higher is better)
-      const apSaved = stage.ap;
-      const totalSpend = [...Object.values(costByType), ...Object.values(lossByType)].reduce((s, v) => s + v, 0);
-      const efficiency = totalSpend > 0 ? apSaved / totalSpend : Infinity;
-
-      if (efficiency > bestEfficiency) {
-        bestEfficiency = efficiency;
-        bestStageId = stageId;
-        bestCostByType = costByType;
-        bestLossByType = lossByType;
-      }
-    }
-
-    if (bestStageId !== null) {
-      const stage = stages.find((s) => s.id === bestStageId);
-      if (!stage) continue;
-
-      // 1 removal
-      runCounts[bestStageId]--;
-      if (runCounts[bestStageId] <= 0) delete runCounts[bestStageId];
-
-      // Tracking blueprintCoverage: calculated based on current shortage before updating farmed
-      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
-        const equipId = Number(dropKey.split('_')[1]);
-        const normalizeDropKey = dropKeyNormalize(dropKey);
-        if (!(equipId in blueprintIdToType)) {
-          const gainedPerRun = dropRate * normalMultiplier;
-          const currentFarmed = farmed[normalizeDropKey] || 0;
-          const needAmt = originalRemaining[normalizeDropKey] || 0;
-          const oldShortage = shortage[normalizeDropKey] || 0;
-          const newShortage = Math.max(0, needAmt - (currentFarmed - gainedPerRun));
-          const increase = newShortage - oldShortage;
-          if (increase > 0) {
-            blueprintCoverage[normalizeDropKey] = (blueprintCoverage[normalizeDropKey] || 0) + increase;
-          }
-        }
-      }
-
-      // Update farmed (maintain farming result state)
-      for (const [dropKey, dropRate] of Object.entries(stage.drops)) {
-        const equipId = Number(dropKey.split('_')[1]);
-        const normalizeDropKey = dropKeyNormalize(dropKey);
-        if (!(equipId in blueprintIdToType)) {
-          farmed[normalizeDropKey] = Math.max(0, (farmed[normalizeDropKey] || 0) - dropRate * normalMultiplier);
-        }
-      }
-
-      // Update availableUniversals: subtract the amount used to fill shortage + lost universal blueprints separately
-      for (const [type, cost] of Object.entries(bestCostByType)) {
-        availableUniversals[type] = (availableUniversals[type] || 0) - cost;
-        blueprintsUsed[type] = (blueprintsUsed[type] || 0) + cost;
-      }
-      for (const [type, loss] of Object.entries(bestLossByType)) {
-        availableUniversals[type] = (availableUniversals[type] || 0) - loss;
-      }
-
-      removed = true;
-    }
-  }
-
-  // After while loop ends: handle uncovered shortfall from the loop with remaining availableUniversals
-  const finalRemaining: Record<string, number> = {};
-  for (const [key, need] of Object.entries(originalRemaining)) {
-    // blueprintCoverage: amount already promised to be covered by blueprints in the loop -> prevents double deduction
-    const shortfall = Math.max(0, need - (farmed[key] || 0) - (blueprintCoverage[key] || 0));
-    if (shortfall <= 1e-9) continue;
-
-    const equipId = Number(key.split('_')[1]);
-    const eqType = getEquipmentType(equipId);
-    const tier = getTierFromEquipmentId(equipId);
-    const blueprintCost = calculateBlueprintCost(tier);
-
-    if (eqType && blueprintCost > 0 && (availableUniversals[eqType] || 0) > 0) {
-      const universalsNeeded = Math.ceil(shortfall * blueprintCost);
-      const used = Math.min(universalsNeeded, availableUniversals[eqType]);
-      availableUniversals[eqType] -= used;
-      blueprintsUsed[eqType] = (blueprintsUsed[eqType] || 0) + used;
-      const left = shortfall - used / blueprintCost;
-      if (left > 1e-9) finalRemaining[key] = left;
-    } else {
-      finalRemaining[key] = shortfall;
-    }
-  }
-
-  console.log('as2 res:', { runCounts, blueprintsUsed, finalRemaining });
-  return { runCounts, blueprintsUsed, finalRemaining };
-}
-
 export interface OptimizeResult {
   runCounts: Record<number, number>;
   blueprintsUsed: Record<string, number>;
@@ -469,7 +304,7 @@ export function optimizeNormalStages2Step(stages: FarmingStage[], remainingNeeds
   const step1Result = step1TierLP(stages, remainingNeeds, normalMultiplier);
   // console.log('step1Result', step1Result);
 
-  return step2UniversalReverseSubstitution(stages, step1Result, userBlueprints, { ...remainingNeeds }, normalMultiplier);
+  return step2Substitution(stages, step1Result, userBlueprints, { ...remainingNeeds }, normalMultiplier, normalMultiplier);
 }
 
 function step1TierLPHard(stages: FarmingStage[], remainingNeeds: Record<string, number>, hardMultiplier: number, maxRunsPerStage: number): Step1Result {
@@ -697,9 +532,9 @@ function step1TierLPCombined(stages: FarmingStage[], remainingNeeds: Record<stri
   return { runCounts, universalsGained, remaining };
 }
 
-// Copy of step2UniversalReverseSubstitution adapted for combined hard+normal stages.
+// Step 2: replace farming runs with universal blueprints where that saves AP.
 // Uses per-stage multipliers: hardMultiplier for Hard stages, normalMultiplier for Normal stages.
-function step2CombinedSubstitution(
+function step2Substitution(
   stages: FarmingStage[],
   step1Result: Step1Result,
   userBlueprints: Record<string, number>,
@@ -890,5 +725,5 @@ export function optimizeCombinedStages2Step(
   console.log('optimizeCombinedStages2Step', stages, remainingNeeds, userBlueprints, normalMultiplier, hardMultiplier, maxRunsPerStage);
 
   const step1Result = step1TierLPCombined(stages, remainingNeeds, normalMultiplier, hardMultiplier, maxRunsPerStage);
-  return step2CombinedSubstitution(stages, step1Result, userBlueprints, { ...remainingNeeds }, normalMultiplier, hardMultiplier);
+  return step2Substitution(stages, step1Result, userBlueprints, { ...remainingNeeds }, normalMultiplier, hardMultiplier);
 }

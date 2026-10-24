@@ -7,6 +7,7 @@ export default [
   route('/api/contract', 'routes/api/email.ts'),
   route('/api/calendar/v2', 'routes/api/calendar.v2.ts'),
   route('/api/notices', 'routes/api/notices.ts'),
+  route('/api/text/notices', 'routes/api/text/notices.ts'), // public plain-text feed (see workers/textFeedGuard.ts)
   route('/api/graphql', 'routes/api/graphql.ts'),
   route('/api/auth/*', 'routes/api/auth.$.ts'),
   route('/api/auth-ext', 'routes/api/auth-ext.ts'),
@@ -16,6 +17,7 @@ export default [
   route('source', 'routes/licence.tsx'), // only english
   route('privacy', 'routes/privacy.tsx'), // only english
   route('terms', 'routes/terms.tsx'), // only english
+  route('developers', 'routes/developers.tsx'), // only english
 
   // 2. Layout wrapping all routes that require locale processing
   // Set path to ':locale?' so all child routes can receive the locale parameter
@@ -39,10 +41,12 @@ export default [
     route('planner/event/:eventId', 'routes/planner/EventPage.tsx'), // Individual event details
     route('planner/students', 'routes/planner/Student.tsx'), // Student growth & leveling planner
     route('planner/equipment', 'routes/planner/Equipment.tsx'), // Equipment farming optimizer
-    route('planner/gacha', 'routes/planner/Gacha_v2.tsx'), // Gacha budgeting (v2)
+    route('planner/gacha/v2', 'routes/planner/Gacha_v2.tsx'), // Gacha budgeting (v2)
+    route('planner/gacha', 'routes/planner/v3/GachaV3.tsx'),
+    route('planner/gacha/guide', 'routes/planner/GachaGuide.tsx'), // Newbie strategy guide
     route('planner/gacha_old', 'routes/planner/Gacha_old.tsx'), // Legacy gacha planner
-    route('planner/resources', 'routes/planner/Resources.tsx'), // Resource leveling calculator
-    route('planner/inventory', 'routes/planner/Inventory.tsx'), // Resource inventory dashboard (all types, owned vs. target)
+    route('planner/resources', 'routes/redirects/LegacyResources.tsx'), // Merged into planner/inventory
+    route('planner/inventory', 'routes/planner/Inventory.tsx'), // Unified resource dashboard: catalog + balance projection + income/schedule setup
     route('planner/gacha-test', 'routes/debug-gacha.tsx'), // Debug gacha mechanics
     route('scanner/item', 'routes/planner/ItemScanner.tsx'), // Image-based inventory scanner
     route('scanner/student', 'routes/planner/StudentScanner.tsx'), // Video-based student roster scanner
@@ -51,13 +55,20 @@ export default [
 
     // My Page — Personal records & history
     route('my/raids', 'routes/my/raids.tsx'), // Raid clear records — track raid clears, team compositions, scores, and ranks across all servers (JP/KR/TW/etc)
+    route('my/gacha', 'routes/my/gacha.tsx'),
+    route('my/arena', 'routes/my/arena.tsx'), // Tactical Challenge records from Combat Report screenshots (unlisted: no nav link, noindex)
     route('utils/jukebox', 'routes/utils/jukebox.tsx'),
+    route('utils/story', 'routes/utils/story.tsx'), // Story preview (unlisted: no nav link, noindex)
+    route('utils/story/map', 'routes/utils/story.map.tsx'),
+    route('utils/story/:series', 'routes/utils/story.series.tsx'),
+    route('utils/story/:series/:story', 'routes/utils/story.episode.tsx'),
     route('utils/favor', 'routes/utils/favor.tsx'),
     route('live', 'routes/live/index.tsx'),
     route('calendar', 'routes/calendar.tsx'),
     route('calendar/:server', 'routes/calendarLegacy.tsx'),
     route('notices', 'routes/notices/index.tsx'),
     route('notices/:postId', 'routes/notices/detail.tsx'),
+    route('changelog', 'routes/changelog.tsx'),
 
     // account
     route('login', 'routes/login.tsx'),

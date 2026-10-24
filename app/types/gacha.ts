@@ -57,15 +57,21 @@ export const bannerStrategySchema = z.object({
   /** Whether there is a plan to pull during this banner period */
   isActive: z.boolean(),
   /**
-   * Maximum Budget (in Spark units) — legacy spark-point system only.
-   * 1 allows up to 200 pulls, 2 allows up to 400 pulls
+   * Maximum Budget as a raw pull count — the canonical budget field for new strategies.
+   * When unset, the engine falls back to the deprecated maxSparks/maxHalfCharges (see resolveMaxPull);
+   * the effective default is 200 pulls.
    */
-  maxSparks: z.number(),
+  maxPull: z.number().optional(),
   /**
-   * Maximum Budget (in Half-Charge units) — new "recruit charge" system only (banners with useChargeSystem=true).
-   * 1 allows up to 100 pulls (the soft-pity checkpoint), 2 allows up to 200 pulls (hard pity), etc.
+   * @deprecated Replaced by `maxPull`. Kept optional for backward-compat with old saved data only —
+   * read exclusively by `resolveMaxPull` as a fallback (×200 pulls). Legacy spark-point system.
    */
-  maxHalfCharges: z.number(),
+  maxSparks: z.number().optional(),
+  /**
+   * @deprecated Replaced by `maxPull`. Kept optional for backward-compat with old saved data only —
+   * read exclusively by `resolveMaxPull` as a fallback (×100 pulls). New "recruit charge" system.
+   */
+  maxHalfCharges: z.number().optional(),
   /* Claim next ticket milestone if within recruitBonusThreshold pulls (charge system only) */
   claimRecruitBonus: z.boolean().optional(),
   /** Pulls-remaining-to-next-ticket threshold for claimRecruitBonus (read with `?? 10` fallback). */
@@ -81,7 +87,8 @@ export const bannerStrategySchema = z.object({
    */
   studentConfigs: z.record(z.string(), studentStrategyConfigSchema),
   // Global banner settings
-  maxPulls: z.number(), // Maximum spark count (e.g., 200, 400, 600...)
+  /** @deprecated Dead field — never read by the engine. Kept optional so old saved data still validates. */
+  maxPulls: z.number().optional(),
   isFes: z.boolean(),
   freePulls: z.number(), // Manually entered free pulls (default: 0)
   // Special options

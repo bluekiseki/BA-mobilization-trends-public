@@ -1,11 +1,36 @@
 // app/utils/gachaEngine.ts
 import type { BannerPeriod, BannerStrategy, Student } from '~/types/gacha';
-import { canSpook, FES_EXCLUSIONS_BY_PICKUP_ID, ARCHIVE_STUDENT_IDS, getRecruitCountReward, getNextTicketThreshold, getRecruitBonusTicketExpiry } from './gachaRules';
-import type { TicketBatch } from './pyroxeneCalc';
+import {
+  canSpook,
+  FES_EXCLUSIONS_BY_PICKUP_ID,
+  ARCHIVE_STUDENT_IDS,
+  STYLE_VARIANT_STUDENT_IDS,
+  ARCHIVE_RECRUITMENT_START_MS,
+  LAUNCH_DAY_STUDENT_IDS,
+  getRecruitCountReward,
+  getNextTicketThreshold,
+  getRecruitBonusTicketExpiry,
+} from './gachaRules';
 
 // ==========================================
 // 1. Constants and Type Definitions
 // ==========================================
+
+/**
+ * A pool of term-limited 10-pull tickets, normalized to "pull units" (1-pull ticket = 1 unit,
+ * 10-pull ticket = 10 units) so the gacha engine can spend them against any 10-pull action
+ * regardless of which ticket denomination originally funded it.
+ */
+export interface TicketBatch {
+  id: string;
+  pullUnits: number;
+  /** Unix ms timestamp the batch stops being usable, or null for a batch that never expires. */
+  expiresAt: number | null;
+  /** Unix ms timestamp the batch starts being usable (0 = already held, usable from the very start). */
+  availableFrom: number;
+  source: 'eraid' | 'manual';
+  label?: string;
+}
 
 const RATES = {
   NORMAL: {
@@ -199,6 +224,9 @@ export const preprocessReleaseDates = (bannersMap: Record<string, BannerPeriod>)
   sortedBanners.forEach((banner) => {
     const bannerTime = new Date(banner.startTime).getTime();
     banner.pickupStudents.forEach((student) => {
+      // Launch-day students predate pickup.csv's tracking window — their first CSV row is a much
+      // later spotlight banner, not their actual release, so skip recording a (wrong) release date.
+      if (LAUNCH_DAY_STUDENT_IDS.has(student.id)) return;
       // Record only students not yet recorded (as the first appearance is the release date)
       if (releaseMap[student.id] === undefined) {
         releaseMap[student.id] = bannerTime;
@@ -212,8 +240,10 @@ export const preprocessReleaseDates = (bannersMap: Record<string, BannerPeriod>)
 /**
  * Creates a recruitment pool for a specific point in time based on estimated release dates
  */
-export const createPoolForBanner = (allStudents: Student[], bannerStartTime: string | Date, releaseDateMap: Record<number, number>): GachaPools => {
+export const createPoolForBanner = (allStudents: Student[], bannerStartTime: string | Date, releaseDateMap: Record<number, number>, region: 'KR' | 'JP' = 'KR'): GachaPools => {
   const targetTime = new Date(bannerStartTime).getTime();
+  // Archive Recruitment only started excluding ARCHIVE_STUDENT_IDS from the normal pool once it launched per region.
+  const archiveExcluded = targetTime >= ARCHIVE_RECRUITMENT_START_MS[region];
 
   // "Release date is earlier than or equal to banner start date" OR "Not in records, considered an original member (undefined)"
   const validStudents = allStudents.filter((s) => {
@@ -225,10 +255,10 @@ export const createPoolForBanner = (allStudents: Student[], bannerStartTime: str
   });
 
   return {
-    grade3: validStudents.filter((s) => getStudentGrade(s.id) === 3 && canSpook(s.id, s.isLimited, s.isFes)),
+    grade3: validStudents.filter((s) => getStudentGrade(s.id) === 3 && canSpook(s.id, s.isLimited, s.isFes) && !(archiveExcluded && ARCHIVE_STUDENT_IDS.has(s.id))),
     grade2: validStudents.filter((s) => getStudentGrade(s.id) === 2),
     grade1: validStudents.filter((s) => getStudentGrade(s.id) === 1),
-    fes: validStudents.filter((s) => s.isFes && !ARCHIVE_STUDENT_IDS.has(s.id)),
+    fes: validStudents.filter((s) => s.isFes && !STYLE_VARIANT_STUDENT_IDS.has(s.id) && !(archiveExcluded && ARCHIVE_STUDENT_IDS.has(s.id))),
   };
 };
 
@@ -390,14 +420,31 @@ const EMPTY_TICKET_CONTEXT: TicketSimContext = { consumeExpiringTickets: false }
 // 4. Banner Simulation Logic
 // ==========================================
 
+/**
+ * Canonical per-banner pull budget (raw pull count). New strategies store `maxPull` directly; strategies
+ * saved before the unification fall back to the deprecated spark (×200) / half-charge (×100) units.
+ * The effective default is 200 pulls either way.
+ */
+export const resolveMaxPull = (strat: BannerStrategy, useChargeSystem: boolean): number => {
+  if (strat.maxPull != null) return strat.maxPull;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- this IS the sanctioned fallback read
+  return useChargeSystem ? (strat.maxHalfCharges ?? 2) * 100 : (strat.maxSparks ?? 1) * 200;
+};
+
 /* Recruit charge pity system: two counters (chargeNormal/chargeLimited) drive soft (100) and hard (200) pity */
 export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrategy, banner: BannerPeriod, pools: GachaPools, ticketCtx: TicketSimContext = EMPTY_TICKET_CONTEXT) => {
   let pullsThisBanner = 0;
   let currentFreePulls = banner.freePulls || 0;
   const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
   let recallFlag: false | 'ACQUIRED' | 'NOT_ACQUIRED' = banner.isRecall ? 'NOT_ACQUIRED' : false;
-  const chargeKey: 'chargeNormal' | 'chargeLimited' = banner.isLimitedBanner ? 'chargeLimited' : 'chargeNormal';
-  const maxHalfCharges = strat.maxHalfCharges ?? 2;
+  // "Recruit charge" accrues on two independent counters — one for the normal-recruitment pickup, one for
+  // the limited-recruitment pickup. When both run concurrently in the same period (e.g. Kasumi (Swimsuit)
+  // normal + Seia (Swimsuit) limited) each pull builds only its own pickup's counter. Route by the target's
+  // own isLimited flag; fall back to the banner-level flag if no per-pickup data is available.
+  const limitedPickupIds = new Set(banner.pickupStudents.filter((s) => s.isLimited).map((s) => s.id));
+  const chargeKeyFor = (studentId: number): 'chargeNormal' | 'chargeLimited' =>
+    limitedPickupIds.has(studentId) || (limitedPickupIds.size === 0 && banner.isLimitedBanner) ? 'chargeLimited' : 'chargeNormal';
+  const maxPull = resolveMaxPull(strat, true);
   const claimRecruitBonus = strat.claimRecruitBonus ?? false;
   const recruitBonusThreshold = strat.recruitBonusThreshold ?? 10;
   const bannerStartTimeMs = getBannerStartTimeMs(banner.startTime);
@@ -418,6 +465,7 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
     .sort((a, b) => a.priority - b.priority);
 
   const pullTenWithCharge = (targetId: number) => {
+    const chargeKey = chargeKeyFor(targetId);
     for (let i = 0; i < 10; i++) {
       state[chargeKey] += 1;
       const forced = state[chargeKey] === 200 ? 'pickup' : state[chargeKey] === 100 ? (Math.random() < 0.5 ? 'pickup' : 'random3star') : undefined;
@@ -441,8 +489,9 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
     while (true) {
       const isObtained = state.obtainedInSim.has(currentTargetId);
       const hasFree = currentFreePulls >= 10;
+      // Budget cap applies to free pulls too (a low maxPull is how a user says "don't drain all 100 free pulls here").
+      if (pullsThisBanner >= maxPull) break;
       if (!hasFree) {
-        if (Math.floor(pullsThisBanner / 100) >= maxHalfCharges) break;
         if (targetConfig.mode === 'must' && isObtained) break;
         if (targetConfig.mode === 'opportunistic') {
           if (isObtained) break;
@@ -477,7 +526,7 @@ export const simulateSingleBannerCharge = (state: SimState, strat: BannerStrateg
   // Drain expiring tickets within this banner's window via extra filler pulls when consumeExpiringTickets is on.
   while (
     (pullsThisBanner < minPulls || currentFreePulls >= 10 || isNearRecruitBonus() || (consumeExpiringTickets && hasExpiringTicketToDrain(state, bannerStartTimeMs, bannerEndTimeMs))) &&
-    Math.floor(pullsThisBanner / 100) < maxHalfCharges
+    pullsThisBanner < maxPull
   ) {
     const hasFree = currentFreePulls >= 10;
     state.totalPulls += 10;
@@ -504,6 +553,7 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
   }
   let sparkPoints = 0;
   let currentFreePulls = banner.freePulls || 0;
+  const maxPull = resolveMaxPull(strat, false);
   const bannerPickupIds = banner.pickupStudents.map((s) => s.id);
   let recallFlag: false | 'ACQUIRED' | 'NOT_ACQUIRED' = banner.isRecall ? 'NOT_ACQUIRED' : false;
   const pickuphistory = [];
@@ -532,12 +582,13 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
     while (true) {
       const isObtained = state.obtainedInSim.has(currentTargetId);
       const hasFree = currentFreePulls >= 10;
+      // Budget cap applies to free pulls too (a low maxPull is how a user limits free-pull usage on this banner).
+      if (sparkPoints >= maxPull) break;
       if (!hasFree) {
         // Number of targets not yet acquired
         const remainTargetCnt = targets.filter((t) => !state.obtainedInSim.has(t.studentId)).length;
         if (Math.floor(sparkPoints / 200) >= remainTargetCnt) break;
 
-        if (Math.floor(sparkPoints / 200) >= strat.maxSparks) break;
         if (targetConfig.mode === 'must' && isObtained) break;
         if (targetConfig.mode === 'opportunistic') {
           if (isObtained) break;
@@ -569,7 +620,7 @@ const simulateSingleBanner = (state: SimState, strat: BannerStrategy, banner: Ba
 
   // 2. Minimum pull guarantee; also drain expiring tickets when consumeExpiringTickets is on.
   const minPulls = strat.minPulls || 0;
-  while ((sparkPoints < minPulls || (ticketCtx.consumeExpiringTickets && hasExpiringTicketToDrain(state, bannerStartTimeMs, bannerEndTimeMs))) && Math.floor(sparkPoints / 200) < strat.maxSparks) {
+  while ((sparkPoints < minPulls || (ticketCtx.consumeExpiringTickets && hasExpiringTicketToDrain(state, bannerStartTimeMs, bannerEndTimeMs))) && sparkPoints < maxPull) {
     const hasFree = currentFreePulls >= 10;
     state.totalPulls += 10;
     sparkPoints += 10;
@@ -690,6 +741,19 @@ export class SimMetricAccumulator {
 /** Exact mean of an already-built distribution — see SimMetricAccumulator.avg for the same computation off a live accumulator. */
 export const meanFromDist = (dist: DistributionData[]): number => dist.reduce((sum, d) => sum + d.binStart * (d.pdf / 100), 0);
 
+/**
+ * Coerce a value that should be a SimMetricAccumulator back into a live instance.
+ * A real instance passes through; a plain object from a persisted gacha result
+ * (its `data` Map flattened to a record) is rebuilt so keys()/dist() still work.
+ */
+export const asSimMetricAccumulator = (value: unknown): SimMetricAccumulator => {
+  if (value instanceof SimMetricAccumulator) return value;
+  const { bin, data } = (value ?? {}) as { bin?: number; data?: Record<string, SimMetricBucket> };
+  const acc = new SimMetricAccumulator(typeof bin === 'number' ? bin : 1);
+  for (const [checkpoint, bucket] of Object.entries(data ?? {})) acc.data.set(checkpoint, bucket);
+  return acc;
+};
+
 /** Live accumulator, one SimMetricAccumulator per tracked variable — the JS engine pushes into these directly as it runs; a WASM worker's transmitted bucket data (SimChunkAcc, plain Maps) gets folded in via mergeSimAccumulator. costWithTickets/costWithGachaTickets use PYROXENE_PER_PULL_UNIT (120) as their bin, not PYROXENE_PER_10PULL (1200), because held ticket value can be a partial pull-unit even though net cost itself always lands on full-10-pull multiples. */
 export interface SimRawAccumulator {
   cost: SimMetricAccumulator;
@@ -751,6 +815,7 @@ export const buildWasmPayload = (
   initialOwnedIds: number[] = [],
   initialTicketBatches: TicketBatch[] = [],
   consumeExpiringTickets: boolean = true,
+  region: 'KR' | 'JP' = 'KR',
 ): WasmPayload => {
   const activeStrategies = strategies.filter((s) => s.isActive);
   const releaseDateMap = preprocessReleaseDates(bannersMap);
@@ -768,6 +833,7 @@ export const buildWasmPayload = (
       grade1: number[];
       fes: number[];
       bannerPickupIds: number[];
+      limitedPickupIds: number[];
       fesExcludedIds: number[];
       startTime: number;
       endTime: number;
@@ -778,7 +844,7 @@ export const buildWasmPayload = (
   for (const strat of activeStrategies) {
     const banner = bannersMap[strat.bannerId];
     if (!banner) continue;
-    const pools = createPoolForBanner(allStudents, banner.startTime, releaseDateMap);
+    const pools = createPoolForBanner(allStudents, banner.startTime, releaseDateMap, region);
     const pickupIds = banner.pickupStudents.map((s) => s.id);
     const fesExcludedIds = [...new Set(pickupIds.flatMap((id) => FES_EXCLUSIONS_BY_PICKUP_ID[id] ?? []))];
     bannerPoolsForWasm[strat.bannerId] = {
@@ -792,6 +858,7 @@ export const buildWasmPayload = (
       grade1: pools.grade1.map((s) => s.id),
       fes: pools.fes.map((s) => s.id),
       bannerPickupIds: pickupIds,
+      limitedPickupIds: banner.pickupStudents.filter((s) => s.isLimited).map((s) => s.id),
       fesExcludedIds,
       startTime: new Date(banner.startTime).getTime(),
       endTime: new Date(banner.endTime).getTime(),
@@ -801,8 +868,7 @@ export const buildWasmPayload = (
 
   const strategiesForWasm = activeStrategies.map((s) => ({
     bannerId: s.bannerId,
-    maxSparks: s.maxSparks ?? 1,
-    maxHalfCharges: s.maxHalfCharges ?? 2,
+    maxPull: resolveMaxPull(s, bannersMap[s.bannerId]?.useChargeSystem ?? false),
     claimRecruitBonus: s.claimRecruitBonus ?? false,
     recruitBonusThreshold: s.recruitBonusThreshold ?? 10,
     minPulls: s.minPulls ?? 0,
@@ -978,6 +1044,7 @@ export const runGlobalSimulation = (
   initialOwnedIds: number[] = [],
   initialTicketBatches: TicketBatch[] = [],
   consumeExpiringTickets: boolean = true,
+  region: 'KR' | 'JP' = 'KR',
 ): GlobalAggregatedResult => {
   const { simCount } = config;
   // const pools = initializePools(allStudents);
@@ -989,7 +1056,7 @@ export const runGlobalSimulation = (
     const banner = bannersMap[strat.bannerId];
     if (banner) {
       // Generate pool based on the start time of the relevant banner
-      bannerPoolsMap[strat.bannerId] = createPoolForBanner(allStudents, banner.startTime, releaseDateMap);
+      bannerPoolsMap[strat.bannerId] = createPoolForBanner(allStudents, banner.startTime, releaseDateMap, region);
     }
   });
 

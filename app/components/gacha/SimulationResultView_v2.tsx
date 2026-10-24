@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { FaGem, FaChartBar, FaSyncAlt, FaCoins, FaSearch, FaTimes, FaChevronDown } from 'react-icons/fa';
+import { FaGem, FaChartBar, FaSyncAlt, FaCoins, FaSearch, FaTimes, FaChevronDown, FaInfoCircle } from 'react-icons/fa';
 import { meanFromDist, ticketCreditedDist, type GlobalAggregatedResult } from '~/utils/gachaEngine';
 import type { BannerStrategy } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
-import { useSearchMatcher } from '~/utils/useSearchMatcher';
+import { useSearchMatcher } from '~/hooks/useSearchMatcher';
 import type { Locale } from '~/utils/i18n/config';
+import RcTooltip from 'rc-tooltip';
+import 'rc-tooltip/assets/bootstrap.css';
 
 interface CustomBarProps {
   x: number;
@@ -19,6 +21,9 @@ interface CustomBarProps {
 }
 
 interface Props {
+  /** Simple-mode display: hides the 'all required acquired' risk card — simple mode has no "required vs
+      conditional" distinction, so the underlying metric wouldn't mean anything to a newcomer. */
+  simple?: boolean;
   result: GlobalAggregatedResult | null;
   initialPyroxenes: number;
   portraitMap: Record<number, string>;
@@ -53,6 +58,7 @@ function RingGauge({ value, color, size = 84 }: { value: number; color: string; 
 }
 
 export default function SimulationResultView_v2({
+  simple = false,
   result,
   initialPyroxenes,
   portraitMap,
@@ -185,11 +191,14 @@ export default function SimulationResultView_v2({
   };
 
   // Collect pickup student IDs (across all active strategies, mode !== skip)
+  // and count "must" targets — the success-rate metric is always 100% (meaningless) when there are none.
   const pickupStudentIds = new Set<number>();
+  let mustTargetCount = 0;
   for (const banner of Object.values(strategies)) {
     if (!banner.isActive) continue;
     for (const [sidStr, cfg] of Object.entries(banner.studentConfigs ?? {})) {
       if (cfg.mode !== 'skip') pickupStudentIds.add(Number(sidStr));
+      if (cfg.mode === 'must') mustTargetCount++;
     }
   }
 
@@ -239,10 +248,20 @@ export default function SimulationResultView_v2({
 
             {/* Secondary stats */}
             <div className="flex flex-col items-end gap-3 shrink-0 text-right" style={monoStyle}>
-              <div>
-                <div className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-0.5">{t('summary.success_rate.title')}</div>
-                <div className="text-base font-bold text-neutral-600 dark:text-neutral-300">{result.successRate.toFixed(1)}%</div>
-              </div>
+              {/* Target-acquisition risk — only surfaced when the plan can't reliably get every "must" pick (usually a budget shortfall) */}
+              {!simple && mustTargetCount > 0 && result.successRate < 99.95 && (
+                <div>
+                  <div className="flex items-center justify-end gap-1 text-[9px] uppercase tracking-wider text-amber-600 dark:text-amber-500 mb-0.5">
+                    {t('summary.success_rate.title')}
+                    <RcTooltip placement="top" trigger={['hover', 'click']} overlay={<span className="block max-w-xs text-[11px] leading-relaxed">{t('summary.success_rate.desc')}</span>}>
+                      <span className="cursor-pointer inline-flex text-amber-500/80 hover:text-amber-600 dark:hover:text-amber-400">
+                        <FaInfoCircle size={10} />
+                      </span>
+                    </RcTooltip>
+                  </div>
+                  <div className="text-base font-bold text-amber-600 dark:text-amber-500 tabular-nums">{result.successRate.toFixed(1)}%</div>
+                </div>
+              )}
               <div>
                 <div className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-0.5">{t('summary.avg_cost.title_pyroxenes')}</div>
                 <div className="text-base font-bold text-neutral-600 dark:text-neutral-300">{fmt(result.cost.avg('inf'))}</div>
@@ -473,8 +492,9 @@ export default function SimulationResultView_v2({
         </div>
       </div>
 
-      {/* Merged student browser: Acquisition per student and Elephs */}
-      {allStats.length > 0 &&
+      {/* Merged student browser: Acquisition per student and Elephs — Standard mode only */}
+      {!simple &&
+        allStats.length > 0 &&
         (() => {
           const q = searchQuery.trim();
 

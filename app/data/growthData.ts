@@ -213,10 +213,37 @@ export const uwLevelGrowthData: Record<number, { xp: number }> = {
   70: { xp: 3955 },
 };
 
-// Weapon enhancement stone EXP amounts (typical values)
+// Unique weapon growth material EXP, per rarity tier (1 = Rusty … 4 = Titanium).
+// Base is what a material grants with no weapon-type bonus; a matching material grants base * 1.5.
+export const weaponEnhancementExpBase = { 1: 10, 2: 50, 3: 200, 4: 1000 };
+// Bonus-applied EXP. Firing pins (Equipment_40~43) always grant this, whatever the weapon type,
+// which is why the planner has historically used these numbers as if they were the base values.
 export const weaponEnhancementExp = { 1: 15, 2: 75, 3: 300, 4: 1500 };
-// Weapon enhancement stone item IDs (typical values)
+export const UW_BONUS_MULTIPLIER = 1.5;
+// Firing pin item IDs — the denomination calcUWLevelNeeds expresses requirements in.
 export const weaponEnhancementItemIds = { 1: 40, 2: 41, 3: 42, 4: 43 };
+
+/** Total unique weapon growth XP needed for a level range — the single source of truth other calculations should match. */
+export const calcUwRequiredXp = (currentUWLevel: number, targetUWLevel: number): number => {
+  let neededXp = 0;
+  for (let i = currentUWLevel + 1; i <= targetUWLevel; i++) {
+    const cost = uwLevelGrowthData[i];
+    if (cost) neededXp += cost.xp;
+  }
+  return neededXp;
+};
+
+// Unique weapon material series that only grant the bonus to some weapon types.
+// Item keys are `Equipment_${baseId + tier - 1}`. The weapon type -> series mapping lives in
+// ~/utils/uwMaterialXp so it can be exhaustively typed against Student['WeaponType'].
+export const UW_MATERIAL_SERIES = {
+  spring: { baseId: 10 },
+  hammer: { baseId: 20 },
+  barrel: { baseId: 30 },
+} as const;
+
+// Firing pins grant the bonus on every weapon type, so they are not tied to a series.
+export const UW_FIRING_PIN_BASE_ID = 40;
 
 // Favor (Bond)
 export const affectionExpToNextLevel: Record<number, number> = {

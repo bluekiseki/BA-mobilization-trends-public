@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, data, redirect } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { StudentNetworkGraphClient } from '~/components/network/StudentNetworkGraphClient';
-import { loadIndex, buildSeasonItems } from '~/components/network/useNetworkData';
-import type { SeasonItem } from '~/components/network/types';
+import { StudentNetworkGraphClient } from '~/features/raid-stats/charts/network/StudentNetworkGraphClient';
+import { loadIndex, buildSeasonItems } from '~/features/raid-stats/charts/network/useNetworkData';
+import type { SeasonItem } from '~/features/raid-stats/charts/network/types';
 import type { Route } from './+types/network';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { GAMESERVER_LIST, type GameServer } from '~/types/data';

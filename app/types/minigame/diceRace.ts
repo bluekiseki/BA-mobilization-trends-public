@@ -11,6 +11,8 @@ export const diceRaceSimConfigSchema = z.object({
   targetItemId: z.number(),
   targetItemAmount: z.number(),
   fixedDicePriority: z.array(z.number()),
+  // Allow spending two fixed dice back to back to reach a priority tile (absent in older saved plans = off)
+  allowDoubleFixedDice: z.boolean().optional(),
 });
 export type DiceRaceSimConfig = z.infer<typeof diceRaceSimConfigSchema>;
 
@@ -25,4 +27,12 @@ export const DefaultDiceRaceSimConfig: DiceRaceSimConfig = {
   targetItemId: 0,
   targetItemAmount: 0,
   fixedDicePriority: [],
+  allowDoubleFixedDice: false,
+};
+
+export type DiceRaceTab = 'overview' | 'calculator';
+
+export type DiceRaceResult = {
+  cost: Record<string, number>;
+  rewards: Record<string, number>;
 };

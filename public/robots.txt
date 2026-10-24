@@ -11,6 +11,10 @@ Allow: /utils/
 Allow: /calendar
 Allow: /notices$
 Disallow: /notices/
+Allow: /developers$
+Allow: /llms.txt$
+Allow: /txt/
+Allow: /api/text/
 
 Allow: /ko$
 Allow: /ko/charts/

@@ -1,5 +1,6 @@
 {
   "cdn": "cdn.yuzutrends.app",
+  "archive": "example.com",
   "email": "contact@example.com",
   "authEmail": "auth@noreply.example.com",
   "domain": "example.com",
@@ -8,6 +9,10 @@
   "localUrl": "http://localhost:5173",
   "localAuthUrl": "http://localhost:8787",
   "lastdataURL": "https://your-r2-bucket.r2.dev/lastdata.json",
+  "videoDumpURL": "https://example.com",
   "timelineURL": "https://your-r2-bucket.r2.dev/timeline.json",
-  "issuesURL": "https://github.com/your-org/your-repo/issues"
+  "repositoryURL": "https://github.com/your-org/your-repo",
+  "issuesURL": "https://github.com/your-org/your-repo/issues",
+  "magicLinkLogin": false,
+  "loginEnabled": true
 }

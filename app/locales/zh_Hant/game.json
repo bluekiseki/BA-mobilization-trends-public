@@ -4,7 +4,7 @@
   "raidAndEraid": "總力戰·大決戰",
   "campaign": "戰役",
   "multifloor": "制約解除決戰",
-  "fest": "加速",
+  "fest": "祭典",
   "limited": "限時",
   "jfd": "綜合戰術考試",
   "jfds": {
@@ -89,5 +89,8 @@
   "opart": "奧帕茨",
   "pyro_unit": "琥珀晶",
   "limitedShort": "限時",
-  "difficultyShort": "難度"
+  "difficultyShort": "難度",
+  "recruitNormal": "常駐",
+  "recruitArchive": "資料庫",
+  "recruitWelfare": "配布"
 }

@@ -1,0 +1,15 @@
+{
+  "_doc": "Hand-kept corrections for the story index. ASCII, Japanese and English text only.",
+  "allowedCategories": ["Main", "Event", "Favor", "Group", "Mini", "Content"],
+  "mergedSeries": [
+    {
+      "firstStory": "11034030",
+      "into": "Event/34"
+    }
+  ],
+  "nameFixes": {},
+  "eventIndex": {
+    "6": 807
+  },
+  "eventNames": {}
+}

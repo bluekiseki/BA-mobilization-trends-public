@@ -36,7 +36,7 @@
       "en": "Tiphareth",
       "zh_Hant": "Tiphareth"
     },
-    "teran": "Outdoor",
+    "teran": "Indoor",
     "armorType": "ElasticArmor"
   },
   "EN0013": {
@@ -111,7 +111,7 @@
   },
   "EN0005": {
     "name": {
-      "en": "Gregrios",
+      "en": "Gregorius",
       "ko": "그레고리오",
       "ja": "グレゴリオ",
       "zh_Hant": "葛利果"

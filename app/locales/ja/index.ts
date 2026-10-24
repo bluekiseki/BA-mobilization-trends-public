@@ -4,6 +4,7 @@ import auth from './auth.json';
 import club from './club.json';
 import stat from './stat.json';
 import planner from './planner.json';
+import gachaGuide from './gachaGuide.json';
 import game from './game.json';
 import jukebox from './jukebox.json';
 import help from './help.json';
@@ -24,6 +25,7 @@ export default {
   dashboardIndex,
   liveDashboard,
   planner,
+  gachaGuide,
   emblemCounter,
   calendar,
   network,

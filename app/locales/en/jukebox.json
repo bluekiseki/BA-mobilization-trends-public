@@ -67,6 +67,7 @@
     "work_story": "[Work]"
   },
   "main_story": {
+    "prologue": "Prologue",
     "vol1_ch1": "Act 1, Vol. 1, Ch. 1, Strange Days for the Task Force",
     "vol1_ch2": "Act 1, Vol. 1, Ch. 2, Things Lost and Others Held On To",
     "vol1_ch3": "Act 1, Vol. 1, Ch. 3, Traces of a Dream",
@@ -94,7 +95,9 @@
     "part2_vol0_ch1": "Act 2, Vol. 0, Ch.1, A Spring Day Full of Almond Blossoms",
     "part2_vol1_ch1": "Act 2, Vol. 1, Ch.1",
     "part2_vol1_ch2": "Act 2, Vol. 1, Ch.2",
+    "part2_vol2_ch1": "Act 2, Vol. 2, Ch.1",
     "part2_ex_lore_ch1": "Act 2, Vol. Ex. Lore Pursuit, Ch. 1, High Noon Haze",
-    "part2_ex_lore_ch2": "Act 2, Vol. Ex. Lore Pursuit, Ch. 2, What's Inside the Drum Barrel"
+    "part2_ex_lore_ch2": "Act 2, Vol. Ex. Lore Pursuit, Ch. 2, What's Inside the Drum Barrel",
+    "part2_ex_lore_ch3": "Act 2, Vol. Ex. Lore Pursuit, Ch. 3, The Train in a Dream"
   }
 }

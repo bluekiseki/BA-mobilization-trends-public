@@ -4,16 +4,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaGem, FaToggleOn, FaToggleOff, FaBolt, FaTrophy, FaPlusCircle, FaTrash } from 'react-icons/fa';
-import { PVP_REWARDS } from '~/utils/pyroxeneCalc';
-import type { PyroxeneConfig } from '~/routes/planner/Gacha_old';
-import { CustomNumberInput } from '../CustomInput';
-
-export interface CustomIncome {
-  id: string;
-  date: string;
-  title: string;
-  amount: number;
-}
+import { PVP_REWARDS, type CustomIncome } from '~/utils/pyroxeneCalc';
+import type { PyroxeneConfig } from './pyroxeneConfigOld';
+import { CustomNumberInput } from '../common/CustomInput';
 
 interface Props {
   config: PyroxeneConfig & { customIncomes?: CustomIncome[] };

@@ -1,4 +1,10 @@
 {
+  "externalEdit": {
+    "copyPrompt": "편집 프롬프트",
+    "copied": "프롬프트 복사됨",
+    "copyFailed": "복사 실패",
+    "description": "내보낸 JSON과 함께 외부 AI 도구에 붙여넣을 편집 프롬프트를 복사합니다."
+  },
   "raids": {
     "title": "내 클리어 기록",
     "description": "총력전, 대결전, 종합전술시험, 제약해제결전 기록을 저장합니다.",
@@ -31,17 +37,17 @@
       "sortByAddedAsc": "등록 역순"
     },
     "error": {
-      "invalidFormat": "잘못된 레이드 기록 형식입니다.",
+      "invalidFormat": "잘못된 클리어 기록 형식입니다.",
       "importFailed": "JSON 파일을 불러오지 못했습니다.",
-      "noRaidSelected": "레이드를 선택해 주세요.",
+      "noRaidSelected": "총력전/대결전을 선택해 주세요.",
       "scoreInvalid": "점수는 0 이상의 정수여야 합니다.",
       "scoreOptionalInvalid": "점수는 비워두거나 0 이상의 정수여야 합니다.",
       "rankInvalid": "등수는 비워두거나 1 이상의 정수여야 합니다.",
       "floorInvalid": "제약해제결전 층수는 1~124 사이여야 합니다.",
       "guideLinkInvalid": "공략 링크는 http:// 또는 https:// 형식이어야 합니다.",
       "armorGuideLinkInvalid": "속성별 공략 링크는 http:// 또는 https:// 형식이어야 합니다.",
-      "assistDuplicate": "이미 이 레이드에서 조력자로 사용 중인 학생입니다.",
-      "assistDuplicateArmor": "이 속성에서 이미 조력자로 사용 중인 학생입니다.",
+      "assistDuplicate": "이미 이 총력전/대결전에서 조력자로 출전 중인 학생입니다.",
+      "assistDuplicateArmor": "이 속성에서 이미 조력자로 출전 중인 학생입니다.",
       "studentDuplicate": "같은 학생을 중복 편성할 수 없습니다.",
       "studentDuplicateWithoutAssist": "같은 학생을 조력자 대여 없이 중복 편성할 수 없습니다."
     },
@@ -77,7 +83,7 @@
     "stats": {
       "totalRecords": "저장 기록",
       "uniqueStudents": "등장 학생 수",
-      "assistCount": "조력자 사용 횟수",
+      "assistCount": "조력자 대여 횟수",
       "noData": "데이터가 없습니다.",
       "content": "컨텐츠",
       "boss": "보스",
@@ -107,7 +113,7 @@
       "usageChart": {
         "title": "가장 많이 함께한 학생",
         "desc": "컨텐츠 유형과 조력자 여부를 조합해서 확인합니다.",
-        "empty": "선택한 조건에 맞는 학생 사용 기록이 없습니다."
+        "empty": "선택한 조건에 맞는 학생 출전 기록이 없습니다."
       },
       "restrictionChart": {
         "title": "제약해제결전 클리어 추이",
@@ -115,6 +121,88 @@
         "empty": "선택한 조건에 맞는 제약해제결전 기록이 없습니다."
       },
       "countTimes": "{{count}}회"
+    }
+  },
+  "gacha": {
+    "title": "내 모집 이력",
+    "description": "모집 결과를 기록하고 내 운이 어느 정도인지 통계로 확인합니다.",
+    "importInvalid": "모집 기록 JSON 형식이 올바르지 않습니다.",
+    "source": {
+      "normal": "일반 모집",
+      "halfPity": "반천장 (호출 100)",
+      "hardPity": "천장 (호출 200)",
+      "pointExchange": "모집 포인트 교환"
+    },
+    "bannerType": {
+      "chargeSystem": "모집 스택",
+      "pointSystem": "모집 포인트"
+    },
+    "tabs": {
+      "studentStats": "학생 통계"
+    },
+    "studentStats": {
+      "mostRecruited": "모집 횟수 TOP 3",
+      "recordedThreeStarNote": "기록에 추가된 3성 학생 기준",
+      "allAcquisitions": "모든 획득"
+    },
+    "summary": {
+      "heading": "전체 기간 요약",
+      "totalPulls": "총 모집 횟수",
+      "recordedBanners": "기록한 모집",
+      "threeStarAcquired": "3성 모집",
+      "pickupAcquired": "픽업 모집",
+      "newRecruits": "신규 모집 {{n}}명",
+      "pickupShareOfThreeStar": "3성 중 {{percent}}%"
+    },
+    "records": {
+      "empty": "아직 저장된 모집 기록이 없습니다.",
+      "unknownBanner": "알 수 없는 모집",
+      "entryMeta": "{{date}} · <1>{{pulls}}회 모집</1> · 3성 {{threeStar}}명 · 목표 {{goal}}명",
+      "edit": "수정"
+    },
+    "stats": {
+      "scopeHeading": "통계 범위",
+      "scopeAll": "전체 기간 누적",
+      "scopeBanner": "특정 모집",
+      "methodInfo": "계산 방식 설명",
+      "median": "중앙값",
+      "topPercent": "상위 %",
+      "topPercentLowerTitle": "같은 목표를 이보다 적게 써서 달성할 확률",
+      "topPercentHigherTitle": "같은 조건에서 이보다 많이 얻을 확률",
+      "distributionAria": "{{title}} 확률 분포와 누적 분포",
+      "pointAria": "{{value}}{{unit}}일 확률 {{percent}}%",
+      "byBanner": "배너별 운",
+      "threeStarTitle": "3성 모집 수",
+      "threeStarSubtitle": "유효 모집 {{pulls}}회 · 이항분포",
+      "threeStarDescription": "일반 모집 결과만 계산하며, 반천장·천장 호출과 모집 포인트 교환은 제외합니다.",
+      "goalTicketsTitle": "소모한 모집 횟수",
+      "goalTicketsSubtitle": "목표 {{n}}명",
+      "halfPityTitle": "반천장 픽업",
+      "halfPitySubtitle": "{{hit}} / {{total}} · 이항분포",
+      "halfPityDescription": "반천장마다 픽업 모집 확률 50%로 계산합니다."
+    },
+    "form": {
+      "addTitle": "모집 기록 추가",
+      "editTitle": "모집 기록 수정",
+      "bannerLabel": "모집 선택",
+      "bannerSearchPlaceholder": "학생 이름 또는 날짜로 검색",
+      "initialChargeLabel": "시작 모집 스택",
+      "initialChargeNormalLabel": "시작 모집 스택 (통상)",
+      "initialChargeLimitedLabel": "시작 모집 스택 (한정)",
+      "resultsHeading": "3성 모집 결과",
+      "selectBannerFirst": "먼저 모집을 선택해 주세요.",
+      "unknownStudent": "학생 #{{id}}",
+      "deleteResult": "3성 결과 삭제",
+      "errorNoBanner": "모집을 선택해 주세요.",
+      "errorPullCount": "총 모집 횟수는 1 이상의 정수여야 합니다.",
+      "errorInitialCharge": "시작 모집 스택은 0~199 사이여야 합니다.",
+      "errorGuaranteed": "보장 결과 수가 총 모집 횟수보다 많습니다.",
+      "errorDuplicateFirst": "같은 학생은 초회 모집으로 한 번만 기록할 수 있습니다.",
+      "errorPickupNotInBanner": "픽업은 이번 모집 대상 학생만 선택할 수 있습니다.",
+      "errorGoalNotInBanner": "목표 학생은 이번 모집 대상 학생만 선택할 수 있습니다.",
+      "errorPickupMustBeGoal": "픽업으로 모집한 학생은 목표 학생에 포함되어야 합니다.",
+      "errorNoPointExchange": "모집 스택 방식에서는 모집 포인트 교환을 기록할 수 없습니다.",
+      "errorNoPity": "기존 모집 포인트 방식에서는 반천장/천장을 기록할 수 없습니다."
     }
   }
 }

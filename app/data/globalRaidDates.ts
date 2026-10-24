@@ -40,7 +40,7 @@ export function getCurrentGlobalraid(): string[] {
   const upcomingEvents: { id: string; startTime: number }[] = [];
 
   // 3. Find the nearest Total Assault that is ongoing or scheduled
-  // Filter items where endTime is in the future based on KST, and sort in ascending order
+  // Filter items where endTime is in the future based on GMT+9, and sort in ascending order
   const nextRaid = raids.filter((r) => getKstTime(r.endTime) > now).sort((a, b) => getKstTime(a.startTime) - getKstTime(b.startTime))[0];
 
   if (nextRaid) {

@@ -8,7 +8,7 @@ import type { CardShopConfig } from '~/types/minigame/cardShop';
 import { DefaultDiceRaceSimConfig, type DiceRaceSimConfig } from '~/types/minigame/diceRace';
 import type { FortuneGachaAvgRates } from '~/types/minigame/fortuneGacha';
 import { DefaultTreasureSimConfig, type TreasureSimConfig } from '~/types/minigame/treasure';
-import { getDefaultApConfig } from '~/components/planner/ApCalculatorConfig';
+import { getDefaultApConfig } from '~/utils/ApCalculatorConfig';
 import { type ApCalculatorConfig } from '~/types/minigame/apCalculator';
 import { defaultDreamMakerConfig, type DreamMakerSimConfig, type DreamMakerSimResult } from '~/types/minigame/dreamMaker';
 import { defaultCardMatchSimConfig, type CardMatchSimConifg } from '~/types/minigame/cardMatch';
@@ -17,6 +17,7 @@ import { defaultFieldEventConfig, type FieldEventConfig } from '~/types/minigame
 import { defaultInteractiveWorldRaidConfig, type InteractiveWorldRaidConfig } from '~/types/minigame/interactiveWorldRaid';
 import { defaultRoadPuzzleConfig, type RoadPuzzleConfig } from '~/types/minigame/roadPuzzle';
 import { defaultJankenConfig, type JankenConfig } from '~/types/minigame/janken';
+import { defaultLocationConfig, type LocationConfig } from '~/types/minigame/location';
 import type { CcgRunInput } from '~/types/minigame/ccg';
 import { type EventPlan, type StagePrio } from '~/types/eventPlan';
 
@@ -68,6 +69,7 @@ interface EventPlanStoreState {
   setInteractiveWorldRaidConfig: (eventId: number, config: InteractiveWorldRaidConfig) => void;
   setRoadPuzzleConfig: (eventId: number, config: RoadPuzzleConfig) => void;
   setMinigameJankenConfig: (eventId: number, config: JankenConfig) => void;
+  setLocationConfig: (eventId: number, config: LocationConfig) => void;
 
   setTotalRewardCurrentAmount: (eventId: number, amount: number) => void;
   setTotalRewardTargetAmount: (eventId: number, amount: number) => void;
@@ -161,6 +163,7 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setInteractiveWorldRaidConfig: (eventId, config) => updatePlanForEvent(eventId, { interactiveWorldRaidConfig: config }),
         setRoadPuzzleConfig: (eventId, config) => updatePlanForEvent(eventId, { roadPuzzleConfig: config }),
         setMinigameJankenConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameJankenConfig: config }),
+        setLocationConfig: (eventId, config) => updatePlanForEvent(eventId, { locationConfig: config }),
         setTotalRewardCurrentAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardCurrentAmount: amount }),
         setTotalRewardTargetAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardTargetAmount: amount }),
         setCachedTotalItems: (eventId, cached) => updatePlanForEvent(eventId, { cachedTotalItems: cached }),
@@ -315,6 +318,8 @@ export const usePlanForEvent = (eventId: number) => {
     interactiveWorldRaidConfig: plan.interactiveWorldRaidConfig ?? defaultInteractiveWorldRaidConfig,
     roadPuzzleConfig: plan.roadPuzzleConfig ?? defaultRoadPuzzleConfig,
     minigameJankenConfig: plan.minigameJankenConfig ?? defaultJankenConfig,
+    locationConfig: plan.locationConfig ?? defaultLocationConfig,
+    setLocationConfig: (config: LocationConfig) => eventId && actions.setLocationConfig(eventId, config),
     ...setters,
     completedMissionsSet,
     setCompletedMissions,

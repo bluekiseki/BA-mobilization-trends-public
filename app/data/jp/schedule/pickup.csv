@@ -548,3 +548,21 @@ studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
 10114,Juri (Part-Timer),2026-08-12 11:00,2026-08-26 10:59,false,false,false
 10119,Nagusa,2026-08-12 11:00,2026-08-26 10:59,false,false,false
 20046,Niya,2026-08-12 11:00,2026-08-26 10:59,false,false,false
+10149,Kokoro,2026-08-26 11:00,2026-09-09 10:59,false,false,false,
+10150,Kotone,2026-08-26 11:00,2026-09-09 10:59,false,false,false,
+20061,Kasumi (Swimsuit),2026-09-09 11:00,2026-09-23 10:59,false,false,false
+10123,Seia (Swimsuit),2026-09-09 11:00,2026-09-23 10:59,true,true,false
+10124,Hasumi (Swimsuit),2026-09-09 11:00,2026-09-23 10:59,true,true,false
+10097,Moe (Swimsuit),2026-09-09 11:00,2026-09-23 10:59,true,false,false
+20037,Fubuki (Swimsuit),2026-09-09 11:00,2026-09-23 10:59,true,false,false
+10151,Anna,2026-09-23 11:00,2026-10-07 10:59,false,false,false
+20062,Erina,2026-09-23 11:00,2026-10-07 10:59,false,false,false
+10152,Tsumugi,2026-10-07 11:00,2026-10-21 10:59,false,false,false
+10125,Eri,2026-10-07 11:00,2026-10-21 10:59,true,false,false
+10126,Kanoe,2026-10-07 11:00,2026-10-21 10:59,true,false,false
+10071,Miyako (Swimsuit),2026-10-07 11:00,2026-10-21 10:59,true,false,false
+10072,Saki (Swimsuit),2026-10-07 11:00,2026-10-21 10:59,true,false,false
+20038,Tomoe (Qipao),2026-10-21 11:00,2026-10-28 10:59,true,false,false
+10103,Marina (Qipao),2026-10-21 11:00,2026-10-28 10:59,true,false,false
+20023,Kanna,2026-10-21 11:00,2026-10-28 10:59,true,false,false
+10052,Noa,2026-10-21 11:00,2026-10-28 10:59,true,false,false

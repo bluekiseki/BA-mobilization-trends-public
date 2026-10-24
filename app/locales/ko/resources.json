@@ -13,16 +13,13 @@
   "tabs": {
     "resources": "자원",
     "income": "수입 & 지출",
-    "students": "학생 목표",
+    "students": "엘레프·엘리그마 필요량 예측",
     "studentsShort": "목표"
   },
   "incomeTabHint": "위에서 추적할 자원을 선택하여 수입, 구매 및 농장 계획을 구성하세요.",
   "planStatus": {
-    "title": "계획 상태",
     "summary": "{{atRisk}}개 위험 · {{covered}}개 엘리그마 필요 · {{onTrack}}개 정상",
     "summaryWithDeadline": "{{atRisk}}개 위험 · {{covered}}개 엘리그마 필요 · {{onTrack}}개 정상 · {{noDeadline}}개 기한 없음",
-    "openButton": "학생 목표",
-    "sectionTitle": "학생 목표",
     "emptyState": "학생 목표를 추가하여 보유 엘레프가 충분한지 또는 엘리그마가 필요한지 확인하세요.",
     "statusCovered": "엘리그마 커버",
     "statusOnTrack": "정상",
@@ -112,8 +109,6 @@
     "premium": "프리미엄:"
   },
   "panel": {
-    "title": "자원",
-    "startingInventory": "초기 보유량",
     "gachaSimulation": "가챠 시뮬레이션",
     "noSimDataPre": "시뮬레이션 데이터 없음.",
     "noSimDataPost": "을 먼저 실행하세요.",

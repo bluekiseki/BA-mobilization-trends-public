@@ -6,3 +6,9 @@ export const ccgRunInputSchema = z.object({
   count: z.number(),
 });
 export type CcgRunInput = z.infer<typeof ccgRunInputSchema>;
+
+// Result Type Definition
+export type MinigameCCGResult = {
+  cost: Record<string, number>;
+  rewards: Record<string, number>;
+};

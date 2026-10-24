@@ -11,48 +11,32 @@ export const typecolor = {
 };
 
 export const type_translation = {
-  LightArmor: {
-    ko: '경장갑',
-    en: 'LightArmor',
-    ja: '軽装備',
-    zh_Hant: '輕型護甲',
-  },
-  HeavyArmor: {
-    ko: '중장갑',
-    en: 'HeavyArmor',
-    ja: '重装甲',
-    zh_Hant: '重型裝甲',
-  },
-  Unarmed: {
-    ko: '특수장갑',
-    en: 'Unarmed',
-    ja: '特殊装甲',
-    zh_Hant: '特殊裝甲',
-  },
-  ElasticArmor: {
-    ko: '탄력장갑',
-    en: 'ElasticArmor',
-    ja: '弾力装甲',
-    zh_Hant: '彈性裝甲',
-  },
-  CompositeArmor: {
-    ko: '복합장갑',
-    en: 'Composite',
-    ja: '複合装甲',
-    zh_Hant: 'Composite',
-  },
-  Explosion: { ko: '폭발', en: 'Explosive', ja: '爆発', zh_Hant: '爆炸' },
-  Pierce: { ko: '관통', en: 'Piercing', ja: '貫通', zh_Hant: '貫通' },
-  Mystic: { ko: '신비', en: 'Mystic', ja: '神秘', zh_Hant: '神祕' },
-  Sonic: { ko: '진동', en: 'Sonic', ja: '振動', zh_Hant: '振動' },
-  Chemical: { ko: '분해', en: 'Chemical', ja: '分解', zh_Hant: '分解' },
+  LightArmor: { en: 'Light Armor', ko: '경장갑', ja: '軽装備', zh_Hant: '輕型護甲' },
+  HeavyArmor: { en: 'Heavy Armor', ko: '중장갑', ja: '重装甲', zh_Hant: '重型裝甲' },
+  Unarmed: { en: 'Special Armor', ko: '특수장갑', ja: '特殊装甲', zh_Hant: '特殊裝甲' },
+  ElasticArmor: { en: 'Elastic Armor', ko: '탄력장갑', ja: '弾力装甲', zh_Hant: '彈性裝甲' },
+  CompositeArmor: { en: 'Composite Armor', ko: '복합장갑', ja: '複合装甲', zh_Hant: 'Composite' },
+  Explosion: { en: 'Explosive', ko: '폭발', ja: '爆発', zh_Hant: '爆炸' },
+  Pierce: { en: 'Piercing', ko: '관통', ja: '貫通', zh_Hant: '貫通' },
+  Mystic: { en: 'Mystic', ko: '신비', ja: '神秘', zh_Hant: '神祕' },
+  Sonic: { en: 'Sonic', ko: '진동', ja: '振動', zh_Hant: '振動' },
+  Chemical: { en: 'Chemical', ko: '분해', ja: '分解', zh_Hant: '分解' },
 };
 export const type_translation_sorted = {
-  LightArmor: { ko: '경장', en: 'Light', ja: '爆発', zh_Hant: '輕型' },
-  HeavyArmor: { ko: '중장', en: 'Heavy', ja: '貫通', zh_Hant: '重型' },
-  Unarmed: { ko: '특장', en: 'Unarmed', ja: '神秘', zh_Hant: '特殊' },
-  ElasticArmor: { ko: '탄력', en: 'Elastic', ja: '振動', zh_Hant: '彈性' },
-  CompositeArmor: { ko: '복합', en: 'Composite', ja: '複合', zh_Hant: 'Composite' },
+  LightArmor: { en: 'Light', ko: '경장', ja: '軽装', zh_Hant: '輕型' },
+  HeavyArmor: { en: 'Heavy', ko: '중장', ja: '重装', zh_Hant: '重型' },
+  Unarmed: { en: 'Special', ko: '특장', ja: '特殊', zh_Hant: '特殊' },
+  ElasticArmor: { en: 'Elastic', ko: '탄력', ja: '弾力', zh_Hant: '彈性' },
+  CompositeArmor: { en: 'Composite', ko: '복합', ja: '複合', zh_Hant: 'Composite' },
+};
+
+// Tab labels: full names, except English drops "Armor" to keep tabs short
+export const type_translation_tab = {
+  LightArmor: { ...type_translation.LightArmor, en: 'Light' },
+  HeavyArmor: { ...type_translation.HeavyArmor, en: 'Heavy' },
+  Unarmed: { ...type_translation.Unarmed, en: 'Special' },
+  ElasticArmor: { ...type_translation.ElasticArmor, en: 'Elastic' },
+  CompositeArmor: { ...type_translation.CompositeArmor, en: 'Composite' },
 };
 
 export function getMostDifficultLevel(raid: RaidInfo) {

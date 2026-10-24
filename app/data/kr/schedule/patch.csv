@@ -15,12 +15,21 @@ startTime,titleEn,titleKo,titleJa,prediction
 2026-06-17 11:00:00,Trip-Trap-Train (Permanent),Trip-Trap-Train 상시화,Trip-Trap-Train　常設化
 2026-06-30 11:00:00,Valentine's Promise (two weeks),발렌타인의 약속 (2주간),バレンタインの約束 (2週間)
 2026-07-21 11:00:00,Cyber New Year March (Permanent),전뇌신춘행진곡 상시화,電脳新春行進曲　常設化
-2026-08-18 11:00:00,Total Assault Simulation,모의 총력전,模縣能力戰,true
-2026-09-08 11:00:00,Tactical Challenge Reset (Outdoor),전술대항전 초기화 (야외),戦術対抗戦リセット (屋外),true
-2026-09-08 11:00:00,Rowdy and Cheery (Permanent),와글와글하고 오손도손하게 상시화,にぎにぎと ゆきゆきて　常設化,true
-2026-09-15 11:00:00,From Opera 0068 with Love! (Permanent),0068 오페라로부터 사랑을 담아서! 상시화,0068 オペラより愛をこめて！　常設化,true
-2026-10-06 11:00:00,-ive aLIVE! (Permanent),-ive aLIVE! 상시화,-ive aLIVE! 常設化,true
+2026-08-18 11:00:00,Total Assault Simulation,모의 총력전,模縣能力戰
+2026-09-08 11:00:00,Tactical Challenge Reset (Outdoor),전술대항전 초기화 (야외),戦術対抗戦リセット (屋外)
+2026-09-08 11:00:00,Rowdy and Cheery (Permanent),와글와글하고 오손도손하게 상시화,にぎにぎと ゆきゆきて　常設化
+2026-09-15 11:00:00,From Opera 0068 with Love! (Permanent),0068 오페라로부터 사랑을 담아서! 상시화,0068 オペラより愛をこめて！　常設化
+2026-10-06 11:00:00,-ive aLIVE! (Permanent),-ive aLIVE! 상시화,-ive aLIVE! 常設化
 2026-10-13 11:00:00,"Add Bond Gear of Iroha, Karin(Bunny Girl), Ayane","이로하, 카린(바니걸), 아야네의 애용품 추가",イロハ、カリン(バニーガール)、アヤネの「愛用品」追加
-2026-10-27 11:00:00,Sheside outside,Sheside outside 상시화,Sheside outside 常設化,true
-2026-11-17 11:00:00,Pity System Changes,천장 시스템 변경,募集のリニューアル,true
-2026-11-17 11:00:00,Added Virtual Aptitude Test and Insight Awakening,가상 적성 시험 및 심상 개화 추가,「仮想適性試験」・「深想開花」を追加,true
+2026-10-13 11:00:00,PremiumDash Recruitment Added,PremiumDash 모집 추가,PremiumDash募集追加
+2026-10-27 11:00:00,Sheside outside (Permanent),Sheside outside 상시화,Sheside outside 常設化,true
+2026-11-10 11:00:00,Pity System Changes,천장 시스템 변경,募集のリニューアル,true
+2026-12-29 11:00:00,Say-Bing! (Permanent),Say-Bing! 상시화,Say-Bing! 常設化,true
+2027-01-05 11:00:00,Bounty Improvements,지명수배 개선,指名手配改善,true
+2027-01-05 11:00:00,"Bond Gear Added: Karin, Eri, Shimiko","카린, 에리, 시미코 애용품 추가","カリン、エリ、シミコの愛用品追加",true
+2027-01-05 11:00:00,Total and Grand Assault Ranking Search / Room Reset / Retry Features Added,총력전 및 대결전 순위 검색·룸 초기화·리트라이 기능 추가,総力戦・大決戦ランキング検索・ルーム初期化・リトライ機能追加,true
+2027-01-05 11:00:00,PC Shortcut Key Settings and Controller Support Added,PC 단축키 설정 및 컨트롤러 기능 추가,PC版ショートカットキー設定およびコントローラー機能追加,true
+2027-01-05 11:00:00,Bulk Gift Giving Added,선물 일괄 선물 기능 추가,プレゼント一括贈呈機能追加,true
+2027-01-05 11:00:00,Lobby Attendant Random Toggle Added,로비 당번 랜덤 전환 기능 추가,当番ランダム切替機能追加,true
+2027-01-19 11:00:00,Group Story Added: Occult Research Club (Dorm 4 Room 404),그룹 스토리 「오컬트 연구회(제4기숙사 404호)」 추가,グループストーリー「オカルト研究会(第4寮404号室)」追加,true
+2027-02-02 11:00:00,"Radiant Moon, Raucous Dream (Permanent)",월화몽소 상시화,月華夢騒 常設化,true

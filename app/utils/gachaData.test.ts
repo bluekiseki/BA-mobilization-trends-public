@@ -46,6 +46,17 @@ describe('parseAndGroupBanners — recruit charge system cutoff', () => {
     expect(student?.id).toBe(CHARGE_SYSTEM_TRIGGER_ID);
     expect(Number.isNaN(student?.id)).toBe(false);
   });
+
+  it('groups a concurrent normal + limited swimsuit event (Kasumi/Seia) into one charge-system banner with mixed pickup types', () => {
+    // KR 2026-12-29: Kasumi (Swimsuit, 20061) is a normal-recruitment pickup, Seia (Swimsuit, 10123) is
+    // limited — same window, so they share one BannerPeriod that must expose both pickup types.
+    const banner = parseAndGroupBanners('KR', null).find((b) => b.pickupStudents.some((s) => s.id === 20061) && b.pickupStudents.some((s) => s.id === 10123));
+    expect(banner).toBeDefined();
+    expect(banner?.useChargeSystem).toBe(true);
+    expect(banner?.isLimitedBanner).toBe(true);
+    expect(banner?.pickupStudents.some((s) => !s.isLimited)).toBe(true); // Kasumi (Swimsuit)
+    expect(banner?.pickupStudents.some((s) => s.isLimited)).toBe(true); // Seia (Swimsuit)
+  });
 });
 
 describe('withPickupFallbackStudents', () => {

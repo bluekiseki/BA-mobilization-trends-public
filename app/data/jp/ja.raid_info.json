@@ -1460,10 +1460,118 @@
   {
     "Id": "R91",
     "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5c4b\u5185",
+    "Location": "\u5e02\u8857\u5730",
     "Date": "2026-08-05",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5c4b\u5185",
+    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
     "MaxLv": 90,
     "Cnt": { "All": 48000, "Lunatic": 1757, "Torment": 46243 }
+  },
+  {
+    "Id": "E36",
+    "Boss": "\u30d3\u30ca\u30fc",
+    "Location": "\u5c4b\u5916",
+    "Type": "LightArmor",
+    "Date": "2026-08-19",
+    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 46635, "Torment": 44403, "Insane": 2232 }
+  },
+  {
+    "Id": "E36",
+    "Boss": "\u30d3\u30ca\u30fc",
+    "Location": "\u5c4b\u5916",
+    "Type": "HeavyArmor",
+    "Date": "2026-08-19",
+    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 46571, "Torment": 42069, "Insane": 4502 }
+  },
+  {
+    "Id": "E36",
+    "Boss": "\u30d3\u30ca\u30fc",
+    "Location": "\u5c4b\u5916",
+    "Type": "ElasticArmor",
+    "Date": "2026-08-19",
+    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 46569, "Insane": 46569 }
+  },
+  {
+    "Id": "R92",
+    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
+    "Location": "\u5c4b\u5185",
+    "Date": "2026-09-02",
+    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5185",
+    "MaxLv": 90,
+    "Cnt": { "All": 41826, "Lunatic": 3030, "Torment": 38796 }
+  },
+  {
+    "Id": "E37",
+    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
+    "Location": "\u5e02\u8857\u5730",
+    "Type": "LightArmor",
+    "Date": "2026-09-16",
+    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
+    "MaxLv": 90,
+    "Cnt": { "All": 33422, "Torment": 31026, "Insane": 2396 }
+  },
+  {
+    "Id": "E37",
+    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
+    "Location": "\u5e02\u8857\u5730",
+    "Type": "Unarmed",
+    "Date": "2026-09-16",
+    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
+    "MaxLv": 90,
+    "Cnt": { "All": 33417, "Torment": 32159, "Insane": 1258 }
+  },
+  {
+    "Id": "E37",
+    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
+    "Location": "\u5e02\u8857\u5730",
+    "Type": "ElasticArmor",
+    "Date": "2026-09-16",
+    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
+    "MaxLv": 90,
+    "Cnt": { "All": 33392, "Insane": 33392 }
+  },
+  {
+    "Id": "R93",
+    "Boss": "\u30c9\u30e9\u30e0\u7f36\u30ac\u30cb",
+    "Location": "\u5e02\u8857\u5730",
+    "Date": "2026-09-30",
+    "Alias": "\u30c9\u30e9\u30e0\u7f36\u30ac\u30cb-\u5e02\u8857\u5730",
+    "MaxLv": 90,
+    "Cnt": { "All": 21069, "Lunatic": 822, "Torment": 20247 }
+  },
+  {
+    "Id": "E38",
+    "Boss": "\u30b2\u30d6\u30e9",
+    "Location": "\u5c4b\u5916",
+    "Type": "Unarmed",
+    "Date": "2026-10-14",
+    "Alias": "\u30b2\u30d6\u30e9-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 28702, "Torment": 12846, "Insane": 15856 }
+  },
+  {
+    "Id": "E38",
+    "Boss": "\u30b2\u30d6\u30e9",
+    "Location": "\u5c4b\u5916",
+    "Type": "LightArmor",
+    "Date": "2026-10-14",
+    "Alias": "\u30b2\u30d6\u30e9-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 34743, "Torment": 16994, "Insane": 17749 }
+  },
+  {
+    "Id": "E38",
+    "Boss": "\u30b2\u30d6\u30e9",
+    "Location": "\u5c4b\u5916",
+    "Type": "HeavyArmor",
+    "Date": "2026-10-14",
+    "Alias": "\u30b2\u30d6\u30e9-\u5c4b\u5916",
+    "MaxLv": 90,
+    "Cnt": { "All": 21440, "Insane": 21440 }
   }
 ]

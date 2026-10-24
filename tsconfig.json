@@ -1,6 +1,6 @@
 {
   "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"],
-  "exclude": ["**/ql/**/*", "app/schemas/*.schema.ts"],
+  "exclude": ["app/schemas/*.schema.ts"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2024"],
     "types": ["node", "vite/client"],

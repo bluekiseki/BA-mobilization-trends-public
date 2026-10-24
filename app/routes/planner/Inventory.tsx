@@ -1,45 +1,83 @@
 // app/routes/planner/Inventory.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { data, type LoaderFunctionArgs } from 'react-router';
+import { data, Link, useLocation, useSearchParams, type LoaderFunctionArgs } from 'react-router';
+import { FaChevronLeft, FaTimes } from 'react-icons/fa';
+import { localeLink } from '~/utils/localeLink';
 import { getInstance } from '~/middleware/i18next';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
+import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { PageHeader } from '~/components/common/PageHeader';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
-import { calculatedGrowthNeeds, getStudentsUsingMaterial } from '~/utils/calculatedGrowthNeeds';
-import { equipmentId } from '~/data/growthData';
-import { BD_NOTE_GRADE_LABEL, BD_NOTE_SCHOOL_ORDER, getBdNoteItemKey, type BdNoteGrade } from '~/utils/bdNoteSchool';
-import {
-  buildResourceEntries,
-  buildStudentResourceGroups,
-  getDisplayAmount,
-  isStudentElephKey,
-  MATRIX_CAPABLE_TYPES,
-  SHOP_CATEGORY_LABEL,
-  sortResourceEntries,
-  type DisplayMode,
-  type SortKey,
-} from '~/utils/inventoryDashboard';
+import { useEventPlanStore } from '~/store/planner/useEventPlanStore';
+import { useGachaResultStore } from '~/store/planner/useGachaResultStore';
+import { useResourcePlanStore } from '~/store/planner/useResourcePlanStore';
+import { todayISODate } from '~/features/inventory/logic/plannerDate';
+import { useResourceProjection, HORIZON_OPTIONS } from '~/features/inventory/components/useResourceProjection';
+import ResourceTimelinePanel from '~/features/inventory/components/ResourceTimelinePanel';
+import { NON_BLUEPRINT_EQUIPMENT_KEYS } from '~/utils/groupMaterialNeeds';
+import { equipmentId, UW_MATERIAL_SERIES } from '~/data/growthData';
+import { BD_NOTE_GRADE_LABEL, BD_NOTE_SCHOOL_ORDER, getBdNoteItemKey, type BdNoteGrade } from '~/features/inventory/logic/bdNoteSchool';
+import { buildResourceEntries, buildStudentResourceGroups, MATRIX_CAPABLE_TYPES, type DisplayMode, type SortKey } from '~/features/inventory/logic/inventoryDashboard';
 import { splitItemKey, type ItemType } from '~/utils/itemType';
-import { getItemDescription, getItemName } from '~/components/planner/common/locale';
-import { ItemIcon } from '~/components/planner/common/Icon';
-import { buildGiftToStudentsMap, filterGiftStudentsForDisplay } from '~/components/planner/StudentGrowth/GiftStudentSheet';
-import { useSearchMatcher } from '~/utils/useSearchMatcher';
-import type { EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import { getItemDescription, getItemName } from '~/utils/locale';
+import { ItemIcon } from '~/components/item/Icon';
+import { useSearchMatcher } from '~/hooks/useSearchMatcher';
+import type { CampaignData, ContentItem, EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
 import type { Route } from './+types/Inventory';
 import { GroupedSections } from '~/components/common/GroupedSections';
-import { StudentIcon } from '~/components/dashboard/studentIcon';
-import type { Character } from '~/components/dashboard/common';
-import { InventoryFilterBar } from '~/components/planner/inventory/InventoryFilterBar';
-import { ResourceGrid } from '~/components/planner/inventory/ResourceGrid';
-import { ResourceMatrix, type MatrixAxisEntry } from '~/components/planner/inventory/ResourceMatrix';
-import { QuantityEditSheet } from '~/components/planner/inventory/QuantityEditSheet';
-import { useResourceIconSize } from '~/components/planner/inventory/ResourceIconButton';
-
-const EQUIP_CATEGORIES = ['Hat', 'Gloves', 'Shoes', 'Bag', 'Badge', 'Hairpin', 'Charm', 'Watch', 'Necklace'] as const;
+import { StudentIcon } from '~/components/student/studentIcon';
+import type { Character } from '~/types/raidReport';
+import { InventoryFilterBar } from '~/features/inventory/components/InventoryFilterBar';
+import { GoalSummaryRow } from '~/features/inventory/components/GoalSummaryRow';
+import { ResourceGrid } from '~/features/inventory/components/ResourceGrid';
+import { ResourceMatrix, type MatrixAxisEntry } from '~/features/inventory/components/ResourceMatrix';
+import { QuantityEditSheet } from '~/features/inventory/components/QuantityEditSheet';
+import { useResourceIconSize } from '~/features/inventory/components/ResourceIconButton';
+import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
+import { getItemLabel, getItemTitle, type I18nLike } from '~/utils/scheduleDisplay';
+import { TrackedItemsBar } from '~/features/inventory/components/TrackedItemsBar';
+import { ItemIncomeSection } from '~/features/inventory/components/ItemIncomeSection';
+import { StudentGoalsTab } from '~/features/inventory/components/StudentGoalsTab';
+import { ScheduleSection } from '~/features/inventory/components/ScheduleSection';
+import { GoalStatusSummary } from '~/features/inventory/components/GoalStatusSummary';
+import { useCalendarSources } from '~/features/inventory/components/useCalendarSources';
+import { COIN_SHOP_BY_COIN_KEY } from '~/data/elephSources';
+import { buildNavigableKeys } from '~/features/inventory/logic/navigation';
+import { buildInlinePanelFilterTypes, filterPanelEntries, buildScheduleBarItems, filterScheduleBarItems } from '~/features/inventory/logic/panelView';
+import { buildSchoolOptions, buildShopCategoryOptions, buildTagOptions, buildRarityOptions, listFilteredEntries, type EntryFilterState } from '~/features/inventory/logic/entryFilters';
+import {
+  buildEditingGiftMap,
+  listEditingGiftStudents,
+  calcEditingPerStudentNeeds,
+  listEditingAllUsers,
+  mergeStudentPortraits,
+  selectRaidConfigItems,
+  selectJfdConfigItems,
+} from '~/features/inventory/logic/editingItem';
+import { buildDisplayInventory, calcNeeded, calcFungiblePoolData, calcFungibleOwnedByKey } from '~/features/inventory/logic/inventoryView';
+import { buildFirstPickupByStudent, findAvailableStages, buildPanelEntryList } from '~/features/inventory/logic/purchasePanel';
+import { type ProjectionSchedule, EQUIP_CATEGORIES, getProjectionSchedule, cachedProjectionSchedule } from '~/features/inventory/logic/inventoryPageLogic';
 const BD_NOTE_GRADES: BdNoteGrade[] = [0, 1, 2, 3];
+const EMPTY_SCHEDULE_ITEMS: ScheduleItemV2[] = [];
+const EMPTY_PROJECTION_SCHEDULE: ProjectionSchedule = {
+  krEvents: EMPTY_SCHEDULE_ITEMS,
+  jpEvents: EMPTY_SCHEDULE_ITEMS,
+  krRaid: EMPTY_SCHEDULE_ITEMS,
+  jpRaid: EMPTY_SCHEDULE_ITEMS,
+  krMultifloor: EMPTY_SCHEDULE_ITEMS,
+  jpMultifloor: EMPTY_SCHEDULE_ITEMS,
+  krCampaign: EMPTY_SCHEDULE_ITEMS,
+  jpCampaign: EMPTY_SCHEDULE_ITEMS,
+  krPickup: EMPTY_SCHEDULE_ITEMS,
+  jpPickup: EMPTY_SCHEDULE_ITEMS,
+};
+
+// ─── Income-section helpers (moved from the old planner/resources route) ─────
+
+// ─── Loader ────────────────────────────────────────────────────────────────
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -60,53 +98,256 @@ export function links() {
   return [...createLinkHreflang('/planner/inventory')];
 }
 
+export function headers({}: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production') return { 'Cache-Control': CACHE_CONTROL_CONFIG };
+}
+
 export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   const { locale } = loaderData;
+  const [schedule, setSchedule] = useState<ProjectionSchedule | null>(cachedProjectionSchedule);
   const { t: t_club } = useTranslation('club', { keyPrefix: 'short' });
   const { t: t_game } = useTranslation('game');
   const { t: t_ui } = useTranslation('ui');
   const { t: t_planner } = useTranslation('planner');
+  const { t: t_resources } = useTranslation('resources');
+  const { i18n } = useTranslation();
+  useTranslation('calendar');
   const iconSize = useResourceIconSize();
   const matcher = useSearchMatcher(locale);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const returnToRaw = searchParams.get('returnTo');
+  const returnTo = returnToRaw && returnToRaw.startsWith('/') && !returnToRaw.startsWith('//') ? returnToRaw : null;
+
+  const returnToSelf = `${location.pathname}${location.search}${location.hash}`;
+  const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnToSelf)}`;
 
   const [students, setStudents] = useState<StudentData>({});
   const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
   const [iconInfos, setIconInfos] = useState<IconInfos | null>(null);
+  const [campaigns, setCampaigns] = useState<{ jp: CampaignData; kr: CampaignData } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Only assets required by the catalog block its first render.
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCriticalData = async () => {
       try {
-        const [studentsRes, portraitsRes, iconImgRes, iconInfoRes] = await Promise.all([
+        const [studentsRes, iconImgRes, iconInfoRes] = await Promise.all([
           fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)),
-          fetch(cdn('/w/students_portrait.json')),
           fetch(cdn('/ew/icon_img.json')),
           fetch(cdn('/ew/icon_info.json')),
         ]);
-        setStudents(await studentsRes.json());
-        setStudentPortraits(await portraitsRes.json());
-        setIconData(await iconImgRes.json());
-        setIconInfos(await iconInfoRes.json());
+        const [studentData, imageData, infoData] = (await Promise.all([studentsRes.json(), iconImgRes.json(), iconInfoRes.json()])) as [StudentData, IconData, IconInfos];
+        setStudents(studentData);
+        setIconData(imageData);
+        setIconInfos(infoData);
       } catch (error) {
         console.error('Failed to fetch inventory data:', error);
       } finally {
         setLoading(false);
       }
     };
-    void fetchData();
+    void fetchCriticalData();
   }, [locale]);
 
-  const { growthPlans, materialInventory, updateMaterialInventory, togglePlanSelection, selectAllPlans } = useGlobalStore();
+  const { growthPlans, materialInventory, updateMaterialInventory, ownedGifts, updateOwnedGifts, togglePlanSelection, selectAllPlans } = useGlobalStore();
+  const { plans: eventPlans } = useEventPlanStore();
+  const { result: gachaResult } = useGachaResultStore();
+  const {
+    server,
+    setServer,
+    gachaEligmaPercentile,
+    gachaEligmaUseMean,
+    setGachaEligmaPercentile,
+    setGachaEligmaUseMean,
+    purchaseEvents,
+    dailySourceAmounts,
+    contentEventYields,
+    targetGoals,
+    addTargetGoal,
+    updateTargetGoal,
+    removeTargetGoal,
+    stageFarmingPlans,
+    removeStageFarmingPlan,
+    setStageFarmingRunsRange,
+    pvpAverageRank,
+    pvpDailyDefenseWins,
+    pvpExtraWeeklyIncome,
+    raidGlobalConfig,
+    eraidGlobalConfig,
+    raidDetailConfigs,
+    setRaidDetailConfig,
+    jfdDefaultDailyCoins,
+    jfdPerPeriodCoins,
+    multifloorDefaultMaxFloor,
+    multifloorMaxFloors,
+    expertPermitMode,
+    expertPermitWeeklyMax,
+    expertPermitDailyAmounts,
+    update: updatePlanStore,
+  } = useResourcePlanStore();
+
+  const [planDays, setPlanDays] = useState(183);
+  const startDate = useMemo(() => todayISODate(), []);
 
   const [selectedTypes, setSelectedTypes] = useState<Set<ItemType>>(new Set());
   const [sortBy, setSortBy] = useState<SortKey>('type');
-  const [showTarget, setShowTarget] = useState(false);
+  const [showTarget, setShowTarget] = useState(true);
   const [onlyNonZero, setOnlyNonZero] = useState(false);
+  const [carryUp, setCarryUp] = useState(true);
   const [showMatrix, setShowMatrix] = useState(false);
   const [groupByStudent, setGroupByStudent] = useState(false);
-
   const [displayMode, setDisplayMode] = useState<DisplayMode>('owned');
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set());
+  const [selectedRoles, setSelectedRoles] = useState<Set<Student['TacticRole']>>(new Set());
+  const [selectedSquads, setSelectedSquads] = useState<Set<Student['SquadType']>>(new Set());
+  const [selectedShopCategories, setSelectedShopCategories] = useState<Set<string>>(new Set());
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedRarities, setSelectedRarities] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [draftInventory, setDraftInventory] = useState<Record<string, number>>({});
+
+  // Wide overlay state — income/schedule setup (tied to the currently edited item) and the
+  // student-goals browser (standalone, not tied to a single catalog item).
+  const [expandedOpen, setExpandedOpen] = useState(false);
+  const [showStudentGoals, setShowStudentGoals] = useState(false);
+  const detailOpen = editingKey !== null || expandedOpen || showStudentGoals;
+  const { krEvents, jpEvents, krRaid, jpRaid, krMultifloor, jpMultifloor, krCampaign, jpCampaign, krPickup, jpPickup } = schedule ?? EMPTY_PROJECTION_SCHEDULE;
+
+  useEffect(() => {
+    if (!detailOpen || schedule) return;
+    let cancelled = false;
+    void getProjectionSchedule()
+      .then((value) => {
+        if (!cancelled) setSchedule(value);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) console.error('Failed to load inventory schedule:', error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [detailOpen, schedule]);
+
+  const needsPortraits = groupByStudent || detailOpen;
+  useEffect(() => {
+    if (!needsPortraits || Object.keys(studentPortraits).length > 0) return;
+    let cancelled = false;
+    void fetch(cdn('/w/students_portrait.json'))
+      .then((response) => response.json<StudentPortraitData>())
+      .then((portraits) => {
+        if (!cancelled) setStudentPortraits(portraits);
+      })
+      .catch((error: unknown) => console.error('Failed to fetch student portraits:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [needsPortraits, studentPortraits]);
+
+  useEffect(() => {
+    if (!editingKey || campaigns) return;
+    let cancelled = false;
+    void Promise.all([fetch(cdn('/w/jp/campaigns.json')), fetch(cdn('/w/kr/campaigns.json'))])
+      .then(async ([jp, kr]) => ({ jp: await jp.json<CampaignData>(), kr: await kr.json<CampaignData>() }))
+      .then((value) => {
+        if (!cancelled) setCampaigns(value);
+      })
+      .catch((error: unknown) => console.error('Failed to fetch campaign data:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [editingKey, campaigns]);
+
+  // Resources-only UI state, used only while the expanded overlay is open.
+  const [itemSearchExtraKeys, setItemSearchExtraKeys] = useState<Set<string>>(new Set());
+  const [selectedCalendarKey, setSelectedCalendarKey] = useState('');
+  const [selectedPurchaseDate, setSelectedPurchaseDate] = useState<string | null>(null);
+  const [selectedRangeMin, setSelectedRangeMin] = useState<string | null>(null);
+  const [selectedRangeMax, setSelectedRangeMax] = useState<string | null>(null);
+  const [showPurchasePanel, setShowPurchasePanel] = useState(true);
+  const [scheduleFilters, setScheduleFilters] = useState({ event: true, raid: true, multifloor: true, campaign: true });
+  const [inlinePanelHiddenTypes, setInlinePanelHiddenTypes] = useState<Set<string>>(new Set());
+
+  // Per-key debounce timers and pending values — multiple keys can be mid-edit at once
+  // (the main QuantityEditSheet field and the ResourceTimelinePanel "starting inventory"
+  // field can target different items), so these must not share a single slot.
+  const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const pendingCommitsRef = useRef<Map<string, number>>(new Map());
+
+  // Apply `?item=`/`?showTarget=1` deep-link params once (e.g. arriving from the Student planner
+  // or an old `/planner/resources?item=...` link redirected here).
+  const appliedDeepLinkRef = useRef(false);
+  useEffect(() => {
+    if (appliedDeepLinkRef.current) return;
+    appliedDeepLinkRef.current = true;
+    const itemParam = searchParams.get('item');
+    if (itemParam) setEditingKey(itemParam);
+    if (searchParams.get('showTarget') === '1') setShowTarget(true);
+  }, [searchParams]);
+
+  // Commits one key's pending edit to the store and clears its draft, so `materialInventory`
+  // becomes the source of truth again (otherwise a stale draft would shadow it forever, e.g.
+  // if the value later changes from cross-device sync).
+  const commitInventoryKey = useCallback(
+    (key: string) => {
+      const timer = debounceTimersRef.current.get(key);
+      if (timer) {
+        clearTimeout(timer);
+        debounceTimersRef.current.delete(key);
+      }
+      const value = pendingCommitsRef.current.get(key);
+      if (value === undefined) return;
+      pendingCommitsRef.current.delete(key);
+      const parts = splitItemKey(key);
+      const isGift = parts?.[0] === 'Item' && iconInfos?.Item?.[parts[1]]?.ItemCategory === 6;
+      if (isGift && parts) {
+        updateOwnedGifts(parts[1], value);
+      } else {
+        updateMaterialInventory(key, value);
+      }
+      setDraftInventory((prev) => {
+        if (!(key in prev)) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    },
+    [updateMaterialInventory, updateOwnedGifts, iconInfos],
+  );
+
+  const scheduleInventoryCommit = useCallback(
+    (key: string, value: number) => {
+      setDraftInventory((prev) => ({ ...prev, [key]: value }));
+      pendingCommitsRef.current.set(key, value);
+      const existingTimer = debounceTimersRef.current.get(key);
+      if (existingTimer) clearTimeout(existingTimer);
+      debounceTimersRef.current.set(
+        key,
+        setTimeout(() => commitInventoryKey(key), 350),
+      );
+    },
+    [commitInventoryKey],
+  );
+
+  const flushAllPendingInventoryCommits = useCallback(() => {
+    for (const key of [...pendingCommitsRef.current.keys()]) commitInventoryKey(key);
+  }, [commitInventoryKey]);
+
+  useEffect(() => {
+    return () => {
+      for (const timer of debounceTimersRef.current.values()) clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (editingKey) {
+      return () => flushAllPendingInventoryCommits();
+    }
+  }, [editingKey, flushAllPendingInventoryCommits]);
 
   const handleToggleShowTarget = (v: boolean) => {
     setShowTarget(v);
@@ -124,14 +365,18 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     setShowMatrix((v) => !v);
     setGroupByStudent(false);
   };
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set());
-  const [selectedRoles, setSelectedRoles] = useState<Set<Student['TacticRole']>>(new Set());
-  const [selectedSquads, setSelectedSquads] = useState<Set<Student['SquadType']>>(new Set());
-  const [selectedShopCategories, setSelectedShopCategories] = useState<Set<string>>(new Set());
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  const [selectedRarities, setSelectedRarities] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
+  // Narrowing the type filter to a single matrix-capable type switches to the table view
+  // automatically; widening the selection again drops back to the flat list.
+  const handleChangeTypes = (types: Set<ItemType>) => {
+    setSelectedTypes(types);
+    const onlyMatrixType = types.size === 1 ? [...types].find((t) => MATRIX_CAPABLE_TYPES.has(t)) : undefined;
+    if (onlyMatrixType !== undefined) {
+      setShowMatrix(true);
+      setGroupByStudent(false);
+    } else {
+      setShowMatrix(false);
+    }
+  };
 
   const EQUIP_LABELS: Record<(typeof EQUIP_CATEGORIES)[number], string> = {
     Hat: t_game('equipments.hat'),
@@ -148,36 +393,108 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   // Matrix view only makes sense when narrowed to exactly one matrix-capable type.
   const singleMatrixType = selectedTypes.size === 1 ? [...selectedTypes].find((t) => MATRIX_CAPABLE_TYPES.has(t)) : undefined;
 
-  const needed = useMemo(() => {
-    if (!showTarget) return {};
-    const activePlans = growthPlans.filter((p) => p.isSelected);
-    return calculatedGrowthNeeds(activePlans, students);
-  }, [showTarget, growthPlans, students]);
+  const horizonLabels: Record<number, string> = {
+    31: t_resources('horizon.oneMonth'),
+    92: t_resources('horizon.threeMonths'),
+    122: t_resources('horizon.fourMonths'),
+    183: t_resources('horizon.sixMonths'),
+    365: t_resources('horizon.oneYear'),
+  };
+
+  // Overlays in-flight (not-yet-debounced) edits on top of the committed store value, so both
+  // numeric inputs display what was typed instantly without waiting for the store commit.
+  // Gift items (ItemCategory 6) are tracked in the separate `ownedGifts` slice (shared with the
+  // Affection tab's gift calculator), not `materialInventory` — overlay it here so this page reads
+  // the same numbers.
+  const displayInventory = useMemo(() => buildDisplayInventory({ materialInventory, ownedGifts, draftInventory, iconInfos }), [materialInventory, ownedGifts, draftInventory, iconInfos]);
+
+  // Balance-projection timeline. Only items the pipeline actually models (eligma, per-student
+  // eleph, AP, coins, WB) produce a meaningful chart, so the panel is gated on `isModeledKey`.
+  const projection = useResourceProjection({
+    enabled: detailOpen && schedule !== null,
+    startDate,
+    days: planDays,
+    server,
+    krEvents,
+    jpEvents,
+    krRaid,
+    jpRaid,
+    krMultifloor,
+    jpMultifloor,
+    krCampaign,
+    jpCampaign,
+    krPickup,
+    jpPickup,
+    campaigns,
+    studentsRecord: students,
+    itemIconInfo: iconInfos,
+    growthPlans,
+    materialInventory,
+    eventPlans,
+    gachaResult,
+    purchaseEvents,
+    dailySourceAmounts,
+    contentEventYields,
+    targetGoals,
+    stageFarmingPlans,
+    pvpAverageRank,
+    pvpDailyDefenseWins,
+    pvpExtraWeeklyIncome,
+    raidGlobalConfig,
+    eraidGlobalConfig,
+    raidDetailConfigs,
+    jfdDefaultDailyCoins,
+    jfdPerPeriodCoins,
+    multifloorDefaultMaxFloor,
+    multifloorMaxFloors,
+    expertPermitMode,
+    expertPermitWeeklyMax,
+    expertPermitDailyAmounts,
+    gachaEligmaPercentile,
+    gachaEligmaUseMean,
+    selectedItemKey: editingKey,
+    itemSearchExtraKeys,
+    locale,
+  });
+
+  const isModeledKey = editingKey != null && projection.trackingItems.some((it) => it.key === editingKey);
+
+  const needed = useMemo(() => calcNeeded({ showTarget, growthPlans, students }), [showTarget, growthPlans, students]);
+
+  // Fungible-pool accounting shared by the goal-comparison summary row, the individual item
+  // grid's deficit/diff numbers + status dot, and the "show 1 or more" pool-visibility filter.
+  // Computed once here so all three always agree with each other.
+  const fungiblePoolData = useMemo(() => calcFungiblePoolData({ showTarget, displayInventory, needed, growthPlans, students }), [showTarget, displayInventory, needed, growthPlans, students]);
+  const { fungibleDeficitByKey, fungibleDiffByKey, poolVisibleKeys, goalSummaryPools } = fungiblePoolData;
+
+  // Carry-up: every fungible pool's owned count, re-expressed as the fewest
+  // highest-denomination items — same greedy allocation as FinalResultsDisplay's carry-up toggle
+  // and the always-on carry-up in the Student page's NeedsGrid. A pure display transform of the
+  // shared inventory (independent of any growth-plan target), so this applies uniformly whether
+  // or not goal comparison is on, and is shared as-is across the main grid, every per-student
+  // grid, and the matrix's supplementary grid.
+  const fungibleOwnedByKey = useMemo(() => calcFungibleOwnedByKey(displayInventory), [displayInventory]);
 
   const entries = useMemo(() => {
     if (!iconInfos) return [];
-    return buildResourceEntries(iconInfos, materialInventory, needed, students, locale);
-  }, [iconInfos, materialInventory, needed, students, locale]);
+    return buildResourceEntries(iconInfos, displayInventory, needed, students, locale);
+  }, [iconInfos, displayInventory, needed, students, locale]);
 
   // Applies every active filter except `exclude`, so each filter's option list only hides
   // zero-match values under the *other* filters, not its own selection.
-  type FilterKey = 'types' | 'schools' | 'roles' | 'squads' | 'shopCategories' | 'tags' | 'rarities';
-  const applyFilters = (source: typeof entries, exclude: FilterKey | null) => {
-    let base = source;
-    if (exclude !== 'types' && selectedTypes.size > 0) base = base.filter((e) => selectedTypes.has(e.itemType));
-    if (exclude !== 'schools' && selectedSchools.size > 0) base = base.filter((e) => e.school === null || selectedSchools.has(e.school));
-    if (exclude !== 'roles' && selectedRoles.size > 0) base = base.filter((e) => e.tacticRole === null || selectedRoles.has(e.tacticRole));
-    if (exclude !== 'squads' && selectedSquads.size > 0) base = base.filter((e) => e.squadType === null || selectedSquads.has(e.squadType));
-    if (exclude !== 'shopCategories' && selectedShopCategories.size > 0) {
-      // Unlike school/role/squad, an empty array here just means "no categories" — it doesn't
-      // bypass the filter, it simply fails to match.
-      base = base.filter((e) => e.shopCategories.some((c) => selectedShopCategories.has(String(c))));
-    }
-    if (exclude !== 'tags' && selectedTags.size > 0) base = base.filter((e) => e.tags.some((t) => selectedTags.has(t)));
-    if (exclude !== 'rarities' && selectedRarities.size > 0) base = base.filter((e) => selectedRarities.has(String(e.rarity)));
-    if (onlyNonZero) base = base.filter((e) => getDisplayAmount(e.owned, e.needed, displayMode) !== 0);
-    if (searchQuery.trim()) base = base.filter((e) => matcher(e.name, searchQuery.trim()));
-    return base;
+  const filterState: EntryFilterState = {
+    selectedTypes,
+    selectedSchools,
+    selectedRoles,
+    selectedSquads,
+    selectedShopCategories,
+    selectedTags,
+    selectedRarities,
+    onlyNonZero,
+    displayMode,
+    searchQuery,
+    matcher,
+    poolVisibleKeys,
   };
 
   const filterDeps = [
@@ -193,54 +510,43 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     displayMode,
     searchQuery,
     matcher,
+    poolVisibleKeys,
   ] as const;
 
-  const schoolOptions = useMemo(() => {
-    const present = new Set<string>();
-    for (const e of applyFilters(entries, 'schools')) if (e.school !== null) present.add(e.school);
-    return Array.from(new Set([...present, ...selectedSchools]))
-      .sort()
-      .map((s) => ({ value: s, label: t_club(s, s) }));
-  }, filterDeps);
+  const schoolOptions = useMemo(() => buildSchoolOptions(entries, filterState, t_club), filterDeps);
 
   // Only show ShopCategory/Tag/rarity values that actually appear under the other active
   // filters — no fixed option list exists to fall back to.
-  const shopCategoryOptions = useMemo(() => {
-    const present = new Set<number>();
-    for (const e of applyFilters(entries, 'shopCategories')) for (const c of e.shopCategories) present.add(c);
-    return Array.from(new Set([...present, ...[...selectedShopCategories].map(Number)]))
-      .sort((a, b) => a - b)
-      .map((c) => ({ value: String(c), label: SHOP_CATEGORY_LABEL[c] ?? String(c) }));
-  }, filterDeps);
+  const shopCategoryOptions = useMemo(() => buildShopCategoryOptions(entries, filterState), filterDeps);
 
-  const tagOptions = useMemo(() => {
-    const present = new Set<string>();
-    for (const e of applyFilters(entries, 'tags')) for (const tag of e.tags) present.add(tag);
-    return Array.from(new Set([...present, ...selectedTags]))
-      .sort()
-      .map((tag) => ({ value: tag, label: tag }));
-  }, filterDeps);
+  const tagOptions = useMemo(() => buildTagOptions(entries, filterState), filterDeps);
 
   // Rarity is 0-based here (item/equipment rarity tier, distinct from the 1-5 student star scale).
-  const rarityOptions = useMemo(() => {
-    const present = new Set<number>();
-    for (const e of applyFilters(entries, 'rarities')) present.add(e.rarity);
-    return Array.from(new Set([...present, ...[...selectedRarities].map(Number)]))
-      .sort((a, b) => a - b)
-      .map((r) => ({ value: String(r), label: String(r) }));
-  }, filterDeps);
+  const rarityOptions = useMemo(() => buildRarityOptions(entries, filterState), filterDeps);
 
-  const filteredEntries = useMemo(() => {
-    return sortResourceEntries(applyFilters(entries, null), sortBy);
-  }, [...filterDeps, sortBy]);
+  const filteredEntries = useMemo(() => listFilteredEntries(entries, filterState, sortBy, fungibleDeficitByKey), [...filterDeps, sortBy, fungibleDeficitByKey]);
+
+  const gridKey = [
+    sortBy,
+    displayMode,
+    onlyNonZero,
+    searchQuery,
+    [...selectedTypes].sort().join(','),
+    [...selectedSchools].sort().join(','),
+    [...selectedRoles].sort().join(','),
+    [...selectedSquads].sort().join(','),
+    [...selectedShopCategories].sort().join(','),
+    [...selectedTags].sort().join(','),
+    [...selectedRarities].sort().join(','),
+  ].join('|');
 
   // Same filtered list, split into one section per student — only meaningful with target data,
   // and scoped to the plans checked so it matches the aggregate `needed` above.
   const studentGroups = useMemo(() => {
     if (!showTarget || !groupByStudent) return [];
     const selectedPlans = growthPlans.filter((p) => p.isSelected);
-    return buildStudentResourceGroups(selectedPlans, students, filteredEntries);
-  }, [showTarget, groupByStudent, growthPlans, students, filteredEntries]);
+    return buildStudentResourceGroups(selectedPlans, students, filteredEntries, displayInventory);
+  }, [showTarget, groupByStudent, growthPlans, students, filteredEntries, displayInventory]);
 
   const eventData: EventData | null = useMemo(() => {
     if (!iconInfos) return null;
@@ -289,7 +595,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
         rows={config.rows}
         cols={config.cols}
         getItemKey={config.getItemKey}
-        inventory={materialInventory}
+        inventory={displayInventory}
         needed={needed}
         eventData={eventData}
         iconData={iconData}
@@ -304,21 +610,10 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
 
   // The list currently being browsed — Tab / prev-next buttons cycle through this, whichever view
   // is active (matrix cells in row-major order, or the flat sorted/filtered grid).
-  const navigableKeys = useMemo(() => {
-    if (groupByStudent) return Array.from(new Set(studentGroups.flatMap((g) => g.entries.map((e) => e.key))));
-    if (showMatrix && singleMatrixType !== undefined) {
-      const config = getMatrixConfig(singleMatrixType);
-      if (!config) return [];
-      const keys: string[] = [];
-      for (const row of config.rows)
-        for (const col of config.cols) {
-          const k = config.getItemKey(row.key, col.key);
-          if (k) keys.push(k);
-        }
-      return keys;
-    }
-    return filteredEntries.map((e) => e.key);
-  }, [groupByStudent, studentGroups, showMatrix, singleMatrixType, filteredEntries, t_club]);
+  const navigableKeys = useMemo(
+    () => buildNavigableKeys({ groupByStudent, studentGroups, showMatrix, singleMatrixType, filteredEntries, getMatrixConfig }),
+    [groupByStudent, studentGroups, showMatrix, singleMatrixType, filteredEntries, t_club],
+  );
 
   const navigate = (direction: 1 | -1) => {
     if (!editingKey) return;
@@ -326,56 +621,221 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     if (idx === -1) return;
     const nextIdx = (idx + direction + navigableKeys.length) % navigableKeys.length;
     setEditingKey(navigableKeys[nextIdx]);
+    setExpandedOpen(false);
   };
 
   // Gift affection lookup only needs the full item catalog (see giftAffectionList.ts) — our
   // `eventData` already carries that, so this reuses the exact same logic as the rest of the app.
-  const giftToStudentsMap = useMemo(() => (eventData ? buildGiftToStudentsMap(students, eventData) : {}), [students, eventData]);
+  const giftToStudentsMap = useMemo(() => buildEditingGiftMap({ editingKey, students, eventData }), [editingKey, students, eventData]);
 
   // undefined when the item isn't a gift at all — distinct from an empty array (a gift nobody likes)
-  const editingGiftStudents = useMemo(() => {
-    if (!editingKey || !eventData) return undefined;
-    const parts = splitItemKey(editingKey);
-    if (!parts) return undefined;
-    const [category, id] = parts;
-    const info = eventData.icons.Item?.[id];
-    if (category !== 'Item' || info?.ItemCategory !== 6) return undefined;
-    return filterGiftStudentsForDisplay(giftToStudentsMap[id] ?? [], info.Rarity ?? 0);
-  }, [editingKey, eventData, giftToStudentsMap]);
+  const editingGiftStudents = useMemo(() => listEditingGiftStudents({ editingKey, eventData, giftToStudentsMap }), [editingKey, eventData, giftToStudentsMap]);
 
-  const editingPerStudentNeeds = useMemo(() => {
-    if (!editingKey || editingGiftStudents !== undefined) return [];
-    return growthPlans
-      .filter((p) => p.studentId != null)
-      .map((p) => ({ studentId: p.studentId as number, amount: calculatedGrowthNeeds([p], students)[editingKey] ?? 0 }))
-      .filter((x) => x.amount > 0)
-      .map((x) => ({ ...x, name: students[x.studentId]?.Name ?? `#${x.studentId}` }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [editingKey, editingGiftStudents, growthPlans, students]);
+  const editingPerStudentNeeds = useMemo(() => calcEditingPerStudentNeeds({ editingKey, editingGiftStudents, growthPlans, students }), [editingKey, editingGiftStudents, growthPlans, students]);
 
   // ALL students who use this material, regardless of active growth plan — only shown for Opart
   // and Eleph (deterministic 1:1 mapping). undefined = not applicable, hides the section.
-  const editingAllUsers = useMemo(() => {
-    if (!editingKey || editingGiftStudents !== undefined) return undefined;
-    const parts = splitItemKey(editingKey);
-    if (!parts || parts[0] !== 'Item') return undefined;
-    const itemId = Number(parts[1]);
+  const editingAllUsers = useMemo(() => listEditingAllUsers({ editingKey, editingGiftStudents, entries, students }), [editingKey, editingGiftStudents, entries, students]);
 
-    if (isStudentElephKey(editingKey)) {
-      return [{ studentId: itemId, name: students[itemId]?.Name ?? `#${itemId}` }];
+  // ─── Merged for the pieces migrated from planner/resources ────────────────
+  // Those components (data.ts `Student`) expect Portrait merged in and numeric keys; the
+  // catalog logic above keeps using the raw `students`/`studentPortraits` state untouched.
+  const studentsWithPortrait = useMemo(() => mergeStudentPortraits({ detailOpen, students, studentPortraits }), [detailOpen, students, studentPortraits]);
+
+  const raidSchedule = useMemo(() => (server === 'kr' ? krRaid : jpRaid), [server, krRaid, jpRaid]);
+  const mfSchedule = useMemo(() => (server === 'kr' ? krMultifloor : jpMultifloor), [server, krMultifloor, jpMultifloor]);
+  const allScheduleItems = useMemo(() => [...raidSchedule, ...mfSchedule], [raidSchedule, mfSchedule]);
+  const getScheduleTitle = useCallback((item: ScheduleItemV2) => getItemTitle(item, locale, i18n as I18nLike), [locale, i18n]);
+
+  const raidConfigItems = useMemo(() => selectRaidConfigItems(raidSchedule, startDate), [raidSchedule, startDate]);
+
+  const jfdConfigItems = useMemo(() => selectJfdConfigItems(raidSchedule, startDate), [raidSchedule, startDate]);
+
+  const contentItems = useMemo((): ContentItem[] => {
+    const items: ContentItem[] = [];
+    for (const item of allScheduleItems) {
+      const date = item.startTime.slice(0, 10);
+      if (date < startDate) continue;
+      const idParts = item.id.split('-');
+      const type = idParts[0] as 'raid' | 'eraid' | 'multifloor';
+      const season = parseInt(idParts[1]);
+      const prefix = type === 'raid' ? 'R' : type === 'eraid' ? 'E' : 'S';
+      const endDate = item.endTime ? item.endTime.slice(0, 10) : undefined;
+      items.push({ id: item.id, type, prefix, season, typeLabel: getItemLabel(item, i18n) ?? type, bossTitle: getScheduleTitle(item), date, endDate });
     }
+    return items.sort((a, b) => a.date.localeCompare(b.date));
+  }, [allScheduleItems, startDate, getScheduleTitle, i18n]);
 
-    const entryType = entries.find((e) => e.key === editingKey)?.itemType;
-    if (entryType !== 'Opart') return undefined;
+  const firstPickupByStudent = useMemo(() => buildFirstPickupByStudent({ server, krPickup, jpPickup }), [server, krPickup, jpPickup]);
 
-    return getStudentsUsingMaterial(itemId, students)
-      .map((id) => ({ studentId: id, name: students[id]?.Name ?? `#${id}` }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [editingKey, editingGiftStudents, entries, students]);
+  const renderItemIcon = useCallback(
+    (itemKey: string, size: number, amount: number) => {
+      if (!iconData || !eventData) return null;
+      const i = itemKey.lastIndexOf('_');
+      if (i < 0) return null;
+      return <ItemIcon type={itemKey.slice(0, i)} itemId={itemKey.slice(i + 1)} amount={amount} size={size} eventData={eventData} iconData={iconData} />;
+    },
+    [iconData, eventData],
+  );
+
+  const { allCalendarSources } = useCalendarSources({
+    trackingItems: projection.trackingItems,
+    purchaseEvents,
+    stageFarmingPlans,
+    campaigns,
+    server,
+    selectedItemKey: editingKey,
+    itemIconInfo: iconInfos,
+    locale,
+    setStageFarmingRunsRange,
+    removeStageFarmingPlan,
+    setSelectedPurchaseDate,
+  });
+
+  const handleSelectItem = useCallback(
+    (key: string) => {
+      setEditingKey(key);
+      if (key in COIN_SHOP_BY_COIN_KEY) {
+        setSelectedCalendarKey(`coin_panel_${key}`);
+        return;
+      }
+      const first = allCalendarSources.find((s) => s.itemKey === key);
+      if (first) setSelectedCalendarKey(first.key);
+    },
+    [allCalendarSources],
+  );
+
+  const handleCalendarSourceChange = useCallback(
+    (key: string) => {
+      setSelectedCalendarKey(key);
+      const src = allCalendarSources.find((s) => s.key === key);
+      if (src?.itemKey) setEditingKey(src.itemKey);
+    },
+    [allCalendarSources],
+  );
+
+  const handleSelectSearchResult = useCallback(
+    (key: string) => {
+      setItemSearchExtraKeys((prev) => new Set([...prev, key]));
+      handleSelectItem(key);
+    },
+    [handleSelectItem],
+  );
+
+  const panelEntryList = useMemo(
+    () => buildPanelEntryList({ editingKey, studentsWithPortrait, growthPlans, firstPickupByStudent, iconInfos, locale, targetGoals, materialInventory, trackingItems: projection.trackingItems }),
+    [editingKey, studentsWithPortrait, growthPlans, firstPickupByStudent, iconInfos, locale, targetGoals, materialInventory, projection.trackingItems],
+  );
+
+  const availableStages = useMemo(() => findAvailableStages({ editingKey, campaigns, server }), [editingKey, campaigns, server]);
+
+  const inlinePanelFilterTypes = useMemo(() => buildInlinePanelFilterTypes({ availableStages, panelEntryList, iconInfos, t_planner }), [availableStages, panelEntryList, iconInfos, t_planner]);
+
+  const filteredPanelEntries = useMemo(() => filterPanelEntries(panelEntryList, inlinePanelHiddenTypes, iconInfos), [panelEntryList, inlinePanelHiddenTypes, iconInfos]);
+
+  const scheduleBarItems = useMemo(
+    () => buildScheduleBarItems({ server, krEvents, jpEvents, raidSchedule, mfSchedule, krCampaign, jpCampaign, startDate, getScheduleTitle }),
+    [server, krEvents, jpEvents, raidSchedule, mfSchedule, krCampaign, jpCampaign, startDate, getScheduleTitle],
+  );
+
+  const filteredScheduleBarItems = useMemo(() => filterScheduleBarItems(scheduleBarItems, scheduleFilters), [scheduleBarItems, scheduleFilters]);
+
+  const scheduleSectionProps = {
+    startDate,
+    allCalendarSources,
+    selectedCalendarKey,
+    onCalendarSourceChange: handleCalendarSourceChange,
+    filteredScheduleBarItems,
+    renderItemIcon,
+    selectedRangeMin,
+    selectedRangeMax,
+    setSelectedRangeMin,
+    setSelectedRangeMax,
+    scheduleFilters,
+    onScheduleFilterChange: (key: keyof typeof scheduleFilters, value: boolean) => setScheduleFilters((prev) => ({ ...prev, [key]: value })),
+    selectedItemKey: editingKey,
+    availableStages,
+    panelEntryList,
+    filteredPanelEntries,
+    inlinePanelFilterTypes,
+    inlinePanelHiddenTypes,
+    onTogglePanelType: (id: string) =>
+      setInlinePanelHiddenTypes((prev) => {
+        const next = new Set(prev);
+        if (prev.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      }),
+    showPurchasePanel,
+    onClosePurchasePanel: () => setShowPurchasePanel(false),
+    selectedPurchaseDate,
+    campaigns,
+    server,
+    stageFarmingPlans,
+    iconInfoData: iconInfos,
+  };
+
+  useEffect(() => {
+    setInlinePanelHiddenTypes(new Set());
+  }, [editingKey]);
+  useEffect(() => {
+    setShowPurchasePanel(true);
+  }, [selectedRangeMin, selectedRangeMax]);
+
+  const canExpandIncome = availableStages.length > 0 || panelEntryList.length > 0;
+
+  const openExpanded = () => {
+    if (!editingKey) setEditingKey('Item_23');
+    setExpandedOpen(true);
+  };
 
   return (
     <div className="p-2 sm:p-4">
+      {returnTo && (
+        <Link to={returnTo} className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-2">
+          <FaChevronLeft size={10} /> {t_planner('itemScanner.backButton')}
+        </Link>
+      )}
       <PageHeader title={t_planner('inventory.title')} badge="BETA" description={t_planner('inventory.description')} />
+
+      <div className="flex items-center gap-2 flex-wrap mb-3">
+        <div className="flex rounded border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+          {(['kr', 'jp'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setServer(s)}
+              className={`px-3 py-1 text-xs font-semibold transition-colors ${
+                server === s ? 'bg-blue-600 text-white dark:bg-blue-500' : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+              }`}
+            >
+              {s.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        <select
+          value={planDays}
+          onChange={(e) => setPlanDays(Number(e.target.value))}
+          className="px-2 py-1 text-sm ios-compact-12 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+        >
+          {HORIZON_OPTIONS.map((o) => (
+            <option key={o.days} value={o.days}>
+              {horizonLabels[o.days]}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={openExpanded}
+          className="px-2.5 py-1.5 text-xs font-semibold rounded border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+        >
+          {t_resources('tabs.income')}
+        </button>
+        <button
+          onClick={() => setShowStudentGoals(true)}
+          className="px-2.5 py-1.5 text-xs font-semibold rounded border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+        >
+          {t_resources('tabs.students')}
+        </button>
+      </div>
 
       {loading || !eventData ? (
         <p className="text-sm text-neutral-400 dark:text-neutral-500 py-10 text-center">{t_ui('loading')}</p>
@@ -385,13 +845,16 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
             searchQuery={searchQuery}
             onChangeSearchQuery={setSearchQuery}
             selectedTypes={selectedTypes}
-            onChangeTypes={setSelectedTypes}
+            onChangeTypes={handleChangeTypes}
+            scannerLink={itemScannerLink}
             sortBy={sortBy}
             onChangeSortBy={setSortBy}
             showTarget={showTarget}
             onToggleShowTarget={handleToggleShowTarget}
             onlyNonZero={onlyNonZero}
             onToggleOnlyNonZero={setOnlyNonZero}
+            carryUp={carryUp}
+            onToggleCarryUp={setCarryUp}
             displayMode={displayMode}
             onChangeDisplayMode={setDisplayMode}
             growthPlans={growthPlans}
@@ -421,6 +884,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
             onChangeRarities={setSelectedRarities}
           />
 
+          <GoalSummaryRow pools={goalSummaryPools} iconData={iconData} />
+
           {groupByStudent ? (
             <GroupedSections
               emptyMessage={t_planner('inventory.emptyMessage')}
@@ -435,8 +900,42 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                   </>
                 ),
                 content: (
+                  <div className="space-y-1.5">
+                    {group.uwDemand && (
+                      // Shared uwGrowth materials aren't repeated per student (see buildStudentResourceGroups) —
+                      // just the XP demand and which material series (by its icon) would grant this student's bonus.
+                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                        <ItemIcon type="Equipment" itemId={String(UW_MATERIAL_SERIES[group.uwDemand.series].baseId)} amount={0} size={16} eventData={eventData} iconData={iconData} />
+                        <span className="tabular-nums">{Math.ceil(group.uwDemand.requiredXp).toLocaleString()} XP</span>
+                      </div>
+                    )}
+                    <ResourceGrid
+                      entries={group.entries}
+                      eventData={eventData}
+                      iconData={iconData}
+                      locale={locale}
+                      showTarget={showTarget}
+                      displayMode={displayMode}
+                      activeKey={editingKey}
+                      onEditItem={setEditingKey}
+                      fungibleDeficitByKey={group.fungibleDeficitByKey}
+                      fungibleDiffByKey={group.fungibleDiffByKey}
+                      fungibleOwnedByKey={carryUp ? fungibleOwnedByKey : undefined}
+                    />
+                  </div>
+                ),
+              }))}
+            />
+          ) : showMatrix && singleMatrixType !== undefined ? (
+            <>
+              {renderMatrix(singleMatrixType)}
+              {singleMatrixType === 'Equipment' && (
+                // Enhancement stones (Equipment_1~4) and unique weapon materials (Equipment_10~43)
+                // don't fit the slot×tier matrix at all, so the matrix view would otherwise hide
+                // them entirely. Shown as a plain divider, not a nested card (CLAUDE.md).
+                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-3">
                   <ResourceGrid
-                    entries={group.entries}
+                    entries={filteredEntries.filter((e) => NON_BLUEPRINT_EQUIPMENT_KEYS.has(e.key))}
                     eventData={eventData}
                     iconData={iconData}
                     locale={locale}
@@ -444,14 +943,16 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                     displayMode={displayMode}
                     activeKey={editingKey}
                     onEditItem={setEditingKey}
+                    fungibleDeficitByKey={fungibleDeficitByKey}
+                    fungibleDiffByKey={fungibleDiffByKey}
+                    fungibleOwnedByKey={carryUp ? fungibleOwnedByKey : undefined}
                   />
-                ),
-              }))}
-            />
-          ) : showMatrix && singleMatrixType !== undefined ? (
-            renderMatrix(singleMatrixType)
+                </div>
+              )}
+            </>
           ) : (
             <ResourceGrid
+              key={gridKey}
               entries={filteredEntries}
               eventData={eventData}
               iconData={iconData}
@@ -460,6 +961,9 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
               displayMode={displayMode}
               activeKey={editingKey}
               onEditItem={setEditingKey}
+              fungibleDeficitByKey={fungibleDeficitByKey}
+              fungibleDiffByKey={fungibleDiffByKey}
+              fungibleOwnedByKey={carryUp ? fungibleOwnedByKey : undefined}
             />
           )}
 
@@ -475,18 +979,155 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                   description={getItemDescription(editingKey, eventData.icons, locale) ?? undefined}
                   helperText={showTarget && (needed[editingKey] ?? 0) > 0 ? t_planner('affectionTab.item.need', { counts: (needed[editingKey] ?? 0).toLocaleString() }) : undefined}
                   icon={<ItemIcon type={category} itemId={id} amount={''} size={iconSize} eventData={eventData} iconData={iconData} />}
-                  value={materialInventory[editingKey] ?? 0}
-                  onChange={(v) => updateMaterialInventory(editingKey, v)}
-                  onClose={() => setEditingKey(null)}
-                  onPrev={navigableKeys.length > 1 ? () => navigate(-1) : undefined}
-                  onNext={() => navigate(1)}
+                  value={displayInventory[editingKey] ?? 0}
+                  onChange={(v) => scheduleInventoryCommit(editingKey, v)}
+                  onClose={() => {
+                    flushAllPendingInventoryCommits();
+                    setEditingKey(null);
+                    setExpandedOpen(false);
+                  }}
+                  onPrev={
+                    navigableKeys.length > 1
+                      ? () => {
+                          flushAllPendingInventoryCommits();
+                          navigate(-1);
+                        }
+                      : undefined
+                  }
+                  onNext={() => {
+                    flushAllPendingInventoryCommits();
+                    navigate(1);
+                  }}
                   perStudentNeeds={editingPerStudentNeeds}
                   allUsers={editingAllUsers}
                   giftStudents={editingGiftStudents}
                   studentPortraits={studentPortraits}
+                  projectionSection={
+                    isModeledKey && iconInfos ? (
+                      <>
+                        <div className="flex items-center gap-2 px-4 pt-3">
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">{t_ui('period')}</span>
+                          <select
+                            value={planDays}
+                            onChange={(e) => setPlanDays(Number(e.target.value))}
+                            className="px-2 py-1 text-xs ios-compact-12 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
+                          >
+                            {HORIZON_OPTIONS.map((o) => (
+                              <option key={o.days} value={o.days}>
+                                {horizonLabels[o.days]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <ResourceTimelinePanel
+                          projection={projection}
+                          selectedKey={editingKey}
+                          gachaEligmaPercentile={gachaEligmaPercentile}
+                          gachaEligmaUseMean={gachaEligmaUseMean}
+                          onSetPercentile={setGachaEligmaPercentile}
+                          onSetUseMean={setGachaEligmaUseMean}
+                          iconInfos={iconInfos}
+                          iconData={iconData}
+                          locale={locale}
+                        />
+                      </>
+                    ) : undefined
+                  }
+                  expandedLabel={t_resources('tabs.income')}
+                  expanded={expandedOpen}
+                  onExpandChange={setExpandedOpen}
+                  expandedContent={
+                    canExpandIncome ? (
+                      <div className="space-y-4 py-4">
+                        {iconInfos && (
+                          <div className="px-4">
+                            <TrackedItemsBar
+                              trackingItems={projection.trackingItems}
+                              selectedItemKey={editingKey}
+                              iconInfos={iconInfos}
+                              studentsRecord={studentsWithPortrait}
+                              locale={locale}
+                              onSelectSearchResult={handleSelectSearchResult}
+                              onSelectItem={handleSelectItem}
+                              renderItemIcon={renderItemIcon}
+                            />
+                          </div>
+                        )}
+                        <div className="px-4">
+                          <ItemIncomeSection
+                            selectedItemKey={editingKey}
+                            pvp={{ pvpAverageRank, pvpDailyDefenseWins, pvpExtraWeeklyIncome, onUpdate: (p) => updatePlanStore(p) }}
+                            jfd={{ jfdDefaultDailyCoins, jfdPerPeriodCoins, jfdConfigItems, onUpdate: (p) => updatePlanStore(p) }}
+                            raid={{
+                              isRaid: editingKey === 'Item_7' || editingKey === 'Item_9',
+                              raidGlobalConfig,
+                              eraidGlobalConfig,
+                              raidDetailConfigs,
+                              raidConfigItems,
+                              setRaidDetailConfig,
+                              onUpdate: (p) => updatePlanStore(p),
+                            }}
+                            expertPermit={{ expertPermitMode, expertPermitWeeklyMax, onUpdate: (p) => updatePlanStore(p) }}
+                            wb={{ multifloorDefaultMaxFloor, multifloorMaxFloors, mfSchedule, onUpdate: (p) => updatePlanStore(p) }}
+                          />
+                        </div>
+                        <ScheduleSection {...scheduleSectionProps} />
+                      </div>
+                    ) : undefined
+                  }
                 />
               );
             })()}
+
+          {showStudentGoals && (
+            <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-0 sm:p-4" onClick={() => setShowStudentGoals(false)}>
+              <div
+                className="relative w-full sm:max-w-5xl h-[95vh] sm:h-[85vh] bg-white dark:bg-neutral-900 border-t sm:border border-neutral-200 dark:border-neutral-700 rounded-t-xl sm:rounded-lg flex flex-col overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between gap-3 p-4 pb-3 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+                  <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{t_resources('tabs.students')}</h2>
+                  <button onClick={() => setShowStudentGoals(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200" aria-label={t_ui('close')}>
+                    <FaTimes size={14} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4">
+                  <div className="border-b border-neutral-200 dark:border-neutral-700 pb-4 mb-4">
+                    <GoalStatusSummary
+                      statuses={projection.studentGoalStatuses}
+                      tacticalCoinStatus={projection.tacticalCoinStatus}
+                      studentsRecord={studentsWithPortrait}
+                      onSelectResource={(key) => {
+                        setEditingKey(key);
+                        setShowStudentGoals(false);
+                      }}
+                    />
+                  </div>
+                  <StudentGoalsTab
+                    selectedItemKey={editingKey}
+                    activePlans={projection.activePlans}
+                    allGrowthPlans={growthPlans}
+                    studentsRecord={studentsWithPortrait}
+                    targetGoals={targetGoals}
+                    contentItems={contentItems}
+                    gachaStudentStats={gachaResult?.studentStats}
+                    onSelectItem={(key) => {
+                      setEditingKey(key);
+                      setShowStudentGoals(false);
+                    }}
+                    onAddGoal={addTargetGoal}
+                    onUpdateGoal={updateTargetGoal}
+                    onRemoveGoal={removeTargetGoal}
+                    onClearStudent={() => {
+                      setEditingKey(null);
+                      setSelectedCalendarKey('');
+                      setSelectedPurchaseDate(null);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

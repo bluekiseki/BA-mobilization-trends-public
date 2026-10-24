@@ -13,16 +13,13 @@
   "tabs": {
     "resources": "資源",
     "income": "收入與支出",
-    "students": "學生目標",
+    "students": "艾蕾芙/艾麗格瑪需求預測",
     "studentsShort": "目標"
   },
   "incomeTabHint": "選擇上面要追蹤的資源，以配置收入、購買和農業計劃。",
   "planStatus": {
-    "title": "計劃狀態",
     "summary": "{{atRisk}} 項風險 · {{covered}} 項需要艾麗格瑪 · {{onTrack}} 項正常",
     "summaryWithDeadline": "{{atRisk}} 項風險 · {{covered}} 項需要艾麗格瑪 · {{onTrack}} 項正常 · {{noDeadline}} 項無期限",
-    "openButton": "學生目標",
-    "sectionTitle": "學生目標",
     "emptyState": "新增學生目標以查看自然艾蕾芙收入是否充足或需要艾麗格瑪。",
     "statusCovered": "艾麗格瑪涵蓋",
     "statusOnTrack": "正常",
@@ -112,8 +109,6 @@
     "premium": "高級:"
   },
   "panel": {
-    "title": "資源",
-    "startingInventory": "初始持有量",
     "gachaSimulation": "抽卡模擬",
     "noSimDataPre": "沒有模擬資料。",
     "noSimDataPost": "請先執行。",

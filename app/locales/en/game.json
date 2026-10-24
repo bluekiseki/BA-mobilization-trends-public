@@ -89,5 +89,8 @@
   "opart": "Oparts",
   "pyro_unit": "Pyro",
   "limitedShort": "Ltd.",
-  "difficultyShort": "Diff"
+  "difficultyShort": "Diff",
+  "recruitNormal": "Standard",
+  "recruitArchive": "Archive",
+  "recruitWelfare": "Welfare"
 }

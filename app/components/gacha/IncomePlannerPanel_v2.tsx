@@ -4,7 +4,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { Link } from 'react-router';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
-import { CustomNumberInput } from '../CustomInput';
+import { CustomNumberInput } from '../common/CustomInput';
 import { FaBolt, FaChartPie, FaInfoCircle } from 'react-icons/fa';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
@@ -24,13 +24,11 @@ import {
 } from '~/utils/gachaEngine';
 import type { BannerPeriod } from '~/utils/gachaData';
 import type { BannerStrategy, Student } from '~/types/gacha';
-import { buildInitialTicketBatches, type PlannerSchedule, type PyroxeneConfig, type SimulationStats } from '~/utils/pyroxeneCalc';
-import IncomeSettingsPanel_v2, { Toggle, type CustomIncome } from './IncomeSettingsPanel_v2';
+import { buildInitialTicketBatches, type CustomIncome, type PlannerSchedule, type PyroxeneConfig, type SimulationStats } from '~/utils/pyroxeneCalc';
+import IncomeSettingsPanel_v2, { Toggle } from './IncomeSettingsPanel_v2';
 import APSchedulePanel_v2 from './APSchedulePanel_v2';
 import SimulationResultView_v2 from './SimulationResultView_v2';
 import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
-
-export type { CustomIncome };
 
 type SimWorkerOutMsg =
   | { type: 'progress'; chunkAcc: SimChunkAcc; completed: number; total: number }
@@ -49,6 +47,9 @@ const monoStyle = { fontFamily: 'inherit' };
 const fmt = (n: number) => Math.round(n).toLocaleString();
 
 interface Props {
+  /** Simple-mode display: hides advanced sim controls (engine/iteration count, owned-students toggle)
+      and the 'all required acquired' risk card, and forwards the same flag to the income settings panel. */
+  simple?: boolean;
   config: PyroxeneConfig & { customIncomes?: CustomIncome[] };
   setConfig: React.Dispatch<React.SetStateAction<PyroxeneConfig & { customIncomes?: CustomIncome[] }>>;
   schedules: PlannerSchedule[];
@@ -57,6 +58,8 @@ interface Props {
   banners: BannerPeriod[];
   strategies: Record<string, BannerStrategy>;
   allStudents: Student[];
+  /** Server region — determines when Archive Recruitment starts excluding ARCHIVE_STUDENT_IDS from the normal off-rate pool. */
+  region: 'KR' | 'JP';
   /** Student IDs the player already owns (from the Student Planner's growth-plan roster) — dupe pulls of these pay eligma from the very first roll of the sim. */
   ownedStudentIds?: number[];
   portraitMap: Record<number, string>;
@@ -149,7 +152,7 @@ const StatsPanel = ({
   );
 
   return (
-    <div className="rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100" style={monoStyle}>
+    <div className="overflow-hidden bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100" style={monoStyle}>
       {/* Header */}
       <div className="px-4 pt-3 pb-2 border-b border-dashed border-neutral-200 dark:border-neutral-700 text-center">
         <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-400 dark:text-neutral-600 mb-0.5">{t('receipt_label', { days: simulationDays })}</div>
@@ -170,7 +173,7 @@ const StatsPanel = ({
       )}
 
       {/* Income items */}
-      <div className="px-4 py-2 text-[11px] space-y-0">
+      <div className="px-2 py-2 text-[11px] space-y-0">
         <Row label={t('items.mission')} value={stats.income.dailyMission + stats.income.weeklyMission} />
         <Row label={t('items.arona')} value={stats.income.arona} />
         <Row label={t('items.pvp')} value={stats.income.pvp} />
@@ -187,7 +190,7 @@ const StatsPanel = ({
 
       {/* Total income subtotal */}
       <div className="border-t border-neutral-200 dark:border-neutral-700 mx-4" />
-      <div className="px-4 py-1.5 flex justify-between items-baseline text-[11px]">
+      <div className="px-2 py-1.5 flex justify-between items-baseline text-[11px]">
         <span className="text-neutral-500 dark:text-neutral-400">{t('total_income')}</span>
         <span className="font-black" style={{ color: '#77e0ff' }}>
           +{fmt(stats.totalIncome)}
@@ -208,7 +211,7 @@ const StatsPanel = ({
       {/* Net flow (after gacha) */}
       <div className="border-t-2 border-neutral-300 dark:border-neutral-600 mx-4" />
       <div className="border-t border-neutral-200 dark:border-neutral-700 mx-4 mt-px" />
-      <div className="px-4 pt-2 pb-2 flex justify-between items-baseline">
+      <div className="px-2 pt-2 pb-2 flex justify-between items-baseline">
         <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300">{tIncome('net_income_label')}</span>
         <span className="text-sm font-black tabular-nums" style={{ color: netFlow >= 0 ? '#77e0ff' : '#ef4444' }}>
           {netFlow >= 0 ? '+' : ''}
@@ -220,7 +223,7 @@ const StatsPanel = ({
       {(stats.expense.ap > 0 || true) && (
         <>
           <div className="border-t border-dashed border-neutral-200 dark:border-neutral-800 mx-4" />
-          <div className="px-4 py-1.5 space-y-0.5 text-[10px]">
+          <div className="px-2 py-1.5 space-y-0.5 text-[10px]">
             {stats.expense.ap > 0 && (
               <div className="flex justify-between items-baseline opacity-50">
                 <span className="text-neutral-500">{t('items.ap_refresh')}</span>
@@ -249,6 +252,7 @@ type SimLevelId = '10k' | '100k' | '1m' | 'manual';
 // Main component
 // ---------------------------------------------------------------------------
 export default function IncomePlannerPanel_v2({
+  simple = false,
   config,
   setConfig,
   schedules,
@@ -257,6 +261,7 @@ export default function IncomePlannerPanel_v2({
   banners,
   strategies,
   allStudents,
+  region,
   ownedStudentIds,
   portraitMap,
   pyroxeneIcon,
@@ -340,6 +345,7 @@ export default function IncomePlannerPanel_v2({
         effectiveOwnedStudentIds,
         initialTicketBatches,
         consumeExpiringTickets,
+        region,
       );
       const { strategiesJson, bannerPoolsJson, activeBannerIds, initialOwnedIds, ticketBatchesJson } = payload;
       const runId = ++runIdRef.current;
@@ -453,6 +459,7 @@ export default function IncomePlannerPanel_v2({
             effectiveOwnedStudentIds,
             initialTicketBatches,
             consumeExpiringTickets,
+            region,
           );
           setSimTiming({ totalMs: performance.now() - start, count: simCount });
           setGachaSimResult(res);
@@ -466,132 +473,150 @@ export default function IncomePlannerPanel_v2({
     }
   };
 
+  const progressBar = simProgress ? (
+    <div className="mt-3 space-y-1">
+      <div className="h-1 w-full rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${simProgressPercent}%`, background: '#77e0ff' }} />
+      </div>
+      <p className="text-[10px] text-neutral-400" style={monoStyle}>
+        {simProgress.completed.toLocaleString()} / {simProgress.total.toLocaleString()}
+        &nbsp;({simProgressPercent.toFixed(1)}%)
+      </p>
+    </div>
+  ) : null;
+
   return (
     <div className="space-y-4">
-      {/* ── SimControls bar ── */}
-      <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-3 sm:p-4">
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
-          {/* Icon + label */}
-          <div className="flex items-center gap-2 mr-1">
-            <span className="grid place-items-center h-9 w-9 rounded-lg" style={{ background: '#77e0ff22', color: '#77e0ff' }}>
-              <FaBolt size={18} />
-            </span>
-            <div>
-              <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400 whitespace-nowrap" style={monoStyle}>
-                {tr('panel.title')}
-              </div>
-              <div className="text-[10px] text-neutral-400 dark:text-neutral-500 hidden sm:block">
-                <Trans i18nKey="gacha.result.panel.desc" ns="planner" values={{ amount: config.currentPyroxene.toLocaleString() }} components={{ 1: <strong /> }} />
-              </div>
-            </div>
-          </div>
-
-          {/* Sim level segs */}
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-neutral-400 mb-1.5 whitespace-nowrap" style={monoStyle}>
-              {tr('panel.iteration_count')}
-            </div>
-            <Seg value={levelId} options={SIM_LEVELS.map((l) => ({ id: l.id, label: l.label }))} onChange={(v) => setLevelId(v)} />
-          </div>
-
-          {/* Manual input */}
-          {levelId === 'manual' && (
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-neutral-400 mb-1.5 whitespace-nowrap" style={monoStyle}>
-                {tr('panel.manual_input_label')}
-              </div>
-              <CustomNumberInput
-                min={1000}
-                max={10_000_000}
-                value={customN}
-                onChange={(val) => setCustomN(Math.max(1000, Math.min(10_000_000, val || 1000)))}
-                className="w-28 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-sm font-bold text-neutral-800 dark:text-neutral-100 focus:ring-2 focus:ring-ba-btn-blue"
-                style={monoStyle}
-              />
-            </div>
-          )}
-
-          {/* Engine segs */}
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-neutral-400 mb-1.5 whitespace-nowrap" style={monoStyle}>
-              {tr('panel.engine_label')}
-            </div>
-            <Seg
-              value={useWasm ? 'wasm' : 'js'}
-              options={[
-                { id: 'js', label: 'JS' },
-                { id: 'wasm', label: 'WASM', icon: <FaBolt size={9} /> },
-              ]}
-              onChange={(v) => handleToggleEngine(v === 'wasm')}
-            />
-          </div>
-
-          {/* Run button */}
+      {/* ── SimControls bar — Compact mode collapses this to one full-width button with no surrounding
+          card, so the button isn't double-padded against a wrapper; nothing else about the run
+          (engine, iteration count, timing readout) is meaningful to someone who didn't choose it. ── */}
+      {simple ? (
+        <div>
           <button
             onClick={handleRun}
             disabled={isSimulating}
-            className="flex items-center gap-2 px-5 h-9.5 rounded-lg font-bold text-sm text-[#06262f] disabled:opacity-60 transition whitespace-nowrap"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-base text-[#06262f] disabled:opacity-60 transition"
             style={{ background: '#77e0ff' }}
           >
-            {isSimulating && <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />}
+            {isSimulating && <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />}
             {isSimulating ? tr('panel.btn_running') : tr('panel.btn_start')}
           </button>
+          {progressBar}
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-neutral-900">
+          <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+            {/* Icon + label */}
+            <div className="flex items-center gap-2 mr-1">
+              <span className="grid place-items-center h-9 w-9 rounded-lg" style={{ background: '#77e0ff22', color: '#77e0ff' }}>
+                <FaBolt size={18} />
+              </span>
+              <div>
+                <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400 whitespace-nowrap" style={monoStyle}>
+                  {tr('panel.title')}
+                </div>
+                <div className="text-[10px] text-neutral-400 dark:text-neutral-500 hidden sm:block">
+                  <Trans i18nKey="gacha.result.panel.desc" ns="planner" values={{ amount: config.currentPyroxene.toLocaleString() }} components={{ 1: <strong /> }} />
+                </div>
+              </div>
+            </div>
 
-          {/* Timing info */}
-          <div className="ml-auto flex items-center gap-2 flex-wrap text-[11px] text-neutral-500 dark:text-neutral-400" style={monoStyle}>
-            {!isSimulating && simTiming && (
-              <>
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 whitespace-nowrap">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                  {simTiming.count.toLocaleString()}
-                  {tr('panel.sim_count_unit')}
-                </span>
-                <span className="whitespace-nowrap">{formatDuration(simTiming.totalMs)}</span>
-                <span className="whitespace-nowrap">{(simTiming.count / (simTiming.totalMs / 1000)).toFixed(0)}/s</span>
-              </>
+            {/* Sim level + engine segs */}
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-neutral-400 mb-1.5 whitespace-nowrap" style={monoStyle}>
+                {tr('panel.iteration_count')}
+              </div>
+              <Seg value={levelId} options={SIM_LEVELS.map((l) => ({ id: l.id, label: l.label }))} onChange={(v) => setLevelId(v)} />
+            </div>
+
+            {levelId === 'manual' && (
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-neutral-400 mb-1.5 whitespace-nowrap" style={monoStyle}>
+                  {tr('panel.manual_input_label')}
+                </div>
+                <CustomNumberInput
+                  min={1000}
+                  max={10_000_000}
+                  value={customN}
+                  onChange={(val) => setCustomN(Math.max(1000, Math.min(10_000_000, val || 1000)))}
+                  className="w-28 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-sm font-bold text-neutral-800 dark:text-neutral-100 focus:ring-2 focus:ring-ba-btn-blue"
+                  style={monoStyle}
+                />
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* Recruited students (grown-plan roster) — feeds gacha dupe eligma. Toggleable: off simulates a fresh/empty box. */}
-        <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-              {tr('panel.owned_students_toggle_label')}
-              <Tooltip placement="top" trigger={['hover', 'click']} overlay={<span className="block max-w-xs text-[11px] leading-relaxed">{tr('panel.owned_students_help')}</span>}>
-                <span className="cursor-pointer text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 inline-flex items-center shrink-0">
-                  <FaInfoCircle size={12} />
-                </span>
-              </Tooltip>
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-neutral-400 mb-1.5 whitespace-nowrap" style={monoStyle}>
+                {tr('panel.engine_label')}
+              </div>
+              <Seg
+                value={useWasm ? 'wasm' : 'js'}
+                options={[
+                  { id: 'js', label: 'JS' },
+                  { id: 'wasm', label: 'WASM', icon: <FaBolt size={9} /> },
+                ]}
+                onChange={(v) => handleToggleEngine(v === 'wasm')}
+              />
             </div>
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5">
-              {tr('panel.owned_students_count', { count: ownedStudentCount })}{' '}
-              <Link to={localeLink(locale, '/planner/students')} state={{ view: 'table' }} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
-                {tBase('button.goToPlanner')}
-              </Link>
-            </p>
-          </div>
-          <Toggle on={applyOwnedStudents} onClick={() => setApplyOwnedStudents((v) => !v)} />
-        </div>
 
-        {/* Progress bar */}
-        {simProgress && (
-          <div className="mt-3 space-y-1">
-            <div className="h-1 w-full rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: `${simProgressPercent}%`, background: '#77e0ff' }} />
+            {/* Run button */}
+            <button
+              onClick={handleRun}
+              disabled={isSimulating}
+              className="flex items-center gap-2 px-5 h-9.5 rounded-lg font-bold text-sm text-[#06262f] disabled:opacity-60 transition whitespace-nowrap"
+              style={{ background: '#77e0ff' }}
+            >
+              {isSimulating && <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />}
+              {isSimulating ? tr('panel.btn_running') : tr('panel.btn_start')}
+            </button>
+
+            {/* Timing info */}
+            <div className="ml-auto flex items-center gap-2 flex-wrap text-[11px] text-neutral-500 dark:text-neutral-400" style={monoStyle}>
+              {!isSimulating && simTiming && (
+                <>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 whitespace-nowrap">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    {simTiming.count.toLocaleString()}
+                    {tr('panel.sim_count_unit')}
+                  </span>
+                  <span className="whitespace-nowrap">{formatDuration(simTiming.totalMs)}</span>
+                  <span className="whitespace-nowrap">{(simTiming.count / (simTiming.totalMs / 1000)).toFixed(0)}/s</span>
+                </>
+              )}
             </div>
-            <p className="text-[10px] text-neutral-400" style={monoStyle}>
-              {simProgress.completed.toLocaleString()} / {simProgress.total.toLocaleString()}
-              &nbsp;({simProgressPercent.toFixed(1)}%)
-            </p>
           </div>
-        )}
-      </div>
+
+          {/* Recruited students (grown-plan roster) — feeds gacha dupe eligma. Toggleable: off simulates
+              a fresh/empty box. Not shown in Compact mode (stays off, its own default). */}
+          <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+                {tr('panel.owned_students_toggle_label')}
+                <Tooltip placement="top" trigger={['hover', 'click']} overlay={<span className="block max-w-xs text-[11px] leading-relaxed">{tr('panel.owned_students_help')}</span>}>
+                  <span className="cursor-pointer text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 inline-flex items-center shrink-0">
+                    <FaInfoCircle size={12} />
+                  </span>
+                </Tooltip>
+              </div>
+              <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5">
+                {tr('panel.owned_students_count', { count: ownedStudentCount })}{' '}
+                <Link to={localeLink(locale, '/planner/students')} state={{ view: 'table' }} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+                  {tBase('button.goToPlanner')}
+                </Link>
+              </p>
+            </div>
+            <Toggle on={applyOwnedStudents} onClick={() => setApplyOwnedStudents((v) => !v)} />
+          </div>
+
+          {progressBar}
+        </div>
+      )}
 
       {/* ── Sim result ── */}
       {gachaSimResult && (
         <>
           <SimulationResultView_v2
+            simple={simple}
             result={gachaSimResult}
             initialPyroxenes={config.currentPyroxene}
             portraitMap={portraitMap}
@@ -608,11 +633,12 @@ export default function IncomePlannerPanel_v2({
 
       {/* ── Income settings ── */}
       <SectionDivider label={tg('tabs.income')} />
-      <IncomeSettingsPanel_v2 config={config} setConfig={setConfig} schedules={schedules} pyroxeneIcon={pyroxeneIcon} ticket1Icon={ticket1Icon} ticket10Icon={ticket10Icon} />
+      <IncomeSettingsPanel_v2 simple={simple} config={config} setConfig={setConfig} schedules={schedules} pyroxeneIcon={pyroxeneIcon} ticket1Icon={ticket1Icon} ticket10Icon={ticket10Icon} />
 
       {/* ── AP schedule ── */}
       <SectionDivider label={tg('income.timeline.title')} />
       <APSchedulePanel_v2
+        simple={simple}
         schedules={schedules}
         apOverrides={apOverrides}
         onApChange={onApChange}

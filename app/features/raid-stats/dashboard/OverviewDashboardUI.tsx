@@ -1,0 +1,105 @@
+// app/components/dashboard/OverviewDashboardUI.tsx
+import type { FullData, GameServer, RaidInfo } from '~/types/data';
+import GrandAssaultTotalScoreAnalysis from './overview/DifficultyCombinationChart';
+import ConcentricDonutChart from './overview/ConcentricDonutChart';
+import RaidClearStatusGraph from './overview/RaidClearStatusGraph';
+import { RecordLookup } from './overview/RecordLookup';
+import { Card } from './card';
+import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
+
+interface OverviewDashboardUIProp {
+  activeTab: string;
+  raidInfos: RaidInfo[];
+  fullData: FullData;
+  server: GameServer;
+  overviewLoading: boolean;
+  setOverviewLoading: (overviewLoading: boolean) => void;
+}
+
+// overviewLoading: topOverviewLoading, setOverviewLoading: SetTopOverviewLoading
+const OverviewDashboardUI = ({ activeTab, raidInfos, fullData, server }: OverviewDashboardUIProp) => {
+  const { t } = useTranslation('dashboard');
+  const { t: t_ui } = useTranslation('ui');
+
+  const id = raidInfos[0].Id;
+  const isGrandAssault = raidInfos.length > 1;
+  const currentRaidInfo = isGrandAssault ? raidInfos.find((r) => r.Type === activeTab) || raidInfos[0] : raidInfos[0];
+
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  const [scores, setScores] = useState<Int32Array>(() => new Int32Array());
+
+  useEffect(() => {
+    setIsCalculating(true);
+
+    const timerId = setTimeout(() => {
+      if (!fullData) {
+        setScores(new Int32Array());
+        setIsCalculating(false);
+        return;
+      }
+
+      let newScores: Int32Array;
+
+      if (isGrandAssault) {
+        if (activeTab === 'TotalType') {
+          newScores = fullData.rank ?? new Int32Array();
+        } else {
+          const armorTypeIndex = raidInfos.findIndex((info) => info.Type === activeTab);
+
+          // rank_1, rank_2, rank_3 ...
+          const keyNumber = armorTypeIndex + 1;
+          const key = `rank_${keyNumber}` as keyof FullData;
+          newScores = (fullData[key] as Int32Array | undefined) ?? new Int32Array();
+        }
+      } else {
+        // Total Assault
+        newScores = fullData.rank_default ?? fullData.rank ?? new Int32Array();
+      }
+
+      setScores(newScores);
+
+      setIsCalculating(false);
+    }, 0); // 0ms
+    // Remove timer when component unmount or dependency changes
+    return () => clearTimeout(timerId);
+  }, [activeTab, fullData, isGrandAssault, raidInfos]);
+
+  if (isCalculating) {
+    return (
+      <>
+        <div className="min-h-62.5 flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {isGrandAssault && activeTab === 'All' ? (
+        <>
+          <Card title={t('recordLookup')} className="space-y-4" height="h-20">
+            <RecordLookup scores={fullData.rank} raidInfo={raidInfos[0]} server={server} isTotalChart={true} />
+          </Card>
+          <GrandAssaultTotalScoreAnalysis key={`${server}/${id}`} fullData={fullData} raidInfos={raidInfos} tierCounter={fullData.tier_counter} boss={raidInfos[0].Boss} server={server} id={id} />
+        </>
+      ) : (
+        // RAID
+        <>
+          <Card title={t('recordLookup')} className="space-y-4" height="h-20">
+            <RecordLookup scores={scores} raidInfo={raidInfos[0]} server={server} isTotalChart={false} />
+          </Card>
+          <Card title={t('donutChartTitle')} className="space-y-4">
+            <ConcentricDonutChart key={`${activeTab}-donut`} scores={scores} tierCounter={fullData.tier_counter} boss={currentRaidInfo.Boss} server={server} id={currentRaidInfo.Id} />
+          </Card>
+
+          <Card title={t('histogramTitle')} defaultExpanded={true} className="space-y-4">
+            <RaidClearStatusGraph key={activeTab} scores={scores} tierCounter={fullData.tier_counter} boss={currentRaidInfo.Boss} server={server} id={currentRaidInfo.Id} />
+          </Card>
+        </>
+      )}
+    </>
+  );
+};
+
+export default OverviewDashboardUI;

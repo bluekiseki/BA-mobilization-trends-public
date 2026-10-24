@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { data, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { HiOutlinePlus } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineArrowUpTray, HiOutlineArrowDownTray } from 'react-icons/hi2';
 import { getInstance } from '~/middleware/i18next';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
-import { RaidHistoryFormModal } from '~/components/my/raids/RaidHistoryFormModal';
-import { RaidHistoryTable, type RaidOption } from '~/components/my/raids/RaidHistoryTable';
-import { RaidStatsTab } from '~/components/my/raids/RaidStatsTab';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
+import { RaidHistoryFormModal } from '~/features/my/raids/RaidHistoryFormModal';
+import { RaidHistoryTable, type RaidOption } from '~/features/my/raids/RaidHistoryTable';
+import { RaidStatsTab } from '~/features/my/raids/RaidStatsTab';
+import { CheckboxSelect, type CheckboxSelectOption } from '~/components/common/CheckboxSelect';
 import { useAuthStore } from '~/store/authStore';
 import { useRaidHistoryStore } from '~/store/planner/useRaidHistoryStore';
-import type { RaidHistoryEntry, RaidHistoryServer } from '~/types/raidHistory';
+import type { RaidHistoryEntry, RaidHistoryServer, RaidType } from '~/types/raidHistory';
 import type { Student, StudentData, StudentPortraitData } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 import { getLocaleShortName } from '~/utils/i18n/config';
@@ -19,17 +20,25 @@ import { cdn } from '~/utils/cdn';
 import { PROFILE_SERVER_OPTIONS } from '~/store/authStore';
 import { localeLink } from '~/utils/localeLink';
 import { downloadFile } from '~/utils/downloadFile';
+import { RAID_HISTORY_EXPORT_VERSION } from '~/features/my/common/historyJsonExchange';
 import { ProfileDataSchemas } from '~/schemas/profileDataValidation';
 import { PageHeader } from '~/components/common/PageHeader';
+import { HistoryExternalEditPromptButton } from '~/features/my/common/HistoryExternalEditPromptButton';
 
 type RaidHistorySort = 'date_desc' | 'date_asc' | 'added_desc' | 'added_asc';
 
 function buildRaidLabel(item: ScheduleItemV2, id: string, locale: Locale, i18n: I18nLike): string {
-  const title = getItemTitle(item, locale, i18n);
+  const rawTitle = getItemTitle(item, locale, i18n);
   const armorLabel = getArmorDisplayName(item.details?.armorType, locale) ?? item.details?.armorType;
+  // JFD's translated title already embeds "#{season}" (e.g. "#55 Shooting Test"), so use a short
+  // "J{season}" display id instead of repeating the season twice. The real `id`/raidId ("JFD{season}")
+  // used for storage/matching is untouched — only this display string is affected.
+  const isJfd = item.type === 'jointFiringDrill' && item.season != null;
+  const displayId = isJfd ? `J${item.season}` : id;
+  const title = isJfd ? rawTitle.replace(`#${item.season} `, '') : rawTitle;
 
-  if (item.type === 'multifloor' && armorLabel) {
-    return `${id} ${title} (${armorLabel})`;
+  if ((item.type === 'multifloor' || item.type === 'jointFiringDrill') && armorLabel) {
+    return `${displayId} ${title} (${armorLabel})`;
   }
 
   if (item.type === 'eraid' && item.details?.bosses?.length) {
@@ -39,11 +48,11 @@ function buildRaidLabel(item: ScheduleItemV2, id: string, locale: Locale, i18n: 
       .join(' / ');
 
     if (armorLabels) {
-      return `${id} ${title} (${armorLabels})`;
+      return `${displayId} ${title} (${armorLabels})`;
     }
   }
 
-  return `${id} ${title}`;
+  return `${displayId} ${title}`;
 }
 
 function toRaidOption(server: RaidHistoryServer, item: ScheduleItemV2, locale: Locale, i18n: I18nLike): RaidOption | null {
@@ -123,6 +132,7 @@ export default function MyRaidHistoryPage() {
   const { t } = useTranslation('mypage');
   const { t: t_ui } = useTranslation('ui');
   const { t: ta } = useTranslation('auth');
+  const { t: t_g } = useTranslation('game');
   const user = useAuthStore((s) => s.user);
   const activeProfileId = useAuthStore((s) => s.activeProfileId);
   const entries = useRaidHistoryStore((s) => s.entries);
@@ -133,6 +143,7 @@ export default function MyRaidHistoryPage() {
   const [students, setStudents] = useState<Record<string, Student>>({});
   const [portraits, setPortraits] = useState<StudentPortraitData>({});
   const [serverFilter, setServerFilter] = useState<RaidHistoryServer | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<Set<RaidType | 'all'>>(new Set(['all']));
   const [sortOrder, setSortOrder] = useState<RaidHistorySort>('date_desc');
   const [activeTab, setActiveTab] = useState<'records' | 'stats'>('records');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -140,6 +151,7 @@ export default function MyRaidHistoryPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [importError, setImportError] = useState(false);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
   const activeProfileServer = user?.profiles?.find((profile) => profile.id === activeProfileId)?.server;
 
   useEffect(() => {
@@ -171,7 +183,9 @@ export default function MyRaidHistoryPage() {
 
   const filteredEntries = useMemo(() => {
     const safeEntries = Array.isArray(entries) ? entries : [];
-    const filtered = safeEntries.filter((entry) => serverFilter === 'all' || entry.server === serverFilter).map((entry, index) => ({ entry, index }));
+    const filtered = safeEntries
+      .filter((entry) => (serverFilter === 'all' || entry.server === serverFilter) && (typeFilter.has('all') || typeFilter.has(entry.raidType)))
+      .map((entry, index) => ({ entry, index }));
 
     filtered.sort((a, b) => {
       if (sortOrder === 'date_desc') return (b.entry.date ?? '').localeCompare(a.entry.date ?? '') || b.index - a.index;
@@ -181,7 +195,7 @@ export default function MyRaidHistoryPage() {
     });
 
     return filtered.map(({ entry }) => entry);
-  }, [entries, serverFilter, sortOrder]);
+  }, [entries, serverFilter, typeFilter, sortOrder]);
 
   const saveEntry = (entry: RaidHistoryEntry) => {
     if (editingEntry) updateEntry(entry);
@@ -191,7 +205,7 @@ export default function MyRaidHistoryPage() {
   };
 
   const exportJson = () => {
-    const exportData = { entries, timestamp: new Date().toISOString(), version: 1 };
+    const exportData = { entries, timestamp: new Date().toISOString(), version: RAID_HISTORY_EXPORT_VERSION };
     downloadFile(JSON.stringify(exportData, null, 2), `BA_RaidHistory_${new Date().toISOString().slice(0, 10)}.json`);
   };
 
@@ -228,10 +242,13 @@ export default function MyRaidHistoryPage() {
   };
 
   const handleImportInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
+    // Keep the element: React clears event.currentTarget once the handler awaits.
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
     await importJsonFile(file);
-    event.currentTarget.value = '';
+    // Reset so picking the same file again fires onChange.
+    input.value = '';
   };
 
   return (
@@ -243,17 +260,39 @@ export default function MyRaidHistoryPage() {
         <button
           type="button"
           onClick={handleImportButtonClick}
-          className="rounded border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          onDragOver={(event) => {
+            event.preventDefault();
+            setIsDragActive(true);
+          }}
+          onDragLeave={() => setIsDragActive(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setIsDragActive(false);
+            const file = event.dataTransfer.files?.[0];
+            if (file) void importJsonFile(file);
+          }}
+          className={`inline-flex items-center gap-2 rounded border px-3 py-2 text-sm font-semibold transition-colors ${
+            isDragActive
+              ? 'border-blue-400 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/20 dark:text-blue-300'
+              : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800'
+          }`}
+          aria-label={t('raids.action.import')}
+          title={t('raids.action.import')}
         >
-          {t('raids.action.import')}
+          <HiOutlineArrowUpTray className="h-4 w-4" />
+          <span className="hidden sm:inline">{t('raids.action.import')}</span>
         </button>
         <button
           type="button"
           onClick={exportJson}
-          className="rounded border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          className="inline-flex items-center gap-2 rounded border border-neutral-300 px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          aria-label={t('raids.action.export')}
+          title={t('raids.action.export')}
         >
-          {t('raids.action.export')}
+          <HiOutlineArrowDownTray className="h-4 w-4" />
+          <span className="hidden sm:inline">{t('raids.action.export')}</span>
         </button>
+        <HistoryExternalEditPromptButton kind="raids" />
         <button
           type="button"
           onClick={() => {
@@ -331,6 +370,25 @@ export default function MyRaidHistoryPage() {
                 ))}
               </select>
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">{t('raids.stats.content')}</span>
+              <CheckboxSelect<RaidType | 'all'>
+                ariaLabel={t('raids.stats.content')}
+                options={
+                  [
+                    { value: 'raid', label: t_g('raid') },
+                    { value: 'eraid', label: t_g('eraid') },
+                    { value: 'jfd', label: t_g('jfd') },
+                    { value: 'multifloor', label: t_g('multifloor') },
+                  ] satisfies CheckboxSelectOption<RaidType>[]
+                }
+                selectedValues={typeFilter}
+                onChange={(next) => setTypeFilter(next.size === 0 ? new Set(['all']) : next)}
+                allOption={{ value: 'all', label: t_ui('all') }}
+                className="w-32"
+                buttonClassName="flex w-full items-center justify-between gap-2 rounded border border-neutral-300 bg-white px-3 py-2 text-left text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+              />
+            </label>
             {activeTab === 'records' && (
               <label className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-neutral-700 dark:text-neutral-300">{t('raids.filters.sort')}</span>
@@ -383,6 +441,15 @@ export default function MyRaidHistoryPage() {
             setEditingEntry(undefined);
           }}
           onSave={saveEntry}
+          onDelete={
+            editingEntry
+              ? () => {
+                  deleteEntry(editingEntry.id);
+                  setIsModalOpen(false);
+                  setEditingEntry(undefined);
+                }
+              : undefined
+          }
         />
       )}
     </div>

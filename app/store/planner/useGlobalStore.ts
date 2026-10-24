@@ -2,7 +2,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { type GrowthPlan } from '~/types/growthPlan';
+import { uwMaxLevelMap } from '~/utils/student/const';
 export type { GrowthPlan };
+
+export type GrowthRangeField =
+  { kind: 'scalar'; field: 'level' | 'affection' | 'uwLevel' } | { kind: 'rank' } | { kind: 'equipment'; index: 0 | 1 | 2 } | { kind: 'potential'; stat: 'hp' | 'atk' | 'heal' };
 
 /**
  * return true when a>b
@@ -49,6 +53,7 @@ interface GlobalState {
   removePlan: (uuid: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updatePlan: (uuid: string, field: string, value: any) => void;
+  updateGrowthRange: (uuid: string, field: GrowthRangeField, current: number, target: number) => void;
   toggleEventInclusion: (uuid: string, eventId: number) => void;
   setGrowthPlans: (plans: GrowthPlan[]) => void;
   updateOwnedGifts: (itemId: string, amount: number) => void;
@@ -159,6 +164,9 @@ export const useGlobalStore = create<GlobalState>()(
       },
       updatePlan: (uuid, field, value) => {
         set((state) => {
+          if (field === 'studentId' && typeof value === 'number' && state.growthPlans.some((plan) => plan.uuid !== uuid && plan.studentId === value)) {
+            return state;
+          }
           const newGrowthPlans = state.growthPlans.map((p) => {
             if (p.uuid === uuid) {
               const newPlan = JSON.parse(JSON.stringify(p)) as GrowthPlan;
@@ -208,6 +216,35 @@ export const useGlobalStore = create<GlobalState>()(
 
           return { growthPlans: newGrowthPlans };
         });
+      },
+      updateGrowthRange: (uuid, field, current, target) => {
+        set((state) => ({
+          growthPlans: state.growthPlans.map((plan) => {
+            if (plan.uuid !== uuid) return plan;
+            const next: GrowthPlan = structuredClone(plan);
+            const nextTarget = Math.max(current, target);
+            if (field.kind === 'scalar') {
+              next.current[field.field] = current;
+              next.target[field.field] = nextTarget;
+            } else if (field.kind === 'equipment') {
+              next.current.equipment[field.index] = current;
+              next.target.equipment[field.index] = nextTarget;
+            } else if (field.kind === 'potential') {
+              next.current.potential[field.stat] = current;
+              next.target.potential[field.stat] = nextTarget;
+            } else {
+              const rankToState = (index: number) => (index < 5 ? { star: index + 1, uw: 0 } : { star: 5, uw: index - 4 });
+              const currentRank = rankToState(current);
+              const targetRank = rankToState(nextTarget);
+              Object.assign(next.current, currentRank);
+              Object.assign(next.target, targetRank);
+              next.current.uwLevel = currentRank.uw === 0 ? 1 : Math.min(next.current.uwLevel, uwMaxLevelMap[currentRank.uw]);
+              next.target.uwLevel = targetRank.uw === 0 ? 1 : Math.min(next.target.uwLevel, uwMaxLevelMap[targetRank.uw]);
+              if (next.target.uw > 0 && next.current.uw > 0) next.target.uwLevel = Math.max(next.target.uwLevel, next.current.uwLevel);
+            }
+            return next;
+          }),
+        }));
       },
       toggleEventInclusion: (uuid, eventId) => {
         set((state) => ({
@@ -264,3 +301,8 @@ export const useGlobalStore = create<GlobalState>()(
     },
   ),
 );
+
+export function getGrowthPlansSyncValue() {
+  const { growthPlans, ownedGifts, materialInventory } = useGlobalStore.getState();
+  return { growthPlans, ownedGifts, materialInventory };
+}

@@ -1,13 +1,15 @@
 // app/routes/planner/Gacha_v2.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaTimes, FaChevronRight } from 'react-icons/fa';
 
 import { parseAndGroupBanners, getAllStudents, normalizePortraitMap, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import type { Student } from '~/types/gacha';
 import { PageHeader } from '~/components/common/PageHeader';
-import IncomePlannerPanel_v2, { type CustomIncome } from '~/components/gacha/IncomePlannerPanel_v2';
+import IncomePlannerPanel_v2 from '~/components/gacha/IncomePlannerPanel_v2';
+import type { CustomIncome } from '~/utils/pyroxeneCalc';
 import BannerPlanner_v2 from '~/components/gacha/BannerPlanner_v2';
+import SimpleBannerPicker from '~/components/gacha/SimpleBannerPicker';
 import PyroTimelineChart, { type ProbTimelinePoint, type CustomLineConfig, type BannerStudentMarker } from '~/components/gacha/PyroTimelineChart';
 
 import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
@@ -28,18 +30,19 @@ import {
   type SimulationStats,
   PYROXENE_PER_MINI_STORY,
 } from '~/utils/pyroxeneCalc';
-import { PYROXENE_PER_PULL_UNIT, ticketCreditedDist, type GlobalAggregatedResult, type DistributionData } from '~/utils/gachaEngine';
+import { PYROXENE_PER_PULL_UNIT, resolveMaxPull, ticketCreditedDist, type GlobalAggregatedResult, type DistributionData } from '~/utils/gachaEngine';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/Gacha_v2';
 import { cdn } from '~/utils/cdn';
-import { useLocalStorage } from '~/utils/useLocalStorage';
+import { useLocalStorage } from '~/hooks/useLocalStorage';
 import PlannerGuide, { GUIDE_STORAGE_KEY } from '~/components/gacha/PlannerGuide';
 import { useSyncStore } from '~/store/syncStore';
 import { localeLink } from '~/utils/localeLink';
 import type { AppHandle } from '~/types/link';
 import { useGachaResultStore } from '~/store/planner/useGachaResultStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
+import { ConfirmDialog } from '~/components/common/ConfirmDialog';
 
 export type { PyroxeneConfig } from '~/utils/pyroxeneCalc';
 
@@ -72,6 +75,7 @@ export function loader({ request, context }: LoaderFunctionArgs) {
   const server = (url.searchParams.get('server') as GameServer) || 'kr';
 
   const i18n = getInstance(context);
+  const locale = i18n.language as Locale;
 
   const scheduleData = loadScheduleDataV2({ server, tracksToLoad: 'all' });
 
@@ -81,11 +85,15 @@ export function loader({ request, context }: LoaderFunctionArgs) {
     description: i18n.t('planner:gacha.intro.summary'),
     server,
     scheduleData,
+    canonicalUrl: createLocalizedUrl(locale, '/planner/gacha'),
   });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/gacha.webp');
+  return [
+    ...createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/gacha.webp', loaderData.canonicalUrl),
+    { tagName: 'link', rel: 'canonical', href: loaderData.canonicalUrl },
+  ];
 }
 
 // Fetch roster/portrait during hydration, not in useEffect — avoids blocking on useTranslation() Suspense.
@@ -124,11 +132,25 @@ interface TimelinePoint {
 
 export const SIMULATION_DAYS = 150;
 
+// Desktop settings-sidebar width (px), user-draggable via the column divider. The divider travels
+// symmetrically: no fixed upper bound, both columns share one minimum width, so the sidebar can grow
+// as large as the banner column can and vice versa (bounded only by the page's max-w-7xl container).
+// Both panels' inner grids are container-query / flex-wrap based, so either column survives its own minimum.
+const COL_MIN_PX = 340; // shared minimum width for either column
+const SIDEBAR_WIDTH_DEFAULT = 340;
+const DIVIDER_TRACK_PX = 20; // the 1.25rem middle grid track that hosts the handle
+
+function clampSidebarWidth(px: number, containerWidth: number): number {
+  const upper = Math.max(COL_MIN_PX, containerWidth - DIVIDER_TRACK_PX - COL_MIN_PX);
+  return Math.min(Math.max(px, COL_MIN_PX), upper);
+}
+
 const GACHA_PREFS_DEFAULT = {
   server: 'KR' as 'KR' | 'JP',
   customPercentiles: [] as number[],
+  sidebarWidth: SIDEBAR_WIDTH_DEFAULT,
   incomeConfig: {
-    currentPyroxene: 24000,
+    currentPyroxene: 0, //24000,
     monthlyCard: true,
     halfMonthlyCard: false,
     monthlyPackCost: 0,
@@ -146,7 +168,7 @@ const GACHA_PREFS_DEFAULT = {
 
 function isStrategyModified(s: BannerStrategy): boolean {
   if (s.isActive) return true;
-  if (s.maxSparks !== 1 || (s.maxHalfCharges ?? 2) !== 2 || s.minPulls !== 0 || s.maxPulls !== 200 || s.freePulls !== 0) return true;
+  if ((s.maxPull ?? 200) !== 200 || s.minPulls !== 0 || s.freePulls !== 0) return true;
   if (s.claimRecruitBonus ?? false) return true;
   return Object.values(s.studentConfigs).some((cfg) => cfg.mode !== 'skip');
 }
@@ -242,7 +264,10 @@ function buildStrategies(loadedBanners: BannerPeriod[], saved: Record<string, Ba
     }
 
     if (match) {
-      next[b.id] = { ...match, bannerId: b.id, server };
+      // Self-heal: drop the deprecated spark/half-charge budget fields, collapsing them into maxPull once.
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- reading them here is how we retire them
+      const { maxSparks: _s, maxHalfCharges: _h, maxPulls: _p, ...rest } = match;
+      next[b.id] = { ...rest, bannerId: b.id, server, maxPull: match.maxPull ?? resolveMaxPull(match, b.useChargeSystem) };
     } else {
       const configs: Record<number, StudentStrategyConfig> = {};
       b.pickupStudents.forEach((s, idx) => {
@@ -252,12 +277,9 @@ function buildStrategies(loadedBanners: BannerPeriod[], saved: Record<string, Ba
         bannerId: b.id,
         server,
         isActive: false,
-        maxSparks: 1,
-        maxHalfCharges: 2,
         minPulls: 0,
         studentConfigs: configs,
         freePulls: 0,
-        maxPulls: 200,
         isFes: false,
         claimRecruitBonus: false,
         recruitBonusThreshold: 10,
@@ -282,7 +304,15 @@ export default function GachaMain() {
 
   const syncPush = useSyncStore((s) => s.push);
 
-  const [guideHidden, setGuideHidden] = useLocalStorage(GUIDE_STORAGE_KEY, false);
+  // Default hidden: a fresh visitor sees the collapsed pill first (see PlannerGuide.tsx's FOUC script,
+  // which is written for this same default). Anyone who already interacted with it keeps their choice.
+  const [guideHidden, setGuideHidden] = useLocalStorage(GUIDE_STORAGE_KEY, true);
+
+  // Simple/expert display mode — 'expert' keeps today's full-featured planner untouched; 'simple'
+  // hides advanced controls the rest of this file conditions on `mode`. Same useLocalStorage pattern
+  // as guideHidden/prefs above; scoped to this route only, so no need for a separate store module.
+  const [mode, setMode] = useLocalStorage<'simple' | 'expert'>('gacha_planner_mode', 'expert');
+  const [modeBannerDismissed, setModeBannerDismissed] = useLocalStorage('gacha_mode_banner_dismissed', false);
 
   const [prefs, setPrefs] = useLocalStorage('gacha_prefs_v1', GACHA_PREFS_DEFAULT);
   const { server, customPercentiles, incomeConfig } = prefs;
@@ -290,6 +320,70 @@ export default function GachaMain() {
   const setCustomPercentiles = (v: number[] | ((prev: number[]) => number[])) => setPrefs((p) => ({ ...p, customPercentiles: v instanceof Function ? v(p.customPercentiles) : v }));
   const setIncomeConfig: React.Dispatch<React.SetStateAction<PyroxeneConfig & { customIncomes?: CustomIncome[] }>> = (v) =>
     setPrefs((p) => ({ ...p, incomeConfig: v instanceof Function ? v(p.incomeConfig) : v }));
+
+  // ── Draggable divider between the banner column and the settings sidebar (desktop only) ──
+  // During a drag the width is written straight to the CSS custom property to avoid re-rendering the
+  // (heavy) planner tree on every pointer move; the pref (localStorage + account sync) is committed once on release.
+  const twoColRef = useRef<HTMLDivElement>(null);
+  // SSR renders the default width (no localStorage); a stored width is applied only after mount so the
+  // server and first client render agree — otherwise React keeps the stale SSR style/aria attributes.
+  const [dividerHydrated, setDividerHydrated] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [twoColWidth, setTwoColWidth] = useState(0);
+  useEffect(() => {
+    setDividerHydrated(true);
+    const el = twoColRef.current;
+    if (!el) return;
+    const measure = () => setTwoColWidth(el.getBoundingClientRect().width);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const storedSidebarWidth = prefs.sidebarWidth ?? SIDEBAR_WIDTH_DEFAULT;
+  const sidebarWidthMax = twoColWidth > 0 ? Math.max(COL_MIN_PX, twoColWidth - DIVIDER_TRACK_PX - COL_MIN_PX) : Math.max(COL_MIN_PX, storedSidebarWidth);
+  const sidebarWidth = dividerHydrated ? Math.min(Math.max(storedSidebarWidth, COL_MIN_PX), sidebarWidthMax) : SIDEBAR_WIDTH_DEFAULT;
+  const commitSidebarWidth = (px: number) => {
+    const containerWidth = twoColRef.current?.getBoundingClientRect().width ?? Number.POSITIVE_INFINITY;
+    setPrefs((p) => ({ ...p, sidebarWidth: clampSidebarWidth(px, containerWidth) }));
+  };
+
+  const handleDividerPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const container = twoColRef.current;
+    const rect = container?.getBoundingClientRect();
+    if (!container || !rect) return;
+    let latest = clampSidebarWidth(sidebarWidth, rect.width);
+    const onMove = (moveEvent: PointerEvent) => {
+      latest = clampSidebarWidth(rect.right - moveEvent.clientX, rect.width);
+      container.style.setProperty('--sidebar-w', `${latest}px`);
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      document.body.classList.remove('select-none', 'cursor-col-resize');
+      setPrefs((p) => ({ ...p, sidebarWidth: latest }));
+    };
+    document.body.classList.add('select-none', 'cursor-col-resize');
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const handleDividerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 48 : 16;
+    let next: number | null = null;
+    if (event.key === 'ArrowLeft')
+      next = sidebarWidth + step; // grow the sidebar
+    else if (event.key === 'ArrowRight') next = sidebarWidth - step;
+    else if (event.key === 'Home') next = COL_MIN_PX;
+    else if (event.key === 'End')
+      next = Number.POSITIVE_INFINITY; // clamps to "sidebar as wide as the layout allows"
+    else if (event.key === 'Enter' || event.key === ' ') next = SIDEBAR_WIDTH_DEFAULT;
+    if (next === null) return;
+    event.preventDefault();
+    commitSidebarWidth(next);
+  };
 
   // Server-dependent (KR/JP) derivation from studentMap, no refetch needed. parseAndGroupBanners falls
   // back to bundled CSV names when studentMap is null, so real dates/pickups show before clientLoader resolves.
@@ -425,7 +519,10 @@ export default function GachaMain() {
     );
     mapItems(tracks['multifloor'], 'Multifloor');
     mapItems(tracks['event'], 'Event');
-    mapItems(tracks['campaign'], 'Campaign');
+    mapItems(
+      tracks['campaign'].filter((item) => item.details?.campaignType !== 'Exp'),
+      'Campaign',
+    );
     mapItems(tracks['mainstory'], 'MainStory');
     if (tracks['ministory']) mapItems(tracks['ministory'], 'MiniStory');
     if (tracks['maintenance']) mapItems(tracks['maintenance'], 'Maintenance');
@@ -611,7 +708,7 @@ export default function GachaMain() {
   // Escape hatch for corrupted saved settings (e.g. an old localStorage shape the app can no longer parse) —
   // clears every gacha-planner-scoped key and reloads, without touching other planners' saved data.
   const handleResetPlannerData = () => {
-    if (!window.confirm(t('reset_confirm'))) return;
+    setResetConfirmOpen(false);
     localStorage.removeItem('gacha_prefs_v1');
     localStorage.removeItem('gacha_strategies_v3');
     localStorage.removeItem(GUIDE_STORAGE_KEY);
@@ -634,109 +731,184 @@ export default function GachaMain() {
           <PageHeader title={t('title')} badge="BETA" description={t('intro.summary')} />
         </div>
 
-        {/* Server toggle pill */}
-        <div className="flex rounded-lg bg-neutral-200/70 dark:bg-neutral-800 p-1 shrink-0 self-start sm:mt-1">
-          <button
-            onClick={() => setServer('KR')}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
-              server === 'KR' ? 'bg-white dark:bg-neutral-700 text-ba-btn-blue' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
-            }`}
-          >
-            {t('server.kr_global')}
-          </button>
-          <button
-            onClick={() => setServer('JP')}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
-              server === 'JP' ? 'bg-white dark:bg-neutral-700 text-amber-600' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
-            }`}
-          >
-            {t('server.jp')}
-          </button>
+        <div className="flex items-center gap-2 shrink-0 self-start sm:mt-1">
+          {/* Simple/expert mode pill */}
+          <div className="flex rounded-lg bg-neutral-200/70 dark:bg-neutral-800 p-1">
+            <button
+              onClick={() => setMode('simple')}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                mode === 'simple' ? 'bg-white dark:bg-neutral-700 text-ba-btn-blue' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+              }`}
+            >
+              {t('mode.simple')}
+            </button>
+            <button
+              onClick={() => setMode('expert')}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                mode === 'expert' ? 'bg-white dark:bg-neutral-700 text-ba-btn-blue' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+              }`}
+            >
+              {t('mode.expert')}
+            </button>
+          </div>
+
+          {/* Server toggle pill */}
+          <div className="flex rounded-lg bg-neutral-200/70 dark:bg-neutral-800 p-1">
+            <button
+              onClick={() => setServer('KR')}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                server === 'KR' ? 'bg-white dark:bg-neutral-700 text-ba-btn-blue' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+              }`}
+            >
+              {t('server.kr_global')}
+            </button>
+            <button
+              onClick={() => setServer('JP')}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                server === 'JP' ? 'bg-white dark:bg-neutral-700 text-amber-600' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+              }`}
+            >
+              {t('server.jp')}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── Legacy link ── */}
-      <Link
-        to={localeLink(locale, `/planner/gacha_old`)}
-        className="mb-4 flex items-center justify-between rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800/60 px-4 py-3 hover:border-neutral-400 dark:hover:border-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group"
-      >
-        <div>
-          <div className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{t('old_version_title')}</div>
-          <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{t('old_version_description')}</div>
+      {/* ── Compact-mode entry point — Standard mode only, dismissible once. Presented as a prominent
+          clickable card (the primary action is "switch to Compact mode"), with the newbie-guide link
+          as a secondary row so newcomers always have a way in. ── */}
+      {mode === 'expert' && !modeBannerDismissed && (
+        <div className="mb-4 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+          <div className="flex items-stretch">
+            <button
+              type="button"
+              onClick={() => setMode('simple')}
+              className="group flex flex-1 items-center gap-3 p-4 text-left hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 transition-colors"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-bold text-neutral-800 dark:text-neutral-100">{t('mode.intro_banner.cta_simple')}</span>
+                <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">{t('mode.intro_banner.text')}</span>
+              </span>
+              <FaChevronRight className="ml-auto shrink-0 text-neutral-300 transition-colors group-hover:text-blue-500 dark:text-neutral-600" size={12} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setModeBannerDismissed(true)}
+              aria-label={t_ui('close')}
+              className="shrink-0 px-3 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 border-l border-neutral-100 dark:border-neutral-800"
+            >
+              <FaTimes size={12} />
+            </button>
+          </div>
+          <Link
+            to={localeLink(locale, '/planner/gacha/guide')}
+            className="flex items-center gap-2 border-t border-neutral-100 px-4 py-2.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-neutral-100/60 dark:border-neutral-800 dark:text-blue-400 dark:hover:bg-neutral-800/40"
+          >
+            {t('mode.intro_banner.cta_guide')}
+            <FaChevronRight size={10} />
+          </Link>
         </div>
-        <span className="text-lg text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">→</span>
-      </Link>
+      )}
 
-      {/* ── Guide ── */}
-      <PlannerGuide collapsed={guideHidden} onToggle={() => setGuideHidden((v) => !v)} gachaTestPath={localeLink(locale, '/planner/gacha-test')} />
+      {/* ── Compact mode: the Standard-only PlannerGuide block is hidden, so surface a direct link to
+          the newbie strategy guide here instead. ── */}
+      {mode === 'simple' && (
+        <Link
+          to={localeLink(locale, '/planner/gacha/guide')}
+          className="mb-4 flex items-center gap-3 rounded-xl border border-neutral-200 px-4 py-3 transition-colors hover:bg-neutral-100/60 dark:border-neutral-800 dark:hover:bg-neutral-800/40"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-neutral-800 dark:text-neutral-100">{t('mode.intro_banner.guide_title')}</span>
+            <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">{t('mode.intro_banner.guide_description')}</span>
+          </span>
+          <FaChevronRight className="ml-auto shrink-0 text-neutral-300 dark:text-neutral-600" size={12} />
+        </Link>
+      )}
+
+      {/* ── Guide — Standard mode only; a newcomer in Compact mode gets the newbie guide route
+          instead, not this power-user notes/legacy-planner block. ── */}
+      {mode === 'expert' && (
+        <PlannerGuide
+          collapsed={guideHidden}
+          onToggle={() => setGuideHidden((v) => !v)}
+          gachaTestPath={localeLink(locale, '/planner/gacha-test')}
+          oldVersionPath={localeLink(locale, '/planner/gacha_old')}
+        />
+      )}
 
       {/* ── KPI strip ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 rounded-xl border border-neutral-200 dark:border-neutral-800 divide-x divide-y divide-neutral-200 dark:divide-neutral-800 mb-5 overflow-hidden">
-        {/* Currently owned — Manual input available */}
-        <div className="px-4 py-3">
-          <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1 flex items-center gap-1" style={monoStyle}>
-            {pyroxeneIcon && (
-              <span className="shrink-0 inline-flex items-center justify-center" style={{ width: 12, height: 12 }}>
-                <img src={`data:image/webp;base64,${pyroxeneIcon}`} className="max-w-full max-h-full object-cover" />
-              </span>
+      {mode === 'simple' ? (
+        <></>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 rounded-xl border border-neutral-200 dark:border-neutral-800 divide-x divide-y divide-neutral-200 dark:divide-neutral-800 mb-5 overflow-hidden">
+          {/* Currently owned — Manual input available */}
+          <div className="px-4 py-3">
+            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1 flex items-center gap-1" style={monoStyle}>
+              {pyroxeneIcon && (
+                <span className="shrink-0 inline-flex items-center justify-center" style={{ width: 12, height: 12 }}>
+                  <img src={`data:image/webp;base64,${pyroxeneIcon}`} className="max-w-full max-h-full object-cover" />
+                </span>
+              )}
+              {t('current_balance_input')}
+            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              aria-label={t('current_balance_input')}
+              value={fmt(incomeConfig.currentPyroxene)}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/[^0-9]/g, '');
+                setIncomeConfig((prev) => ({ ...prev, currentPyroxene: digits ? Number(digits) : 0 }));
+              }}
+              className="min-w-0 w-full text-[26px] font-black tabular-nums leading-none bg-transparent border-none outline-none"
+              style={{ ...monoStyle, color: '#77e0ff', fontSize: '26px', WebkitTextSizeAdjust: '100%' }}
+            />
+          </div>
+
+          {/* P90 balance at the tightest point in the plan */}
+          <div className="px-4 py-3">
+            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1 flex items-center gap-1" style={monoStyle}>
+              {pyroxeneIcon && (
+                <span className="shrink-0 inline-flex items-center justify-center" style={{ width: 12, height: 12 }}>
+                  <img src={`data:image/webp;base64,${pyroxeneIcon}`} className="max-w-full max-h-full object-cover" />
+                </span>
+              )}
+              {t('balance_p90')}
+            </div>
+            <div
+              className={`flex items-baseline gap-1.5 ${p90Balance === null ? 'text-neutral-400 dark:text-neutral-500' : p90Balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
+              style={monoStyle}
+            >
+              <span className="text-[26px] font-black tabular-nums leading-none">{p90Balance !== null ? `${p90Balance < 0 ? '-' : '+'}${fmt(Math.abs(p90Balance))}` : '—'}</span>
+              {p90Balance !== null && <span className="text-[11px] font-bold">{t(p90Balance < 0 ? 'balance_shortfall' : 'balance_surplus')}</span>}
+            </div>
+          </div>
+
+          {/* Planned banners */}
+          <div className="px-4 py-3">
+            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1" style={monoStyle}>
+              {t('planned_banners')}
+            </div>
+            <div className="text-[26px] font-black tabular-nums leading-none text-neutral-800 dark:text-neutral-100" style={monoStyle}>
+              {activeStrategyCount}
+            </div>
+          </div>
+
+          {/* Pyroxene sufficiency probability */}
+          <div className="px-4 py-3">
+            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1" style={monoStyle}>
+              {t('result_view.summary.safety.title')}
+            </div>
+            <div className="text-[26px] font-black tabular-nums leading-none" style={{ ...monoStyle, color: bankruptcyRate !== null ? bankruptcyColor(bankruptcyRate) : '#a3a3a3' }}>
+              {bankruptcyRate !== null ? `${(100 - bankruptcyRate).toFixed(1)}%` : '—'}
+            </div>
+            {failedUsersPerHundred !== null && (
+              <div className="mt-1.5 text-[11px] leading-tight text-neutral-500 dark:text-neutral-400">{t('failure_out_of_100', { count: failedUsersPerHundred })}</div>
             )}
-            {t('current_balance_input')}
-          </div>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            aria-label={t('current_balance_input')}
-            value={fmt(incomeConfig.currentPyroxene)}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/[^0-9]/g, '');
-              setIncomeConfig((prev) => ({ ...prev, currentPyroxene: digits ? Number(digits) : 0 }));
-            }}
-            className="min-w-0 w-full text-[26px] font-black tabular-nums leading-none bg-transparent border-none outline-none"
-            style={{ ...monoStyle, color: '#77e0ff', fontSize: '26px', WebkitTextSizeAdjust: '100%' }}
-          />
-        </div>
-
-        {/* P90 balance at the tightest point in the plan */}
-        <div className="px-4 py-3">
-          <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1 flex items-center gap-1" style={monoStyle}>
-            {pyroxeneIcon && (
-              <span className="shrink-0 inline-flex items-center justify-center" style={{ width: 12, height: 12 }}>
-                <img src={`data:image/webp;base64,${pyroxeneIcon}`} className="max-w-full max-h-full object-cover" />
-              </span>
-            )}
-            {t('balance_p90')}
-          </div>
-          <div
-            className={`flex items-baseline gap-1.5 ${p90Balance === null ? 'text-neutral-400 dark:text-neutral-500' : p90Balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}
-            style={monoStyle}
-          >
-            <span className="text-[26px] font-black tabular-nums leading-none">{p90Balance !== null ? `${p90Balance < 0 ? '-' : '+'}${fmt(Math.abs(p90Balance))}` : '—'}</span>
-            {p90Balance !== null && <span className="text-[11px] font-bold">{t(p90Balance < 0 ? 'balance_shortfall' : 'balance_surplus')}</span>}
           </div>
         </div>
-
-        {/* Planned banners */}
-        <div className="px-4 py-3">
-          <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1" style={monoStyle}>
-            {t('planned_banners')}
-          </div>
-          <div className="text-[26px] font-black tabular-nums leading-none text-neutral-800 dark:text-neutral-100" style={monoStyle}>
-            {activeStrategyCount}
-          </div>
-        </div>
-
-        {/* Pyroxene sufficiency probability */}
-        <div className="px-4 py-3">
-          <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mb-1" style={monoStyle}>
-            {t('result_view.summary.safety.title')}
-          </div>
-          <div className="text-[26px] font-black tabular-nums leading-none" style={{ ...monoStyle, color: bankruptcyRate !== null ? bankruptcyColor(bankruptcyRate) : '#a3a3a3' }}>
-            {bankruptcyRate !== null ? `${(100 - bankruptcyRate).toFixed(1)}%` : '—'}
-          </div>
-          {failedUsersPerHundred !== null && <div className="mt-1.5 text-[11px] leading-tight text-neutral-500 dark:text-neutral-400">{t('failure_out_of_100', { count: failedUsersPerHundred })}</div>}
-        </div>
-      </div>
+      )}
 
       {/* ── Timeline chart ── */}
       <section className="mb-5">
@@ -764,28 +936,64 @@ export default function GachaMain() {
         )}
       </section>
 
-      {/* ── Two-column layout: banners (left) + settings sidebar (right) ── */}
-      <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-5 lg:items-start pb-8">
+      {/* ── Two-column layout: banners (left) + settings sidebar (right), user-resizable divider between ── */}
+      <div ref={twoColRef} className="lg:grid lg:grid-cols-[minmax(0,1fr)_1.25rem_var(--sidebar-w)] lg:items-start pb-8" style={{ '--sidebar-w': `${sidebarWidth}px` } as React.CSSProperties}>
         {/* Left: Banner strategy */}
-        <section className="mb-5 lg:mb-0 min-w-0">
-          <SectionDivider label={t('section_strategy')} right={activeStrategyCount > 0 ? t('active_banner_count', { count: activeStrategyCount }) : undefined} />
-          {/* CSV banners enriched by clientLoader (portraits/names/school in place) */}
-          <BannerPlanner_v2
-            banners={banners}
-            strategies={strategies}
-            portraitMap={portraitMap}
-            pyroxeneIcon={pyroxeneIcon}
-            onUpdateStrategy={updateStrategy}
-            onUpdateStudentConfig={updateStudentConfig}
-            gachaSimResult={gachaSimResult}
-            onResetPlannerData={handleResetPlannerData}
-          />
+        <section className="mb-5 lg:mb-0 lg:pr-1 min-w-0">
+          <SectionDivider label={t('section_strategy')} right={mode === 'expert' && activeStrategyCount > 0 ? t('active_banner_count', { count: activeStrategyCount }) : undefined} />
+          {/* CSV banners enriched by clientLoader (portraits/names/school in place). Simple mode swaps in a
+              student-icon picker over the same strategies/callbacks — no separate state, so switching modes
+              never loses a setting (see SimpleBannerPicker.tsx). */}
+          {mode === 'simple' ? (
+            <SimpleBannerPicker
+              banners={banners}
+              strategies={strategies}
+              portraitMap={portraitMap}
+              onUpdateStrategy={updateStrategy}
+              onUpdateStudentConfig={updateStudentConfig}
+              onResetPlannerData={() => setResetConfirmOpen(true)}
+            />
+          ) : (
+            <BannerPlanner_v2
+              banners={banners}
+              strategies={strategies}
+              portraitMap={portraitMap}
+              pyroxeneIcon={pyroxeneIcon}
+              onUpdateStrategy={updateStrategy}
+              onUpdateStudentConfig={updateStudentConfig}
+              gachaSimResult={gachaSimResult}
+              onResetPlannerData={() => setResetConfirmOpen(true)}
+            />
+          )}
         </section>
 
+        {/* Divider: drag to reallocate width between the banner column and the settings sidebar */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={t('sidebar_resize.label')}
+          aria-valuenow={Math.round(sidebarWidth)}
+          aria-valuemin={COL_MIN_PX}
+          aria-valuemax={Math.round(sidebarWidthMax)}
+          tabIndex={0}
+          onPointerDown={handleDividerPointerDown}
+          onKeyDown={handleDividerKeyDown}
+          onDoubleClick={() => commitSidebarWidth(SIDEBAR_WIDTH_DEFAULT)}
+          className="group relative hidden touch-none select-none cursor-col-resize lg:sticky lg:top-4 lg:flex lg:h-[calc(100vh-2rem)] lg:items-center lg:justify-center focus-visible:outline-2 focus-visible:outline-blue-500"
+        >
+          <span className="h-full w-px bg-neutral-200 transition-colors group-hover:bg-blue-400 dark:bg-neutral-800 dark:group-hover:bg-blue-500" />
+          <span className="absolute flex flex-col gap-1">
+            {[0, 1, 2].map((dot) => (
+              <span key={dot} className="h-1 w-1 rounded-full bg-neutral-400 transition-colors group-hover:bg-blue-500 dark:bg-neutral-600" />
+            ))}
+          </span>
+        </div>
+
         {/* Right: Sim + Income settings sidebar */}
-        <div className="lg:sticky lg:top-4">
+        <div className="lg:sticky lg:top-4 lg:pl-1">
           <SectionDivider label={t('section_settings')} />
           <IncomePlannerPanel_v2
+            simple={mode === 'simple'}
             config={incomeConfig}
             setConfig={setIncomeConfig}
             schedules={plannerSchedules}
@@ -794,6 +1002,7 @@ export default function GachaMain() {
             banners={banners}
             strategies={strategies}
             allStudents={allStudents}
+            region={server}
             ownedStudentIds={ownedStudentIds}
             portraitMap={portraitMap}
             pyroxeneIcon={pyroxeneIcon}
@@ -811,6 +1020,7 @@ export default function GachaMain() {
           />
         </div>
       </div>
+      <ConfirmDialog open={resetConfirmOpen} message={t('reset_confirm')} danger onCancel={() => setResetConfirmOpen(false)} onConfirm={handleResetPlannerData} />
     </div>
   );
 }

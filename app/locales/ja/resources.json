@@ -13,16 +13,13 @@
   "tabs": {
     "resources": "リソース",
     "income": "収入と支出",
-    "students": "生徒の目標",
+    "students": "エレフ・エリグマ必要量予測",
     "studentsShort": "目標"
   },
   "incomeTabHint": "上で追跡するリソースを選択して、収入、購入、農業計画を構成してください。",
   "planStatus": {
-    "title": "プラン状態",
     "summary": "{{atRisk}}件 リスク中 · {{covered}}件 エリグマが必要 · {{onTrack}}件 順調",
     "summaryWithDeadline": "{{atRisk}}件 リスク中 · {{covered}}件 エリグマが必要 · {{onTrack}}件 順調 · {{noDeadline}}件 期限なし",
-    "openButton": "生徒の目標",
-    "sectionTitle": "生徒の目標",
     "emptyState": "生徒の目標を追加して、自然なエレフ収入が十分か、エリグマが必要かを確認してください。",
     "statusCovered": "エリグマでカバー",
     "statusOnTrack": "順調",
@@ -112,8 +109,6 @@
     "premium": "プレミアム:"
   },
   "panel": {
-    "title": "リソース",
-    "startingInventory": "初期保有量",
     "gachaSimulation": "ガチャシミュレーション",
     "noSimDataPre": "シミュレーションデータなし。",
     "noSimDataPost": "をまず実行してください。",

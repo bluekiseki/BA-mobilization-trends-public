@@ -1,4 +1,4 @@
-import type { DifficultyName } from '~/components/raid/Difficulty';
+import type { DifficultyName } from '~/utils/difficultyPolicy';
 import type { RaidDetailConfig, RaidTrophy } from '~/types/resourcePlan';
 
 export { RAID_DIFFICULTIES, RAID_TROPHIES } from '~/types/resourcePlan';

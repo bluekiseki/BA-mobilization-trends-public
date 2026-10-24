@@ -1,4 +1,10 @@
 {
+  "externalEdit": {
+    "copyPrompt": "編集プロンプト",
+    "copied": "プロンプトをコピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "description": "エクスポートしたJSONと一緒に外部AIツールへ貼り付ける編集プロンプトをコピーします。"
+  },
   "raids": {
     "title": "クリア記録",
     "description": "総力戦、大決戦、総合戦術試験、制約解除決戦のクリア記録を保存します。",
@@ -31,17 +37,17 @@
       "sortByAddedAsc": "登録逆順"
     },
     "error": {
-      "invalidFormat": "レイド記録のフォーマットが正しくありません。",
+      "invalidFormat": "クリア記録のフォーマットが正しくありません。",
       "importFailed": "JSONファイルの読み込みに失敗しました。",
-      "noRaidSelected": "レイドを選択してください。",
+      "noRaidSelected": "総力戦/大決戦を選択してください。",
       "scoreInvalid": "スコアは0以上の整数である必要があります。",
       "scoreOptionalInvalid": "スコアは空欄または0以上の整数である必要があります。",
       "rankInvalid": "ランクは空欄または1以上の整数である必要があります。",
       "floorInvalid": "層数は1〜124の間である必要があります。",
       "guideLinkInvalid": "攻略リンクはhttp://またはhttps://から始まる必要があります。",
       "armorGuideLinkInvalid": "属性攻略リンクはhttp://またはhttps://から始まる必要があります。",
-      "assistDuplicate": "このレイドですでに助っ人として使用している生徒です。",
-      "assistDuplicateArmor": "この属性ですでに助っ人として使用している生徒です。",
+      "assistDuplicate": "この総力戦/大決戦ですでに助っ人として出撃している生徒です。",
+      "assistDuplicateArmor": "この属性ですでに助っ人として出撃している生徒です。",
       "studentDuplicate": "同じ生徒を複数編成することはできません。",
       "studentDuplicateWithoutAssist": "同じ生徒は助っ人として借りない限り、重複して編成できません。"
     },
@@ -77,7 +83,7 @@
     "stats": {
       "totalRecords": "保存記録",
       "uniqueStudents": "登場生徒数",
-      "assistCount": "助っ人使用回数",
+      "assistCount": "助っ人レンタル回数",
       "noData": "データがありません。",
       "content": "コンテンツ",
       "boss": "ボス",
@@ -107,7 +113,7 @@
       "usageChart": {
         "title": "最も多く一緒に戦った生徒",
         "desc": "コンテンツの種類と助っ人の有無を組み合わせて確認します。",
-        "empty": "選択した条件に合う生徒使用記録がありません。"
+        "empty": "選択した条件に合う生徒出撃記録がありません。"
       },
       "restrictionChart": {
         "title": "制約解除決戦 クリア推移",
@@ -115,6 +121,88 @@
         "empty": "選択した条件に合う制約解除決戦の記録がありません。"
       },
       "countTimes": "{{count}}回"
+    }
+  },
+  "gacha": {
+    "title": "募集履歴",
+    "description": "募集結果を記録して、自分の運がどれくらいか統計で確認できます。",
+    "importInvalid": "募集履歴のJSON形式が正しくありません。",
+    "source": {
+      "normal": "通常募集",
+      "halfPity": "半天井（100連）",
+      "hardPity": "天井（200連）",
+      "pointExchange": "呼び出しポイント交換"
+    },
+    "bannerType": {
+      "chargeSystem": "呼び出しチャージ",
+      "pointSystem": "呼び出しポイント"
+    },
+    "tabs": {
+      "studentStats": "生徒統計"
+    },
+    "studentStats": {
+      "mostRecruited": "募集回数 TOP 3",
+      "recordedThreeStarNote": "記録に追加された★3生徒が対象",
+      "allAcquisitions": "すべての獲得"
+    },
+    "summary": {
+      "heading": "全期間サマリー",
+      "totalPulls": "総募集回数",
+      "recordedBanners": "記録した募集",
+      "threeStarAcquired": "★3募集",
+      "pickupAcquired": "ピックアップ募集",
+      "newRecruits": "うち新規 {{n}}人",
+      "pickupShareOfThreeStar": "★3のうち {{percent}}%"
+    },
+    "records": {
+      "empty": "募集記録はまだありません。",
+      "unknownBanner": "不明な募集",
+      "entryMeta": "{{date}} · <1>募集{{pulls}}回</1> · ★3 {{threeStar}}人 · 目標 {{goal}}人",
+      "edit": "編集"
+    },
+    "stats": {
+      "scopeHeading": "統計範囲",
+      "scopeAll": "全期間累計",
+      "scopeBanner": "特定の募集",
+      "methodInfo": "計算方法の説明",
+      "median": "中央値",
+      "topPercent": "上位%",
+      "topPercentLowerTitle": "同じ目標をこれより少ない消費で達成できる確率",
+      "topPercentHigherTitle": "同じ条件でこれより多く獲得できる確率",
+      "distributionAria": "{{title}}の確率分布と累積分布",
+      "pointAria": "{{value}}{{unit}}になる確率{{percent}}%",
+      "byBanner": "募集別の運",
+      "threeStarTitle": "★3募集数",
+      "threeStarSubtitle": "有効募集 {{pulls}}回 · 二項分布",
+      "threeStarDescription": "通常募集の結果のみ計算し、半天井・天井による獲得と呼び出しポイント交換は除外します。",
+      "goalTicketsTitle": "消費した募集回数",
+      "goalTicketsSubtitle": "目標 {{n}}人",
+      "halfPityTitle": "半天井ピックアップ",
+      "halfPitySubtitle": "{{hit}} / {{total}} · 二項分布",
+      "halfPityDescription": "半天井ごとにピックアップ募集確率を50%として計算します。"
+    },
+    "form": {
+      "addTitle": "募集記録を追加",
+      "editTitle": "募集記録を編集",
+      "bannerLabel": "募集を選択",
+      "bannerSearchPlaceholder": "生徒名または日付で検索",
+      "initialChargeLabel": "開始時の呼び出しチャージ",
+      "initialChargeNormalLabel": "開始時の呼び出しチャージ（通常）",
+      "initialChargeLimitedLabel": "開始時の呼び出しチャージ（限定）",
+      "resultsHeading": "★3募集結果",
+      "selectBannerFirst": "先に募集を選択してください。",
+      "unknownStudent": "生徒 #{{id}}",
+      "deleteResult": "★3結果を削除",
+      "errorNoBanner": "募集を選択してください。",
+      "errorPullCount": "総募集回数は1以上の整数である必要があります。",
+      "errorInitialCharge": "開始時の呼び出しチャージは0〜199の範囲で入力してください。",
+      "errorGuaranteed": "保証結果数が総募集回数を超えています。",
+      "errorDuplicateFirst": "同じ生徒は初回募集として一度しか記録できません。",
+      "errorPickupNotInBanner": "ピックアップはこの募集の対象生徒のみ選択できます。",
+      "errorGoalNotInBanner": "目標生徒はこの募集の対象生徒のみ選択できます。",
+      "errorPickupMustBeGoal": "ピックアップで募集した生徒は目標生徒に含める必要があります。",
+      "errorNoPointExchange": "呼び出しチャージ方式では呼び出しポイント交換を記録できません。",
+      "errorNoPity": "従来の呼び出しポイント方式では半天井・天井を記録できません。"
     }
   }
 }

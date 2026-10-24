@@ -15,13 +15,15 @@ public/locales/
 .env
 codeql-repo
 *.zip
-/ql/
 .wrangler
 .dev.vars
 *.xml
 
 *.onnx
 *.wasm
+# libav.js scandec build outputs; reproduced from scripts/libav/libav.lock.json
+public/scanner/libav/*.mjs
 public/scanner/*.json
+public/arena-scanner/models/*.json
 public/**/*.txt
 wasm/gacha-engine/target/

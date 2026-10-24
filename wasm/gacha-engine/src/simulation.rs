@@ -526,8 +526,15 @@ fn simulate_single_banner_charge(
 
     let pull_ten_with_charge =
         |target_id: u32, state: &mut SimState, recall_flag: &mut RecallFlag, rng: &mut Rng| {
+            // Route this target's pulls to the normal or limited "recruit charge" counter by the target's
+            // own pickup type; fall back to the banner-level flag when no per-pickup data is present.
+            let is_limited = if pool_data.limited_pickup_ids.is_empty() {
+                pool_data.is_limited_banner
+            } else {
+                pool_data.limited_pickup_ids.contains(&target_id)
+            };
             for i in 0..10u32 {
-                let charge = if pool_data.is_limited_banner {
+                let charge = if is_limited {
                     &mut state.charge_limited
                 } else {
                     &mut state.charge_normal
@@ -580,7 +587,7 @@ fn simulate_single_banner_charge(
                     *recall_flag = RecallFlag::Acquired;
                 }
                 if result.is_pickup {
-                    if pool_data.is_limited_banner {
+                    if is_limited {
                         state.charge_limited = 0;
                     } else {
                         state.charge_normal = 0;
@@ -598,10 +605,11 @@ fn simulate_single_banner_charge(
             let is_obtained =
                 state.obtained_in_sim[student_index.slot(target_config.student_id)] != 0;
             let has_free = current_free_pulls >= 10;
+            // Budget cap applies to free pulls too (a low max_pull limits free-pull usage on this banner).
+            if pulls_this_banner >= strategy.max_pull {
+                break;
+            }
             if !has_free {
-                if pulls_this_banner / 100 >= strategy.max_half_charges {
-                    break;
-                }
                 match target_config.mode {
                     TargetMode::Must if is_obtained => break,
                     TargetMode::Opportunistic
@@ -657,7 +665,7 @@ fn simulate_single_banner_charge(
         || is_near_recruit_bonus(pulls_this_banner)
         || (consume_expiring_tickets
             && has_expiring_ticket_to_drain(state, pool_data.start_time, pool_data.end_time)))
-        && pulls_this_banner / 100 < strategy.max_half_charges
+        && pulls_this_banner < strategy.max_pull
     {
         let has_free = current_free_pulls >= 10;
         state.total_pulls += 10;
@@ -741,15 +749,16 @@ fn simulate_single_banner(
             let is_obtained = state.obtained_in_sim[student_index.slot(current_target_id)] != 0;
             let has_free = current_free_pulls >= 10;
 
+            // Budget cap applies to free pulls too (a low max_pull limits free-pull usage on this banner).
+            if spark_points >= strategy.max_pull {
+                break;
+            }
             if !has_free {
                 let remain = targets
                     .iter()
                     .filter(|t| state.obtained_in_sim[student_index.slot(t.student_id)] == 0)
                     .count() as u32;
                 if spark_points / 200 >= remain {
-                    break;
-                }
-                if spark_points / 200 >= strategy.max_sparks {
                     break;
                 }
 
@@ -829,7 +838,7 @@ fn simulate_single_banner(
     while (spark_points < min_pulls
         || (consume_expiring_tickets
             && has_expiring_ticket_to_drain(state, pool_data.start_time, pool_data.end_time)))
-        && spark_points / 200 < strategy.max_sparks
+        && spark_points < strategy.max_pull
     {
         let has_free = current_free_pulls >= 10;
         state.total_pulls += 10;
@@ -1201,6 +1210,7 @@ mod tests {
             grade1: (16001u32..16100).collect(),
             fes: vec![],
             banner_pickup_ids: vec![10001],
+            limited_pickup_ids: vec![],
             fes_excluded_ids: vec![],
             start_time: 0,
             recruit_bonus_ticket_expiry: i64::MAX, // effectively unreachable in these tests unless explicitly overridden
@@ -1208,11 +1218,10 @@ mod tests {
         }
     }
 
-    fn must_strat(banner_id: &str, student_id: u32, max_sparks: u32) -> BannerStrategy {
+    fn must_strat(banner_id: &str, student_id: u32, max_pull: u32) -> BannerStrategy {
         BannerStrategy {
             banner_id: banner_id.to_string(),
-            max_sparks,
-            max_half_charges: 2,
+            max_pull,
             claim_recruit_bonus: false,
             recruit_bonus_threshold: 10,
             min_pulls: 0,
@@ -1365,6 +1374,7 @@ mod tests {
             // 10002 and 10003 are also banner pickups AND already in grade3 (already released) —
             // they must not be double-counted in the spook pool.
             banner_pickup_ids: vec![10001, 10002, 10003],
+            limited_pickup_ids: vec![],
             fes_excluded_ids: vec![],
             start_time: 0,
             recruit_bonus_ticket_expiry: i64::MAX,
@@ -1441,8 +1451,7 @@ mod tests {
     fn charge_system_respects_half_charge_budget_and_ticket_refund() {
         let mut pool = normal_pool();
         pool.use_charge_system = true;
-        let mut strat = must_strat("b", 10001, 1);
-        strat.max_half_charges = 1;
+        let mut strat = must_strat("b", 10001, 100);
         strat.min_pulls = 100;
         strat.targets.clear();
         let result = run_strategies_chunk(
@@ -1477,7 +1486,7 @@ mod tests {
     /// A charge-system strategy with no targets, so every pull is a pure min_pulls filler (deterministic
     /// pull count regardless of RNG outcome, since nothing ever gates on "obtained").
     fn filler_strat(banner_id: &str, min_pulls: u32) -> BannerStrategy {
-        let mut s = must_strat(banner_id, 10001, 2);
+        let mut s = must_strat(banner_id, 10001, 200);
         s.targets.clear();
         s.min_pulls = min_pulls;
         s
@@ -1564,9 +1573,9 @@ mod tests {
 
     #[test]
     fn must_target_always_acquired() {
-        // must + max_sparks=1 -> Must be acquired within 200 pulls
+        // must + max_pull=200 -> Must be acquired within 200 pulls
         let pools = pools_map("b", normal_pool());
-        let strat = must_strat("b", 10001, 1);
+        let strat = must_strat("b", 10001, 200);
         let mut rng = Rng::new(42);
         let r = run_strategies_chunk(&[strat], &pools, 2000, &mut rng, &[], &[], false);
         assert_eq!(
@@ -1580,7 +1589,7 @@ mod tests {
     fn cost_equals_pulls_over_10_times_1200() {
         // Since free_pulls=0, cost must equal (pulls/10) * 1200
         let pools = pools_map("b", normal_pool());
-        let strat = must_strat("b", 10001, 1);
+        let strat = must_strat("b", 10001, 200);
         let mut rng = Rng::new(7);
         let r = run_strategies_chunk(&[strat], &pools, 500, &mut rng, &[], &[], false);
         let cost = r.cost.bucket("inf").unwrap();
@@ -1592,7 +1601,7 @@ mod tests {
     fn spark_cost_at_most_240000() {
         // 1 spark = 200 pulls × 1200 = 240,000
         let pools = pools_map("b", normal_pool());
-        let strat = must_strat("b", 10001, 1);
+        let strat = must_strat("b", 10001, 200);
         let mut rng = Rng::new(99);
         let r = run_strategies_chunk(&[strat], &pools, 500, &mut rng, &[], &[], false);
         assert!(r
@@ -1607,7 +1616,7 @@ mod tests {
     #[test]
     fn same_seed_same_result() {
         // Same seed -> Same result (deterministic + no state leaks)
-        let strat = || must_strat("b", 10001, 1);
+        let strat = || must_strat("b", 10001, 200);
         let pool = || pools_map("b", normal_pool());
         let r1 = run_strategies_chunk(
             &[strat()],
@@ -1671,8 +1680,7 @@ mod tests {
 
     #[test]
     fn preowned_target_is_not_considered_found_before_a_pull() {
-        let mut strategy = must_strat("b", 10001, 1);
-        strategy.max_half_charges = 1;
+        let strategy = must_strat("b", 10001, 200);
         let result = run_strategies_chunk(
             &[strategy],
             &pools_map("b", normal_pool()),
@@ -1701,7 +1709,7 @@ mod tests {
             pool
         };
         let make_strat = || {
-            let mut strat = must_strat("b", 10001, 1);
+            let mut strat = must_strat("b", 10001, 200);
             strat.min_pulls = 2000;
             strat.targets.clear();
             strat

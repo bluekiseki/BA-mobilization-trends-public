@@ -80,6 +80,7 @@ import { I18nextProvider } from 'react-i18next';
 import type { EntryContext, RouterContextProvider } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { getInstance } from './middleware/i18next';
+import { buildI18nPayload, serializeI18nPayload } from './utils/i18n/ssrResources';
 
 export default async function handleRequest(request: Request, responseStatusCode: number, responseHeaders: Headers, routerContext: EntryContext, loadContext: RouterContextProvider) {
   let shellRendered = false;
@@ -87,10 +88,7 @@ export default async function handleRequest(request: Request, responseStatusCode
 
   const instance = getInstance(loadContext);
 
-  // Namespace tracking and SSR resource seeding are intentionally disabled. Locale
-  // namespaces are loaded from the CDN so they can be cached independently of HTML.
-
-  const body = await renderToReadableStream(
+  const rendered = await renderToReadableStream(
     <I18nextProvider i18n={instance}>
       <ServerRouter context={routerContext} url={request.url} />
     </I18nextProvider>,
@@ -106,10 +104,21 @@ export default async function handleRequest(request: Request, responseStatusCode
   );
   shellRendered = true;
 
+  // Once every Suspense boundary has streamed, the namespaces this render used are known.
+  // Appending them lets the client hydrate without fetching each namespace from the CDN in turn.
+  const encoder = new TextEncoder();
+  const body = rendered.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      flush(controller) {
+        controller.enqueue(encoder.encode(serializeI18nPayload(buildI18nPayload(instance, instance.reportNamespaces?.getUsedNamespaces() ?? []))));
+      },
+    }),
+  );
+
   // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
   // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
   if ((userAgent && isbot(userAgent)) || routerContext.isSpaMode) {
-    await body.allReady;
+    await rendered.allReady;
   }
 
   responseHeaders.set('Content-Type', 'text/html');

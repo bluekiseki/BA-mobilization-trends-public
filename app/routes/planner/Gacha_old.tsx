@@ -6,7 +6,8 @@ import { FaChartLine, FaClipboardList, FaSpinner, FaInfoCircle, FaTimes, FaExcla
 import { parseAndGroupBanners, getAllStudents, normalizePortraitMap, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import type { Student } from '~/types/gacha';
 import { PageHeader } from '~/components/common/PageHeader';
-import IncomePlannerPanel, { type CustomIncome } from '~/components/gacha/IncomePlannerPanel';
+import IncomePlannerPanel from '~/components/gacha/IncomePlannerPanel';
+import type { CustomIncome } from '~/utils/pyroxeneCalc';
 import BannerPlanner from '~/components/gacha/BannerPlanner';
 import PyroTimelineChart, { type ProbTimelinePoint, type CustomLineConfig, type BannerStudentMarker } from '~/components/gacha/PyroTimelineChart';
 
@@ -17,34 +18,22 @@ import type { GameServer } from '~/types/data';
 import { data, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import type { Locale } from '~/utils/i18n/config';
 import { calculatePyroxeneTimeline, getCdfByBinValue, getBinStartByCdf, getEventPyroxeneReward, PYROXENE_PER_MAIN_STORY, type PlannerSchedule, type SimulationStats } from '~/utils/pyroxeneCalc';
-import type { GlobalAggregatedResult, DistributionData } from '~/utils/gachaEngine';
+import { resolveMaxPull, type GlobalAggregatedResult, type DistributionData } from '~/utils/gachaEngine';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
-import { createMetaDescriptor } from '~/components/head';
+import { createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/Gacha_old';
 import { cdn } from '~/utils/cdn';
-import { useLocalStorage } from '~/utils/useLocalStorage';
+import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { SlUserFemale } from 'react-icons/sl';
 import { useSyncStore } from '~/store/syncStore';
-
-export interface PyroxeneConfig {
-  currentPyroxene: number;
-  currentTicket1: number;
-  currentTicket10: number;
-  monthlyCard: boolean;
-  halfMonthlyCard: boolean;
-  monthlyExtraGem: number;
-  monthlyPackCost: number;
-  apRefreshes_normal: number;
-  apRefreshes_event: number;
-  raidRank: 'platinum' | 'gold' | 'silver' | 'bronze';
-  pvpRankTier: number;
-}
+import type { PyroxeneConfig } from '~/components/gacha/pyroxeneConfigOld';
 
 export function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const server = (url.searchParams.get('server') as GameServer) || 'kr';
 
   const i18n = getInstance(context);
+  const locale = i18n.language as Locale;
 
   const scheduleData = loadScheduleDataV2({ server, tracksToLoad: 'all' });
 
@@ -54,11 +43,17 @@ export function loader({ request, context }: LoaderFunctionArgs) {
     description: i18n.t('planner:gacha.intro.summary'),
     server,
     scheduleData,
+    // Legacy (v1) planner: keep it out of the index and point canonicalization at the live v2 page.
+    canonicalUrl: createLocalizedUrl(locale, '/planner/gacha'),
   });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/gacha.webp');
+  return [
+    ...createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/gacha.webp'),
+    { name: 'robots', content: 'noindex, follow' },
+    { tagName: 'link', rel: 'canonical', href: loaderData.canonicalUrl },
+  ];
 }
 
 interface TimelinePoint {
@@ -74,7 +69,7 @@ const GACHA_PREFS_DEFAULT = {
   server: 'KR' as 'KR' | 'JP',
   customPercentiles: [] as number[],
   incomeConfig: {
-    currentPyroxene: 24000,
+    currentPyroxene: 0, //24000,
     currentTicket1: 0,
     currentTicket10: 0,
     monthlyCard: true,
@@ -92,7 +87,7 @@ const GACHA_PREFS_DEFAULT = {
 // Returns true if a strategy has been modified from its defaults and should be persisted.
 function isStrategyModified(s: BannerStrategy): boolean {
   if (s.isActive) return true;
-  if (s.maxSparks !== 1 || s.minPulls !== 0 || s.maxPulls !== 200 || s.freePulls !== 0) return true;
+  if (resolveMaxPull(s, false) !== 200 || s.minPulls !== 0 || s.freePulls !== 0) return true;
   return Object.values(s.studentConfigs).some((cfg) => cfg.mode !== 'skip');
 }
 
@@ -360,7 +355,7 @@ export default function GachaMain() {
               b.pickupStudents.forEach((s, idx) => {
                 configs[s.id] = { studentId: s.id, priority: idx + 1, mode: 'skip', opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 };
               });
-              next[b.id] = { bannerId: b.id, isActive: false, maxSparks: 1, maxHalfCharges: 2, minPulls: 0, studentConfigs: configs, freePulls: 0, maxPulls: 200, isFes: false };
+              next[b.id] = { bannerId: b.id, isActive: false, maxPull: 200, minPulls: 0, studentConfigs: configs, freePulls: 0, isFes: false };
             }
           });
           return next;
@@ -548,6 +543,7 @@ export default function GachaMain() {
           banners={banners}
           strategies={strategies}
           allStudents={allStudents}
+          region={server}
           portraitMap={portraitMap}
           gachaSimResult={gachaSimResult}
           setGachaSimResult={setGachaSimResult}

@@ -1,34 +1,38 @@
 // app/routes/planner/EventMainPage.tsx
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { data, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router';
-import { getlocaleMethond } from '~/components/planner/common/locale';
-import { formatInTimeZone } from '~/components/planner/EventInfo';
+import { getlocaleMethond } from '~/utils/locale';
+import { formatInTimeZone } from '~/components/common/EventInfo';
 import eventListJsonRaw from '~/data/jp/eventList.json';
 import type { EventEntry, EventListData } from '~/types/eventList';
 const eventList = eventListJsonRaw as unknown as EventListData;
 
 import { DEFAULT_LOCALE, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import { getGlobalEventDates } from '~/data/globalEventDates';
+import { getGlEventStatus } from '~/utils/glEventStatus';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/EventMainPage';
 import { localeLink } from '~/utils/localeLink';
 import { FaSortAmountUp, FaSortAmountDown } from 'react-icons/fa';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { getKstTime } from '~/data/globalRaidDates';
-import { EventCard, type StatusEvent } from '~/components/home/EventStatusCard';
+import { EventCard } from '~/features/home/EventStatusCard';
+import type { StatusEvent } from '~/types/eventStatus';
 import { PageHeader } from '~/components/common/PageHeader';
+import { textFeedUrl } from '~/data/textFeeds.meta';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName } from '~/utils/i18n/config';
 import type { Student, StudentPortraitData } from '~/types/plannerData';
 import { type ScheduleTrack } from '~/utils/calender.data';
 import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
-import { RemainingTime } from '~/components/RemainingTime';
-import { PickupStudentIcon } from '~/components/planner/PickupStudentIcon';
-import { ExportImportPanel } from '~/components/planner/ExportImportPanel';
-import { EventTotalItemsPreview } from '~/components/planner/EventTotalItemsPreview';
+import { RemainingTime } from '~/components/common/RemainingTime';
+import { PickupStudentIcon } from '~/components/student/PickupStudentIcon';
+import { ExportImportPanel } from '~/components/common/ExportImportPanel';
+import { EventTotalItemsPreview } from '~/features/event-planner/components/EventTotalItemsPreview';
 import { useEventPlanStore } from '~/store/planner/useEventPlanStore';
+import { useAuthStore } from '~/store/authStore';
 import type { AppHandle } from '~/types/link';
 
 export function loader({ context }: LoaderFunctionArgs) {
@@ -61,23 +65,7 @@ export function loader({ context }: LoaderFunctionArgs) {
     }
   }
 
-  let glEvent: StatusEvent | null = null;
-  {
-    const glDates = getGlobalEventDates();
-    const processed = Object.entries(glDates).map(([idStr, dates]) => {
-      const id = Number(idStr);
-      const d = eventList[idStr];
-      const name = d ? (d[getlocaleMethond('', 'Jp', locale) as keyof EventEntry] as string | undefined) || d.Jp || `Event ${id}` : `Event ${id}`;
-      return { id, name, startTime: new Date(getKstTime(dates.start)), endTime: new Date(getKstTime(dates.end)) };
-    });
-    const current = processed.find((e) => now >= e.startTime && now <= e.endTime);
-    if (current) {
-      glEvent = { id: current.id, name: current.name, status: 'active', dateIso: current.endTime.toISOString() };
-    } else {
-      const upcoming = processed.filter((e) => e.startTime > now).sort((a, b) => a.startTime.getTime() - b.startTime.getTime())[0];
-      if (upcoming) glEvent = { id: upcoming.id, name: upcoming.name, status: 'upcoming', dateIso: upcoming.startTime.toISOString() };
-    }
-  }
+  const glEvent = getGlEventStatus(locale, now);
 
   return data({
     locale,
@@ -136,9 +124,22 @@ export const EventMainPage = () => {
   const locale = i18n.language as Locale;
   const { jpEvent, glEvent, pickupScheduleData } = useLoaderData<typeof loader>();
   const plans = useEventPlanStore((state) => state.plans);
+  const activeProfile = useAuthStore((s) => s.user?.profiles?.find((p) => p.id === s.activeProfileId));
 
   // ── UI controls ────────────────────────────────────────────────────────────
-  const [pickupMode, setPickupMode] = useState<PickupMode>(() => (locale === 'ja' ? 'jp' : 'kr'));
+  // Server priority: active profile's server first, then UI language, as the default pickup bucket.
+  const [pickupMode, setPickupModeState] = useState<PickupMode>(() => (activeProfile ? (activeProfile.server === 'jp' ? 'jp' : 'kr') : locale === 'ja' ? 'jp' : 'kr'));
+  // Stays true until the user manually picks a pickup mode, so the profile-based default above
+  // doesn't fight a deliberate choice once the auth store finishes hydrating (it populates after mount).
+  const pickupModeAutoRef = useRef(true);
+  const setPickupMode = useCallback((mode: PickupMode) => {
+    pickupModeAutoRef.current = false;
+    setPickupModeState(mode);
+  }, []);
+  useEffect(() => {
+    if (!pickupModeAutoRef.current || !activeProfile) return;
+    setPickupModeState(activeProfile.server === 'jp' ? 'jp' : 'kr');
+  }, [activeProfile]);
   // desc (reverse order): upcoming first, then recent→old past
   // asc (chronological order): old→recent past first, then upcoming
   const [sortOrder, setSortOrder] = useState<SortOrder>(() => (locale === 'ja' ? 'desc' : 'asc'));
@@ -264,10 +265,13 @@ export const EventMainPage = () => {
     const glInfo = glDates[event.id];
     const glStart = glInfo ? formatInTimeZone(glInfo.start) : null;
     const glEnd = glInfo ? formatInTimeZone(glInfo.end) : null;
+    // Dim based on whichever server's dates are currently shown (same server selection used for pickups below)
+    const effectiveCloseMs = pickupMode === 'kr' && glInfo ? getKstTime(glInfo.end) : event.closeTime.getTime();
+    const isPast = effectiveCloseMs < now.getTime();
     const pickups = pickupMode !== 'none' ? getPickupsForEvent(event.id, event.openTime, event.closeTime) : [];
 
     return (
-      <div key={event.id} className="relative pl-4 group">
+      <div key={event.id} className={`relative pl-4 group ${isPast ? 'opacity-60' : ''}`}>
         <div
           className={`absolute -left-3.5 top-2 w-2.5 h-2.5 rounded-full border-2 transition-colors ${
             isActive ? 'bg-green-400 dark:bg-green-500 border-white dark:border-neutral-900' : 'bg-neutral-300 dark:bg-neutral-600 border-white dark:border-neutral-800 group-hover:bg-blue-400'
@@ -386,7 +390,18 @@ export const EventMainPage = () => {
                       const name = studentData?.[s.id]?.Name ?? String(s.id);
                       const bulletType = studentData?.[s.id]?.BulletType;
                       return (
-                        <PickupStudentIcon key={s.id} portrait={portrait} name={name} studentId={s.id} rerun={s.rerun} fest={s.fest} limited={s.limited} bulletType={bulletType} locale={locale} />
+                        <PickupStudentIcon
+                          key={s.id}
+                          portrait={portrait}
+                          studentPortraits={studentPortraits ?? undefined}
+                          name={name}
+                          studentId={s.id}
+                          rerun={s.rerun}
+                          fest={s.fest}
+                          limited={s.limited}
+                          bulletType={bulletType}
+                          locale={locale}
+                        />
                       );
                     })}
                   </div>
@@ -411,7 +426,7 @@ export const EventMainPage = () => {
   return (
     <>
       <div className="px-4 sm:px-6 py-8">
-        <PageHeader title={t('page.eventPlanner')} description={t('app.description')} />
+        <PageHeader title={t('page.eventPlanner')} description={t('app.description')} textFeedHref={textFeedUrl.events(locale)} />
 
         {/* Current event cards */}
         <section className="mb-6 mt-2">

@@ -1,4 +1,6 @@
-import { getOrCreateAuth, checkRateLimit } from './auth';
+import { getOrCreateAuth, checkRateLimit, isSessionFresh } from './auth';
+import { checkBrowserMutation, checkBrowserRead, getAllowedOrigins } from './requestGuard';
+import { parse, type DefinitionNode } from 'graphql';
 import { getOrCreateYogaServer } from './graphql';
 import { getDefaultProfileServer, getSupportedProfileLocale } from '../../app/utils/profileServer';
 import { validatePassword } from './password-validate';
@@ -9,6 +11,18 @@ function json(data: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// After a raw D1 write to `user` (bypassing better-auth's own update endpoints), the signed
+// session_data cookie cache still holds the pre-update username/email for up to cookieCache.maxAge.
+// Expiring it forces the next getSession() call to re-read D1 and refill the cache with current
+// values — cheaper than disabling the cache globally, since it only costs one extra read for the
+// user who just changed, not one per page load for everyone.
+function expireSessionDataCookies(res: Response): Response {
+  for (const name of ['better-auth.session_data', '__Secure-better-auth.session_data']) {
+    res.headers.append('Set-Cookie', `${name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`);
+  }
+  return res;
 }
 
 function isAuthMaintenanceEnabled(env: Env): boolean {
@@ -35,26 +49,31 @@ async function verifyTurnstile(token: string, secret: string, ip: string): Promi
 }
 
 const RATE_LIMITED_PATHS = ['/sign-in/username', '/sign-up/email', '/sign-in/magic-link', '/sign-in/email'];
+// Passkey login: generate-authenticate-options is a GET (challenge issuance), verify-authentication
+// is a POST. Both are called on every normal passkey login, so they need a much looser budget than
+// the password/magic-link paths above — this is about capping abuse/DoS, not brute-forcing WebAuthn.
+const PASSKEY_RATE_LIMITED_PATHS = ['/passkey/generate-authenticate-options', '/passkey/verify-authentication'];
 
 async function handleAuth(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const pathSuffix = url.pathname.replace(/^\/api\/auth/, '');
-  const isRateLimited = RATE_LIMITED_PATHS.some((p) => pathSuffix.startsWith(p));
+  const isRateLimited = RATE_LIMITED_PATHS.some((p) => pathSuffix.startsWith(p)) && request.method === 'POST';
+  const isPasskeyRateLimited = PASSKEY_RATE_LIMITED_PATHS.some((p) => pathSuffix.startsWith(p)) && (request.method === 'GET' || request.method === 'POST');
 
-  if (isRateLimited && request.method === 'POST') {
+  if (isRateLimited || isPasskeyRateLimited) {
     const ip = getClientIp(request);
     const isLocalhost = ip === '127.0.0.1' || ip === '::1' || ip === 'localhost';
     if (!isLocalhost) {
-      const { allowed, remaining } = await checkRateLimit(env.ba_user, ip, pathSuffix);
+      const { allowed, remaining } = isPasskeyRateLimited ? await checkRateLimit(env.ba_user, ip, pathSuffix, 30, 3_600_000) : await checkRateLimit(env.ba_user, ip, pathSuffix);
       if (!allowed) {
-        return new Response(JSON.stringify({ error: 'Too many attempts. Please try again tomorrow.' }), {
+        return new Response(JSON.stringify({ error: 'Too many attempts. Please try again later.' }), {
           status: 429,
-          headers: { 'Content-Type': 'application/json', 'X-RateLimit-Remaining': '0', 'Retry-After': '86400' },
+          headers: { 'Content-Type': 'application/json', 'X-RateLimit-Remaining': '0', 'Retry-After': isPasskeyRateLimited ? '3600' : '86400' },
         });
       }
       if (remaining < 2) console.warn(`Rate limit warning: ${ip} has ${remaining} attempts left for ${pathSuffix}`);
 
-      if (env.TURNSTILE_SECRET_KEY) {
+      if (isRateLimited && env.TURNSTILE_SECRET_KEY) {
         let body: Record<string, unknown>;
         try {
           body = await request.clone().json();
@@ -71,34 +90,91 @@ async function handleAuth(request: Request, env: Env): Promise<Response> {
 
   try {
     const auth = getOrCreateAuth(env);
-    return await auth.handler(request);
+    const res = await auth.handler(request);
+    // Session/list endpoints can carry tokens; never let a shared cache keep them.
+    if (!res.headers.has('Cache-Control')) {
+      const guarded = new Response(res.body, res);
+      guarded.headers.set('Cache-Control', 'private, no-store');
+      return guarded;
+    }
+    return res;
   } catch (error) {
     console.error('Auth error:', error);
     return json({ error: 'Auth error' }, 500);
   }
 }
 
-async function handleAuthExt(request: Request, env: Env): Promise<Response> {
-  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-
-  const url = new URL(request.url);
-  const op = url.searchParams.get('op');
-  if (op !== 'link-credential') return json({ error: 'Unknown operation' }, 400);
+async function handleListSessions(request: Request, env: Env): Promise<Response> {
+  const originError = checkBrowserRead(request, env);
+  if (originError) return originError;
 
   const auth = getOrCreateAuth(env);
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await auth.api.getSession({ headers: request.headers, query: { disableCookieCache: true } });
   if (!session?.user) return json({ error: 'Unauthorized' }, 401);
 
-  const requestData: { username: string; password: string } = await request.json();
-  const { username, password } = requestData;
-  if (!username || !password) return json({ error: 'Missing fields' }, 400);
-  if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) return json({ error: 'Invalid username format' }, 400);
+  // Only non-secret columns: the session token and IP address are never returned.
+  // Date columns are ISO 8601 text (see cleanupExpiredAuthData), so compare against an ISO string.
+  const rows = await env.ba_user
+    .prepare('SELECT id, userAgent, createdAt, updatedAt FROM session WHERE userId = ? AND expiresAt > ? ORDER BY updatedAt DESC')
+    .bind(session.user.id, new Date().toISOString())
+    .all<{ id: string; userAgent: string | null; createdAt: number | string; updatedAt: number | string }>();
+
+  const sessions = (rows.results ?? []).map((row) => ({
+    userAgent: row.userAgent,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    current: row.id === session.session.id,
+  }));
+  return new Response(JSON.stringify({ sessions }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } });
+}
+
+async function handleAuthExt(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const op = url.searchParams.get('op');
+
+  if (request.method === 'GET' && op === 'list-sessions') return handleListSessions(request, env);
+  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (op !== 'link-credential') return json({ error: 'Unknown operation' }, 400);
+
+  const guardError = checkBrowserMutation(request, env);
+  if (guardError) return guardError;
+
+  const auth = getOrCreateAuth(env);
+  // Bypass the signed cookie cache so a revoked session cannot keep linking credentials.
+  const session = await auth.api.getSession({ headers: request.headers, query: { disableCookieCache: true } });
+  if (!session?.user) return json({ error: 'Unauthorized' }, 401);
+  if (!isSessionFresh(session.session.createdAt)) return json({ error: 'Session is not fresh', code: 'SESSION_NOT_FRESH' }, 403);
+
+  // Keyed by user id (not IP) since the caller is already authenticated — this stops one user
+  // from probing username availability unbounded without punishing others on the same IP.
+  const { allowed } = await checkRateLimit(env.ba_user, session.user.id, 'auth-ext:link-credential', 10, 3_600_000);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Too many attempts. Please try again later.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'X-RateLimit-Remaining': '0', 'Retry-After': '3600' },
+    });
+  }
+
+  let requestData: { username?: unknown; password?: unknown };
+  try {
+    requestData = await request.json();
+  } catch {
+    return json({ error: 'Invalid request body' }, 400);
+  }
+  const { username: rawUsername, password } = requestData;
+  if (typeof rawUsername !== 'string' || typeof password !== 'string' || !rawUsername || !password) return json({ error: 'Missing fields' }, 400);
+  if (!/^[a-zA-Z0-9_-]{3,20}$/.test(rawUsername)) return json({ error: 'Invalid username format' }, 400);
+
+  // Normalize like the better-auth username plugin so case variants cannot create duplicate rows.
+  const username = rawUsername.toLowerCase();
+  // `github_<id>@users.internal` is the synthetic email for GitHub accounts without a public email.
+  if (username.startsWith('github_')) return json({ error: 'Invalid username format' }, 400);
 
   const pwError = validatePassword(password);
   if (pwError) return json({ error: pwError }, 400);
 
   const db = env.ba_user;
-  const existingUser = await db.prepare('SELECT id FROM user WHERE username = ?').bind(username).first<{ id: string }>();
+  const existingUser = await db.prepare('SELECT id FROM user WHERE lower(username) = ?').bind(username).first<{ id: string }>();
   if (existingUser && existingUser.id !== session.user.id) return json({ error: 'Username already taken' }, 409);
 
   const existingCredential = await db.prepare("SELECT id FROM account WHERE userId = ? AND providerId = 'credential'").bind(session.user.id).first<{ id: string }>();
@@ -110,23 +186,48 @@ async function handleAuthExt(request: Request, env: Env): Promise<Response> {
 
   try {
     await db
-      .prepare('INSERT INTO account (id, userId, issuer, accountId, providerId, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), session.user.id, 'local:credential', session.user.id, 'credential', hashedPw, now, now)
+      .prepare('INSERT INTO account (id, userId, accountId, providerId, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind(crypto.randomUUID(), session.user.id, session.user.id, 'credential', hashedPw, now, now)
       .run();
-    await db.prepare('UPDATE user SET username = ?, email = ?, updatedAt = ? WHERE id = ?').bind(username, syntheticEmail, now, session.user.id).run();
+    await db.prepare('UPDATE user SET username = ?, displayUsername = ?, email = ?, updatedAt = ? WHERE id = ?').bind(username, rawUsername, syntheticEmail, now, session.user.id).run();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes('UNIQUE constraint failed')) return json({ error: 'Username already taken' }, 409);
     throw err;
   }
 
-  return json({ ok: true });
+  return expireSessionDataCookies(json({ ok: true }));
+}
+
+// A request body may contain several operations; only a mutation needs the uncached DB session check.
+function containsMutation(query: unknown): boolean {
+  if (typeof query !== 'string') return false;
+  try {
+    return parse(query).definitions.some((def: DefinitionNode) => def.kind === 'OperationDefinition' && def.operation === 'mutation');
+  } catch {
+    return false;
+  }
 }
 
 async function handleGraphQL(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  const guardError = checkBrowserMutation(request, env);
+  if (guardError) return guardError;
+
   try {
+    const bodyText = await request.clone().text();
+    let isMutation = false;
+    try {
+      const parsed: unknown = JSON.parse(bodyText);
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      isMutation = items.some((item) => typeof item === 'object' && item !== null && containsMutation((item as { query?: unknown }).query));
+    } catch {
+      // Unparseable body: Yoga rejects it; treat as a mutation to stay on the strict path.
+      isMutation = true;
+    }
+
     const auth = getOrCreateAuth(env);
-    const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
+    const session = await auth.api.getSession({ headers: request.headers, ...(isMutation ? { query: { disableCookieCache: true } } : {}) }).catch(() => null);
     const userId = session?.user?.id ?? null;
 
     const newHeaders = new Headers(request.headers);
@@ -134,7 +235,7 @@ async function handleGraphQL(request: Request, env: Env): Promise<Response> {
     if (userId) newHeaders.set('x-user-id', userId);
     const modifiedRequest = new Request(request, { headers: newHeaders });
 
-    const yogaResp = await getOrCreateYogaServer().fetch(modifiedRequest, { userDb: env.ba_user });
+    const yogaResp = await getOrCreateYogaServer(getAllowedOrigins(env)).fetch(modifiedRequest, { userDb: env.ba_user });
     const body = await yogaResp.text();
     return new Response(body, { status: yogaResp.status, headers: yogaResp.headers });
   } catch (error) {
@@ -213,6 +314,28 @@ async function handleInternalSession(request: Request, env: Env): Promise<Respon
   return new Response(payload, { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
+// Purge expired better-auth sessions/verifications and stale rate-limit rows.
+// better-auth (1.7.x) does not clean these up automatically; run daily via Cron Trigger.
+// Date columns are stored as ISO 8601 text (D1 sqlite dialect => supportsDates=false),
+// which sorts chronologically, so a direct string comparison works.
+// rate_limit.lastRequest is a Unix-ms integer written by checkRateLimit().
+async function cleanupExpiredAuthData(env: Env): Promise<void> {
+  const nowIso = new Date().toISOString();
+  const rateLimitCutoff = Date.now() - 86_400_000; // matches checkRateLimit's 24h window
+
+  try {
+    const results = await env.ba_user.batch([
+      env.ba_user.prepare('DELETE FROM session WHERE expiresAt IS NOT NULL AND expiresAt < ?').bind(nowIso),
+      env.ba_user.prepare('DELETE FROM verification WHERE expiresAt IS NOT NULL AND expiresAt < ?').bind(nowIso),
+      env.ba_user.prepare('DELETE FROM rate_limit WHERE lastRequest < ?').bind(rateLimitCutoff),
+    ]);
+    const [session, verification, rateLimit] = results.map((r) => r.meta.changes ?? 0);
+    console.log(`[auth cleanup] session=${session} verification=${verification} rate_limit=${rateLimit}`);
+  } catch (err) {
+    console.error('[auth cleanup] failed', err);
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const { pathname } = new URL(request.url);
@@ -224,11 +347,27 @@ export default {
       });
     }
 
+    if (isAuthMaintenanceEnabled(env)) {
+      // Pause planner sync too: no D1 work for existing sessions while maintenance is on.
+      if (pathname === '/api/graphql') {
+        return new Response(JSON.stringify({ errors: [{ message: 'Sync is temporarily unavailable for maintenance.' }] }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json', 'Retry-After': '300' },
+        });
+      }
+      // No session payload: the page renders as anonymous and the session-injection script is skipped.
+      if (pathname === '/__internal/session') return new Response(null, { status: 204 });
+    }
+
     if (pathname === '/api/auth-ext') return handleAuthExt(request, env);
     if (pathname.startsWith('/api/auth')) return handleAuth(request, env);
     if (pathname === '/api/graphql') return handleGraphQL(request, env);
     if (pathname === '/__internal/session') return handleInternalSession(request, env);
 
     return new Response('Not found', { status: 404 });
+  },
+
+  scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): void {
+    ctx.waitUntil(cleanupExpiredAuthData(env));
   },
 } satisfies ExportedHandler<Env>;

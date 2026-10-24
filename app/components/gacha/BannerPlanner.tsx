@@ -6,7 +6,8 @@ import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
-import { CustomNumberInput } from '../CustomInput';
+import { resolveMaxPull } from '~/utils/gachaEngine';
+import { CustomNumberInput } from '../common/CustomInput';
 
 interface Props {
   banners: BannerPeriod[];
@@ -177,8 +178,8 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                       <span className="font-medium text-neutral-600 dark:text-neutral-300">{t('settings.max_budget')}:</span>
                       <select
                         className="bg-transparent border border-neutral-300 dark:border-neutral-600 rounded px-1 py-0.5 outline-none w-24"
-                        value={strat.maxSparks}
-                        onChange={(e) => onUpdateStrategy(banner.id, { maxSparks: Number(e.target.value) })}
+                        value={resolveMaxPull(strat, false) / 200}
+                        onChange={(e) => onUpdateStrategy(banner.id, { maxPull: Number(e.target.value) * 200 })}
                       >
                         {Array.from({ length: Math.max(3, banner.pickupStudents.length + 1) }, (_, i) => i + 1).map((n) => (
                           <option key={n} value={n} className="dark:bg-neutral-800">
@@ -218,10 +219,10 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                       const handleModeChange = (newMode: 'skip' | 'must' | 'opportunistic') => {
                         const needMaxSparks = Object.entries(strategies[banner.id].studentConfigs).filter(([id, cfg]) => (student.id === Number(id) ? newMode : cfg.mode) === 'must').length;
 
-                        if (needMaxSparks > strategies[banner.id].maxSparks) {
+                        if (needMaxSparks * 200 > resolveMaxPull(strategies[banner.id], false)) {
                           onUpdateStrategy(banner.id, {
                             ...strategies[banner.id],
-                            maxSparks: needMaxSparks,
+                            maxPull: needMaxSparks * 200,
                             studentConfigs: {
                               ...strategies[banner.id].studentConfigs,
                               [student.id]: { ...strategies[banner.id].studentConfigs[student.id], mode: newMode },

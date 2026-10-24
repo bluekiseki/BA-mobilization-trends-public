@@ -8,14 +8,14 @@ import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore'
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { cdn } from '~/utils/cdn';
 import { getInstance } from '~/middleware/i18next';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import { PageHeader } from '~/components/common/PageHeader';
 import { localeLink } from '~/utils/localeLink';
-import { getGiftAffectionList } from '~/components/planner/StudentGrowth/giftAffectionList';
+import { getGiftAffectionList } from '~/utils/student/giftAffectionList';
 
 // Components
-import { AffectionTab } from '~/components/planner/StudentGrowth/FaverTab';
-import StudentSearchDropdown from '~/components/StudentSearchDropdown';
+import { AffectionTab } from '~/components/student/FaverTab';
+import StudentSearchDropdown from '~/components/student/StudentSearchDropdown';
 
 // Types
 import type { EventData, IconData, Student, StudentPortraitData } from '~/types/plannerData';
@@ -42,15 +42,21 @@ const DEFAULT_PLAN_TEMPLATE: PlanTemplate = {
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
+  const locale = i18n.language as Locale;
   return data({
+    locale,
     siteTitle: i18n.t('common:title'),
     title: i18n.t('planner:page.favorCalculator'),
     description: i18n.t('planner:page.description.favorCalculator'),
+    canonicalUrl: createLocalizedUrl(locale, '/utils/favor'),
   });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/favorcalc.webp');
+  return [
+    ...createMetaDescriptor(loaderData.title + ' | ' + loaderData.siteTitle, loaderData.description, '/img/favorcalc.webp', loaderData.canonicalUrl),
+    { tagName: 'link', rel: 'canonical', href: loaderData.canonicalUrl },
+  ];
 }
 
 export function links() {

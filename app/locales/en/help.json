@@ -16,7 +16,7 @@
           {
             "element": "#formations",
             "popover": {
-              "title": "2. Frequently Deployed Formations",
+              "title": "2. Frequently Mobilized Formations",
               "description": "This tab allows you to check the most commonly used party combinations."
             }
           },
@@ -47,7 +47,7 @@
             "element": "div[data-component-name=VariantStats]",
             "popover": {
               "title": "6. Other Information",
-              "description": "Check detailed operational information such as\nfixed starting skills and student deployment order."
+              "description": "Check detailed operational information such as\nfixed starting skills and student mobilization order."
             }
           }
         ]
@@ -75,7 +75,7 @@
             "element": "#participation button:nth-child(3)",
             "popover": {
               "title": "3. View Assistants Only",
-              "description": "Click the button to see statistics only for students\nmost frequently used as Assistants (Rentals)."
+              "description": "Click the button to see statistics only for students\nmost frequently mobilized as Assistants (Rentals)."
             },
             "actionOnNext": "click"
           }
@@ -83,7 +83,7 @@
       },
       {
         "title": "Search for Custom Condition Parties",
-        "description": "Exclude specific students or search only for parties using desired students\nto reduce investment costs.",
+        "description": "Exclude specific students or search only for parties that mobilized desired students\nto reduce investment costs.",
         "tour": [
           {
             "element": "main nav button:nth-child(2)",
@@ -110,7 +110,7 @@
           {
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
             "popover": {
-              "title": "4. Select Students to Include/Deploy",
+              "title": "4. Select Students to Include/Mobilize",
               "description": "Search or select students to include in the formation.\n(Supports English name search for JP/Hant users)\n\nYou can precisely set whether a student must be included in the party\nand the desired star level (e.g., 3★ to UE50)."
             },
             "actionOnNext": "click"
@@ -119,7 +119,7 @@
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
             "popover": {
               "title": "5. Set Excluded Students / Assistants",
-              "description": "Set students you do not own or cannot deploy due to lack of growth.\n\n• Completely Exclude: Remove entirely from the party list.\n• Assistant Available: Include in search only if borrowed once from others."
+              "description": "Set students you do not own or cannot mobilize due to lack of growth.\n\n• Completely Exclude: Remove entirely from the party list.\n• Assistant Available: Include in search only if borrowed once from others."
             },
             "actionOnNext": "click"
           }
@@ -150,7 +150,7 @@
           {
             "element": "#formations",
             "popover": {
-              "title": "2. Frequently Deployed Formations",
+              "title": "2. Frequently Mobilized Formations",
               "description": "This tab allows you to check the most commonly used party combinations."
             }
           },
@@ -181,7 +181,7 @@
             "element": "div[data-component-name=VariantStats]",
             "popover": {
               "title": "6. Other Information",
-              "description": "Check detailed operational information such as\nfixed starting skills and student deployment order."
+              "description": "Check detailed operational information such as\nfixed starting skills and student mobilization order."
             }
           }
         ]
@@ -217,7 +217,7 @@
             "element": "#participation button:nth-child(3)",
             "popover": {
               "title": "3. View Assistants Only",
-              "description": "Click the button to see statistics only for students\nmost frequently used as Assistants (Rentals)."
+              "description": "Click the button to see statistics only for students\nmost frequently mobilized as Assistants (Rentals)."
             },
             "actionOnNext": "click"
           }
@@ -225,7 +225,7 @@
       },
       {
         "title": "Search for Custom Condition Parties",
-        "description": "Exclude specific students or search only for parties using desired students\nto reduce investment costs.",
+        "description": "Exclude specific students or search only for parties that mobilized desired students\nto reduce investment costs.",
         "tour": [
           {
             "element": "main nav button:nth-child(2)",
@@ -260,7 +260,7 @@
           {
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(1)",
             "popover": {
-              "title": "4. Select Students to Include/Deploy",
+              "title": "4. Select Students to Include/Mobilize",
               "description": "Search or select students to include in the formation.\n(Supports English name search for JP/Hant users)\n\nYou can precisely set whether a student must be included in the party\nand the desired star level (e.g., 3★ to UE50)."
             },
             "actionOnNext": "click"
@@ -269,7 +269,7 @@
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
             "popover": {
               "title": "5. Set Excluded Students / Assistants",
-              "description": "Set students you do not own or cannot deploy due to lack of growth.\n\n• Completely Exclude: Remove entirely from the party list.\n• Assistant Available: Include in search only if borrowed once from others."
+              "description": "Set students you do not own or cannot mobilize due to lack of growth.\n\n• Completely Exclude: Remove entirely from the party list.\n• Assistant Available: Include in search only if borrowed once from others."
             },
             "actionOnNext": "click"
           }
@@ -360,7 +360,7 @@
     "heatmap": [
       {
         "title": "Where will this student shine?",
-        "description": "Check which boss battles a specific student is frequently used in.\nUseful for deciding whether to recruit (Gacha) or invest Eligma into a student.",
+        "description": "Check which boss battles a specific student is frequently mobilized in.\nUseful for deciding whether to recruit (Gacha) or invest Eligma into a student.",
         "tour": [
           {
             "element": "div[data-component-name=StudentSearchDropdown]",
@@ -374,7 +374,7 @@
             "element": "div[data-component-name=ChartControls_Main]>div:nth-child(1) > div>div:nth-child(5)",
             "popover": {
               "title": "2. Select Difficulty",
-              "description": "Select the boss difficulty (e.g., Insane, Torment) to display\ndeployment statistics specifically for that difficulty."
+              "description": "Select the boss difficulty (e.g., Insane, Torment) to display\nmobilization statistics specifically for that difficulty."
             },
             "actionOnNext": "click"
           },
@@ -382,14 +382,14 @@
             "element": "div[data-component-name=RaidUsageStackChart]",
             "popover": {
               "title": "3. Recruitment Statistics Summary",
-              "description": "Shows the pick rate and the star levels at which\nthe student was used in each Total and Grand Assault."
+              "description": "Shows the pick rate and the star levels at which\nthe student was mobilized in each Total and Grand Assault."
             }
           },
           {
             "element": "div[data-component-name=ChartControls_Main]>div:nth-child(2)",
             "popover": {
               "title": "4. Star Level Filtering & Heatmap Preparation",
-              "description": "Use the heatmap below to see deployment rates by boss and season at a glance.\n(※ Recommended for wide PC or tablet screens.)\n\nFirst, set the star level range to be displayed on the heatmap."
+              "description": "Use the heatmap below to see mobilization rates by boss and season at a glance.\n(※ Recommended for wide PC or tablet screens.)\n\nFirst, set the star level range to be displayed on the heatmap."
             }
           },
           {
@@ -404,7 +404,7 @@
             "element": "div[data-component-name=ChartDataContainer]",
             "popover": {
               "title": "6. View Heatmap Details",
-              "description": "A heatmap of deployment rates for all seasons based on your conditions will appear.\nClick a specific cell (season) in the graph to view more detailed statistics for that boss battle."
+              "description": "A heatmap of mobilization rates for all seasons based on your conditions will appear.\nClick a specific cell (season) in the graph to view more detailed statistics for that boss battle."
             }
           }
         ]
@@ -413,7 +413,7 @@
     "ranking": [
       {
         "title": "Future Sight Total/Grand Assault Student Usage Ranking",
-        "description": "Check which students were most frequently deployed in upcoming seasons\nand the average star level at which they were primarily used.",
+        "description": "Check which students were most frequently mobilized in upcoming seasons\nand the average star level at which they are typically mobilized.",
         "tour": [
           {
             "element": "div[data-component-name=RankingChartPage_Slider]",
@@ -426,14 +426,14 @@
             "element": "div[data-component-name=RankingChart]",
             "popover": {
               "title": "2. Check Comprehensive Ranking",
-              "description": "View the overall ranking and star level distribution of students\nwho were deployed most frequently during the selected period."
+              "description": "View the overall ranking and star level distribution of students\nwho were mobilized most frequently during the selected period."
             }
           }
         ]
       },
       {
-        "title": "Specific Difficulty (Torment, etc.) Student Deployment Ranking",
-        "description": "Check in detail which students were primarily used and at what star level\nfor specific high difficulties like 'Torment' or 'Insane'.",
+        "title": "Specific Difficulty (Torment, etc.) Student Mobilization Ranking",
+        "description": "Check in detail which students were primarily mobilized and at what star level\nfor specific high difficulties like 'Torment' or 'Insane'.",
         "tour": [
           {
             "element": "div[data-component-name=RankingChartPage_DetailedFilter]>div>div:nth-child(3)",
@@ -453,7 +453,7 @@
             "element": "div[data-component-name=RankingChart]",
             "popover": {
               "title": "3. Check Detailed Ranking",
-              "description": "Confirm the student deployment rankings and detailed star level ratios\ncorresponding to the selected period and difficulty."
+              "description": "Confirm the student mobilization rankings and detailed star level ratios\ncorresponding to the selected period and difficulty."
             }
           }
         ]

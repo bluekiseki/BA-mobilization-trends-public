@@ -13,6 +13,7 @@ import { customGameItemSchema } from '~/types/minigame/customGame';
 import { interactiveWorldRaidConfigSchema } from '~/types/minigame/interactiveWorldRaid';
 import { roadPuzzleConfigSchema } from '~/types/minigame/roadPuzzle';
 import { jankenConfigSchema } from '~/types/minigame/janken';
+import { locationConfigSchema } from '~/types/minigame/location';
 
 export const stagePrioSchema = z.enum(['include', 'exclude', 'priority']);
 export type StagePrio = z.infer<typeof stagePrioSchema>;
@@ -59,6 +60,7 @@ export const eventPlanSchema = z.object({
   interactiveWorldRaidConfig: interactiveWorldRaidConfigSchema.optional(),
   roadPuzzleConfig: roadPuzzleConfigSchema.optional(),
   minigameJankenConfig: jankenConfigSchema.optional(),
+  locationConfig: locationConfigSchema.optional(),
   cachedTotalItems: z
     .object({
       savedAt: z.number(),

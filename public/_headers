@@ -1,0 +1,16 @@
+# Plain-text feeds (scripts/generate-text-feeds.mjs): readable by other programs, served without the Worker.
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
+
+/txt/*
+  Content-Type: text/plain; charset=utf-8
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  Cache-Control: public, max-age=3600
+
+# Worker scripts of the cross-origin isolated item scanner page (routes/planner/ItemScanner.tsx) must carry COEP too.
+# COEP is ignored on worker scripts of pages that are not isolated.
+/assets/*
+  Cross-Origin-Embedder-Policy: credentialless

@@ -1,8 +1,9 @@
 import { data, type LoaderFunctionArgs } from 'react-router';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/licence';
-import ContactButton from '~/components/ContactButton';
-import { issuesURL } from '~/data/livedataServer.json';
+import { RAID_TEAM_DATA_SOURCES } from '~/data/raidTeamDataSources';
+import ContactButton from '~/components/shell/ContactButton';
+import { issuesURL, repositoryURL } from '~/data/livedataServer.json';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -18,7 +19,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 const LicencePage = () => {
   return (
-    <div className="ont-pretendard">
+    <div className="font-pretendard px-4 py-6">
       {/* Simple and clean page title */}
       <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 dark:text-white mb-8 border-b border-neutral-300 dark:border-neutral-600 pb-4">License & Data Sources</h1>
 
@@ -108,24 +109,17 @@ const LicencePage = () => {
         </ul>
         <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Total Assault Teams</h3>
         <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
-          <li>
-            <b>S43-S46:</b>{' '}
-            <a href="https://storage.googleapis.com/info.herdatasam.me" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-              Someone's Google Storage API
-            </a>
-          </li>
-          <li>
-            <b>S47-S79:</b>{' '}
-            <a href="https://arona.ai/raidreport" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-              Arona.AI Total Assault Report (no longer accessible)
-            </a>
-          </li>
-          <li>
-            <b>S80-Current:</b>{' '}
-            <a href="https://www.plana-stats.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-              Plana Stats
-            </a>
-          </li>
+          {RAID_TEAM_DATA_SOURCES.total.map((source) => (
+            <li key={source.from}>
+              <b>
+                S{source.from}-{Number.isFinite(source.through) ? `S${source.through}` : 'Current'}:
+              </b>{' '}
+              <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                {source.name}
+                {'unavailable' in source && source.unavailable ? ' (no longer accessible)' : ''}
+              </a>
+            </li>
+          ))}
         </ul>
         <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Grand Assault Overall</h3>
         <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
@@ -147,19 +141,17 @@ const LicencePage = () => {
         </ul>
         <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Grand Assault Teams</h3>
         <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
-          <li>
-            <b>S1-S23:</b>{' '}
-            <a href="https://arona.ai/eraidreport" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-              Arona.AI Grand Assault Report (no longer accessible)
-            </a>
-          </li>
-
-          <li>
-            <b>S24-Current:</b>{' '}
-            <a href="https://www.plana-stats.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-              Plana Stats
-            </a>
-          </li>
+          {RAID_TEAM_DATA_SOURCES.grand.map((source) => (
+            <li key={source.from}>
+              <b>
+                S{source.from}-{Number.isFinite(source.through) ? `S${source.through}` : 'Current'}:
+              </b>{' '}
+              <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                {source.name}
+                {'unavailable' in source && source.unavailable ? ' (no longer accessible)' : ''}
+              </a>
+            </li>
+          ))}
         </ul>
 
         <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Japan Server Assault Live Data</h3>
@@ -169,18 +161,14 @@ const LicencePage = () => {
 
         <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Korea Server Assault Data</h3>
         <ul className="list-disc list-inside space-y-2 text-neutral-600 dark:text-neutral-400 pl-2">
-          <li>
-            Total Assault & Grand Assault Distribution Google Spreadsheets: <br />
-            <a href="https://docs.google.com/spreadsheets/d/1JGBeDCu8KtVIsWd4QbQhNJekeG1YD8ZmGmbfXYznT7k" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
-              docs.google.com/spreadsheets/...
-            </a>
-          </li>
-          <li>
-            Someone's Google Storage API: <br />
-            <a href="https://storage.googleapis.com/info.herdatasam.me" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
-              storage.googleapis.com/info.herdatasam.me
-            </a>
-          </li>
+          {RAID_TEAM_DATA_SOURCES.kr.map((source) => (
+            <li key={source.url}>
+              {source.name}: <br />
+              <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                {source.url.replace('https://', '')}
+              </a>
+            </li>
+          ))}
         </ul>
 
         <h3 className="text-lg font-semibold text-neutral-700 dark:text-neutral-200 mt-6 mb-2">Student Matadata</h3>
@@ -308,7 +296,7 @@ const LicencePage = () => {
           <li>Distributed under the MIT License.</li>
           <li>
             Source Code:{' '}
-            <a href="https://github.com/bluekiseki/BA-mobilization-trends-public" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+            <a href={repositoryURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
               Github
             </a>
           </li>
@@ -388,6 +376,17 @@ const LicencePage = () => {
             </a>
           </li>
         </ul>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-2xl font-bold text-neutral-800 dark:text-white mb-4">Developers</h2>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          Students, events, schedules, raid seasons and notices are available as plain-text feeds. See{' '}
+          <a href="/developers" className="text-blue-500 hover:underline">
+            Developers
+          </a>
+          .
+        </p>
       </section>
 
       {/* Legal Pages Footer */}

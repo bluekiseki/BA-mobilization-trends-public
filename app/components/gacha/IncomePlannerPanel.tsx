@@ -19,11 +19,11 @@ import {
   type SimRawAccumulator,
   type SimChunkAcc,
 } from '~/utils/gachaEngine';
-import type { PyroxeneConfig } from '~/routes/planner/Gacha_old';
+import type { PyroxeneConfig } from './pyroxeneConfigOld';
 import type { BannerPeriod } from '~/utils/gachaData';
 import type { BannerStrategy, Student } from '~/types/gacha';
-import type { PlannerSchedule, SimulationStats } from '~/utils/pyroxeneCalc';
-import IncomeSettingsPanel, { type CustomIncome } from './IncomeSettingsPanel';
+import type { CustomIncome, PlannerSchedule, SimulationStats } from '~/utils/pyroxeneCalc';
+import IncomeSettingsPanel from './IncomeSettingsPanel';
 import APSchedulePanel from './APSchedulePanel';
 import SimulationResultPanel from './SimulationResultPanel';
 import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
@@ -42,8 +42,6 @@ const formatDuration = (ms: number): string => {
   return `${(ms * 1_000_000).toFixed(0)}ns`;
 };
 
-export type { CustomIncome };
-
 type TabId = 'income' | 'stats' | 'schedule' | 'result';
 
 interface Props {
@@ -57,6 +55,8 @@ interface Props {
   banners: BannerPeriod[];
   strategies: Record<string, BannerStrategy>;
   allStudents: Student[];
+  /** Server region — determines when Archive Recruitment starts excluding ARCHIVE_STUDENT_IDS from the normal off-rate pool. */
+  region: 'KR' | 'JP';
   portraitMap: Record<number, string>;
   gachaSimResult: GlobalAggregatedResult | null;
   setGachaSimResult: (next: GlobalAggregatedResult | null) => void;
@@ -387,6 +387,7 @@ export default function IncomePlannerPanel({
   banners,
   strategies,
   allStudents,
+  region,
   portraitMap,
   gachaSimResult,
   setGachaSimResult,
@@ -433,7 +434,7 @@ export default function IncomePlannerPanel({
       }
 
       // Pre-build WASM inputs once (pool building + JSON serialization)
-      const payload = buildWasmPayload(Object.values(strategies), bannersMap as unknown as Parameters<typeof buildWasmPayload>[1], allStudents);
+      const payload = buildWasmPayload(Object.values(strategies), bannersMap as unknown as Parameters<typeof buildWasmPayload>[1], allStudents, [], [], true, region);
       const { strategiesJson, bannerPoolsJson, activeBannerIds } = payload;
 
       const runId = ++runIdRef.current;
@@ -527,7 +528,7 @@ export default function IncomePlannerPanel({
         try {
           const simConfig: SimulationConfig = { initialPyroxenes: config.currentPyroxene, simCount };
           const start = performance.now();
-          const res = runGlobalSimulation(Object.values(strategies), bannersMap as unknown as Parameters<typeof runGlobalSimulation>[1], allStudents, simConfig);
+          const res = runGlobalSimulation(Object.values(strategies), bannersMap as unknown as Parameters<typeof runGlobalSimulation>[1], allStudents, simConfig, [], [], true, region);
           setSimTiming({ totalMs: performance.now() - start, count: simCount });
           setGachaSimResult(res);
           setActiveTab('result');

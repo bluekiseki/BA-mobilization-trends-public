@@ -1,23 +1,23 @@
 // src/routes/EventPage.tsx
 import { useState, useEffect } from 'react';
 import { data, useLoaderData, useParams, type LoaderFunctionArgs } from 'react-router';
-import { EventInfo } from '~/components/planner/EventInfo';
+import { EventInfo } from '~/components/common/EventInfo';
 import type { EventData, EventSeason, IconData, IconInfos, StudentData, StudentPortraitData } from '~/types/plannerData';
 // import iconDataInfoModule from "~/data/event/icon_info.json"
 // import iconDataAllModule from "~/data/event/icon_img.json"
 import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_LOCALE, getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import eventList from '~/data/jp/eventList.json';
-import { getlocaleMethond } from '~/components/planner/common/locale';
+import { getPlannerEventName, isRerunEvent } from '~/utils/eventList';
 import type { Route } from './+types/EventPage';
 import { getInstance } from '~/middleware/i18next';
 import type { AppHandle, AppUIMatch } from '~/types/link';
 import { cdn } from '~/utils/cdn';
-import { EventPlannerLoader } from '~/components/planner/event/EventPlannerLoader';
+import { EventPlannerLoader } from '~/features/event-planner/components/EventPlannerLoader';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/utils/usePageHelp';
+import { useHelpKey } from '~/hooks/usePageHelp';
 
 const fetchEventSeasonData = async (eventId: number) => {
   try {
@@ -42,10 +42,8 @@ export async function loader({ context, params }: LoaderFunctionArgs) {
     throw new Response('Not Found: Invalid server parameter.', { status: 404 });
   }
 
-  const eventEntry = eventList[String(eventId < 60000 ? eventId % 10000 : eventId) as keyof typeof eventList] ?? eventList[String(eventId % 10000) as keyof typeof eventList];
-  const localeKey = getlocaleMethond('', 'Jp', locale) as 'Jp' | 'Kr' | 'En' | 'Tw';
-  const localizedName = eventEntry?.[localeKey] || eventEntry?.Jp || 'No event information';
-  const eventName = `${eventId > 10000 && eventId < 60000 ? `[${i18n.t('game:rerun')}] ` : ''}${localizedName}`;
+  const localizedName = getPlannerEventName(eventList, eventId, locale, 'No event information');
+  const eventName = `${isRerunEvent(eventId) ? `[${i18n.t('game:rerun')}] ` : ''}${localizedName}`;
 
   return data({
     locale,
@@ -79,6 +77,12 @@ export const handle: AppHandle = {
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
+      ...['/ew/icon_info.json', '/ew/icon_img.json', ...(eventId ? [`/ew/event.${eventId}.json`, `/ew/icon_img.${eventId}.json`] : [])].map((path) => ({
+        rel: 'preload' as const,
+        href: cdn(path),
+        as: 'fetch' as const,
+        crossOrigin: 'anonymous' as const,
+      })),
       ...(eventId
         ? [
             {
@@ -130,14 +134,10 @@ export const EventPage = () => {
       setIsLoading(true);
       setError(null);
       try {
-        // const eventDataModules = import.meta.glob('/app/data/event/event.*.json');
-        // const modulePath = `/app/data/event/event.${eventId}.json`;
-        // const eventDataModule: any = await eventDataModules[modulePath]()
-        const eventDataModule: EventData = await (await fetch(cdn(`/ew/event.${eventId}.json`))).json();
-
-        // const eventDataModule = (await import(/* @vite-ignore */ `/app/data/event/event.${eventId}.json`)).default;
-        // const iconDataInfoModule = (await import(`~/data/event/icon_info.json`)).default;
-        const iconDataInfoModule: Partial<IconInfos> = await (await fetch(cdn('/ew/icon_info.json'))).json();
+        const [eventDataModule, iconDataInfoModule] = await Promise.all([
+          fetch(cdn(`/ew/event.${eventId}.json`)).then((response) => response.json<EventData>()),
+          fetch(cdn('/ew/icon_info.json')).then((response) => response.json<Partial<IconInfos>>()),
+        ]);
         for (const key in iconDataInfoModule) {
           const k = key as keyof IconInfos;
           Object.assign(eventDataModule.icons, {
@@ -167,19 +167,15 @@ export const EventPage = () => {
 
     const fetchIconData = async () => {
       try {
-        // Use the path format provided by the user
-        /*
-        const iconModules = import.meta.glob('/app/data/event/icon_img.*.json');
-        const modulePath = `/app/data/event/icon_img.${eventId}.json`;
-        const iconDataModule: any = await iconModules[modulePath]()
-        */
-        const iconDataModule: IconData = await (await fetch(cdn(`/ew/icon_img.${eventId}.json`))).json();
-        const iconDataAllModule: IconData = await (await fetch(cdn(`/ew/icon_img.json`))).json();
+        const [iconDataModule, iconDataAllModule] = await Promise.all([
+          fetch(cdn(`/ew/icon_img.${eventId}.json`)).then((response) => response.json<IconData>()),
+          fetch(cdn('/ew/icon_img.json')).then((response) => response.json<IconData>()),
+        ]);
         const ext: IconData = {
           Item: {},
           Equipment: {},
         };
-        for (const key in iconDataModule) {
+        for (const key of new Set([...Object.keys(iconDataModule), ...Object.keys(iconDataAllModule)])) {
           ext[key] = {
             ...iconDataModule[key],
             ...iconDataAllModule[key],

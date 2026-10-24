@@ -12,7 +12,6 @@ import path from 'path';
 // import { visualizer } from 'rollup-plugin-visualizer';
 
 const ENABLE_OBFUSCATION = true;
-const ortDistDir = path.resolve(import.meta.dirname, 'node_modules/onnxruntime-web/dist');
 
 function removeWasmPlugin() {
   return {
@@ -27,20 +26,39 @@ function removeWasmPlugin() {
   };
 }
 
-function ortMiddleware() {
+// Dev only: serve the generated text feeds with the same headers as public/_headers in production.
+// Vite's static server sends .txt as bare `text/plain`, which browsers decode as Latin-1.
+function textFeedHeadersMiddleware() {
+  const publicDir = path.resolve(import.meta.dirname, 'public');
   return {
-    name: 'serve-ort-wasm',
-    configureServer(server: any) {
-      server.middlewares.use('/scanner/ort', (req: any, res: any, next: any) => {
-        const file = path.join(ortDistDir, req.url.split('?')[0]);
-        if (fs.existsSync(file) && fs.statSync(file).isFile()) {
-          const ext = path.extname(file);
-          res.setHeader('Content-Type', ext === '.wasm' ? 'application/wasm' : 'text/javascript');
-          res.setHeader('Cache-Control', 'public, max-age=86400');
-          fs.createReadStream(file).pipe(res);
-        } else {
-          next();
-        }
+    name: 'serve-text-feeds',
+    configureServer(server: { middlewares: { use: (fn: (req: { url?: string }, res: { setHeader: (k: string, v: string) => void; end: (b: Buffer) => void }, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        const pathname = (req.url ?? '').split('?')[0];
+        if (pathname !== '/llms.txt' && !pathname.startsWith('/txt/')) return next();
+        const file = path.join(publicDir, pathname);
+        if (!file.startsWith(publicDir + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return next();
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(fs.readFileSync(file));
+      });
+    },
+  };
+}
+
+// Dev only: a cross-origin isolated page (routes/planner/ItemScanner.tsx sends COOP/COEP) may only
+// start same-origin dedicated workers whose script response also carries COEP (Chromium blocks
+// them with ERR_BLOCKED_BY_RESPONSE otherwise). This covers the video scan worker and
+// onnxruntime-web's pthread workers. COEP is ignored on worker scripts of non-isolated pages.
+function workerCoepMiddleware() {
+  return {
+    name: 'worker-coep-header',
+    configureServer(server: {
+      middlewares: { use: (fn: (req: { headers: Record<string, string | string[] | undefined> }, res: { setHeader: (k: string, v: string) => void }, next: () => void) => void) => void };
+    }) {
+      server.middlewares.use((req, res, next) => {
+        if (req.headers['sec-fetch-dest'] === 'worker') res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+        next();
       });
     },
   };
@@ -55,7 +73,8 @@ try {
 
 export default defineConfig(({ isSsrBuild, command }) => ({
   plugins: [
-    command === 'serve' && ortMiddleware(),
+    command === 'serve' && textFeedHeadersMiddleware(),
+    command === 'serve' && workerCoepMiddleware(),
     cloudflare({
       viteEnvironment: { name: 'ssr' },
       ...(command === 'serve' ? { auxiliaryWorkers: [{ configPath: './wrangler.auth.jsonc' }] } : {}),
@@ -135,6 +154,10 @@ export default defineConfig(({ isSsrBuild, command }) => ({
   },
   resolve: {
     tsconfigPaths: true,
+  },
+  // The video scanner worker bundles onnxruntime-web with dynamic imports, which the default iife worker format can't code-split.
+  worker: {
+    format: 'es',
   },
   optimizeDeps: {
     exclude: ['onnxruntime-web', 'isbot'],

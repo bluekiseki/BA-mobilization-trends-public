@@ -12,3 +12,13 @@ export const defaultCardMatchSimConfig: CardMatchSimConifg = {
   targetClears: 10,
   simIterations: 2000,
 };
+
+export type CardMatchTab = 'simulation' | 'info';
+export type CardMatchViewMode = 'total' | 'average';
+
+export type CardMatchResult = {
+  totalCosts: Record<string, number>;
+  totalRewards: Record<string, number>;
+  avgFlipsPerRound: number;
+  targetClears: number;
+};

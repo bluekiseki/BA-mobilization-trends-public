@@ -6,13 +6,14 @@ import { env } from 'cloudflare:workers';
 import { diffWords, type Change } from 'diff';
 import type { Locale } from '~/utils/i18n/config';
 import type { Route } from './+types/detail';
-import { createMetaDescriptor } from '~/components/head';
+import { createMetaDescriptor } from '~/components/shell/head';
 import { getInstance } from '~/middleware/i18next';
 import { SafeHtmlContent } from '~/components/common/SafeHtmlContent.client';
 import { ClientOnly } from '~/components/common/ClientOnly';
-import { effectiveModifyDateSql, htmlToPlainText, buildLineDiff, pairLineDiff, collapseContextLines, type DiffRow, type DiffLineRow } from '~/utils/notices.server';
+import { effectiveModifyDateSql, htmlToPlainText, buildLineDiff, pairLineDiff, collapseContextLines, type DiffRow, type DiffLineRow } from '~/features/notices/server/notices.server';
 import { decodeHtmlEntities } from '~/utils/decodeHtmlEntities';
-import { parseImageLine } from '~/utils/notices';
+import { parseImageLine } from '~/features/notices/notices';
+import { NoticeImg } from '~/features/notices/NoticeImg';
 import { NOTICES_CACHE_CONTROL } from '~/utils/cacheControl';
 
 interface NoticePost {
@@ -172,7 +173,7 @@ function DiffText({ parts }: { parts: Change[] }) {
 // highlighting for paired replacement lines, or plain text otherwise.
 function LineText({ row }: { row: DiffLineRow }) {
   const imgSrc = parseImageLine(row.text);
-  if (imgSrc) return <img src={imgSrc} alt="" className="w-12 h-12 object-cover rounded-sm align-middle" />;
+  if (imgSrc) return <NoticeImg src={imgSrc} className="w-12 h-12 object-cover rounded-sm align-middle" />;
 
   if (!row.parts) return <>{row.text}</>;
   return (

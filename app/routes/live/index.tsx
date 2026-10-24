@@ -1,34 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { data, useLoaderData, type LoaderFunctionArgs } from 'react-router';
-import type { LastData, TimelineData } from '~/types/livetype';
+import type { LastData, TimelineData } from '~/features/raid-stats/live/livetype';
 import type { Student } from '~/types/data';
-import { isTotalAssault, type PortraitData } from '~/components/dashboard/common';
-import { useDataCacheJson } from '~/utils/useDataCacheJson';
-import RankScatterChart, { type PredictionData } from '~/components/live/RankScatterChart';
-import ScoreTimelineChart from '~/components/live/ScoreTimelineChart';
-import TierAnalysisDashboard from '~/components/live/TierAnalysisDashboard';
-import Top10Rankings from '~/components/live/Top10Rankings';
-import MaxScoreTimelineChart from '~/components/live/MaxScoreTimelineChart';
+import { isTotalAssault } from '~/utils/raid/report';
+import type { PortraitData } from '~/types/raidReport';
+import { useDataCacheJson } from '~/hooks/useDataCacheJson';
+import RankScatterChart, { type PredictionData } from '~/features/raid-stats/live/RankScatterChart';
+import type { EliminationScoreModels, ScoreModel } from '~/features/raid-stats/live/scorePredictor';
+import ScoreTimelineChart from '~/features/raid-stats/live/ScoreTimelineChart';
+import TierAnalysisDashboard from '~/features/raid-stats/live/TierAnalysisDashboard';
+import Top10Rankings from '~/features/raid-stats/live/Top10Rankings';
+import MaxScoreTimelineChart from '~/features/raid-stats/live/MaxScoreTimelineChart';
 import { useTranslation } from 'react-i18next';
-import { formatDateToDayString } from '~/components/live/formatDateToDayString';
-import { getLiveRaidInfo } from '~/data/liveRaid';
+import { formatDateToDayString } from '~/features/raid-stats/live/formatDateToDayString';
+import { getLiveRaidInfo, getRaidSeasonPeriods } from '~/data/liveRaid';
 
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import { getMostDifficultLevel } from '~/components/raid/raidToString';
 import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
 import { lastdataURL, timelineURL, issuesURL } from '~/data/livedataServer.json';
+import { LIVE_CACHE_CONTROL } from '~/utils/cacheControl';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types';
 import { cdn } from '~/utils/cdn';
 import { env } from 'cloudflare:workers';
-import { YouTubeSearchGenerator } from '~/components/dashboard/YouTubeSearchGenerator';
+import { YouTubeSearchGenerator } from '~/features/raid-stats/common/YouTubeSearchGenerator';
 import type { AppHandle } from '~/types/link';
-import ContactButton from '~/components/ContactButton';
+import ContactButton from '~/components/shell/ContactButton';
 import BugReportModal from '~/components/common/BugReportModal';
-import { LiveVideoSection } from '~/components/live/LiveVideoSection';
-import { PlatinumCutWidget } from '~/components/live/PlatinumCutWidget';
-import { ScoreTimeConverter } from '~/components/live/ScoreTimeConverter';
+import { LiveVideoSection } from '~/features/raid-stats/live/LiveVideoSection';
+import { PlatinumCutWidget } from '~/features/raid-stats/live/PlatinumCutWidget';
+import { ScoreTimeConverter } from '~/features/raid-stats/live/ScoreTimeConverter';
+import { countAbnormalRecords, filterAbnormalRecords } from '~/features/raid-stats/live/abnormalRecords';
 
 const RANKS_TO_PLOT = [
   1,
@@ -58,7 +62,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   return [{ title }, { property: 'og:title', content: title }, { property: 'twitter:title', content: title }];
 }
 
-export async function loader({ context }: LoaderFunctionArgs) {
+export async function loader({ context, request }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   const locale = i18n.language as Locale;
   const raidInfos = getLiveRaidInfo(locale);
@@ -105,12 +109,20 @@ export async function loader({ context }: LoaderFunctionArgs) {
     return res.json() as unknown as T;
   };
 
-  // Historical trajectory datasets for RankScatterChart/PlatinumCutWidget, synced to R2 via CI and fetched
-  // through the CDN_BUCKET binding. Non-critical: a miss just means charts render without the overlay.
+  // Historical trajectory datasets for RankScatterChart/PlatinumCutWidget, synced to R2 via CI. Fetched
+  // through the CDN_BUCKET binding, with a CDN URL fallback so it also works where the binding is empty
+  // (e.g. local dev has no such R2 object). Non-critical: a miss just renders charts without the overlay.
   const fetchTrajectory = async (filename: string): Promise<unknown> => {
     try {
-      const r2Object = await env.CDN_BUCKET.get(`assets/data/jp/trajectory/${filename}`);
-      return r2Object ? await r2Object.json() : null;
+      const r2Object = await env.CDN_BUCKET?.get(`assets/data/jp/trajectory/${filename}`);
+      if (r2Object) return await r2Object.json();
+    } catch {
+      // fall through to the CDN URL
+    }
+    try {
+      // cdn() yields the CDN URL in production and a root-relative public/ path in dev (the leading slash keeps it from resolving under /ko/live).
+      const res = await fetch(new URL(cdn(`/data/jp/trajectory/${filename}`), request.url));
+      return res.ok ? await res.json() : null;
     } catch {
       return null;
     }
@@ -118,14 +130,18 @@ export async function loader({ context }: LoaderFunctionArgs) {
 
   try {
     // Using a common function to call both data points in parallel cleanly!
-    const [lastData, timelineData, totalAssaultTrajectories, eliminationRaidTrajectories] = await Promise.all([
+    const [lastData, timelineData, totalAssaultTrajectories, eliminationRaidTrajectories, totalAssaultModel, eliminationRaidModel] = await Promise.all([
       fetchWithR2Fallback<LastData>('lastdata.json', lastdataURL),
       fetchWithR2Fallback<TimelineData>('timeline.json', timelineURL),
       fetchTrajectory('total_assault_trajectories.json'),
       fetchTrajectory('elimination_raid_trajectories.json'),
+      fetchTrajectory('total_assault_model.json'),
+      fetchTrajectory('elimination_raid_model.json'),
     ]);
 
-    const isDataStale = new Date(lastData.time.replace(' ', 'T') + 'Z') < new Date(raidInfos[0].Date.replace(' ', 'T') + 'Z');
+    // lastData.time is GMT+0, but raidInfos[0].Date is a GMT+9 wall-clock string (see toKstDateString in data/liveRaid.ts).
+    // Parse each with its own offset so both sides become correct Unix timestamps before comparing.
+    const isDataStale = new Date(lastData.time.replace(' ', 'T') + 'Z') < new Date(raidInfos[0].Date.replace(' ', 'T') + '+09:00');
 
     // Pass data to components in JSON format.
     return data({
@@ -135,11 +151,14 @@ export async function loader({ context }: LoaderFunctionArgs) {
       description: i18n.t('liveDashboard:description'),
       raidType: isRaid ? i18n.t('game:raid') : i18n.t('game:eraid'),
       raidInfos,
+      seasonPeriods: getRaidSeasonPeriods(isRaid ? 'raid' : 'eraid'),
 
       lastData,
       timelineData,
       totalAssaultTrajectories,
       eliminationRaidTrajectories,
+      totalAssaultModel,
+      eliminationRaidModel,
       dataAvailable: !isDataStale,
     });
   } catch (error) {
@@ -150,6 +169,10 @@ export async function loader({ context }: LoaderFunctionArgs) {
 
 export function links() {
   return [...createLinkHreflang('/live')];
+}
+
+export function headers({}: Route.HeadersArgs) {
+  if (process.env.NODE_ENV === 'production') return { 'Cache-Control': LIVE_CACHE_CONTROL };
 }
 
 export const handle: AppHandle = {
@@ -181,7 +204,25 @@ export const handle: AppHandle = {
 };
 
 export default function LiveDashboardPage() {
-  const { lastData: lastData, timelineData: timelineData, raidInfos, dataAvailable, totalAssaultTrajectories, eliminationRaidTrajectories } = useLoaderData<typeof loader>();
+  const {
+    lastData: rawLastData,
+    timelineData: rawTimelineData,
+    raidInfos,
+    seasonPeriods,
+    dataAvailable,
+    totalAssaultTrajectories,
+    eliminationRaidTrajectories,
+    totalAssaultModel,
+    eliminationRaidModel,
+  } = useLoaderData<typeof loader>();
+
+  // Records the upstream provider flagged as suspected abnormal clears are hidden by default; users can opt in to show them.
+  const [hideAbnormalRecords, setHideAbnormalRecords] = useState(true);
+  const abnormalRecordCount = useMemo(() => countAbnormalRecords(rawLastData), [rawLastData]);
+  const { lastData, timelineData } = useMemo(
+    () => (hideAbnormalRecords ? filterAbnormalRecords(rawLastData, rawTimelineData) : { lastData: rawLastData, timelineData: rawTimelineData }),
+    [hideAbnormalRecords, rawLastData, rawTimelineData],
+  );
   // const [lastData, setLastData] = useState<LastData>(lastData_f as LastData);
   // const [timelineData, setTimelineData] = useState<TimelineData>(timelineData_f as any);
 
@@ -191,6 +232,7 @@ export default function LiveDashboardPage() {
   const { t: t_d, i18n } = useTranslation('dashboardIndex');
   const { t } = useTranslation('liveDashboard');
   const { t: tg } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const [isReady, setIsReady] = useState(false);
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
@@ -217,7 +259,7 @@ export default function LiveDashboardPage() {
   if (!raidInfos) return <div className="p-8 text-center">Loading or Processing Data...</div>;
 
   return (
-    <main className="p-4 sm:p-6 lg:p-8 space-y-12 bg-neutral-50 dark:bg-neutral-900">
+    <main className="p-2 sm:p-4 lg:p-8 space-y-12 bg-neutral-50 dark:bg-neutral-900">
       <header className="text-center pb-4 border-b border-neutral-200 dark:border-neutral-700">
         <h1 className="text-xl font-extrabold text-neutral-900 dark:text-white mb-2">{t_d('liveBetaTitle')}</h1>
 
@@ -245,6 +287,13 @@ export default function LiveDashboardPage() {
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               {t('service_discontinuation_notice')} {t('irregular_update_notice')}
             </p>
+            {abnormalRecordCount > 0 && (
+              <label className="mt-3 inline-flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                <input type="checkbox" checked={hideAbnormalRecords} onChange={(e) => setHideAbnormalRecords(e.target.checked)} className="rounded accent-blue-500 w-4 h-4" />
+                {t('hide_abnormal_records')}
+                <span className="text-neutral-400 dark:text-neutral-500">({abnormalRecordCount})</span>
+              </label>
+            )}
           </div>
         )}
       </header>
@@ -274,13 +323,13 @@ export default function LiveDashboardPage() {
         </div>
       )}
       {!dataAvailable && <PlatinumCutWidget raidInfos={raidInfos} isRaid={isRaid} totalAssaultTrajectories={totalAssaultTrajectories} eliminationRaidTrajectories={eliminationRaidTrajectories} />}
-      {!dataAvailable && <LiveVideoSection raidInfos={raidInfos} studentData={studentData} portraitData={portraitData} />}
+
       {isBugModalOpen && <BugReportModal onClose={() => setIsBugModalOpen(false)} issuesURL={issuesURL} />}
 
       {dataAvailable && (
         <>
           <section>
-            <h2 className="text-2xl font-bold mb-4">Overview</h2>
+            <h2 className="text-2xl font-bold mb-4">{t_ui('overview')}</h2>
             <TierAnalysisDashboard timelineData={timelineData} raidInfos={raidInfos} isRaid={isRaid} />
           </section>
 
@@ -292,9 +341,13 @@ export default function LiveDashboardPage() {
                   isRaid={isRaid}
                   lastData={lastData}
                   raidInfos={raidInfos}
+                  seasonPeriods={seasonPeriods}
                   server={server}
                   totalAssaultTrajectories={totalAssaultTrajectories as PredictionData | null}
                   eliminationRaidTrajectories={eliminationRaidTrajectories as PredictionData | null}
+                  totalAssaultModel={totalAssaultModel as ScoreModel | null}
+                  eliminationRaidModel={eliminationRaidModel as EliminationScoreModels | null}
+                  timelineData={timelineData}
                 />
               </section>
 
@@ -304,17 +357,19 @@ export default function LiveDashboardPage() {
 
               <section>
                 <h2 className="text-2xl font-bold mb-4">{t('ranking_cutoff_fluctuation')}</h2>
-                <ScoreTimelineChart isRaid={isRaid} timelineData={timelineData} ranksToPlot={RANKS_TO_PLOT} raidInfos={raidInfos} />
+                <ScoreTimelineChart isRaid={isRaid} timelineData={timelineData} ranksToPlot={RANKS_TO_PLOT} raidInfos={raidInfos} server={server} />
               </section>
 
               <section>
                 <h2 className="text-2xl font-bold mb-4">{t('highscore_change_by_difficulty')}</h2>
-                <MaxScoreTimelineChart isRaid={isRaid} timelineData={timelineData} raidInfos={raidInfos} server={server} />
+                <MaxScoreTimelineChart isRaid={isRaid} timelineData={rawTimelineData} hideAbnormal={hideAbnormalRecords} raidInfos={raidInfos} server={server} />
               </section>
             </>
           )}
         </>
       )}
+
+      <LiveVideoSection raidInfos={raidInfos} studentData={studentData} portraitData={portraitData} />
     </main>
   );
 }

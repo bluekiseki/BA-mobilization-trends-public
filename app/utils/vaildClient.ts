@@ -19,9 +19,18 @@ export function vaildClient(request: Request) {
     return false;
   }
 
-  if (!referer || !ALLOWED_DOMAINS.some((domain) => referer.startsWith(domain))) {
+  if (!referer || !isAllowedReferer(referer)) {
     return false;
   }
 
   return true;
+}
+
+// Compare the parsed origin exactly; a prefix match accepts "https://domain.evil.test" and "https://domain@evil.test".
+function isAllowedReferer(referer: string): boolean {
+  try {
+    return ALLOWED_DOMAINS.includes(new URL(referer).origin);
+  } catch {
+    return false;
+  }
 }

@@ -1,68 +1,28 @@
 // app/routes/utils/jukebox.tsx
-import { useState, useEffect, useRef, useCallback, useMemo, memo, useTransition } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, useTransition } from 'react';
+import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import eventList from '~/data/jp/eventList.json';
 import type { EventListData } from '~/types/eventList';
-import { useDataCache } from '~/utils/cache';
+import { useDataCache } from '~/hooks/cache';
 import type { Student } from '~/types/data';
-import { eventConvertor, FilterIcon, GENERAL_CATEGORIES, mainStoryChapters, otherStoryTitles, PlayIcon, SoundWaveIcon, XREF_PREFIXES, type OtherStoryData } from './jukeboxMetadata';
+import { eventConvertor, FilterIcon, GENERAL_CATEGORIES, mainStoryChapters, otherStoryTitles, XREF_PREFIXES, type OtherStoryData } from '~/features/jukebox/jukeboxMetadata';
 import { data } from 'react-router';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
-import RubyText from '~/components/RubyText';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import { FaSortAmountUp, FaSortAmountDown } from 'react-icons/fa';
 import type { Route } from './+types/jukebox';
 import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
-import { useHelpKey } from '~/utils/usePageHelp';
-import { useSearchMatcher } from '~/utils/useSearchMatcher';
-import Player from '~/components/jukebox/Player';
-import StoryFilters from '~/components/jukebox/StoryFilters';
+import { useHelpKey } from '~/hooks/usePageHelp';
+import { useSearchMatcher } from '~/hooks/useSearchMatcher';
+import Player from '~/features/jukebox/Player';
+import StoryFilters from '~/features/jukebox/StoryFilters';
 import type { StudentPortraitData } from '~/types/plannerData';
-import { FiChevronDown, FiExternalLink } from 'react-icons/fi';
+import { filterBgm, getActiveFilters, type SpoilerFilters } from '~/features/jukebox/jukeboxFilters';
 import { PageHeader } from '~/components/common/PageHeader';
-
-// --- TYPE DEFINITIONS ---
-type Language = 'en' | 'jp' | 'ko' | 'tw';
-interface LocalizedName {
-  ja?: string | string[] | null;
-  ko?: string | string[] | null;
-  en?: string | string[] | null;
-  tw?: string | string[] | null;
-}
-interface LocalizedObj {
-  ja?: string | string[] | null;
-  jp?: string | string[] | null;
-  ko?: string | string[] | null;
-  en?: string | string[] | null;
-  tw?: string | string[] | null;
-  Name?: string | null;
-}
-interface XrefEntry {
-  type: string;
-  title?: string | number | null;
-  name?: LocalizedObj;
-  episode?: string | number | null;
-}
-interface BgmEntry {
-  id: string;
-  title?: string;
-  composer?: string;
-  youtube_url?: string;
-  xref: XrefEntry[];
-}
-interface YTPlayer {
-  seekTo: (seconds: number) => void;
-  playVideo: () => void;
-}
-
-// --- HELPER FUNCTIONS ---
-const getLocalizedText = (obj: LocalizedObj | null | undefined, lang: Language, fallbackKey: keyof LocalizedName = 'ja'): string => {
-  const val = obj?.[lang] || obj?.[fallbackKey] || obj?.Name || '';
-  return Array.isArray(val) ? (val[0] ?? '') : val;
-};
-const getLocalizedTextArr = (obj: LocalizedObj | null | undefined, lang: Language, fallbackKey: keyof LocalizedName = 'ja'): string | string[] => obj?.[lang] || obj?.[fallbackKey] || obj?.Name || '';
+import { type YTPlayer, type BgmEntry, type XrefEntry, type Language, getLocalizedTextArr, getLocalizedText, BgmItem } from '~/features/jukebox/BgmItem';
 
 // --- LOADER / META / HANDLE ---
 export function loader({ context }: Route.LoaderArgs) {
@@ -91,100 +51,17 @@ export const handle: AppHandle = {
   },
 };
 
-// --- BGM LIST ITEM (memoized to prevent re-renders on unrelated state changes) ---
-const BgmItem = memo(function BgmItem({
-  bgm,
-  isExpanded,
-  isPlaying,
-  hasAnyActiveFilter,
-  isXrefMatchingActive,
-  renderXrefLine,
-  onSelect,
-  onToggleDetails,
-}: {
-  bgm: BgmEntry;
-  isExpanded: boolean;
-  isPlaying: boolean;
-  hasAnyActiveFilter: boolean;
-  isXrefMatchingActive: (xref: XrefEntry) => boolean;
-  renderXrefLine: (xref: XrefEntry, bgm: BgmEntry) => string;
-  onSelect: (bgm: BgmEntry) => void;
-  onToggleDetails: (id: string) => void;
-}) {
-  const { t } = useTranslation('jukebox');
-
-  const matchingXrefs = useMemo(() => (hasAnyActiveFilter ? bgm.xref.filter(isXrefMatchingActive) : []), [hasAnyActiveFilter, bgm.xref, isXrefMatchingActive]);
-
-  return (
-    <div
-      id={`bgm-item-${bgm.id}`}
-      className={`scroll-mt-24 md:scroll-mt-16 px-4 py-3 transition-colors duration-150 ${isPlaying ? 'bg-sky-50 dark:bg-sky-950/30' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/30'}`}
-    >
-      <div className={`flex items-center gap-3 ${bgm.youtube_url ? 'cursor-pointer' : ''}`} onClick={() => bgm.youtube_url && onSelect(bgm)}>
-        <span className={`font-mono text-base font-bold w-10 shrink-0 tabular-nums ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-400 dark:text-neutral-500'}`}>
-          {Number(bgm.id) < 10000 ? bgm.id : 'N/A'}
-        </span>
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm font-semibold leading-tight ${isPlaying ? 'text-sky-700 dark:text-sky-300' : 'text-neutral-800 dark:text-neutral-100'}`}>{bgm.title || `BGM #${bgm.id}`}</p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate mt-0.5">{bgm.composer}</p>
-        </div>
-        {bgm.youtube_url ? (
-          <div className={`shrink-0 ${isPlaying ? 'text-sky-500 dark:text-sky-400' : 'text-neutral-300 dark:text-neutral-600'}`}>{isPlaying ? <SoundWaveIcon /> : <PlayIcon />}</div>
-        ) : (
-          Number(bgm.id) < 10000 && (
-            <a
-              href={`https://bluearchive.wiki/wiki/Music#track${bgm.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              title={t('actions.view_on_wiki')}
-              className="shrink-0 text-neutral-300 dark:text-neutral-600 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-            >
-              <FiExternalLink className="w-7 h-7" />
-            </a>
-          )
-        )}
-      </div>
-
-      {matchingXrefs.length > 0 && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleDetails(bgm.id);
-          }}
-          className="mt-2 w-full text-left group"
-        >
-          <div className="flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
-            <FiChevronDown className={`w-3 h-3 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-            <span className="font-medium">
-              {matchingXrefs.length} {isExpanded ? t('actions.hide_details') : t('actions.view_details')}
-            </span>
-          </div>
-          {isExpanded && (
-            <ul className="mt-1.5 ml-3.5 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
-              {matchingXrefs.map((x, i) => (
-                <li key={i} className="flex items-baseline gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
-                  <span className="shrink-0 text-neutral-300 dark:text-neutral-600">·</span>
-                  <RubyText>{renderXrefLine(x, bgm)}</RubyText>
-                </li>
-              ))}
-            </ul>
-          )}
-        </button>
-      )}
-    </div>
-  );
-});
-
 // --- PAGE COMPONENT ---
 export default function JukeboxPage() {
   const { t, i18n } = useTranslation(['jukebox', 'game']);
   const { t: t_club } = useTranslation('club');
   const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
-  const language = ({ ja: 'jp', ko: 'ko', en: 'en', 'zh-Hant': 'zh_Hant' }[locale] as Language) || 'jp';
+  const language = ({ en: 'en', ko: 'ko', ja: 'jp', 'zh-Hant': 'zh_Hant' }[locale] as Language) || 'jp';
 
   // --- State ---
+  const [searchParams] = useSearchParams();
+  const requestedBgm = searchParams.get('bgm');
   const [allBgm, setAllBgm] = useState<BgmEntry[]>([]);
   const [studentData, setStudentData] = useState<Record<string, Student>>({});
   const [eventData, setEventListData] = useState<EventListData>({});
@@ -195,13 +72,7 @@ export default function JukeboxPage() {
   const [otherStoryData] = useState<OtherStoryData>(otherStoryTitles);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [spoilerFilters, setSpoilerFilters] = useState<{
-    general: Record<string, boolean>;
-    mainStories: Record<string, boolean>;
-    eventStories: Record<string, boolean>;
-    favorStudents: Record<string, boolean>;
-    memorialStudents: Record<string, boolean>;
-  }>({ general: {}, mainStories: {}, eventStories: {}, favorStudents: {}, memorialStudents: {} });
+  const [spoilerFilters, setSpoilerFilters] = useState<SpoilerFilters>({ general: {}, mainStories: {}, eventStories: {}, favorStudents: {}, memorialStudents: {} });
 
   const [mainStoryList, setMainStoryList] = useState<[string, string][]>([]);
   const [eventStoryList, setEventStoryList] = useState<[string, string][]>([]);
@@ -263,7 +134,7 @@ export default function JukeboxPage() {
               mainStories.set(key, mainStoryChapters[key] ? t(`main_story.${mainStoryChapters[key].key}`, key) : key);
             }
             if (xref.type === 'Event_Story' && xref.title) {
-              const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' };
+              const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ko: 'Kr', ja: 'Jp', 'zh-Hant': 'Tw' };
               eventStories.set(
                 String(xref.title),
                 (!Number.isNaN(Number(xref.title)) ? eventJson[eventConvertor[Number(xref.title) as keyof typeof eventConvertor]]?.[localeMap[locale]] : '') ||
@@ -299,51 +170,21 @@ export default function JukeboxPage() {
   }, [locale, t, fetchStudents, allBgm]);
 
   // --- Active filters (used in filtering effect and render) ---
-  const activeFilters = useMemo(
-    () => ({
-      general: Object.entries(spoilerFilters.general)
-        .filter(([, v]) => v)
-        .map(([k]) => k),
-      mainStories: Object.keys(spoilerFilters.mainStories).filter((k) => spoilerFilters.mainStories[k]),
-      eventStories: Object.keys(spoilerFilters.eventStories).filter((k) => spoilerFilters.eventStories[k]),
-      favorStudents: Object.keys(spoilerFilters.favorStudents).filter((k) => spoilerFilters.favorStudents[k]),
-      memorialStudents: Object.keys(spoilerFilters.memorialStudents).filter((k) => spoilerFilters.memorialStudents[k]),
-    }),
-    [spoilerFilters],
-  );
+  const activeFilters = useMemo(() => getActiveFilters(spoilerFilters), [spoilerFilters]);
 
   const hasAnyActiveFilter = useMemo(() => Object.values(activeFilters).some((arr) => arr.length > 0), [activeFilters]);
+
+  // A link from another page (?bgm=<id>) selects that track once the list is loaded.
+  useEffect(() => {
+    if (!requestedBgm || allBgm.length === 0) return;
+    const entry = allBgm.find((b) => b.id === requestedBgm);
+    if (entry) setCurrentSong(entry);
+  }, [requestedBgm, allBgm]);
 
   // --- Filtering Effect ---
   useEffect(() => {
     if (isLoading || error) return;
-    const { general, mainStories, eventStories, favorStudents, memorialStudents } = activeFilters;
-    let results: BgmEntry[] = [];
-
-    if ([...general, ...mainStories, ...eventStories, ...favorStudents, ...memorialStudents].length > 0) {
-      results = allBgm.filter((bgm) =>
-        bgm.xref.some((xref) => {
-          if (xref.type === 'Favor_Story' && xref.title && favorStudents.includes(String(xref.title))) return true;
-          if (xref.type === 'Memorial' && xref.title && memorialStudents.includes(String(xref.title))) return true;
-          if ((xref.type === 'raid' || xref.type === 'limitraid') && general.includes('Raid')) return true;
-          if (xref.type === 'UI' && general.includes('Other')) return true;
-          if ((xref.type === 'main_work' || xref.type === 'event_work') && general.includes('Work')) return true;
-          if (xref.type === 'Main_Story' && xref.title && mainStories.includes(String(xref.title))) return true;
-          if (xref.type === 'Event_Story' && xref.title && eventStories.includes(String(xref.title))) return true;
-          if (xref.type === 'Group_Story' && general.includes('GroupStory')) return true;
-          if (xref.type === 'Mini_Story' && general.includes('MiniStory')) return true;
-          if (xref.type === 'Work_Story' && general.includes('WorkStory')) return true;
-          return false;
-        }),
-      );
-    }
-
-    if (searchTerm) {
-      results = results.filter((bgm) => matcher(bgm.id, searchTerm) || (bgm.title ? matcher(bgm.title, searchTerm) : false) || (bgm.composer ? matcher(bgm.composer, searchTerm) : false));
-    }
-
-    results.sort((a, b) => (sortOrder === 'ascending' ? Number(a.id) - Number(b.id) : Number(b.id) - Number(a.id)));
-    setFilteredBgm(results);
+    setFilteredBgm(filterBgm({ allBgm, activeFilters, searchTerm, sortOrder, matcher }));
   }, [searchTerm, activeFilters, allBgm, isLoading, error, sortOrder, matcher]);
 
   // --- Scroll ---
@@ -540,7 +381,7 @@ export default function JukeboxPage() {
         else if (episodeString) name = `${t('meta.rank')} ${xref.episode}`;
       }
 
-      const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ja: 'Jp', ko: 'Kr', 'zh-Hant': 'Tw' };
+      const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ko: 'Kr', ja: 'Jp', 'zh-Hant': 'Tw' };
 
       switch (xref.type) {
         case 'Main_Story': {

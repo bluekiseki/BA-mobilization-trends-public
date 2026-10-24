@@ -4,12 +4,12 @@ import { env } from 'cloudflare:workers';
 import { useTranslation } from 'react-i18next';
 import { RiSearchLine, RiArrowLeftSLine, RiArrowRightSLine } from 'react-icons/ri';
 import type { Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import { PageHeader } from '~/components/common/PageHeader';
 import type { Route } from './+types';
 import { getInstance } from '~/middleware/i18next';
-import { queryNotices } from '~/utils/notices-query.server';
-import { NoticeListItem } from '~/components/NoticeListItem';
+import { queryNotices } from '~/features/notices/server/notices-query.server';
+import { NoticeListItem } from '~/features/notices/NoticeListItem';
 import type { AppHandle } from '~/types/link';
 import { NOTICES_CACHE_CONTROL } from '~/utils/cacheControl';
 

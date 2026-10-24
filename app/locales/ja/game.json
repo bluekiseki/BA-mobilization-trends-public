@@ -89,5 +89,8 @@
   "opart": "オパーツ",
   "pyro_unit": "青輝石",
   "limitedShort": "限定",
-  "difficultyShort": "難易度"
+  "difficultyShort": "難易度",
+  "recruitNormal": "恒常",
+  "recruitArchive": "アーカイブ",
+  "recruitWelfare": "配布"
 }

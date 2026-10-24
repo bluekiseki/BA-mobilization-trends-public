@@ -64,6 +64,9 @@
   "ETC": "その他",
   "Sakugawa": "柵川中学",
   "FoxSquad": "FOX小隊",
+  "DivingClub": "ダイビング部",
+  "Class183": "183号特別クラス 특별반",
+  "Odyssey": "オデュッセイア",
   "short": {
     "Abydos": "アビドス",
     "Arius": "アリウス",
@@ -80,6 +83,8 @@
     "Sakugawa": "柵川中学",
     "Other": "その他",
     "Highlander": "ハイランダー",
-    "WildHunt": "ワイルドハント"
+    "WildHunt": "ワイルドハント",
+
+    "Odyssey": "オデュッセイア"
   }
 }

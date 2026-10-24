@@ -75,7 +75,7 @@
             "element": "#participation button:nth-child(3)",
             "popover": {
               "title": "3. 조력자만 보기",
-              "description": "버튼을 클릭하면 조력자(렌탈)로\n가장 많이 사용된 학생 통계만 따로 모아볼 수 있습니다."
+              "description": "버튼을 클릭하면 조력자(대여)로\n가장 많이 출전한 학생 통계만 따로 모아볼 수 있습니다."
             },
             "actionOnNext": "click"
           }
@@ -83,7 +83,7 @@
       },
       {
         "title": "조건 맞춤형 파티 검색하기",
-        "description": "특정 학생을 제외하거나, 육성 비용 절감을 위해\n원하는 조건의 학생을 사용한 파티만 골라서 검색합니다.",
+        "description": "특정 학생을 제외하거나, 육성 비용 절감을 위해\n원하는 조건의 학생이 출전한 파티만 골라서 검색합니다.",
         "tour": [
           {
             "element": "main nav button:nth-child(2)",
@@ -119,7 +119,7 @@
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
             "popover": {
               "title": "5. 제외할 학생 / 조력자 설정",
-              "description": "내게 없거나 육성이 덜 되어 투입하기 힘든 학생을 설정합니다.\n\n• 아예 투입 불가: 파티 목록에서 완전히 제외합니다.\n• 조력자 대여 가능: 다른 사람에게 1번 빌려서 쓰는 경우만 검색에 포함합니다."
+              "description": "내게 없거나 육성이 덜 되어 투입하기 힘든 학생을 설정합니다.\n\n• 아예 투입 불가: 파티 목록에서 완전히 제외합니다.\n• 조력자 대여 가능: 다른 사람에게 1번 빌려서 출전시키는 경우만 검색에 포함합니다."
             },
             "actionOnNext": "click"
           }
@@ -217,7 +217,7 @@
             "element": "#participation button:nth-child(3)",
             "popover": {
               "title": "3. 조력자만 보기",
-              "description": "버튼을 클릭하면 조력자(렌탈)로\n가장 많이 사용된 학생 통계만 따로 모아볼 수 있습니다."
+              "description": "버튼을 클릭하면 조력자(대여)로\n가장 많이 출전한 학생 통계만 따로 모아볼 수 있습니다."
             },
             "actionOnNext": "click"
           }
@@ -225,7 +225,7 @@
       },
       {
         "title": "조건 맞춤형 파티 검색하기",
-        "description": "특정 학생을 제외하거나, 육성 비용 절감을 위해\n원하는 조건의 학생을 사용한 파티만 골라서 검색합니다.",
+        "description": "특정 학생을 제외하거나, 육성 비용 절감을 위해\n원하는 조건의 학생이 출전한 파티만 골라서 검색합니다.",
         "tour": [
           {
             "element": "main nav button:nth-child(2)",
@@ -269,7 +269,7 @@
             "element": "#rankings div[data-component-name=TableFilterPanelComponent]>div:nth-child(2)",
             "popover": {
               "title": "5. 제외할 학생 / 조력자 설정",
-              "description": "내게 없거나 육성이 덜 되어 투입하기 힘든 학생을 설정합니다.\n\n• 아예 투입 불가: 파티 목록에서 완전히 제외합니다.\n• 조력자 대여 가능: 다른 사람에게 1번 빌려서 쓰는 경우만 검색에 포함합니다."
+              "description": "내게 없거나 육성이 덜 되어 투입하기 힘든 학생을 설정합니다.\n\n• 아예 투입 불가: 파티 목록에서 완전히 제외합니다.\n• 조력자 대여 가능: 다른 사람에게 1번 빌려서 출전시키는 경우만 검색에 포함합니다."
             },
             "actionOnNext": "click"
           }
@@ -361,7 +361,7 @@
     "heatmap": [
       {
         "title": "이 학생은 어느 총력전/대결전에서 활약할까?",
-        "description": "특정 학생이 어떤 보스전에서 자주 쓰이는지 확인합니다.\n학생을 모집(가챠)하거나 엘리그마로 성장시킬지 판단할 때 유용한 참고 자료가 됩니다.",
+        "description": "특정 학생이 어떤 보스전에 자주 출전하는지 확인합니다.\n학생을 모집(가챠)하거나 엘리그마로 성장시킬지 판단할 때 유용한 참고 자료가 됩니다.",
         "tour": [
           {
             "element": "div[data-component-name=StudentSearchDropdown]",
@@ -383,7 +383,7 @@
             "element": "div[data-component-name=RaidUsageStackChart]",
             "popover": {
               "title": "3. 채용 통계 요약",
-              "description": "각 총력전 및 대결전에서 해당 학생이\n어떤 성급(별)으로 얼마나 많이 사용되었는지 픽률을 보여줍니다."
+              "description": "각 총력전 및 대결전에서 해당 학생이\n어떤 성급(별)으로 얼마나 많이 출전했는지 픽률을 보여줍니다."
             }
           },
           {
@@ -414,7 +414,7 @@
     "ranking": [
       {
         "title": "미래시 총력전/대결전 학생 기용 순위",
-        "description": "다가올 총력전 및 대결전 시즌에서 어떤 학생이 가장 많이 기용되었는지,\n주력으로 사용된 평균 성급은 어느 정도인지 확인합니다.",
+        "description": "다가올 총력전 및 대결전 시즌에서 어떤 학생이 가장 많이 기용되었는지,\n주력으로 출전한 평균 성급은 어느 정도인지 확인합니다.",
         "tour": [
           {
             "element": "div[data-component-name=RankingChartPage_Slider]",

@@ -11,6 +11,8 @@ DATA_DIR="$ROOT/app/data"
 
 cp -r "$MOCK_DIR/jp/." "$DATA_DIR/jp/"
 cp "$MOCK_DIR/livedataServer.json" "$DATA_DIR/livedataServer.json"
+cp "$MOCK_DIR/birthdays.json" "$DATA_DIR/birthdays.json"
+cp "$MOCK_DIR/story/notice_images.json" "$DATA_DIR/story/notice_images.json"
 
 # Wrangler config — copy only if not already present
 [ -f "$ROOT/wrangler.jsonc" ] || cp "$ROOT/wrangler.example.jsonc" "$ROOT/wrangler.jsonc"

@@ -13,16 +13,13 @@
   "tabs": {
     "resources": "Resources",
     "income": "Sources & Spending",
-    "students": "Student Goals",
+    "students": "Eleph/Eligma Need Forecast",
     "studentsShort": "Goals"
   },
   "incomeTabHint": "Select a tracked resource above to configure income, purchases, and farming plans.",
   "planStatus": {
-    "title": "Plan status",
     "summary": "{{atRisk}} at risk · {{covered}} need eligma · {{onTrack}} on track",
     "summaryWithDeadline": "{{atRisk}} at risk · {{covered}} need eligma · {{onTrack}} on track · {{noDeadline}} no deadline",
-    "openButton": "Student Goals",
-    "sectionTitle": "Student goals",
     "emptyState": "Add student goals to see whether natural eleph income is enough or eligma is needed.",
     "statusCovered": "Eligma covers it",
     "statusOnTrack": "On track",
@@ -112,8 +109,6 @@
     "premium": "Premium:"
   },
   "panel": {
-    "title": "Resources",
-    "startingInventory": "Starting inventory",
     "gachaSimulation": "Gacha simulation",
     "noSimDataPre": "No simulation data.",
     "noSimDataPost": "first.",

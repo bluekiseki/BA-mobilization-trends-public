@@ -17,3 +17,8 @@ export const defaultJankenConfig: JankenConfig = {
   challengeCurrentScore: 0,
   challengeTargetScore: 0,
 };
+
+export type MinigameJankenResult = {
+  cost: Record<string, number>;
+  rewards: Record<string, number>;
+};

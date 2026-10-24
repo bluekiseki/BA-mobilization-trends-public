@@ -11,3 +11,17 @@ export const defaultRoadPuzzleConfig: RoadPuzzleConfig = {
   startStage: 1,
   endStage: 0,
 };
+
+export type Cell =
+  | { type: 'x' } // wall (impassable)
+  | { type: 'o' } // empty, placeable (costs 1 tile)
+  | { type: 's' } // start
+  | { type: 'g' } // goal
+  | { type: 'r'; a: number; b: number };
+
+export type Grid = Cell[][];
+
+export type RoadPuzzleResult = {
+  cost: Record<string, number>;
+  rewards: Record<string, number>;
+};

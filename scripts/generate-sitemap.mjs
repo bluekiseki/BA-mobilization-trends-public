@@ -58,6 +58,7 @@ const staticPages = [
   { path: '/dashboard/jp/videos', changefreq: 'weekly', priority: '0.6' },
   { path: '/dashboard/kr/videos', changefreq: 'weekly', priority: '0.6' },
   { path: '/notices', changefreq: 'daily', priority: '0.6' },
+  { path: '/changelog', changefreq: 'weekly', priority: '0.4' },
   { path: '/charts/jp/heatmap', changefreq: 'weekly', priority: '0.6' },
   { path: '/charts/kr/heatmap', changefreq: 'weekly', priority: '0.6' },
   { path: '/charts/jp/network', changefreq: 'weekly', priority: '0.6' },

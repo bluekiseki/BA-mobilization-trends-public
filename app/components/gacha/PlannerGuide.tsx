@@ -1,6 +1,6 @@
 // app/components/gacha/PlannerGuide.tsx
 import { useTranslation } from 'react-i18next';
-import { FaExclamationTriangle, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaExclamationTriangle, FaChevronDown, FaChevronUp, FaChevronRight } from 'react-icons/fa';
 import { Link } from 'react-router';
 
 export const GUIDE_STORAGE_KEY = 'gacha_guide_hidden';
@@ -8,8 +8,10 @@ export const GUIDE_STORAGE_KEY = 'gacha_guide_hidden';
 const EXPANDED_ID = 'planner-guide-expanded';
 const COLLAPSED_ID = 'planner-guide-collapsed';
 
-// Pre-hydration script flips visibility to prevent flash during hydration.
-const PREVENT_FLASH_SCRIPT = `try{if(localStorage.getItem(${JSON.stringify(GUIDE_STORAGE_KEY)})==='true'){var e=document.getElementById(${JSON.stringify(EXPANDED_ID)}),c=document.getElementById(${JSON.stringify(COLLAPSED_ID)});if(e)e.classList.add('hidden');if(c)c.classList.remove('hidden');}}catch(_){}`;
+// Default is collapsed (see Gacha_v2.tsx's useLocalStorage(GUIDE_STORAGE_KEY, true)), so SSR and a
+// fresh visitor's first client render already agree. The only pre-hydration flip needed is the
+// opposite case: a returning visitor who explicitly expanded it before (stored value === 'false').
+const PREVENT_FLASH_SCRIPT = `try{if(localStorage.getItem(${JSON.stringify(GUIDE_STORAGE_KEY)})==='false'){var e=document.getElementById(${JSON.stringify(EXPANDED_ID)}),c=document.getElementById(${JSON.stringify(COLLAPSED_ID)});if(e)e.classList.remove('hidden');if(c)c.classList.add('hidden');}}catch(_){}`;
 
 const monoStyle = { fontFamily: 'inherit' };
 
@@ -19,10 +21,14 @@ interface Props {
   collapsed: boolean;
   onToggle: () => void;
   gachaTestPath: string;
+  /** Link to the legacy (spreadsheet-era) planner — folded in here since it's advanced/secondary info,
+      not part of the primary flow. Omit to hide the row entirely (e.g. simple mode). */
+  oldVersionPath?: string;
 }
 
-export default function PlannerGuide({ collapsed, onToggle, gachaTestPath }: Props) {
+export default function PlannerGuide({ collapsed, onToggle, gachaTestPath, oldVersionPath }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.intro' });
+  const { t: tGacha } = useTranslation('planner', { keyPrefix: 'gacha' });
 
   const steps = [
     { title: t('feat1_title'), desc: t('feat1_desc') },
@@ -69,6 +75,19 @@ export default function PlannerGuide({ collapsed, onToggle, gachaTestPath }: Pro
             </div>
           ))}
         </div>
+
+        {/* Legacy (spreadsheet-era) planner — secondary info, folded into the guide instead of its own banner */}
+        {oldVersionPath && (
+          <Link
+            to={oldVersionPath}
+            className="flex items-center justify-between gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-3 mb-4 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+          >
+            <span className="text-[11px] leading-relaxed">
+              <span className="font-semibold text-neutral-700 dark:text-neutral-300">{tGacha('old_version_title')}</span> — {tGacha('old_version_description')}
+            </span>
+            <FaChevronRight className="shrink-0" size={10} />
+          </Link>
+        )}
 
         {/* Notes */}
         <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3">

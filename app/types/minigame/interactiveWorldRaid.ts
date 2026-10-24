@@ -24,3 +24,8 @@ export const defaultInteractiveWorldRaidConfig: InteractiveWorldRaidConfig = {
   ticketPeriodDays: [0, 0, 0],
   ticketDailyPurchase: [0, 0, 0],
 };
+
+export type InteractiveWorldRaidResult = {
+  cost: Record<string, number>;
+  rewards: Record<string, number>;
+};

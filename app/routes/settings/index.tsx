@@ -1,29 +1,42 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, redirect, useLoaderData, useRevalidator } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { isSessionStaleCode } from '~/features/account/logic/authErrors';
 import type { Route } from './+types/index';
 import { localeLink } from '~/utils/localeLink';
+import { getRelativeTime } from '~/utils/time';
+import type { Locale } from '~/utils/i18n/config';
 import { getInstance } from '~/middleware/i18next';
-import { createMetaDescriptor, createLinkHreflang } from '~/components/head';
-import { ChangePasswordForm } from '~/components/auth/ChangePasswordForm';
-import { NewProfileModal } from '~/components/auth/NewProfileModal';
-import { ImportDataBanner } from '~/components/auth/ImportDataBanner';
+import { createMetaDescriptor, createLinkHreflang } from '~/components/shell/head';
+import { ChangePasswordForm } from '~/features/account/components/ChangePasswordForm';
+import { NewProfileModal } from '~/features/account/components/NewProfileModal';
+import { ImportDataBanner } from '~/features/account/components/ImportDataBanner';
+import { ProfileAvatar } from '~/components/shell/ProfileAvatar';
+import { DeviceSessions } from '~/features/account/components/DeviceSessions';
+import { exportProfileData } from '~/components/shell/accountActions';
 import { ClientOnly } from '~/components/common/ClientOnly';
-import { LuTrash2, LuPlus, LuCheck, LuRefreshCw, LuDownload, LuUpload, LuTriangleAlert, LuPencil, LuX } from 'react-icons/lu';
+import { ConfirmDialog } from '~/components/common/ConfirmDialog';
+import StudentSearchDropdown from '~/components/student/StudentSearchDropdown';
+import type { Student } from '~/types/data';
+import { cdn } from '~/utils/cdn';
+import { getLocaleShortName } from '~/utils/i18n/config';
+import { loadPortraitMap } from '~/utils/studentPortraitMap';
+import { LuTrash2, LuPlus, LuRefreshCw, LuDownload, LuUpload, LuTriangleAlert, LuPencil, LuX } from 'react-icons/lu';
 import { magicLinkLogin } from '~/data/livedataServer.json';
 import { env } from 'cloudflare:workers';
-import { PROFILE_SERVER_OPTIONS, useAuthStore, type ProfileServer, type UserProfile } from '~/store/authStore';
-import { useSyncStore } from '~/store/syncStore';
-import { useGlobalStore } from '~/store/planner/useGlobalStore';
+import { PROFILE_SERVER_OPTIONS, mapRawProfile, useAuthStore, type ProfileServer, type RawProfileRow, type UserProfile } from '~/store/authStore';
+import { SYNC_STALE_BUTTON_MS, useSyncStore } from '~/store/syncStore';
 import { createInternalSessionRequest } from '~/utils/internalSessionRequest';
-import { getProfileServerLabel, isProfileServer, toGraphQLProfileServer } from '~/utils/profileServer';
+import { useIsStale } from '~/hooks/useRelativeTime';
+import { getProfileServerLabel, isProfileServer, MAX_PROFILE_NAME_LENGTH, MAX_PROFILES_PER_USER, toGraphQLProfileServer } from '~/utils/profileServer';
+import { getProfileStats, type ProfileStats } from '~/utils/profileDataStats';
 
 // WebAuthn only works client-side, so this is excluded from the SSR bundle entirely.
-const PasskeyRegisterButton = lazy(() => import('~/components/auth/PasskeyRegisterButton.client').then((m) => ({ default: m.PasskeyRegisterButton })));
+const PasskeyRegisterButton = lazy(() => import('~/features/account/components/PasskeyRegisterButton.client').then((m) => ({ default: m.PasskeyRegisterButton })));
 
 interface SessionData {
   user: { id: string; email?: string; username?: string | null };
-  profiles: unknown[];
+  profiles: RawProfileRow[];
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -55,11 +68,13 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
     return {
       user: session.user,
+      // SSR fallback so the Planner Profiles panel isn't empty on first paint, before
+      // the client authStore hydrates from the same session data (see root.tsx).
+      profiles: session.profiles.map(mapRawProfile),
       linkedProviders,
       passkeys,
       pageTitle,
       pageDesc,
-      headers: { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' },
     };
   } catch (err) {
     console.error('Session check failed:', err);
@@ -75,6 +90,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export function links() {
   return createLinkHreflang('/settings');
 }
+
+// This route always renders per-user data (session, linked accounts, passkeys, profiles),
+// so it must never be cached or shared across users.
+export function headers() {
+  return { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' };
+}
+
+// Placeholder shown in a stat tile until its profile data arrives; same height as the number (text-lg)
+const statSpinner = <span className="inline-block h-[18px] w-[18px] animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-500 dark:border-neutral-600 dark:border-t-neutral-300" />;
 
 async function callGql<T = Record<string, unknown>>(query: string, variables: Record<string, unknown>): Promise<T> {
   const res = await fetch('/api/graphql', {
@@ -98,123 +122,76 @@ interface GameInfoDraft {
   nickname: string;
 }
 
-interface ProfileStats {
-  inventoryTypes: number;
-  inventoryTotal: number;
-  students: number;
-  equipmentPlans: number;
-  resourceGoals: number;
-  gachaStrategies: number;
-  eventPlans: number;
-  raidRecords: number;
+interface ProfileAllDataResponse {
+  profileAllData: Array<{ key: string; value: unknown; revision: number; updatedAt: number }>;
 }
 
-interface ProfileAllDataResponse {
-  profileAllData: Array<{ key: string; value: unknown }>;
-}
+const PROFILE_ALL_DATA_QUERY = 'query ProfileAllData($id: ID!) { profileAllData(id: $id) { key value revision updatedAt } }';
+
+const UPDATE_PROFILE_MUTATION =
+  'mutation UpdateProfile($id: ID!, $input: UpdateProfileInput!) { updateProfile(id: $id, input: $input) { id name server isDefault sortOrder avatarStudentId createdAt updatedAt } }';
 
 interface UpdateProfileResponse {
   updateProfile: Omit<UserProfile, 'server'> & { server: string };
 }
 
-const EMPTY_PROFILE_STATS: ProfileStats = { inventoryTypes: 0, inventoryTotal: 0, students: 0, equipmentPlans: 0, resourceGoals: 0, gachaStrategies: 0, eventPlans: 0, raidRecords: 0 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function getProfileStats(rows: Array<{ key: string; value: unknown }>): ProfileStats {
-  const growthPlansValue = rows.find((row) => row.key === 'growthPlans')?.value;
-  const growthPlans = isRecord(growthPlansValue) && Array.isArray(growthPlansValue.growthPlans) ? growthPlansValue.growthPlans : [];
-  const students = growthPlans.filter((plan) => isRecord(plan) && typeof plan.studentId === 'number').length;
-  const materialInventory = isRecord(growthPlansValue) && isRecord(growthPlansValue.materialInventory) ? growthPlansValue.materialInventory : {};
-  const inventoryAmounts = Object.values(materialInventory).filter((amount): amount is number => typeof amount === 'number' && Number.isFinite(amount) && amount > 0);
-
-  const gachaStrategiesValue = rows.find((row) => row.key === 'gacha_strategies')?.value;
-  const gachaStrategies = isRecord(gachaStrategiesValue) ? Object.keys(gachaStrategiesValue).length : 0;
-
-  const equipmentPlanValue = rows.find((row) => row.key === 'equipmentPlan')?.value;
-  const runCounts = isRecord(equipmentPlanValue) && isRecord(equipmentPlanValue.runCounts) ? equipmentPlanValue.runCounts : {};
-  const equipmentPlans = Object.values(runCounts).filter((count) => typeof count === 'number' && count > 0).length;
-
-  const resourcePlanValue = rows.find((row) => row.key === 'resourcePlan')?.value;
-  const resourcePlans = isRecord(resourcePlanValue) ? [resourcePlanValue.kr, resourcePlanValue.jp, resourcePlanValue] : [];
-  const resourceGoalStudentIds = new Set<string>();
-  resourcePlans.forEach((plan) => {
-    if (!isRecord(plan) || !isRecord(plan.targetGoals)) return;
-    Object.entries(plan.targetGoals).forEach(([studentId, goals]) => {
-      if (Array.isArray(goals) && goals.length > 0) resourceGoalStudentIds.add(studentId);
-    });
-  });
-
-  const raidHistoryValue = rows.find((row) => row.key === 'raidHistory')?.value;
-  const raidRecords = isRecord(raidHistoryValue) && Array.isArray(raidHistoryValue.entries) ? raidHistoryValue.entries.length : 0;
-
-  return {
-    inventoryTypes: inventoryAmounts.length,
-    inventoryTotal: inventoryAmounts.reduce((total, amount) => total + amount, 0),
-    students,
-    equipmentPlans,
-    resourceGoals: resourceGoalStudentIds.size,
-    gachaStrategies,
-    eventPlans: rows.filter((row) => row.key.startsWith('eventPlans:')).length,
-    raidRecords,
-  };
-}
-
 export default function SettingsPage() {
   const { t, i18n } = useTranslation('auth');
   const { t: t_ui } = useTranslation('ui');
-  const { user, linkedProviders, passkeys } = useLoaderData<typeof loader>();
+  const { user, linkedProviders, passkeys, profiles: initialProfiles } = useLoaderData<typeof loader>();
   const revalidator = useRevalidator();
 
   // Planner profile state — Selector returns only primitives/stable references (no object literals)
   const authUser = useAuthStore((s) => s.user);
   const activeProfileId = useAuthStore((s) => s.activeProfileId);
-  const profiles = authUser?.profiles ?? [];
+  // Fall back to the SSR-provided list until the client authStore hydrates, so the panel
+  // isn't empty on first paint (see root.tsx's session-init effect for the hydration path).
+  const profiles = authUser?.profiles ?? initialProfiles;
   const syncStatus = useSyncStore((s) => s.status);
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
+  const lastModifiedAt = useSyncStore((s) => s.lastModifiedAt);
   const syncInitialized = useSyncStore((s) => s.isInitialized);
+  const syncConflictCount = useSyncStore((s) => Object.keys(s.conflicts).length);
+  const isSyncStale = useIsStale(lastSyncedAt, SYNC_STALE_BUTTON_MS);
   const [showNewProfile, setShowNewProfile] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
   const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
+  const [pendingDeleteProfileId, setPendingDeleteProfileId] = useState<string | null>(null);
   const [exportingProfileId, setExportingProfileId] = useState<string | null>(null);
   const [importingProfileId, setImportingProfileId] = useState<string | null>(null);
   const [importError, setImportError] = useState('');
   const [profileActionError, setProfileActionError] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [profileStats, setProfileStats] = useState<Record<string, ProfileStats>>({});
-
   useEffect(() => {
-    if (lastSyncedAt !== null) {
+    if (!syncInitialized || lastSyncedAt !== null) {
       setShowImport(false);
-    } else if (activeProfileId && useGlobalStore.getState().growthPlans.length > 0) {
-      setShowImport(true);
+    } else if (activeProfileId && authUser?.id) {
+      void import('~/store/anonymousPlannerSnapshot.client').then(({ getAnonymousPlannerSnapshot }) => {
+        setShowImport(getAnonymousPlannerSnapshot(authUser.id, activeProfileId) !== null);
+      });
     }
-  }, [lastSyncedAt, activeProfileId]);
+  }, [lastSyncedAt, activeProfileId, authUser?.id, syncInitialized]);
 
+  // Key by ids so the SSR -> authStore profile list swap doesn't trigger a refetch
+  const profileIdsKey = profiles.map((p) => p.id).join(',');
   useEffect(() => {
     let cancelled = false;
+    const ids = profileIdsKey ? profileIdsKey.split(',') : [];
 
-    const loadProfileStats = async () => {
-      const stats = await Promise.all(
-        profiles.map(async (profile) => {
-          const data = await callGql<ProfileAllDataResponse>('query ProfileAllData($id: ID!) { profileAllData(id: $id) { key value } }', { id: profile.id });
-          return [profile.id, getProfileStats(data.profileAllData)] as const;
-        }),
-      );
-
-      if (!cancelled) setProfileStats(Object.fromEntries(stats));
-    };
-
-    void loadProfileStats().catch(() => {
-      if (!cancelled) setProfileStats({});
+    // Each profile resolves independently; a failure keeps the previous value (or the placeholder)
+    ids.forEach((id) => {
+      callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id })
+        .then((data) => {
+          if (!cancelled) setProfileStats((previous) => ({ ...previous, [id]: getProfileStats(data.profileAllData) }));
+        })
+        .catch(() => undefined);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [profiles]);
+  }, [profileIdsKey]);
 
   const handleDeleteProfile = async (profileId: string) => {
     if (profiles.length <= 1 || profileId === activeProfileId) return;
@@ -237,20 +214,7 @@ export default function SettingsPage() {
     setExportingProfileId(profileId);
     setProfileActionError('');
     try {
-      type ProfileAllDataResponse = { profileAllData: { key: string; value: unknown }[] };
-      const data: ProfileAllDataResponse = await callGql<ProfileAllDataResponse>('query ProfileAllData($id: ID!) { profileAllData(id: $id) { key value } }', { id: profileId });
-      const exportData = {
-        profile: { id: profileId, name: profileName, server: profileServer },
-        data: Object.fromEntries(data.profileAllData.map(({ key, value }) => [key, value])),
-        exportedAt: new Date().toISOString(),
-      };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `yuzu-${profileName.replace(/[^a-z0-9]/gi, '_')}-${profileServer}.profile.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await exportProfileData(profileId, profileName, profileServer);
     } catch (err) {
       setProfileActionError(err instanceof Error ? err.message : t('settings.errors.failedToExportProfile'));
     } finally {
@@ -267,13 +231,20 @@ export default function SettingsPage() {
       const parsed: ImportData = JSON.parse(text) as ImportData;
       if (!parsed.data || typeof parsed.data !== 'object') throw new Error('Invalid file format');
 
-      await Promise.all(
-        Object.entries(parsed.data).map(([key, value]) =>
-          callGql('mutation($profileId:ID!,$key:String!,$value:JSON!){ upsertProfileData(profileId:$profileId,key:$key,value:$value) }', { profileId, key, value }),
-        ),
+      const current = await callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id: profileId });
+      const revisions = new Map(current.profileAllData.map((row) => [row.key, row.revision]));
+      const imported = await callGql<{ syncProfileData: Array<{ key: string; status: 'APPLIED' | 'CONFLICT' }> }>(
+        `mutation SyncProfileData($profileId:ID!,$changes:[SyncProfileDataChangeInput!]!){
+          syncProfileData(profileId:$profileId,changes:$changes){ key status }
+        }`,
+        {
+          profileId,
+          changes: Object.entries(parsed.data).map(([key, value]) => ({ key, value, schemaVersion: 1, baseRevision: revisions.get(key) ?? 0 })),
+        },
       );
-      if (profileId === activeProfileId) await useSyncStore.getState().pullAll(profileId);
-      const data: ProfileAllDataResponse = await callGql<ProfileAllDataResponse>('query ProfileAllData($id: ID!) { profileAllData(id: $id) { key value } }', { id: profileId });
+      if (imported.syncProfileData.some((result) => result.status === 'CONFLICT')) throw new Error(t('settings.errors.failedToImportProfile'));
+      if (profileId === activeProfileId) await useSyncStore.getState().pullAll();
+      const data: ProfileAllDataResponse = await callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id: profileId });
       setProfileStats((previous) => ({ ...previous, [profileId]: getProfileStats(data.profileAllData) }));
     } catch (err) {
       setImportError(err instanceof Error ? err.message : t('settings.errors.failedToImportProfile'));
@@ -285,10 +256,8 @@ export default function SettingsPage() {
   const handleSwitchProfile = async (profileId: string) => {
     if (profileId === activeProfileId) return;
     setSwitchingId(profileId);
-    useSyncStore.getState().setCurrentProfileId(profileId);
     useAuthStore.getState().setActiveProfile(profileId);
-    useSyncStore.getState().reset();
-    await useSyncStore.getState().pullAll(profileId);
+    await useSyncStore.getState().switchProfile(profileId);
     setSwitchingId(null);
   };
 
@@ -299,6 +268,30 @@ export default function SettingsPage() {
   const [profileSaving, setProfileSaving] = useState<string | null>(null);
   const [profileEditError, setProfileEditError] = useState('');
   const [savedGameInfo, setSavedGameInfo] = useState<Record<string, GameInfoDraft>>({});
+  const [profileNameDraft, setProfileNameDraft] = useState('');
+  const [avatarStudentDraft, setAvatarStudentDraft] = useState<number | null>(null);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [pickerStudents, setPickerStudents] = useState<Record<number, Student> | null>(null);
+  const [pickerLoading, setPickerLoading] = useState(false);
+
+  const openAvatarPicker = async () => {
+    setAvatarPickerOpen(true);
+    if (pickerStudents || pickerLoading) return;
+    setPickerLoading(true);
+    try {
+      const [metaRes, portraitMap] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(i18n.language as Locale)}.students.min.json`)), loadPortraitMap()]);
+      const meta: Record<string, Student> = await metaRes.json();
+      const merged: Record<number, Student> = {};
+      for (const [id, student] of Object.entries(meta)) {
+        merged[Number(id)] = { ...student, Portrait: portraitMap[id] };
+      }
+      setPickerStudents(merged);
+    } catch {
+      setProfileEditError(t('settings.errors.failedToSaveProfile'));
+    } finally {
+      setPickerLoading(false);
+    }
+  };
 
   const handleOpenProfileEdit = async (profileId: string) => {
     if (editingProfileId === profileId) {
@@ -309,7 +302,12 @@ export default function SettingsPage() {
     setProfileEditError('');
     try {
       const profile = profiles.find((item) => item.id === profileId);
-      if (profile) setProfileServerDraft(profile.server);
+      if (profile) {
+        setProfileNameDraft(profile.name);
+        setProfileServerDraft(profile.server);
+        setAvatarStudentDraft(profile.avatarStudentId);
+      }
+      setAvatarPickerOpen(false);
       type AllDataResponse = { profileAllData: { key: string; value: unknown }[] };
       const data = await callGql<AllDataResponse>('query($id:ID!){ profileAllData(id:$id){ key value } }', { id: profileId });
       const row = data.profileAllData.find((r) => r.key === 'gameInfo');
@@ -328,22 +326,34 @@ export default function SettingsPage() {
     }
   };
 
-  const updateProfileServer = async (profile: UserProfile) => {
-    if (profile.server === profileServerDraft) return;
-
-    const data = await callGql<UpdateProfileResponse>(
-      'mutation UpdateProfile($id: ID!, $input: UpdateProfileInput!) { updateProfile(id: $id, input: $input) { id name server isDefault sortOrder createdAt updatedAt } }',
-      { id: profile.id, input: { server: toGraphQLProfileServer(profileServerDraft) } },
-    );
+  const applyUpdatedProfile = (data: UpdateProfileResponse) => {
     const server = data.updateProfile.server.toLowerCase();
     if (!isProfileServer(server)) throw new Error(t('settings.errors.failedToSaveProfile'));
-
     const currentUser = useAuthStore.getState().user;
     if (!currentUser?.profiles) return;
     useAuthStore.getState().setUser({
       ...currentUser,
-      profiles: currentUser.profiles.map((item) => (item.id === profile.id ? { ...item, ...data.updateProfile, server } : item)),
+      profiles: currentUser.profiles.map((item) => (item.id === data.updateProfile.id ? { ...item, ...data.updateProfile, server } : item)),
     });
+  };
+
+  const updateProfileName = async (profile: UserProfile) => {
+    const name = profileNameDraft.trim();
+    if (!name || name === profile.name) return;
+    const data = await callGql<UpdateProfileResponse>(UPDATE_PROFILE_MUTATION, { id: profile.id, input: { name } });
+    applyUpdatedProfile(data);
+  };
+
+  const updateProfileServer = async (profile: UserProfile) => {
+    if (profile.server === profileServerDraft) return;
+    const data = await callGql<UpdateProfileResponse>(UPDATE_PROFILE_MUTATION, { id: profile.id, input: { server: toGraphQLProfileServer(profileServerDraft) } });
+    applyUpdatedProfile(data);
+  };
+
+  const updateProfileAvatar = async (profile: UserProfile) => {
+    if (profile.avatarStudentId === avatarStudentDraft) return;
+    const data = await callGql<UpdateProfileResponse>(UPDATE_PROFILE_MUTATION, { id: profile.id, input: { avatarStudentId: avatarStudentDraft } });
+    applyUpdatedProfile(data);
   };
 
   const saveGameInfo = async (profileId: string) => {
@@ -351,11 +361,15 @@ export default function SettingsPage() {
     if (gameInfoDraft.uuid) value.uuid = gameInfoDraft.uuid;
     if (gameInfoDraft.friendCode) value.friendCode = gameInfoDraft.friendCode;
     if (gameInfoDraft.nickname) value.nickname = gameInfoDraft.nickname;
-    await callGql('mutation($profileId:ID!,$key:String!,$value:JSON!){ upsertProfileData(profileId:$profileId,key:$key,value:$value) }', {
-      profileId,
-      key: 'gameInfo',
-      value,
-    });
+    const current = await callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id: profileId });
+    const baseRevision = current.profileAllData.find((row) => row.key === 'gameInfo')?.revision ?? 0;
+    const saved = await callGql<{ syncProfileData: Array<{ status: 'APPLIED' | 'CONFLICT' }> }>(
+      `mutation SyncProfileData($profileId:ID!,$changes:[SyncProfileDataChangeInput!]!){
+        syncProfileData(profileId:$profileId,changes:$changes){ status }
+      }`,
+      { profileId, changes: [{ key: 'gameInfo', value, schemaVersion: 1, baseRevision }] },
+    );
+    if (saved.syncProfileData[0]?.status !== 'APPLIED') throw new Error(t('settings.errors.failedToSaveProfile'));
   };
 
   const handleSaveProfile = async (profileId: string) => {
@@ -365,7 +379,9 @@ export default function SettingsPage() {
       const profile = profiles.find((item) => item.id === profileId);
       if (!profile) throw new Error(t('settings.errors.failedToSaveProfile'));
 
+      await updateProfileName(profile);
       await updateProfileServer(profile);
+      await updateProfileAvatar(profile);
       await saveGameInfo(profileId);
       setSavedGameInfo((prev) => ({ ...prev, [profileId]: { ...gameInfoDraft } }));
       setEditingProfileId(null);
@@ -400,7 +416,11 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      if (!res.ok) throw new Error(t('settings.errors.failedToDeletePasskey'));
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { code?: string };
+        if (isSessionStaleCode(data.code)) throw new Error(t('settings.errors.deleteAccountSessionExpired'));
+        throw new Error(t('settings.errors.failedToDeletePasskey'));
+      }
       void revalidator.revalidate();
     } catch (err) {
       setPasskeyError(err instanceof Error ? err.message : t('settings.errors.failedToDeletePasskey'));
@@ -441,7 +461,8 @@ export default function SettingsPage() {
       });
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { message?: string };
+        const data = (await res.json().catch(() => ({}))) as { message?: string; code?: string };
+        if (isSessionStaleCode(data.code)) throw new Error(t('settings.errors.deleteAccountSessionExpired'));
         throw new Error(data.message ?? t('settings.errors.failedToUnlinkAccount'));
       }
       void revalidator.revalidate();
@@ -474,6 +495,7 @@ export default function SettingsPage() {
     try {
       type DeleteResponse = {
         message?: string;
+        code?: string;
       };
 
       const res = await fetch('/api/auth/delete-user', {
@@ -483,6 +505,7 @@ export default function SettingsPage() {
       });
       if (!res.ok) {
         const data: DeleteResponse = await res.json();
+        if (isSessionStaleCode(data?.code)) throw new Error(t('settings.errors.deleteAccountSessionExpired'));
         throw new Error(data?.message || t('settings.errors.failedToDeleteAccount'));
       }
       window.location.href = localeLink(i18n.language, '/');
@@ -540,7 +563,7 @@ export default function SettingsPage() {
           {t('settings.profiles.title')}
         </h2>
 
-        {showImport && activeProfileId && <ImportDataBanner profileId={activeProfileId} onDone={() => setShowImport(false)} />}
+        {showImport && activeProfileId && authUser && <ImportDataBanner userId={authUser.id} profileId={activeProfileId} onDone={() => setShowImport(false)} />}
         {profileActionError && <p className="text-xs text-red-600 dark:text-red-400">{profileActionError}</p>}
         {importError && <p className="text-xs text-red-600 dark:text-red-400">{importError}</p>}
         {profileEditError && <p className="text-xs text-red-600 dark:text-red-400">{profileEditError}</p>}
@@ -550,13 +573,11 @@ export default function SettingsPage() {
             <div key={profile.id} className="space-y-0">
               <div
                 className={`flex flex-wrap items-center justify-between p-3 rounded-lg border transition ${editingProfileId === profile.id ? 'rounded-b-none border-b-0' : ''} ${
-                  profile.id === activeProfileId
-                    ? 'border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700/30'
-                }`}
+                  profile.id === activeProfileId ? 'border-blue-400 dark:border-blue-600 ' : 'border-neutral-200 dark:border-neutral-700 '
+                } bg-neutral-50 dark:bg-neutral-700/30`}
               >
                 <div className="flex items-center gap-3">
-                  {profile.id === activeProfileId && <LuCheck className="text-blue-600 dark:text-blue-400 shrink-0" size={16} />}
+                  <ProfileAvatar studentId={profile.avatarStudentId} name={profile.name} className="h-12 w-12" />
                   <div>
                     <p className="font-medium text-neutral-900 dark:text-white text-sm">{profile.name}</p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">{getProfileServerLabel(profile.server)}</p>
@@ -564,17 +585,36 @@ export default function SettingsPage() {
                     {savedGameInfo[profile.id]?.uuid && <p className="text-xs text-neutral-400 dark:text-neutral-500">UID {savedGameInfo[profile.id].uuid}</p>}
                     {profile.id === activeProfileId && (syncStatus !== 'idle' || !syncInitialized) && (
                       <p
-                        className={`text-xs mt-0.5 ${
-                          syncStatus === 'error' ? 'text-red-500 dark:text-red-400' : syncStatus === 'syncing' ? 'text-blue-500 dark:text-blue-400' : 'text-neutral-400 dark:text-neutral-500'
+                        className={`text-xs mt-0.5 flex items-center gap-1 flex-wrap ${
+                          syncStatus === 'error' || syncStatus === 'conflict'
+                            ? 'text-red-500 dark:text-red-400'
+                            : syncStatus === 'syncing'
+                              ? 'text-blue-500 dark:text-blue-400'
+                              : 'text-neutral-400 dark:text-neutral-500'
                         }`}
                       >
-                        {syncStatus === 'synced' && lastSyncedAt
-                          ? `${t('settings.profiles.synced')} ${new Date(lastSyncedAt).toLocaleTimeString()}`
+                        {syncStatus === 'syncing' && <LuRefreshCw className="animate-spin" size={11} />}
+                        {syncStatus === 'synced'
+                          ? lastModifiedAt
+                            ? `${t('settings.profiles.synced')} · ${getRelativeTime(lastModifiedAt, i18n.language as Locale)}`
+                            : t('settings.profiles.synced')
                           : syncStatus === 'syncing'
                             ? t('settings.profiles.syncing')
-                            : syncStatus === 'error'
-                              ? t('settings.profiles.syncError')
-                              : t('settings.profiles.notSynced')}
+                            : syncStatus === 'conflict'
+                              ? t('settings.profiles.syncConflictCount', { count: syncConflictCount })
+                              : syncStatus === 'error'
+                                ? t('settings.profiles.syncError')
+                                : t('settings.profiles.notSynced')}
+                        {syncStatus === 'error' && (
+                          <button type="button" onClick={() => void useSyncStore.getState().forceSync()} className="font-medium underline decoration-dotted hover:no-underline">
+                            {t('settings.profiles.forceSync')}
+                          </button>
+                        )}
+                        {syncStatus === 'synced' && isSyncStale && (
+                          <button type="button" onClick={() => void useSyncStore.getState().pullAll()} className="font-medium underline decoration-dotted hover:no-underline">
+                            {t('settings.profiles.forceSync')}
+                          </button>
+                        )}
                       </p>
                     )}
                   </div>
@@ -584,23 +624,29 @@ export default function SettingsPage() {
                     onClick={() => void handleOpenProfileEdit(profile.id)}
                     disabled={profileEditLoading === profile.id}
                     title={t('settings.profiles.editProfile')}
-                    className="p-2 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition disabled:opacity-50"
+                    className="p-3 sm:p-2 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition disabled:opacity-50"
                   >
-                    {profileEditLoading === profile.id ? <LuRefreshCw size={14} className="animate-spin" /> : editingProfileId === profile.id ? <LuX size={14} /> : <LuPencil size={14} />}
+                    {profileEditLoading === profile.id ? (
+                      <LuRefreshCw className="w-5 h-5 sm:w-3.5 sm:h-3.5 animate-spin" />
+                    ) : editingProfileId === profile.id ? (
+                      <LuX className="w-5 h-5 sm:w-3.5 sm:h-3.5" />
+                    ) : (
+                      <LuPencil className="w-5 h-5 sm:w-3.5 sm:h-3.5" />
+                    )}
                   </button>
                   <button
                     onClick={() => void handleExportProfile(profile.id, profile.name, profile.server)}
                     disabled={exportingProfileId === profile.id}
                     title={t('settings.profiles.exportData')}
-                    className="p-2 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition disabled:opacity-50"
+                    className="p-3 sm:p-2 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition disabled:opacity-50"
                   >
-                    {exportingProfileId === profile.id ? <LuRefreshCw size={14} className="animate-spin" /> : <LuDownload size={14} />}
+                    {exportingProfileId === profile.id ? <LuRefreshCw className="w-5 h-5 sm:w-3.5 sm:h-3.5 animate-spin" /> : <LuDownload className="w-5 h-5 sm:w-3.5 sm:h-3.5" />}
                   </button>
                   <label
                     title={t('settings.profiles.importData')}
-                    className={`p-2 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition cursor-pointer ${importingProfileId === profile.id ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`p-3 sm:p-2 text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 rounded transition cursor-pointer ${importingProfileId === profile.id ? 'opacity-50 pointer-events-none' : ''}`}
                   >
-                    {importingProfileId === profile.id ? <LuRefreshCw size={14} className="animate-spin" /> : <LuUpload size={14} />}
+                    {importingProfileId === profile.id ? <LuRefreshCw className="w-5 h-5 sm:w-3.5 sm:h-3.5 animate-spin" /> : <LuUpload className="w-5 h-5 sm:w-3.5 sm:h-3.5" />}
                     <input
                       type="file"
                       accept=".json"
@@ -614,58 +660,76 @@ export default function SettingsPage() {
                   </label>
                   {profile.id !== activeProfileId && profiles.length > 1 && (
                     <button
-                      onClick={() => void handleDeleteProfile(profile.id)}
+                      onClick={() => setPendingDeleteProfileId(profile.id)}
                       disabled={deletingProfileId !== null}
                       title={t('settings.profiles.deleteProfile')}
-                      className="p-1.5 text-neutral-400 hover:text-red-600 dark:hover:text-red-400 rounded transition disabled:opacity-50"
+                      className="p-3 sm:p-1.5 text-neutral-400 hover:text-red-600 dark:hover:text-red-400 rounded transition disabled:opacity-50"
                     >
-                      {deletingProfileId === profile.id ? <LuRefreshCw size={14} className="animate-spin" /> : <LuTrash2 size={14} />}
+                      {deletingProfileId === profile.id ? <LuRefreshCw className="w-5 h-5 sm:w-3.5 sm:h-3.5 animate-spin" /> : <LuTrash2 className="w-5 h-5 sm:w-3.5 sm:h-3.5" />}
                     </button>
                   )}
                   {profile.id !== activeProfileId && (
                     <button
                       onClick={() => void handleSwitchProfile(profile.id)}
                       disabled={switchingId !== null}
-                      className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 disabled:opacity-50 transition ml-1"
+                      className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 disabled:opacity-50 transition ml-1 py-3 sm:py-0"
                     >
                       {switchingId === profile.id ? '…' : t('settings.profiles.switch')}
                     </button>
                   )}
                 </div>
                 <div className="mt-3 grid w-full grid-cols-2 gap-x-5 gap-y-3 border-t border-neutral-200 pt-3 dark:border-neutral-700 sm:grid-cols-3">
-                  <span className="flex min-w-0 flex-col text-neutral-800 dark:text-neutral-200">
-                    <span className="text-lg font-semibold leading-none tabular-nums">{profileStats[profile.id]?.inventoryTypes ?? EMPTY_PROFILE_STATS.inventoryTypes}</span>
-                    <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                      {t('settings.profiles.stats.inventory', { total: (profileStats[profile.id]?.inventoryTotal ?? EMPTY_PROFILE_STATS.inventoryTotal).toLocaleString() })}
-                    </span>
-                  </span>
-                  {(
-                    [
-                      ['students', '/planner/students'],
-                      ['equipmentPlans', '/planner/equipment'],
-                      ['resourceGoals', '/planner/resources'],
-                      ['gachaStrategies', '/planner/gacha'],
-                      ['eventPlans', '/planner/event'],
-                      ['raidRecords', '/my/raids'],
-                    ] as const
-                  ).map(([key, to]) => {
-                    const count = profileStats[profile.id]?.[key] ?? EMPTY_PROFILE_STATS[key];
-                    const content = (
+                  {(() => {
+                    const renderSyncedAt = (tile: string) => {
+                      const ts = profileStats[profile.id]?.syncedAt?.[tile];
+                      if (!ts) return null;
+                      return (
+                        <span className="mt-0.5 text-[11px] text-neutral-400 dark:text-neutral-500" title={new Date(ts).toLocaleString()}>
+                          {getRelativeTime(ts, i18n.language as Locale)}
+                        </span>
+                      );
+                    };
+                    return (
                       <>
-                        <span className="text-lg font-semibold leading-none tabular-nums">{count}</span>
-                        <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t(`settings.profiles.stats.${key}`)}</span>
+                        <span className="flex min-w-0 flex-col text-neutral-800 dark:text-neutral-200">
+                          <span className="text-lg font-semibold leading-none tabular-nums">{profileStats[profile.id]?.inventoryTypes ?? statSpinner}</span>
+                          <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                            {t('settings.profiles.stats.inventory', { total: profileStats[profile.id] ? profileStats[profile.id].inventoryTotal.toLocaleString() : '…' })}
+                          </span>
+                          {renderSyncedAt('inventory')}
+                        </span>
+                        {(
+                          [
+                            ['students', '/planner/students'],
+                            ['equipmentPlans', '/planner/equipment'],
+                            ['resourceGoals', '/planner/resources'],
+                            ['gachaStrategies', '/planner/gacha'],
+                            ['eventPlans', '/planner/event'],
+                            ['raidRecords', '/my/raids'],
+                            ['gachaRecords', '/my/gacha'],
+                          ] as const
+                        ).map(([key, to]) => {
+                          const count = profileStats[profile.id]?.[key] ?? statSpinner;
+                          const content = (
+                            <>
+                              <span className="text-lg font-semibold leading-none tabular-nums">{count}</span>
+                              <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{t(`settings.profiles.stats.${key}`)}</span>
+                              {renderSyncedAt(key)}
+                            </>
+                          );
+                          return profile.id === activeProfileId ? (
+                            <Link key={key} to={localeLink(i18n.language, to)} className="flex min-w-0 flex-col text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                              {content}
+                            </Link>
+                          ) : (
+                            <span key={key} className="flex min-w-0 flex-col text-neutral-800 dark:text-neutral-200">
+                              {content}
+                            </span>
+                          );
+                        })}
                       </>
                     );
-                    return profile.id === activeProfileId ? (
-                      <Link key={key} to={localeLink(i18n.language, to)} className="flex min-w-0 flex-col text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-                        {content}
-                      </Link>
-                    ) : (
-                      <span key={key} className="flex min-w-0 flex-col text-neutral-800 dark:text-neutral-200">
-                        {content}
-                      </span>
-                    );
-                  })}
+                  })()}
                 </div>
               </div>
               {editingProfileId === profile.id && (
@@ -676,6 +740,16 @@ export default function SettingsPage() {
                       : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-700/30'
                   }`}
                 >
+                  <div>
+                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t('settings.profiles.profileName')}</label>
+                    <input
+                      type="text"
+                      value={profileNameDraft}
+                      onChange={(e) => setProfileNameDraft(e.target.value)}
+                      maxLength={MAX_PROFILE_NAME_LENGTH}
+                      className="w-full px-2 py-1.5 text-sm border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                   <div>
                     <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t_ui('server')}</label>
                     <select
@@ -690,6 +764,44 @@ export default function SettingsPage() {
                       ))}
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                      {t('settings.profiles.representativeStudent')} <span className="font-normal">— {t('settings.gameInfo.optional')}</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <ProfileAvatar studentId={avatarStudentDraft} name={profile.name} className="h-14 w-14" />
+                      <button
+                        type="button"
+                        onClick={() => (avatarPickerOpen ? setAvatarPickerOpen(false) : void openAvatarPicker())}
+                        className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition"
+                      >
+                        {avatarPickerOpen ? t_ui('cancel') : t_ui('select')}
+                      </button>
+                      {avatarStudentDraft !== null && (
+                        <button type="button" onClick={() => setAvatarStudentDraft(null)} className="px-2 py-1 text-sm text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition">
+                          {t_ui('reset')}
+                        </button>
+                      )}
+                    </div>
+                    {avatarPickerOpen && (
+                      <div className="mt-2">
+                        {pickerLoading && <p className="text-xs text-neutral-500 dark:text-neutral-400">{t_ui('loading')}</p>}
+                        {pickerStudents && (
+                          <StudentSearchDropdown
+                            students={pickerStudents}
+                            selectedStudentId={avatarStudentDraft}
+                            setSelectedStudentId={(id) => {
+                              setAvatarStudentDraft(id);
+                              setAvatarPickerOpen(false);
+                            }}
+                            hideLavel
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                     {t('settings.gameInfo.title')} <span className="font-normal">— {t('settings.gameInfo.optional')}</span>
                   </p>
@@ -749,7 +861,7 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {profiles.length < 5 && (
+        {profiles.length < MAX_PROFILES_PER_USER && (
           <button
             onClick={() => setShowNewProfile(true)}
             className="w-full flex items-center justify-center gap-2 py-2 text-sm text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700/30 hover:text-neutral-900 dark:hover:text-neutral-200 transition"
@@ -904,14 +1016,18 @@ export default function SettingsPage() {
         <h2 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide border-b border-neutral-200 dark:border-neutral-700 pb-2">
           {t('settings.passkeySection.title')}
         </h2>
-        <Suspense fallback={null}>
-          <PasskeyRegisterButton
-            onSuccess={() => {
-              void revalidator.revalidate();
-            }}
-            showNameInput={true}
-          />
-        </Suspense>
+        {/* ClientOnly keeps the lazy boundary from being evaluated during SSR,
+            where the .client module's export resolves to undefined. */}
+        <ClientOnly>
+          <Suspense fallback={null}>
+            <PasskeyRegisterButton
+              onSuccess={() => {
+                void revalidator.revalidate();
+              }}
+              showNameInput={true}
+            />
+          </Suspense>
+        </ClientOnly>
         {passkeyError && <p className="text-xs text-red-600 dark:text-red-400">{passkeyError}</p>}
         {passkeys.length > 0 && (
           <div className="space-y-2">
@@ -935,6 +1051,10 @@ export default function SettingsPage() {
           </div>
         )}
       </section>
+
+      <ClientOnly>
+        <DeviceSessions />
+      </ClientOnly>
 
       {/* Danger Zone */}
       <section className="space-y-4">
@@ -1006,6 +1126,18 @@ export default function SettingsPage() {
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={pendingDeleteProfileId !== null}
+        message={t('settings.profiles.deleteProfileConfirm')}
+        danger
+        onCancel={() => setPendingDeleteProfileId(null)}
+        onConfirm={() => {
+          const id = pendingDeleteProfileId;
+          setPendingDeleteProfileId(null);
+          if (id) void handleDeleteProfile(id);
+        }}
+      />
     </div>
   );
 }

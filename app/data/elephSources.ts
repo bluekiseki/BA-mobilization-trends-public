@@ -221,4 +221,5 @@ export const EXPERT_PERMIT_SHOP_EXCLUDED_IDS = new Set<number>([
   10080, // Shokuhou Misaki
   26011, // Saten Ruiko
   10099, // Exclude the Expert Permit Shop
+  10144,
 ]);

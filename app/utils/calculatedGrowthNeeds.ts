@@ -1,5 +1,6 @@
 import {
   affectionExpToNextLevel,
+  calcUwRequiredXp,
   CREDIT_ID,
   ELIGMA_ID,
   // equipmentBlueprintId,
@@ -16,16 +17,18 @@ import {
   skillLevelUpCredit,
   starGrowthCost,
   TIER_MAX_LEVEL,
+  UW_FIRING_PIN_BASE_ID,
+  UW_MATERIAL_SERIES,
   uwGrowthCost,
   uwLevelGrowthData,
   WB_ATK_ID,
   WB_HEAL_ID,
   WB_HP_ID,
   weaponEnhancementExp,
-  weaponEnhancementItemIds,
 } from '~/data/growthData';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 import type { Student, StudentData } from '~/types/plannerData';
+import { seriesForWeaponType } from '~/utils/uwMaterialXp';
 
 export const calculateAffectionExp = (currentLevel: number, targetLevel: number): number => {
   if (targetLevel <= currentLevel) return 0;
@@ -180,27 +183,29 @@ export const calcLevelNeeds = (currentLevel: number, targetLevel: number): Recor
   return needs;
 };
 
-export const calcUWLevelNeeds = (currentUWLevel: number, targetUWLevel: number): Record<string, number> => {
+export const calcUWLevelNeeds = (currentUWLevel: number, targetUWLevel: number, weaponType?: Student['WeaponType']): Record<string, number> => {
   const needs: Record<string, number> = {};
-  let neededXp = 0;
   for (let i = currentUWLevel + 1; i <= targetUWLevel; i++) {
     const cost = uwLevelGrowthData[i];
-    if (cost) {
-      neededXp += cost.xp;
-      needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + cost.xp * 180;
-    }
+    if (cost) needs[`Currency_${CREDIT_ID}`] = (needs[`Currency_${CREDIT_ID}`] || 0) + cost.xp * 180;
   }
+  let neededXp = calcUwRequiredXp(currentUWLevel, targetUWLevel);
   if (neededXp > 0) {
-    for (let i = 3; i >= 1; i--) {
-      const enhancementId = weaponEnhancementItemIds[i as keyof typeof weaponEnhancementItemIds];
+    // Denominated in the weapon-type-matching series (spring/hammer/barrel) — the actually
+    // intended growth material, which gets the exact same bonus rate as firing pins for a
+    // matching weapon type. Falls back to firing pins (bonus on every weapon type) only when
+    // the caller doesn't know the weapon type.
+    const baseId = weaponType ? UW_MATERIAL_SERIES[seriesForWeaponType(weaponType)].baseId : UW_FIRING_PIN_BASE_ID;
+    for (let i = 4; i >= 1; i--) {
+      const itemId = baseId + i - 1;
       const exp = weaponEnhancementExp[i as keyof typeof weaponEnhancementExp];
       const count = Math.floor(neededXp / exp);
       if (count > 0) {
-        needs[`Equipment_${enhancementId}`] = (needs[`Equipment_${enhancementId}`] || 0) + count;
+        needs[`Equipment_${itemId}`] = (needs[`Equipment_${itemId}`] || 0) + count;
         neededXp -= count * exp;
       }
     }
-    if (neededXp > 0) needs[`Equipment_${weaponEnhancementItemIds[1]}`] = (needs[`Equipment_${weaponEnhancementItemIds[1]}`] || 0) + Math.ceil(neededXp / weaponEnhancementExp[1]);
+    if (neededXp > 0) needs[`Equipment_${baseId}`] = (needs[`Equipment_${baseId}`] || 0) + Math.ceil(neededXp / weaponEnhancementExp[1]);
   }
   return needs;
 };
@@ -246,6 +251,13 @@ export function getStudentsUsingMaterial(itemId: number, allStudents: StudentDat
   return result;
 }
 
+// Whether this plan has any growth target at all (level/equipment/uw/star/skill/potential/gear
+// all still at current) — reuses calculatedGrowthNeeds itself so it always agrees with what
+// actually drives report/stone/material visibility elsewhere.
+export function planHasGrowthTarget(plan: GrowthPlan, allStudents: StudentData): boolean {
+  return Object.values(calculatedGrowthNeeds([plan], allStudents)).some((v) => v > 0);
+}
+
 export const calculatedGrowthNeeds = (plansForThisEvent: GrowthPlan[], allStudents: StudentData) => {
   const needs: Record<string, number> = {};
   for (const plan of plansForThisEvent) {
@@ -258,7 +270,7 @@ export const calculatedGrowthNeeds = (plansForThisEvent: GrowthPlan[], allStuden
     const levelNeeds = calcLevelNeeds(current.level, target.level);
     for (const [k, v] of Object.entries(levelNeeds)) needs[k] = (needs[k] || 0) + v;
 
-    const uwLevelNeeds = calcUWLevelNeeds(current.uwLevel, target.uwLevel);
+    const uwLevelNeeds = calcUWLevelNeeds(current.uwLevel, target.uwLevel, studentInfo.WeaponType);
     for (const [k, v] of Object.entries(uwLevelNeeds)) needs[k] = (needs[k] || 0) + v;
 
     let neededEleph = 0;

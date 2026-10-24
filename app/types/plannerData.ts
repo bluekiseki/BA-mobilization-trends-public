@@ -1,5 +1,9 @@
 // app/types/plannerData.ts
 import type { Student as StudentBase } from './data';
+import type { LocationData } from './minigame/location';
+import type { LocalizeEtc } from './localize';
+
+export type { LocalizeEtc };
 // src/types/student.ts
 export interface Student extends StudentBase {
   Name: string;
@@ -20,6 +24,9 @@ export interface Student extends StudentBase {
   Equipment: ['Hat' | 'Shoes' | 'Gloves', 'Hairpin' | 'Bag' | 'Badge', 'Watch' | 'Charm' | 'Necklace'];
   FavorItemTags: string[];
   FavorItemUniqueTags: string[];
+  // [tier1, tier2, tier3]; each tier is an array of [furnitureId, groupIndex] pairs.
+  // The three tiers correspond to favor-rank stages and usually repeat the same furniture ids.
+  FurnitureInteraction?: number[][][];
   ArmorType: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
   PathName: string;
   StreetBattleAdaptation: 0 | 1 | 2 | 3 | 4 | 5;
@@ -34,6 +41,7 @@ export interface Student extends StudentBase {
         TierUpMaterialAmount: number[][];
       };
   WeaponType: 'AR' | 'FT' | 'GL' | 'HG' | 'MG' | 'MT' | 'RG' | 'RL' | 'SG' | 'SMG' | 'SR';
+  Cover?: boolean;
   // Only the terrain-adaptation-bonus fields are typed here (used by the student scanner's
   // matching pipeline); the raw SchaleDB data also carries Name/Desc/AttackPower/etc.
   Weapon?: { AdaptationType?: 'Street' | 'Outdoor' | 'Indoor'; AdaptationValue?: number } | null;
@@ -121,6 +129,7 @@ export interface EventData {
   };
   minigame_road_puzzle?: RoadPuzzleData;
   minigame_janken?: MinigameJanken;
+  location?: LocationData;
 }
 
 export interface RoadPuzzleData {
@@ -265,17 +274,6 @@ export interface GoodsInfo {
   ParcelTypeStr: ParcelType[];
 }
 
-export interface LocalizeEtc {
-  NameEn: string;
-  NameKr: string;
-  NameJp: string;
-  NameTw: string;
-  DescriptionEn: string;
-  DescriptionKr: string;
-  DescriptionJp: string;
-  DescriptionTw: string;
-}
-
 // Icon metadata (name, etc.)
 export interface IconInfo {
   Icon?: string;
@@ -333,7 +331,7 @@ export interface CardShopCostGoods {
 
 export interface CardShopItem {
   Id: number;
-  Rarity: number; // 0: N, 1: R, 2: SR, 3: UR
+  Rarity: number; // 0: N, 1: R, 2: SR, 3: SSR
   Prob: number;
   CostGoodsId: number;
   RewardParcelType: number[]; // parcelType[]
@@ -570,6 +568,7 @@ export interface MinigameDreamData {
 export interface MinigameMission {
   Id: number;
   Category: number;
+  CompleteConditionType: number;
   CompleteConditionCount: number;
   CompleteConditionParameter: number[]; // [?, ParameterId]
   MissionRewardAmount: number[];
@@ -774,10 +773,24 @@ export interface ClueSearchRound {
   Reward: ClueSearchRoundReward;
 }
 
+export interface ClueSearchCostGoods {
+  Id: number;
+  ConsumeParcelAmount: number[];
+  ConsumeParcelId: number[];
+  ConsumeParcelType: number[];
+  ConsumeParcelTypeStr: string[];
+}
+
 export interface ClueSearchInfo {
   ClueBgimagePath: string;
   TitleLocalize: number;
   UsePrefabName: string;
+  // Search-based variant (0 / absent on shop-purchase events)
+  DeductionPointItemId?: number;
+  InspirationConvertCount?: number;
+  MaxSearchCount?: number;
+  SearchCostGoodsId?: number;
+  SearchCostGoods?: ClueSearchCostGoods;
 }
 
 export interface ClueSearchData {
@@ -854,9 +867,17 @@ export interface FieldEventData {
   FieldContentStageReward: Record<string, FieldContentStageRewardItem[]>;
 }
 
+export type TransactionItemAmount = {
+  amount: number;
+  isBonusApplied: boolean;
+  // This entry is a "collect N total" cumulative goal, not a real spend (e.g. Cumulative
+  // Rewards) — see EventPlanner.tsx's totalItems aggregation pass for how it's handled.
+  goalKind?: 'cumulative';
+};
+
 export type TransactionEntry = {
   source: string; // ex: 'shop_cost', 'farming', 'studentGrowth_cost'
-  items: Record<string, { amount: number; isBonusApplied: boolean }>;
+  items: Record<string, TransactionItemAmount>;
 };
 
 export interface CampaignReward {
@@ -934,4 +955,11 @@ export interface InteractiveWorldRaidBossGroup {
   IsSeasonFinalBoss: boolean;
   WorldBossPopupPortrait: string;
   WorldBossPopupNameTexture: string;
+}
+
+export interface FavorStory {
+  favor_rank: number;
+  title: Record<string, string>;
+  summary: Record<string, string>;
+  memorial: boolean;
 }

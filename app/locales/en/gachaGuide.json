@@ -1,0 +1,121 @@
+{
+  "title": "Recruitment/Gacha Guide",
+  "meta_description": "A guide to Blue Archive's gacha (recruitment) system for teachers who are new to it.",
+  "back_to_planner": "Back to the planner",
+  "guide_published_label": "Published:",
+  "guide_updated_label": "Last updated:",
+  "intro": "This covers the basics of Blue Archive's gacha system and how to plan around it. Once you've picked a goal, run the actual simulation up top.",
+  "goal": {
+    "title": "Pick your goal first",
+    "fun_label": "I just want the student I like",
+    "fun_body": "Pull on every Fes banner, and do whatever you want with the rest.",
+    "raid_label": "I want a better Total Assault score",
+    "raid_body": "Keep reading."
+  },
+  "priority": {
+    "title": "1. Recruitment priority for Total Assault",
+    "order": "You can always borrow someone else's assist, so think of it roughly in this order of importance:",
+    "tier1": "Fes Supporters",
+    "tier2": "Fes Attackers, Kisaki",
+    "tier2a": "Fes Attackers",
+    "tier3": "Key Supporters",
+    "normal_dealer": "Don't rush to pull normal attackers. They get outclassed by the next student soon enough, and borrowing one as an assist works just as well.",
+    "fes_dealer": "Fes attackers stick around a lot longer, so pulling them pays off. Borrowing an assist works well enough on its own, so there's no need to rush your own.",
+    "ranking_pre": "For actual numbers, check the",
+    "ranking_link1": "Mobilization Frequency Ranking",
+    "ranking_mid": "and the",
+    "ranking_link2": "Student Mobilization Trends by Assault",
+    "ranking_post": "."
+  },
+  "selection_ticket": {
+    "title": "1-1. Using the ★3 Select Ticket",
+    "b1": "For a normal supporter, buying the ★3 Select Ticket is a lot more cost-effective than buying pyroxenes and gacha-ing for one.",
+    "b2": "Hold onto it rather than using it right away — you might just pull that student naturally while rolling for something else.",
+    "b3": "That said, if getting the student now would let you hit a goal (e.g. reaching Platinum in Total Assault/Grand Assault, or clearing a harder difficulty), go ahead and use it early."
+  },
+  "eligma": {
+    "title": "2. Eligma",
+    "warning": "Don't touch eligma at all until you're close to max level.",
+    "detail": "Eligma converts into per-student eleph, which raises a student's Star Level. Mostly it comes from gacha, with small amounts occasionally available from events. It costs many times more than pyroxenes, so spend it carefully — you won't have a good sense of what's worth it early on. Plenty of students also have other ways to farm their eleph, so eligma often isn't the first thing to spend.",
+    "leveling": "If a student is underleveled, raising their student level or skill level usually helps more than Star Level. Damage drops about 2 percentage points for every level below the recommended one, up to a cap of 30 levels; going higher than recommended doesn't add anything extra.",
+    "exception": "If you're going to spend it anyway, Hanako (Swimsuit, Fes) is worth taking up to Unique Weapon (UE) Star 2."
+  },
+  "strategy": {
+    "title": "3. Don't spread your pulls thin",
+    "pool": "This game comes down to roster width. Teams are built out of combinations, and a lot of students don't have a clean replacement — swapping one out usually costs you score or rank, or takes several students to make up the difference.",
+    "focus": "So rather than dabbling in every banner a little, pick one goal and put everything toward it. Run dry halfway through and you get nothing — no student, and no pyroxenes left for the next attempt either.",
+    "fes_400": "If you've got pyroxenes to spare but a thin roster, saving up for 400 pulls on your first Fes is a solid move. The 3-star rate doubles to 6%, and Fes students only show up there. Early on, basic missions alone can get you most of the way to 400 pulls without much effort."
+  },
+  "charge": {
+    "title": "4. The charge (soft pity) system",
+    "b1": "Every pull builds up charge. It's what replaced the old recruitment points.",
+    "b2": "At 100 charge you're guaranteed a 3-star. It's a coinflip whether it's actually the pickup.",
+    "b3": "Hit 200 charge, and the pickup is guaranteed outright.",
+    "b4": "Charge resets the moment you land the pickup. That's fine if you only wanted one — the reset happens right as you finish. This only matters if you're going for two students on the same banner. You get the first one, charge goes to 0, and the second one starts from scratch.",
+    "status_note": "This already launched on the Japan server. It hasn't reached KR/Global yet, and looks likely to arrive with the Makoto (Swimsuit) and Satsuki (Swimsuit) banner planned for November."
+  },
+  "carryover": {
+    "title": "4-1. Charge carryover",
+    "b1": "If you miss the pickup within the window, the charge rolls over to the next banner.",
+    "b2": "Limited only rolls into limited, though, and normal only into normal. They never cross.",
+    "b3": "Special formats like Archive recruitment don't carry charge at all."
+  },
+  "ticket_bonus": {
+    "title": "4-2. Pull-count bonuses",
+    "b1": "Certain pull counts during a pickup earn you rewards. 10-pull tickets are part of that — a kind of payback on the pyroxenes you spent.",
+    "b2": "Unlike charge, none of this carries over. It all resets when the pickup ends.",
+    "b3": "10-pull tickets land at 70, 130, 150, 170, 270, 330, 350, and 370 pulls. Nothing after 370.",
+    "b4": "Once you've got what you came for, check how far the next ticket milestone is before deciding whether to keep going."
+  },
+  "spark": {
+    "title": "5. Intentional spark (the old system)",
+    "b1": "200 recruitment points bought you a straight trade for your target. If you landed them near a multiple of 200, forcing the pity on purpose was an option.",
+    "b2": "It costs extra pyroxenes. Pick a student you already have for good eligma efficiency, or pick one you don't to widen your pool."
+  },
+  "free100": {
+    "title": "6. The free 100 pulls",
+    "b1": "A limited banner runs right before or after a Fes and hands out 100 free pulls.",
+    "b2": "They don't carry over, so you have to use all of them within that window. You can't save them for the Fes itself."
+  },
+  "odds": {
+    "title": "7. The odds",
+    "col_metric": "",
+    "col_before": "Before revamp",
+    "col_after": "After revamp",
+    "row1_label": "Chance of getting 1 within 100 pulls",
+    "row1_before": "~50%",
+    "row1_after": "~75%",
+    "row2_label": "Chance of getting 2 within 200 pulls",
+    "row2_before": "~75%",
+    "row2_after": "~66%",
+    "row3_label": "Pyroxenes to reach the pity (200 pulls)",
+    "row3_before": "120 × 200",
+    "row3_after": "120 × 160",
+    "note": "The table alone makes it look worse. Factoring in the ticket payback, the new system comes out ahead."
+  },
+  "glossary": {
+    "title": "8. Terms",
+    "ceiling_term": "Pity",
+    "ceiling_desc": "Collect a set number of pulls, 200, and you're guaranteed to get your target student.",
+    "half_ceiling_term": "Soft pity",
+    "half_ceiling_desc": "At the halfway point, 100 pulls, a 3-star is guaranteed, with a 50% chance it's the pickup. It's a newer system from the revamp.",
+    "charge_term": "Charge",
+    "charge_desc": "A stack that builds with every pull. It resets to zero when you land the pickup, and otherwise carries into the next banner.",
+    "pull10_term": "10-pull",
+    "pull10_desc": "The unit for counting pulls done together as a batch — ten at once is a 10-pull.",
+    "pickup_term": "Pickup",
+    "pickup_desc": "A banner that boosts one specific student to a 0.7% appearance rate, running for a set window. Thanks to the pity system, that's your one shot at landing them — pull while their pickup is running.",
+    "fes_term": "Fes banner",
+    "fes_desc": "A limited banner held on anniversaries and half-anniversaries, with double the usual 3-star rate, 6%.",
+    "limited_term": "Limited banner",
+    "limited_desc": "A student obtainable only during its own pickup period, unavailable until it reruns. Normal students stay in the general 3-star pool and can show up outside their own banner; limited students can't.",
+    "archive_term": "Archive banner",
+    "archive_desc": "An always-open banner where you pick one older standard student to be the pickup. The 3-star students in it don't appear on any other banner.",
+    "rerun_term": "Rerun",
+    "rerun_desc": "When content that already ended opens up again later."
+  },
+  "mapping": {
+    "title": "9. How this maps onto the planner",
+    "body": "In Minimal mode, you click the portrait of the student you want and run the simulation. Conditional pulls, intentional spark, and manual budgets live in Standard mode."
+  }
+}

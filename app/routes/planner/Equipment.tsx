@@ -4,52 +4,33 @@ import { data, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router
 import { useEquipmentPlanStore } from '~/store/planner/useEquipmentPlanStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { NON_BLUEPRINT_EQUIPMENT_KEYS } from '~/utils/groupMaterialNeeds';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/Equipment';
 import type { CampaignData, EventData, IconData, IconInfos, Student, StudentPortraitData } from '~/types/plannerData';
 import { FaFilter, FaSortAmountUp, FaSortAmountDown, FaPlusCircle, FaLayerGroup, FaSortNumericDown, FaSortAmountDown as FaSortDesc, FaSearch, FaUsers, FaCalculator, FaMap } from 'react-icons/fa';
-import { NumberInput } from '~/components/planner/common/NumberInput';
-import { EquipmentStudentCard } from '~/components/planner/Equipment/EquipmentStudentCard';
-import { useSearchMatcher } from '~/utils/useSearchMatcher';
+import { NumberInput } from '~/components/common/NumberInput';
+import { EquipmentStudentCard } from '~/features/equipment/components/EquipmentStudentCard';
+import { useSearchMatcher } from '~/hooks/useSearchMatcher';
 import { useTranslation } from 'react-i18next';
 import { localeLink } from '~/utils/localeLink';
-import { EquipmentItemIcon, getEquipmentTierLabel, resolveGachaGroup, type ResolvedStage } from '~/components/planner/Equipment/common';
-import { EquipmentFilterModal } from '~/components/planner/Equipment/EquipmentFilterModal';
-import { EquipmentInventoryMatrix } from '~/components/planner/Equipment/EquipmentInventoryMatrix';
-import { EquipmentSummaryPanel } from '~/components/planner/Equipment/EquipmentSummaryPanel';
-import { StageAccordion } from '~/components/planner/Equipment/StageAccordion';
-import { SimRunButton } from '~/components/planner/common/SimRunButton';
-import { BlueprintUsageDetail } from '~/components/planner/Equipment/BlueprintUsageDetail';
+import { EquipmentItemIcon, getEquipmentTierLabel, resolveGachaGroup } from '~/components/common/equipmentCommon';
+import type { ResolvedStage } from '~/types/resolvedStage';
+import { EquipmentFilterModal } from '~/features/equipment/components/EquipmentFilterModal';
+import { EquipmentInventoryMatrix } from '~/features/equipment/components/EquipmentInventoryMatrix';
+import { EquipmentSummaryPanel } from '~/features/equipment/components/EquipmentSummaryPanel';
+import { StageAccordion } from '~/features/equipment/components/StageAccordion';
+import { SimRunButton } from '~/features/event-planner/components/SimRunButton';
+import { BlueprintUsageDetail } from '~/features/equipment/components/BlueprintUsageDetail';
 import { cdn } from '~/utils/cdn';
-import {
-  getTierFromEquipmentId,
-  getEquipmentType,
-  calculateBlueprintCost,
-  blueprintIdToType,
-  equipmentTypeToBlueprint,
-  optimizeNormalStages2Step,
-  optimizeHardStages,
-  optimizeCombinedStages2Step,
-  normalizeBluprintToEquipment,
-  type OptimizeResult,
-} from '~/utils/blueprintUtils';
-import { CustomNumberInput } from '~/components/CustomInput';
+import { calculateEquipmentSurplus, blueprintIdToType, equipmentTypeToBlueprint, normalizeBluprintToEquipment, type OptimizeResult } from '~/utils/blueprintUtils';
+import { CustomNumberInput } from '~/components/common/CustomInput';
 import type { AppHandle } from '~/types/link';
-import { StatCard, MultiplierSeg, PaneHeader } from '~/components/planner/Equipment/EquipmentPrimitives';
-
-const equipmentTypeLabelKey = {
-  Hat: 'equipments.hat',
-  Gloves: 'equipments.gloves',
-  Shoes: 'equipments.shoes',
-  Bag: 'equipments.bag',
-  Badge: 'equipments.badge',
-  Hairpin: 'equipments.hairpin',
-  Charm: 'equipments.charm',
-  Watch: 'equipments.watch',
-  Necklace: 'equipments.necklace',
-} as const;
+import { StatCard, MultiplierSeg, PaneHeader } from '~/features/equipment/components/EquipmentPrimitives';
+import { deductWithOwnedBlueprints, planOptimization } from '~/features/equipment/logic/equipmentPlan';
+import { equipmentTypeLabelKey } from '~/features/equipment/equipmentTypeLabels';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -271,11 +252,7 @@ export default function EquipmentPlannerV2() {
 
   const totalEquipmentNeeds = useMemo(() => {
     const needs = calculatedGrowthNeeds(selectedPlans, mergedStudents);
-    return Object.fromEntries(
-      Object.entries(needs).filter(
-        ([key]) => key.startsWith('Equipment_') && !['Equipment_1', 'Equipment_2', 'Equipment_3', 'Equipment_4', 'Equipment_40', 'Equipment_41', 'Equipment_42', 'Equipment_43'].includes(key),
-      ),
-    );
+    return Object.fromEntries(Object.entries(needs).filter(([key]) => key.startsWith('Equipment_') && !NON_BLUEPRINT_EQUIPMENT_KEYS.has(key)));
   }, [selectedPlans, mergedStudents]);
 
   const farmedByPlan = useMemo(() => {
@@ -308,38 +285,7 @@ export default function EquipmentPlannerV2() {
         blueprintsUsedByItem: {}, // as Record<string, Record<string, number>>,
       };
 
-    const remaining = { ...rawRemainingNeeds };
-    const blueprintsUsed: Record<string, number> = {};
-    const blueprintsUsedByItem: Record<string, Record<string, number>> = {};
-    const bpCopy = { ...blueprints };
-
-    for (const [key, amt] of Object.entries(farmedByPlan)) {
-      const id = Number(key.split('_')[1]);
-      if (id in blueprintIdToType) {
-        const bt = blueprintIdToType[id];
-        bpCopy[bt] = (bpCopy[bt] || 0) + Math.floor(amt);
-      }
-    }
-    for (const [key, needed] of Object.entries(remaining)) {
-      let left = needed;
-      const id = Number(key.split('_')[1]);
-      const eqType = getEquipmentType(id);
-      const tier = getTierFromEquipmentId(id);
-
-      if (eqType && bpCopy[eqType]) {
-        const cost = calculateBlueprintCost(tier);
-        const univ = Math.ceil(left * cost);
-        const used = Math.min(univ, bpCopy[eqType]);
-        bpCopy[eqType] -= used;
-        blueprintsUsed[eqType] = (blueprintsUsed[eqType] || 0) + used;
-        if (!blueprintsUsedByItem[eqType]) blueprintsUsedByItem[eqType] = {};
-        blueprintsUsedByItem[eqType][key] = (blueprintsUsedByItem[eqType][key] || 0) + used;
-        left -= used / cost;
-      }
-      if (left > 1e-9) remaining[key] = left;
-      else delete remaining[key];
-    }
-    return { remainingNeeds: remaining, blueprintsUsed, blueprintsUsedByItem };
+    return deductWithOwnedBlueprints({ rawRemainingNeeds, farmedByPlan, blueprints });
   }, [optimizerOutput, rawRemainingNeeds, farmedByPlan, materialInventory]);
 
   const blueprintsUsedForDisplay = useMemo(() => {
@@ -351,32 +297,10 @@ export default function EquipmentPlannerV2() {
     return d;
   }, [blueprintsUsed]);
 
-  const surplusGoods = useMemo(() => {
-    const surplus: Record<string, number> = {};
-    const allFarmed = { ...farmedByPlan };
-    for (const [k, v] of Object.entries(materialInventory)) allFarmed[k] = (allFarmed[k] || 0) + v;
-    for (const [k, amt] of Object.entries(allFarmed)) {
-      const id = Number(k.split('_')[1]);
-      if (id in blueprintIdToType) {
-        const bt = blueprintIdToType[id];
-        const total = amt + (blueprints[bt] || 0) - (blueprintsUsed[bt] || 0);
-        if (total > 0) surplus[k] = total;
-      } else {
-        const s = amt - (totalEquipmentNeeds[k] || 0);
-        if (s > 0) surplus[k] = s;
-      }
-    }
-    for (const [type, owned] of Object.entries(blueprints)) {
-      const id = equipmentTypeToBlueprint[type];
-      if (!id) continue;
-      const k = `Equipment_${id}`;
-      if (!(k in allFarmed) && owned > 0) {
-        const rem = owned - (blueprintsUsed[type] || 0);
-        if (rem > 0) surplus[k] = rem;
-      }
-    }
-    return surplus;
-  }, [totalEquipmentNeeds, farmedByPlan, materialInventory, blueprintsUsed]);
+  const surplusGoods = useMemo(
+    () => calculateEquipmentSurplus({ materialInventory, farmedByPlan, totalEquipmentNeeds, blueprintsUsed }),
+    [totalEquipmentNeeds, farmedByPlan, materialInventory, blueprintsUsed],
+  );
 
   const totalApUsed = useMemo(() => Math.round(resolvedStages.reduce((t, s) => t + (runCounts[s.id] || 0) * s.ap, 0)), [runCounts, resolvedStages]);
 
@@ -408,69 +332,9 @@ export default function EquipmentPlannerV2() {
   const handleOptimize = useCallback(() => {
     setIsOptimizing(true);
     setTimeout(() => {
-      const maxHardRuns = farmingDays * 3;
-      let hardRunCounts: Record<number, number> = {};
-
-      if (hardMode === 'combined') {
-        const needs: Record<string, number> = {};
-        for (const [k, amt] of Object.entries(totalEquipmentNeeds)) {
-          const n = amt - (materialInventory[k] || 0);
-          if (n > 0) needs[k] = n;
-        }
-        if (Object.keys(needs).length > 0) {
-          const result = optimizeCombinedStages2Step(resolvedStages, needs, blueprints, normalMultiplier, hardMultiplier, maxHardRuns);
-          setRunCounts(result.runCounts);
-          setOptimizerOutput({ blueprintsUsed: result.blueprintsUsed, finalRemaining: result.finalRemaining });
-        } else {
-          setRunCounts({});
-          setOptimizerOutput(null);
-        }
-        setIsOptimizing(false);
-        return;
-      }
-
-      if (hardMode === 'manual') {
-        hardRunCounts = Object.fromEntries(Object.entries(runCounts).filter(([id]) => resolvedStages.find((s) => s.id === Number(id))?.type === 'Hard'));
-      } else if (hardMode === 'aggressive') {
-        const needed = new Set(Object.keys(totalEquipmentNeeds));
-        resolvedStages
-          .filter((s) => s.type === 'Hard' && Object.keys(s.drops).some((k) => needed.has(k)))
-          .forEach((s) => {
-            hardRunCounts[s.id] = maxHardRuns;
-          });
-      } else {
-        const needsForHard: Record<string, number> = {};
-        for (const [k, amt] of Object.entries(totalEquipmentNeeds)) {
-          const n = amt - (materialInventory[k] || 0);
-          if (n > 0) needsForHard[k] = n;
-        }
-        if (Object.keys(needsForHard).length > 0) hardRunCounts = optimizeHardStages(resolvedStages, needsForHard, hardMultiplier, maxHardRuns).runCounts;
-      }
-
-      const hardFarmed: Record<string, number> = {};
-      for (const s of resolvedStages) {
-        if (s.type !== 'Hard') continue;
-        const runs = hardRunCounts[s.id] || 0;
-        if (!runs) continue;
-        for (const [k, d] of Object.entries(s.drops)) hardFarmed[k] = (hardFarmed[k] || 0) + d * runs * hardMultiplier;
-      }
-
-      const needsForNormal: Record<string, number> = {};
-      for (const [k, amt] of Object.entries(totalEquipmentNeeds)) {
-        const n = amt - (materialInventory[k] || 0) - (hardFarmed[k] || 0);
-        if (n > 0) needsForNormal[k] = n;
-      }
-
-      const newCounts = { ...hardRunCounts };
-      if (Object.keys(needsForNormal).length > 0) {
-        const result = optimizeNormalStages2Step(resolvedStages, needsForNormal, blueprints, normalMultiplier);
-        for (const [id, runs] of Object.entries(result.runCounts)) newCounts[Number(id)] = runs;
-        setRunCounts(newCounts);
-        setOptimizerOutput({ blueprintsUsed: result.blueprintsUsed, finalRemaining: result.finalRemaining });
-      } else {
-        setRunCounts(newCounts);
-        setOptimizerOutput(null);
-      }
+      const plan = planOptimization({ hardMode, runCounts, resolvedStages, totalEquipmentNeeds, farmingDays, hardMultiplier, materialInventory, normalMultiplier, blueprints });
+      setRunCounts(plan.runCounts);
+      setOptimizerOutput(plan.optimizerOutput);
       setIsOptimizing(false);
     }, 0);
   }, [hardMode, runCounts, resolvedStages, totalEquipmentNeeds, farmingDays, hardMultiplier, materialInventory, normalMultiplier, blueprints, setRunCounts]);
@@ -499,6 +363,7 @@ export default function EquipmentPlannerV2() {
     });
   }, []);
   const handleSelectAllPlans = useCallback(() => setSelectedPlanUuids(new Set(growthPlans.map((p) => p.uuid))), [growthPlans]);
+  const handleSelectFocusPlans = useCallback(() => setSelectedPlanUuids(new Set(growthPlans.filter((p) => p.isSelected !== false).map((p) => p.uuid))), [growthPlans]);
   const handleDeselectAllPlans = useCallback(() => setSelectedPlanUuids(new Set()), []);
 
   const eventDataForIcon = useMemo(() => ({ icons: iconInfoData }) as EventData, [iconInfoData]);
@@ -666,6 +531,11 @@ export default function EquipmentPlannerV2() {
                 <button onClick={handleSelectAllPlans} className="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200">
                   {t_ui('selectAll')}
                 </button>
+                {growthPlans.length > 0 && (
+                  <button onClick={handleSelectFocusPlans} className="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200">
+                    {t('equipment.selectFocusStudents')}
+                  </button>
+                )}
                 <button
                   onClick={handleDeselectAllPlans}
                   className="text-[10px] px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600"
@@ -777,10 +647,9 @@ export default function EquipmentPlannerV2() {
                       <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 truncate min-w-12">{t_g(equipmentTypeLabelKey[type])}</span>
                       <CustomNumberInput
                         value={owned}
-                        onChange={(e) => setBlueprint(type, Math.max(0, Math.min(9999, e || 0)))}
+                        onChange={(e) => setBlueprint(type, Math.max(0, e || 0))}
                         min={0}
-                        max={9999}
-                        className="w-12 text-center text-xs font-mono py-0.5 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        className="w-16 sm:w-14 text-center text-xs font-mono py-0.5 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-400"
                       />
                       {used > 0 && <span className={`text-xs font-mono shrink-0 ${status === 'full' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>/{used}</span>}
                     </div>

@@ -1,7 +1,7 @@
 import { data, useLoaderData, type LoaderFunctionArgs } from 'react-router';
-import { EmblemCounter } from '~/components/emblem/EmblemCounter'; // Fix path
+import { EmblemCounter } from '~/features/raid-stats/charts/emblem/EmblemCounter'; // Fix path
 import { PageHeader } from '~/components/common/PageHeader';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import type { Route } from './+types/favor';
@@ -9,7 +9,7 @@ import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/utils/usePageHelp';
+import { useHelpKey } from '~/hooks/usePageHelp';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -62,7 +62,7 @@ export default function emblemCounter() {
   useHelpKey('chart.favor');
   const loaderData = useLoaderData<typeof loader>();
   return (
-    <div className="px-4 mx-auto py-6">
+    <div className="sm:px-4 px-0 mx-auto py-6">
       <PageHeader title={loaderData.title} description={loaderData.description} />
       <EmblemCounter />
     </div>

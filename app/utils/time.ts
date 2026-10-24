@@ -41,3 +41,5 @@ export function getRelativeTime(timestamp: number, locale: Locale = DEFAULT_LOCA
     day: 'numeric',
   });
 }
+
+export const MS_PER_HOUR = 1000 * 60 * 60;

@@ -8,3 +8,15 @@ export const cardShopConfigSchema = z.object({
   strategy: cardShopStrategySchema,
 });
 export type CardShopConfig = z.infer<typeof cardShopConfigSchema>;
+
+export type SimulationResult = {
+  costs: Record<string, number>;
+  rewards: Record<string, number>;
+  totalFlips: number;
+};
+
+export type CardShopRates = {
+  avgCosts: Record<string, number>;
+  avgRewards: Record<string, number>;
+  avgFlips: number;
+};

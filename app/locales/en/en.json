@@ -33,7 +33,8 @@
       "noTranslation": "No translation available",
       "newUpdate": "Recent updates",
       "feedbackPrompt": "We welcome bug reports and feature requests.",
-      "sendFeedback": "Send feedback"
+      "sendFeedback": "Send feedback",
+      "description": "History of feature additions and fixes"
     },
     "currentLocale": "en",
     "navigation": {
@@ -57,6 +58,7 @@
       "eventPlanner": "Event Farming Planner",
       "gachaPlanner": "Pyroxene & Recruit/Gacha Planner",
       "equipmentFarmingPlanner": "Equipment Farming Planner",
+      "favorStats": "Relationship Statistics",
       "favorCalculator": "Relationship Rank Calculator"
     },
     "homeFeatures": {
@@ -93,10 +95,6 @@
         "next": "Next ➔",
         "prev": "⬅ Prev"
       }
-    },
-    "promoBanner": {
-      "noMoreToday": "Hide for today",
-      "noMoreThisWeek": "Hide for a week"
     },
     "bugReport": {
       "title": "Send Feedback",
@@ -146,7 +144,8 @@
       "jpStats": "JP stats",
       "kivotosPeace": "Kivotos is at peace.",
       "noEvent": "No event scheduled.",
-      "monthEndReset": "Monthly shop reset"
+      "monthEndReset": "Monthly shop reset",
+      "loginAvailable": "Logging in lets you sync your data across devices."
     },
     "scroll_to_first_page": "First Page",
     "scroll_to_prev_page": "Previous Page",
@@ -174,7 +173,8 @@
         "rank_normal": "Recruited student only",
         "rank_assist": "Assist only",
         "display_mode": "Display Mode",
-        "raid": "Select a assault period"
+        "raid": "Select a assault period",
+        "recruit_type": "Recruitment"
       },
       "desp_percent": "Each bar length represents a ratio to the total number of mobilizations",
       "desp_absolute": "Each bar length represents the actual number of mobilizations.",
@@ -202,6 +202,12 @@
           "histograms": "Histograms:",
           "rankWidth": "Ranking Group Size:",
           "X-Threshold": "Hide assault less than below:"
+        },
+        "combatStyleView": {
+          "title": "Form Switch",
+          "mode": "Aggregation",
+          "combined": "Combined",
+          "separate": "Separate"
         },
         "filterByStars": {
           "title": "Filter by Star Level",
@@ -235,11 +241,27 @@
     "Normal": "Normal"
   },
   "dashboard": {
+    "actualStats": {
+      "context": "{{bracket}} bracket · Group by",
+      "incomplete": "Incomplete",
+      "more": "+{{count}} more",
+      "less": "Show less",
+      "all": "All",
+      "bracket": "Score bracket",
+      "zoom": "Zoom to combination",
+      "loading": "Loading actual combinations…",
+      "retry": "Could not load · Retry",
+      "ratio": "{{percent}}% of all {{count}} players in scope",
+      "order": "Letter order: {{armors}}",
+      "share": "Share",
+      "viewChips": "Chips",
+      "viewTable": "Table"
+    },
     "title": "Assault Dashboard",
     "shorttitle": "Dashboard",
     "description1": "View statistics for each Assault",
     "detailMetaTitle": "{{server}} {{season}} {{boss}} {{location}} {{raidType}} Stats and Teams",
-    "detailMetaDescription": "Blue Archive {{server}} {{season}} {{boss}} {{location}} {{raidType}} score distribution, clear statistics, top teams, and student usage rates.",
+    "detailMetaDescription": "Blue Archive {{server}} {{season}} {{boss}} {{location}} {{raidType}} score distribution, clear statistics, top teams, and student participation rates.",
     "rankRange": "Rank Range",
     "subtitle": "Assault Dashboard Perorodzilla 2025.09",
     "scoreDistribution": "Score Distribution",
@@ -291,6 +313,13 @@
     "bracketFilter": "Difficulty Bracket Filter",
     "playerCount": "Players",
     "donutChartTitle": "Tier / Difficulty Combination Distribution",
+    "actualStats.title": "Actual difficulty combinations",
+    "actualStats.open": "View actual combinations",
+    "actualStats.close": "Close",
+    "actualStats.combination": "Combination",
+    "actualStats.ratio": "Share",
+    "actualStats.bracketFilter": "Showing only the {{bracket}} bracket",
+    "actualStats.noData": "No per-boss data",
     "donutChartSubtitle": "Click on inner elements of the donut chart for details",
     "groupingCriteria": "Grouping Criteria",
     "actualCombination": "Actual Combination",
@@ -373,7 +402,7 @@
     "composition": {
       "mode_team": "Team",
       "mode_report": "Report",
-      "total_parties": "Units Deployed",
+      "total_parties": "Units Mobilized",
       "full_party_only": "Full(6) Only",
       "table_filter_reflect": "Apply include/exclude filter",
       "only_with_video": "With Video Only",
@@ -386,19 +415,43 @@
       "sort_count": "Most popular",
       "sort_bestRank": "Best score",
       "ignore_position": "Ignore placement order",
+      "included_formations": "Formations including this party",
+      "included_formations_count": "{{count}}",
       "placement_variants": "Placement Order Variants",
       "mulligan_variants": "Starting Hand Variants",
       "mulligan_view_order": "Pick Order",
-      "mopup_filter": "Mop-up party filter"
+      "mopup_filter": "Mop-up party filter",
+      "allow_assist": "Assist Available",
+      "allow_assist_hint": "Allow up to one excluded student as an assist per party."
     },
     "videos_select_boss": "Select a boss type to view videos.",
     "videos_empty": "No videos available.",
+    "videos_scope_label": "Video scope",
+    "videos_scope_all": "All",
+    "videos_scope_current": "This season",
+    "videos_scope_reference": "{{raid}} reference",
+    "videos_reference_title": "Played in another server's identical season",
+    "videos_candidate": "Candidate",
+    "videos_basic_analysis": "Basic",
+    "videos_basic_analysis_title": "Score and difficulty were read from the title only",
     "videos_sort_score_desc": "Score (High to Low)",
     "videos_sort_score_asc": "Score (Low to High)",
     "videos_sort_upload_desc": "Upload Date (Newest)",
     "videos_sort_upload_asc": "Upload Date (Oldest)",
     "videos_score_min_placeholder": "Min",
+    "videos_filter_party_info": "With student party information only",
+    "videos_party_info_missing": "Student party information unavailable",
+    "videos_view_results": "View videos ({{count}})",
     "videos_filter_tl": "TL Only",
+    "videos_show_original_title": "Original",
+    "videos_description": "Description",
+    "videos_copy_link": "Copy link",
+    "videos_copy_failed": "Could not copy. Long-press or select the link to copy it.",
+    "videos_view_original": "View original",
+    "videos_view_translation": "View translation",
+    "videos_description_translation_note": "Student names, boss names and game terms are translated.",
+    "videos_before_raid": "Before start",
+    "videos_after_raid": "After end",
     "videos_filter_target_type": "Target Type Only",
     "videos_missing_note": "Some videos may be missing due to automated processing.",
     "videos_view_all": "View all analyzed videos",
@@ -421,21 +474,25 @@
     "highscore_change_by_difficulty": "High Score Changes by Difficulty",
     "service_discontinuation_notice": "This service may be discontinued at any time.",
     "irregular_update_notice": "Data is updated irregularly.",
+    "hide_abnormal_records": "Hide records suspected of abusing in-game systems",
     "changePerHourLabel": "Players / hr",
     "playersPerHourUnit": "players/hr",
     "playersUnit": "players",
     "show_prediction_cutoff": "Show Platinum Cutoff Prediction",
+    "prediction_mode_model": "Current Pace",
     "prediction_mode_stats": "Avg / Min-Max Range",
     "prediction_mode_compare": "Compare Past Seasons",
     "platinum_prediction_avg": "Rank {{rank}}",
     "compare_cutoff": "{{name}} Cutoff (Rank {{rank}})",
     "total_combined": "{{types}}",
     "predicted_score": "{{score}}pt",
+    "prediction_fused_score": "{{score}} (80%: {{low}}–{{high}})",
     "data_unavailable_reason": "Since no official API is provided, this feature has been operated using data supplied unofficially by a third party.",
     "data_unavailable_status": "Supply has been suspended due to the data provider's circumstances and is currently unavailable. If you can provide data or help with doing so, please reach out.",
     "data_unavailable_contact_email": "Contact via Email",
     "data_unavailable_contact_anon": "Submit Anonymously",
     "platinum_cut_est": "Platinum Cut Est. (stats-based)",
+    "highest_cleared_difficulty": "Highest cleared",
     "video_fallback_note_crawl": "Video crawling is still manual — updates at most every 1–2 days.",
     "video_fallback_note_live_only": "Showing only the current raid. For more:",
     "score_time_converter_title": "Score / Time Converter",
@@ -498,7 +555,8 @@
       "bounty": "Bounty",
       "scrimmage": "Scrimmage",
       "normal": "Normal",
-      "commission": "Commission"
+      "commission": "Commission",
+      "exp": "EXP"
     },
     "story": {
       "mini": "Mini Story: {{title}}"

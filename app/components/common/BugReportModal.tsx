@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { HiOutlineXMark } from 'react-icons/hi2';
 import { FaGithub } from 'react-icons/fa';
 import { useLoaderData } from 'react-router';
-import type { loader } from '~/root';
 
 interface BugReportModalProps {
   onClose: () => void;
@@ -15,7 +14,7 @@ export default function BugReportModal({ onClose, issuesURL }: BugReportModalPro
   const { t } = useTranslation('common');
   const { t: t_ui } = useTranslation('ui');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const data = useLoaderData<typeof loader>();
+  const data = useLoaderData<{ env?: { VITE_WEB3FORMS_ACCESS_KEY?: string } }>();
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -31,7 +30,8 @@ export default function BugReportModal({ onClose, issuesURL }: BugReportModalPro
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    formData.append('access_key', (data?.env || import.meta.env).VITE_WEB3FORMS_ACCESS_KEY || 'YOUR_ACCESS_KEY_HERE');
+    const env: Record<string, string | undefined> = data?.env || import.meta.env;
+    formData.append('access_key', env.VITE_WEB3FORMS_ACCESS_KEY || 'YOUR_ACCESS_KEY_HERE');
     const typeLabel = formData.get('type') === 'bug' ? t('bugReport.typeBug') : t('bugReport.typeSuggestion');
     // eslint-disable-next-line @typescript-eslint/no-base-to-string
     formData.append('subject', `[Feedback] ${typeLabel} - ${String(formData.get('title'))}`);

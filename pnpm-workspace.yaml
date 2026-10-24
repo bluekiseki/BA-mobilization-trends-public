@@ -5,6 +5,3 @@ allowBuilds:
   protobufjs: true
   sharp: true
   workerd: true
-
-overrides:
-  kysely: '0.28.17'

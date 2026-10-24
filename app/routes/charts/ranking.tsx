@@ -2,48 +2,31 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import 'rc-slider/assets/index.css';
-import type { GameServer, RaidInfo, Student } from '~/types/data';
+import type { GameServer, RaidInfo } from '~/types/data';
 import { GAMESERVER_LIST } from '~/types/data';
 import { difficultyInfo } from '~/components/raid/Difficulty';
 import { CheckboxSelect, type CheckboxSelectOption } from '~/components/common/CheckboxSelect';
 import { useTranslation } from 'react-i18next';
-import { ToggleButtonGroup } from '~/components/ToggleButtonGroup';
-import TooltipSlider from '~/components/HandleTooltip';
+import { ToggleButtonGroup } from '~/components/common/ToggleButtonGroup';
+import TooltipSlider from '~/components/common/HandleTooltip';
 import { raidToString, raidToStringTsx } from '~/components/raid/raidToString';
-import { useDataCache } from '~/utils/cache';
+import { useDataCache } from '~/hooks/cache';
 import type { Route } from './+types/ranking';
 import { useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import type { AppHandle } from '~/types/link';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 
-import { RankingChart } from '~/components/ranking/chart';
-import { PlayIcon, StopIcon } from '~/components/Icon';
+import { processRankingData } from '~/features/raid-stats/charts/ranking/processRankingData';
+import { RankingChart } from '~/features/raid-stats/charts/ranking/chart';
+import { PlayIcon, StopIcon } from '~/components/common/SvgIcons';
 import { PageHeader } from '~/components/common/PageHeader';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/utils/usePageHelp';
+import { useHelpKey } from '~/hooks/usePageHelp';
 import { getCurrentGlobalraid } from '~/data/globalRaidDates';
-
-interface RawRatingData {
-  [key: string]: number; // e.g., "6|10074|6": 1024
-}
-
-export interface RatingData {
-  rank: number;
-  id: number;
-  name: string;
-  bullettype: Student['BulletType'];
-  total: number;
-  count: number;
-  portrait: Student['Portrait'];
-  ratings: {
-    [key: string]: number;
-  };
-}
-
-type TacticRoleFilter = Student['TacticRole'] | 'All';
+import { type RecruitTypeFilter, type RankStudent, type TacticRoleFilter, type RawRatingData } from '~/features/raid-stats/charts/ranking/types';
 
 export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
@@ -121,7 +104,7 @@ export function headers({}: Route.HeadersArgs) {
 export default function RankingChartPage() {
   const [isRelativeMode, setIsRelativeMode] = useState<boolean>(false);
   const [rawRatingData, setRawRatingData] = useState<RawRatingData>({});
-  const [studentMap, setStudentMap] = useState<Record<number, Student>>({});
+  const [studentMap, setStudentMap] = useState<Record<number, RankStudent>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [displayMode, setDisplayMode] = useState<'total' | 'average'>('average');
 
@@ -129,7 +112,8 @@ export default function RankingChartPage() {
   const [selectedSquadType, setSelectedSquadType] = useState<string>('All');
   const [selectedTacticRoles, setSelectedTacticRoles] = useState<Set<TacticRoleFilter>>(new Set(['All']));
   const [selectedStudentType, setSelectedStudentType] = useState<string>('All');
-  const [allStudents, setAllStudents] = useState<Record<string, Student>>({});
+  const [selectedRecruitTypes, setSelectedRecruitTypes] = useState<Set<RecruitTypeFilter>>(new Set(['All']));
+  const [allStudents, setAllStudents] = useState<Record<string, RankStudent>>({});
   const [raidInfo, setraidInfo] = useState<RaidInfo[]>([]);
 
   const glFutureIndex = useMemo(() => {
@@ -158,7 +142,7 @@ export default function RankingChartPage() {
   const [svgWidth, setSvgWidth] = useState(800); // window.innerWidth - 50
 
   const fetchData = useDataCache<RawRatingData>();
-  const fetchStudents = useDataCache<Record<string, Student>>();
+  const fetchStudents = useDataCache<Record<string, RankStudent>>();
   const fetchRaids = useDataCache<RaidInfo[]>();
 
   useEffect(() => {
@@ -187,7 +171,7 @@ export default function RankingChartPage() {
       try {
         const [ratings, students, raids] = await Promise.all([
           fetchData(cdn(`/w/${server}/play_rate_rank.bin`), (res) => res.json() as unknown as Promise<RawRatingData>),
-          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as unknown as Promise<Record<string, Student>>),
+          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as unknown as Promise<Record<string, RankStudent>>),
           fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as unknown as Promise<RaidInfo[]>),
         ]);
 
@@ -201,7 +185,7 @@ export default function RankingChartPage() {
           setAllStudents(students);
         })();
 
-        const nameMap: Record<number, Student> = {};
+        const nameMap: Record<number, RankStudent> = {};
         for (const key in students) {
           const studentId = parseInt(key, 10);
           if (!isNaN(studentId)) {
@@ -222,108 +206,39 @@ export default function RankingChartPage() {
     void fetchDataAndStudents();
   }, [fetchData, fetchStudents, fetchRaids, currentLocale, server, locale, glFutureIndex]);
 
-  const processedData = useMemo(() => {
-    if (Object.keys(rawRatingData).length === 0 || Object.keys(allStudents).length === 0) return [];
-
-    // Filter students based on selected SquadType and TacticRole
-    const filteredStudentIds = Object.keys(allStudents)
-      .filter((studentId) => {
-        const student = allStudents[studentId];
-        const squadTypeMatch = selectedSquadType === 'All' || student.SquadType === selectedSquadType;
-        const tacticRoleMatch = selectedTacticRoles.has('All') || selectedTacticRoles.has(student.TacticRole);
-
-        return squadTypeMatch && tacticRoleMatch;
-      })
-      .map((id) => parseInt(id, 10));
-
-    // Process only the filtered students' data
-    const studentTotals: Record<number, number> = {};
-    const studentRankCounts: Record<number, Record<string, number>> = {};
-
-    const [startId, endId] = selectedRaidIds;
-
-    const displayValue = displayMode === 'average';
-
-    // Determine which difficulties to include
-    const difficultiesToInclude = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
-
-    for (const key in rawRatingData) {
-      const [raidStr, studentStr, rankStr, difficultyIndex] = key.split('|');
-      const student = parseInt(studentStr, 10);
-      const rank = parseInt(rankStr, 10);
-      let count = rawRatingData[key];
-      const raidIdNum = parseInt(raidStr, 10);
-      const difficulty = difficultyInfo[parseInt(difficultyIndex)].name;
-
-      // Filter by difficulty before calculating the per-difficulty average.
-      if (!difficultiesToInclude.has(difficulty)) continue;
-
-      if (displayValue) {
-        const participantCount = raidInfo[raidIdNum].Cnt[difficulty];
-        count /= participantCount || raidInfo[raidIdNum].Cnt.All;
-      }
-
-      // Filter by raid ID range
-      const raidIdMatch = raidIdNum >= startId && raidIdNum <= endId;
-
-      // Only process data for students that match the filter
-      if (filteredStudentIds.includes(student) && raidIdMatch) {
-        const studentTypeMatch = selectedStudentType === 'All' || (selectedStudentType === 'Normal' && rank >= 0) || (selectedStudentType === 'Helper' && rank < 0);
-        if (!studentTypeMatch) {
-          continue;
-        }
-        studentTotals[student] = (studentTotals[student] || 0) + count;
-        if (!studentRankCounts[student]) {
-          studentRankCounts[student] = {};
-        }
-        studentRankCounts[student][rankStr] = (studentRankCounts[student][rankStr] || 0) + count;
-      }
-    }
-
-    const sortedStudents = Object.entries(studentTotals).sort(([, totalA], [, totalB]) => totalB - totalA);
-
-    const formattedData: RatingData[] = sortedStudents.map(([studentIdStr, total], index) => {
-      const studentId = parseInt(studentIdStr, 10);
-      const ratings = studentRankCounts[studentId];
-      return {
-        rank: index + 1,
-        id: studentId,
-        name: studentMap[studentId].Name,
-        bullettype: studentMap[studentId].BulletType,
-        portrait: studentMap[studentId].Portrait,
-        total: total,
-        count: total,
-        ratings: ratings,
-      };
-    });
-
-    const maxTotal = Math.max(...formattedData.map((item) => item.total));
-
-    return formattedData.map((item) => {
-      let xOffset = 0;
-      const processedRatings = Object.entries(item.ratings)
-        .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
-        .sort(([a], [b]) => {
-          const f = (x: number) => (x >= 0 ? x : 10000 + -x);
-          return f(parseInt(a, 10)) - f(parseInt(b, 10));
-        })
-        .map(([key, value]) => {
-          const width = isRelativeMode ? (value / item.total) * (svgWidth - 120) : (value / maxTotal) * (svgWidth - 120);
-          const x = xOffset;
-          const percent = `${((value / item.total) * 100).toFixed(2)}%`;
-          xOffset += width;
-          return {
-            rating: parseInt(key),
-            value: value,
-            width,
-            x,
-            percent,
-            label: isRelativeMode ? percent : displayMode == 'average' ? value.toFixed(2) : value.toLocaleString(),
-          };
-        });
-      return { ...item, processedRatings };
-    });
-  }, [rawRatingData, allStudents, selectedRaidIds, displayMode, selectedSquadType, selectedTacticRoles, selectedDifficulties, raidInfo, selectedStudentType, studentMap, isRelativeMode, svgWidth]);
+  const processedData = useMemo(
+    () =>
+      processRankingData({
+        rawRatingData,
+        allStudents,
+        selectedRaidIds,
+        displayMode,
+        selectedSquadType,
+        selectedTacticRoles,
+        selectedRecruitTypes,
+        selectedDifficulties,
+        raidInfo,
+        selectedStudentType,
+        studentMap,
+        isRelativeMode,
+        svgWidth,
+      }),
+    [
+      rawRatingData,
+      allStudents,
+      selectedRaidIds,
+      displayMode,
+      selectedSquadType,
+      selectedTacticRoles,
+      selectedRecruitTypes,
+      selectedDifficulties,
+      raidInfo,
+      selectedStudentType,
+      studentMap,
+      isRelativeMode,
+      svgWidth,
+    ],
+  );
 
   // Create marks for the slider
   // const raidIds = Object.keys(raidInfo).map(Number).filter(id => !isNaN(id));
@@ -486,6 +401,26 @@ export default function RankingChartPage() {
                   }
                   selectedValues={selectedTacticRoles}
                   onChange={(next) => setSelectedTacticRoles(next.size === 0 ? new Set(['All']) : next)}
+                  allOption={{ value: 'All', label: t_ui('all') }}
+                  className="w-32"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2 py-0.5">
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t('control.recruit_type')}</label>
+                <CheckboxSelect<RecruitTypeFilter>
+                  ariaLabel={t('control.recruit_type')}
+                  options={
+                    [
+                      { value: '3', label: t_g('fest') },
+                      { value: '1', label: t_g('limited') },
+                      { value: '0', label: t_g('recruitNormal') },
+                      { value: '4', label: t_g('recruitArchive') },
+                      { value: '2', label: t_g('recruitWelfare') },
+                    ] satisfies CheckboxSelectOption<RecruitTypeFilter>[]
+                  }
+                  selectedValues={selectedRecruitTypes}
+                  onChange={(next) => setSelectedRecruitTypes(next.size === 0 ? new Set(['All']) : next)}
                   allOption={{ value: 'All', label: t_ui('all') }}
                   className="w-32"
                 />

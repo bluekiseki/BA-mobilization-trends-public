@@ -6,6 +6,9 @@
     "directory": "./build/client",
     "binding": "ASSETS",
   },
+  // Per-IP limit for the dynamic notices text feed (workers/textFeedGuard.ts); keep in sync with
+  // TEXT_FEED_RATE_LIMIT (app/data/textFeeds.meta.ts). Static /txt feeds need no Worker.
+  "ratelimits": [{ "name": "TEXT_NOTICES_LIMITER", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } }],
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "logs": {

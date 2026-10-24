@@ -9,8 +9,8 @@
     "hide_story_names": "ストーリータイトル非表示",
     "view_all_details": "すべての詳細を開く",
     "hide_all_details": "すべての詳細を閉じる",
-    "deselect_all_searched": "検索された学生をすべて選択解除",
-    "select_all_searched": "検索された学生をすべて選択",
+    "deselect_all_searched": "検索された生徒をすべて選択解除",
+    "select_all_searched": "検索された生徒をすべて選択",
     "view_on_wiki": "再生不可 — ブルーアーカイブWikiで見る"
   },
   "selection": {
@@ -67,6 +67,7 @@
     "work_story": "[業務]"
   },
   "main_story": {
+    "prologue": "プロローグ",
     "vol1_ch1": "第1部 Vol.1 第1章 対策委員会の奇妙な一日",
     "vol1_ch2": "第1部 Vol.1 第2章 失ったもの、手放さなかったもの",
     "vol1_ch3": "第1部 Vol.1 第3章 夢が残した足跡",
@@ -94,7 +95,9 @@
     "part2_vol0_ch1": "第2部 Vol.0 第1章 アーモンドの花咲く春の日に",
     "part2_vol1_ch1": "第2部 Vol.1 第1章 ゲヘナを再び偉大に！",
     "part2_vol1_ch2": "第2部 Vol.1 第2章 炎となる私たち",
+    "part2_vol2_ch1": "第2部 Vol.2 第1章 瞳に映る水平線",
     "part2_ex_lore_ch1": "第2部 Ex.ロア追跡編 第1章 正午の陽炎",
-    "part2_ex_lore_ch2": "第2部 Ex.ロア追跡編 第1章 ドラム缶の中に潜むもの"
+    "part2_ex_lore_ch2": "第2部 Ex.ロア追跡編 第2章 ドラム缶の中に潜むもの",
+    "part2_ex_lore_ch3": "第2部 Ex.ロア追跡編 第3章 夢の中の列車"
   }
 }

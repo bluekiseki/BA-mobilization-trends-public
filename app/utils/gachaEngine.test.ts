@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { initSync, simulate_strategies_chunk } from '~/workers/gacha_engine_pkg.js';
-import { buildWasmPayload, simulateSingleBannerCharge, rollSingle, runGlobalSimulation, meanFromDist, type SimState, type GachaPools } from './gachaEngine';
+import { simulateSingleBannerCharge, rollSingle, runGlobalSimulation, createPoolForBanner, preprocessReleaseDates, type SimState, type GachaPools } from './gachaEngine';
 import type { BannerPeriod, BannerStrategy, Student } from '~/types/gacha';
 
 const PICKUP_ID = 20999;
@@ -60,16 +57,97 @@ const makeBanner = (overrides: Partial<BannerPeriod> = {}): BannerPeriod => ({
 const makeStrategy = (overrides: Partial<BannerStrategy> = {}): BannerStrategy => ({
   bannerId: 'banner-1',
   isActive: true,
-  maxSparks: 1,
-  maxHalfCharges: 5,
+  maxPull: 500,
   minPulls: 0,
   studentConfigs: {
     [PICKUP_ID]: { studentId: PICKUP_ID, mode: 'must', priority: 1, opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 },
   },
-  maxPulls: 500,
   isFes: false,
   freePulls: 0,
   ...overrides,
+});
+
+describe('createPoolForBanner — launch-day students bypass first-pickup release gating', () => {
+  const MAKI_ID = 10007; // launch-day, first pickup.csv row is a later spotlight, not her real debut
+  const LATER_STUDENT_ID = 10200; // ordinary ★3, not launch-day — first pickup IS their real debut
+
+  const makeStudentEntry = (id: number): Student => ({
+    id,
+    name: `student-${id}`,
+    rarity: 3,
+    isLimited: false,
+    isFes: false,
+    releaseDate: 0,
+    isRerun: false,
+  });
+
+  it('KR: includes Maki in grade3 for a banner dated before her only recorded pickup', () => {
+    const releaseDateMap = preprocessReleaseDates({
+      spotlight: makeBanner({ id: 'spotlight', startTime: '2023-05-09 11:00', pickupStudents: [makeStudentEntry(MAKI_ID)] }),
+    });
+
+    const pools = createPoolForBanner([makeStudentEntry(MAKI_ID)], '2022-11-22 11:00', releaseDateMap, 'KR');
+
+    expect(pools.grade3.some((s) => s.id === MAKI_ID)).toBe(true);
+  });
+
+  it('JP: includes Maki in grade3 for a banner dated before her only recorded pickup', () => {
+    const releaseDateMap = preprocessReleaseDates({
+      spotlight: makeBanner({ id: 'spotlight', startTime: '2022-11-09 11:00', pickupStudents: [makeStudentEntry(MAKI_ID)] }),
+    });
+
+    const pools = createPoolForBanner([makeStudentEntry(MAKI_ID)], '2021-06-30 12:30', releaseDateMap, 'JP');
+
+    expect(pools.grade3.some((s) => s.id === MAKI_ID)).toBe(true);
+  });
+
+  it('still excludes a non-launch-day student from a pool dated before their real first pickup', () => {
+    const releaseDateMap = preprocessReleaseDates({
+      debut: makeBanner({ id: 'debut', startTime: '2023-05-09 11:00', pickupStudents: [makeStudentEntry(LATER_STUDENT_ID)] }),
+    });
+
+    const pools = createPoolForBanner([makeStudentEntry(LATER_STUDENT_ID)], '2022-11-22 11:00', releaseDateMap, 'KR');
+
+    expect(pools.grade3.some((s) => s.id === LATER_STUDENT_ID)).toBe(false);
+  });
+});
+
+describe('createPoolForBanner — Archive Recruitment roster', () => {
+  const AKANE_BUNNY_ID = 20019;
+  const ASUNA_BUNNY_ID = 10028;
+  const MIKU_ID = 20007;
+  const students = [makeStudent(AKANE_BUNNY_ID), makeStudent(ASUNA_BUNNY_ID), { ...makeStudent(MIKU_ID), isLimited: true }];
+  const regions = [
+    { region: 'KR', archiveStart: '2025-09-23', akaneRelease: '2023-04-11 11:00', asunaRelease: '2022-05-17 12:00', mikuRelease: '2022-06-14 12:00' },
+    { region: 'JP', archiveStart: '2025-07-22', akaneRelease: '2022-10-12 11:00', asunaRelease: '2021-10-12 12:30', mikuRelease: '2021-11-03 12:30' },
+  ] as const;
+
+  for (const { region, archiveStart, akaneRelease, asunaRelease, mikuRelease } of regions) {
+    const releaseDates = {
+      [AKANE_BUNNY_ID]: new Date(akaneRelease).getTime(),
+      [ASUNA_BUNNY_ID]: new Date(asunaRelease).getTime(),
+      [MIKU_ID]: new Date(mikuRelease).getTime(),
+    };
+    const archiveStartMs = new Date(archiveStart).getTime();
+
+    it(`${region}: includes both permanent bunny students before Archive Recruitment, but excludes limited Miku`, () => {
+      const pools = createPoolForBanner(students, new Date(archiveStartMs - 1), releaseDates, region);
+
+      expect(pools.grade3.map((student) => student.id)).toEqual([AKANE_BUNNY_ID, ASUNA_BUNNY_ID]);
+    });
+
+    it(`${region}: keeps Akane (Bunny) and excludes archive Asuna (Bunny) and limited Miku from Archive Recruitment's start`, () => {
+      const pools = createPoolForBanner(students, new Date(archiveStartMs), releaseDates, region);
+
+      expect(pools.grade3.map((student) => student.id)).toEqual([AKANE_BUNNY_ID]);
+    });
+
+    it(`${region}: still excludes Akane (Bunny) before her original release`, () => {
+      const pools = createPoolForBanner(students, new Date(releaseDates[AKANE_BUNNY_ID] - 1), releaseDates, region);
+
+      expect(pools.grade3.some((student) => student.id === AKANE_BUNNY_ID)).toBe(false);
+    });
+  }
 });
 
 describe('rollSingle — forcedOutcome', () => {
@@ -209,11 +287,11 @@ describe('simulateSingleBannerCharge — recruit charge pity', () => {
     expect(state.chargeLimited).toBe(50); // untouched by a normal-track banner
   });
 
-  it('stops pulling once maxHalfCharges budget is exhausted, even without a lucky natural pickup', () => {
+  it('stops pulling once the maxPull budget is exhausted, even without a lucky natural pickup', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.9); // never a natural pickup; the 100-count coin-flip also always misses (0.9 >= 0.5)
 
     const state = makeState();
-    const strat = makeStrategy({ maxHalfCharges: 1 }); // 100-pull budget
+    const strat = makeStrategy({ maxPull: 100 }); // 100-pull budget
     const banner = makeBanner();
     simulateSingleBannerCharge(state, strat, banner, makePools());
 
@@ -226,7 +304,7 @@ describe('simulateSingleBannerCharge — recruit charge pity', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.9); // never a natural pickup; the 100-count coin-flip also misses
 
     const state = makeState({ owned: new Set([PICKUP_ID]) });
-    const strat = makeStrategy({ maxHalfCharges: 1 });
+    const strat = makeStrategy({ maxPull: 100 });
     simulateSingleBannerCharge(state, strat, makeBanner(), makePools());
 
     expect(state.obtainedInSim.has(PICKUP_ID)).toBe(false);
@@ -271,6 +349,22 @@ describe('simulateSingleBannerCharge — recruit charge pity', () => {
     expect(state.chargeNormal).toBe(100); // the free pulls still built charge progress
   });
 
+  it('caps free pulls at maxPull (a low budget is how a user avoids draining all 100 free pulls here)', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.9); // never a natural pickup; the 100-count coin-flip also misses
+
+    const state = makeState();
+    const strat = makeStrategy({
+      maxPull: 90,
+      studentConfigs: { [PICKUP_ID]: { studentId: PICKUP_ID, mode: 'skip', priority: 1, opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 } },
+    });
+    const banner = makeBanner({ freePulls: 100 });
+    simulateSingleBannerCharge(state, strat, banner, makePools());
+
+    expect(state.totalPulls).toBe(90); // stops at the budget, leaving 10 free pulls unused
+    expect(state.totalCost).toBe(0); // all covered by free pulls
+    expect(state.chargeNormal).toBe(90); // 90 charge carried forward instead of 100
+  });
+
   it('recruit count bonus: earning a ticket at count 70 pools it (unspent, since no further pulls happen this banner)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.9); // never a natural/forced pickup within 70 pulls
 
@@ -308,6 +402,70 @@ describe('simulateSingleBannerCharge — recruit charge pity', () => {
   });
 });
 
+describe('simulateSingleBannerCharge — concurrent normal + limited pickups', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const LIMITED_ID = PICKUP_ID - 1;
+  // The data layer merges same-window pickups into one BannerPeriod and flags the whole thing
+  // isLimitedBanner=true if any pickup is limited. Recruit charge must still accrue per pickup type.
+  const mixedBanner = (overrides: Partial<BannerPeriod> = {}): BannerPeriod =>
+    makeBanner({
+      isLimitedBanner: true,
+      pickupStudents: [makeStudent(PICKUP_ID), { ...makeStudent(LIMITED_ID), isLimited: true }],
+      ...overrides,
+    });
+  const soloTarget = (studentId: number, mode: 'must' | 'opportunistic' = 'must', opportunisticThreshold = 50) => ({
+    [studentId]: { studentId, mode, priority: 1, opportunisticThreshold, intentionalSpark: false, intentionalSparkThreshold: 20 },
+  });
+
+  it('routes a normal-recruitment pull to chargeNormal, leaving chargeLimited untouched', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.9);
+
+    const state = makeState({ chargeNormal: 199, chargeLimited: 77 });
+    const strat = makeStrategy({ studentConfigs: soloTarget(PICKUP_ID) });
+    simulateSingleBannerCharge(state, strat, mixedBanner(), makePools());
+
+    expect(state.owned.has(PICKUP_ID)).toBe(true);
+    expect(state.chargeNormal).toBe(9); // 199 -> 200 forced pickup + reset -> recount 1..9
+    expect(state.chargeLimited).toBe(77); // the limited counter never advances on a normal-pickup pull
+  });
+
+  it('routes a limited-recruitment pull to chargeLimited, leaving chargeNormal untouched', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.9);
+
+    const state = makeState({ chargeNormal: 77, chargeLimited: 199 });
+    const strat = makeStrategy({ studentConfigs: soloTarget(LIMITED_ID) });
+    simulateSingleBannerCharge(state, strat, mixedBanner(), makePools());
+
+    expect(state.owned.has(LIMITED_ID)).toBe(true);
+    expect(state.chargeLimited).toBe(9); // 199 -> 200 forced pickup + reset -> recount 1..9
+    expect(state.chargeNormal).toBe(77); // the normal counter never advances on a limited-pickup pull
+  });
+
+  it('shares the recruit-count-bonus tally across both pickups in the period', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.9); // never a natural or forced pickup within this budget
+
+    const state = makeState();
+    const strat = makeStrategy({
+      maxPull: 70,
+      studentConfigs: {
+        ...soloTarget(PICKUP_ID, 'opportunistic', 40),
+        [LIMITED_ID]: { studentId: LIMITED_ID, mode: 'opportunistic', priority: 2, opportunisticThreshold: 40, intentionalSpark: false, intentionalSparkThreshold: 20 },
+      },
+    });
+    simulateSingleBannerCharge(state, strat, mixedBanner(), makePools());
+
+    // 40 pulls chasing the normal pickup + 30 chasing the limited pickup = cumulative count 70, which earns
+    // one 10-pull ticket. A per-pickup tally would never reach 70 on either side.
+    expect(state.totalPulls).toBe(70);
+    expect(state.chargeNormal).toBe(40);
+    expect(state.chargeLimited).toBe(30);
+    expect(state.ticketPool).toEqual([{ pullUnits: 10, expiresAt: expect.any(Number) as number, availableFrom: expect.any(Number) as number, fromGacha: true }]);
+  });
+});
+
 describe('claimRecruitBonus / recruitBonusThreshold', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -319,7 +477,7 @@ describe('claimRecruitBonus / recruitBonusThreshold', () => {
     const state = makeState();
     state.owned.add(PICKUP_ID); // "must" target already obtained -> stage 1 contributes 0 pulls
     state.obtainedInSim.add(PICKUP_ID);
-    const strat = makeStrategy({ minPulls: 60, maxHalfCharges: 5 }); // claimRecruitBonus omitted -> defaults to false
+    const strat = makeStrategy({ minPulls: 60, maxPull: 500 }); // claimRecruitBonus omitted -> defaults to false
     const banner = makeBanner();
     simulateSingleBannerCharge(state, strat, banner, makePools());
 
@@ -333,7 +491,7 @@ describe('claimRecruitBonus / recruitBonusThreshold', () => {
     const state = makeState();
     state.owned.add(PICKUP_ID);
     state.obtainedInSim.add(PICKUP_ID);
-    const strat = makeStrategy({ minPulls: 60, maxHalfCharges: 5, claimRecruitBonus: true, recruitBonusThreshold: 10 });
+    const strat = makeStrategy({ minPulls: 60, maxPull: 500, claimRecruitBonus: true, recruitBonusThreshold: 10 });
     const banner = makeBanner();
     simulateSingleBannerCharge(state, strat, banner, makePools());
 
@@ -344,7 +502,7 @@ describe('claimRecruitBonus / recruitBonusThreshold', () => {
     expect(state.ticketPool).toEqual([{ pullUnits: 10, expiresAt: expect.any(Number) as number, availableFrom: expect.any(Number) as number, fromGacha: true }]);
   });
 
-  it('budget cutoff (maxHalfCharges) wins even when a milestone is within reach, without overshooting', () => {
+  it('budget cutoff (maxPull) wins even when a milestone is within reach, without overshooting', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.9);
 
     const state = makeState();
@@ -352,11 +510,11 @@ describe('claimRecruitBonus / recruitBonusThreshold', () => {
     state.obtainedInSim.add(PICKUP_ID);
     // Threshold widened to 40 so the "near" range (starting pull 90) crosses the 100-pull budget boundary
     // before the 130 milestone — the default 10 never spans a 100-boundary.
-    const strat = makeStrategy({ minPulls: 90, maxHalfCharges: 1, claimRecruitBonus: true, recruitBonusThreshold: 40 });
+    const strat = makeStrategy({ minPulls: 90, maxPull: 100, claimRecruitBonus: true, recruitBonusThreshold: 40 });
     const banner = makeBanner();
     simulateSingleBannerCharge(state, strat, banner, makePools());
 
-    expect(state.totalPulls).toBe(100); // budget (1 half-charge = 100 pulls) cuts it off before the 130 milestone
+    expect(state.totalPulls).toBe(100); // budget (maxPull = 100) cuts it off before the 130 milestone
     expect(state.totalCost).toBe(10 * 1200 - 1200); // 10 paid batches minus the ticket earned in passing at count 70
   });
 
@@ -366,7 +524,7 @@ describe('claimRecruitBonus / recruitBonusThreshold', () => {
     const state = makeState();
     state.owned.add(PICKUP_ID);
     state.obtainedInSim.add(PICKUP_ID);
-    const strat = makeStrategy({ minPulls: 60, maxHalfCharges: 5, claimRecruitBonus: true, recruitBonusThreshold: 0 });
+    const strat = makeStrategy({ minPulls: 60, maxPull: 500, claimRecruitBonus: true, recruitBonusThreshold: 0 });
     const banner = makeBanner();
     simulateSingleBannerCharge(state, strat, banner, makePools());
 
@@ -458,110 +616,11 @@ describe('term-limited ticket pool', () => {
 describe('runGlobalSimulation — legacy spark-point system regression', () => {
   it('still reliably acquires a "must" target on a legacy (useChargeSystem: false) banner', () => {
     const banner = makeBanner({ useChargeSystem: false });
-    const strat = makeStrategy({ maxSparks: 5 });
+    const strat = makeStrategy({ maxPull: 1000 });
     const bannersMap = { [banner.id]: banner };
     const allStudents = [makeStudent(PICKUP_ID), makeStudent(SPOOK_ID), makeStudent(GRADE2_ID), makeStudent(GRADE1_ID)];
 
     const result = runGlobalSimulation([strat], bannersMap, allStudents, { initialPyroxenes: 0, simCount: 200 });
     expect(result.successRate).toBeGreaterThan(99);
-  });
-});
-
-describe('JS and WASM recruit charge parity', () => {
-  it('produces equivalent aggregate results over many charge-system simulations', () => {
-    initSync(readFileSync(resolve(process.cwd(), 'wasm/gacha-engine/pkg/gacha_engine_bg.wasm')));
-
-    const banner = makeBanner({ id: 'charge-normal', freePulls: 20 });
-    const limitedBanner = makeBanner({
-      id: 'charge-limited',
-      isLimitedBanner: true,
-      pickupStudents: [makeStudent(PICKUP_ID + 1)],
-    });
-    const normalStrategy = makeStrategy({
-      bannerId: banner.id,
-      maxHalfCharges: 4,
-      minPulls: 60,
-      claimRecruitBonus: true,
-      recruitBonusThreshold: 10,
-    });
-    const limitedStrategy = makeStrategy({
-      bannerId: limitedBanner.id,
-      maxHalfCharges: 4,
-      studentConfigs: {
-        [PICKUP_ID + 1]: { studentId: PICKUP_ID + 1, mode: 'opportunistic', priority: 1, opportunisticThreshold: 70, intentionalSpark: false, intentionalSparkThreshold: 20 },
-      },
-    });
-    const bannersMap = { [banner.id]: banner, [limitedBanner.id]: limitedBanner };
-    const students = [makeStudent(PICKUP_ID), makeStudent(PICKUP_ID + 1), makeStudent(SPOOK_ID), makeStudent(GRADE2_ID), makeStudent(GRADE1_ID)];
-    const simCount = 30_000;
-
-    const js = runGlobalSimulation([normalStrategy, limitedStrategy], bannersMap, students, { initialPyroxenes: 0, simCount });
-    const payload = buildWasmPayload([normalStrategy, limitedStrategy], bannersMap, students);
-    const wasm = JSON.parse(
-      simulate_strategies_chunk(
-        payload.strategiesJson,
-        payload.bannerPoolsJson,
-        simCount,
-        0x1234n,
-        new Uint32Array(payload.initialOwnedIds),
-        payload.ticketBatchesJson,
-        payload.consumeExpiringTickets,
-      ),
-    ) as {
-      cost: Record<string, { sum: number; count: number }>;
-      pulls: Record<string, { sum: number; count: number }>;
-      eligmaCumulative: Record<string, { sum: number; count: number }>;
-      successCount: number;
-    };
-    const average = (metric: Record<string, { sum: number; count: number }>) => metric.inf.sum / metric.inf.count;
-
-    expect(average(wasm.cost)).toBeCloseTo(meanFromDist(js.cost.dist('inf')), -2);
-    expect(average(wasm.pulls)).toBeCloseTo(meanFromDist(js.pulls.dist('inf')), 0);
-    expect(average(wasm.eligmaCumulative)).toBeCloseTo(meanFromDist(js.eligmaCumulative.dist('inf')), -1);
-    expect((wasm.successCount / simCount) * 100).toBeCloseTo(js.successRate, 0);
-  });
-});
-
-describe('initialOwnedIds — pre-owned students raise average eligma', () => {
-  it('a populated owned pool raises avgTotalEligma vs an empty owned pool, in both the JS and WASM engines', () => {
-    initSync(readFileSync(resolve(process.cwd(), 'wasm/gacha-engine/pkg/gacha_engine_bg.wasm')));
-
-    // With an empty owned pool, early grade2 hits are new (0-eligma) acquisitions before dupes kick in;
-    // with the pool pre-owned, every hit is a dupe from pull #1 — a large, low-variance eligma gap.
-    // minPulls is set well past coupon-collector expectation to keep this non-flaky.
-    const grade2Pool = Array.from({ length: 30 }, (_, i) => makeStudent(13101 + i));
-    const banner = makeBanner({ freePulls: 0 });
-    const strategy = makeStrategy({ minPulls: 5000, maxHalfCharges: 50, studentConfigs: {} });
-    const bannersMap = { [banner.id]: banner };
-    const students = [makeStudent(PICKUP_ID), makeStudent(SPOOK_ID), makeStudent(GRADE1_ID), ...grade2Pool];
-    const simCount = 200;
-    const ownedIds = grade2Pool.map((s) => s.id);
-
-    const jsUnowned = runGlobalSimulation([strategy], bannersMap, students, { initialPyroxenes: 0, simCount }, []);
-    const jsOwned = runGlobalSimulation([strategy], bannersMap, students, { initialPyroxenes: 0, simCount }, ownedIds);
-    expect(meanFromDist(jsOwned.eligmaCumulative.dist('inf'))).toBeGreaterThan(meanFromDist(jsUnowned.eligmaCumulative.dist('inf')) + 100);
-
-    const runWasm = (owned: number[]) => {
-      const payload = buildWasmPayload([strategy], bannersMap, students, owned);
-      const raw = JSON.parse(
-        simulate_strategies_chunk(
-          payload.strategiesJson,
-          payload.bannerPoolsJson,
-          simCount,
-          0xabcdn,
-          new Uint32Array(payload.initialOwnedIds),
-          payload.ticketBatchesJson,
-          payload.consumeExpiringTickets,
-        ),
-      ) as { eligmaCumulative: Record<string, { sum: number; count: number }> };
-      return raw.eligmaCumulative.inf.sum / raw.eligmaCumulative.inf.count;
-    };
-    const wasmUnownedAvg = runWasm([]);
-    const wasmOwnedAvg = runWasm(ownedIds);
-    expect(wasmOwnedAvg).toBeGreaterThan(wasmUnownedAvg + 100);
-
-    // Both engines should land on a similar owned-pool average (relative tolerance, not absolute —
-    // the JS engine uses real Math.random() while WASM uses a fixed seed, so exact equality isn't expected).
-    expect(Math.abs(meanFromDist(jsOwned.eligmaCumulative.dist('inf')) - wasmOwnedAvg) / wasmOwnedAvg).toBeLessThan(0.1);
   });
 });

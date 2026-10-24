@@ -64,6 +64,9 @@
   "ETC": "ETC",
   "Sakugawa": "Sakugawa Middle School",
   "FoxSquad": "FOX Squad",
+  "DivingClub": "Diving Club",
+  "Class183": "Spec Ops No. 183",
+  "Odyssey": "Odyssey",
   "short": {
     "Abydos": "Abydos",
     "Arius": "Arius",
@@ -80,6 +83,7 @@
     "Sakugawa": "Sakugawa",
     "Other": "Other",
     "Highlander": "Highlander",
-    "WildHunt": "Wildhunt"
+    "WildHunt": "Wildhunt",
+    "Odyssey": "Odyssey"
   }
 }

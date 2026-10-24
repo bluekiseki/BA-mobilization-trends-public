@@ -5,24 +5,27 @@ import { useParams } from 'react-router';
 import { DEFAULT_LOCALE } from '~/utils/i18n/config';
 import type { Route } from './+types/signup-passkey';
 import { localeLink } from '~/utils/localeLink';
+import { ClientOnly } from '~/components/common/ClientOnly';
 import { LuFingerprint, LuCheck, LuArrowRight } from 'react-icons/lu';
 import { env } from 'cloudflare:workers';
 import { createInternalSessionRequest } from '~/utils/internalSessionRequest';
 
 // WebAuthn only works client-side, so this is excluded from the SSR bundle entirely.
-const PasskeyRegisterButton = lazy(() => import('~/components/auth/PasskeyRegisterButton.client').then((m) => ({ default: m.PasskeyRegisterButton })));
+const PasskeyRegisterButton = lazy(() => import('~/features/account/components/PasskeyRegisterButton.client').then((m) => ({ default: m.PasskeyRegisterButton })));
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   try {
     const sessionResp = await env.AUTH_WORKER.fetch(createInternalSessionRequest(request, params.locale));
     if (sessionResp.status !== 200) return redirect(localeLink(params.locale, '/login'));
-    return {
-      headers: { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' },
-    };
+    return null;
   } catch (err) {
     console.error('Session check failed:', err);
     return redirect(localeLink(params.locale, '/login'));
   }
+}
+
+export function headers() {
+  return { 'Cache-Control': 'private, no-store' };
 }
 
 export function meta() {
@@ -68,9 +71,13 @@ export default function SignupPasskeyPage() {
           </div>
 
           {/* Passkey Register Component */}
-          <Suspense fallback={null}>
-            <PasskeyRegisterButton onSuccess={handleSuccess} showNameInput={true} />
-          </Suspense>
+          {/* ClientOnly keeps the lazy boundary from being evaluated during SSR,
+              where the .client module's export resolves to undefined. */}
+          <ClientOnly>
+            <Suspense fallback={null}>
+              <PasskeyRegisterButton onSuccess={handleSuccess} showNameInput={true} />
+            </Suspense>
+          </ClientOnly>
 
           {/* Skip Button */}
           <Link

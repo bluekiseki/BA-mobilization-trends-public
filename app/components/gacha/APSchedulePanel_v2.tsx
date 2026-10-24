@@ -8,6 +8,9 @@ const AP_OPTIONS = [0, 3, 6, 9, 12];
 const monoStyle = { fontFamily: 'inherit' };
 
 interface Props {
+  /** Compact-mode display: hides the campaign-bulk editor and the full schedule list — advanced detail
+      a newcomer doesn't need. The event/normal-period AP selectors stay. */
+  simple?: boolean;
   schedules: PlannerSchedule[];
   apOverrides: Record<string, number>;
   onApChange: (id: string, val: string) => void;
@@ -81,6 +84,7 @@ const typeStyle = (type: string, t: (k: string) => string) => {
 };
 
 export default function APSchedulePanel_v2({
+  simple = false,
   schedules,
   apOverrides,
   onApChange,
@@ -114,7 +118,7 @@ export default function APSchedulePanel_v2({
   };
 
   return (
-    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
+    <div className="bg-white dark:bg-neutral-900">
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
         {/* Event period */}
         <div className="flex items-center justify-between py-2.5">
@@ -128,139 +132,143 @@ export default function APSchedulePanel_v2({
           <ApSelect value={apRefreshes_normal} onChange={(v) => onApRefreshChange('apRefreshes_normal', v)} />
         </div>
 
-        {/* Campaign bulk settings */}
-        <div className="py-2.5">
-          <button type="button" className="w-full flex items-center justify-between" onClick={() => setShowCampaignBulk((v) => !v)}>
-            <RowLabel>{t('campaignBulkLabel')}</RowLabel>
-            <span className="text-neutral-400 dark:text-neutral-500 text-xs">{showCampaignBulk ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}</span>
-          </button>
+        {/* Campaign bulk settings — Standard mode only */}
+        {!simple && (
+          <div className="py-2.5">
+            <button type="button" className="w-full flex items-center justify-between" onClick={() => setShowCampaignBulk((v) => !v)}>
+              <RowLabel>{t('campaignBulkLabel')}</RowLabel>
+              <span className="text-neutral-400 dark:text-neutral-500 text-xs">{showCampaignBulk ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}</span>
+            </button>
 
-          {showCampaignBulk && (
-            <div className="mt-3 space-y-2">
-              {/* ×2 / ×3 header */}
-              <div className="grid grid-cols-[3rem_1fr_1fr] gap-2 text-[10px] text-neutral-400 dark:text-neutral-500 text-center" style={monoStyle}>
-                <div />
-                <div>×2</div>
-                <div>×3</div>
-              </div>
-              {CAMPAIGN_TYPES.map((key) => (
-                <div key={key} className="grid grid-cols-[3rem_1fr_1fr] gap-2 items-center">
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400 whitespace-nowrap" style={monoStyle}>
-                    {getLocalizedCampaignLabel(key, tCal as (key: string) => string)}
-                  </span>
-                  {[2, 3].map((mult) => {
-                    const dKey = `${key}_${mult}`;
-                    const val = apRefreshes_campaigns[dKey];
-                    return (
-                      <select
-                        key={mult}
-                        className="w-full text-xs border border-neutral-200 dark:border-neutral-700 rounded-md py-1 px-1.5 bg-neutral-50 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-ba-btn-blue cursor-pointer"
-                        style={monoStyle}
-                        value={val ?? ''}
-                        onChange={(e) => {
-                          if (e.target.value === '') onCampaignBulkChange(dKey, -1);
-                          else onCampaignBulkChange(dKey, Number(e.target.value));
-                        }}
-                      >
-                        <option value="">
-                          {apRefreshes_normal}
-                          {t('unit_times')}
-                        </option>
-                        {AP_OPTIONS.map((v) => (
-                          <option key={v} value={v}>
-                            {v}
+            {showCampaignBulk && (
+              <div className="mt-3 space-y-2">
+                {/* ×2 / ×3 header */}
+                <div className="grid grid-cols-[3rem_1fr_1fr] gap-2 text-[10px] text-neutral-400 dark:text-neutral-500 text-center" style={monoStyle}>
+                  <div />
+                  <div>×2</div>
+                  <div>×3</div>
+                </div>
+                {CAMPAIGN_TYPES.map((key) => (
+                  <div key={key} className="grid grid-cols-[3rem_1fr_1fr] gap-2 items-center">
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400 whitespace-nowrap" style={monoStyle}>
+                      {getLocalizedCampaignLabel(key, tCal as (key: string) => string)}
+                    </span>
+                    {[2, 3].map((mult) => {
+                      const dKey = `${key}_${mult}`;
+                      const val = apRefreshes_campaigns[dKey];
+                      return (
+                        <select
+                          key={mult}
+                          className="w-full text-xs border border-neutral-200 dark:border-neutral-700 rounded-md py-1 px-1.5 bg-neutral-50 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-ba-btn-blue cursor-pointer"
+                          style={monoStyle}
+                          value={val ?? ''}
+                          onChange={(e) => {
+                            if (e.target.value === '') onCampaignBulkChange(dKey, -1);
+                            else onCampaignBulkChange(dKey, Number(e.target.value));
+                          }}
+                        >
+                          <option value="">
+                            {apRefreshes_normal}
                             {t('unit_times')}
                           </option>
-                        ))}
-                      </select>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Schedule list */}
-        <div className="py-2.5">
-          <button type="button" className="w-full flex items-center justify-between" onClick={() => setShowSchedule((v) => !v)}>
-            <RowLabel>
-              {t('scheduleLabel')}
-              <span className="text-[11px] text-neutral-400 dark:text-neutral-500 ml-1" style={monoStyle}>
-                {t('scheduleCount', { count: sorted.length })}
-              </span>
-            </RowLabel>
-            <span className="text-neutral-400 dark:text-neutral-500 text-xs">{showSchedule ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}</span>
-          </button>
-
-          {showSchedule && (
-            <div className="mt-2 -mx-4 border-t border-neutral-100 dark:border-neutral-800">
-              {/* Column headers */}
-              <div
-                className="flex items-center px-4 py-1.5 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-100 dark:border-neutral-800 text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider"
-                style={monoStyle}
-              >
-                <div className="w-14">{t('headers.start')}</div>
-                <div className="w-14 text-center">{t('headers.type')}</div>
-                <div className="flex-1 px-2">{t('headers.name')}</div>
-                <div className="w-24 text-right">{t('headers.ap')}</div>
+                          {AP_OPTIONS.map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                              {t('unit_times')}
+                            </option>
+                          ))}
+                        </select>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
+        )}
 
-              <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-72 overflow-y-auto custom-scrollbar">
-                {sorted.length === 0 ? (
-                  <div className="p-5 text-center text-xs text-neutral-400 dark:text-neutral-500">{t('empty')}</div>
-                ) : (
-                  sorted.map((item) => {
-                    const { label, cls } = typeStyle(item.type, t as (k: string) => string);
-                    const isConfigurable = item.type === 'Event' || item.type === 'Campaign';
-                    const customOverride = apOverrides[item.id] ?? -1;
-                    const hasOverride = customOverride !== -1;
-                    const autoAp = effectiveAp(item);
-                    const itemName = item.type === 'Campaign' && item.campaignType ? getLocalizedCampaignLabel(item.campaignType, tCal as (key: string) => string) : item.name;
+        {/* Schedule list — Standard mode only */}
+        {!simple && (
+          <div className="py-2.5">
+            <button type="button" className="w-full flex items-center justify-between" onClick={() => setShowSchedule((v) => !v)}>
+              <RowLabel>
+                {t('scheduleLabel')}
+                <span className="text-[11px] text-neutral-400 dark:text-neutral-500 ml-1" style={monoStyle}>
+                  {t('scheduleCount', { count: sorted.length })}
+                </span>
+              </RowLabel>
+              <span className="text-neutral-400 dark:text-neutral-500 text-xs">{showSchedule ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}</span>
+            </button>
 
-                    return (
-                      <div key={item.id} className="flex items-center px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
-                        <div className="w-14 text-xs text-neutral-400 dark:text-neutral-500 shrink-0" style={monoStyle}>
-                          {item.start.slice(5).replace('-', '/')}
-                        </div>
-                        <div className="w-14 shrink-0 flex justify-center">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${cls}`}>{label}</span>
-                        </div>
-                        <div className="flex-1 px-2 min-w-0">
-                          <div className="text-xs text-neutral-700 dark:text-neutral-300 truncate" title={itemName}>
-                            {itemName}
+            {showSchedule && (
+              <div className="mt-2 -mx-4 border-t border-neutral-100 dark:border-neutral-800">
+                {/* Column headers */}
+                <div
+                  className="flex items-center px-4 py-1.5 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-100 dark:border-neutral-800 text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider"
+                  style={monoStyle}
+                >
+                  <div className="w-14">{t('headers.start')}</div>
+                  <div className="w-14 text-center">{t('headers.type')}</div>
+                  <div className="flex-1 px-2">{t('headers.name')}</div>
+                  <div className="w-24 text-right">{t('headers.ap')}</div>
+                </div>
+
+                <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-72 overflow-y-auto custom-scrollbar">
+                  {sorted.length === 0 ? (
+                    <div className="p-5 text-center text-xs text-neutral-400 dark:text-neutral-500">{t('empty')}</div>
+                  ) : (
+                    sorted.map((item) => {
+                      const { label, cls } = typeStyle(item.type, t as (k: string) => string);
+                      const isConfigurable = item.type === 'Event' || item.type === 'Campaign';
+                      const customOverride = apOverrides[item.id] ?? -1;
+                      const hasOverride = customOverride !== -1;
+                      const autoAp = effectiveAp(item);
+                      const itemName = item.type === 'Campaign' && item.campaignType ? getLocalizedCampaignLabel(item.campaignType, tCal as (key: string) => string) : item.name;
+
+                      return (
+                        <div key={item.id} className="flex items-center px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
+                          <div className="w-14 text-xs text-neutral-400 dark:text-neutral-500 shrink-0" style={monoStyle}>
+                            {item.start.slice(5).replace('-', '/')}
+                          </div>
+                          <div className="w-14 shrink-0 flex justify-center">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${cls}`}>{label}</span>
+                          </div>
+                          <div className="flex-1 px-2 min-w-0">
+                            <div className="text-xs text-neutral-700 dark:text-neutral-300 truncate" title={itemName}>
+                              {itemName}
+                            </div>
+                          </div>
+                          <div className="w-24 shrink-0 flex items-center justify-end gap-1.5">
+                            {isConfigurable && (
+                              <>
+                                <select
+                                  className={`text-[10px] border rounded py-0.5 px-1 outline-none cursor-pointer transition-colors ${
+                                    hasOverride
+                                      ? 'bg-blue-600 dark:bg-blue-500 text-white border-blue-600'
+                                      : 'bg-white dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700'
+                                  }`}
+                                  value={customOverride}
+                                  onChange={(e) => onApChange(item.id, e.target.value)}
+                                >
+                                  <option value={-1}>{autoAp > 0 ? t('auto_ap_format', { count: autoAp }) : '-'}</option>
+                                  {AP_OPTIONS.map((v) => (
+                                    <option key={v} value={v}>
+                                      {v}
+                                    </option>
+                                  ))}
+                                </select>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <div className="w-24 shrink-0 flex items-center justify-end gap-1.5">
-                          {isConfigurable && (
-                            <>
-                              <select
-                                className={`text-[10px] border rounded py-0.5 px-1 outline-none cursor-pointer transition-colors ${
-                                  hasOverride
-                                    ? 'bg-blue-600 dark:bg-blue-500 text-white border-blue-600'
-                                    : 'bg-white dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-neutral-700'
-                                }`}
-                                value={customOverride}
-                                onChange={(e) => onApChange(item.id, e.target.value)}
-                              >
-                                <option value={-1}>{autoAp > 0 ? t('auto_ap_format', { count: autoAp }) : '-'}</option>
-                                {AP_OPTIONS.map((v) => (
-                                  <option key={v} value={v}>
-                                    {v}
-                                  </option>
-                                ))}
-                              </select>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

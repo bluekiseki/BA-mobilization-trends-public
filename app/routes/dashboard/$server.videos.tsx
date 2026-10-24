@@ -1,19 +1,19 @@
 import { useEffect, useState, useMemo } from 'react';
-import { data, type LoaderFunctionArgs, useLoaderData, useParams } from 'react-router';
+import { data, type LoaderFunctionArgs, useLoaderData, useParams, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { GameServer, RaidInfo, Student } from '~/types/data';
 import { GAMESERVER_LIST } from '~/types/data';
 import { loadRaidInfos } from '~/utils/loadRaidInfo';
-import type { PortraitData, StudentData } from '~/components/dashboard/common';
+import type { PortraitData, ReportStudentData } from '~/types/raidReport';
 import { cdn } from '~/utils/cdn';
-import { VideoPageView } from '~/components/dashboard/video/VideoPageView';
+import { VideoPageView } from '~/features/raid-stats/common/video/VideoPageView';
 import { getLiveRaidInfo } from '~/data/liveRaid';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { HiOutlineChevronLeft } from 'react-icons/hi2';
 import { type_translation, typecolor } from '~/components/raid/raidToString';
-import { useDataCacheJson } from '~/utils/useDataCacheJson';
+import { useDataCacheJson } from '~/hooks/useDataCacheJson';
 import { getInstance } from '~/middleware/i18next';
-import { createMetaDescriptor } from '~/components/head';
+import { createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/$server.videos';
 
 export function loader({ context, params }: LoaderFunctionArgs) {
@@ -39,18 +39,17 @@ export default function RaidVideosPage() {
   const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [portraitData, setPortraitData] = useState<PortraitData>({});
-  const [studentData, setStudentData] = useState<StudentData>({});
+  const [studentData, setStudentData] = useState<ReportStudentData>({});
   const [loading, setLoading] = useState(true);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
   const fetchStudents = useDataCacheJson<Record<string, Student>>();
 
   // Get all raids (live + past) sorted by date descending
   // Keep all Type variations for Grand Assault, but deduplicate by Id for sorting reference
   const allRaids = useMemo(() => {
     const allData = loadRaidInfos(server as GameServer, locale);
-    const liveData = getLiveRaidInfo(locale);
+    const liveData = getLiveRaidInfo(locale, server as GameServer);
 
     // allData first so a raid's finalized/localized entry wins the dedupe below over liveData's temporary placeholder.
     const merged: RaidInfo[] = [...allData, ...liveData];
@@ -81,6 +80,9 @@ export default function RaidVideosPage() {
     });
   }, [allRaids]);
 
+  const requestedId = searchParams.get('raid');
+  const selectedId = uniqueRaidIds.some((raid) => raid.Id === requestedId) ? requestedId : null;
+
   // Get raid info for selected id (from allRaids which includes live + past)
   const raidInfo = useMemo(() => {
     if (!selectedId) return null;
@@ -93,10 +95,23 @@ export default function RaidVideosPage() {
     return allRaids.filter((r) => r.Id === selectedId);
   }, [selectedId, allRaids]);
 
-  // const isGrandAssault = raidInfos.length > 1;
   const isGrandAssault = raidInfos[0]?.Id.startsWith('E');
+  const requestedType = searchParams.get('type');
+  const selectedType = isGrandAssault && raidInfos.some((raid) => raid.Type === requestedType) ? requestedType : null;
 
-  // console.log(raidInfo, raidInfos)
+  const updateSelection = (raid: string | null, type: string | null) => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (raid) next.set('raid', raid);
+        else next.delete('raid');
+        if (type) next.set('type', type);
+        else next.delete('type');
+        return next;
+      },
+      { preventScrollReset: true },
+    );
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -131,8 +146,7 @@ export default function RaidVideosPage() {
             id="raid-select"
             value={selectedId || ''}
             onChange={(e) => {
-              setSelectedId(e.target.value || null);
-              setSelectedType(null);
+              updateSelection(e.target.value || null, null);
             }}
             className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 rounded-lg text-sm"
           >
@@ -155,7 +169,8 @@ export default function RaidVideosPage() {
               return (
                 <button
                   key={r.Type}
-                  onClick={() => setSelectedType(isSelected ? null : r.Type || '')}
+                  onClick={() => updateSelection(selectedId, isSelected ? null : r.Type || null)}
+                  aria-pressed={isSelected}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isSelected ? 'text-white' : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600'
                   }`}

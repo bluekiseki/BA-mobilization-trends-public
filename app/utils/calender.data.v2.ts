@@ -5,8 +5,6 @@ import bossData from '~/data/bossdata.json';
 import type { GameServer } from '~/types/data';
 import type { Locale } from '~/utils/i18n/config';
 import { loadRaidInfosById } from './loadRaidInfo';
-import { getLiveRaidInfo, LIVE_RAID_DURATION } from '~/data/liveRaid';
-import { getKstTime } from '~/data/globalRaidDates';
 import { parseCsvString, type PickupStudentInfo, type ScheduleTrack } from './calender.data';
 
 import jpEventCsvRaw from '~/data/jp/schedule/event.csv?raw';
@@ -283,23 +281,17 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
       const startMs = new Date(parseKST(item.startTime)).getTime();
       const endMs = new Date(parseKST(item.endTime)).getTime();
 
-      const isLiveRunning = (() => {
-        const liveRaids = getLiveRaidInfo(defaultLocale);
-        const startDate = getKstTime(liveRaids[0].Date);
-        return new Date(startDate + LIVE_RAID_DURATION * 24 * 60 * 60 * 1000 - 7 * 60 * 60 * 1000).getTime() > nowMs;
-      })();
-
       let link: string | undefined;
       if (server === 'jp' && item.season < JP_RAID_SEASON_EXIST_START) {
         /* no link */
       } else if (server === 'kr' && item.season < KR_RAID_SEASON_EXIST_START) {
         /* no link */
-      } else if (nowMs >= startMs && nowMs <= endMs && server === 'jp' && isLiveRunning) link = '/live';
+      } else if (nowMs >= startMs && nowMs <= endMs && server === 'jp') link = '/live';
       else if (server === 'kr' && item.season > KR_RAID_SEASON_EXIST_END) {
         if (loadRaidInfosById('jp', defaultLocale, `R${item.season + 3}`).length) link = `/dashboard/jp/R${item.season + 3}`;
       } else if (nowMs > endMs) link = `/dashboard/${server}/R${item.season}`;
 
-      addItem('raid', { id: `raid-${item.season}`, type: 'raid', startTime: item.startTime, endTime: item.endTime, bossKey: item.boss, link, details });
+      addItem('raid', { id: `raid-${item.season}`, type: 'raid', startTime: item.startTime, endTime: item.endTime, bossKey: item.boss, season: item.season, link, details });
     });
 
     parseCsvString<ERaidItem>(sources.eraid).forEach((item) => {
@@ -328,7 +320,16 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
         if (loadRaidInfosById('jp', defaultLocale, `E${item.season}`).length) link = `/dashboard/jp/E${item.season}`;
       } else if (nowMs > endMs) link = `/dashboard/${server}/E${item.season}`;
 
-      addItem('raid', { id: `eraid-${item.season}`, type: 'eraid', startTime: item.startTime, endTime: item.endTime, bossKey, link, details: { terrain, bosses, prediction: !!item.prediction } });
+      addItem('raid', {
+        id: `eraid-${item.season}`,
+        type: 'eraid',
+        startTime: item.startTime,
+        endTime: item.endTime,
+        bossKey,
+        season: item.season,
+        link,
+        details: { terrain, bosses, prediction: !!item.prediction },
+      });
     });
 
     parseCsvString<JfdItem>(sources.jfd).forEach((item) => {
@@ -365,6 +366,7 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
         startTime: item.startTime,
         endTime: item.endTime,
         bossKey: item.boss,
+        season: item.season,
         details: { armorType: item.armorType, prediction: !!item.prediction },
       });
     });

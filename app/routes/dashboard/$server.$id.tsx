@@ -5,25 +5,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GAMESERVER_LIST, type FullData, type GameServer, type Student } from '~/types/data';
 import { loadRaidInfosById } from '~/utils/loadRaidInfo';
-import { isTotalAssault, type PortraitData, type ReportEntry, type ReportEntryRank, type StudentData } from '~/components/dashboard/common';
+import { isTotalAssault } from '~/utils/raid/report';
+import type { PortraitData, ReportEntry, ReportEntryRank, ReportStudentData } from '~/types/raidReport';
 // import type { loader as rootLorder } from '~/root';
 import { HiOutlineChartPie, HiOutlineUsers, HiArrowRight } from 'react-icons/hi2'; // Icon example
 
 // Import UI components
-import RaidHeader from '~/components/dashboard/RaidHeader';
-import { getMostDifficultLevel, type_translation, typecolor } from '~/components/raid/raidToString';
-import DashboardUI from '~/components/dashboard/dashboardUI';
+import RaidHeader from '~/features/raid-stats/dashboard/RaidHeader';
+import { getMostDifficultLevel, type_translation, type_translation_tab, typecolor } from '~/components/raid/raidToString';
+import DashboardUI from '~/features/raid-stats/dashboard/dashboardUI';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/head';
+import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import type { AppHandle } from '~/types/link';
-import { useDataCacheJson } from '~/utils/useDataCacheJson';
-import OverviewDashboardUI from '~/components/dashboard/OverviewDashboardUI';
-import TierSummary from '~/components/dashboard/TierSummary';
+import { useDataCacheJson } from '~/hooks/useDataCacheJson';
+import OverviewDashboardUI from '~/features/raid-stats/dashboard/OverviewDashboardUI';
+import TierSummary from '~/features/raid-stats/dashboard/TierSummary';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/$server.$id';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/utils/usePageHelp';
+import { useHelpKey } from '~/hooks/usePageHelp';
 import { localeLink } from '~/utils/localeLink';
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -206,7 +207,7 @@ export default function RaidDetailsPage() {
   // const [activeType, setActiveType] = useState<string>(initType || '');
   // Data caching and state
   const [cachedData, setCachedData] = useState<Record<string, ReportEntryRank[]>>({});
-  const [studentData, setStudentData] = useState<StudentData>({});
+  const [studentData, setStudentData] = useState<ReportStudentData>({});
   const [portraitData, setPortraitData] = useState<PortraitData>({});
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -429,7 +430,7 @@ export default function RaidDetailsPage() {
                   'Total'
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center leading-tight">
-                    <span className="font-semibold">{type_translation[tab as keyof typeof type_translation][getLocaleShortName(locale)]}</span>
+                    <span className="font-semibold">{type_translation_tab[tab as keyof typeof type_translation_tab][getLocaleShortName(locale)]}</span>
                     {raidInfoForTab && (
                       <span className={`mt-1 text-xs  dark:text-neutral-400 ${activeTab === tab ? 'text-neutral-200' : 'text-neutral-500'}`}>{getMostDifficultLevel(raidInfoForTab)}</span>
                     )}

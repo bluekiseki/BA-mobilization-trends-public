@@ -50,3 +50,13 @@ export const NOTICES_CACHE_CONTROL = cacheHeader({
   sMaxage: '5m',
   staleWhileRevalidate: '1h',
 });
+
+// Backstop only — real invalidation for /live is driven by R2 etag changes (see
+// workers/app.ts's getLiveDataVersion usage). This just bounds staleness if that lookup
+// ever fails, and covers the rarely-updated trajectory overlays (not etag-tracked).
+export const LIVE_CACHE_CONTROL = cacheHeader({
+  maxAge: '1m',
+  sMaxage: '1h',
+  staleWhileRevalidate: '2h',
+  staleIfError: '1d',
+});

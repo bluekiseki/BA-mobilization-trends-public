@@ -1,7 +1,7 @@
 import { data, type LoaderFunctionArgs } from 'react-router';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/terms';
-import ContactButton from '~/components/ContactButton';
+import ContactButton from '~/components/shell/ContactButton';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
