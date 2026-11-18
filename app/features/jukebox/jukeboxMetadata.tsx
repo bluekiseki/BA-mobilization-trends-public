@@ -57,6 +57,7 @@ export const eventConvertor = {
   56: 861,
   57: 862,
   58: 864,
+  59: 857, // Lore Pursuit special ops: its three runs (857, 858, 863) share the same content, so only the first is linked
 };
 
 // --- ICON COMPONENTS ---
@@ -144,9 +145,30 @@ export const mainStoryChapters: Record<string, { key: string; date: string }> = 
   '2부 Vol.0 1장': { key: 'part2_vol0_ch1', date: '2026/04/22' },
   '2부 Ex. 로어추적 편 1장': { key: 'part2_ex_lore_ch1', date: '2026/04/22' },
   '2부 Ex. 로어추적 편 2장': { key: 'part2_ex_lore_ch2', date: '2026/05/27' },
+  '2부 Ex. 로어추적 편 3장': { key: 'part2_ex_lore_ch3', date: '2026/10/21' },
   '2부 Vol.1 1장': { key: 'part2_vol1_ch1', date: '2026/08/12' },
   '2부 Vol.1 2장': { key: 'part2_vol1_ch2', date: '2026/08/19' },
   '2부 Vol.2 1장': { key: 'part2_vol2_ch1', date: '2026/08/26' },
+};
+
+/** Event list id of an Event_Story title: a jukebox event number goes through `eventConvertor`, a title of 800 or more already is an event list id. */
+export function eventListId(title: string | number | null | undefined): number | undefined {
+  const n = Number(title);
+  if (title === null || title === undefined || title === '' || Number.isNaN(n)) return undefined;
+  return n >= 800 ? n : eventConvertor[n as keyof typeof eventConvertor];
+}
+
+/** Position of an Event_Story title among the jukebox event numbers (an event list id sits right after the last numbered event before it). */
+export function eventSortKey(title: string): number {
+  const n = Number(title);
+  if (n < 800) return n;
+  const before = Object.entries(eventConvertor).filter(([, id]) => id < n);
+  return before.length > 0 ? Math.max(...before.map(([key]) => Number(key))) + 0.5 : -0.5;
+}
+
+/** Event stories whose jukebox title is a name rather than an event number; the value is the key under `named_events` in the jukebox locale. */
+export const namedEventKeys: Record<string, string> = {
+  발렌타인: 'valentine',
 };
 
 export const otherStoryTitles = {

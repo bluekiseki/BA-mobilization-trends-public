@@ -2,15 +2,30 @@
 
 import { useTranslation } from 'react-i18next';
 import type { Skill, Student } from '~/types/plannerData';
+import { useIconSheet } from '~/components/common/SheetIcon';
+import { iconSheetStyle, type IconSheet } from '~/utils/iconSheet';
 import { replaceSkillDescTags } from '~/utils/skillDescTags';
 
 // --- Helper: Format Skill Descriptions (Buffs/Debuffs) ---
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const formatSkillBuffDesc = (str: string, t: any) => {
+export const formatSkillBuffDesc = (str: string, t: any, buffSheet?: IconSheet | null) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const safeT = (key: string, options?: Record<string, unknown>) => String(t(key, options));
 
-  return replaceSkillDescTags(str, (statKey, param) => `<strong class="underline">${safeT(statKey, { defaultValue: param })}</strong>`).replace(/\\n/g, '<br/>');
+  return replaceSkillDescTags(str, (statKey, param) => {
+    const label = `<strong class="underline">${safeT(statKey, { defaultValue: param })}</strong>`;
+    const icon = buffSheet ? buffIconHtml(buffSheet, statKey.slice('stat:'.length)) : '';
+    // Keep the icon and its label on one line.
+    return icon ? `<span class="whitespace-nowrap">${icon}${label}</span>` : label;
+  }).replace(/\\n/g, '<br/>');
+};
+
+// Descriptions are HTML strings, so the sprite icon is emitted as an inline-styled span (same math as SheetIcon).
+const buffIconHtml = (sheet: IconSheet, id: string): string => {
+  const style = iconSheetStyle(sheet, id);
+  if (!style) return '';
+  const css = `background-image:${String(style.backgroundImage)};background-size:${String(style.backgroundSize)};background-position:${String(style.backgroundPosition)};background-repeat:no-repeat`;
+  return `<span role="img" aria-hidden="true" class="mr-0.5 inline-block aspect-[47/54] h-[1.2em] align-text-bottom" style="${css}"></span>`;
 };
 
 interface SkillDisplayProps {
@@ -26,6 +41,8 @@ interface SkillDisplayProps {
   targetRank: number; // Affection Rank
   currentGear?: number;
   targetGear?: number;
+  /** Shows skillData as given, without the weapon and bond gear upgrades (used for summon skills). */
+  fixed?: boolean;
 }
 
 export const SkillDisplay = ({
@@ -41,8 +58,10 @@ export const SkillDisplay = ({
   targetRank,
   currentGear = 0,
   targetGear = 0,
+  fixed = false,
 }: SkillDisplayProps) => {
   const { t } = useTranslation(['planner', 'stat']);
+  const buffSheet = useIconSheet('buff');
 
   // --- Logic: Determine Effective Skill Data (Weapon/Gear upgrades) ---
   let currentSkillData: Skill | undefined = skillData;
@@ -50,7 +69,7 @@ export const SkillDisplay = ({
   let isDescriptionChanged = false;
 
   // 1. Unique Weapon Passive Upgrade (2-Star UW)
-  if (skillKey === 'Passive') {
+  if (!fixed && skillKey === 'Passive') {
     const hasWeaponPassive = !!studentInfo.Skills.WeaponPassive;
     if (hasWeaponPassive) {
       if (currentUW >= 2) currentSkillData = studentInfo.Skills.WeaponPassive;
@@ -64,7 +83,7 @@ export const SkillDisplay = ({
   }
 
   // 2. Bond Gear Normal Skill Upgrade (Bond rank >= 20 AND T2 gear equipped)
-  if (skillKey === 'Public') {
+  if (!fixed && skillKey === 'Public') {
     const hasGearPublic = !!studentInfo.Skills.GearPublic;
     if (hasGearPublic) {
       const currentMeetsGear = currentRank >= 20 && currentGear >= 2;
@@ -91,7 +110,7 @@ export const SkillDisplay = ({
 
       return val !== undefined ? `<strong class="text-blue-600 dark:text-blue-400">${val}</strong>` : match;
     });
-    return formatSkillBuffDesc(rawDesc, t);
+    return formatSkillBuffDesc(rawDesc, t, buffSheet);
   };
 
   const formatSkillDiffDesc = (data: Skill, levels: [number, number]) => {
@@ -117,7 +136,7 @@ export const SkillDisplay = ({
         `</strong>`
       );
     });
-    return formatSkillBuffDesc(rawDesc, t);
+    return formatSkillBuffDesc(rawDesc, t, buffSheet);
   };
 
   const currentDesc = formatSkillDesc(currentSkillData, currentLevel);

@@ -1,0 +1,179 @@
+{
+  "Hat": [
+    [["AttackPower_Coefficient", 800]],
+    [["AttackPower_Coefficient", 1300]],
+    [["AttackPower_Coefficient", 1800]],
+    [["AttackPower_Coefficient", 2500]],
+    [["AttackPower_Coefficient", 3000]],
+    [["AttackPower_Coefficient", 3500]],
+    [["AttackPower_Coefficient", 4000]],
+    [["AttackPower_Coefficient", 4500]],
+    [["AttackPower_Coefficient", 4800]],
+    [["AttackPower_Coefficient", 5000]]
+  ],
+  "Gloves": [
+    [["AttackPower_Coefficient", 640]],
+    [["AttackPower_Coefficient", 1040]],
+    [["AttackPower_Coefficient", 1440]],
+    [["AttackPower_Coefficient", 2000]],
+    [["AttackPower_Coefficient", 2500]],
+    [["AttackPower_Coefficient", 3000]],
+    [["AttackPower_Coefficient", 3500]],
+    [["AttackPower_Coefficient", 4000]],
+    [["AttackPower_Coefficient", 4600]],
+    [["AttackPower_Coefficient", 5000]]
+  ],
+  "Shoes": [
+    [["AttackPower_Coefficient", 400]],
+    [["AttackPower_Coefficient", 650]],
+    [["AttackPower_Coefficient", 900]],
+    [
+      ["AttackPower_Coefficient", 1250],
+      ["MaxHP_Coefficient", 600]
+    ],
+    [
+      ["AttackPower_Coefficient", 2000],
+      ["MaxHP_Coefficient", 900]
+    ],
+    [
+      ["AttackPower_Coefficient", 2500],
+      ["MaxHP_Coefficient", 1200]
+    ],
+    [
+      ["AttackPower_Coefficient", 3000],
+      ["MaxHP_Coefficient", 1350]
+    ],
+    [
+      ["AttackPower_Coefficient", 3500],
+      ["MaxHP_Coefficient", 1500]
+    ],
+    [
+      ["AttackPower_Coefficient", 4200],
+      ["MaxHP_Coefficient", 1750]
+    ],
+    [
+      ["AttackPower_Coefficient", 4600],
+      ["MaxHP_Coefficient", 2000]
+    ]
+  ],
+  "Bag": [
+    [["MaxHP_Base", 600]],
+    [["MaxHP_Base", 975]],
+    [["MaxHP_Base", 1350]],
+    [
+      ["MaxHP_Base", 1875],
+      ["DefensePower_Base", 1000]
+    ],
+    [
+      ["MaxHP_Base", 3500],
+      ["DefensePower_Base", 1100]
+    ],
+    [
+      ["MaxHP_Base", 5500],
+      ["DefensePower_Base", 1200]
+    ],
+    [
+      ["MaxHP_Base", 7500],
+      ["DefensePower_Base", 1300]
+    ],
+    [
+      ["MaxHP_Base", 9500],
+      ["DefensePower_Base", 1400]
+    ],
+    [
+      ["MaxHP_Base", 12000],
+      ["DefensePower_Base", 1600],
+      ["MaxHP_Coefficient", 500]
+    ],
+    [
+      ["MaxHP_Base", 14000],
+      ["DefensePower_Base", 1700],
+      ["MaxHP_Coefficient", 500]
+    ]
+  ],
+  "Badge": [
+    [["MaxHP_Base", 800]],
+    [["MaxHP_Base", 1300]],
+    [["MaxHP_Base", 1800]],
+    [["MaxHP_Base", 2500]],
+    [
+      ["MaxHP_Base", 4500],
+      ["MaxHP_Coefficient", 1000]
+    ],
+    [
+      ["MaxHP_Base", 6500],
+      ["MaxHP_Coefficient", 1800]
+    ],
+    [
+      ["MaxHP_Base", 9500],
+      ["MaxHP_Coefficient", 2200]
+    ],
+    [
+      ["MaxHP_Base", 12000],
+      ["MaxHP_Coefficient", 2400]
+    ],
+    [
+      ["MaxHP_Base", 14000],
+      ["MaxHP_Coefficient", 2500]
+    ],
+    [
+      ["MaxHP_Base", 16000],
+      ["MaxHP_Coefficient", 2500]
+    ]
+  ],
+  "Hairpin": [
+    [["MaxHP_Base", 400]],
+    [["MaxHP_Base", 650]],
+    [["MaxHP_Base", 900]],
+    [["MaxHP_Base", 1250]],
+    [["MaxHP_Base", 3000]],
+    [["MaxHP_Base", 4500]],
+    [["MaxHP_Base", 6500]],
+    [["MaxHP_Base", 8500]],
+    [["MaxHP_Base", 11000]],
+    [["MaxHP_Base", 13000]]
+  ],
+  "Charm": [[], [], [], [], [], [], [], [], [], []],
+  "Watch": [
+    [],
+    [],
+    [],
+    [],
+    [["MaxHP_Coefficient", 500]],
+    [["MaxHP_Coefficient", 700]],
+    [["MaxHP_Coefficient", 900]],
+    [["MaxHP_Coefficient", 1100]],
+    [["MaxHP_Coefficient", 1300]],
+    [["MaxHP_Coefficient", 1500]]
+  ],
+  "Necklace": [
+    [["HealPower_Coefficient", 800]],
+    [["HealPower_Coefficient", 1300]],
+    [["HealPower_Coefficient", 1800]],
+    [["HealPower_Coefficient", 2500]],
+    [
+      ["HealPower_Coefficient", 2800],
+      ["AttackPower_Coefficient", 400]
+    ],
+    [
+      ["HealPower_Coefficient", 3200],
+      ["AttackPower_Coefficient", 600]
+    ],
+    [
+      ["HealPower_Coefficient", 3500],
+      ["AttackPower_Coefficient", 800]
+    ],
+    [
+      ["HealPower_Coefficient", 3800],
+      ["AttackPower_Coefficient", 1000]
+    ],
+    [
+      ["HealPower_Coefficient", 4000],
+      ["AttackPower_Coefficient", 1400]
+    ],
+    [
+      ["HealPower_Coefficient", 4200],
+      ["AttackPower_Coefficient", 1800]
+    ]
+  ]
+}

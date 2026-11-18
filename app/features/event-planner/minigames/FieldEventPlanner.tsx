@@ -570,7 +570,7 @@ export const FieldEventPlanner = ({ eventId, eventData, iconData, onCalculate, r
         {/* ── RESULT SUMMARY ── */}
         {displayResult && (Object.keys(displayResult.cost ?? {}).length > 0 || Object.keys(displayResult.rewards).length > 0) && (
           <div className="pt-4 border-t dark:border-neutral-700 space-y-3">
-            <h3 className="font-bold text-base dark:text-neutral-200">{t('resultTitle')}</h3>
+            <h3 className="font-bold text-base dark:text-neutral-200">{t_ui('calculationResult')}</h3>
             {displayResult.cost && Object.keys(displayResult.cost).length > 0 && (
               <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
                 <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2 text-sm">{t_p('clue_search.cost')}</h4>
@@ -586,7 +586,7 @@ export const FieldEventPlanner = ({ eventId, eventData, iconData, onCalculate, r
             )}
             {Object.keys(displayResult.rewards).length > 0 && (
               <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
-                <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2 text-sm">{t('rewards')}</h4>
+                <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2 text-sm">{t_ui('obtainedRewards')}</h4>
                 <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
                   {Object.entries(displayResult.rewards)
                     .filter(([, amount]) => amount > 0)

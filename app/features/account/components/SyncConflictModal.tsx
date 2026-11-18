@@ -1,12 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { LuDownload, LuTriangleAlert } from 'react-icons/lu';
 import { useSyncStore } from '~/store/syncStore';
 import { downloadFile } from '~/utils/downloadFile';
-import { getConflictStats, type ConflictStatKey } from '~/utils/profileDataStats';
+import { profileSummary, storageProfileSummary } from '~/utils/profileDataComparison';
 import { getRelativeTime } from '~/utils/time';
 import type { Locale } from '~/utils/i18n/config';
+
+import { getPersistenceConflicts, persistenceRevision, resolvePersistenceConflicts, subscribePersistence } from '~/store/history/localPersistence';
+
+function parseStoredValue(raw: string | null | undefined): unknown {
+  if (raw == null) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
 
 interface PayloadSize {
   raw: number;
@@ -27,22 +38,45 @@ export function SyncConflictModal() {
   const resolveConflict = useSyncStore((state) => state.resolveConflict);
   const serverButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const conflicts = Object.values(conflictsByKey);
+  const persistenceVersion = useSyncExternalStore(subscribePersistence, persistenceRevision, () => 0);
+  const tabConflicts = useMemo(
+    () =>
+      getPersistenceConflicts().map((entry) => ({
+        ...entry,
+        source: 'tab' as const,
+        id: `tab:${entry.key}`,
+        serverValue: parseStoredValue(entry.remoteValue),
+        localValue: parseStoredValue(entry.localValue),
+        serverUpdatedAt: null,
+        localUpdatedAt: null,
+      })),
+    [persistenceVersion],
+  );
+  // Resolve device writes first so an old failed draft cannot replace a chosen server version.
+  const conflicts = [...tabConflicts, ...Object.values(conflictsByKey).map((entry) => ({ ...entry, source: 'server' as const, id: `server:${entry.key}` }))];
   const conflict = conflicts[0];
   const [sizes, setSizes] = useState<{ key: string; server: PayloadSize; local: PayloadSize } | null>(null);
+  const [now, setNow] = useState(Date.now);
+
+  useEffect(() => {
+    if (!conflict) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(timer);
+  }, [conflict?.id]);
 
   useEffect(() => {
     if (!conflict) return;
     let cancelled = false;
     Promise.all([measurePayload(conflict.serverValue), measurePayload(conflict.localValue)])
       .then(([server, local]) => {
-        if (!cancelled) setSizes({ key: conflict.key, server, local });
+        if (!cancelled) setSizes({ key: conflict.id, server, local });
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [conflict?.key, conflict?.serverValue, conflict?.localValue]);
+  }, [conflict?.id, conflict?.serverValue, conflict?.localValue]);
 
   useEffect(() => {
     if (!conflict) return;
@@ -68,37 +102,35 @@ export function SyncConflictModal() {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', keepFocusInside);
     };
-  }, [conflict?.key]);
+  }, [conflict?.id]);
 
   if (!conflict || typeof document === 'undefined') return null;
 
-  const statLabels: Record<Exclude<ConflictStatKey, 'inventoryTotal'>, string> = {
-    students: t('settings.profiles.stats.students'),
-    equipmentPlans: t('settings.profiles.stats.equipmentPlans'),
-    resourceGoals: t('settings.profiles.stats.resourceGoals'),
-    gachaStrategies: t('settings.profiles.stats.gachaStrategies'),
-    gachaRecords: t('settings.profiles.stats.gachaRecords'),
-    eventPlans: t('settings.profiles.stats.eventPlans'),
-    raidRecords: t('settings.profiles.stats.raidRecords'),
+  const formatSummary = (value: unknown): string => (conflict.source === 'tab' ? storageProfileSummary : profileSummary)(conflict.key, value, t, i18n.language) || conflict.key;
+
+  const selectVersion = (side: 'server' | 'local') => {
+    if (conflict.source === 'tab') resolvePersistenceConflicts(side === 'server' ? 'remote' : 'local', conflict.key, conflict.remoteValue);
+    else resolveConflict(conflict.key, side);
   };
 
-  const formatSummary = (value: unknown): string => {
-    const summaries = getConflictStats(conflict.key, value).map((stat) => {
-      const formattedValue = stat.value.toLocaleString(i18n.language);
-      return stat.key === 'inventoryTotal' ? t('settings.profiles.stats.inventory', { total: formattedValue }) : `${statLabels[stat.key]} ${formattedValue}`;
-    });
-    return summaries.length > 0 ? summaries.join(' · ') : conflict.key;
-  };
-
-  const formatTime = (timestamp: number | null): string => {
+  const formatTime = (timestamp: number | null) => {
     if (!timestamp) return t('settings.profiles.conflictTimeUnknown');
-    return t('settings.profiles.conflictUpdated', { time: getRelativeTime(timestamp, i18n.language as Locale) });
+    const seconds = Math.max(0, Math.floor((now - timestamp) / 1_000));
+    const relative = seconds < 60 ? new Intl.RelativeTimeFormat(i18n.language, { numeric: 'always' }).format(-seconds, 'second') : getRelativeTime(timestamp, i18n.language as Locale);
+    const date = new Date(timestamp);
+    const exact = date.toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'medium' });
+    return (
+      <time dateTime={date.toISOString()} title={exact}>
+        {t('settings.profiles.conflictUpdated', { time: relative })}
+        <span className="mt-0.5 block tabular-nums">{exact}</span>
+      </time>
+    );
   };
 
   const formatKb = (bytes: number): string => `${(bytes / 1024).toLocaleString(i18n.language, { maximumFractionDigits: bytes < 10240 ? 1 : 0 })} KB`;
 
   const formatSize = (side: 'server' | 'local'): string | null => {
-    if (!sizes || sizes.key !== conflict.key) return null;
+    if (!sizes || sizes.key !== conflict.id) return null;
     const size = sizes[side];
     return size.gzip === null ? formatKb(size.raw) : `${formatKb(size.raw)} · gzip ${formatKb(size.gzip)}`;
   };
@@ -136,7 +168,9 @@ export function SyncConflictModal() {
           <section className="space-y-3 p-4">
             <div>
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">{t('settings.profiles.serverVersion')}</h3>
+                <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                  {t(conflict.source === 'tab' ? 'settings.profiles.otherTabVersion' : 'settings.profiles.serverVersion')}
+                </h3>
                 <button
                   type="button"
                   onClick={() => handleDownload(conflict.serverValue, 'server')}
@@ -154,8 +188,9 @@ export function SyncConflictModal() {
             <button
               ref={serverButtonRef}
               type="button"
-              onClick={() => resolveConflict(conflict.key, 'server')}
-              className="w-full border border-neutral-300 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+              onClick={() => selectVersion('server')}
+              disabled={conflict.source === 'tab' && conflict.remoteValue === undefined}
+              className="w-full disabled:cursor-not-allowed disabled:opacity-50 border border-neutral-300 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
             >
               {t('settings.profiles.useThisVersion')}
             </button>
@@ -164,7 +199,9 @@ export function SyncConflictModal() {
           <section className="space-y-3 p-4">
             <div>
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">{t('settings.profiles.deviceVersion')}</h3>
+                <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                  {t(conflict.source === 'tab' ? 'settings.profiles.thisTabVersion' : 'settings.profiles.deviceVersion')}
+                </h3>
                 <button
                   type="button"
                   onClick={() => handleDownload(conflict.localValue, 'local')}
@@ -181,7 +218,7 @@ export function SyncConflictModal() {
             </div>
             <button
               type="button"
-              onClick={() => resolveConflict(conflict.key, 'local')}
+              onClick={() => selectVersion('local')}
               className="w-full bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               {t('settings.profiles.useThisVersion')}

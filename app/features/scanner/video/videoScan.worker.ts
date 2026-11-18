@@ -8,9 +8,8 @@ import { InventoryVideoScanner, type VideoScanDeps } from './scanner';
 import type { VideoScanNotifier } from './types';
 import type { WorkerRequest, WorkerResponse } from './protocol';
 
-// Runs the video scan off the main thread. Models are loaded here too (from the HTTP cache) because ORT sessions can't be shared across threads.
-// Four-cell batches reduced ONNX calls from 4708 to 1744 (21s clip) and 578 to 163 (7.4s clip).
-// OCR and voting stay unchanged; repeated warm timings did not show a consistent total speedup.
+// Load worker-local models because ORT sessions cannot be shared across threads.
+// Classify four cells per batch to reduce ONNX calls.
 const deps: VideoScanDeps = { detect: detectCells, classify: (source, boxes, onMetrics) => classifyBatch(source, boxes, onMetrics, 4), readQuantities };
 
 let cancelled = false;

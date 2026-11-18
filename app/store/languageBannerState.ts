@@ -1,5 +1,3 @@
-// app/stores/languageBannerState.ts (new file)
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 

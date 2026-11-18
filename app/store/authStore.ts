@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { editHistory } from './history/history';
 import { getProfileServerLabel, PROFILE_SERVERS, type ProfileServer } from '~/utils/profileServer';
 
 export interface UserProfile {
@@ -83,7 +84,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  setUser: (user) => set({ user, error: null }),
+  setUser: (user) => {
+    if (get().user?.id !== user?.id) editHistory.clear();
+    set({ user, error: null });
+  },
   setActiveProfile: (profileId) => {
     const userId = get().user?.id;
     if (userId) localStorage.setItem(getActiveProfileStorageKey(userId), profileId);
@@ -93,6 +97,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setError: (error) => set({ error }),
 
   logout: () => {
+    editHistory.clear();
     set({ user: null, activeProfileId: null });
   },
 

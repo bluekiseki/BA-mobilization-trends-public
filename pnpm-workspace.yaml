@@ -3,5 +3,4 @@ allowBuilds:
   es5-ext: true
   esbuild: true
   protobufjs: true
-  sharp: true
   workerd: true

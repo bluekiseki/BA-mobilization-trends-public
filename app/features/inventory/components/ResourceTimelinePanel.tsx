@@ -94,7 +94,6 @@ export default function ResourceTimelinePanel({
   const isEligma = effectiveKey === 'Item_23';
   const isStudentEleph = !isEligma && getItemTypeFromKey(effectiveKey ?? '', iconInfos) === 'SecretStone';
   const eventIncomeItems = eventItemsByKey[effectiveKey ?? ''] ?? [];
-  const eventIncomeTotal = eventIncomeItems.reduce((s, e) => s + e.amount, 0);
 
   const hasGachaData = distEligma.length > 0;
   const getGachaEligmaPercentile = (pct: number) => getPercentileFromDist(distEligma, pct);
@@ -207,26 +206,6 @@ export default function ResourceTimelinePanel({
                 </Link>
                 {t('panel.noEventDataPost')}
               </p>
-            )}
-            {eventIncomeItems.length > 0 && (
-              <div className="space-y-2">
-                <span className={sectionLabelCls}>{t('panel.eventIncome')}</span>
-                <div className="space-y-0.5">
-                  {eventIncomeItems.map((ev, i) => (
-                    <div key={i} className="flex items-baseline gap-2 text-xs">
-                      <span className="flex-1 text-neutral-600 dark:text-neutral-300 truncate min-w-0" title={ev.name}>
-                        {ev.name}
-                      </span>
-                      <span className="text-neutral-400 dark:text-neutral-500 shrink-0 font-mono">{ev.date || '—'}</span>
-                      <span className="font-mono font-semibold text-neutral-700 dark:text-neutral-200 shrink-0">+{ev.amount}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-neutral-100 dark:border-neutral-800 pt-1 flex justify-between text-xs text-neutral-400 dark:text-neutral-500">
-                    <span>{t_ui('total')}</span>
-                    <span className="font-mono font-semibold">{eventIncomeTotal}</span>
-                  </div>
-                </div>
-              </div>
             )}
 
             {/* Contextual notes */}

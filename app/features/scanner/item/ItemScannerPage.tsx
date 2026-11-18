@@ -12,7 +12,7 @@ import type { ModelLoadPhase, ScanPhase, LogEntry, ScanEntry, ComparisonRow, Ico
 import type { PreviewFrame } from '~/features/scanner/video/types';
 import { MAX_VIDEO_DURATION_SECONDS } from '~/features/scanner/video/errors';
 import { makeInstanceKey } from '~/features/scanner/core/types';
-import { aggregateConfirmedQuantities } from '~/features/scanner/item/aggregateQuantities';
+import { aggregateConfirmedDetails } from '~/features/scanner/item/aggregateQuantities';
 import { ScanOverlayViewer } from './ScanOverlayViewer';
 import { LiveScanPreview } from './LiveScanPreview';
 import { FilteredResultsSection } from './FilteredResultsSection';
@@ -246,11 +246,11 @@ export function ItemScannerPage() {
           },
           signal: abort.signal,
           modelMessages: {
-            loadingData: t('loadingModelData'),
+            loadingData: t_ui('loadingModelData'),
             loadingCellDetector: t('loadingCellDetector'),
             loadingClassifier: t('loadingClassifier'),
             loadingOcr: t('loadingOcrModel'),
-            ready: t('loadReady'),
+            ready: t_ui('loadReady'),
           },
         });
         dispatch({ type: 'SCAN_RESULT', result });
@@ -403,7 +403,7 @@ function lookupCurrent(icon: IconEntry, inventoryKey: string, materialInventory:
 }
 
 /**
- * Sums confirmed cells within each file and takes the maximum file total per item.
+ * Combines duplicated cells within each file (summed or max per item kind) and takes the maximum file total per item.
  */
 function deriveComparisonRows(
   results: ScanEntry[],
@@ -414,7 +414,7 @@ function deriveComparisonRows(
 ): ComparisonRow[] {
   const iconByKey = new Map<string, IconEntry>();
   const maxConfidence: Record<string, number> = {};
-  const quantities = aggregateConfirmedQuantities(results, confirmedItems, editedValues);
+  const details = aggregateConfirmedDetails(results, confirmedItems, editedValues);
   const hasPositiveInstance = new Set<string>();
 
   for (const img of results) {
@@ -433,9 +433,10 @@ function deriveComparisonRows(
       inventoryKey,
       icon,
       current: lookupCurrent(icon, inventoryKey, materialInventory, ownedGifts),
-      scanned: quantities.get(inventoryKey) ?? 0,
-      edited: quantities.get(inventoryKey) ?? 0,
+      scanned: details.get(inventoryKey)?.total ?? 0,
+      edited: details.get(inventoryKey)?.total ?? 0,
+      duplicates: (details.get(inventoryKey)?.parts.length ?? 0) > 1 ? details.get(inventoryKey) : undefined,
       confidence: maxConfidence[inventoryKey] ?? 0,
-      confirmed: quantities.has(inventoryKey),
+      confirmed: details.has(inventoryKey),
     }));
 }

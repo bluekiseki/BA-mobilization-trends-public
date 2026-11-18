@@ -23,6 +23,7 @@ export interface IndexStory {
   p?: IndexPart[]; // parts, only when a story has more than one
   b?: string[]; // BGM (keys of StoryIndex.bgm)
   c?: string[]; // characters (keys of StoryIndex.chars), most lines first
+  v?: Record<string, string[]>; // speaker names per character when outfit variants speak (plain name included if it speaks too)
 }
 
 export interface IndexSeries {
@@ -41,5 +42,6 @@ export interface StoryIndex {
   stories: Record<string, IndexStory>;
   chars: Record<string, LocalizedText>;
   cs: Record<string, string>; // student id of the characters that are students (for portraits)
+  vs?: Record<string, string>; // student id of the outfit variant speaker names that are outfit students of their own
   bgm: Record<string, IndexBgm>;
 }

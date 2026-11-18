@@ -22,7 +22,7 @@ export interface VideoEntry {
   extraction_method?: string;
   /** Set by the merge loader; absent on legacy per-raid files. */
   videoId?: string;
-  /** Season the video was originally collected for. Differs from the viewed raid for JP reference videos. */
+  /** Season the video was originally collected for. Differs from the viewed raid for cross-server videos. */
   origin?: VideoOrigin;
   isReference?: boolean;
   /** True when only the remote dump knows this video (server/season match is not proven). */

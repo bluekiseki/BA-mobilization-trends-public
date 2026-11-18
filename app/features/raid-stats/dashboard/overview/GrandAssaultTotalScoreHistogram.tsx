@@ -6,6 +6,9 @@ import { CustomNumberInput } from '~/components/common/CustomInput';
 import { getBracketColorFromTotalScore, getBracketFromTotalScore, SCORE_BRACKETS } from '~/components/raid/Difficulty';
 import type { PlayerAnalysisData } from './types';
 import LegendChips from '../LegendChips';
+import { plotValues, yAxisConfig } from '../yScale';
+import type { YScale } from '../yScale';
+import ChartOptions from '../ChartOptions';
 import type { AnalysisHistogramQuery, AnalysisHistogramResult, CombinationStats, TierName } from '~/features/raid-stats/dashboard/types/eraidAnalysis';
 
 interface HistogramAnalysisProps {
@@ -39,6 +42,7 @@ export default function HistogramAnalysis({
   const { t } = useTranslation('dashboard');
   const { t: t_ui } = useTranslation('ui');
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [yScale, setYScale] = useState<YScale>('linear');
 
   const [histFilter, setHistFilter] = useState({
     rankMin: 1,
@@ -221,16 +225,33 @@ export default function HistogramAnalysis({
   }, [actualSelection?.combination, actualTier, actualBracket, histFilter, currentBinSize, calculatedScoreMin, bracketVisibility, onHistogramQuery]);
   const displayedHistogram = useMemo(() => {
     const actualBins = new Map(actualHistogram?.combination === actualSelection?.combination ? actualHistogram?.bins.map((bin) => [bin.binStart, bin]) : []);
-    return histogramData.map((bin) => {
+    const actualCounts = histogramData.map((bin) => actualBins.get(bin.binStart)?.count ?? 0);
+    const plots = plotValues(
+      histogramData.map((bin) => bin.count),
+      yScale,
+    );
+    const actualPlots = plotValues(actualCounts, yScale);
+    return histogramData.map((bin, i) => {
       const actual = actualBins.get(bin.binStart);
       return {
         ...bin,
-        actualCount: actual?.count ?? 0,
+        plot: plots[i],
+        actualPlot: actualPlots[i],
+        actualCount: actualCounts[i],
         actualScoreRange: actual ? `${actual.scoreMin.toLocaleString()} ~ ${actual.scoreMax.toLocaleString()}` : '-',
         actualRankRange: actual ? `${actual.rankMin.toLocaleString()} — ${actual.rankMax.toLocaleString()}` : '-',
       };
     });
-  }, [histogramData, actualHistogram, actualSelection?.combination]);
+  }, [histogramData, actualHistogram, actualSelection?.combination, yScale]);
+
+  const yAxis = useMemo(
+    () =>
+      yAxisConfig(
+        histogramData.map((bin) => bin.count),
+        yScale,
+      ),
+    [histogramData, yScale],
+  );
 
   // Bins overlapping the selected combination's score range, for the highlight band (bins are in descending score order).
   const highlightRange = useMemo(() => {
@@ -247,6 +268,16 @@ export default function HistogramAnalysis({
     const present = new Set(allPlayers.map((p) => getBracketFromTotalScore(p.totalScore)));
     return SCORE_BRACKETS.filter((b) => DEFAULT_VISIBLE_BRACKETS.includes(b.name) && present.has(b.name));
   }, [allPlayers]);
+
+  // Players per bracket within the current rank/score range.
+  const bracketCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const player of rangeFilteredPlayers) {
+      const name = getBracketFromTotalScore(player.totalScore);
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return counts;
+  }, [rangeFilteredPlayers]);
 
   // --- UI Handlers ---
   const handleSelectAllBrackets = () => {
@@ -314,7 +345,8 @@ export default function HistogramAnalysis({
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 justify-between items-center mb-2">
         <h3 className="font-bold text-lg">{t('scoreDistribution')}</h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ChartOptions yScale={yScale} onYScaleChange={setYScale} />
           <button
             onClick={() => setIsSettingsVisible(!isSettingsVisible)}
             className="text-sm px-3 py-1 rounded-md bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
@@ -342,6 +374,7 @@ export default function HistogramAnalysis({
             key: b.name,
             label: b.name,
             color: b.fill,
+            count: bracketCounts.get(b.name) ?? 0,
             active: bracketVisibility[b.name] ?? true,
             onClick: () => setBracketVisibility((p) => ({ ...p, [b.name]: !(p[b.name] ?? true) })),
           })),
@@ -362,18 +395,18 @@ export default function HistogramAnalysis({
               tickFormatter={(value: number) => `${(value / 1_000_000).toFixed(2)}M`}
               style={{ fontSize: '11px' }}
             />
-            <YAxis allowDecimals={false} width={36} tickFormatter={(v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(v))} style={{ fontSize: '11px' }} />
+            <YAxis allowDecimals={false} width={36} domain={yAxis.domain} ticks={yAxis.ticks} tickFormatter={yAxis.tickFormatter} style={{ fontSize: '11px' }} />
             {highlightRange && (
               <ReferenceArea x1={highlightRange.x1} x2={highlightRange.x2} fill="#a3a3a3" fillOpacity={0.2} stroke="#a3a3a3" strokeOpacity={0.7} strokeDasharray="4 3" ifOverflow="visible" />
             )}
             <Tooltip content={<HistogramTooltip />} cursor={{ fill: 'rgba(150, 150, 150, 0.1)' }} allowEscapeViewBox={{ x: false, y: true }} wrapperStyle={{ zIndex: 50 }} />
             <Bar
-              dataKey="count"
+              dataKey="plot"
               name={t('playerCount')}
               shape={(props: BarShapeProps) => {
-                const entry = props.payload as { color?: string; count: number; actualCount: number };
+                const entry = props.payload as { color?: string; plot: number; actualPlot: number; actualCount: number };
                 const height = props.height || 0;
-                const selectedHeight = entry.actualCount > 0 ? Math.min(height, Math.max(2, (height * entry.actualCount) / entry.count)) : 0;
+                const selectedHeight = entry.actualCount > 0 ? Math.min(height, Math.max(2, (height * entry.actualPlot) / entry.plot)) : 0;
                 return (
                   <g>
                     <rect x={props.x} y={props.y} width={props.width} height={props.height} fill={entry?.color || '#8884d8'} opacity={actualSelection ? 0.25 : 1} />

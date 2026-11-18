@@ -8,7 +8,7 @@ mod stats;
 mod strategy;
 
 use pool::GachaPools;
-use simulation::{run_charge_chunk, run_chunk, run_strategies_chunk, Rng, TicketBatch};
+use simulation::{run_charge_chunk, run_chunk, run_strategies_chunk_with_charge, Rng, TicketBatch};
 use wasm_bindgen::prelude::*;
 
 use crate::stats::WasmStats;
@@ -84,6 +84,8 @@ pub fn simulate_strategies_chunk(
     initial_owned_ids: &[u32],
     ticket_batches_json: &str,
     consume_expiring_tickets: bool,
+    initial_charge_normal: u32,
+    initial_charge_limited: u32,
 ) -> String {
     let strategies: Vec<strategy::BannerStrategy> = match serde_json::from_str(strategies_json) {
         Ok(v) => v,
@@ -108,7 +110,7 @@ pub fn simulate_strategies_chunk(
     };
 
     let mut rng = Rng::new(rng_seed);
-    let result = run_strategies_chunk(
+    let result = run_strategies_chunk_with_charge(
         &strategies,
         &banner_pools,
         sim_count,
@@ -116,6 +118,8 @@ pub fn simulate_strategies_chunk(
         initial_owned_ids,
         &ticket_batches,
         consume_expiring_tickets,
+        initial_charge_normal,
+        initial_charge_limited,
     );
 
     match serde_json::to_string(&result) {

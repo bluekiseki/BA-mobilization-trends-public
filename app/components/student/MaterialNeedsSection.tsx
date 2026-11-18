@@ -2,6 +2,11 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
 import { ItemIcon } from '../item/Icon';
+import { MaterialItemTable } from '../item/MaterialItemTable';
+import { MaterialLevelToggle, type MaterialDetailLevel } from '../item/MaterialLevelToggle';
+import { buildMaterialRows } from '~/utils/materialTable';
+import type { Locale } from '~/utils/i18n/config';
+import { isCoveredByIncome, type IncomeByKey } from '~/utils/itemOutlook';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { groupMaterialNeeds, FUNGIBLE_POOLS, computeSubPoolXp, compactSubPool } from '~/utils/groupMaterialNeeds';
 import { localeLink } from '~/utils/localeLink';
@@ -18,6 +23,8 @@ interface MaterialNeedsSectionProps {
   // this screen agrees with the inventory goal-comparison summary. Falls back to the plain
   // (bonus-unaware) badge when omitted, e.g. for callers with no per-student weapon type context.
   uwSummary?: UwXpResult;
+  // Expected income; when given, shortages it covers turn amber.
+  incomeByKey?: IncomeByKey;
 }
 
 export const CATEGORY_I18N: Record<string, string> = {
@@ -69,6 +76,7 @@ interface NeedsGridProps {
   sortByDeficit?: boolean;
   showFulfillmentBadge?: boolean;
   uwSummary?: UwXpResult;
+  incomeByKey?: IncomeByKey;
 }
 
 export const NeedsGrid = ({
@@ -83,6 +91,7 @@ export const NeedsGrid = ({
   sortByDeficit = false,
   showFulfillmentBadge = false,
   uwSummary,
+  incomeByKey,
 }: NeedsGridProps) => {
   const { t } = useTranslation(['planner', 'game']);
   const tStr = t as (k: string) => string;
@@ -224,7 +233,17 @@ export const NeedsGrid = ({
                     <span className={`text-[10px] font-bold ${RARITY_TEXT[rarity] ?? 'text-neutral-400'}`}>{RARITY_LABEL[rarity] ?? `Rarity ${rarity}`}</span>
                     <div className={`flex flex-wrap ${gap} mt-1`}>
                       {rItems.map(({ key, amount }) => (
-                        <NeedsItem key={key} itemKey={key} amount={amount} materialInventory={materialInventory} eventData={eventData} iconData={iconData} iconSize={iconSize} rarity={rarity} />
+                        <NeedsItem
+                          key={key}
+                          itemKey={key}
+                          amount={amount}
+                          materialInventory={materialInventory}
+                          eventData={eventData}
+                          iconData={iconData}
+                          iconSize={iconSize}
+                          rarity={rarity}
+                          incomeByKey={incomeByKey}
+                        />
                       ))}
                     </div>
                   </div>
@@ -242,6 +261,7 @@ export const NeedsGrid = ({
                     iconData={iconData}
                     iconSize={iconSize}
                     rarity={getItemRarity(key, eventData.icons)}
+                    incomeByKey={incomeByKey}
                   />
                 ))}
               </div>
@@ -261,34 +281,60 @@ interface NeedsItemProps {
   iconData: IconData;
   iconSize: number;
   rarity: number;
+  incomeByKey?: IncomeByKey;
 }
 
-const NeedsItem = ({ itemKey, amount, materialInventory, eventData, iconData, iconSize /*, rarity*/ }: NeedsItemProps) => {
+const NeedsItem = ({ itemKey, amount, materialInventory, eventData, iconData, iconSize, incomeByKey }: NeedsItemProps) => {
+  const { i18n } = useTranslation('planner');
+  const location = useLocation();
   const [type, id] = itemKey.split('_');
   const owned = materialInventory[itemKey] ?? 0;
   const deficit = amount - owned;
   const hasInventoryData = Object.keys(materialInventory).length > 0;
-  return (
-    <div className="flex flex-col items-center gap-0.5">
+  const tracked = !!incomeByKey && hasInventoryData;
+  const deficitColor = tracked && isCoveredByIncome(deficit, incomeByKey[itemKey]) ? 'text-amber-500' : 'text-red-500';
+  const content = (
+    <>
       <ItemIcon type={type} itemId={id} amount={amount} size={iconSize} eventData={eventData} iconData={iconData} />
       {hasInventoryData && (
-        <span className={`text-xs font-semibold leading-none ${deficit > 0 ? 'text-red-500' : deficit < 0 ? 'text-green-500' : 'text-neutral-400 dark:text-neutral-500'}`}>
+        <span className={`text-xs font-semibold leading-none ${deficit > 0 ? deficitColor : deficit < 0 ? 'text-green-500' : 'text-neutral-400 dark:text-neutral-500'}`}>
           {deficit > 0 ? `−${deficit}` : deficit < 0 ? `+${-deficit}` : '✓'}
         </span>
       )}
-    </div>
+    </>
+  );
+  if (!tracked || deficit <= 0) return <div className="flex flex-col items-center gap-0.5">{content}</div>;
+  // The inventory page already has the timeline chart, event income log and farming stages for a selected item.
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const to = `${localeLink(i18n.language, '/planner/inventory')}?item=${itemKey}&showTarget=1&returnTo=${encodeURIComponent(returnTo)}`;
+  return (
+    <Link to={to} className="flex flex-col items-center gap-0.5">
+      {content}
+    </Link>
   );
 };
 
-export const MaterialNeedsSection = ({ calculatedNeeds, eventData, iconData, title, uwSummary }: MaterialNeedsSectionProps) => {
+export const MaterialNeedsSection = ({ calculatedNeeds, eventData, iconData, title, uwSummary, incomeByKey }: MaterialNeedsSectionProps) => {
   const { materialInventory } = useGlobalStore();
   const { t, i18n } = useTranslation('planner');
+  const { t: tUi } = useTranslation('ui');
   const location = useLocation();
 
   // 'id' keeps each material series (T1..T4) together; 'rarity' lists all top-tier items first.
   const [sortBy, setSortBy] = useState<'rarity' | 'id'>('id');
+  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [level, setLevel] = useState<MaterialDetailLevel>('total');
+  const locale = i18n.language as Locale;
+  const rows = useMemo(() => buildMaterialRows({ needs: calculatedNeeds, inventory: materialInventory, incomeByKey }), [calculatedNeeds, materialInventory, incomeByKey]);
 
   const groups = useMemo(() => groupMaterialNeeds(calculatedNeeds), [calculatedNeeds]);
+  // Fungible pools (reports etc.) render as carry-up totals and never use the amber state.
+  const hasCovered = useMemo(
+    () =>
+      !!incomeByKey &&
+      groups.some(({ categoryKey, items }) => !FUNGIBLE_POOLS[categoryKey] && items.some(({ key, amount }) => isCoveredByIncome(amount - (materialInventory[key] ?? 0), incomeByKey[key]))),
+    [incomeByKey, groups, materialInventory],
+  );
   if (groups.length === 0) return null;
 
   const sectionTitle = title ?? t('label.materialsForCurrentEvent');
@@ -301,6 +347,26 @@ export const MaterialNeedsSection = ({ calculatedNeeds, eventData, iconData, tit
         <h3 className="font-bold dark:text-neutral-200">{sectionTitle}</h3>
         <div className="flex items-center gap-2">
           <div className="flex text-xs rounded border border-neutral-400 dark:border-neutral-600 overflow-hidden">
+            {(
+              [
+                ['grid', t('materialTable.view.grid')],
+                ['table', tUi('table')],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setView(value)}
+                aria-pressed={view === value}
+                className={`px-2 py-1 transition-colors ${
+                  view === value ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className={`flex text-xs rounded border border-neutral-400 dark:border-neutral-600 overflow-hidden ${view === 'table' ? 'hidden' : ''}`}>
             {(
               [
                 ['id', t('inventory.sortByType')],
@@ -331,20 +397,33 @@ export const MaterialNeedsSection = ({ calculatedNeeds, eventData, iconData, tit
         </div>
       </div>
 
-      <div className="overflow-y-auto max-h-72 p-3 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg space-y-2">
-        <NeedsGrid
-          groups={groups}
-          materialInventory={materialInventory}
-          eventData={eventData}
-          iconData={iconData}
-          iconSize={12}
-          gap="gap-2"
-          subgroupRarity={false}
-          sortBy={sortBy}
-          showFulfillmentBadge
-          uwSummary={uwSummary}
-        />
-      </div>
+      {view === 'table' ? (
+        <div className="space-y-2">
+          <MaterialLevelToggle value={level} onChange={setLevel} className="ml-auto w-fit" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 overflow-y-auto max-h-[36rem]">
+            {rows.map((row) => (
+              <MaterialItemTable key={row.key} row={row} eventData={eventData} iconData={iconData} locale={locale} level={level} />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-y-auto max-h-72 p-3 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg space-y-2">
+          <NeedsGrid
+            groups={groups}
+            materialInventory={materialInventory}
+            eventData={eventData}
+            iconData={iconData}
+            iconSize={12}
+            gap="gap-2"
+            subgroupRarity={false}
+            sortBy={sortBy}
+            showFulfillmentBadge
+            uwSummary={uwSummary}
+            incomeByKey={incomeByKey}
+          />
+        </div>
+      )}
+      {hasCovered && <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('itemOutlook.legendCovered')}</p>}
     </div>
   );
 };

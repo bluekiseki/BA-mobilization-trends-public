@@ -1,7 +1,7 @@
 import { useState, type Dispatch, type SetStateAction, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaChevronDown, FaTrash } from 'react-icons/fa';
-import { PVP_REWARDS, type PlannerSchedule, type PyroxeneConfig, type ManualTicketBatchInput, type CustomIncome } from '~/utils/pyroxeneCalc';
+import { PVP_REWARDS, clampCharge, type PlannerSchedule, type PyroxeneConfig, type ManualTicketBatchInput, type CustomIncome } from '~/utils/pyroxeneCalc';
 import { getEraidTicketExpiry } from '~/utils/gachaRules';
 import { NumberFieldV3, SelectFieldV3, ToggleV3 } from './FieldsV3';
 import { updatePermanentTickets } from './plannerStateV3';
@@ -88,6 +88,22 @@ export default function IncomeSettingsPanelV3({ config, setConfig, schedules, ch
               unit={unitSheets}
               value={permanent('ticket10Count')}
               onChange={(value) => setPermanent('ticket10Count', value)}
+            />
+            <NumberFieldV3
+              className="v3-resource-field"
+              label={tp('gacha.v3.settings.charge_normal')}
+              unit={tp('gacha.v3.settings.charge_unit')}
+              value={config.chargeNormal ?? 0}
+              max={199}
+              onChange={(value) => set({ chargeNormal: clampCharge(value) })}
+            />
+            <NumberFieldV3
+              className="v3-resource-field"
+              label={tp('gacha.v3.settings.charge_limited')}
+              unit={tp('gacha.v3.settings.charge_unit')}
+              value={config.chargeLimited ?? 0}
+              max={199}
+              onChange={(value) => set({ chargeLimited: clampCharge(value) })}
             />
           </div>
           <SelectFieldV3 label={tp('gacha.income.settings.raid_title')} value={config.raidRank} onChange={(value) => set({ raidRank: value as PyroxeneConfig['raidRank'] })}>

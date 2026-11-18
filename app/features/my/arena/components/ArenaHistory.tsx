@@ -3,7 +3,6 @@ import { HiOutlineArrowDownTray, HiOutlineArrowUpTray, HiOutlineTrash } from 're
 import { downloadFile } from '~/utils/downloadFile';
 import { ARENA_HISTORY_EXPORT_VERSION } from '~/features/my/common/historyJsonExchange';
 import { arenaSeasonImportSchema } from '~/features/my/arena/scan/schema';
-import type { PortraitData } from '~/types/raidReport';
 import type { Student } from '~/types/plannerData';
 import type { ArenaRecord, ArenaRole, ArenaTeam } from '~/features/my/arena/types';
 import { isEmptyQuery, matchesQuery, type ArenaQuery } from '~/features/my/arena/scan/records';
@@ -13,7 +12,6 @@ import { ArenaTeamRow, RoleIcon, StudentPortrait, TeamHeader, wonRowTint } from 
 interface Props {
   query: ArenaQuery;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: string;
   // Search with one team of a battle: which side it was on and my role in that battle.
   onUseTeam: (team: ArenaTeam, side: 'me' | 'opponent', battle: ArenaRole) => void;
@@ -23,7 +21,7 @@ const BUTTON = 'inline-flex items-center gap-2 rounded border px-3 py-1.5 text-s
 const BUTTON_IDLE = 'border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800';
 
 // Saved battles of the selected season, newest first, narrowed by the same query as the opponent search.
-export function ArenaHistory({ query, students, portraitData, locale, onUseTeam }: Props) {
+export function ArenaHistory({ query, students, locale, onUseTeam }: Props) {
   const records = useArenaHistoryStore((s) => s.records);
   const seasonKey = useArenaHistoryStore((s) => s.seasonKey);
   const deleteRecord = useArenaHistoryStore((s) => s.deleteRecord);
@@ -161,7 +159,6 @@ export function ArenaHistory({ query, students, portraitData, locale, onUseTeam 
             key={r.id}
             record={r}
             students={students}
-            portraitData={portraitData}
             date={formatDate(r.capturedAt)}
             onDelete={() => void deleteRecord(r.id)}
             onUseTeam={(side) => onUseTeam(side === 'me' ? r.me : r.opponent, side, r.role)}
@@ -237,13 +234,13 @@ export function battleSides(record: ArenaRecord) {
   return iAttacked ? { attack: mine, defense: theirs } : { attack: theirs, defense: mine };
 }
 
-export function OpponentName({ record, students, portraitData }: { record: ArenaRecord; students: Record<string, Student>; portraitData: PortraitData }) {
+export function OpponentName({ record, students }: { record: ArenaRecord; students: Record<string, Student> }) {
   const avatarId = record.opponent.avatarId;
   return (
     <span className="flex min-w-0 items-center gap-1">
       {avatarId !== null && (
         <span className="w-5 shrink-0">
-          <StudentPortrait id={avatarId} portraitData={portraitData} name={students[String(avatarId)]?.Name} />
+          <StudentPortrait id={avatarId} name={students[String(avatarId)]?.Name} />
         </span>
       )}
       {record.opponent.nickname && (
@@ -258,14 +255,12 @@ export function OpponentName({ record, students, portraitData }: { record: Arena
 function RecordRow({
   record,
   students,
-  portraitData,
   date,
   onDelete,
   onUseTeam,
 }: {
   record: ArenaRecord;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   date: string;
   onDelete: () => void;
   onUseTeam: (side: 'me' | 'opponent') => void;
@@ -278,14 +273,8 @@ function RecordRow({
           const t = sides[role];
           return (
             <div key={role} className="min-w-0">
-              <TeamHeader
-                role={role}
-                won={t.side === 'me' ? t.won : undefined}
-                side={t.side}
-                name={<OpponentName record={record} students={students} portraitData={portraitData} />}
-                onSearch={() => onUseTeam(t.side)}
-              />
-              <ArenaTeamRow team={t.team} students={students} portraitData={portraitData} />
+              <TeamHeader role={role} won={t.side === 'me' ? t.won : undefined} side={t.side} name={<OpponentName record={record} students={students} />} onSearch={() => onUseTeam(t.side)} />
+              <ArenaTeamRow team={t.team} students={students} />
             </div>
           );
         })}

@@ -126,6 +126,29 @@ export const calculateBlueprintCost = (equipmentTier: number): number => {
   return tierReplacementCosts[equipmentTier - 1] || 0;
 };
 
+/**
+ * Universal blueprints are spent first on the gear still missing after the owned copies. Lower tiers come first
+ * so the same blueprints close as many items as possible. Only gear a blueprint actually covers gets an override.
+ */
+export function applyUniversalBlueprints(displayInventory: Record<string, number>, needed: Record<string, number>, deficitByKey: Record<string, number>, diffByKey: Record<string, number>) {
+  for (const [type, ids] of Object.entries(equipmentId)) {
+    let blueprints = displayInventory[`Equipment_${equipmentTypeToBlueprint[type]}`] ?? 0;
+    if (blueprints <= 0) continue;
+    for (const [index, id] of ids.entries()) {
+      const key = `Equipment_${id}`;
+      const owned = displayInventory[key] ?? 0;
+      const missing = Math.max(0, (needed[key] ?? 0) - owned);
+      const cost = calculateBlueprintCost(index + 1);
+      if (missing <= 0 || cost <= 0) continue;
+      const covered = Math.min(missing, Math.floor(blueprints / cost));
+      if (covered <= 0) continue;
+      blueprints -= covered * cost;
+      deficitByKey[key] = missing - covered;
+      diffByKey[key] = owned + covered - (needed[key] ?? 0);
+    }
+  }
+}
+
 export const getMaxTier = (stage: FarmingStage): number => {
   let max = 0;
   for (const dropKey of Object.keys(stage.drops)) {

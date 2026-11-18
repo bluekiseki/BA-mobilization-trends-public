@@ -96,7 +96,7 @@ export function FilteredResultsSection({ rows, finalOverrides, returnTo, onEditF
     <div>
       {/* Category filter tags */}
       <div className="flex flex-wrap items-center gap-1 mb-2 sm:gap-1.5 sm:mb-3">
-        <span className="text-xs text-neutral-500 mr-0.5">{t('filterLabel')}</span>
+        <span className="text-xs text-neutral-500 mr-0.5">{t_ui('filter')}</span>
         <button
           onClick={() => setActiveCats(null)}
           className={[

@@ -23,7 +23,7 @@ export default function PyroTimelineChartV3({ probTimeline, customLines = [], cu
   const { t: t_ui } = useTranslation('ui');
   const { t: t_game } = useTranslation('game');
   const { t: tp } = useTranslation('planner');
-  const t_dynamic = t as (key: string, options?: Record<string, string | number>) => string;
+
   const [showDetails, setShowDetails] = useState(false);
   const [showPercentileForm, setShowPercentileForm] = useState(false);
   const [newPercentileInput, setNewPercentileInput] = useState('');
@@ -33,8 +33,8 @@ export default function PyroTimelineChartV3({ probTimeline, customLines = [], cu
   const logDescription = (log: LogEntry) => {
     if (log.i18nKey === 'log.multifloor' && log.params?.name != null) return String(log.params.name);
     if (!log.i18nKey) return log.title ?? '';
-    if (!log.params) return t_dynamic(log.i18nKey);
-    return t_dynamic(log.i18nKey, log.params);
+    if (!log.params) return t(log.i18nKey);
+    return t(log.i18nKey, log.params);
   };
   const logGroup = (log: LogEntry) => {
     if (log.i18nKey === 'log.multifloor') return 'game:multifloor';
@@ -53,7 +53,6 @@ export default function PyroTimelineChartV3({ probTimeline, customLines = [], cu
     if (log.i18nKey === 'log.event') return t_game('event');
     if (log.i18nKey === 'log.fixed_daily' || log.i18nKey === 'log.fixed_daily_sunday') return t('log.fixed_daily');
     if (log.i18nKey === 'log.mainstory' || log.i18nKey === 'log.ministory') return t_game('story');
-    if (log.i18nKey === 'log.mainstory') return t('stats.items.mainstory');
     if (log.i18nKey === 'log.monthly_extra') return t('stats.items.monthly');
     if (log.i18nKey === 'log.ap_refresh') return t('stats.items.ap_refresh');
     if (log.i18nKey === 'log.term_ticket_acquired' || log.i18nKey === 'log.term_ticket_acquired_expiry' || log.i18nKey === 'log.term_ticket_expired') return t('settings.ticket_batches_title');
@@ -72,7 +71,7 @@ export default function PyroTimelineChartV3({ probTimeline, customLines = [], cu
       const log = probTimeline.flatMap((point) => point.logs).find((entry) => logGroup(entry) === id);
       return { id, name: log ? logGroupName(log) : id, total };
     });
-  }, [probTimeline, t_dynamic]);
+  }, [probTimeline, t]);
 
   const handleAddPercentile = () => {
     const val = Number(newPercentileInput);

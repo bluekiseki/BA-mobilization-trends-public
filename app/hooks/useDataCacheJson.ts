@@ -5,7 +5,7 @@ import JsonProcessorWorker from '../workers/jsonProcessor.worker?worker';
 /**
  * A dedicated custom hook for fetching, processing, and caching JSON data.
  * Uses a Web Worker to handle the entire process in the background:
- * fetch > XOR > XZ decompression > JSON parsing,
+ * fetch > XOR > gzip decompression > JSON parsing,
  * and stores the deserialized object in the cache.
  * * @returns A memoized `fetchAndCacheJson` function.
  */

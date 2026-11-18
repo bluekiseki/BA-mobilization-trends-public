@@ -13,11 +13,13 @@
     "breakthrough": "突破演習",
     "escort": "護衛演習"
   },
+  "tacticalRelay": "仮想適性試験",
   "tacticalChallenge": "戦術対抗戦",
   "expertPermit": "熟達証書",
   "event": "イベント",
   "schedule": "スケジュール",
   "difficulty": "難易度",
+  "boss_armor_type": "ボス防御タイプ",
   "difficulties": {
     "lunatic": "LUNATIC",
     "torment": "TORMENT",

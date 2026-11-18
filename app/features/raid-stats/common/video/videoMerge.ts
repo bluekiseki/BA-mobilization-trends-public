@@ -2,7 +2,7 @@ import type { VideoEntry, VideoOrigin } from './types';
 
 export type DataServer = 'jp' | 'gl';
 export type WebServer = 'jp' | 'kr';
-export type VideoScope = 'all' | 'current' | 'reference';
+export type VideoScope = 'all' | 'current' | 'reference' | 'none';
 
 /** The web uses `kr`; stored data and the Worker use `gl`. Convert only at the loading boundary. */
 export const toDataServer = (server: WebServer): DataServer => (server === 'kr' ? 'gl' : 'jp');
@@ -132,7 +132,7 @@ export function markReference(videos: VideoEntry[]): VideoEntry[] {
 }
 
 /**
- * Combine this season's videos with linked JP reference videos. A video that exists in both
+ * Combine this season's videos with linked cross-server videos. A video that exists in both
  * is kept as a direct (current) video so reference status never hides a direct match.
  */
 export function combineScopes(current: VideoEntry[], reference: VideoEntry[]): VideoEntry[] {
@@ -142,10 +142,17 @@ export function combineScopes(current: VideoEntry[], reference: VideoEntry[]): V
 }
 
 export function matchesScope(video: VideoEntry, scope: VideoScope): boolean {
+  if (scope === 'none') return false;
   if (scope === 'all') return true;
   return scope === 'reference' ? video.isReference === true : video.isReference !== true;
 }
 
 export function findJpReference(links: RaidLink[], glRaidId: string): string | null {
   return links.find((link) => link.gl === glRaidId)?.jp ?? null;
+}
+
+/** Resolve explicit cross-server links in either direction, retaining every linked season. */
+export function findLinkedSeasons(links: RaidLink[], origin: VideoOrigin): VideoOrigin[] {
+  const ids = links.flatMap((link) => (origin.server === 'jp' ? (link.jp === origin.raidId ? [link.gl] : []) : link.gl === origin.raidId ? [link.jp] : []));
+  return [...new Set(ids)].map((raidId) => ({ server: origin.server === 'jp' ? 'kr' : 'jp', raidId }));
 }

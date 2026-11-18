@@ -106,6 +106,8 @@ interface InventoryFilterBarProps {
   onToggleMatrix: () => void;
   groupByStudent: boolean;
   onToggleGroupByStudent: () => void;
+  showTable: boolean;
+  onToggleTable: () => void;
   // School/role/squad apply to any entry carrying that attribute (eleph always; school also
   // applies to BD/tech notes) — entries without the attribute simply bypass the filter.
   schoolOptions: CheckboxSelectOption<string>[];
@@ -153,6 +155,8 @@ export function InventoryFilterBar({
   onToggleMatrix,
   groupByStudent,
   onToggleGroupByStudent,
+  showTable,
+  onToggleTable,
   schoolOptions,
   selectedSchools,
   onChangeSchools,
@@ -228,7 +232,7 @@ export function InventoryFilterBar({
         </LabeledFilter>
         {matrixAvailable && (
           <ToggleButton active={showMatrix} onClick={onToggleMatrix}>
-            {showMatrix ? 'List' : t_planner('inventory.toggleMatrix')}
+            {showMatrix ? 'List' : t_ui('table')}
           </ToggleButton>
         )}
         <Link
@@ -237,7 +241,7 @@ export function InventoryFilterBar({
           className="text-xs px-2.5 py-1.5 rounded border whitespace-nowrap transition-colors flex items-center gap-1 border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
         >
           <RiCharacterRecognitionLine size={12} />
-          {t_planner('page.itemScanner')}
+          {t_planner('itemScanner.title')}
         </Link>
         <button
           type="button"
@@ -285,6 +289,9 @@ export function InventoryFilterBar({
                 </option>
               ))}
             </select>
+            <ToggleButton active={showTable} onClick={onToggleTable}>
+              {t_ui('table')}
+            </ToggleButton>
             <ToggleButton active={groupByStudent} onClick={onToggleGroupByStudent}>
               {t_resources('studentGoals.byStudent')}
             </ToggleButton>

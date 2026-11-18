@@ -799,6 +799,14 @@ export interface SimChunkAcc {
   successCount: number;
 }
 
+/** Recruit-charge stacks held before the first simulated banner (normal / limited counters). */
+export interface InitialCharge {
+  normal: number;
+  limited: number;
+}
+
+export const NO_INITIAL_CHARGE: InitialCharge = { normal: 0, limited: 0 };
+
 export interface WasmPayload {
   strategiesJson: string;
   bannerPoolsJson: string;
@@ -806,6 +814,8 @@ export interface WasmPayload {
   initialOwnedIds: number[];
   ticketBatchesJson: string;
   consumeExpiringTickets: boolean;
+  initialChargeNormal: number;
+  initialChargeLimited: number;
 }
 
 export const buildWasmPayload = (
@@ -816,6 +826,7 @@ export const buildWasmPayload = (
   initialTicketBatches: TicketBatch[] = [],
   consumeExpiringTickets: boolean = true,
   region: 'KR' | 'JP' = 'KR',
+  initialCharge: InitialCharge = NO_INITIAL_CHARGE,
 ): WasmPayload => {
   const activeStrategies = strategies.filter((s) => s.isActive);
   const releaseDateMap = preprocessReleaseDates(bannersMap);
@@ -898,6 +909,8 @@ export const buildWasmPayload = (
       })),
     ),
     consumeExpiringTickets,
+    initialChargeNormal: initialCharge.normal,
+    initialChargeLimited: initialCharge.limited,
   };
 };
 
@@ -1045,6 +1058,7 @@ export const runGlobalSimulation = (
   initialTicketBatches: TicketBatch[] = [],
   consumeExpiringTickets: boolean = true,
   region: 'KR' | 'JP' = 'KR',
+  initialCharge: InitialCharge = NO_INITIAL_CHARGE,
 ): GlobalAggregatedResult => {
   const { simCount } = config;
   // const pools = initializePools(allStudents);
@@ -1131,8 +1145,8 @@ export const runGlobalSimulation = (
       totalEligma: 0,
       totalPulls: 0,
       totalCost: 0,
-      chargeNormal: 0,
-      chargeLimited: 0,
+      chargeNormal: initialCharge.normal,
+      chargeLimited: initialCharge.limited,
       // Deep-copied per sim run since consumeTicketOrPyroxene mutates pullUnits in place.
       ticketPool: initialTicketBatches.map((b) => ({ pullUnits: b.pullUnits, expiresAt: b.expiresAt, availableFrom: b.availableFrom, fromGacha: false })),
       nonGachaTicketValueSpent: 0,

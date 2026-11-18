@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { isLarger, type GrowthPlan } from '../../store/planner/useGlobalStore';
+import { normalizePlan } from '~/utils/student/recruitState';
 
 interface SpreadsheetDraftState {
   draftPlans: GrowthPlan[];
@@ -45,7 +46,7 @@ export const useSpreadsheetDraftStore = create<SpreadsheetDraftState>((set, get)
             }
           }
 
-          // Ensure target >= current (always verified in all cases)
+          // Clamp targets to the current values.
           const currentVal = newPlan.current[sub as keyof typeof newPlan.current];
           const targetVal = newPlan.target[sub as keyof typeof newPlan.target];
 
@@ -75,7 +76,7 @@ export const useSpreadsheetDraftStore = create<SpreadsheetDraftState>((set, get)
             }
           }
 
-          return newPlan;
+          return normalizePlan(newPlan);
         }
         return p;
       });

@@ -1,6 +1,7 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import type { Student } from '~/types/data';
 import { InclusionUsage } from '../../../../types/raidReport';
-import type { ExcludableStudentCondition, IncludableStudentCondition, PortraitData, ReportStudentData, TableFilters, UsageStats } from '../../../../types/raidReport';
+import type { ExcludableStudentCondition, IncludableStudentCondition, ReportStudentData, TableFilters, UsageStats } from '../../../../types/raidReport';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StarRating } from '~/components/student/StarRating';
@@ -17,10 +18,9 @@ const StudentDropdownItem: React.FC<{
   usageStats: UsageStats;
   isExpanded: boolean;
   type: 'includable' | 'excludable';
-  portraitData: PortraitData;
   onToggleExpand: () => void;
   onAdd: (condition: IncludableStudentCondition | ExcludableStudentCondition) => void;
-}> = ({ studentId, student, usageStats, isExpanded, type, portraitData, onToggleExpand, onAdd }) => {
+}> = ({ studentId, student, usageStats, isExpanded, type, onToggleExpand, onAdd }) => {
   const [selectedStars, setSelectedStars] = useState<Set<number>>(new Set());
   const { t: t_c } = useTranslation('common');
   const { t: t_ui } = useTranslation('ui');
@@ -91,7 +91,7 @@ const StudentDropdownItem: React.FC<{
     <div className="border-t border-neutral-200 dark:border-neutral-700">
       <div onClick={onToggleExpand} className="p-2 hover:bg-teal-500/20 dark:hover:bg-teal-500/50 cursor-pointer flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <img className="h-6 w-6 rounded-full object-cover" src={`data:image/webp;base64,${portraitData[studentId]}`} alt={`${student.Name} portrait`} />
+          <SheetIcon sheet="student" id={studentId} alt={`${student.Name} portrait`} className="h-6 w-6 rounded-full" />
           <span className="font-bold text-neutral-800 dark:text-neutral-100">{student.Name}</span>
         </div>
         <span className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -183,8 +183,7 @@ const FilterConditionBuilder: React.FC<{
   onAdd: (condition: IncludableStudentCondition | ExcludableStudentCondition) => void;
   type: 'includable' | 'excludable';
   placeholderText: string;
-  portraitData: PortraitData;
-}> = ({ studentData, usageStats, onAdd, type, placeholderText, portraitData }) => {
+}> = ({ studentData, usageStats, onAdd, type, placeholderText }) => {
   const [searchText, setSearchText] = useState('');
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -242,7 +241,6 @@ const FilterConditionBuilder: React.FC<{
                   usageStats={usageStats}
                   isExpanded={expandedId === Number(id)}
                   type={type}
-                  portraitData={portraitData}
                   onToggleExpand={() => handleToggleExpand(Number(id))}
                   onAdd={handleAddCondition}
                 />
@@ -262,10 +260,9 @@ export const TableFilterPanelComponent: React.FC<{
   handleTableFilterChange: (filters: TableFilters) => void;
   studentData: ReportStudentData;
   usageStats: UsageStats;
-  portraitData: PortraitData;
   partyCountMin?: number;
   partyCountMax?: number;
-}> = ({ tableFilters, handleTableFilterChange, studentData, usageStats, portraitData, partyCountMin = 1, partyCountMax = 99 }) => {
+}> = ({ tableFilters, handleTableFilterChange, studentData, usageStats, partyCountMin = 1, partyCountMax = 99 }) => {
   const { t } = useTranslation('dashboard');
   const { t: t_ui } = useTranslation('ui');
   const { growthPlans } = useGlobalStore();
@@ -385,7 +382,7 @@ export const TableFilterPanelComponent: React.FC<{
 
     return (
       <div className="bg-neutral-200 text-neutral-700 dark:bg-neutral-600 dark:text-white px-1 pr-2 py-1 rounded-full flex items-center space-x-2 text-sm">
-        <img className="h-6 w-6 rounded-full object-cover" src={`data:image/webp;base64,${portraitData[cond.id]}`} alt={`${studentData[cond.id]?.Name} portrait`} />
+        <SheetIcon sheet="student" id={cond.id} alt={`${studentData[cond.id]?.Name} portrait`} className="h-6 w-6 rounded-full" />
         <span className="flex items-center">
           {studentData[cond.id]?.Name}
           {'starValues' in cond && cond.starValues.length > 0 && (
@@ -462,14 +459,7 @@ export const TableFilterPanelComponent: React.FC<{
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <h3 className="font-bold text-lg text-sky-600 dark:text-sky-300">{t('includableStudentTitle')}</h3>
-              <FilterConditionBuilder
-                studentData={studentData}
-                usageStats={usageStats}
-                onAdd={(c) => addCondition('includable', c)}
-                type="includable"
-                placeholderText={t('searchStudentByName')}
-                portraitData={portraitData}
-              />
+              <FilterConditionBuilder studentData={studentData} usageStats={usageStats} onAdd={(c) => addCondition('includable', c)} type="includable" placeholderText={t('searchStudentByName')} />
               <div className="flex flex-wrap gap-2 pt-2 min-h-10.5">
                 {tableFilters.includable.map((c) => (
                   <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('includable', c.id)} />
@@ -490,14 +480,7 @@ export const TableFilterPanelComponent: React.FC<{
                   </button>
                 )}
               </div>
-              <FilterConditionBuilder
-                studentData={studentData}
-                usageStats={usageStats}
-                onAdd={(c) => addCondition('excludable', c)}
-                type="excludable"
-                placeholderText={t('searchStudentByName')}
-                portraitData={portraitData}
-              />
+              <FilterConditionBuilder studentData={studentData} usageStats={usageStats} onAdd={(c) => addCondition('excludable', c)} type="excludable" placeholderText={t('searchStudentByName')} />
               <div className="flex flex-wrap gap-2 pt-2 min-h-10.5">
                 {tableFilters.excludable.map((c) => (
                   <ConditionTag key={c.id} cond={c} onRemove={() => removeCondition('excludable', c.id)} />

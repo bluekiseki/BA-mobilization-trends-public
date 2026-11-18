@@ -22,15 +22,19 @@ import { ToggleButtonGroup } from '../../../../components/common/ToggleButtonGro
 import type { Student } from '~/types/data';
 import { useTranslation } from 'react-i18next';
 import { difficultyInfo } from '../../../../components/raid/Difficulty';
+import { getBossTypeOptions, type BossTypeSelect } from '../bossType';
+import { RaidPicker, type RaidPickerOption } from '../ranking/RaidPicker';
 import { CheckboxSelect, type CheckboxSelectOption } from '../../../../components/common/CheckboxSelect';
 import type { Locale } from '~/utils/i18n/config';
 import { CustomNumberInput } from '../../../../components/common/CustomInput';
 import StudentProfileCard from '../StudentProfileCard';
 import { getCombatStyleGroupRosterIds, isCombatStyleMerged } from '~/utils/combatStyle';
+import { SheetIcon } from '~/components/common/SheetIcon';
 
 interface ChartControlsProps {
   students: Record<number, Student>;
-  portraitData: Record<number, string> | null;
+  // Hide the student picker and profile card when the host page already fixes the student
+  hideStudentPicker?: boolean;
 }
 
 const SliderComponent = ({
@@ -67,7 +71,7 @@ const SliderComponent = ({
   );
 };
 
-const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
+const ChartControls = ({ students, hideStudentPicker = false }: ChartControlsProps) => {
   const { t, i18n } = useTranslation('charts', {
     keyPrefix: 'heatmap.control',
   });
@@ -97,6 +101,8 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
     availableZValueCounter,
     selectedDifficulties,
     setSelectedDifficulties,
+    selectedBossTypes,
+    setSelectedBossTypes,
     getFilteredRaidInfoByDifficulty,
     combatStyleViewMode,
     setCombatStyleViewMode,
@@ -121,6 +127,8 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
       availableZValueCounter: state.availableZValueCounter,
       selectedDifficulties: state.selectedDifficulties,
       setSelectedDifficulties: state.setSelectedDifficulties,
+      selectedBossTypes: state.selectedBossTypes,
+      setSelectedBossTypes: state.setSelectedBossTypes,
       getFilteredRaidInfoByDifficulty: state.getFilteredRaidInfoByDifficulty,
       combatStyleViewMode: state.combatStyleViewMode,
       setCombatStyleViewMode: state.setCombatStyleViewMode,
@@ -128,6 +136,8 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
   );
 
   const [tempRankWidth, setTempRankWidth] = useState<number>(rankwidth);
+  // The slider is uncontrolled (defaultValue), so remount it when the range is set from a picker
+  const [sliderKey, setSliderKey] = useState(0);
   const xLabels = getFilteredRaidInfoByDifficulty();
   const formRosterIds = selectedStudentId && isCombatStyleMerged(selectedStudentId) ? getCombatStyleGroupRosterIds(selectedStudentId) : [];
 
@@ -136,9 +146,34 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
     return map;
   }, {});
 
+  const pickerOptions: RaidPickerOption[] = xLabels.map((raid, index) => ({
+    index,
+    text: `${raid.Id} ${raidToString(raid, locale, true)}`,
+    label: (
+      <>
+        <span className="font-bold text-blue-600 dark:text-blue-400">{raid.Id}</span> {raidToString(raid, locale, true)}
+      </>
+    ),
+  }));
+  const rangeStart = Math.max(fullXRange[0], xRange[0]);
+  const rangeEnd = Math.min(fullXRange[1], xRange[1]);
+  // Keep the range ordered by moving the opposite handle when the handles would cross
+  const pickRange = (start: number, end: number) => {
+    setXRange([start, end]);
+    setSliderKey((key) => key + 1);
+  };
+  const pickStart = (next: number) => pickRange(next, Math.max(next, rangeEnd));
+  const pickEnd = (next: number) => pickRange(Math.min(next, rangeStart), next);
+
   const handleSelectAllZValues = () => {
     setSelectedZValues(Array.from(availableZValueCounter.keys()));
   };
+
+  // The two buttons light up for the state they describe, so an empty selection does not look like everything is picked
+  const allZSelected = availableZValueCounter.size > 0 && selectedZValues.size === availableZValueCounter.size;
+  const noneZSelected = selectedZValues.size === 0;
+  const zButtonOn = 'text-black bg-ba-btn-blue hover:bg-sky-400 dark:hover:bg-sky-500';
+  const zButtonOff = 'text-neutral-700 dark:text-neutral-300 bg-ba-btn-gray dark:bg-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-500';
 
   const handleDeselectAllZValues = () => {
     setSelectedZValues([]);
@@ -148,10 +183,12 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
     <div data-component-name="ChartControls">
       <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
       {/* Student Search + Profile Card */}
-      <div className="mb-2">
-        <StudentSearchDropdown students={students} selectedStudentId={selectedStudentId} setSelectedStudentId={setSelectedStudentId} />
-      </div>
-      {selectedStudentId && <StudentProfileCard portraitData={portraitData} />}
+      {!hideStudentPicker && (
+        <div className="mb-2">
+          <StudentSearchDropdown students={students} selectedStudentId={selectedStudentId} setSelectedStudentId={setSelectedStudentId} />
+        </div>
+      )}
+      {!hideStudentPicker && selectedStudentId && <StudentProfileCard />}
       {selectedStudentId && isCombatStyleMerged(selectedStudentId) && (
         <div className="my-3 flex flex-wrap items-center justify-between gap-2 text-sm">
           <span className="font-semibold text-neutral-800 dark:text-neutral-100">
@@ -170,11 +207,15 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
                   <span>{t(`combatStyleView.${mode}`)}</span>
                   <span className="flex items-center -space-x-1" aria-hidden="true">
                     {previewIds.map((rosterId) => {
-                      const portrait = portraitData?.[rosterId];
-                      return portrait ? (
-                        <img key={rosterId} src={`data:image/webp;base64,${portrait}`} alt="" className="h-5 w-5 rounded-full object-cover" />
-                      ) : (
-                        <span key={rosterId} className="h-5 w-5 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+                      return (
+                        <SheetIcon
+                          key={rosterId}
+                          sheet="student"
+                          id={rosterId}
+                          alt=""
+                          className="h-5 w-5 rounded-full"
+                          fallback={<span className="h-5 w-5 rounded-full bg-neutral-300 dark:bg-neutral-600" />}
+                        />
                       );
                     })}
                   </span>
@@ -257,6 +298,18 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
                 className="w-32"
               />
             </div>
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t_g('boss_armor_type')}</label>
+              <CheckboxSelect<BossTypeSelect>
+                ariaLabel={t_g('boss_armor_type')}
+                options={getBossTypeOptions(locale)}
+                colorDotsInTrigger={false}
+                selectedValues={selectedBossTypes}
+                onChange={(next) => setSelectedBossTypes(next.size === 0 ? new Set(['All']) : next)}
+                allOption={{ value: 'All', label: t_ui('all') }}
+                className="w-32"
+              />
+            </div>
           </div>
         </div>
 
@@ -266,13 +319,15 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
           <div className="flex gap-1 mb-2">
             <button
               onClick={handleSelectAllZValues}
-              className="px-3 py-1 text-xs font-medium text-black bg-ba-btn-blue rounded-md hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors w-full shadow-ba"
+              aria-pressed={allZSelected}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors w-full shadow-ba ${allZSelected ? zButtonOn : zButtonOff}`}
             >
               {t('filterByStars.all')}
             </button>
             <button
               onClick={handleDeselectAllZValues}
-              className="px-3 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 bg-ba-btn-gray dark:bg-neutral-600 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-500 transition-colors w-full shadow-ba"
+              aria-pressed={noneZSelected}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors w-full shadow-ba ${noneZSelected ? zButtonOn : zButtonOff}`}
             >
               {t('filterByStars.none')}
             </button>
@@ -313,17 +368,27 @@ const ChartControls = ({ students, portraitData }: ChartControlsProps) => {
         <div>
           <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 mb-2">{t('raidRange.title')}</h3>
           <div className="w-full text-center text-sm text-neutral-700 dark:text-neutral-400 mb-2 transition-colors duration-300 flex flex-col sm:flex-row justify-center">
-            <span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.min(fullXRange[1], xRange[1])]?.Id}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.min(fullXRange[1], xRange[1])], locale, true)}</span>
-            </span>
+            <RaidPicker options={pickerOptions} value={rangeEnd} onSelect={pickEnd} align="left" ariaLabel={t_ui('end')}>
+              {(chevron) => (
+                <span>
+                  <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[rangeEnd]?.Id}</span>
+                  {chevron}
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[rangeEnd], locale, true)}</span>
+                </span>
+              )}
+            </RaidPicker>
             <span className="mx-2 font-medium">—</span>
-            <span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[Math.max(fullXRange[0], xRange[0])]?.Id}</span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[Math.max(fullXRange[0], xRange[0])], locale, true)}</span>
-            </span>
+            <RaidPicker options={pickerOptions} value={rangeStart} onSelect={pickStart} align="right" ariaLabel={t_ui('start')}>
+              {(chevron) => (
+                <span>
+                  <span className="font-semibold text-blue-600 dark:text-blue-400 transition-colors duration-300">{xLabels[rangeStart]?.Id}</span>
+                  {chevron}
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1 transition-colors duration-300">{raidToStringTsx(xLabels[rangeStart], locale, true)}</span>
+                </span>
+              )}
+            </RaidPicker>
           </div>
-          <SliderComponent fullXRange={fullXRange} labelMap={labelMap} xRange={xRange} setXRange={setXRange} />
+          <SliderComponent key={sliderKey} fullXRange={fullXRange} labelMap={labelMap} xRange={xRange} setXRange={setXRange} />
           <hr className="border-neutral-300 dark:border-neutral-700 my-3 transition-colors duration-300" />
         </div>
       </div>

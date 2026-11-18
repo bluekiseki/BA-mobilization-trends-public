@@ -65,7 +65,8 @@ async function loadModules() {
 }
 
 describe('applySession', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await vi.dynamicImportSettled();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
@@ -83,6 +84,32 @@ describe('applySession', () => {
     expect(useAuthStore.getState().user?.id).toBe('user-1');
     expect(useAuthStore.getState().activeProfileId).toBe('p-b');
     expect(localStorage.getItem(SESSION_HINT_KEY)).toBe('1');
+  });
+
+  it('does not initialize a deferred login after the user has logged out', async () => {
+    const { applySession, useAuthStore } = await loadModules();
+    applySession({ user: { id: 'user-1', username: 'alice' }, profiles: [makeProfile()] });
+    useAuthStore.getState().logout();
+    await vi.dynamicImportSettled();
+    expect(initializeProfile).not.toHaveBeenCalled();
+  });
+
+  it('clears history on identity changes but preserves it for same-user updates', async () => {
+    const { useAuthStore } = await loadModules();
+    const { editHistory, snapshot } = await import('./history/history');
+    const recordEdit = () => {
+      editHistory.seed('plan', snapshot(0));
+      editHistory.observe('plan', snapshot(1));
+      editHistory.commit();
+    };
+    recordEdit();
+    useAuthStore.getState().setUser({ id: 'user-1', username: 'alice' });
+    expect(editHistory.entries).toHaveLength(0);
+    recordEdit();
+    useAuthStore.getState().setUser({ id: 'user-1', username: 'updated' });
+    expect(editHistory.entries).toHaveLength(1);
+    useAuthStore.getState().setUser({ id: 'user-2', username: 'bob' });
+    expect(editHistory.entries).toHaveLength(0);
   });
 
   it('prefers a locally saved profile over the server-marked default', async () => {

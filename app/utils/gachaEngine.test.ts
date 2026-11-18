@@ -557,6 +557,68 @@ describe('term-limited ticket pool', () => {
     expect(state.ticketPool).toEqual([]); // spent, and pruned
   });
 
+  describe('200 free pulls (KR/GL Makoto/Satsuki Swimsuit): recruitment mileage tickets are kept for later', () => {
+    const pooledUnits = (state: SimState) => state.ticketPool.reduce((sum, b) => sum + b.pullUnits, 0);
+
+    it('draining only the free pulls earns the 70/130/150/170 tickets (40 pulls) and spends none of them', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.9); // never a natural pickup; the 100-count coin-flip also misses
+
+      const state = makeState();
+      const banner = makeBanner({ id: 'b1', startTime: '2026-11-10 11:00', freePulls: 200 });
+      simulateSingleBannerCharge(state, makeStrategy({ bannerId: 'b1', studentConfigs: {} }), banner, makePools());
+
+      expect(state.totalPulls).toBe(200);
+      expect(state.totalCost).toBe(0);
+      expect(pooledUnits(state)).toBe(40);
+    });
+
+    it('spends the kept tickets before pyroxene on the next banner', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.9);
+
+      const state = makeState();
+      simulateSingleBannerCharge(state, makeStrategy({ bannerId: 'b1', studentConfigs: {} }), makeBanner({ id: 'b1', startTime: '2026-11-10 11:00', freePulls: 200 }), makePools());
+
+      // Next week, well inside the 40-day ticket window: 40 pulls are covered by the pooled tickets.
+      const fes = makeBanner({ id: 'b2', startTime: '2026-11-17 11:00', isFes: true });
+      simulateSingleBannerCharge(state, makeStrategy({ bannerId: 'b2', studentConfigs: {}, minPulls: 40 }), fes, makePools());
+
+      expect(state.totalCost).toBe(0);
+      expect(pooledUnits(state)).toBe(0);
+    });
+
+    it('a single "must" target is guaranteed by the 200-count hard pity, so the free pulls end the banner with the tickets still held', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.9);
+
+      const state = makeState();
+      const banner = makeBanner({ id: 'b1', startTime: '2026-11-10 11:00', freePulls: 200 });
+      simulateSingleBannerCharge(state, makeStrategy({ bannerId: 'b1' }), banner, makePools());
+
+      expect(state.obtainedInSim.has(PICKUP_ID)).toBe(true);
+      expect(state.totalCost).toBe(0);
+      expect(pooledUnits(state)).toBe(40);
+    });
+
+    it('two "must" targets: the charge resets after the first, so the second spends the kept tickets in the same banner', () => {
+      // 0.4 never rolls a natural pickup, and wins the 100-count coin-flip (< 0.5) for the first target.
+      vi.spyOn(Math, 'random').mockReturnValue(0.4);
+
+      const SECOND_PICKUP_ID = 20998;
+      const state = makeState();
+      const banner = makeBanner({ id: 'b1', startTime: '2026-11-10 11:00', freePulls: 200, pickupStudents: [makeStudent(PICKUP_ID), makeStudent(SECOND_PICKUP_ID)] });
+      const strat = makeStrategy({
+        bannerId: 'b1',
+        studentConfigs: {
+          [PICKUP_ID]: { studentId: PICKUP_ID, mode: 'must', priority: 1, opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 },
+          [SECOND_PICKUP_ID]: { studentId: SECOND_PICKUP_ID, mode: 'must', priority: 2, opportunisticThreshold: 50, intentionalSpark: false, intentionalSparkThreshold: 20 },
+        },
+      });
+      simulateSingleBannerCharge(state, strat, banner, makePools());
+
+      expect(state.totalPulls).toBeGreaterThan(200); // had to keep pulling for the second student after the free pulls ran out
+      expect(pooledUnits(state)).toBeLessThan(40); // so the mileage tickets were spent here instead of being kept
+    });
+  });
+
   it('a ticket past its expiry by the time a later banner starts is not spendable there', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.9);
 

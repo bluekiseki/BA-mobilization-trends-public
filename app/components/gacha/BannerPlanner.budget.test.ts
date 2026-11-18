@@ -42,7 +42,7 @@ function render(strategy: BannerStrategy) {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
-  act(() => root.render(createElement(BannerPlanner, { banners: [banner], strategies: { b1: strategy }, portraitMap: {}, onUpdateStrategy, onUpdateStudentConfig, currentServer: 'KR' })));
+  act(() => root.render(createElement(BannerPlanner, { banners: [banner], strategies: { b1: strategy }, onUpdateStrategy, onUpdateStudentConfig, currentServer: 'KR' })));
   const budget = container.querySelector('select.w-24') as HTMLSelectElement | null;
   const modes = Array.from(container.querySelectorAll('select')).filter((s) => s.querySelector('option[value="must"]') !== null);
   return { container, root, budget, modes, onUpdateStrategy, onUpdateStudentConfig };

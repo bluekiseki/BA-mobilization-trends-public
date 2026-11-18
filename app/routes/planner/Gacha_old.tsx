@@ -3,11 +3,11 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaChartLine, FaClipboardList, FaSpinner, FaInfoCircle, FaTimes, FaExclamationTriangle, FaChevronRight } from 'react-icons/fa';
 
-import { parseAndGroupBanners, getAllStudents, normalizePortraitMap, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
+import { parseAndGroupBanners, getAllStudents, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import type { Student } from '~/types/gacha';
 import { PageHeader } from '~/components/common/PageHeader';
 import IncomePlannerPanel from '~/components/gacha/IncomePlannerPanel';
-import type { CustomIncome } from '~/utils/pyroxeneCalc';
+import type { CustomIncome, PyroLogKey } from '~/utils/pyroxeneCalc';
 import BannerPlanner from '~/components/gacha/BannerPlanner';
 import PyroTimelineChart, { type ProbTimelinePoint, type CustomLineConfig, type BannerStudentMarker } from '~/components/gacha/PyroTimelineChart';
 
@@ -22,6 +22,7 @@ import { resolveMaxPull, type GlobalAggregatedResult, type DistributionData } fr
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import { createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/Gacha_old';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { cdn } from '~/utils/cdn';
 import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { SlUserFemale } from 'react-icons/sl';
@@ -59,7 +60,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 interface TimelinePoint {
   date: string;
   pyroxene: number;
-  logs: { i18nKey?: string; params?: Record<string, string | number>; title?: string; amount: number }[];
+  logs: { i18nKey?: PyroLogKey; params?: Record<string, string | number>; title?: string; amount: number }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -119,7 +120,6 @@ export default function GachaMain() {
   // --- Data state ---
   const [banners, setBanners] = useState<BannerPeriod[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
-  const [portraitMap, setPortraitMap] = useState<Record<number, string>>({});
 
   // Sparse persistence: only user-modified strategies are stored in localStorage.
   // Defaults for all banners are regenerated in-memory on each load.
@@ -285,14 +285,13 @@ export default function GachaMain() {
       const students = targeted.map((s) => ({
         id: s.id,
         name: s.name,
-        portrait: portraitMap[s.id] ? (portraitMap[s.id].startsWith('data:') ? portraitMap[s.id] : `data:image/webp;base64,${portraitMap[s.id]}`) : undefined,
       }));
       const existing = map.get(date);
       if (existing) existing.students.push(...students);
       else map.set(date, { date, students });
     });
     return Array.from(map.values());
-  }, [banners, strategies, portraitMap]);
+  }, [banners, strategies]);
 
   const allTargetedStudents = useMemo(() => {
     const seen = new Set<number>();
@@ -322,11 +321,9 @@ export default function GachaMain() {
       try {
         setLoading(true);
         setError(null);
-        const [studentRes, portraitRes] = await Promise.all([fetch(cdn(`/schaledb.com/${locale}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
+        const studentRes = await fetch(cdn(`/schaledb.com/${locale}.students.min.json`));
         if (!studentRes.ok) throw new Error(t('errors.load_students'));
         const rawStudentData: SchaleStudent[] | Record<string, SchaleStudent> = await studentRes.json();
-        const rawPortraitData: Record<string, string> = portraitRes.ok ? await portraitRes.json() : {};
-        setPortraitMap(normalizePortraitMap(rawPortraitData));
         const studentMap: Record<string, SchaleStudent> = {};
         (Array.isArray(rawStudentData) ? rawStudentData : Object.values(rawStudentData)).forEach((s) => {
           studentMap[s.Id] = s;
@@ -403,8 +400,8 @@ export default function GachaMain() {
             onClick={() => setStrategyDrawerOpen(true)}
             className="whitespace-nowrap relative flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow transition-colors"
           >
-            {allTargetedStudents.length > 0 && allTargetedStudents[0].portrait ? (
-              <img src={allTargetedStudents[0].portrait} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+            {allTargetedStudents.length > 0 ? (
+              <SheetIcon sheet="student" id={allTargetedStudents[0].id} alt="" className="w-7 h-7 rounded-full shrink-0" fallback={<SlUserFemale />} />
             ) : (
               <SlUserFemale />
             )}
@@ -544,7 +541,7 @@ export default function GachaMain() {
           strategies={strategies}
           allStudents={allStudents}
           region={server}
-          portraitMap={portraitMap}
+
           gachaSimResult={gachaSimResult}
           setGachaSimResult={setGachaSimResult}
           bankruptcyRate={bankruptcyRate}
@@ -576,7 +573,7 @@ export default function GachaMain() {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto py-4">
-          <BannerPlanner banners={banners} strategies={strategies} portraitMap={portraitMap} onUpdateStrategy={updateStrategy} onUpdateStudentConfig={updateStudentConfig} currentServer={server} />
+          <BannerPlanner banners={banners} strategies={strategies} onUpdateStrategy={updateStrategy} onUpdateStudentConfig={updateStudentConfig} currentServer={server} />
         </div>
       </div>
     </div>

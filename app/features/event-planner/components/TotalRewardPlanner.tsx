@@ -17,8 +17,8 @@ export const TotalRewardPlanner = ({ eventId, eventData, iconData, onCalculate }
   // const [currentAmount, setCurrentAmount] = useState(0);
   // const [targetAmount, setTargetAmount] = useState(0);
   const {
-    totalRewardCurrentAmount: currentAmount,
-    totalRewardTargetAmount: targetAmount,
+    totalRewardCurrentAmount: currentAmount = 0,
+    totalRewardTargetAmount: targetAmount = 0,
     setTotalRewardCurrentAmount: setCurrentAmount,
     setTotalRewardTargetAmount: setTargetAmount,
   } = usePlanForEvent(eventId);
@@ -26,8 +26,6 @@ export const TotalRewardPlanner = ({ eventId, eventData, iconData, onCalculate }
   const { t } = useTranslation('planner', { keyPrefix: 'total_reward' });
   const totalRewardData = eventData.total_reward;
   const requiredItemId = useMemo(() => eventData.currency?.filter((v) => v.EventContentItemType == 0)[0]?.ItemUniqueId, [eventData.currency]);
-
-  if (currentAmount === undefined || targetAmount === undefined) return null;
 
   const claimedRewardIds = useMemo(() => {
     const ids = new Set<number>();

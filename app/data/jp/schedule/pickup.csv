@@ -1,4 +1,4 @@
-studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
+studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction,freePulls
 23006,Shizuko,2021-02-25 14:30,2021-03-11 12:00,false,false,false
 10014,Izuna,2021-02-25 14:30,2021-03-11 12:00,false,false,false
 10002,Haruna,2021-03-11 12:30,2021-03-18 12:00,false,false,false
@@ -566,3 +566,8 @@ studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
 10103,Marina (Qipao),2026-10-21 11:00,2026-10-28 10:59,true,false,false
 20023,Kanna,2026-10-21 11:00,2026-10-28 10:59,true,false,false
 10052,Noa,2026-10-21 11:00,2026-10-28 10:59,true,false,false
+10153,Hifumi (Racing),2026-10-28 11:00,2026-11-11 10:59,false,true,false
+20063,Azusa (Racing),2026-10-28 11:00,2026-11-11 10:59,false,true,false
+10127,Miyo,2026-11-11 11:00,2026-11-18 10:59,true,false,false
+10128,Fuyu,2026-11-11 11:00,2026-11-18 10:59,true,false,false
+20050,Ritsu,2026-11-11 11:00,2026-11-18 10:59,true,false,false

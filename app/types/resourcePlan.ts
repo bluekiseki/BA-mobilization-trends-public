@@ -74,6 +74,12 @@ export const resourcePlanDataSchema = z.object({
   expertPermitMode: z.enum(['weekly_max', 'daily']),
   expertPermitWeeklyMax: z.number(),
   expertPermitDailyAmounts: z.record(z.string(), z.number()),
+  /** Per income source id: assume its full reward is collected (overrides the source default). */
+  /** Items bought at the monthly maximum from a coin shop, regardless of the coin balance. */
+  autoBuyShopItems: z.record(z.string(), z.boolean()).optional(),
+  /** `planner`: saved event plans; `all`: every shop good and mission reward, regardless of plans. */
+  eventIncomeMode: z.enum(['planner', 'all']).optional(),
+  assumeAllIncome: z.record(z.string(), z.boolean()).optional(),
 });
 
 export type ResourcePlanData = z.infer<typeof resourcePlanDataSchema>;

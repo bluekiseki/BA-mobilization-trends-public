@@ -1,7 +1,7 @@
 // app/components/planner/StudentGrowth/OpartStudentSheet.tsx
 import { useTranslation } from 'react-i18next';
 
-import type { EventData, IconData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData } from '~/types/plannerData';
 import { ItemIconView } from '../item/ItemIconView';
 import { StudentPortraitList, StudentSheetModal } from './StudentSheetModal';
 
@@ -14,14 +14,12 @@ export interface OpartStudentEntry {
 export const OpartStudentSheet = ({
   itemId,
   students,
-  studentPortraits,
   eventData,
   iconData,
   onClose,
 }: {
   itemId: string;
   students: OpartStudentEntry[];
-  studentPortraits?: StudentPortraitData;
   eventData: EventData;
   iconData: IconData;
   onClose: () => void;
@@ -42,7 +40,7 @@ export const OpartStudentSheet = ({
         </>
       }
     >
-      <StudentPortraitList students={students} studentPortraits={studentPortraits} emptyMessage={t('inventory.noUsersForGrowth')} />
+      <StudentPortraitList students={students} emptyMessage={t('inventory.noUsersForGrowth')} />
     </StudentSheetModal>
   );
 };

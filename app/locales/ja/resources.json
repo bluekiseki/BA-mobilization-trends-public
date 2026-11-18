@@ -70,7 +70,7 @@
     "weeklyIncome": "週間収入",
     "permitsPerWeek": "許可証/週",
     "dailyInputHint": "日次入力: 下のスケジュールカレンダーを使用して日次金額を入力してください。",
-    "defaultMaxFloor": "デフォルト最大階層",
+    "defaultMaxFloor": "制約解除決戦の到達階層(全シーズン)",
     "noMfPeriods": "スケジュールに能力解放WB期間がありません。"
   },
   "elephCard": {
@@ -148,6 +148,20 @@
     "growthSpendEleph": "{{item}} 目標達成消費",
     "growthSpendDefault": "成長支出",
     "elephGoalReached": "{{studentName}} - エレフ (目標達成)",
-    "goalLabel": "(目標)"
+    "goalLabel": "(目標)",
+    "coinShopAuto": "総合戦術試験ショップ(自動購入)"
+  },
+  "assumeAll": {
+    "title": "収入の想定",
+    "raid": "総力戦のスコア報酬を全て獲得",
+    "eraid": "大決戦のスコア報酬を全て獲得",
+    "eventTitle": "イベント収入",
+    "eventMode": {
+      "planner": "イベントプランナーの結果を使用",
+      "all": "ショップとミッション報酬を全て合算(ステージ周回を除く)"
+    }
+  },
+  "autoBuy": {
+    "jfd": "総合戦術試験ショップで毎月上限まで購入"
   }
 }

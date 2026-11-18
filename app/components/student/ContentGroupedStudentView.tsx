@@ -64,14 +64,6 @@ export default function ContentGroupedStudentView({ contentItems, growthPlans, a
     [growthPlans],
   );
 
-  const portraitMap = useMemo((): Record<number, string> => {
-    const map: Record<number, string> = {};
-    for (const [id, s] of Object.entries(allStudents)) {
-      if (s.Portrait) map[Number(id)] = s.Portrait;
-    }
-    return map;
-  }, [allStudents]);
-
   const groups = useMemo((): Group[] => {
     const groupMap: Record<string, Group> = {};
 
@@ -167,7 +159,7 @@ export default function ContentGroupedStudentView({ contentItems, growthPlans, a
                   };
                   return (
                     <div key={`${group.key}_${entry.studentId}`} className="flex flex-col items-center gap-1 w-14">
-                      <StudentIcon character={character} student={student} portraitData={portraitMap} grayscale={greyOut && !plannedIds.has(getCombatStylePlanGroupId(character.id))} />
+                      <StudentIcon character={character} student={student} grayscale={greyOut && !plannedIds.has(getCombatStylePlanGroupId(character.id))} />
                       {student && (
                         <span className="text-[10px] text-neutral-500 dark:text-neutral-400 text-center leading-tight truncate w-full" title={student.Name}>
                           {student.Name}

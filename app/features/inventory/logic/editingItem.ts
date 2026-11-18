@@ -1,5 +1,5 @@
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { EventData, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, Student, StudentData } from '~/types/plannerData';
 import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
 import { calculatedGrowthNeeds, getStudentsUsingMaterial } from '~/utils/calculatedGrowthNeeds';
 import { splitItemKey } from '~/utils/itemType';
@@ -81,18 +81,17 @@ export function listEditingAllUsers({ editingKey, editingGiftStudents, entries, 
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export interface StudentsWithPortraitInput {
+export interface StudentsByIdInput {
   detailOpen: boolean;
   students: StudentData;
-  studentPortraits: StudentPortraitData;
 }
 
-/** Students keyed by numeric id with the portrait merged in, only while the detail panel is open. */
-export function mergeStudentPortraits({ detailOpen, students, studentPortraits }: StudentsWithPortraitInput): Record<number, Student> {
+/** Students keyed by numeric id, only while the detail panel is open. */
+export function studentsByNumericId({ detailOpen, students }: StudentsByIdInput): Record<number, Student> {
   if (!detailOpen) return {};
   const rec: Record<number, Student> = {};
   for (const [idStr, s] of Object.entries(students)) {
-    rec[Number(idStr)] = { ...s, Portrait: studentPortraits[Number(idStr)] ?? s.Portrait };
+    rec[Number(idStr)] = s;
   }
   return rec;
 }

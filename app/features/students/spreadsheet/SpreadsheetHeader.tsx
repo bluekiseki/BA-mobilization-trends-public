@@ -16,6 +16,7 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
   const { t: t_game } = useTranslation('game');
   const { t: t_ui } = useTranslation('ui');
+  const { t: t_planner } = useTranslation('planner');
   const showIdentityColumns = screenWidth > 600;
 
   return (
@@ -23,25 +24,25 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
       {/* Group row */}
       <tr>
         <th colSpan={showIdentityColumns ? 5 : 3} className={`${hGroup} sticky left-0 z-40 bg-neutral-100 dark:bg-neutral-700`} />
-        <th colSpan={5} className={`${hGroup} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300`}>
+        <th colSpan={5} className={`${hGroup} bg-blue-100 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_30%,var(--color-neutral-900))] text-blue-700 dark:text-blue-300`}>
           {t('headerGroup.basicStatsCurrent')}
         </th>
-        <th colSpan={4} className={`${hGroup} bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300`}>
+        <th colSpan={4} className={`${hGroup} bg-emerald-100 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_30%,var(--color-neutral-900))] text-emerald-700 dark:text-emerald-300`}>
           {t('headerGroup.basicStatsTarget')}
         </th>
-        <th colSpan={4} className={`${hGroup} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300`}>
+        <th colSpan={4} className={`${hGroup} bg-blue-100 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_30%,var(--color-neutral-900))] text-blue-700 dark:text-blue-300`}>
           {t('headerGroup.skillsCurrent')}
         </th>
-        <th colSpan={4} className={`${hGroup} bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300`}>
+        <th colSpan={4} className={`${hGroup} bg-emerald-100 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_30%,var(--color-neutral-900))] text-emerald-700 dark:text-emerald-300`}>
           {t('headerGroup.skillsTarget')}
         </th>
-        <th colSpan={4} className={`${hGroup} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300`}>
+        <th colSpan={4} className={`${hGroup} bg-blue-100 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_30%,var(--color-neutral-900))] text-blue-700 dark:text-blue-300`}>
           {t('headerGroup.equipmentCurrent')}
         </th>
-        <th colSpan={4} className={`${hGroup} bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300`}>
+        <th colSpan={4} className={`${hGroup} bg-emerald-100 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_30%,var(--color-neutral-900))] text-emerald-700 dark:text-emerald-300`}>
           {t('headerGroup.equipmentTarget')}
         </th>
-        <th colSpan={5} className={`${hGroup} bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300`}>
+        <th colSpan={6} className={`${hGroup} bg-purple-100 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_30%,var(--color-neutral-900))] text-purple-700 dark:text-purple-300`}>
           {t_ui('etc')}
         </th>
       </tr>
@@ -67,7 +68,7 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
               style={{ left: L.name, width: 120, minWidth: 120, maxWidth: 120 }}
               onClick={() => handleSort('name')}
             >
-              {t('headerField.name')}
+              {t_ui('nameLabel')}
               {getSortIcon('name')}
             </th>
             <th
@@ -80,91 +81,151 @@ export function SpreadsheetHeader({ hGroup, hField, L, handleSort, getSortIcon, 
             </th>
           </>
         )}
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('level')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('level')}
+        >
           {t_game('level')}
           {getSortIcon('level')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('star')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('star')}
+        >
           {t_game('rank')}
           {getSortIcon('star')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('uwLevel')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('uwLevel')}
+        >
           {t('headerField.ueLevel')}
           {getSortIcon('uwLevel')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('affection')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('affection')}
+        >
           {t('headerField.affection')}
           {getSortIcon('affection')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('affectionExp')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('affectionExp')}
+        >
           {t('headerField.experience')}
           {getSortIcon('affectionExp')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetLevel')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetLevel')}
+        >
           {t_game('level')}
           {getSortIcon('targetLevel')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetStar')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetStar')}
+        >
           {t_game('rank')}
           {getSortIcon('targetStar')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetUwLevel')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetUwLevel')}
+        >
           {t('headerField.ueLevel')}
           {getSortIcon('targetUwLevel')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetAffection')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetAffection')}
+        >
           {t('headerField.affection')}
           {getSortIcon('targetAffection')}
         </th>
         {SKILLS.map((s) => (
-          <th key={`ch-${s}`} className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort(s)}>
+          <th
+            key={`ch-${s}`}
+            className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+            onClick={() => handleSort(s)}
+          >
             {SKILL_LABELS[SKILLS.indexOf(s)]}
             {getSortIcon(s)}
           </th>
         ))}
         {SKILLS.map((s) => (
-          <th key={`th-${s}`} className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort(s)}>
+          <th
+            key={`th-${s}`}
+            className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+            onClick={() => handleSort(s)}
+          >
             {SKILL_LABELS[SKILLS.indexOf(s)]}
             {getSortIcon(s)}
           </th>
         ))}
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('currentEquipment0')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('currentEquipment0')}
+        >
           {t('headerField.equipment1')}
           {getSortIcon('currentEquipment0')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('currentEquipment1')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('currentEquipment1')}
+        >
           {t('headerField.equipment2')}
           {getSortIcon('currentEquipment1')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('currentEquipment2')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('currentEquipment2')}
+        >
           {t('headerField.equipment3')}
           {getSortIcon('currentEquipment2')}
         </th>
-        <th className={`${hField} bg-blue-50 dark:bg-blue-900/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20`} onClick={() => handleSort('currentGear')}>
+        <th
+          className={`${hField} bg-blue-50 dark:bg-[color-mix(in_srgb,var(--color-blue-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-blue-100 dark:hover:bg-[color-mix(in_srgb,var(--color-blue-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('currentGear')}
+        >
           {t_game('gear')}
           {getSortIcon('currentGear')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetEquipment0')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetEquipment0')}
+        >
           {t('headerField.equipment1')}
           {getSortIcon('targetEquipment0')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetEquipment1')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetEquipment1')}
+        >
           {t('headerField.equipment2')}
           {getSortIcon('targetEquipment1')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetEquipment2')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetEquipment2')}
+        >
           {t('headerField.equipment3')}
           {getSortIcon('targetEquipment2')}
         </th>
-        <th className={`${hField} bg-emerald-50 dark:bg-emerald-900/10 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/20`} onClick={() => handleSort('targetGear')}>
+        <th
+          className={`${hField} bg-emerald-50 dark:bg-[color-mix(in_srgb,var(--color-emerald-900)_10%,var(--color-neutral-900))] cursor-pointer hover:bg-emerald-100 dark:hover:bg-[color-mix(in_srgb,var(--color-emerald-900)_20%,var(--color-neutral-900))]`}
+          onClick={() => handleSort('targetGear')}
+        >
           {t_game('gear')}
           {getSortIcon('targetGear')}
         </th>
-        <th className={`${hField} bg-purple-50 dark:bg-purple-900/10`}>{t('headerField.acquiredDate')}</th>
-        <th className={`${hField} bg-purple-50 dark:bg-purple-900/10`}>{t('headerField.useEligma')}</th>
-        <th className={`${hField} bg-purple-50 dark:bg-purple-900/10`}>{t('headerField.eligmaPrice')}</th>
-        <th className={`${hField} bg-purple-50 dark:bg-purple-900/10`}>{t('headerField.eligmaStock')}</th>
-        <th className={`${hField} bg-purple-50 dark:bg-purple-900/10`}></th>
+        <th className={`${hField} bg-purple-50 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_10%,var(--color-neutral-900))]`}>{t_planner('growthCard.recruited')}</th>
+        <th className={`${hField} bg-purple-50 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_10%,var(--color-neutral-900))]`}>{t('headerField.acquiredDate')}</th>
+        <th className={`${hField} bg-purple-50 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_10%,var(--color-neutral-900))]`}>{t('headerField.useEligma')}</th>
+        <th className={`${hField} bg-purple-50 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_10%,var(--color-neutral-900))]`}>{t('headerField.eligmaPrice')}</th>
+        <th className={`${hField} bg-purple-50 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_10%,var(--color-neutral-900))]`}>{t('headerField.eligmaStock')}</th>
+        <th className={`${hField} bg-purple-50 dark:bg-[color-mix(in_srgb,var(--color-purple-900)_10%,var(--color-neutral-900))]`}></th>
       </tr>
     </thead>
   );

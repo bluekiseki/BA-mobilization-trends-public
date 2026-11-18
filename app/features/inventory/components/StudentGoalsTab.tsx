@@ -1,4 +1,5 @@
 // components/planner/resources/StudentGoalsTab.tsx
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StarRating } from '~/components/student/StarRating';
@@ -103,7 +104,7 @@ export function StudentGoalsTab({
                           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                       }`}
                     >
-                      {meta?.Portrait && <img src={`data:image/webp;base64,${meta.Portrait}`} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />}
+                      <SheetIcon sheet="student" id={id} alt="" className="w-4 h-4 rounded-full shrink-0" />
                       <span className="max-w-[80px] truncate" title={meta?.Name ?? `#${id}`}>
                         {meta?.Name ?? `#${id}`}
                       </span>
@@ -133,7 +134,6 @@ export function StudentGoalsTab({
               key={selectedStudentId}
               studentId={selectedStudentId}
               studentName={selectedStudentMeta?.Name ?? `#${selectedStudentId}`}
-              studentIcon={selectedStudentMeta?.Portrait}
               plan={selectedPlan}
               simStat={gachaStudentStats?.[selectedStudentId]}
               minStar={selectedStudentMeta?.StarGrade ?? 1}

@@ -1,5 +1,7 @@
 // Resolves AP cost per resource unit. Extract* functions (per-source) + Dijkstra resolution.
-import type { ClueSearchData, EventData, Stage, StageReward, MinigameDefenseStage, MinigameJankenStage } from '~/types/plannerData';
+import type { ClueSearchData, EventData, Stage, StageReward, MinigameDefenseStage, MinigameJankenStage, MinigameTankStage } from '~/types/plannerData';
+import { buildJointCurve, solveJointDetail, type JointClear, type JointColumn, type JointCurvePoint, type JointModel } from './jointGoalCurve';
+import { planJointAtAp, type JointStep } from './jointPlan';
 import { runSimulation as runDiceRaceSimulation } from '~/features/event-planner/logic/diceRaceSim';
 import { runSingleSimulation as runTreasureSimulation } from '~/features/event-planner/logic/treasureSimulation';
 import { simulateAverageFlips } from '~/features/event-planner/logic/cardMatchSim';
@@ -14,9 +16,12 @@ import { ROAD_PUZZLE_MAPS } from '~/data/roadPuzzleMaps';
 import { applyRepeatableEventBonus } from '~/features/event-planner/logic/eventBonus';
 import { getLocationRows } from '~/features/event-planner/logic/locationPlanner';
 import { getClueSearchCostModel, searchesForFragments, type ClueSearchCostModel } from '~/features/event-planner/logic/clueSearch';
+import { calcTieredCost } from '~/features/event-planner/logic/shopTieredCost';
 
 const REPEATABLE_TAGS = new Set(['Event', 'Default', 'Rare']);
 const AP = 'AP'; // sentinel currency key: raw AP itself.
+const HIGH_AREA_FIRST = 9;
+const HIGH_AREA_LAST = 12;
 const keyOf = (type: string, id: number) => `${type}_${id}`;
 
 // Trailing stage number from a raw internal `Name` codename (e.g. "EVENT_845_Normal_MainGround_Stage02"
@@ -24,6 +29,13 @@ const keyOf = (type: string, id: number) => `${type}_${id}`;
 const stageNumberFromName = (name: string): string => name.split('_').pop()?.replace('Stage', '') || name;
 
 export type StageWithType = Stage & { type: 'stage' | 'story' | 'challenge' };
+
+// The user's shop purchase plan (item id -> count). When set, finite-limit shop items shrink to exactly the
+// planned purchases (after what was already bought) instead of their full limit.
+export interface ShopGoals {
+  purchaseCounts: Record<string, number>;
+  alreadyPurchasedCounts: Record<string, number>;
+}
 
 export interface Ctx {
   allStages: StageWithType[];
@@ -36,6 +48,14 @@ export interface Ctx {
   // as far as possible" default. Never includes targetLap/endConditionType — the simulated horizon is fixed
   // by the event's own total_reward data, not the user's personal plan (see extractDiceRace).
   diceRaceRouting?: Pick<DiceRaceSimConfig, 'fixedDicePriority' | 'ownedFixedDice' | 'allowDoubleFixedDice'>;
+  shopGoals?: ShopGoals;
+  // Treat story clears as a mandatory prerequisite of area stages. Off by default: story is cleared for other
+  // reasons anyway (pyroxene, minigames) and is not a gate in-game.
+  includeStoryClears?: boolean;
+  // Repeat farming only areas 9-12 (their by-product top-tier ooparts); lower areas count as a single clear each.
+  highAreaFirst?: boolean;
+  // Result of computeSimulatedSources, reused so plan-only changes (e.g. shop goals) skip re-simulating.
+  simulatedSources?: SimulatedSources;
 }
 
 // ---------------------------------------------------------------------------
@@ -43,17 +63,26 @@ export interface Ctx {
 // ---------------------------------------------------------------------------
 
 // Collapse enter-cost sources to one shape; category picks prefix, stageNumber is parsed from raw Name.
-type StageLikeCategory = 'stage' | 'story' | 'challenge' | 'minigame_defense' | 'janken_story' | 'janken_normal' | 'janken_challenge';
+type StageLikeCategory = 'stage' | 'story' | 'challenge' | 'minigame_defense' | 'janken_story' | 'janken_normal' | 'janken_challenge' | 'minigame_tank';
+
+// Present only when planned purchases drive the shop sources: which purchases (1-based, inclusive) of
+// which item this segment covers.
+export interface ShopGoalRange {
+  itemId: number;
+  from: number;
+  to: number;
+}
 
 export type SourceRef =
   // `oneTimeClear` covers FirstClear and ThreeStar: both one-time, same AP cost, tracked as one bucket.
-  | { type: 'stage_like'; category: StageLikeCategory; stageNumber?: string; oneTimeClear?: boolean }
+  // `storyGate`: a story stage that must be cleared before any area stage (user opted in); otherwise story is its own track.
+  | { type: 'stage_like'; category: StageLikeCategory; stageNumber?: string; oneTimeClear?: boolean; storyGate?: boolean }
   // Sequenced family prefix spans multiple categories (story gates regular-stage access); list each category's range.
   | { type: 'sequenced_prefix_bulk'; ranges: { category: StageLikeCategory; from: number; to: number }[] }
   | { type: 'minigame_janken_score'; score: number }
-  | { type: 'shop_unlimited'; shopId: string }
-  | { type: 'shop_flat_limit'; shopId: string; limit: number }
-  | { type: 'shop_tier'; shopId: string; tier: number }
+  | { type: 'shop_unlimited'; shopId: string; costKey?: string }
+  | { type: 'shop_flat_limit'; shopId: string; limit: number; goal?: ShopGoalRange; costKey?: string }
+  | { type: 'shop_tier'; shopId: string; tier: number; goal?: ShopGoalRange; costKey?: string }
   | { type: 'card_shop_round'; round: number }
   | { type: 'box_gacha_round'; round: number; repeat?: boolean }
   | { type: 'interactive_world_raid' }
@@ -78,25 +107,45 @@ type StageLikeSourceRef = Extract<SourceRef, { type: 'stage_like' }>;
 
 const STAGE_LIKE_PREFIX: Record<StageLikeCategory, string> = {
   stage: 'common.stage',
-  story: 'ui:story',
+  story: 'game:story',
   challenge: 'common.challenge',
   minigame_defense: 'minigame.minigame_defense',
-  janken_story: 'ui:story',
-  janken_normal: 'ui:normal',
+  janken_story: 'game:story',
+  janken_normal: 'game:difficulties.normal',
   janken_challenge: 'common.challenge',
+  minigame_tank: 'minigame.minigame_tank',
 };
 
 // Format raw stage Name to parsed trailing number (same convention as RepeatableTab.tsx/OnetimeTab.tsx).
 export interface SourceLabelKey {
-  parts: Array<{ type: 'key' | 'text'; value: string }>;
+  parts: Array<{ type: 'key' | 'text' | 'resource'; value: string }>;
   params?: Record<string, string | number>;
+}
+
+const JANKEN_CATEGORIES: ReadonlySet<StageLikeCategory> = new Set(['janken_story', 'janken_normal', 'janken_challenge']);
+
+// Janken stage names ("story 1") are ambiguous next to regular stages, so they carry the minigame title.
+function stageLikePrefixParts(category: StageLikeCategory): Array<{ type: 'key' | 'text'; value: string }> {
+  const parts: Array<{ type: 'key' | 'text'; value: string }> = [];
+  if (JANKEN_CATEGORIES.has(category)) parts.push({ type: 'key', value: 'minigame_janken.title' }, { type: 'text', value: ' ' });
+  parts.push({ type: 'key', value: STAGE_LIKE_PREFIX[category] });
+  return parts;
+}
+
+// A shop is named after the currency it takes; the shop id only stands in when that currency is unknown.
+function shopNameParts(source: { shopId: string; costKey?: string }): SourceLabelKey['parts'] {
+  return source.costKey
+    ? [{ type: 'resource', value: source.costKey }]
+    : [
+        { type: 'key', value: 'common.shop' },
+        { type: 'text', value: ` (${source.shopId})` },
+      ];
 }
 
 function formatSourceLabel(source: SourceRef): SourceLabelKey {
   switch (source.type) {
     case 'stage_like': {
-      const baseKey = STAGE_LIKE_PREFIX[source.category];
-      const parts: Array<{ type: 'key' | 'text'; value: string }> = [{ type: 'key', value: baseKey }];
+      const parts = stageLikePrefixParts(source.category);
       if (source.stageNumber) {
         parts.push({ type: 'text', value: ` {{stageNumber}}` });
       }
@@ -109,7 +158,7 @@ function formatSourceLabel(source: SourceRef): SourceLabelKey {
       const parts: Array<{ type: 'key' | 'text'; value: string }> = [];
       source.ranges.forEach((r, i) => {
         if (i > 0) parts.push({ type: 'text', value: ' + ' });
-        parts.push({ type: 'key', value: STAGE_LIKE_PREFIX[r.category] });
+        parts.push(...stageLikePrefixParts(r.category));
         parts.push({ type: 'text', value: r.from === r.to ? ` {{n${i}}}` : ` {{n${i}}}-{{m${i}}}` });
       });
       // Use literal "(cleared once each)" to disambiguate multi-stage ranges (not shared translation key).
@@ -124,7 +173,7 @@ function formatSourceLabel(source: SourceRef): SourceLabelKey {
     case 'minigame_janken_score':
       return {
         parts: [
-          { type: 'key', value: 'minigame.minigame_janken' },
+          { type: 'key', value: 'minigame_janken.title' },
           { type: 'text', value: ' ' },
           { type: 'key', value: 'label.cumulativeRewards' },
           { type: 'text', value: ' {{score}}' },
@@ -133,35 +182,22 @@ function formatSourceLabel(source: SourceRef): SourceLabelKey {
       };
     case 'shop_unlimited':
       return {
-        parts: [
-          { type: 'key', value: 'common.shop' },
-          { type: 'text', value: ' ({{shopId}}) unlimited purchase' },
-        ],
+        parts: [...shopNameParts(source), { type: 'key', value: 'ui.resourceEfficiencyShopUnlimited' }],
         params: { shopId: source.shopId },
       };
     case 'shop_flat_limit':
       return {
-        parts: [
-          { type: 'key', value: 'common.shop' },
-          { type: 'text', value: ' ({{shopId}}) up to {{limit}}x' },
-        ],
-        params: { shopId: source.shopId, limit: source.limit },
+        parts: [...shopNameParts(source), { type: 'key', value: source.goal ? 'ui.resourceEfficiencyShopPurchase' : 'ui.resourceEfficiencyShopLimit' }],
+        params: source.goal ? { shopId: source.shopId, from: source.goal.from, to: source.goal.to } : { shopId: source.shopId, limit: source.limit },
       };
     case 'shop_tier':
       return {
-        parts: [
-          { type: 'key', value: 'common.shop' },
-          { type: 'text', value: ' ({{shopId}}) tier {{tier}}' },
-        ],
-        params: { shopId: source.shopId, tier: source.tier },
+        parts: [...shopNameParts(source), { type: 'key', value: source.goal ? 'ui.resourceEfficiencyShopTierPurchase' : 'ui.resourceEfficiencyShopTier' }],
+        params: source.goal ? { shopId: source.shopId, tier: source.tier, from: source.goal.from, to: source.goal.to } : { shopId: source.shopId, tier: source.tier },
       };
     case 'card_shop_round':
       return {
-        parts: [
-          { type: 'key', value: 'cardShop.title' },
-          { type: 'text', value: ' round {{round}}' },
-        ],
-        params: { round: source.round },
+        parts: [{ type: 'key', value: 'cardShop.title' }],
       };
     case 'box_gacha_round':
       return {
@@ -313,12 +349,12 @@ function formatSourceLabel(source: SourceRef): SourceLabelKey {
       };
     }
     case 'location_schedule':
-      return { parts: [{ type: 'text', value: `스케줄 랭크 ${source.rank} · ${source.name} (${source.runs}회)` }] };
+      return { parts: [{ type: 'text', value: `Schedule rank ${source.rank} · ${source.name} (${source.runs} runs)` }] };
   }
 }
 
 // ---------------------------------------------------------------------------
-// Public shapes (what the UI consumes) — unchanged from before this refactor.
+// Resource cost types used by the UI.
 // ---------------------------------------------------------------------------
 
 export interface ApSegment {
@@ -457,13 +493,15 @@ function extractStageLike(entries: { source: StageLikeSourceRef; costKey: string
     const oneTimeClearByKey = new Map<string, number>();
     for (const r of entry.rewards) {
       const rawKey = keyOf(r.RewardParcelTypeStr, r.RewardId);
-      let amount = r.RewardAmount * (r.RewardProb / 10000);
       const isRepeatable = REPEATABLE_TAGS.has(r.RewardTagStr);
-      // Event bonus only boosts repeatable-tag farming stages (mirrors FarmingPlanner.tsx eligibility).
+      // Event bonus only boosts repeatable-tag farming stages (mirrors FarmingPlanner.tsx eligibility). The game rounds
+      // the bonus of a single drop up, so it is applied to the whole drop amount before the drop chance weights it.
+      let perDrop = r.RewardAmount;
       if (isRepeatable && entry.bonusEligible && eventCurrencyIds.has(r.RewardId)) {
         const bonusPercent = ctx.totalBonus?.[r.RewardId] || 0;
-        amount = applyRepeatableEventBonus(amount, bonusPercent);
+        perDrop = applyRepeatableEventBonus(perDrop, bonusPercent);
       }
+      const amount = perDrop * (r.RewardProb / 10000);
       const targetMap = isRepeatable ? repeatableByKey : oneTimeClearByKey;
       for (const { producesKey, amount: expandedAmount } of expandGachaGroupReward(rawKey, amount, ctx.eventData)) {
         targetMap.set(producesKey, (targetMap.get(producesKey) ?? 0) + expandedAmount);
@@ -484,15 +522,42 @@ function extractStageLike(entries: { source: StageLikeSourceRef; costKey: string
   return { segments, oneTime };
 }
 
+// Older event layouts keep some area stages (e.g. Hard stage 4/8/12) in the "else" group. They are part of the same
+// 1..N clear order, so include them unless the area list already has that stage number.
+function legacyAreaStages(ctx: Ctx): StageWithType[] {
+  const have = new Set(ctx.allStages.filter((s) => s.type === 'stage').map((s) => stageNumberFromName(s.Name)));
+  return (ctx.eventData.stage?.else ?? []).filter((s) => /_Hard_Main_Stage\d+$/.test(s.Name) && !have.has(stageNumberFromName(s.Name))).map((s) => ({ ...s, type: 'stage' as const }));
+}
+
 function extractStage(ctx: Ctx): Extracted {
-  const entries = ctx.allStages.map((s) => ({
-    source: { type: 'stage_like' as const, category: s.type, stageNumber: stageNumberFromName(s.Name) },
+  const entries = [...ctx.allStages, ...legacyAreaStages(ctx)].map((s) => ({
+    source: { type: 'stage_like' as const, category: s.type, stageNumber: stageNumberFromName(s.Name), ...(s.type === 'story' && ctx.includeStoryClears ? { storyGate: true } : {}) },
     costKey: AP,
     costAmount: s.StageEnterCostAmount,
     rewards: s.EventContentStageReward,
     bonusEligible: s.type === 'stage',
   }));
-  return extractStageLike(entries, ctx);
+  const extracted = extractStageLike(entries, ctx);
+  if (!ctx.highAreaFirst) return extracted;
+  // Outside areas 9-12 a stage is cleared once (prerequisite + first-clear bonuses) but never farmed, so its
+  // single-run yield becomes a one-time contribution instead of a repeatable segment.
+  const segments: RawSegment[] = [];
+  const oneTime = [...extracted.oneTime];
+  for (const seg of extracted.segments) {
+    const area = seg.source.type === 'stage_like' && seg.source.category === 'stage' ? Number(seg.source.stageNumber) : NaN;
+    if (seg.source.type !== 'stage_like' || Number.isNaN(area) || (area >= HIGH_AREA_FIRST && area <= HIGH_AREA_LAST)) {
+      segments.push(seg);
+      continue;
+    }
+    oneTime.push({
+      producesKey: seg.producesKey,
+      amount: seg.amount + (seg.firstRunBonusAmount ?? 0),
+      costKey: seg.costKey,
+      costAmount: seg.costAmount,
+      source: { ...seg.source, oneTimeClear: true },
+    });
+  }
+  return { segments, oneTime };
 }
 
 // minigame_defense reuses Stage reward shape; entry cost is global currency, not per-stage fields.
@@ -539,6 +604,22 @@ function extractMinigameJanken(ctx: Ctx): Extracted {
   return result;
 }
 
+// minigame_tank stages: entry cost is per-stage CostParcel (event token), same FirstClear-vs-repeatable split.
+// The time-attack stage has no cost and no rewards, so it is skipped.
+function extractMinigameTank(ctx: Ctx): Extracted {
+  const tank = ctx.eventData.minigame_tank;
+  if (!tank) return { segments: [], oneTime: [] };
+  const entries = tank.stage
+    .filter((s: MinigameTankStage) => (s.EventContentStageReward?.length ?? 0) > 0)
+    .map((s: MinigameTankStage) => ({
+      source: { type: 'stage_like' as const, category: 'minigame_tank' as const, stageNumber: String(s.StageNumber) },
+      costKey: keyOf(s.CostParcelTypeStr, s.CostParcelId),
+      costAmount: s.CostParcelAmount,
+      rewards: s.EventContentStageReward ?? [],
+    }));
+  return extractStageLike(entries, ctx);
+}
+
 // ---------------------------------------------------------------------------
 // Extraction: shop (tiered pricing), card_shop (exact expectation), box_gacha (deterministic rounds).
 // ---------------------------------------------------------------------------
@@ -546,9 +627,36 @@ function extractMinigameJanken(ctx: Ctx): Extracted {
 function extractShop(ctx: Ctx): Extracted {
   const shop = ctx.eventData.shop;
   if (!shop) return { segments: [], oneTime: [] };
+  const goals = ctx.shopGoals;
   const segments: RawSegment[] = [];
+  // Currencies some shop item is bought with. An item that yields one is an exchange route the rate map needs
+  // to price that currency in AP, so it stays available in full unless the user planned a count for it.
+  const spentKeys = new Set<string>();
+  if (goals) {
+    for (const items of Object.values(shop)) {
+      for (const item of items) for (const goods of item.Goods || []) spentKeys.add(keyOf(goods.ConsumeParcelTypeStr[0], goods.ConsumeParcelId[0]));
+    }
+  }
   for (const [shopId, items] of Object.entries(shop)) {
     for (const item of items) {
+      // Purchases covered by this item: [start, end). Without goals it is the whole limit; unlimited items
+      // (`PurchaseCountLimit === 0`, confirmed against live shop data) have no end.
+      let start = 0;
+      let end: number | undefined = item.PurchaseCountLimit || undefined;
+      // Unlimited items are exchange routes (the rate map needs them), so goals only narrow finite ones.
+      let goalLimited = false;
+      if (goals && item.PurchaseCountLimit) {
+        const goal = goals.purchaseCounts[item.Id] ?? 0;
+        const isExchange = (item.Goods || []).some((g) => g.ParcelId.some((pid, i) => spentKeys.has(keyOf(g.ParcelTypeStr[i], pid))));
+        if (goal > 0 || !isExchange) {
+          start = goals.alreadyPurchasedCounts[item.Id] ?? 0;
+          const count = Math.min(goal, item.PurchaseCountLimit - start);
+          if (count <= 0) continue;
+          end = start + count;
+          goalLimited = true;
+        }
+      }
+      const range = (from: number, to: number): ShopGoalRange | undefined => (goalLimited ? { itemId: item.Id, from: from + 1, to } : undefined);
       for (const goods of item.Goods || []) {
         const costKey = keyOf(goods.ConsumeParcelTypeStr[0], goods.ConsumeParcelId[0]);
         const baseAmount = goods.ConsumeParcelAmount[0];
@@ -558,44 +666,50 @@ function extractShop(ctx: Ctx): Extracted {
           const producesKey = keyOf(goods.ParcelTypeStr[idx], pid);
           const amount = goods.ParcelAmount[idx];
           if (amount <= 0) return;
-          // `PurchaseCountLimit === 0` means unlimited purchases (confirmed against live shop data —
-          // every finite-limit item has a positive count; 0 is the outlier used for "no cap").
-          if (!item.PurchaseCountLimit) {
+          if (end === undefined) {
             const finalPrice = extraStep.length > 0 ? extraAmount[extraAmount.length - 1] : baseAmount;
-            segments.push({ costKey, costAmount: finalPrice, producesKey, amount, source: { type: 'shop_unlimited', shopId }, repeatsForever: true });
+            segments.push({ costKey, costAmount: finalPrice, producesKey, amount, source: { type: 'shop_unlimited', shopId, costKey }, repeatsForever: true });
             return;
           }
           if (extraStep.length === 0) {
-            // Flat price for the whole limit — one aggregated segment.
+            // Flat price for the whole range — one aggregated segment.
+            const units = end - start;
             segments.push({
               costKey,
-              costAmount: baseAmount * item.PurchaseCountLimit,
+              costAmount: baseAmount * units,
               producesKey,
-              amount: amount * item.PurchaseCountLimit,
-              source: { type: 'shop_flat_limit', shopId, limit: item.PurchaseCountLimit },
+              amount: amount * units,
+              source: { type: 'shop_flat_limit', shopId, limit: item.PurchaseCountLimit || units, goal: range(start, end), costKey },
             });
             return;
           }
-          // Tiered price, bounded by PurchaseCountLimit — one segment per tier (not per unit).
-          let purchased = 0;
+          // Tiered price over [start, end) — one segment per tier (not per unit).
           let tierStart = 0;
-          for (let i = 0; i < extraStep.length && purchased < item.PurchaseCountLimit; i++) {
-            const tierEnd = Math.min(tierStart + extraStep[i], item.PurchaseCountLimit);
-            const unitsInTier = tierEnd - purchased;
-            if (unitsInTier > 0) {
-              segments.push({ costKey, costAmount: extraAmount[i] * unitsInTier, producesKey, amount: amount * unitsInTier, source: { type: 'shop_tier', shopId, tier: i + 1 } });
-              purchased = tierEnd;
+          let covered = start;
+          for (let i = 0; i < extraStep.length && covered < end; i++) {
+            const tierEnd = tierStart + extraStep[i];
+            const segEnd = Math.min(tierEnd, end);
+            if (segEnd > covered) {
+              const units = segEnd - covered;
+              segments.push({
+                costKey,
+                costAmount: extraAmount[i] * units,
+                producesKey,
+                amount: amount * units,
+                source: { type: 'shop_tier', shopId, tier: i + 1, goal: range(covered, segEnd), costKey },
+              });
+              covered = segEnd;
             }
-            tierStart += extraStep[i];
+            tierStart = tierEnd;
           }
-          if (purchased < item.PurchaseCountLimit) {
-            const remaining = item.PurchaseCountLimit - purchased;
+          if (covered < end) {
+            const units = end - covered;
             segments.push({
               costKey,
-              costAmount: extraAmount[extraAmount.length - 1] * remaining,
+              costAmount: extraAmount[extraAmount.length - 1] * units,
               producesKey,
-              amount: amount * remaining,
-              source: { type: 'shop_tier', shopId, tier: extraStep.length + 1 },
+              amount: amount * units,
+              source: { type: 'shop_tier', shopId, tier: extraStep.length + 1, goal: range(covered, end), costKey },
             });
           }
         });
@@ -605,22 +719,64 @@ function extractShop(ctx: Ctx): Extracted {
   return { segments, oneTime: [] };
 }
 
+/**
+ * Currency spent by the planned shop purchases, keyed like segment cost keys (e.g. "Item_23").
+ * Mirrors the planner's own shop totals: first goods entry, tiered pricing after already-bought items.
+ */
+export function computeShopGoalConsumption(eventData: EventData, goals: ShopGoals): Record<string, number> {
+  const consumption: Record<string, number> = {};
+  if (!eventData.shop) return consumption;
+  for (const items of Object.values(eventData.shop)) {
+    for (const item of items) {
+      const goods = item.Goods?.[0];
+      if (!goods) continue;
+      const already = goals.alreadyPurchasedCounts[item.Id] ?? 0;
+      const remaining = item.PurchaseCountLimit ? item.PurchaseCountLimit - already : Infinity;
+      const count = Math.min(goals.purchaseCounts[item.Id] ?? 0, remaining);
+      if (count <= 0) continue;
+      const cost = calcTieredCost(already, count, goods.ConsumeExtraStep ?? [], goods.ConsumeExtraAmount ?? [], goods.ConsumeParcelAmount[0]);
+      const costKey = keyOf(goods.ConsumeParcelTypeStr[0], goods.ConsumeParcelId[0]);
+      consumption[costKey] = (consumption[costKey] ?? 0) + cost;
+    }
+  }
+  return consumption;
+}
+
 function extractCardShop(ctx: Ctx): Extracted {
   const cardShop = ctx.eventData.card_shop;
   if (!cardShop || cardShop.length === 0) return { segments: [], oneTime: [] };
   const costGoods = cardShop[0].CostGoods;
   const costKey = keyOf('Item', costGoods.ConsumeParcelId[0]);
-  // Expected amount of each produced key per single card flip, across the whole rarity/prob table.
-  const expectedPerFlip = new Map<string, number>();
-  for (const card of cardShop) {
-    const weighted = card.RewardParcelAmount.map((a) => a * (card.Prob / 10000));
-    for (const { producesKey, amount } of parcelRewards(card.RewardParcelId, card.RewardParcelTypeStr, weighted, ctx.eventData)) {
-      expectedPerFlip.set(producesKey, (expectedPerFlip.get(producesKey) ?? 0) + amount);
+  // One play follows the "reset on SR" strategy: flip n draws from refresh group n, and the play ends at the first
+  // SR or better (rarity >= 2). Flip n is reached only when every earlier flip was below SR, which gives the exact
+  // expected cost and reward of a play without simulating it.
+  const groupCount = Math.max(...cardShop.map((c) => c.RefreshGroup));
+  let reach = 1;
+  let expectedCost = 0;
+  const expectedReward = new Map<string, number>();
+  for (let flip = 0; flip < costGoods.ConsumeExtraAmount.length && flip < groupCount; flip++) {
+    const pool = cardShop.filter((c) => c.RefreshGroup === flip + 1);
+    const totalProb = pool.reduce((sum, c) => sum + c.Prob, 0);
+    if (totalProb <= 0) continue;
+    expectedCost += reach * costGoods.ConsumeExtraAmount[flip];
+    for (const card of pool) {
+      const weighted = card.RewardParcelAmount.map((a) => (a * reach * card.Prob) / totalProb);
+      for (const { producesKey, amount } of parcelRewards(card.RewardParcelId, card.RewardParcelTypeStr, weighted, ctx.eventData)) {
+        expectedReward.set(producesKey, (expectedReward.get(producesKey) ?? 0) + amount);
+      }
     }
+    reach *= 1 - pool.filter((c) => c.Rarity >= 2).reduce((sum, c) => sum + c.Prob, 0) / totalProb;
   }
-  const rewardsPerFlip = [...expectedPerFlip].map(([producesKey, amount]) => ({ producesKey, amount }));
   const segments: RawSegment[] = [];
-  costGoods.ConsumeExtraAmount.forEach((price, round) => emitSegments(segments, costKey, price, rewardsPerFlip, { type: 'card_shop_round', round: round + 1 }));
+  // A play can be repeated without end.
+  emitSegments(
+    segments,
+    costKey,
+    expectedCost,
+    [...expectedReward].map(([producesKey, amount]) => ({ producesKey, amount })),
+    { type: 'card_shop_round', round: 1 },
+    { repeatsForever: true },
+  );
   return { segments, oneTime: [] };
 }
 
@@ -1157,10 +1313,17 @@ function extractLocation(ctx: Ctx): Extracted {
   return { segments, oneTime: [] };
 }
 
+// Opaque handle for the Monte-Carlo-based extraction result; depends on totalBonus + diceRaceRouting only.
+export type SimulatedSources = Extracted;
+
+export function computeSimulatedSources(ctx: Ctx): SimulatedSources {
+  return merge(extractRoadPuzzle(ctx), extractDiceRace(ctx), extractTreasure(ctx), extractConcentration(ctx), extractMinigameDream(ctx), extractFortuneGacha(ctx));
+}
+
 function extractAll(ctx: Ctx): Extracted {
   // Monte-Carlo-simulation-based extractors only run when explicitly opted into (see Ctx.includeSimulations)
   // — road_puzzle alone measured ~2.3s per event, far too slow to run on every render/tab-open.
-  const sim = ctx.includeSimulations;
+  const simulated = ctx.includeSimulations ? (ctx.simulatedSources ?? computeSimulatedSources(ctx)) : EMPTY_EXTRACTED;
   return merge(
     extractStage(ctx),
     extractMinigameDefense(ctx),
@@ -1169,14 +1332,10 @@ function extractAll(ctx: Ctx): Extracted {
     extractBoxGacha(ctx),
     extractInteractiveWorldRaid(ctx),
     extractMinigameJanken(ctx),
+    extractMinigameTank(ctx),
     extractMinigameCcg(ctx),
     extractClueSearch(ctx),
-    sim ? extractRoadPuzzle(ctx) : EMPTY_EXTRACTED,
-    sim ? extractDiceRace(ctx) : EMPTY_EXTRACTED,
-    sim ? extractTreasure(ctx) : EMPTY_EXTRACTED,
-    sim ? extractConcentration(ctx) : EMPTY_EXTRACTED,
-    sim ? extractMinigameDream(ctx) : EMPTY_EXTRACTED,
-    sim ? extractFortuneGacha(ctx) : EMPTY_EXTRACTED,
+    simulated,
     extractMissions(ctx),
     extractField(ctx),
     extractLocation(ctx),
@@ -1256,7 +1415,7 @@ function sequencedFamilyPrefix(
   const segMembers = extracted.segments.filter((s) => s.producesKey === currencyKey && sequenceFamilyOf(s.source) === family && (sequenceOrderOf(s.source) as number) <= chosenOrder);
   const oneTimeMembers = extracted.oneTime.filter((o) => o.producesKey === currencyKey && sequenceFamilyOf(o.source) === family && (sequenceOrderOf(o.source) as number) <= chosenOrder);
   const amount = segMembers.reduce((a, s) => a + s.amount + (s.firstRunBonusAmount ?? 0), 0) + oneTimeMembers.reduce((a, o) => a + o.amount, 0);
-  const apCost = segMembers.reduce((a, s) => a + s.costAmount, 0) + oneTimeMembers.reduce((a, o) => a + (o.costAmount ?? 0), 0);
+  const memberApCost = segMembers.reduce((a, s) => a + s.costAmount, 0) + oneTimeMembers.reduce((a, o) => a + (o.costAmount ?? 0), 0);
 
   // Show full range covered ("story 1-10 + stage 1-12"), not just endpoint; prefix spans multiple categories.
   const rangeByCategory = new Map<StageLikeCategory, { from: number; to: number }>();
@@ -1281,10 +1440,17 @@ function sequencedFamilyPrefix(
     const clearId = stageClearIdOf(m.source);
     if (clearId !== null) prefixClears[clearId] = m.costAmount ?? 0;
   }
+  // Earlier clears that drop none of this currency are still required to reach the chosen stage — charge them too.
+  let gapApCost = 0;
+  for (const [clearId, info] of familyClearCosts(extracted, family)) {
+    if (info.order >= chosenOrder || clearId in prefixClears) continue;
+    prefixClears[clearId] = info.apCost;
+    gapApCost += info.apCost;
+  }
 
   return {
     amount,
-    apCost,
+    apCost: memberApCost + gapApCost,
     segMembers: new Set(segMembers),
     oneTimeMembers: new Set(oneTimeMembers),
     bulkSource,
@@ -1294,6 +1460,22 @@ function sequencedFamilyPrefix(
 
 function stageClearIdOf(source: SourceRef): string | null {
   return source.type === 'stage_like' && source.stageNumber !== undefined ? `${source.category}:${source.stageNumber}` : null;
+}
+
+// AP of every AP-costed clear in a sequenced family (any resource it drops), keyed by clear id. Clearing stage N
+// requires clearing 1..N-1 whether or not those drop the resource being priced, so their AP is a real prerequisite.
+function familyClearCosts(extracted: Extracted, family: string): Map<string, { order: number; apCost: number; source: StageLikeSourceRef }> {
+  const costs = new Map<string, { order: number; apCost: number; source: StageLikeSourceRef }>();
+  const consider = (source: SourceRef, costKey: string | undefined, costAmount: number | undefined): void => {
+    if (source.type !== 'stage_like' || costKey !== AP || costAmount === undefined || sequenceFamilyOf(source) !== family) return;
+    const clearId = stageClearIdOf(source);
+    const order = sequenceOrderOf(source);
+    if (clearId === null || order === null || costs.has(clearId)) return;
+    costs.set(clearId, { order, apCost: costAmount, source: { type: 'stage_like', category: source.category, stageNumber: source.stageNumber, ...(source.storyGate ? { storyGate: true } : {}) } });
+  };
+  for (const s of extracted.segments) consider(s.source, s.costKey, s.costAmount);
+  for (const o of extracted.oneTime) consider(o.source, o.costKey, o.costAmount);
+  return costs;
 }
 
 const sumClears = (clears: PrefixClears | undefined): number => Object.values(clears ?? {}).reduce((a, v) => a + v, 0);
@@ -1390,8 +1572,8 @@ function sequenceFamilyOf(source: SourceRef): string | null {
   switch (source.type) {
     case 'stage_like':
       if (source.stageNumber === undefined) return null;
-      // Story gates regular-stage access, so merge into stage family as mandatory prerequisite; challenge is separate.
-      return source.category === 'story' ? 'stage_like:stage' : `stage_like:${source.category}`;
+      // Story joins the stage family only when opted in as a prerequisite (storyGate); challenge is always separate.
+      return source.category === 'story' && source.storyGate ? 'stage_like:stage' : `stage_like:${source.category}`;
     case 'clue_search_round':
     case 'clue_search_clue':
       return 'clue_search';
@@ -1642,7 +1824,149 @@ function profileFromExtracted(extracted: Extracted, rateMap: Map<string, number>
   const merged = mergeSharedPrefixContributions(nettedSegments, rawOneTimeContributions);
   const segments = merged.segments.sort((a, b) => b.amount / b.apCost - a.amount / a.apCost);
 
-  return { key: targetKey, segments, oneTimeContributions: merged.oneTimeContributions };
+  return { key: targetKey, segments: [...segments, ...unlockClearSegments(extracted, segments, merged.oneTimeContributions)], oneTimeContributions: merged.oneTimeContributions };
+}
+
+// The repeat stage needs every earlier stage of its sequence cleared once, even ones that drop none of the
+// target. Those clears become zero-output finite segments (the curve runs sequenced finite segments first, in
+// stage order, and charges each clear only once).
+function unlockClearSegments(extracted: Extracted, segments: ApSegment[], oneTime: OneTimeContribution[]): ApSegment[] {
+  let tail: ApSegment | undefined;
+  for (const s of segments) {
+    if (!s.repeatsForever || sequenceKeyOf(s) === null) continue;
+    if (!tail || s.amount / s.apCost > tail.amount / tail.apCost) tail = s;
+  }
+  const key = tail ? sequenceKeyOf(tail) : null;
+  if (!tail || !key) return [];
+
+  const covered = new Set<string>();
+  for (const e of [...segments, ...oneTime]) {
+    const clearId = stageClearIdOf(e.source);
+    if (clearId !== null) covered.add(clearId);
+    for (const id of Object.keys(e.prefixClears ?? {})) covered.add(id);
+  }
+  const unlocks: ApSegment[] = [];
+  for (const [clearId, info] of familyClearCosts(extracted, key.family)) {
+    if (info.order >= key.order || covered.has(clearId)) continue;
+    unlocks.push({ apCost: info.apCost, amount: 0, source: info.source, sourceLabel: formatSourceLabel(info.source) });
+  }
+  return unlocks;
+}
+
+// Re-groups extracted sources into the joint model: stage-like segments of one stage become one activity that
+// co-produces everything the stage drops, and each stage's clear (first-clear bonuses, first-run bonuses) sits in
+// its sequence chain so earlier clears are prerequisites of later ones.
+function buildJointModel(extracted: Extracted, targetKey: string, owned: Record<string, number>, refs: JointRefLabel[] = [], cleared: ReadonlySet<string> = new Set()): JointModel {
+  const refOf = (source: SourceRef, clearId?: string, costKey?: string): number => refs.push({ source, sourceLabel: formatSourceLabel(source), clearId, costKey }) - 1;
+  interface StageGroup {
+    source: StageLikeSourceRef;
+    costKey: string;
+    costAmount: number;
+    repeatOut: Map<string, number>;
+    clearOut: Map<string, number>;
+  }
+  const groups = new Map<string, StageGroup>();
+  const groupOf = (source: StageLikeSourceRef, costKey: string, costAmount: number): StageGroup => {
+    const id = `${source.category}:${source.stageNumber ?? ''}:${costKey}:${costAmount}`;
+    let g = groups.get(id);
+    if (!g) {
+      g = { source, costKey, costAmount, repeatOut: new Map(), clearOut: new Map() };
+      groups.set(id, g);
+    }
+    return g;
+  };
+  const addTo = (map: Map<string, number>, key: string, amount: number): void => {
+    map.set(key, (map.get(key) ?? 0) + amount);
+  };
+  const columns: JointColumn[] = [];
+  const fixed: JointModel['fixed'] = [];
+  const goals: JointColumn[] = [];
+  const constants = new Map<string, number>();
+  for (const [key, amount] of Object.entries(owned)) if (amount > 0) constants.set(key, amount);
+
+  for (const seg of extracted.segments) {
+    if (seg.amount <= 0 || seg.costAmount <= 0) continue;
+    if (seg.source.type === 'stage_like') {
+      const g = groupOf(seg.source, seg.costKey, seg.costAmount);
+      // A finite stage segment is a single clear's yield (see Ctx.highAreaFirst), not repeatable farming.
+      if (seg.repeatsForever) addTo(g.repeatOut, seg.producesKey, seg.amount);
+      else addTo(g.clearOut, seg.producesKey, seg.amount);
+      if (seg.firstRunBonusAmount) addTo(g.clearOut, seg.producesKey, seg.firstRunBonusAmount);
+      continue;
+    }
+    const inFlow = new Map([[seg.costKey, seg.costAmount]]);
+    const outFlow = new Map([[seg.producesKey, seg.amount]]);
+    const isGoalPurchase = (seg.source.type === 'shop_tier' || seg.source.type === 'shop_flat_limit') && seg.source.goal !== undefined;
+    // A purchase the plan aims for is bought first as far as the budget allows; everything else is optional.
+    if (isGoalPurchase) goals.push({ in: inFlow, out: outFlow, cap: 1, ref: refOf(seg.source, undefined, seg.costKey) });
+    else columns.push({ in: inFlow, out: outFlow, cap: seg.repeatsForever ? Infinity : 1, ref: refOf(seg.source), divisible: seg.isApproximated });
+  }
+  for (const one of extracted.oneTime) {
+    if (one.amount <= 0) continue;
+    if (one.source.type === 'stage_like' && one.costKey !== undefined && one.costAmount !== undefined && one.costAmount > 0) {
+      addTo(groupOf(one.source, one.costKey, one.costAmount).clearOut, one.producesKey, one.amount);
+    } else if (one.costKey === undefined || one.costAmount === undefined) {
+      addTo(constants, one.producesKey, one.amount);
+    } else {
+      columns.push({ in: new Map([[one.costKey, one.costAmount]]), out: new Map([[one.producesKey, one.amount]]), cap: 1, ref: refOf(one.source) });
+    }
+  }
+
+  const chainMap = new Map<string, { order: number; clear: JointClear }[]>();
+  let standalone = 0;
+  for (const g of groups.values()) {
+    const inFlow = new Map([[g.costKey, g.costAmount]]);
+    const clearOut = new Map(g.repeatOut);
+    for (const [key, amount] of g.clearOut) addTo(clearOut, key, amount);
+    // A clear step is labelled by the stage alone, not by the "one-time reward" wording of its first-clear source.
+    const ref = refOf({ ...g.source, oneTimeClear: false }, `${g.source.category}:${g.source.stageNumber ?? ''}`);
+    const family = sequenceFamilyOf(g.source) ?? `standalone:${standalone++}`;
+    const order = sequenceOrderOf(g.source) ?? 0;
+    // Equally efficient stages are resolved in favour of the higher area: its runs get a hair cheaper (far below
+    // any real difference), so the solver no longer picks between exact ties arbitrarily.
+    const repeatIn = new Map(inFlow);
+    for (const [key, amount] of repeatIn) repeatIn.set(key, amount * (1 - Math.max(0, order) * AREA_TIE_BREAK));
+    const clear: JointClear = { in: inFlow, out: clearOut, repeat: g.repeatOut.size > 0 ? { in: repeatIn, out: new Map(g.repeatOut), cap: Infinity, ref } : null, ref };
+    const entries = chainMap.get(family) ?? [];
+    entries.push({ order, clear });
+    chainMap.set(family, entries);
+  }
+  const chains: JointClear[][] = [];
+  for (const entries of chainMap.values()) {
+    const sorted = entries.sort((a, b) => a.order - b.order).map((e) => e.clear);
+    // A cleared stage implies every earlier stage of its chain is cleared too. Cleared stages cost nothing and give
+    // no first-clear bonus, but their repeat farming is available from the start.
+    let lastCleared = -1;
+    sorted.forEach((clear, j) => {
+      const id = clear.ref !== undefined ? refs[clear.ref]?.clearId : undefined;
+      if (id !== undefined && cleared.has(id)) lastCleared = j;
+    });
+    for (let j = 0; j <= lastCleared; j++) {
+      const repeat = sorted[j].repeat;
+      if (repeat) columns.push(repeat);
+    }
+    const rest = sorted.slice(lastCleared + 1);
+    if (rest.length > 0) chains.push(rest);
+  }
+  return { apKey: AP, targetKey, columns, chains, fixed, goals, constants };
+}
+
+export interface JointRefLabel {
+  source: SourceRef;
+  sourceLabel: SourceLabelKey;
+  /** Stage clear id (see stageClearIdOf) for a stage clear; undefined for other activities. */
+  clearId?: string;
+  /** Currency a shop purchase is paid with, so purchases can be grouped by currency. */
+  costKey?: string;
+}
+
+export interface JointGoalPlan {
+  steps: JointStep[];
+  target: number;
+  startTarget: number;
+  apUsed: number;
+  /** Label table the steps' `ref` indexes into. */
+  labels: JointRefLabel[];
 }
 
 export interface ResourceApIndex {
@@ -1650,7 +1974,18 @@ export interface ResourceApIndex {
   resolveProfile: (targetKey: string) => ResourceApProfile;
   buildSankey: (targetKey: string, targetAmount: number) => SankeyFlow;
   buildFarmingPlan: (targetKey: string) => FarmingPlanEntry[];
+  // Target amount per AP once the shop purchases the plan commits to compete for the same AP (see jointGoalCurve.ts).
+  buildJointGoalCurve: (targetKey: string, owned: Record<string, number>, maxAp: number, points?: number, cleared?: ReadonlySet<string>) => JointCurvePoint[];
+  buildJointGoalPlan: (targetKey: string, owned: Record<string, number>, cleared?: ReadonlySet<string>, stopAtGoals?: boolean) => JointGoalPlan | null;
+  /** Stage chains in clear order, for the "already cleared" checklist. */
+  listJointClearChains: (targetKey: string, owned: Record<string, number>) => { id: string; sourceLabel: SourceLabelKey }[][];
 }
+
+// Relative AP discount per area step that breaks ties between equally efficient stages.
+const AREA_TIE_BREAK = 1e-8;
+
+// Budget standing in for "unlimited AP" when laying out the farming plan.
+const OPEN_PLAN_AP = 1_000_000;
 
 /**
  * Runs extraction + rate resolution once; caches result so callers can resolve multiple profiles efficiently.
@@ -1664,6 +1999,80 @@ export function buildResourceApIndex(ctx: Ctx): ResourceApIndex {
     resolveProfile: (targetKey) => profileFromExtracted(extracted, rateMap, chosenEdge, targetKey),
     buildSankey: (targetKey, targetAmount) => sankeyFlowFromExtracted(extracted, chosenEdge, targetKey, targetAmount),
     buildFarmingPlan: (targetKey) => farmingPlanFromExtracted(extracted, chosenEdge, targetKey),
+    buildJointGoalCurve: (targetKey, owned, maxAp, points, cleared) => buildJointCurve(buildJointModel(extracted, targetKey, owned, [], cleared), maxAp, points),
+    buildJointGoalPlan: (targetKey, owned, cleared, stopAtGoals) => {
+      const labels: JointRefLabel[] = [];
+      const model = buildJointModel(extracted, targetKey, owned, labels, cleared);
+      const goalCount = model.goals?.length ?? 0;
+      if (stopAtGoals && goalCount > 0) {
+        // Cheapest budget that still buys every goal purchase: the target is not farmed any further than that.
+        const solveAt = (ap: number) => {
+          const ks = buildJointCurve(model, ap, 2)[1]?.ks;
+          return ks ? { ks, done: (solveJointDetail(model, ks, ap)?.goal ?? 0) >= goalCount - 1e-6 } : null;
+        };
+        let hi = 1000;
+        while (hi < OPEN_PLAN_AP && !solveAt(hi)?.done) hi *= 2;
+        let lo = hi / 2;
+        // A 0.25% window is far below what the chart can show and halves the number of solves.
+        while (hi - lo > Math.max(1, hi * 0.0025)) {
+          const mid = (lo + hi) / 2;
+          if (solveAt(mid)?.done) hi = mid;
+          else lo = mid;
+        }
+        const found = solveAt(hi);
+        const plan = found ? planJointAtAp(model, found.ks, hi, { integerRuns: true }) : null;
+        if (plan) return { ...plan, labels };
+      }
+      // Unlimited AP: the plan at a very large budget is (finite prerequisites) + (one stage repeated without end).
+      // Planning at two budgets and extrapolating each repeat count linearly separates the two parts.
+      const plans = [OPEN_PLAN_AP, OPEN_PLAN_AP * 2].map((ap) => {
+        const last = buildJointCurve(model, ap, 2)[1];
+        return last?.ks ? planJointAtAp(model, last.ks, ap) : null;
+      });
+      const [near, far] = plans;
+      if (!near || !far) return null;
+      const stepKey = (st: JointStep) => `${st.kind}|${st.ref}|${st.chain}|${st.index}`;
+      const farCount = new Map(far.steps.map((st) => [stepKey(st), st.count]));
+      const steps: JointStep[] = [];
+      const forever: JointStep[] = [];
+      let cum = 0;
+      for (const st of near.steps) {
+        const growth = (farCount.get(stepKey(st)) ?? st.count) - st.count;
+        const grows = growth > 0.5;
+        const isForever = st.kind === 'repeat' && grows;
+        const count = isForever ? Math.max(0, st.count - growth) : st.count;
+        // Whatever scales with the budget (the repeat itself and the exchanges its output feeds) is open-ended: only the
+        // part present without extra AP belongs to the finite stretch, the rest is the per-AP rate below.
+        const finiteShare = grows && st.count > 0 ? Math.max(0, st.count - growth) / st.count : 1;
+        if (isForever) forever.push({ ...st, count: Infinity, ap: 0, forever: true, runAp: st.count > 0 ? st.ap / st.count : 0, targetDelta: 0 });
+        if (isForever && count < 0.5) continue;
+        const stepAp = isForever && st.count > 0 ? (st.ap * count) / st.count : st.ap;
+        steps.push({ ...st, count, ap: stepAp, targetDelta: st.targetDelta * finiteShare, apStart: cum, apEnd: cum + stepAp });
+        cum += stepAp;
+      }
+      // Beyond the finite stretch the target keeps rising at the slope between the two budgets.
+      if (forever.length > 0) forever[0].targetPerAp = (far.target - near.target) / OPEN_PLAN_AP;
+      // Steps that spend only currency were paced along the (huge) near budget; keep them inside the finite stretch.
+      const clampAp = (ap: number) => Math.min(ap, cum);
+      for (const st of steps) {
+        if (st.ap > 0) continue;
+        st.apStart = clampAp(st.apStart);
+        st.apEnd = clampAp(st.apEnd);
+        st.progress = st.progress?.map(([ap, share]): [number, number] => [clampAp(ap), share]);
+      }
+      for (const st of forever) steps.push({ ...st, apStart: cum, apEnd: cum });
+      return { steps, target: near.target, startTarget: near.startTarget, apUsed: cum, labels };
+    },
+    listJointClearChains: (targetKey, owned) => {
+      const labels: JointRefLabel[] = [];
+      const model = buildJointModel(extracted, targetKey, owned, labels);
+      return model.chains.map((chain) =>
+        chain.flatMap((clear) => {
+          const label = clear.ref !== undefined ? labels[clear.ref] : undefined;
+          return label?.clearId !== undefined ? [{ id: label.clearId, sourceLabel: label.sourceLabel }] : [];
+        }),
+      );
+    },
   };
 }
 
@@ -1718,7 +2127,7 @@ function sankeyNodeLabel(source: SourceRef): string {
     case 'field_stage':
       return `Field stage ${source.index + 1}`;
     case 'location_schedule':
-      return `스케줄 랭크 ${source.rank} · ${source.name}`;
+      return `Schedule rank ${source.rank} · ${source.name}`;
     default:
       return source.type;
   }
@@ -2028,7 +2437,12 @@ function pullPrefixBonusesBeforeTail(segments: ApSegment[]): ApSegment[] {
   return [...segments.slice(0, tailIndex), ...late, ...segments.slice(tailIndex).filter((s) => !lateSet.has(s))];
 }
 
-export function buildCumulativeCurve(rawSegments: ApSegment[], maxAp: number): { ap: number; amount: number }[] {
+export function buildCumulativeCurve(
+  rawSegments: ApSegment[],
+  maxAp: number,
+  // Reports the cumulative-AP span each finite segment occupies on the curve (e.g. to highlight it on a chart).
+  onFiniteSegment?: (seg: ApSegment, fromAp: number, toAp: number) => void,
+): { ap: number; amount: number }[] {
   const segments = pullPrefixBonusesBeforeTail(pullSequencedOneTimeToFront(foldSequencedFamilies(rawSegments)));
   const points: { ap: number; amount: number }[] = [{ ap: 0, amount: 0 }];
   let ap = 0;
@@ -2066,7 +2480,9 @@ export function buildCumulativeCurve(rawSegments: ApSegment[], maxAp: number): {
       amount += (maxAp - startAp) * rate;
       break;
     }
+    const fromAp = ap;
     ap += finiteApCost(seg);
+    onFiniteSegment?.(seg, fromAp, Math.min(ap, maxAp));
     // firstRunBonusAmount can still be set here on a demoted (foldSequencedFamilies) segment.
     amount += seg.amount + (seg.firstRunBonusAmount ?? 0);
     points.push({ ap: Math.min(ap, maxAp), amount });
@@ -2091,6 +2507,7 @@ export function hasAnySelectableResourceSource(eventData: EventData): boolean {
     has(d.minigame_defense) ||
     has(d.interactive_world_raid) ||
     has(d.minigame_janken) ||
+    has(d.minigame_tank) ||
     has(d.minigame_ccg) ||
     has(d.clue) ||
     has(d.minigame_road_puzzle) ||
@@ -2145,6 +2562,7 @@ export function debugSourceCoverage(ctx: Ctx): SourceCoverageEntry[] {
       status: 'partially_modeled',
       note: 'Ticket currency id is not in the type, approximated as Currency_4; daily free ticket regen not modeled.',
     },
+    { source: 'minigame_tank (stage clear reward)', existsInData: has(d.minigame_tank?.stage), status: 'modeled' },
     { source: 'minigame_janken (stage clear reward)', existsInData: has(d.minigame_janken?.stage), status: 'modeled' },
     {
       source: 'minigame_janken (score ladder)',

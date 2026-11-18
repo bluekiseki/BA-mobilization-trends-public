@@ -10,6 +10,7 @@ export interface IconEntry {
   localizeEtc: { NameEn: string; NameKr: string; NameJp: string; NameTw?: string };
   dataUrl: string;
   isGift: boolean; // ItemCategory === 6
+  itemCategory?: number; // raw ItemCategory from icon_info (2 = eleph, 3 = materials incl. OOParts)
   numericId: string; // "5001" — used as ownedGifts key when isGift
 }
 
@@ -61,6 +62,7 @@ export interface ComparisonRow {
   scanned: number; // maximum per-file sum of confirmed quantities, including instance edits
   edited: number; // aggregated quantity before an optional final table override
   confidence: number; // max similarity score across all detections (0–1)
+  duplicates?: { parts: number[]; mode: 'sum' | 'max' }; // set when the item was confirmed on several cells of the winning file
   confirmed: boolean; // true when at least one instance of this item has been confirmed
 }
 

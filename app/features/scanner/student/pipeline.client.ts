@@ -20,17 +20,8 @@ type LoadPortrait = (id: number) => Promise<ImageBitmap | null>;
 // Shared shape so the caller can pick a runner (video vs. screenshots) at runtime.
 export type BatchScanRunner = (files: File[], database: StudentRecord[], loadPortrait: LoadPortrait, cb: StudentScanCallbacks, signal?: AbortSignal) => Promise<StudentResult[]>;
 
-// Orchestrates a full video scan: scanStableFrames (0-40%) -> detectVideoLayout (40-43%) ->
-// dedup+extractStudent fused loop (43-100%).
-//
-// Dedup and extraction used to be two passes (prepareVideoCandidates decoded every raw candidate
-// once to compute its signature, then extractStudent decoded the *kept* ones again from
-// scratch). They're fused here into one forward pass that decodes each raw candidate exactly
-// once: a small one-candidate lookahead ("pending") holds the latest-seen member of the current
-// run of near-duplicate frames, and gets handed straight to extractStudentFromImage (reusing its
-// already-decoded ImageData) the moment a genuinely different candidate confirms the run is over
-// — the same "keep the last frame of a duplicate run" behavior prepareVideoCandidates had via a
-// reverse scan, but processed forward so results still stream out in chronological order.
+// Scan stable frames (0-40%), detect layout (40-43%), then deduplicate and extract (43-100%).
+// Keep the last frame of each duplicate run and reuse its decoded image for extraction.
 export async function processVideo(file: File, database: StudentRecord[], loadPortrait: LoadPortrait, cb: StudentScanCallbacks, signal?: AbortSignal): Promise<StudentResult[]> {
   cb.onLog('Scanning video for stable frames…');
   const rawCandidates = await scanStableFrames(file, (fraction, detail) => cb.onProgress(detail, fraction * 40), cb.progressMessages, signal);

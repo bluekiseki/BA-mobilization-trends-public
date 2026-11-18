@@ -32,7 +32,7 @@ export const getPreferenceIcon = (preferenceLevel: number, rarity: number): stri
 // --- Shared Component: grouped-by-affection avatar list, no modal chrome — used both inside
 // GiftStudentSheet's popup and embedded directly in other panels (e.g. the inventory item sheet). ---
 
-export function GiftAffectionGroups({ students, studentPortraits, emptyMessage }: { students: GiftStudentEntry[]; studentPortraits?: Record<number, string>; emptyMessage?: string }) {
+export function GiftAffectionGroups({ students, emptyMessage }: { students: GiftStudentEntry[]; emptyMessage?: string }) {
   const { t } = useTranslation('planner');
 
   const grouped = useMemo(() => {
@@ -62,7 +62,7 @@ export function GiftAffectionGroups({ students, studentPortraits, emptyMessage }
           </div>
           <div className="flex flex-wrap gap-1.5">
             {group.map((s) => (
-              <StudentPortraitAvatar key={s.id} studentId={Number(s.id)} name={s.name} studentPortraits={studentPortraits} />
+              <StudentPortraitAvatar key={s.id} studentId={Number(s.id)} name={s.name} />
             ))}
           </div>
         </div>
@@ -76,14 +76,12 @@ export function GiftAffectionGroups({ students, studentPortraits, emptyMessage }
 export const GiftStudentSheet = ({
   gift,
   students,
-  studentPortraits,
   eventData,
   iconData,
   onClose,
 }: {
   gift: GiftEntry;
   students: GiftStudentEntry[];
-  studentPortraits?: Record<number, string>;
   eventData: EventData;
   iconData: IconData;
   onClose: () => void;
@@ -117,7 +115,7 @@ export const GiftStudentSheet = ({
         </>
       }
     >
-      <GiftAffectionGroups students={filteredStudents} studentPortraits={studentPortraits} />
+      <GiftAffectionGroups students={filteredStudents} />
     </StudentSheetModal>
   );
 };

@@ -9,7 +9,7 @@ import { RiHeartLine, RiCharacterRecognitionLine, RiKeyboardLine, RiInformationL
 
 import { affectionExpToNextLevel } from '~/data/growthData';
 import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore';
-import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, StudentData } from '~/types/plannerData';
 // import { getGiftAffectionList } from '../../utils/student/giftAffectionList';
 import { GiftStudentSheet, getPreferenceIcon, type GiftEntry } from './GiftStudentSheet';
 import { buildGiftToStudentsMap, type GiftStudentEntry } from '../../utils/student/giftStudents';
@@ -36,7 +36,8 @@ interface AffectionTabProps {
   iconData: IconData;
   handlePlanChange: (field: string, value: number | string | boolean, isNumeric?: boolean) => void;
   allStudents?: StudentData;
-  studentPortraits?: StudentPortraitData;
+  /** Unrecruited plan: `current` is fixed to the recruit baseline. */
+  currentLocked?: boolean;
 }
 
 // --- Sub-components ---
@@ -48,6 +49,7 @@ const EditableLevelDisplay = ({
   onChange,
   prefix = '',
   textClassName = '',
+  disabled = false,
 }: {
   value: number;
   max: number;
@@ -55,6 +57,7 @@ const EditableLevelDisplay = ({
   onChange: (val: number) => void;
   prefix?: string;
   textClassName?: string;
+  disabled?: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localVal, setLocalVal] = useState(value);
@@ -71,6 +74,14 @@ const EditableLevelDisplay = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleCommit();
   };
+
+  if (disabled) {
+    return (
+      <div className={`flex items-center gap-1 px-1 py-0.5 opacity-30 select-none ${textClassName}`}>
+        <span className="font-bold">-</span>
+      </div>
+    );
+  }
 
   if (isEditing) {
     return (
@@ -209,8 +220,9 @@ const SegmentedControl = <T extends string>({ value, onChange, options }: { valu
 
 // --- Main Component ---
 
-export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, handlePlanChange, allStudents, studentPortraits }: AffectionTabProps) => {
+export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, handlePlanChange, allStudents, currentLocked = false }: AffectionTabProps) => {
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const location = useLocation();
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
@@ -334,7 +346,7 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
                   </span>
                   <span className="text-sm font-bold tabular-nums">
                     {result.scheduleCount.toLocaleString()}
-                    <span className="text-[10px] font-normal text-neutral-400 ml-0.5">{t('affectionTab.units.runs')}</span>
+                    <span className="text-[10px] font-normal text-neutral-400 ml-0.5">{t_ui('runsUnit')}</span>
                   </span>
                 </div>
               </div>
@@ -389,17 +401,20 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
                   max={100}
                   min={1}
                   prefix="Lv."
+                  disabled={currentLocked}
                   onChange={(val) => handlePlanChange('current.affection', val, true)}
                   textClassName="text-neutral-800 dark:text-white"
                 />
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={plan.current.affection}
-                  onChange={(e) => handlePlanChange('current.affection', Number(e.target.value), true)}
-                  className="w-full h-1 mt-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700 accent-neutral-600"
-                />
+                {!currentLocked && (
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    value={plan.current.affection}
+                    onChange={(e) => handlePlanChange('current.affection', Number(e.target.value), true)}
+                    className="w-full h-1 mt-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700 accent-neutral-600"
+                  />
+                )}
               </div>
               {/* Target */}
               <div className="flex-1 min-w-0">
@@ -424,26 +439,28 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
             </div>
 
             {/* Current EXP */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center text-[10px] font-bold text-neutral-400 whitespace-nowrap gap-1">
-                <EditableLevelDisplay
+            {!currentLocked && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center text-[10px] font-bold text-neutral-400 whitespace-nowrap gap-1">
+                  <EditableLevelDisplay
+                    value={plan.current.affectionExp}
+                    max={affectionExpToNextLevel[plan.current.affection] || 0}
+                    min={0}
+                    onChange={(val) => handlePlanChange('current.affectionExp', val, true)}
+                    textClassName="text-neutral-500 dark:text-neutral-300"
+                  />
+                  <span>/ {affectionExpToNextLevel[plan.current.affection] || 0}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={affectionExpToNextLevel[plan.current.affection] || 100}
                   value={plan.current.affectionExp}
-                  max={affectionExpToNextLevel[plan.current.affection] || 0}
-                  min={0}
-                  onChange={(val) => handlePlanChange('current.affectionExp', val, true)}
-                  textClassName="text-neutral-500 dark:text-neutral-300"
+                  onChange={(e) => handlePlanChange('current.affectionExp', Number(e.target.value), true)}
+                  className="flex-1 h-1 bg-neutral-100 rounded-lg appearance-none cursor-pointer dark:bg-neutral-800 accent-neutral-400"
                 />
-                <span>/ {affectionExpToNextLevel[plan.current.affection] || 0}</span>
               </div>
-              <input
-                type="range"
-                min="0"
-                max={affectionExpToNextLevel[plan.current.affection] || 100}
-                value={plan.current.affectionExp}
-                onChange={(e) => handlePlanChange('current.affectionExp', Number(e.target.value), true)}
-                className="flex-1 h-1 bg-neutral-100 rounded-lg appearance-none cursor-pointer dark:bg-neutral-800 accent-neutral-400"
-              />
-            </div>
+            )}
           </div>
         </div>
 
@@ -520,7 +537,7 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
                   options={[
                     { value: 'off', label: t('affectionTab.rules.convertOff') },
                     { value: 'toTarget', label: t('affectionTab.rules.convertToTarget') },
-                    { value: 'all', label: t('affectionTab.rules.convertAll') },
+                    { value: 'all', label: t('affectionTab.rules.all') },
                   ]}
                 />
                 {simulateCrafting && (
@@ -596,16 +613,7 @@ export const AffectionTab = ({ plan, giftAffectionList, eventData, iconData, han
           (() => {
             const gift = giftAffectionList.find((g) => g.id === selectedGiftId);
             if (!gift) return null;
-            return (
-              <GiftStudentSheet
-                gift={gift}
-                students={giftToStudentsMap[selectedGiftId] ?? []}
-                studentPortraits={studentPortraits}
-                eventData={eventData}
-                iconData={iconData}
-                onClose={() => setSelectedGiftId(null)}
-              />
-            );
+            return <GiftStudentSheet gift={gift} students={giftToStudentsMap[selectedGiftId] ?? []} eventData={eventData} iconData={iconData} onClose={() => setSelectedGiftId(null)} />;
           })()}
       </div>
 

@@ -15,12 +15,12 @@
   },
   "selection": {
     "main_story": "Select Main Stories",
-    "event_story": "Select Event Stories",
+    "event_story": "Select Events",
     "favor_story": "Choose relationship Stories",
     "memorial": "Select Memorial Lobby"
   },
   "search": {
-    "placeholder": "Search by title, composer...",
+    "placeholder": "Search by title, composer, usage...",
     "student_name": "Search student name...",
     "no_results": "No results. Filters must be set to prevent spoilers before the results are displayed."
   },
@@ -33,7 +33,15 @@
     "autoplay_next": "Autoplay Next",
     "autoplay_scroll": "Auto-scroll on play",
     "repeat_current": "Repeat Current",
-    "stop_after": "Stop After"
+    "stop_after": "Stop After",
+    "advanced": "Advanced options",
+    "order": "Play order",
+    "order_random": "Random",
+    "order_sequential": "By number",
+    "id_range": "Number range",
+    "id_range_from": "From number",
+    "id_range_to": "To number",
+    "id_range_clear": "Clear"
   },
   "status": {
     "error": "An error occurred."
@@ -93,11 +101,14 @@
     "final_ch4": "Act 1, Final Episode, Ch. 4, Phrenapates Showdown",
     "part2_prologue": "Act 2, Prologue",
     "part2_vol0_ch1": "Act 2, Vol. 0, Ch.1, A Spring Day Full of Almond Blossoms",
-    "part2_vol1_ch1": "Act 2, Vol. 1, Ch.1",
-    "part2_vol1_ch2": "Act 2, Vol. 1, Ch.2",
-    "part2_vol2_ch1": "Act 2, Vol. 2, Ch.1",
+    "part2_vol1_ch1": "Act 2, Vol. 1, Ch.1, Glory to Gehenna!",
+    "part2_vol1_ch2": "Act 2, Vol. 1, Ch.2, As We Become the Flame",
+    "part2_vol2_ch1": "Act 2, Vol. 2, Ch.1, The Horizon in Your Eyes",
     "part2_ex_lore_ch1": "Act 2, Vol. Ex. Lore Pursuit, Ch. 1, High Noon Haze",
     "part2_ex_lore_ch2": "Act 2, Vol. Ex. Lore Pursuit, Ch. 2, What's Inside the Drum Barrel",
     "part2_ex_lore_ch3": "Act 2, Vol. Ex. Lore Pursuit, Ch. 3, The Train in a Dream"
+  },
+  "named_events": {
+    "valentine": "Valentine's Day"
   }
 }

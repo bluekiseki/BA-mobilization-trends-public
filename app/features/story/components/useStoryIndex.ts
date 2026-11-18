@@ -73,33 +73,6 @@ export function useStoryLang(): { lang: StoryLang; setLang: (lang: StoryLang) =>
   return { lang, setLang, query: search ? `?${search}` : '' };
 }
 
-let portraits: Promise<Record<string, string>> | null = null;
-
-// Student portraits (student id -> base64 webp) are the same file the jukebox page uses. A failed load just means no thumbnails.
-export function useStudentPortraits(): Record<string, string> {
-  const [loaded, setLoaded] = useState<Record<string, string>>({});
-  useEffect(() => {
-    let active = true;
-    portraits ??= fetch(cdn('/w/students_portrait.json')).then(async (res) => {
-      if (!res.ok) return {};
-      const raw: unknown = await res.json();
-      return raw as Record<string, string>;
-    });
-    portraits.then(
-      (data) => {
-        if (active) setLoaded(data);
-      },
-      () => {
-        portraits = null;
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, []);
-  return loaded;
-}
-
 const studentNames = new Map<StoryLang, Promise<Record<string, string>>>();
 
 // Student names in the story language (student id -> name), from the same files the other student pages read. A failed load just means the names stay as written in the schedule.

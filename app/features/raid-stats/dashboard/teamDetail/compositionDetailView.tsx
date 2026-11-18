@@ -6,7 +6,7 @@ import { getDifficultyFromScoreAndBoss } from '~/components/raid/Difficulty';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { getBackgroundRatingColor, getCharacterStarValue } from '../../../../utils/raid/report';
-import type { Character, PortraitData, ReportEntryRank, ReportStudentData } from '../../../../types/raidReport';
+import type { Character, ReportEntryRank, ReportStudentData } from '../../../../types/raidReport';
 import { formatTimeToTimestamp } from '~/utils/time';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from 'recharts';
 import type { TooltipContentProps } from 'recharts';
@@ -147,8 +147,7 @@ export const StarRatingDistributionBarChart: React.FC<{
   };
   studentId: number;
   studentData: ReportStudentData;
-  portraitData: PortraitData;
-}> = ({ studentChartInfo, studentId, studentData, portraitData }) => {
+}> = ({ studentChartInfo, studentId, studentData }) => {
   if (!studentChartInfo || !studentChartInfo.data.length) {
     return null;
   }
@@ -174,7 +173,7 @@ export const StarRatingDistributionBarChart: React.FC<{
   return (
     <>
       <div className="shrink-0 w-10">
-        <StudentIcon character={{ id: studentId } as Character} student={studentData[studentId]} portraitData={portraitData} />
+        <StudentIcon character={{ id: studentId } as Character} student={studentData[studentId]} />
       </div>
       <div className="grow h-10">
         <ResponsiveContainer width="100%" height={40}>
@@ -265,10 +264,9 @@ const IncludedFormations: React.FC<{
   entries: ReportEntryRank[];
   compKey: string;
   studentData: ReportStudentData;
-  portraitData: PortraitData;
   startRank: number;
   maxRank: number;
-}> = ({ entries, compKey, studentData, portraitData, startRank, maxRank }) => {
+}> = ({ entries, compKey, studentData, startRank, maxRank }) => {
   const { t } = useTranslation('dashboard');
   const { t: t_ui } = useTranslation('ui');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -329,7 +327,7 @@ const IncludedFormations: React.FC<{
                         <div key={tIdx} className={`grid grid-cols-6 gap-1 rounded-sm ${isSelf ? 'outline-2 outline-offset-2 outline-ba-btn-blue-dark' : ''}`}>
                           {ids.map((sid, idx) => (
                             <div key={idx} className="w-10">
-                              <StudentIcon character={{ id: sid } as Character} student={studentData[sid]} portraitData={portraitData} />
+                              <StudentIcon character={{ id: sid } as Character} student={studentData[sid]} />
                             </div>
                           ))}
                         </div>
@@ -373,14 +371,13 @@ export const CompositionDetailView: React.FC<{
   boss: string;
   server: GameServer;
   id: string;
-  portraitData: PortraitData;
   onClose: () => void;
   analysisUnit?: 'team' | 'report';
   // Student IDs per party of the most common arrangement (report mode)
   partyLayout?: number[][];
   // Rank range of the whole dataset, so the scatter plots line up with the main list
   rankRange?: { start: number; max: number };
-}> = ({ comp, entries, studentData, raidInfo, boss, server, id, portraitData, onClose, analysisUnit, partyLayout, rankRange }) => {
+}> = ({ comp, entries, studentData, raidInfo, boss, server, id, onClose, analysisUnit, partyLayout, rankRange }) => {
   const { t } = useTranslation('dashboard');
   const { t: t_ui } = useTranslation('ui');
   const [selectedStudentId, setSelectedStudentId] = useState<'all' | number>('all');
@@ -740,7 +737,7 @@ export const CompositionDetailView: React.FC<{
                 className={`w-10 rounded-full transition-all duration-200 ${selectedStudentId === sid ? 'ring-2 ring-sky-500 ring-offset-2 dark:ring-offset-neutral-800' : 'opacity-60 hover:opacity-100'}`}
                 title={studentData[sid]?.Name}
               >
-                <StudentIcon character={{ id: sid } as Character} student={studentData[sid]} portraitData={portraitData} />
+                <StudentIcon character={{ id: sid } as Character} student={studentData[sid]} />
               </button>
             ))}
           </div>
@@ -827,9 +824,7 @@ export const CompositionDetailView: React.FC<{
       {analysisUnit === 'team' && <PartyCountChart data={entries} />}
 
       {/* Formations containing this party (team mode only) */}
-      {analysisUnit === 'team' && (
-        <IncludedFormations entries={entries} compKey={comp.ids.join(',')} studentData={studentData} portraitData={portraitData} startRank={rankRange?.start ?? 1} maxRank={rankRange?.max ?? 1} />
-      )}
+      {analysisUnit === 'team' && <IncludedFormations entries={entries} compKey={comp.ids.join(',')} studentData={studentData} startRank={rankRange?.start ?? 1} maxRank={rankRange?.max ?? 1} />}
 
       {/* Star Distribution Bar Chart (one block per party when the composition spans several parties) */}
       <div>
@@ -845,7 +840,7 @@ export const CompositionDetailView: React.FC<{
                 )}
                 {rows.map((row) => (
                   <div key={row.studentId} className="relative hover:z-20 flex items-center gap-2">
-                    <StarRatingDistributionBarChart studentChartInfo={row} studentId={row.studentId} studentData={studentData} portraitData={portraitData} />
+                    <StarRatingDistributionBarChart studentChartInfo={row} studentId={row.studentId} studentData={studentData} />
                   </div>
                 ))}
               </div>

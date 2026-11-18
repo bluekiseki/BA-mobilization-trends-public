@@ -2,6 +2,8 @@ export interface LegendChipItem {
   key: string;
   label: string;
   color: string;
+  // Optional number shown next to the label (e.g. player count).
+  count?: number;
   active?: boolean;
   onClick?: () => void;
 }
@@ -20,6 +22,7 @@ export default function LegendChips({ items }: { items: LegendChipItem[] }) {
           <>
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
             <span className="font-semibold">{item.label}</span>
+            {item.count !== undefined && <span className="tabular-nums text-neutral-500 dark:text-neutral-400">{item.count.toLocaleString()}</span>}
           </>
         );
 

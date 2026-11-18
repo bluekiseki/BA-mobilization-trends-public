@@ -595,7 +595,9 @@ function PerImageItemList({
       {items.length > 0 && (
         <div
           className={
-            isVideo ? 'grid min-h-0 flex-1 grid-cols-1 gap-1.5 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+            isVideo
+              ? 'grid min-h-0 flex-1 grid-cols-1 content-start gap-1.5 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'
+              : 'grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
           }
         >
           {items.map(({ r, index }) => {

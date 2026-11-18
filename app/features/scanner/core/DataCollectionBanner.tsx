@@ -5,11 +5,11 @@ interface Props {
   allowDataCollection: boolean;
   onToggle: (allow: boolean) => void;
   translationKeyPrefix?: 'itemScanner' | 'studentScanner';
-  detailsLabel?: string;
 }
 
-export function DataCollectionBanner({ allowDataCollection, onToggle, translationKeyPrefix = 'itemScanner', detailsLabel }: Props) {
+export function DataCollectionBanner({ allowDataCollection, onToggle, translationKeyPrefix = 'itemScanner' }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: translationKeyPrefix });
+  const { t: tUi } = useTranslation('ui');
   const [showDetails, setShowDetails] = useState(false);
   const [contributionCount, setContributionCount] = useState<number | null>(null);
 
@@ -45,7 +45,7 @@ export function DataCollectionBanner({ allowDataCollection, onToggle, translatio
           <span className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed">{t('dataCollectionOptIn')}</span>
         </label>
         <button onClick={() => setShowDetails(!showDetails)} className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-400 underline whitespace-nowrap shrink-0">
-          {detailsLabel ?? t('dataCollectionDetails')}
+          {tUi('details')}
         </button>
       </div>
       {showDetails && <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">{t('dataCollectionPrivacy')}</p>}

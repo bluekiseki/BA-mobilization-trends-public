@@ -1,6 +1,7 @@
 // app/components/live/DifficultySelector.tsx
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
 import { FiFilter, FiCheck, FiX } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import 'rc-slider/assets/index.css';
 
 interface DifficultySelectorProps {
@@ -10,6 +11,8 @@ interface DifficultySelectorProps {
 }
 
 export const DifficultySelector: React.FC<DifficultySelectorProps> = ({ availableDifficulties, selectedDiffs, setSelectedDiffs }) => {
+  const { t } = useTranslation('ui');
+  const { t: t_game } = useTranslation('game');
   const handleToggle = (diff: string) => {
     const newSet = new Set(selectedDiffs);
     if (newSet.has(diff)) newSet.delete(diff);
@@ -27,13 +30,13 @@ export const DifficultySelector: React.FC<DifficultySelectorProps> = ({ availabl
       <div className="flex items-center justify-between text-xs sm:text-sm">
         <div className="flex items-center gap-1.5 font-semibold text-neutral-600 dark:text-neutral-400">
           <FiFilter className="text-emerald-500" />
-          <span>Difficulty</span>
+          <span>{t_game('difficulty')}</span>
         </div>
         <div className="flex gap-1">
-          <button onClick={handleSelectAll} title="Select All" className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
+          <button onClick={handleSelectAll} title={t('selectAll')} className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
             <FiCheck size={14} />
           </button>
-          <button onClick={handleClear} title="Clear All" className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
+          <button onClick={handleClear} title={t('deselectAll')} className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded text-neutral-500 transition-colors">
             <FiX size={14} />
           </button>
         </div>

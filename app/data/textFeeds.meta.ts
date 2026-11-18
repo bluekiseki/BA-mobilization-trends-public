@@ -118,7 +118,7 @@ export const TEXT_FEEDS: TextFeedMeta[] = [
     lang: true,
     update: 'on deploy',
     columns: [
-      { name: 'Track', desc: 'raid | eraid | jointFiringDrill | multifloor | event | pickup | campaign | mainstory | ministory | patch | maintenance | ...' },
+      { name: 'Track', desc: 'raid | eraid | jointFiringDrill | tacticalRelay | multifloor | event | pickup | campaign | mainstory | ministory | patch | maintenance | ...' },
       { name: 'Title', desc: 'Localized title' },
       { name: 'Start', desc: 'ISO 8601, UTC' },
       { name: 'End', desc: 'ISO 8601, UTC' },

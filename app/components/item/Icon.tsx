@@ -1,6 +1,6 @@
 // app/components/planner/common/Icon.tsx
 import { useMemo, useState } from 'react';
-import type { IconInfo, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { IconInfo, StudentData } from '~/types/plannerData';
 import { ItemIconView, type ItemIconBaseProps } from './ItemIconView';
 import { GiftStudentSheet, type GiftEntry } from '../student/GiftStudentSheet';
 import { buildGiftToStudentsMap } from '../../utils/student/giftStudents';
@@ -12,11 +12,10 @@ import { getShopItemType } from '~/utils/itemType';
 
 export interface ItemIconProps extends ItemIconBaseProps {
   allStudents?: StudentData;
-  studentPortraits?: StudentPortraitData;
 }
 
 /** Item icon that opens the gift / furniture / opart student sheets when student data is supplied. */
-export const ItemIcon = ({ allStudents, studentPortraits, ...iconProps }: ItemIconProps) => {
+export const ItemIcon = ({ allStudents, ...iconProps }: ItemIconProps) => {
   const { type, itemId, eventData, iconData } = iconProps;
   const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
   const [selectedFurnitureId, setSelectedFurnitureId] = useState<string | null>(null);
@@ -59,22 +58,15 @@ export const ItemIcon = ({ allStudents, studentPortraits, ...iconProps }: ItemIc
             preferenceLevel: 0,
           };
           const students = giftToStudentsMap[itemId] ?? [];
-          return <GiftStudentSheet gift={gift} students={students} studentPortraits={studentPortraits} eventData={eventData} iconData={iconData} onClose={() => setSelectedGiftId(null)} />;
+          return <GiftStudentSheet gift={gift} students={students} eventData={eventData} iconData={iconData} onClose={() => setSelectedGiftId(null)} />;
         })()}
 
       {isFurniture && selectedFurnitureId === itemId && allStudents && (
-        <FurnitureStudentSheet
-          furnitureId={itemId}
-          students={furnitureToStudentsMap[itemId] ?? []}
-          studentPortraits={studentPortraits}
-          eventData={eventData}
-          iconData={iconData}
-          onClose={() => setSelectedFurnitureId(null)}
-        />
+        <FurnitureStudentSheet furnitureId={itemId} students={furnitureToStudentsMap[itemId] ?? []} eventData={eventData} iconData={iconData} onClose={() => setSelectedFurnitureId(null)} />
       )}
 
       {isOpart && selectedOpartId === itemId && allStudents && (
-        <OpartStudentSheet itemId={itemId} students={opartStudents} studentPortraits={studentPortraits} eventData={eventData} iconData={iconData} onClose={() => setSelectedOpartId(null)} />
+        <OpartStudentSheet itemId={itemId} students={opartStudents} eventData={eventData} iconData={iconData} onClose={() => setSelectedOpartId(null)} />
       )}
     </ItemIconView>
   );

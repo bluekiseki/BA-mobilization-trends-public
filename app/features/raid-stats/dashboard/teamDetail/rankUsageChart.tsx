@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useIsDarkState } from '~/store/isDarkState';
 import { getBackgroundRatingColor, getCharacterStarValue } from '../../../../utils/raid/report';
-import type { Character, PortraitData, ReportEntryRank, ReportStudentData } from '../../../../types/raidReport';
+import type { Character, ReportEntryRank, ReportStudentData } from '../../../../types/raidReport';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { StarRating } from '~/components/student/StarRating';
 import { StudentIcon } from '../../../../components/student/studentIcon';
@@ -72,8 +72,7 @@ const getColorForString = (str: string, is_etc: boolean) => {
 export const RankUsageChart: React.FC<{
   data: ReportEntryRank[];
   studentData: ReportStudentData;
-  portraitData: PortraitData;
-}> = React.memo(({ data, studentData, portraitData }) => {
+}> = React.memo(({ data, studentData }) => {
   const [selectedCharId, setSelectedCharId] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState<number | null | string>(null);
   const { isDark } = useIsDarkState();
@@ -385,7 +384,7 @@ export const RankUsageChart: React.FC<{
                 className={`flex flex-col items-center w-13 p-0 rounded-sm cursor-pointer transition-all ${selectedCharId === char.id ? 'bg-teal-500/30' : 'hover:bg-neutral-200 dark:hover:bg-neutral-700'}`}
               >
                 <div className="w-12 h-12">
-                  <StudentIcon character={{ id: char.id } as Character} student={studentData[char.id]} portraitData={portraitData} combinedPortrait />
+                  <StudentIcon character={{ id: char.id } as Character} student={studentData[char.id]} combinedPortrait />
                 </div>
                 <span className="font-bold text-neutral-800 text-[0.7em] dark:text-white mt-1">{char.rate.toFixed(2)}%</span>
               </div>

@@ -30,7 +30,12 @@ interface Probe {
   workers: FakeWorker[];
   log: string[];
   setCalls: number[];
-  result: { completedStatsForContext: CompletedStatsSimulation | null; isStatsCalculating: boolean; statsSimulationErrorKey: string | null } | null;
+  result: {
+    completedStatsForContext: CompletedStatsSimulation | null;
+    isStatsCalculating: boolean;
+    statsSimulationErrorKey: string | null;
+    statsSimulationProgress: { completed: number; total: number } | null;
+  } | null;
 }
 
 type Props = Omit<UseGachaStatsSimulationInput, 'setSimulationCount' | 'createWorker'>;
@@ -129,7 +134,7 @@ describe('useGachaStatsSimulation', () => {
       error: null,
       completed: { key: 'A', count: 1000, marker: 1 },
     });
-    await step('count above default runs a baseline instead', (m) => m.render({ ...base, tab: 'stats', statsContextKey: 'A', simulationCountInput: '50000' }), {
+    await step('count above default runs a baseline instead', (m) => m.render({ ...base, tab: 'stats', statsContextKey: 'A', simulationCountInput: '500000' }), {
       log: ['create', 'post:1:1000:true:2', 'terminate'],
       setCalls: [1000],
       calculating: false,
@@ -229,7 +234,7 @@ describe('useGachaStatsSimulation', () => {
         'post:5:1000:false:2',
         'terminate',
         'create',
-        'post:6:10000:true:2',
+        'post:6:100000:true:2',
       ],
       setCalls: [1000, 1000],
       calculating: true,
@@ -253,8 +258,29 @@ describe('useGachaStatsSimulation', () => {
       'post:5:1000:false:2',
       'terminate',
       'create',
-      'post:6:10000:true:2',
+      'post:6:100000:true:2',
       'terminate',
     ]);
+  });
+
+  it('draws a preview while the full run continues, keeps the worker alive, and reports progress', async () => {
+    const probe: Probe = { workers: [], log: [], setCalls: [], result: null };
+    const hook = mount(probe);
+    const reply = (response: GachaHistoryStatsWorkerResponse) => probe.workers[0].onmessage?.({ data: response } as MessageEvent<GachaHistoryStatsWorkerResponse>);
+    await act(async () => {
+      hook.render({ ...base, tab: 'stats', statsContextKey: 'P', simulationCountInput: '1000' });
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    act(() => reply({ type: 'progress', jobId: 1, completed: 250, total: 1000, stats: stats(6) }));
+    expect(probe.result?.statsSimulationProgress).toEqual({ completed: 250, total: 1000 });
+    expect(snapshot(probe)).toMatchObject({ completed: { marker: 6 } });
+    act(() => reply({ type: 'preview', jobId: 1, stats: stats(7), perBannerStats: perBanner }));
+    expect(snapshot(probe)).toMatchObject({ calculating: true, completed: { key: 'P', marker: 7 }, log: ['create', 'post:1:1000:true:2'] });
+    act(() => reply({ type: 'done', jobId: 1, stats: stats(8), perBannerStats: perBanner }));
+    expect(snapshot(probe)).toMatchObject({ calculating: false, completed: { key: 'P', marker: 8 } });
+    expect(probe.result?.statsSimulationProgress).toBeNull();
   });
 });

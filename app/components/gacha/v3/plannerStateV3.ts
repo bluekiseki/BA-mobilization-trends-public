@@ -1,5 +1,5 @@
 import type { ManualTicketBatchInput, PyroxeneConfig, PlannerSchedule } from '~/utils/pyroxeneCalc';
-import { buildInitialTicketBatches } from '~/utils/pyroxeneCalc';
+import { buildInitialTicketBatches, clampCharge } from '~/utils/pyroxeneCalc';
 import type { BannerStrategy, Student } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
 
@@ -38,6 +38,7 @@ export function simulationKeyV3(
       .sort((a, b) => a.bannerId.localeCompare(b.bannerId)),
     tickets: buildInitialTicketBatches(config, schedules),
     consumeExpiringTickets: config.consumeExpiringTickets ?? true,
+    charge: [clampCharge(config.chargeNormal), clampCharge(config.chargeLimited)],
     banners,
     students,
     region,

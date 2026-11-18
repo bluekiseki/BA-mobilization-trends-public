@@ -97,6 +97,7 @@ export default function APSchedulePanel_v2({
 }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.timeline' });
   const { t: tCal } = useTranslation(['calendar', 'game']);
+  const { t: t_planner } = useTranslation('planner');
   const [showCampaignBulk, setShowCampaignBulk] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
@@ -122,7 +123,7 @@ export default function APSchedulePanel_v2({
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
         {/* Event period */}
         <div className="flex items-center justify-between py-2.5">
-          <RowLabel>{t('eventPeriod')}</RowLabel>
+          <RowLabel>{t_planner('gacha.income.settings.event_period')}</RowLabel>
           <ApSelect value={apRefreshes_event} onChange={(v) => onApRefreshChange('apRefreshes_event', v)} />
         </div>
 
@@ -210,7 +211,7 @@ export default function APSchedulePanel_v2({
                   <div className="w-14">{t('headers.start')}</div>
                   <div className="w-14 text-center">{t('headers.type')}</div>
                   <div className="flex-1 px-2">{t('headers.name')}</div>
-                  <div className="w-24 text-right">{t('headers.ap')}</div>
+                  <div className="w-24 text-right">{t_planner('common.ap')}</div>
                 </div>
 
                 <div className="divide-y divide-neutral-100 dark:divide-neutral-800 max-h-72 overflow-y-auto custom-scrollbar">

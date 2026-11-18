@@ -50,7 +50,7 @@ const LOCALES: {
 ];
 
 // Language dropdown
-export const LocaleDropdown = ({ currentLocale, isMobileText = false }: { currentLocale: Locale; isMobileText?: boolean }) => {
+export const LocaleDropdown = ({ currentLocale }: { currentLocale: Locale }) => {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { pathname, search } = useLocation();
@@ -67,9 +67,13 @@ export const LocaleDropdown = ({ currentLocale, isMobileText = false }: { curren
 
   return (
     <div className="relative flex items-center" ref={ref}>
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        title={t_ui('language')}
+        aria-label={t_ui('language')}
+        className="flex items-center text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
+      >
         <HiOutlineLanguage className="text-xl" strokeWidth={1.5} />
-        <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t_ui('language')}</span>
       </button>
 
       {isOpen && (

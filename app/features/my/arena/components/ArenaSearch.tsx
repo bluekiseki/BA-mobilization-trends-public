@@ -4,7 +4,6 @@
 import { useMemo, useState } from 'react';
 import { HiOutlineXMark } from 'react-icons/hi2';
 import StudentSearchDropdown from '~/components/student/StudentSearchDropdown';
-import type { PortraitData } from '~/types/raidReport';
 import type { Student } from '~/types/plannerData';
 import type { ArenaRecord, ArenaTeam } from '~/features/my/arena/types';
 import {
@@ -128,7 +127,6 @@ interface Props {
   search: ArenaSearchState;
   onSearchChange: (search: ArenaSearchState) => void;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: string;
 }
 
@@ -150,7 +148,7 @@ const SORT_OPTIONS: { value: CounterSort; label: string }[] = [
   { value: 'recent', label: 'Recent' },
 ];
 
-export function ArenaSearch({ records, search, onSearchChange, students, portraitData, locale }: Props) {
+export function ArenaSearch({ records, search, onSearchChange, students, locale }: Props) {
   const [active, setActive] = useState(0);
   // How many queried students may be missing from a defense for it to count as matching (0 = exact).
   const [maxMissing, setMaxMissing] = useState(0);
@@ -210,7 +208,7 @@ export function ArenaSearch({ records, search, onSearchChange, students, portrai
             id === null ? `border-dashed text-xl font-bold ${VISIBLE_IN_LIST.has(index) ? 'text-neutral-500 dark:text-neutral-400' : 'text-neutral-300 dark:text-neutral-700'}` : ''
           }`}
         >
-          {id === null ? slotLabel(index, layout) : <StudentPortrait id={id} portraitData={portraitData} name={students[String(id)]?.Name} />}
+          {id === null ? slotLabel(index, layout) : <StudentPortrait id={id} name={students[String(id)]?.Name} />}
         </button>
         {id !== null && (
           <button
@@ -270,14 +268,7 @@ export function ArenaSearch({ records, search, onSearchChange, students, portrai
           </label>
           <label className="min-w-0">
             <span className="mb-1 block text-xs text-neutral-500 dark:text-neutral-400">Opponent nickname</span>
-            <ArenaNicknameSearch
-              value={search.nickname}
-              onChange={(nickname) => onSearchChange({ ...search, nickname })}
-              candidates={nicknames}
-              students={students}
-              portraitData={portraitData}
-              locale={locale}
-            />
+            <ArenaNicknameSearch value={search.nickname} onChange={(nickname) => onSearchChange({ ...search, nickname })} candidates={nicknames} students={students} locale={locale} />
           </label>
         </div>
       </div>
@@ -311,7 +302,7 @@ export function ArenaSearch({ records, search, onSearchChange, students, portrai
                 <TeamHeader role={a.role} side={a.side} onSearch={() => searchTeam(a.team, a.side, a.role)}>
                   <WinRate wins={a.wins} losses={a.losses} />
                 </TeamHeader>
-                <ArenaTeamRow team={a.team} students={students} portraitData={portraitData} hideDamage />
+                <ArenaTeamRow team={a.team} students={students} hideDamage />
               </div>
             ))}
           </div>
@@ -360,7 +351,7 @@ export function ArenaSearch({ records, search, onSearchChange, students, portrai
                     <WinRate wins={m.counters.reduce((n, a) => n + a.wins, 0)} losses={m.counters.reduce((n, a) => n + a.losses, 0)} />
                   </span>
                 </TeamHeader>
-                <ArenaTeamRow team={m.team} students={students} portraitData={portraitData} hideDamage />
+                <ArenaTeamRow team={m.team} students={students} hideDamage />
               </div>
             ))}
           </div>

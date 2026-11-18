@@ -20,18 +20,22 @@ import ResourceTimelinePanel from '~/features/inventory/components/ResourceTimel
 import { NON_BLUEPRINT_EQUIPMENT_KEYS } from '~/utils/groupMaterialNeeds';
 import { equipmentId, UW_MATERIAL_SERIES } from '~/data/growthData';
 import { BD_NOTE_GRADE_LABEL, BD_NOTE_SCHOOL_ORDER, getBdNoteItemKey, type BdNoteGrade } from '~/features/inventory/logic/bdNoteSchool';
+import { getOpartItemKey, listOpartSeriesBases, OPART_TIERS, type OpartTier } from '~/features/inventory/logic/opartSeries';
 import { buildResourceEntries, buildStudentResourceGroups, MATRIX_CAPABLE_TYPES, type DisplayMode, type SortKey } from '~/features/inventory/logic/inventoryDashboard';
 import { splitItemKey, type ItemType } from '~/utils/itemType';
 import { getItemDescription, getItemName } from '~/utils/locale';
 import { ItemIcon } from '~/components/item/Icon';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
-import type { CampaignData, ContentItem, EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { CampaignData, ContentItem, EventData, IconData, IconInfos, Student, StudentData } from '~/types/plannerData';
 import type { Route } from './+types/Inventory';
 import { GroupedSections } from '~/components/common/GroupedSections';
 import { StudentIcon } from '~/components/student/studentIcon';
 import type { Character } from '~/types/raidReport';
 import { InventoryFilterBar } from '~/features/inventory/components/InventoryFilterBar';
 import { GoalSummaryRow } from '~/features/inventory/components/GoalSummaryRow';
+import { MaterialItemTable } from '~/components/item/MaterialItemTable';
+import { MaterialLevelToggle, type MaterialDetailLevel } from '~/components/item/MaterialLevelToggle';
+import { buildMaterialRow } from '~/utils/materialTable';
 import { ResourceGrid } from '~/features/inventory/components/ResourceGrid';
 import { ResourceMatrix, type MatrixAxisEntry } from '~/features/inventory/components/ResourceMatrix';
 import { QuantityEditSheet } from '~/features/inventory/components/QuantityEditSheet';
@@ -40,6 +44,14 @@ import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
 import { getItemLabel, getItemTitle, type I18nLike } from '~/utils/scheduleDisplay';
 import { TrackedItemsBar } from '~/features/inventory/components/TrackedItemsBar';
 import { ItemIncomeSection } from '~/features/inventory/components/ItemIncomeSection';
+import { findAutoBuyShops, ShopAutoBuyToggle } from '~/features/inventory/components/ShopAutoBuyToggle';
+import { MultifloorFloorInput } from '~/features/inventory/components/MultifloorFloorInput';
+import { MULTIFLOOR_WB_KEYS } from '~/features/inventory/logic/resourceEventAdapters';
+import { useStaticData } from '~/hooks/useStaticData';
+import { loadCoinShopMonthly, loadMultifloorRewards } from '~/utils/itemSourceData';
+import { useEventDropSources } from '~/hooks/useEventDropSources';
+import { ItemDropList } from '~/features/inventory/components/ItemDropList';
+import { IncomeAssumptions } from '~/features/inventory/components/IncomeAssumptions';
 import { StudentGoalsTab } from '~/features/inventory/components/StudentGoalsTab';
 import { ScheduleSection } from '~/features/inventory/components/ScheduleSection';
 import { GoalStatusSummary } from '~/features/inventory/components/GoalStatusSummary';
@@ -53,13 +65,15 @@ import {
   listEditingGiftStudents,
   calcEditingPerStudentNeeds,
   listEditingAllUsers,
-  mergeStudentPortraits,
+  studentsByNumericId,
   selectRaidConfigItems,
   selectJfdConfigItems,
 } from '~/features/inventory/logic/editingItem';
 import { buildDisplayInventory, calcNeeded, calcFungiblePoolData, calcFungibleOwnedByKey } from '~/features/inventory/logic/inventoryView';
 import { buildFirstPickupByStudent, findAvailableStages, buildPanelEntryList } from '~/features/inventory/logic/purchasePanel';
 import { type ProjectionSchedule, EQUIP_CATEGORIES, getProjectionSchedule, cachedProjectionSchedule } from '~/features/inventory/logic/inventoryPageLogic';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
+import type { AppHandle } from '~/types/link';
 const BD_NOTE_GRADES: BdNoteGrade[] = [0, 1, 2, 3];
 const EMPTY_SCHEDULE_ITEMS: ScheduleItemV2[] = [];
 const EMPTY_PROJECTION_SCHEDULE: ProjectionSchedule = {
@@ -124,7 +138,6 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   const itemScannerLink = `${localeLink(locale, '/scanner/item')}?returnTo=${encodeURIComponent(returnToSelf)}`;
 
   const [students, setStudents] = useState<StudentData>({});
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
   const [iconInfos, setIconInfos] = useState<IconInfos | null>(null);
   const [campaigns, setCampaigns] = useState<{ jp: CampaignData; kr: CampaignData } | null>(null);
@@ -186,6 +199,9 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     expertPermitMode,
     expertPermitWeeklyMax,
     expertPermitDailyAmounts,
+    assumeAllIncome,
+    eventIncomeMode,
+    autoBuyShopItems,
     update: updatePlanStore,
   } = useResourcePlanStore();
 
@@ -199,6 +215,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   const [carryUp, setCarryUp] = useState(true);
   const [showMatrix, setShowMatrix] = useState(false);
   const [groupByStudent, setGroupByStudent] = useState(false);
+  const [showTable, setShowTable] = useState(false);
+  const [tableLevel, setTableLevel] = useState<MaterialDetailLevel>('split');
   const [displayMode, setDisplayMode] = useState<DisplayMode>('owned');
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set());
@@ -215,7 +233,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   // student-goals browser (standalone, not tied to a single catalog item).
   const [expandedOpen, setExpandedOpen] = useState(false);
   const [showStudentGoals, setShowStudentGoals] = useState(false);
-  const detailOpen = editingKey !== null || expandedOpen || showStudentGoals;
+  // The material table lists expected income per item, which needs the schedule and projection as well.
+  const detailOpen = editingKey !== null || expandedOpen || showStudentGoals || (showTable && showTarget);
   const { krEvents, jpEvents, krRaid, jpRaid, krMultifloor, jpMultifloor, krCampaign, jpCampaign, krPickup, jpPickup } = schedule ?? EMPTY_PROJECTION_SCHEDULE;
 
   useEffect(() => {
@@ -232,21 +251,6 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
       cancelled = true;
     };
   }, [detailOpen, schedule]);
-
-  const needsPortraits = groupByStudent || detailOpen;
-  useEffect(() => {
-    if (!needsPortraits || Object.keys(studentPortraits).length > 0) return;
-    let cancelled = false;
-    void fetch(cdn('/w/students_portrait.json'))
-      .then((response) => response.json<StudentPortraitData>())
-      .then((portraits) => {
-        if (!cancelled) setStudentPortraits(portraits);
-      })
-      .catch((error: unknown) => console.error('Failed to fetch student portraits:', error));
-    return () => {
-      cancelled = true;
-    };
-  }, [needsPortraits, studentPortraits]);
 
   useEffect(() => {
     if (!editingKey || campaigns) return;
@@ -429,7 +433,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     studentsRecord: students,
     itemIconInfo: iconInfos,
     growthPlans,
-    materialInventory,
+    // Gifts and unsaved edits live outside `materialInventory`; the projection must start from what this page shows.
+    materialInventory: displayInventory,
     eventPlans,
     gachaResult,
     purchaseEvents,
@@ -457,7 +462,12 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     locale,
   });
 
-  const isModeledKey = editingKey != null && projection.trackingItems.some((it) => it.key === editingKey);
+  const coinShopMonthly = useStaticData(loadCoinShopMonthly, null);
+  const multifloorRewards = useStaticData(loadMultifloorRewards, null);
+  const isMultifloorKey = editingKey !== null && (MULTIFLOOR_WB_KEYS as readonly string[]).includes(editingKey);
+  const multifloorFloorCap = Math.max(97, ...Object.values(multifloorRewards ?? {}).flatMap((floors) => Object.keys(floors).map(Number)));
+  const autoBuyShops = editingKey ? findAutoBuyShops(coinShopMonthly, editingKey) : [];
+  const isModeledKey = editingKey != null && (projection.trackingItems.some((it) => it.key === editingKey) || !!projection.timelines[editingKey]);
 
   const needed = useMemo(() => calcNeeded({ showTarget, growthPlans, students }), [showTarget, growthPlans, students]);
 
@@ -583,6 +593,20 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
         getItemKey: (rowKey, colKey) => getBdNoteItemKey(base, Number(rowKey), Number(colKey) as BdNoteGrade),
       };
     }
+    if (itemType === 'Opart') {
+      const opartEntries = entries.filter((e) => e.itemType === 'Opart');
+      const entryByKey = new Map(opartEntries.map((e) => [e.key, e]));
+      const bases = listOpartSeriesBases(opartEntries.map((e) => Number(e.id)));
+      return {
+        // Label each series by its top-tier item name (falls back to the lowest tier).
+        rows: bases.map((base) => ({ key: String(base), label: (entryByKey.get(getOpartItemKey(base, 3)) ?? entryByKey.get(getOpartItemKey(base, 0)))?.name ?? String(base) })),
+        cols: OPART_TIERS.map((tier) => ({ key: String(tier), label: `T${tier + 1}` })),
+        getItemKey: (rowKey, colKey) => {
+          const key = getOpartItemKey(Number(rowKey), Number(colKey) as OpartTier);
+          return entryByKey.has(key) ? key : null;
+        },
+      };
+    }
     return null;
   };
 
@@ -597,6 +621,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
         getItemKey={config.getItemKey}
         inventory={displayInventory}
         needed={needed}
+        deficitByKey={fungibleDeficitByKey}
+        diffByKey={fungibleDiffByKey}
         eventData={eventData}
         iconData={iconData}
         locale={locale}
@@ -612,7 +638,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   // is active (matrix cells in row-major order, or the flat sorted/filtered grid).
   const navigableKeys = useMemo(
     () => buildNavigableKeys({ groupByStudent, studentGroups, showMatrix, singleMatrixType, filteredEntries, getMatrixConfig }),
-    [groupByStudent, studentGroups, showMatrix, singleMatrixType, filteredEntries, t_club],
+    [groupByStudent, studentGroups, showMatrix, singleMatrixType, filteredEntries, entries, t_club],
   );
 
   const navigate = (direction: 1 | -1) => {
@@ -638,14 +664,15 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   const editingAllUsers = useMemo(() => listEditingAllUsers({ editingKey, editingGiftStudents, entries, students }), [editingKey, editingGiftStudents, entries, students]);
 
   // ─── Merged for the pieces migrated from planner/resources ────────────────
-  // Those components (data.ts `Student`) expect Portrait merged in and numeric keys; the
-  // catalog logic above keeps using the raw `students`/`studentPortraits` state untouched.
-  const studentsWithPortrait = useMemo(() => mergeStudentPortraits({ detailOpen, students, studentPortraits }), [detailOpen, students, studentPortraits]);
+  // Those components (data.ts `Student`) expect numeric keys; the catalog logic above keeps
+  // using the raw `students` state untouched.
+  const studentsById = useMemo(() => studentsByNumericId({ detailOpen, students }), [detailOpen, students]);
 
   const raidSchedule = useMemo(() => (server === 'kr' ? krRaid : jpRaid), [server, krRaid, jpRaid]);
   const mfSchedule = useMemo(() => (server === 'kr' ? krMultifloor : jpMultifloor), [server, krMultifloor, jpMultifloor]);
   const allScheduleItems = useMemo(() => [...raidSchedule, ...mfSchedule], [raidSchedule, mfSchedule]);
   const getScheduleTitle = useCallback((item: ScheduleItemV2) => getItemTitle(item, locale, i18n as I18nLike), [locale, i18n]);
+  const dropSources = useEventDropSources(editingKey, server === 'kr' ? krEvents : jpEvents, startDate, getScheduleTitle);
 
   const raidConfigItems = useMemo(() => selectRaidConfigItems(raidSchedule, startDate), [raidSchedule, startDate]);
 
@@ -723,8 +750,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
   );
 
   const panelEntryList = useMemo(
-    () => buildPanelEntryList({ editingKey, studentsWithPortrait, growthPlans, firstPickupByStudent, iconInfos, locale, targetGoals, materialInventory, trackingItems: projection.trackingItems }),
-    [editingKey, studentsWithPortrait, growthPlans, firstPickupByStudent, iconInfos, locale, targetGoals, materialInventory, projection.trackingItems],
+    () => buildPanelEntryList({ editingKey, studentsById, growthPlans, firstPickupByStudent, iconInfos, locale, targetGoals, materialInventory, trackingItems: projection.trackingItems }),
+    [editingKey, studentsById, growthPlans, firstPickupByStudent, iconInfos, locale, targetGoals, materialInventory, projection.trackingItems],
   );
 
   const availableStages = useMemo(() => findAvailableStages({ editingKey, campaigns, server }), [editingKey, campaigns, server]);
@@ -866,6 +893,8 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
             onToggleMatrix={handleToggleMatrix}
             groupByStudent={groupByStudent}
             onToggleGroupByStudent={handleToggleGroupByStudent}
+            showTable={showTable}
+            onToggleTable={() => setShowTable((v) => !v)}
             schoolOptions={schoolOptions}
             selectedSchools={selectedSchools}
             onChangeSchools={setSelectedSchools}
@@ -886,7 +915,26 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
 
           <GoalSummaryRow pools={goalSummaryPools} iconData={iconData} />
 
-          {groupByStudent ? (
+          {showTable && showTarget ? (
+            <div className="space-y-2">
+              <MaterialLevelToggle value={tableLevel} onChange={setTableLevel} className="ml-auto w-fit" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                {filteredEntries
+                  .filter((entry) => entry.needed > 0)
+                  .map((entry) => (
+                    <MaterialItemTable
+                      key={entry.key}
+                      row={buildMaterialRow(entry.key, entry.needed, entry.owned, projection.expectedIncome[entry.key])}
+                      eventData={eventData}
+                      iconData={iconData}
+                      locale={locale}
+                      level={tableLevel}
+                      onOpenItem={setEditingKey}
+                    />
+                  ))}
+              </div>
+            </div>
+          ) : groupByStudent ? (
             <GroupedSections
               emptyMessage={t_planner('inventory.emptyMessage')}
               sections={studentGroups.map((group) => ({
@@ -894,7 +942,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                 header: (
                   <>
                     <div className="w-10 shrink-0">
-                      <StudentIcon character={{ id: group.studentId } as Character} student={students[group.studentId]} portraitData={studentPortraits} />
+                      <StudentIcon character={{ id: group.studentId } as Character} student={students[group.studentId]} />
                     </div>
                     <span className="text-sm font-bold text-neutral-800 dark:text-neutral-100">{group.name}</span>
                   </>
@@ -930,9 +978,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
             <>
               {renderMatrix(singleMatrixType)}
               {singleMatrixType === 'Equipment' && (
-                // Enhancement stones (Equipment_1~4) and unique weapon materials (Equipment_10~43)
-                // don't fit the slot×tier matrix at all, so the matrix view would otherwise hide
-                // them entirely. Shown as a plain divider, not a nested card (CLAUDE.md).
+                // Show non-blueprint materials separately because they have no slot/tier coordinates.
                 <div className="border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-3">
                   <ResourceGrid
                     entries={filteredEntries.filter((e) => NON_BLUEPRINT_EQUIPMENT_KEYS.has(e.key))}
@@ -1001,35 +1047,50 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                   perStudentNeeds={editingPerStudentNeeds}
                   allUsers={editingAllUsers}
                   giftStudents={editingGiftStudents}
-                  studentPortraits={studentPortraits}
                   projectionSection={
-                    isModeledKey && iconInfos ? (
+                    dropSources.length > 0 || autoBuyShops.length > 0 || isMultifloorKey || (isModeledKey && iconInfos) ? (
                       <>
-                        <div className="flex items-center gap-2 px-4 pt-3">
-                          <span className="text-xs text-neutral-500 dark:text-neutral-400">{t_ui('period')}</span>
-                          <select
-                            value={planDays}
-                            onChange={(e) => setPlanDays(Number(e.target.value))}
-                            className="px-2 py-1 text-xs ios-compact-12 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-100 focus:outline-none focus:border-blue-400"
-                          >
-                            {HORIZON_OPTIONS.map((o) => (
-                              <option key={o.days} value={o.days}>
-                                {horizonLabels[o.days]}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <ResourceTimelinePanel
-                          projection={projection}
-                          selectedKey={editingKey}
-                          gachaEligmaPercentile={gachaEligmaPercentile}
-                          gachaEligmaUseMean={gachaEligmaUseMean}
-                          onSetPercentile={setGachaEligmaPercentile}
-                          onSetUseMean={setGachaEligmaUseMean}
-                          iconInfos={iconInfos}
-                          iconData={iconData}
-                          locale={locale}
-                        />
+                        {dropSources.length > 0 && (
+                          <div className="px-4 pt-3">
+                            <ItemDropList sources={dropSources} />
+                          </div>
+                        )}
+                        {isMultifloorKey && (
+                          <div className="px-4 pt-3">
+                            <MultifloorFloorInput value={multifloorDefaultMaxFloor} max={multifloorFloorCap} onChange={(floor) => updatePlanStore({ multifloorDefaultMaxFloor: floor })} />
+                          </div>
+                        )}
+                        {editingKey && autoBuyShops.length > 0 && (
+                          <div className="px-4 pt-3">
+                            <ShopAutoBuyToggle
+                              checked={!!autoBuyShopItems?.[editingKey]}
+                              onChange={(checked) => updatePlanStore({ autoBuyShopItems: { ...autoBuyShopItems, [editingKey]: checked } })}
+                            />
+                          </div>
+                        )}
+                        {isModeledKey && iconInfos && (
+                          <>
+                            <div className="px-4 pt-3">
+                              <IncomeAssumptions
+                                assumptions={assumeAllIncome}
+                                onChange={(next) => updatePlanStore({ assumeAllIncome: next })}
+                                eventIncomeMode={eventIncomeMode}
+                                onEventIncomeModeChange={(mode) => updatePlanStore({ eventIncomeMode: mode })}
+                              />
+                            </div>
+                            <ResourceTimelinePanel
+                              projection={projection}
+                              selectedKey={editingKey}
+                              gachaEligmaPercentile={gachaEligmaPercentile}
+                              gachaEligmaUseMean={gachaEligmaUseMean}
+                              onSetPercentile={setGachaEligmaPercentile}
+                              onSetUseMean={setGachaEligmaUseMean}
+                              iconInfos={iconInfos}
+                              iconData={iconData}
+                              locale={locale}
+                            />
+                          </>
+                        )}
                       </>
                     ) : undefined
                   }
@@ -1045,7 +1106,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                               trackingItems={projection.trackingItems}
                               selectedItemKey={editingKey}
                               iconInfos={iconInfos}
-                              studentsRecord={studentsWithPortrait}
+                              studentsRecord={studentsById}
                               locale={locale}
                               onSelectSearchResult={handleSelectSearchResult}
                               onSelectItem={handleSelectItem}
@@ -1068,7 +1129,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                               onUpdate: (p) => updatePlanStore(p),
                             }}
                             expertPermit={{ expertPermitMode, expertPermitWeeklyMax, onUpdate: (p) => updatePlanStore(p) }}
-                            wb={{ multifloorDefaultMaxFloor, multifloorMaxFloors, mfSchedule, onUpdate: (p) => updatePlanStore(p) }}
+                            wb={{ multifloorDefaultMaxFloor, multifloorMaxFloors, mfSchedule, rewards: multifloorRewards, server, onUpdate: (p) => updatePlanStore(p) }}
                           />
                         </div>
                         <ScheduleSection {...scheduleSectionProps} />
@@ -1096,7 +1157,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                     <GoalStatusSummary
                       statuses={projection.studentGoalStatuses}
                       tacticalCoinStatus={projection.tacticalCoinStatus}
-                      studentsRecord={studentsWithPortrait}
+                      studentsRecord={studentsById}
                       onSelectResource={(key) => {
                         setEditingKey(key);
                         setShowStudentGoals(false);
@@ -1107,7 +1168,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
                     selectedItemKey={editingKey}
                     activePlans={projection.activePlans}
                     allGrowthPlans={growthPlans}
-                    studentsRecord={studentsWithPortrait}
+                    studentsRecord={studentsById}
                     targetGoals={targetGoals}
                     contentItems={contentItems}
                     gachaStudentStats={gachaResult?.studentStats}
@@ -1133,3 +1194,7 @@ export default function InventoryPage({ loaderData }: Route.ComponentProps) {
     </div>
   );
 }
+
+export const handle: AppHandle = {
+  preload: () => studentSheetPreloadLinks(),
+};

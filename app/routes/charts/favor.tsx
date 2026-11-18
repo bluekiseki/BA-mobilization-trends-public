@@ -9,7 +9,7 @@ import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/hooks/usePageHelp';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -41,15 +41,10 @@ export const handle: AppHandle = {
 
     // const { eventId } = useLoaderData<typeof rootLorder>().params
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
-        as: 'fetch',
-        crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
-        href: cdn(`/w/students_portrait.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -59,7 +54,6 @@ export const handle: AppHandle = {
 };
 
 export default function emblemCounter() {
-  useHelpKey('chart.favor');
   const loaderData = useLoaderData<typeof loader>();
   return (
     <div className="sm:px-4 px-0 mx-auto py-6">

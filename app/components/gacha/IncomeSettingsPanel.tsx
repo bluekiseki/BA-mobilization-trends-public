@@ -17,6 +17,7 @@ interface Props {
 
 export default function IncomeSettingsPanel({ config, setConfig, includeGacha, onToggleIncludeGacha }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
+  const { t: t_ui } = useTranslation('ui');
 
   const [newCustomDate, setNewCustomDate] = useState('');
   const [newCustomTitle, setNewCustomTitle] = useState('');
@@ -187,7 +188,7 @@ export default function IncomeSettingsPanel({ config, setConfig, includeGacha, o
             onChange={(val) => setNewCustomAmount(Number(val))}
           />
           <button onClick={handleAdd} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-3 rounded transition-colors">
-            {t('common.add', { defaultValue: 'Add' })}
+            {t_ui('add')}
           </button>
         </div>
         {config.customIncomes && config.customIncomes.length > 0 && (

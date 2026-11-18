@@ -24,7 +24,7 @@ const armor = (key: keyof typeof type_translation, en: string): Record<TermLocal
  * Title terms were counted across public/video/raid-jp-*.json (R85-R93, E29-E38, 2026-10),
  * and description terms across the 165 populated descriptions in E38.
  * Boss names come from bossdata.json; only aliases are listed here.
- * Community slang whose meaning could not be verified (e.g. 定価) is intentionally left out.
+ * Unverified community slang is excluded.
  */
 export const TITLE_GLOSSARY: Record<string, GlossaryConcept> = {
   // Game title
@@ -80,7 +80,7 @@ export const TITLE_GLOSSARY: Record<string, GlossaryConcept> = {
   attempt: { label: { en: 'Team', ko: '파티', ja: '凸', zh_Hant: '刀' } },
   composition: { label: { en: 'Comp', ko: '편성', ja: '編成', zh_Hant: '編成' } },
   uniqueWeapon: { label: { en: 'UE', ko: '고유', ja: '固有', zh_Hant: '專武' } },
-  // レンタル in titles means borrowing an assist student (e.g. "ミカレンタル").
+  // Rental terms in titles refer to borrowing an assist student.
   assist: { label: { en: 'Assist', ko: '조력자', ja: '助っ人', zh_Hant: '助戰' }, aliases: { en: ['Borrow'], ja: ['レンタル'] } },
   subtitledGuide: { label: { en: 'Subtitled guide', ko: '자막 해설', ja: '字幕解説', zh_Hant: '字幕解說' } },
   quickGuide: { label: { en: 'Quick guide', ko: '간단 해설', ja: '簡易解説', zh_Hant: '簡易解說' } },
@@ -97,7 +97,7 @@ export const TITLE_GLOSSARY: Record<string, GlossaryConcept> = {
   firstDay: { label: { en: 'Day 1', ko: '첫날', ja: '初日', zh_Hant: '首日' } },
   lastDay: { label: { en: 'Last day', ko: '마지막 날', ja: '最終日', zh_Hant: '最終日' } },
   score: { label: { en: 'Score', ko: '점수', ja: 'スコア', zh_Hant: '分數' } },
-  // EX skill cost in battle (e.g. "10.5コスト必須"); labels follow the site's buff names.
+  // EX skill cost labels follow the site's buff names.
   exCost: { label: { en: 'Cost', ko: '코스트', ja: 'コスト', zh_Hant: 'COST' } },
   clear: { label: { en: 'Clear', ko: '클리어', ja: 'クリア', zh_Hant: '通關' }, aliases: { ja: ['クリアー'] } },
   withTimeline: { label: { en: 'with TL', ko: 'TL 있음', ja: 'TL有り', zh_Hant: '附軸' }, aliases: { ja: ['TL有', 'TLあり', 'TL付き', 'TL付'] } },
@@ -138,6 +138,6 @@ export const TITLE_GLOSSARY: Record<string, GlossaryConcept> = {
   // Platinum trophy (top 20,000). Labels follow the site's existing "Platinum" wording.
   platinumTrophy: { label: { en: 'Platinum', ko: '플래티넘', ja: 'チナトロ', zh_Hant: '白金' }, aliases: { ja: ['プラチナトロフィー'] } },
   platinumBorder: { label: { en: 'Platinum cutoff', ko: '플래티넘 컷', ja: 'チナトロボーダー', zh_Hant: '白金檔線' }, aliases: { ja: ['プラチナボーダー'] } },
-  // Players who started at an anniversary, e.g. "4.5周年勢" = started at the 4.5th anniversary.
+  // Anniversary terms describe when a player started playing.
   anniversaryStarters: { label: { en: 'anniversary starters', ko: '주년 입문자', ja: '周年勢', zh_Hant: '周年入坑' } },
 };

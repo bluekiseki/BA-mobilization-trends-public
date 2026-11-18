@@ -1,6 +1,8 @@
 // SkillsTab.tsx
 
 import { useTranslation } from 'react-i18next';
+import { summonsOf, useSummonCatalog } from '~/features/students/data/useSummons';
+import type { Locale } from '~/utils/i18n/config';
 import { FiInfo } from 'react-icons/fi';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 import type { EventData, EXSkill, IconData, Student, Skill } from '~/types/plannerData';
@@ -27,10 +29,13 @@ interface SkillsTabProps {
   handlePlanChange: (field: string, value: string | number, isNumeric?: boolean) => void;
   iconData?: IconData;
   eventData?: EventData;
+  /** Unrecruited plan: `current` is fixed to the recruit baseline. */
+  currentLocked?: boolean;
 }
 
-export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, eventData }: SkillsTabProps) => {
-  const { t } = useTranslation(['planner', 'game']);
+export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, eventData, currentLocked = false }: SkillsTabProps) => {
+  const { t, i18n } = useTranslation(['planner', 'game', 'students']);
+  const summons = summonsOf(studentInfo ?? {}, useSummonCatalog(i18n.language as Locale));
 
   if (!studentInfo) return <div className="text-center p-4 text-xs text-neutral-400">Please select a student.</div>;
 
@@ -47,6 +52,9 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
         const hasGear = studentInfo.Gear !== undefined && 'TierUpMaterial' in studentInfo.Gear;
         const targetMeetsGearCondition = plan.target.affection >= 20 && (plan.target.gear ?? 0) >= 2;
         const showGearHint = hasGearNormalUpgrade && hasGear && !targetMeetsGearCondition;
+
+        // Summon skills use the level of the student skill they follow in game
+        const summonSkills = summons.flatMap((summon) => summon.skills.filter((skill) => skill.follows === skillKey).map((skill) => ({ summon, skill })));
 
         const currentLevel = plan.current[id as keyof typeof plan.current] as number;
         const targetLevel = plan.target[id as keyof typeof plan.target] as number;
@@ -77,6 +85,23 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
                     />
                   </div>
                 ))}
+              {summonSkills.map(({ summon, skill }) => (
+                <div key={`${summon.Id}-${skill.Name}`} className="mt-2 pt-2 border-t border-dashed border-neutral-100 dark:border-neutral-800">
+                  <SkillDisplay
+                    studentInfo={studentInfo}
+                    skillKey={skillKey}
+                    skillLabel={`${t('students:summon')} · ${summon.Name}`}
+                    currentLevel={plan.current[id]}
+                    targetLevel={plan.target[id]}
+                    currentUW={plan.current.uw}
+                    targetUW={plan.target.uw}
+                    skillData={{ ...skill, Icon: '', Effects: [] }}
+                    currentRank={plan.current.affection}
+                    targetRank={plan.target.affection}
+                    fixed
+                  />
+                </div>
+              ))}
               {showGearHint && (
                 <div className="mt-2 flex items-center gap-2 px-2 py-1.5 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-400">
                   <FiInfo className="w-3.5 h-3.5 shrink-0" />
@@ -99,18 +124,28 @@ export const SkillsTab = ({ plan, studentInfo, handlePlanChange, iconData, event
               <div className="grid grid-cols-2 gap-3">
                 {/* Current */}
                 <div>
-                  <MinMaxControls label="Current" onMin={() => handlePlanChange(`current.${id}`, 1, true)} onMax={() => handlePlanChange(`current.${id}`, maxLevel, true)} />
-                  <select
-                    value={plan.current[id]}
-                    onChange={(e) => handlePlanChange(`current.${id}`, e.target.value, true)}
-                    className="w-full p-1.5 text-sm ios-compact-14 border border-neutral-200 rounded bg-white dark:bg-neutral-700 dark:border-neutral-600 text-center"
-                  >
-                    {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
-                      <option key={level} value={level}>
-                        Lv.{level}
-                      </option>
-                    ))}
-                  </select>
+                  {currentLocked ? (
+                    <p className="mb-0.5 text-[11px] font-bold tracking-tight text-neutral-500 dark:text-neutral-400">Current</p>
+                  ) : (
+                    <MinMaxControls label="Current" onMin={() => handlePlanChange(`current.${id}`, 1, true)} onMax={() => handlePlanChange(`current.${id}`, maxLevel, true)} />
+                  )}
+                  {currentLocked ? (
+                    <div className="w-full rounded border border-neutral-200 bg-white p-1.5 text-center text-sm text-neutral-400 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-500">
+                      -
+                    </div>
+                  ) : (
+                    <select
+                      value={plan.current[id]}
+                      onChange={(e) => handlePlanChange(`current.${id}`, e.target.value, true)}
+                      className="w-full p-1.5 text-sm ios-compact-14 border border-neutral-200 rounded bg-white dark:bg-neutral-700 dark:border-neutral-600 text-center"
+                    >
+                      {Array.from({ length: maxLevel }, (_, i) => i + 1).map((level) => (
+                        <option key={level} value={level}>
+                          Lv.{level}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Target */}

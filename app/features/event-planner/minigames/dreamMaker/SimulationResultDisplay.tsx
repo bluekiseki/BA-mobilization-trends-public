@@ -33,7 +33,7 @@ export const SimulationResultDisplay = ({ result, title, description, eventData,
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-          <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('calculator.avgCost')}</h4>
+          <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t_ui('avgCost')}</h4>
           <div className="flex flex-wrap gap-2">
             {Object.entries(result.avgCost).map(([key, amount]) => (
               <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={12} eventData={eventData} iconData={iconData} />

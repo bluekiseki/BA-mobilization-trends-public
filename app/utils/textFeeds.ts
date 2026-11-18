@@ -2,6 +2,7 @@
 // Pure functions: scripts/generate-text-feeds.mjs loads the data and writes the results to public/.
 
 import { feedServerName, findTextFeed, TEXT_FEED_FORMAT_VERSION, TEXT_FEED_LANGS, TEXT_FEED_RATE_LIMIT, TEXT_FEEDS, type TextFeedMeta } from '~/data/textFeeds.meta';
+import { FAVOR_BRACKET_END, getFavorStatAt } from '~/utils/student/favorStats';
 import { getPreferredGiftList } from '~/utils/student/giftAffectionList';
 import { formatMissionDescription, getMissionStages } from '~/utils/missionDescription';
 import { getItemName, getLocalizeEtcName } from '~/utils/locale';
@@ -15,6 +16,7 @@ import { fillSkillParamsAllLevels, joinLevelValues, replaceSkillDescTags } from 
 import { decodeHtmlEntities } from '~/utils/decodeHtmlEntities';
 import type { Locale } from '~/utils/i18n/config';
 import { getPlannerEventName, isPublicPlannerEvent, isRerunEvent } from '~/utils/eventList';
+import { formatLocations } from '~/utils/raidLocation';
 
 export { feedServerName, isPublicPlannerEvent };
 
@@ -151,18 +153,7 @@ export function formatSkillText(skill: Skill, t: I18nLike['t']): string {
   return oneLine(replaceSkillDescTags(filled, (statKey, param) => t(statKey, { defaultValue: param })));
 }
 
-// Cumulative relationship-rank stat bonus, following SchaleDB's bracket rule:
-// FavorStatValue[i] is the per-rank gain while moving through ranks 2-5, 6-10, 11-15, 16-20, 21-30, 31-40, 41-50.
-const FAVOR_BRACKET_END = [5, 10, 15, 20, 30, 40, 50];
-
-export function getFavorStatAt(values: number[][], rank: number): number[] {
-  const total = values[0]?.map(() => 0) ?? [];
-  for (let r = 2; r <= Math.min(rank, 50); r++) {
-    const bracket = FAVOR_BRACKET_END.findIndex((end) => r <= end);
-    values[bracket]?.forEach((v, i) => (total[i] += v));
-  }
-  return total;
-}
+export { getFavorStatAt };
 
 // play_rate_rank keys are "<raid index>|<student id>|<star grade, negative = borrowed>|<difficulty index>",
 // where the raid index points into the server's raid_info list (same order as app/data/<server>/*.raid_info.json).
@@ -194,7 +185,7 @@ export function buildRaidUsage(playRate: Record<string, number>, raids: RaidInfo
         return {
           server,
           raidId: r.Id,
-          label: `${r.Id} ${r.Boss}${r.Type ? ` ${r.Type}` : ''} (${r.Location})`,
+          label: `${r.Id} ${r.Boss}${r.Type ? ` ${r.Type}` : ''} (${formatLocations(r.Location)})`,
           date: r.Date,
           sample: r.Cnt.All,
           own: c.own,
@@ -263,7 +254,7 @@ export function formatStudentDetail(
   }
 
   // Same gift list as StudentProfileCard, grouped by preference level (higher = more preferred).
-  const gifts = getPreferredGiftList(student, { icons: data.icons } as EventData);
+  const gifts = getPreferredGiftList(student, { icons: data.icons });
   const giftsByLevel = new Map<number, string[]>();
   for (const g of gifts) {
     const name = oneLine(getLocalizeEtcName(data.icons.Item[g.id]?.LocalizeEtc, lang) ?? g.id);
@@ -606,7 +597,7 @@ export function formatSchedule(tracks: Record<string, ScheduleItemV2[]>, server:
     const d = item.details;
     const details = compact([
       d?.armorType ? `armor=${d.armorType}` : null,
-      d?.terrain ? `terrain=${d.terrain}` : null,
+      d?.terrain ? `terrain=${formatLocations(d.terrain, '/')}` : null,
       d?.maxDifficulty ? `maxDifficulty=${d.maxDifficulty}` : null,
       d?.bosses?.length ? `bosses=${d.bosses.map((b) => `${b.armorType ?? '?'}:${b.difficulty}`).join(',')}` : null,
       d?.rerun ? 'rerun=1' : null,
@@ -638,7 +629,7 @@ export function formatRaids(raids: RaidFullInfo[], server: 'jp' | 'kr', ctx: Fee
       r.Id,
       getBossName(r.Boss, 'en'),
       r.Type ?? '',
-      r.Location,
+      formatLocations(r.Location, '/'),
       r.Date,
       r.MaxLv,
       r.TotalParticipants ?? r.Cnt.All,
@@ -686,7 +677,8 @@ const PAGES: [string, string][] = [
   ['/dashboard/jp', 'Total Assault / Grand Assault statistics per season'],
   ['/charts/jp/ranking', 'Student usage ranking charts'],
   ['/planner/event', 'Event planner (shop / stage farming optimizer)'],
-  ['/planner/students', 'Student growth planner'],
+  ['/students', 'Student list (profiles, skills, bond stats, growth plans)'],
+  ['/planner/students', 'Student growth planner (previous version)'],
   ['/planner/gacha', 'Gacha (pyroxene) planner'],
   ['/planner/inventory', 'Item management'],
   ['/notices', 'Official notices from all regions'],

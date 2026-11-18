@@ -24,6 +24,9 @@ export default [
   route(':locale?', 'routes/layout.tsx', [
     index('routes/home.tsx'), // -> / or /ko
 
+    route('students', 'routes/students/index.tsx'),
+    route('students/:studentId', 'routes/students/detail.tsx'),
+
     // Charts
     route('charts/:server/heatmap', 'routes/charts/heatmap.tsx'),
     route('charts/:server/ranking', 'routes/charts/ranking.tsx'),

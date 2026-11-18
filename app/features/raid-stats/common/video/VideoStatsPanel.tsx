@@ -1,10 +1,11 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HiChevronDown, HiChevronRight } from 'react-icons/hi2';
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { BarShapeProps, TooltipContentProps } from 'recharts';
 import type { VideoEntry } from './types';
-import type { PortraitData, ReportStudentData } from '../../../../types/raidReport';
+import type { ReportStudentData } from '../../../../types/raidReport';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
 import { getBackgroundRatingColor, getStarValue } from '../../../../utils/raid/report';
@@ -65,19 +66,34 @@ const SegmentLabel = ({ x = 0, y = 0, width = 0, height = 0, value = 0 }: { x?: 
   );
 };
 
-const StudentStarBar: React.FC<{ row: StudentRow; xMax: number; portrait?: string }> = ({ row, xMax, portrait }) => {
+const StudentStarBar: React.FC<{ row: StudentRow; xMax: number }> = ({ row, xMax }) => {
   const { isDark } = useIsDarkState();
   const { t: t_ui } = useTranslation('ui');
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  // Recharts can miss its own mouse-leave, leaving tooltips stuck open; the row wrapper's pointer events are the source of truth.
+  const [hovering, setHovering] = useState(false);
   const keys = Object.keys(row.counts).sort((a, b) => bucketSortValue(a) - bucketSortValue(b));
   const data = [{ ...row.counts, name: 'row' }];
 
   return (
     <>
       <span className="shrink-0 w-9 h-9 rounded-sm overflow-hidden bg-neutral-200 dark:bg-neutral-700">
-        {portrait && <img src={`data:image/webp;base64,${portrait}`} alt="" className="w-full h-full object-cover" />}
+        <SheetIcon sheet="student" id={row.id} alt="" />
       </span>
-      <div className="grow h-9">
+      <div
+        className="grow h-9"
+        onPointerEnter={() => setHovering(true)}
+        onPointerLeave={(e) => {
+          // Touch fires pointerleave on finger lift, which would dismiss a tapped tooltip immediately.
+          if (e.pointerType === 'touch') return;
+          setHovering(false);
+          setActiveKey(null);
+        }}
+        onPointerCancel={() => {
+          setHovering(false);
+          setActiveKey(null);
+        }}
+      >
         <ResponsiveContainer width="100%" height={36}>
           <BarChart data={data} layout="vertical" margin={{ top: 4, right: 0, left: 0, bottom: 4 }}>
             <XAxis type="number" hide domain={[0, xMax]} />
@@ -87,24 +103,39 @@ const StudentStarBar: React.FC<{ row: StudentRow; xMax: number; portrait?: strin
               cursor={{ fill: 'rgba(150, 150, 150, 0.1)' }}
               allowEscapeViewBox={{ x: true, y: true }}
               wrapperStyle={{ zIndex: 60 }}
-              content={({ active, payload }) => {
-                if (!active || !payload || !payload.length) return null;
-                const seg = payload.find((p) => String(p.dataKey) === activeKey);
-                const val = Number(seg?.value ?? 0);
-                if (!seg || !val) return null;
-                const key = String(seg.dataKey);
+              content={({ active }) => {
+                if (!active || !hovering) return null;
+                // List every segment of the row; the hovered one is emphasized and the rest are dimmed.
                 return (
-                  <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 border border-neutral-200 dark:border-neutral-600 text-sm flex items-center gap-1.5">
-                    <span className="block w-2.5 h-2.5" style={{ backgroundColor: String(seg.fill) }} />
-                    {key === UNKNOWN_KEY ? <span className="text-neutral-500 dark:text-neutral-400">{t_ui('etc')}</span> : <StarRating n={parseInt(key, 10)} />}
-                    <span className="font-bold">{val.toLocaleString()}</span>
-                    <span className="text-neutral-500 dark:text-neutral-400">({((val / row.total) * 100).toFixed(0)}%)</span>
+                  <div className="bg-white/95 dark:bg-neutral-800/95 backdrop-blur-sm p-1.5 border border-neutral-200 dark:border-neutral-600 text-sm flex flex-col gap-0.5">
+                    {keys.map((key) => {
+                      const val = row.counts[key] ?? 0;
+                      const isActive = key === activeKey;
+                      const dimmed = activeKey !== null && !isActive;
+                      return (
+                        <div key={key} className={`flex items-center gap-1.5 px-1.5 py-0.5 ${isActive ? 'bg-neutral-200 dark:bg-neutral-600 font-bold' : ''} ${dimmed ? 'opacity-50' : ''}`}>
+                          <span className="block w-2.5 h-2.5" style={{ backgroundColor: bucketColor(key, isDark) }} />
+                          {key === UNKNOWN_KEY ? <span className="text-neutral-500 dark:text-neutral-400">{t_ui('etc')}</span> : <StarRating n={parseInt(key, 10)} />}
+                          <span className="ml-auto pl-3 font-bold">{val.toLocaleString()}</span>
+                          <span className="w-9 text-right text-neutral-500 dark:text-neutral-400">{((val / row.total) * 100).toFixed(0)}%</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               }}
             />
             {keys.map((key) => (
-              <Bar key={key} dataKey={key} stackId="a" isAnimationActive={false} fill={bucketColor(key, isDark)} onMouseEnter={() => setActiveKey(key)} onMouseLeave={() => setActiveKey(null)}>
+              <Bar
+                key={key}
+                dataKey={key}
+                stackId="a"
+                isAnimationActive={false}
+                fill={bucketColor(key, isDark)}
+                fillOpacity={activeKey !== null && activeKey !== key ? 0.45 : 1}
+                onMouseEnter={() => setActiveKey(key)}
+                onMouseLeave={() => setActiveKey(null)}
+              >
                 <LabelList dataKey={key} content={<SegmentLabel />} />
               </Bar>
             ))}
@@ -118,11 +149,10 @@ const StudentStarBar: React.FC<{ row: StudentRow; xMax: number; portrait?: strin
 export const VideoStatsPanel: React.FC<{
   /** Fully filtered video list (score range included). */
   videos: VideoEntry[];
-  portraitData: PortraitData;
   studentData: ReportStudentData;
   raidInfo: RaidInfo;
   server: GameServer;
-}> = ({ videos, portraitData, studentData, raidInfo, server }) => {
+}> = ({ videos, studentData, raidInfo, server }) => {
   const { t } = useTranslation(['dashboard', 'mypage']);
   const { t: t_ui } = useTranslation('ui');
   const [open, setOpen] = useState(false);
@@ -303,7 +333,7 @@ export const VideoStatsPanel: React.FC<{
                 <div className="space-y-3">
                   {shownRows.map((row) => (
                     <div key={row.id} className="flex items-center gap-2" title={studentData[row.id]?.Name}>
-                      <StudentStarBar row={row} xMax={maxTotal} portrait={portraitData[row.id]} />
+                      <StudentStarBar row={row} xMax={maxTotal} />
                       <span className="shrink-0 w-9 text-right text-xs font-mono text-neutral-500 dark:text-neutral-400">{row.total}</span>
                     </div>
                   ))}

@@ -1,3 +1,4 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaExternalLinkAlt, FaHeart } from 'react-icons/fa';
@@ -18,9 +19,10 @@ import { AffectionTab } from '~/components/student/FaverTab';
 import StudentSearchDropdown from '~/components/student/StudentSearchDropdown';
 
 // Types
-import type { EventData, IconData, Student, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, Student } from '~/types/plannerData';
 import type { Route } from './+types/favor';
 import type { AppHandle } from '~/types/link';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 const BULLET_TYPE_COLORS: Record<string, string> = {
   Explosion: '#b62915',
@@ -63,12 +65,6 @@ export function links() {
   return [
     {
       rel: 'preload',
-      href: cdn(`/w/students_portrait.json`),
-      crossOrigin: 'anonymous',
-      as: 'fetch',
-    },
-    {
-      rel: 'preload',
       href: cdn(`/ew/icon_img.json`),
       as: 'fetch',
       crossOrigin: 'anonymous',
@@ -89,6 +85,7 @@ export const handle: AppHandle = {
     if (!d?.locale) return [];
     const locale = d.locale as Locale;
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
@@ -102,7 +99,6 @@ export const handle: AppHandle = {
 export const FavorPlannerPage = () => {
   // 1. Data Loading State
   const [allStudents, setAllStudents] = useState<Record<string, Student>>({});
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
   const [iconInfoData, setIconInfoData] = useState<EventData['icons'] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,21 +116,14 @@ export const FavorPlannerPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [studentsRes, portraitsRes, iconImgRes, iconInfoRes] = await Promise.all([
+        const [studentsRes, iconImgRes, iconInfoRes] = await Promise.all([
           fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)),
-          fetch(cdn('/w/students_portrait.json')),
           fetch(cdn(`/ew/icon_img.json`)),
           fetch(cdn(`/ew/icon_info.json`)),
         ]);
         const students: Record<string, Student> = await studentsRes.json();
-        const portraits: StudentPortraitData = await portraitsRes.json();
-
-        Object.entries(students).forEach(([id, student]) => {
-          student.Portrait = portraits[parseInt(id)];
-        });
 
         setAllStudents(students);
-        setStudentPortraits(portraits);
         setIconData(await iconImgRes.json());
         setIconInfoData(await iconInfoRes.json());
       } catch (e) {
@@ -207,13 +196,13 @@ export const FavorPlannerPage = () => {
     if (targetUuid) {
       updatePlan(targetUuid, 'current.affection', localPlan.current.affection);
       updatePlan(targetUuid, 'target.affection', localPlan.target.affection);
-      void navigate(localeLink(locale, '/planner/students'));
+      void navigate(localeLink(locale, '/students'));
     }
   };
 
   const giftAffectionList = useMemo(() => {
     if (!selectedStudentId || !allStudents[selectedStudentId] || !iconInfoData || !iconInfoData.Item) return [];
-    return getGiftAffectionList(allStudents[selectedStudentId], { icons: iconInfoData } as EventData);
+    return getGiftAffectionList(allStudents[selectedStudentId], { icons: iconInfoData });
   }, [selectedStudentId, allStudents, iconInfoData]);
 
   const isSelected = selectedStudentId !== null;
@@ -240,7 +229,7 @@ export const FavorPlannerPage = () => {
               className="flex items-center justify-center rounded-full shrink-0 shadow"
               style={{ width: '44px', height: '44px', backgroundColor: BULLET_TYPE_COLORS[allStudents[selectedStudentId].BulletType] || '#888' }}
             >
-              {studentPortraits[selectedStudentId] && <img src={`data:image/webp;base64,${studentPortraits[selectedStudentId]}`} alt="icon" width={38} height={38} className="rounded-full" />}
+              <SheetIcon sheet="student" id={selectedStudentId} alt="icon" className="h-[38px] w-[38px] rounded-full" />
             </div>
             <div className="flex-1 relative z-20">
               <StudentSearchDropdown students={allStudents} selectedStudentId={selectedStudentId} setSelectedStudentId={handleStudentSelect} hideLavel={true} />
@@ -256,7 +245,6 @@ export const FavorPlannerPage = () => {
               iconData={iconData}
               handlePlanChange={handlePlanChange}
               allStudents={allStudents}
-              studentPortraits={studentPortraits}
             />
 
             {/* Open in Planner Button */}

@@ -49,6 +49,8 @@ export type UwXpResult = {
   effectiveOwned: number;
   /** Unmet demand: max(0, required - effectiveOwned). */
   deficit: number;
+  /** Material XP left over after the demand is fully covered (0 while there is a deficit). */
+  surplus: number;
 };
 
 /** How far the inventory covers a group's unique-weapon XP demand, with the 1.5x bonus where a series matches. */
@@ -72,9 +74,10 @@ export function calcUwMaterialXp(inventory: Record<string, number>, demandByWeap
   }
 
   const deficit = Math.max(0, totalOwnDeficit - universalPoolXp);
+  const surplus = Math.max(0, universalPoolXp - totalOwnDeficit);
   const effectiveOwned = required - deficit;
 
-  return { required, effectiveOwned, deficit };
+  return { required, effectiveOwned, deficit, surplus };
 }
 
 /** Unique-weapon XP demand of the growth plans by weapon type, for calcUwMaterialXp. Plans without a known student are skipped. */

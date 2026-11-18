@@ -1,25 +1,10 @@
+import { ALWAYS_SAFE_STORES, SYNC_TRACKED_STORES } from '~/store/crossTabPersistence';
+export { SYNC_TRACKED_STORES } from '~/store/crossTabPersistence';
 import { useEffect } from 'react';
-import { getActiveProfileStorageKey, useAuthStore } from '~/store/authStore';
-import { applyWithoutSyncPushAsync, useSyncStore } from '~/store/syncStore';
-import { useGlobalStore } from '~/store/planner/useGlobalStore';
-import { useEquipmentPlanStore } from '~/store/planner/useEquipmentPlanStore';
-import { useGachaResultStore } from '~/store/planner/useGachaResultStore';
-import { useEventPlanStore } from '~/store/planner/useEventPlanStore';
-import { useGachaHistoryStore } from '~/store/planner/useGachaHistoryStore';
-import { useResourcePlanStore } from '~/store/planner/useResourcePlanStore';
-import { useRaidHistoryStore } from '~/store/planner/useRaidHistoryStore';
-import { useAppPreferencesStore } from '~/store/useAppPreferencesStore';
-import { useLanguageBannerStore } from '~/store/languageBannerState';
-
-// Pure UI/preference stores: never touched by the server-sync system, so there's no identity to
-// conflate. Always safe to rehydrate on a storage event regardless of this tab's login state.
-const ALWAYS_SAFE_STORES = [useGachaResultStore, useAppPreferencesStore, useLanguageBannerStore];
-
-// Stores mirrored to/from the server via useSyncStore (see useSyncWatcher.ts / syncStore.ts's
-// clearPlannerStores). These share the same unscoped localStorage keys whether the tab is
-// anonymous or logged in. Only rehydrate them in a tab that is itself logged in — see the guard
-// below for why an anonymous tab must not follow these.
-const SYNC_TRACKED_STORES = [useGlobalStore, useEquipmentPlanStore, useEventPlanStore, useGachaHistoryStore, useResourcePlanStore, useRaidHistoryStore];
+import { getActiveProfileStorageKey, SESSION_HINT_KEY, useAuthStore } from '~/store/authStore';
+import { clearAccountSession } from '~/store/clearAccountSession';
+import { rehydrateStore, receiveSyncRevisions, SYNC_REVISIONS_KEY, useSyncStore } from '~/store/syncStore';
+import { getPersistenceContext, hasPersistenceConflicts, PERSISTENCE_RESOLVED_EVENT } from '~/store/history/localPersistence';
 
 /**
  * Keeps other open tabs in sync with localStorage writes made by this tab, and vice versa.
@@ -29,7 +14,17 @@ const SYNC_TRACKED_STORES = [useGlobalStore, useEquipmentPlanStore, useEventPlan
 export function useCrossTabSync() {
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (!event.key || event.newValue === event.oldValue) return;
+      if ((event.storageArea && event.storageArea !== localStorage) || !event.key || event.newValue === event.oldValue) return;
+
+      if (event.key === SYNC_REVISIONS_KEY) {
+        receiveSyncRevisions(localStorage.getItem(event.key));
+        return;
+      }
+
+      if (event.key === SESSION_HINT_KEY && event.newValue === null) {
+        if (useAuthStore.getState().user) clearAccountSession();
+        return;
+      }
 
       // Another tab switched the active profile: mirror the switch instead of reloading,
       // reusing the same path the in-tab profile switcher uses (settings/index.tsx).
@@ -43,32 +38,42 @@ export function useCrossTabSync() {
         return;
       }
 
+      if (hasPersistenceConflicts(event.key)) return;
       for (const store of ALWAYS_SAFE_STORES) {
         if (store.persist.getOptions().name === event.key) {
-          void store.persist.rehydrate();
+          rehydrateStore(store, false);
           return;
         }
       }
 
-      // An anonymous tab has no server backstop: if another tab just logged in, its
-      // clearPlannerStores() + pullAll() sequence rewrites these same shared keys for a
-      // completely unrelated account, and blindly rehydrating here would wipe this tab's own
-      // unsynced local data for a login it has nothing to do with. A logged-in tab is safe to
-      // follow, since the revision-based sync system corrects any mismatch on its next pull/push.
-      if (!useAuthStore.getState().user) return;
+      const raw = localStorage.getItem(event.key);
+      const context = getPersistenceContext(raw);
+      const sync = useSyncStore.getState();
+      if (context && (context.userId !== sync.currentUserId || context.profileId !== sync.currentProfileId)) return;
+      // Account resets must not replace an unrelated anonymous tab's plan.
+      if (!userId && (raw === null || context?.external)) return;
+      if (!context && !userId && localStorage.getItem(SESSION_HINT_KEY) !== null) return;
       for (const store of SYNC_TRACKED_STORES) {
         if (store.persist.getOptions().name === event.key) {
-          // Without this guard, rehydrating here fires this tab's OWN useSyncWatcher subscription,
-          // which would mistake the mirrored value for a real local edit and push it to the server
-          // — isApplyingSyncData is a per-tab module variable, so the writing tab's own guard
-          // (set during its clearPlannerStores()/applyRows()) never protects this tab.
-          void applyWithoutSyncPushAsync(() => store.persist.rehydrate());
+          // User edits supersede this tab's queued values; server refreshes preserve them.
+          // The guard also prevents mirrored writes from becoming edits or server pushes.
+          rehydrateStore(store, true, !context?.external, context?.edits);
           return;
         }
       }
     };
 
+    const handleResolution = (event: Event) => {
+      const { key } = (event as CustomEvent<{ key: string }>).detail;
+      const store = [...SYNC_TRACKED_STORES, ...ALWAYS_SAFE_STORES].find((store) => store.persist.getOptions().name === key);
+      // An explicit choice must replace pending edits rather than reapply them over the chosen data.
+      if (store) rehydrateStore(store, false);
+    };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener(PERSISTENCE_RESOLVED_EVENT, handleResolution);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(PERSISTENCE_RESOLVED_EVENT, handleResolution);
+    };
   }, []);
 }

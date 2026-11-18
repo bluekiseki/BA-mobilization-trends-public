@@ -13,6 +13,7 @@ export const TRACK_COLORS: Record<string, string> = {
   eraid: 'bg-[#6d28d9]', // Violet-700
   jointFiringDrill: 'bg-[#0f766e]', // Teal-700
   multifloor: 'bg-[#b45309]', // Amber-700
+  tacticalRelay: 'bg-[#0e7490]', // Cyan-700
   pickup: 'bg-[#f43f5e]', // Rose-500 (Main Pickup Color)
   maintenance: 'bg-[#737373]', // Neutral-500
   mainstory: 'bg-[#4f46e5]', // Indigo-600

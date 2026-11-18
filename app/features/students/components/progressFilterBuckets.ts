@@ -23,11 +23,12 @@ export function findLevelBucketKey(level: number): LevelRangeKey | undefined {
   return LEVEL_BUCKETS.find((b) => level >= b.min && level <= b.max)?.key;
 }
 
-export type AffectionRangeKey = '100' | '50-99' | '20-49' | '10-19' | '1-9';
+export type AffectionRangeKey = '100' | '50-99' | '30-49' | '20-29' | '10-19' | '1-9';
 export const AFFECTION_BUCKETS: readonly Bucket<AffectionRangeKey>[] = [
   { key: '100', min: 100, max: 100 },
   { key: '50-99', min: 50, max: 99 },
-  { key: '20-49', min: 20, max: 49 },
+  { key: '30-49', min: 30, max: 49 },
+  { key: '20-29', min: 20, max: 29 },
   { key: '10-19', min: 10, max: 19 },
   { key: '1-9', min: 1, max: 9 },
 ];

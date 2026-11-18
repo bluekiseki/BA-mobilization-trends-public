@@ -1,7 +1,15 @@
 // Characterization tests: pins resolved AP/amount values against real event data to catch regressions.
 // Expected numbers were independently verified against the raw event JSON. Event data is fetched from the CDN once, up front.
 import { describe, it, expect, vi } from 'vitest';
-import { resolveResourceApProfile, listSelectableResourceKeys, buildCumulativeCurve, buildFarmingPlan, type ApSegment } from '~/features/event-planner/logic/resourceApCost';
+import {
+  resolveResourceApProfile,
+  listSelectableResourceKeys,
+  buildCumulativeCurve,
+  buildFarmingPlan,
+  computeShopGoalConsumption,
+  buildResourceApIndex,
+  type ApSegment,
+} from '~/features/event-planner/logic/resourceApCost';
 import type { EventData } from '~/types/plannerData';
 import { getLoadedEvent, loadEventsFromCdn } from './loadEventsFromCdn';
 
@@ -253,7 +261,8 @@ describe('resolveResourceApProfile', () => {
 
   it('event 853 fortune gacha: the 290 AP clear prefix funds every card its points buy, and repeats keep full output', () => {
     const eventData = loadEvent(853);
-    const ctx = { allStages: getAllStages(eventData), eventData, eventId: 853, includeSimulations: true };
+    // Story is a prerequisite only when opted in; stage costs 10x4 + 15x4 + 20x4 = 180 and story 10x11 = 110, so 290 total.
+    const ctx = { allStages: getAllStages(eventData), eventData, eventId: 853, includeSimulations: true, includeStoryClears: true };
     // Story 1-11 + stage 1-12 once: 110 + 2550 first-clear points + 108 per-clear drops = 2768 points = 9.227 cards.
     const card = resolveResourceApProfile('Item_80733', ctx).segments;
     const cardPrefix = card.find((s) => !s.repeatsForever);
@@ -286,9 +295,13 @@ describe('resolveResourceApProfile', () => {
   it('event 853 Item_80732: a pool bonus is charged its real clear AP, not a mismatched prefix total', () => {
     const eventData = loadEvent(853);
     const ctx = { allStages: getAllStages(eventData), eventData, eventId: 853 };
-    const bonus = resolveResourceApProfile('Item_80732', ctx).segments.find((s) => s.source.type === 'shop_unlimited' && !s.repeatsForever);
-    expect(bonus?.apCost).toBe(220);
-    expect(bonus?.amount).toBeCloseTo(574.2, 1);
+    const find = (c: typeof ctx & { includeStoryClears?: boolean }) => resolveResourceApProfile('Item_80732', c).segments.find((s) => s.source.type === 'shop_unlimited' && !s.repeatsForever);
+    // Without the story gate the bonus needs stages 1-11 only: 10x4 + 15x4 + 20x3 = 160.
+    expect(find(ctx)?.apCost).toBe(160);
+    // With story clears included, all 11 story stages (10 each) are added on top: 110 + 160 = 270.
+    const gated = find({ ...ctx, includeStoryClears: true });
+    expect(gated?.apCost).toBe(270);
+    expect(gated?.amount).toBeCloseTo(574.2, 1);
   });
 
   it('event 803: a shop tier bought entirely with free currency stays a free one-time contribution', () => {
@@ -320,4 +333,209 @@ describe('resolveResourceApProfile', () => {
     expect(keys).toContain('Character_26016');
     expect(keys).toContain('Item_26016');
   });
+
+  // Event 803 shop item 8030002: 25 of Item_80021 per Item_26004, limit 50. Item_80021's free (no-AP) supply is
+  // 1000 (missions), so the first 40 purchases (1000 / 25) cost no AP — verified by hand against the raw event JSON.
+  it('event 803 shop goals: purchase range, free-pool boundary, and spend are exact', () => {
+    const eventData = loadEvent(803);
+    const base = { allStages: getAllStages(eventData), eventData, eventId: 803 };
+    const profileFor = (count: number, already = 0) =>
+      buildResourceApIndex({ ...base, shopGoals: { purchaseCounts: { 8030002: count }, alreadyPurchasedCounts: { 8030002: already } } }).resolveProfile('Item_26004');
+
+    // 5 already bought + goal 30 -> purchases 6..35, 750 currency, fully covered by the free pool.
+    const free = profileFor(30, 5);
+    expect(free.segments).toHaveLength(0);
+    expect(free.oneTimeContributions).toHaveLength(1);
+    expect(free.oneTimeContributions[0].amount).toBe(30);
+    expect(free.oneTimeContributions[0].apCost).toBeUndefined();
+    expect(free.oneTimeContributions[0].source).toMatchObject({ type: 'shop_flat_limit', goal: { itemId: 8030002, from: 6, to: 35 } });
+
+    // 40 purchases = exactly the 1000 free currency; the 41st is the first to need AP.
+    expect(profileFor(40).segments).toHaveLength(0);
+    const paid = profileFor(41);
+    expect(paid.segments).toHaveLength(1);
+    expect(paid.segments[0].amount).toBe(41);
+    expect(paid.segments[0].apCost).toBeGreaterThan(0);
+
+    // Items without a goal are dropped, and the spend matches 8030002 x25 + 8030004 x10 + 8030011 x1000 + 8030012 x2000.
+    const goals = { purchaseCounts: { 8030002: 50, 8030004: 150, 8030011: 1, 8030012: 1 }, alreadyPurchasedCounts: {} };
+    expect(computeShopGoalConsumption(eventData, goals)['Item_80021']).toBe(50 * 25 + 150 * 10 + 1000 + 2000);
+    expect(buildResourceApIndex({ ...base, shopGoals: { purchaseCounts: { 8030002: 50 }, alreadyPurchasedCounts: {} } }).resolveProfile('Item_80025').segments).toHaveLength(0);
+  });
+
+  // Event 803 keeps Hard stages 4/8/12 under "else" (not in the area list). Reaching Item_80021's best farming stage
+  // (stage 9, 15 AP) needs stages 1-8 cleared first, whether or not they drop it:
+  //   10 + 10 + 10 + 10 (stages 1-4) + 12 x4 (stages 5-8) + 15 (stage 9) = 103 AP. Story 1-2 (10 each) adds 20.
+  it('event 803: prerequisite clears that drop none of the currency are still charged, and story is opt-in', () => {
+    const eventData = loadEvent(803);
+    const base = { allStages: getAllStages(eventData), eventData, eventId: 803, shopGoals: { purchaseCounts: { 8030002: 41 }, alreadyPurchasedCounts: {} } };
+    const apCost = (includeStoryClears: boolean) => resolveResourceApProfile('Item_26004', { ...base, includeStoryClears }).segments[0].apCost;
+    expect(apCost(false)).toBe(103);
+    expect(apCost(true)).toBe(123);
+  });
+});
+
+describe('joint shop-goal curve (event 860)', () => {
+  // Hand check from the raw JSON, no bonuses: every Hard stage yields 1.8 currency per AP. Shops 13 and 14 cost
+  // 14140 + 15850 currency; the Hard clears' first-clear bonuses supply 1393 of each, so (12747 + 14457) / 1.8
+  // = 15113 AP of extra farming. 200 Eleph alone needs about 17040 AP (janken prefix included).
+  const eventData = loadEvent(860);
+  const allStages = getAllStages(eventData);
+  const purchaseCounts: Record<string, number> = {};
+  for (const cat of ['13', '14']) for (const item of eventData.shop?.[cat] ?? []) if (item.PurchaseCountLimit > 0) purchaseCounts[item.Id] = item.PurchaseCountLimit;
+  const apFor = (index: ReturnType<typeof buildResourceApIndex>, amount: number): number | null => {
+    const curve = index.buildJointGoalCurve('Item_26016', {}, 40000, 161);
+    return curve.find((p) => p.amount !== null && p.amount >= amount)?.ap ?? null;
+  };
+
+  it('needs the shop currency AP on top of the target AP', () => {
+    const base = { allStages, eventData, eventId: 860, totalBonus: {}, includeSimulations: false };
+    const off = apFor(buildResourceApIndex(base), 200);
+    const on = apFor(buildResourceApIndex({ ...base, shopGoals: { purchaseCounts, alreadyPurchasedCounts: {} } }), 200);
+    expect(off).toBeGreaterThan(17040 - 300);
+    expect(off).toBeLessThan(17040 + 300);
+    expect(on).toBeGreaterThan(32153 - 300);
+    expect(on).toBeLessThan(32153 + 300);
+  }, 30000);
+
+  // Below the AP needed to buy every goal, the curve still exists: shop goals are bought first, as far as the
+  // budget allows, and only the leftover AP feeds the target.
+  it('keeps a curve below the full-buyout budget that stays under the no-shop curve', () => {
+    const base = { allStages, eventData, eventId: 860, totalBonus: {}, includeSimulations: false };
+    const off = buildResourceApIndex(base).buildJointGoalCurve('Item_26016', {}, 20000, 9);
+    const on = buildResourceApIndex({ ...base, shopGoals: { purchaseCounts, alreadyPurchasedCounts: {} } }).buildJointGoalCurve('Item_26016', {}, 20000, 9);
+    for (let i = 0; i < on.length; i++) {
+      expect(on[i].amount).not.toBeNull();
+      expect(on[i].amount as number).toBeLessThanOrEqual((off[i].amount as number) + 1e-6);
+    }
+    expect(on[on.length - 1].amount as number).toBeLessThan((off[off.length - 1].amount as number) - 20);
+  }, 30000);
+});
+
+describe('joint goal plan (event 860)', () => {
+  const eventData = loadEvent(860);
+  const allStages = getAllStages(eventData);
+  const purchaseCounts: Record<string, number> = {};
+  for (const cat of ['13', '14']) for (const item of eventData.shop?.[cat] ?? []) if (item.PurchaseCountLimit > 0) purchaseCounts[item.Id] = item.PurchaseCountLimit;
+  const index = buildResourceApIndex({ allStages, eventData, eventId: 860, totalBonus: {}, includeSimulations: false, shopGoals: { purchaseCounts, alreadyPurchasedCounts: {} } });
+
+  it('lays the steps out along the AP axis and ends with one stage repeated without end', () => {
+    const plan = index.buildJointGoalPlan('Item_26016', {});
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    for (let i = 1; i < plan.steps.length; i++) expect(plan.steps[i].apStart).toBeGreaterThanOrEqual(plan.steps[i - 1].apStart - 1e-9);
+    expect(plan.steps.filter((s) => s.kind === 'goal').length).toBeGreaterThan(0);
+    // The first thing in the plan is a stage clear, never a repeat or a purchase.
+    expect(plan.steps[0].kind).toBe('clear');
+    const forever = plan.steps.filter((s) => s.forever);
+    expect(forever.length).toBeGreaterThan(0);
+    expect(plan.steps[plan.steps.length - 1].forever).toBe(true);
+    // The finite part (clears, shop currencies) is bounded; only the open-ended steps carry no AP.
+    expect(Number.isFinite(plan.apUsed)).toBe(true);
+    expect(forever.every((s) => s.ap === 0)).toBe(true);
+  }, 30000);
+});
+
+describe('cleared stages (event 860)', () => {
+  const eventData = loadEvent(860);
+  const allStages = getAllStages(eventData);
+  const index = buildResourceApIndex({ allStages, eventData, eventId: 860, totalBonus: {}, includeSimulations: false });
+
+  it('skips the clear AP and the first-clear bonus of cleared stages and unlocks their repeats', () => {
+    const chains = index.listJointClearChains('Item_26016', {});
+    const hard = chains.find((chain) => chain.length === 12);
+    expect(hard).toBeDefined();
+    if (!hard) return;
+    const cleared = new Set(hard.map((c) => c.id));
+    const fresh = index.buildJointGoalPlan('Item_26016', {});
+    const done = index.buildJointGoalPlan('Item_26016', {}, cleared);
+    expect(fresh && done).toBeTruthy();
+    if (!fresh || !done) return;
+    expect(fresh.steps.filter((s) => s.kind === 'clear' && s.ap > 0).length).toBeGreaterThanOrEqual(12);
+    expect(done.steps.filter((s) => s.kind === 'clear' && s.ap > 0).length).toBe(0);
+    // No 180 AP of clears to pay, but the first-clear currency is gone: net effect is still positive for the target.
+    expect(done.steps[0].apStart).toBe(0);
+    expect(done.target).toBeGreaterThan(0);
+    // Marking a later stage cleared marks the earlier ones too.
+    const partial = index.buildJointGoalPlan('Item_26016', {}, new Set([hard[5].id]));
+    const early = new Set(hard.slice(0, 6).map((c) => c.id));
+    expect(partial?.steps.some((s) => s.kind === 'clear' && s.ref !== undefined && early.has(partial.labels[s.ref]?.clearId ?? ''))).toBe(false);
+  }, 30000);
+});
+
+describe('highAreaFirst (event 860)', () => {
+  const eventData = loadEvent(860);
+  const allStages = getAllStages(eventData);
+  const repeatedStages = (highAreaFirst: boolean): number[] => {
+    const profile = resolveResourceApProfile('Item_80861', { allStages, eventData, eventId: 860, totalBonus: {}, includeSimulations: false, highAreaFirst });
+    return profile.segments
+      .filter((seg) => seg.repeatsForever && seg.source.type === 'stage_like' && seg.source.category === 'stage')
+      .map((seg) => (seg.source.type === 'stage_like' ? Number(seg.source.stageNumber) : NaN))
+      .sort((a, b) => a - b);
+  };
+
+  it('repeat-farms only areas 9-12 while lower areas stay as one clear each', () => {
+    expect(repeatedStages(false).some((n) => n < 9)).toBe(true);
+    const high = repeatedStages(true);
+    expect(high.length).toBeGreaterThan(0);
+    expect(high.every((n) => n >= 9 && n <= 12)).toBe(true);
+  });
+});
+
+describe('joint curve search (event 860, +80% bonus on every currency, shops 13 and 14 fully bought)', () => {
+  const eventData = loadEvent(860);
+  const allStages = getAllStages(eventData);
+  const purchaseCounts: Record<string, number> = {};
+  for (const cat of ['13', '14']) for (const item of eventData.shop?.[cat] ?? []) if (item.PurchaseCountLimit > 0) purchaseCounts[item.Id] = item.PurchaseCountLimit;
+  const amountAt = (highAreaFirst: boolean, ap: number): number | null | undefined => {
+    const index = buildResourceApIndex({
+      allStages,
+      eventData,
+      eventId: 860,
+      totalBonus: { 80860: 8000, 80861: 8000, 80862: 8000 },
+      includeSimulations: false,
+      highAreaFirst,
+      shopGoals: { purchaseCounts, alreadyPurchasedCounts: {} },
+    });
+    return index.buildJointGoalCurve('Item_26016', {}, ap, 2).find((p) => p.ap === ap)?.amount;
+  };
+
+  // Hand check, all areas, 30000 AP: Hard 1-12 clears cost 180 AP and give 2261 points of the minigame currency;
+  // the shops need 12649 + 14359 more of the two stage currencies. Exhaustive search over clear depths gives the same
+  // values at the points below (verified outside the test).
+  it('matches the exhaustive optimum where the budget barely covers the purchases', () => {
+    // 9-12 only: giving up one story-clear (1 Eleph per 100 points) for the challenge clear (4.3 per 400) is the
+    // best plan here; a search that changes one chain at a time stops at about 98.7.
+    expect(amountAt(true, 8500)).toBeCloseTo(101.06, 1);
+    expect(amountAt(false, 8500)).toBeCloseTo(103.28, 1);
+  });
+});
+
+describe('stop at shop goals (event 860, +110% bonus)', () => {
+  const eventData = loadEvent(860);
+  const allStages = getAllStages(eventData);
+  const purchaseCounts: Record<string, number> = {};
+  for (const cat of ['13', '14']) for (const item of eventData.shop?.[cat] ?? []) if (item.PurchaseCountLimit > 0) purchaseCounts[item.Id] = item.PurchaseCountLimit;
+  const index = buildResourceApIndex({
+    allStages,
+    eventData,
+    eventId: 860,
+    totalBonus: { 80860: 11000, 80861: 11000, 80862: 11000 },
+    includeSimulations: false,
+    shopGoals: { purchaseCounts, alreadyPurchasedCounts: {} },
+  });
+
+  it('plans the cheapest way to buy every goal, with nothing repeated without end', () => {
+    const plan = index.buildJointGoalPlan('Item_26016', {}, undefined, true);
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    expect(plan.steps.some((s) => s.forever)).toBe(false);
+    expect(plan.steps.filter((s) => s.kind === 'goal').every((s) => s.count > 0.99)).toBe(true);
+    // Cross-checked against an independent LP: 180 AP of clears plus stages 02 and 03 (about 286 and 418 runs) is the
+    // cheapest way to cover both shop currencies, about 7,216 AP in all (a little less here: other sources add some).
+    expect(plan.apUsed).toBeGreaterThan(6900);
+    expect(plan.apUsed).toBeLessThan(7300);
+    const repeated = plan.steps.filter((s) => s.kind === 'repeat' && s.count > 5).map((s) => plan.labels[s.ref ?? -1]?.clearId);
+    expect(repeated).toEqual(expect.arrayContaining(['stage:02', 'stage:03']));
+  }, 60000);
 });

@@ -19,7 +19,7 @@ export function loader({ request, params }: Route.LoaderArgs) {
   if (params.ns == 'translation') {
     const headers = new Headers();
 
-    // On production, we want to add cache headers to the response
+    // Cache production responses.
     if (process.env.NODE_ENV === 'production') {
       headers.set(
         'Cache-Control',
@@ -44,7 +44,7 @@ export function loader({ request, params }: Route.LoaderArgs) {
 
   const headers = new Headers();
 
-  // On production, we want to add cache headers to the response
+  // Cache production responses.
   if (process.env.NODE_ENV === 'production') {
     headers.set(
       'Cache-Control',

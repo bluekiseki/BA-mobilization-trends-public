@@ -2,7 +2,7 @@ import { cdn } from '~/utils/cdn';
 import { preloadPortraitHistograms } from './pipeline/match';
 import { fetchJsonWithProgress, type DownloadProgress } from '~/utils/fetchWithProgress';
 
-// StudentPortraitData renders each student on a background, unlike the plain cutout art
+// The student icon sprite sheet renders each student on a background, unlike the plain cutout art
 // rankByPortrait's histogram comparison expects. Fetch SchaleDB's collection art instead,
 // pre-combined into one JSON file so a scan does one fetch instead of one per candidate.
 let referencePortraitsPromise: Promise<Record<string, string>> | null = null;
@@ -14,8 +14,7 @@ const getReferencePortraits = (): Promise<Record<string, string>> => {
   return referencePortraitsPromise;
 };
 
-// Fallback path — only reached for a student id missing from the precomputed histogram set
-// (e.g. a new SchaleDB student not yet covered by build-reference-portrait-histograms.mjs).
+// Load portrait art when a student is missing from the precomputed histogram set.
 export async function loadReferencePortrait(id: number): Promise<ImageBitmap | null> {
   const portraits = await getReferencePortraits();
   const b64 = portraits[id];

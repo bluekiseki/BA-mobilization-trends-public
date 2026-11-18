@@ -39,6 +39,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
   const oneTimeStages = useMemo(() => allStages.filter((s) => s.type === 'story' || s.type === 'challenge'), [allStages]);
 
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { farmingActiveTab: activeTab, setFarmingActiveTab: setActiveTab, showOneTimeRewards, setShowOneTimeRewards, minimizeRepeatableInfo, setMinimizeRepeatableInfo } = useEventSettings(eventId);
 
@@ -162,8 +163,12 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       initialNeeded[Number(id)] = -amount;
     }
     const optimizableStages = farmingStages.filter((s) => (stagePrio?.[s.Id] || 'include') !== 'exclude');
-    if (optimizableStages.length === 0 || Object.keys(initialNeeded).length === 0) {
-      alert('Option not selected');
+    if (optimizableStages.length === 0) {
+      alert(t('button.autoFarmNoStages'));
+      return;
+    }
+    if (Object.keys(initialNeeded).length === 0) {
+      alert(t('button.autoFarmNoTargets'));
       return;
     }
     const farmedByCurrentRuns: Record<number, number> = {};
@@ -222,7 +227,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
       }
       return next;
     });
-  }, [neededItems, farmingStages, stagePrio, priorityItemId, totalBonus, runCounts, setRunCounts]);
+  }, [neededItems, farmingStages, stagePrio, priorityItemId, totalBonus, runCounts, setRunCounts, t]);
 
   const handleRunCountChange = useCallback(
     (stageId: number, value: number) => {
@@ -357,7 +362,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
 
       <label htmlFor="ap-input" className="inline-flex items-center text-lg font-bold text-neutral-800 dark:text-neutral-200 mb-2">
         <img src={`data:image/webp;base64,${iconData.Currency?.['5']}`} className="w-6 h-6 ml-0.5 object-cover rounded-full" />
-        {t('ui.totalAp')}
+        {t_ui('totalAp')}
       </label>
       <CustomNumberInput
         id="ap-input"
@@ -424,7 +429,7 @@ export const FarmingPlanner = ({ eventId, eventData, iconData, allStages, availa
           className="flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
         >
           <FaRedo size={9} />
-          {t('ui.inventoryReset')}
+          {t_ui('resetAll')}
         </button>
       </div>
 

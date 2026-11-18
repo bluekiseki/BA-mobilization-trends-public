@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useTranslation } from 'react-i18next';
 import { FiBarChart2 } from 'react-icons/fi';
 import { localeLink } from '~/utils/localeLink';
@@ -6,9 +7,8 @@ import { localeLink } from '~/utils/localeLink';
 export interface SelectedNodeInfo {
   id: number;
   name: string;
-  portrait: string;
   totalAppearances: number;
-  partners: { id: number; name: string; portrait: string; weight: number; pct: number }[];
+  partners: { id: number; name: string; weight: number; pct: number }[];
 }
 
 interface NodeDetailPanelProps {
@@ -27,11 +27,7 @@ export function NodeDetailPanel({ node, locale, onFocusPartner }: NodeDetailPane
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3">
-        {node.portrait ? (
-          <img src={node.portrait} alt="" className="w-12 h-12 rounded-full shrink-0 object-cover" />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />
-        )}
+        <SheetIcon sheet="student" id={node.id} alt="" className="w-12 h-12 rounded-full shrink-0" fallback={<div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />} />
         <div>
           <p className="font-semibold text-sm leading-tight">{node.name}</p>
           <p className="text-xs text-neutral-500 mt-0.5">{t('nodeDetail.appearances', { count: node.totalAppearances.toLocaleString() })}</p>
@@ -39,8 +35,7 @@ export function NodeDetailPanel({ node, locale, onFocusPartner }: NodeDetailPane
       </div>
 
       <Link
-        to={localeLink(locale, '/charts/jp/heatmap')}
-        state={{ studentId: node.id }}
+        to={localeLink(locale, `/students/${node.id}?tab=stats`)}
         className="mx-4 mb-3 text-xs flex items-center gap-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 transition-colors"
       >
         <FiBarChart2 className="w-4 h-4 shrink-0" />
@@ -56,7 +51,7 @@ export function NodeDetailPanel({ node, locale, onFocusPartner }: NodeDetailPane
       ) : (
         node.partners.map((p) => (
           <button key={p.id} onClick={() => onFocusPartner(p.id)} className="w-full flex items-center gap-2.5 px-4 py-1.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-            {p.portrait ? <img src={p.portrait} alt="" className="w-6 h-6 rounded-full shrink-0 object-cover" /> : <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />}
+            <SheetIcon sheet="student" id={p.id} alt="" className="w-6 h-6 rounded-full shrink-0" fallback={<div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />} />
             <span className="flex-1 text-sm truncate" title={p.name}>
               {p.name}
             </span>

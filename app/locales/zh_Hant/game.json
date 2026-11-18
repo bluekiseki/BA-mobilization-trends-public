@@ -13,11 +13,13 @@
     "breakthrough": "突破考試",
     "escort": "護衛考試"
   },
+  "tacticalRelay": "虛擬適性測驗",
   "tacticalChallenge": "戰術大賽",
   "expertPermit": "精通證書",
   "event": "事件",
   "schedule": "日程",
   "difficulty": "難度",
+  "boss_armor_type": "Boss 防禦類型",
   "difficulties": {
     "lunatic": "瘋狂",
     "torment": "折磨",

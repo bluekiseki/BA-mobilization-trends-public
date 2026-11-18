@@ -7,6 +7,7 @@ import { meanFromDist, ticketCreditedDist, type GlobalAggregatedResult } from '~
 import type { BannerStrategy } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import type { Locale } from '~/utils/i18n/config';
 
 import 'rc-tooltip/assets/bootstrap.css';
@@ -27,7 +28,6 @@ interface Props {
   simple?: boolean;
   result: GlobalAggregatedResult | null;
   initialPyroxenes: number;
-  portraitMap: Record<number, string>;
   pyroxeneIcon?: string | null;
   elephIconMap?: Record<string, string>;
   bankruptcyRate: number | null;
@@ -48,7 +48,6 @@ export default function SimulationResultViewV3({
 
   result,
   initialPyroxenes,
-  portraitMap,
 
   bankruptcyRate,
   strategies,
@@ -371,7 +370,7 @@ export default function SimulationResultViewV3({
                     {val != null && isPyroxeneTab && (
                       <div className="mt-0.5 text-xs leading-tight text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
                         {Math.round(val / 120).toLocaleString()}
-                        {t('pulls_short')}
+                        {tp('gacha.banner_planner.unit_pulls')}
                       </div>
                     )}
                   </div>
@@ -444,11 +443,13 @@ export default function SimulationResultViewV3({
                       aria-expanded={selectedId === stat.studentId}
                       onClick={() => setSelectedId(selectedId === stat.studentId ? null : stat.studentId)}
                     >
-                      {portraitMap[stat.studentId] ? (
-                        <img className="h-10 w-10 rounded-full object-cover" src={`data:image/webp;base64,${portraitMap[stat.studentId]}`} alt="" />
-                      ) : (
-                        <span className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-800" />
-                      )}
+                      <SheetIcon
+                        sheet="student"
+                        id={stat.studentId}
+                        alt=""
+                        className="h-10 w-10 rounded-full"
+                        fallback={<span className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-800" />}
+                      />
                       <span className="min-w-0">
                         <span className="block font-semibold">{stat.name}</span>
                         <span className="mt-1 block text-xs text-neutral-600 dark:text-neutral-400 sm:hidden">

@@ -22,7 +22,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡．庫帕拉",
+    "Tw": "革命的伊凡·庫帕拉",
     "OpenTime": "2021-04-29 12:30:00",
     "CloseTime": "2021-05-13 12:00:00"
   },
@@ -39,7 +39,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Vacation!",
+    "En": "Head Prefect Hina's Summer Break!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2021-07-29 12:30:00",
     "CloseTime": "2021-08-12 12:00:00"
@@ -94,7 +94,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♥ Valentine Patrol",
+    "En": "Schale's Happy ♡ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2022-01-26 12:30:00",
     "CloseTime": "2022-02-09 12:00:00"
@@ -390,7 +390,7 @@
   "845": {
     "Name": "Event_Name_845",
     "Kr": "Pray-Ball! ~노려라! 만루 홈런~",
-    "Jp": "プレイボール！ ～目指せ！満塁ホームラン～",
+    "Jp": "プレイボール！～目指せ！満塁ホームラン～",
     "En": "Pray-Ball! Swing for the Grand Slam!",
     "Tw": "Pray-Ball！～瞄準滿壘全壘打！～",
     "OpenTime": "2025-03-26 11:00:00",
@@ -399,7 +399,7 @@
   "846": {
     "Name": "Event_Name_846",
     "Kr": "하이랜더 철도 폭주 사건 ~그리고 기차는 없었다~",
-    "Jp": "ハイランダー鉄道爆走事件 〜そして列車はなくなった〜",
+    "Jp": "ハイランダー鉄道爆走事件〜そして列車はなくなった〜",
     "En": "Highlander Railroad Runaway Incident: And the Train Disappeared",
     "Tw": "高地人鐵道暴走事件～於是列車消失了～",
     "OpenTime": "2025-04-22 11:00:00",
@@ -526,8 +526,8 @@
     "Name": "Event_Name_860",
     "Kr": "출항! 만마선 ~마코토 의장님의 화려한 피서~",
     "Jp": "出航！万魔船　マコト議長の華麗なる避暑",
-    "En": null,
-    "Tw": null,
+    "En": "Set Sail! Pandemonium Ship: Chair Makoto's Lux Summer Getaway!",
+    "Tw": "出航！萬魔船～真琴議長的華麗避暑～",
     "OpenTime": "2026-07-29 11:00:00",
     "CloseTime": "2026-08-12 10:59:59"
   },
@@ -535,8 +535,8 @@
     "Name": "Event_Name_861",
     "Kr": "DIVE into OCEAN!",
     "Jp": "DIVE into OCEAN！",
-    "En": null,
-    "Tw": null,
+    "En": "DIVE into OCEAN!",
+    "Tw": "DIVE into OCEAN!",
     "OpenTime": "2026-08-26 11:00:00",
     "CloseTime": "2026-09-09 10:59:59"
   },
@@ -544,8 +544,8 @@
     "Name": "Event_Name_862",
     "Kr": "It’s our Engine! ~183호를 탈출하라!~",
     "Jp": "It’s our Engine!　～183号を脱出せよ！～",
-    "En": null,
-    "Tw": null,
+    "En": "It's our Engine! Escape From No. 183!",
+    "Tw": "It’s our Engine!～逃出183號！～",
     "OpenTime": "2026-09-23 11:00:00",
     "CloseTime": "2026-10-07 10:59:59"
   },
@@ -557,6 +557,15 @@
     "Tw": "特殊作戰：怪談追蹤篇",
     "OpenTime": "2026-10-21 11:00:00",
     "CloseTime": "2026-10-28 10:59:59"
+  },
+  "864": {
+    "Name": "Event_Name_864",
+    "Kr": "Start Your Engines! ~183호여, 영원하라!~",
+    "Jp": "Start Your Engines!　～183号よ永遠に！～",
+    "En": null,
+    "Tw": null,
+    "OpenTime": "2026-10-28 11:00:00",
+    "CloseTime": "2026-11-11 10:59:59"
   },
   "10801": {
     "Name": "Event_Name_801",
@@ -572,7 +581,7 @@
     "Kr": "혁명의 이반 쿠팔라",
     "Jp": "革命のイワン・クパーラ",
     "En": "A Revolutionary Ivan Kupala",
-    "Tw": "革命的伊凡．庫帕拉",
+    "Tw": "革命的伊凡·庫帕拉",
     "OpenTime": "2022-03-09 11:30:00",
     "CloseTime": "2022-03-16 10:59:59"
   },
@@ -589,7 +598,7 @@
     "Name": "Event_Name_804",
     "Kr": "히나 선도부장님의 여름방학!",
     "Jp": "ヒナ委員長のなつやすみっ！",
-    "En": "Head Prefect Hina's Summer Vacation!",
+    "En": "Head Prefect Hina's Summer Break!",
     "Tw": "陽奈委員長的暑假！",
     "OpenTime": "2022-09-07 11:00:00",
     "CloseTime": "2022-09-14 10:59:59"
@@ -634,7 +643,7 @@
     "Name": "Event_Name_810",
     "Kr": "샬레의 해피♡발렌타인 순찰",
     "Jp": "シャーレのハッピー♡バレンタインパトロール",
-    "En": "Schale's Happy ♥ Valentine Patrol",
+    "En": "Schale's Happy ♡ Valentine Patrol",
     "Tw": "夏萊的快樂♡情人節巡邏",
     "OpenTime": "2023-01-11 11:00:00",
     "CloseTime": "2023-01-24 10:59:59"
@@ -903,7 +912,7 @@
   "10845": {
     "Name": "Event_Name_845",
     "Kr": "Pray-Ball! ~노려라! 만루 홈런~",
-    "Jp": "プレイボール！ ～目指せ！満塁ホームラン～",
+    "Jp": "プレイボール！～目指せ！満塁ホームラン～",
     "En": "Pray-Ball! Swing for the Grand Slam!",
     "Tw": "Pray-Ball！～瞄準滿壘全壘打！～",
     "OpenTime": "2026-05-06 11:00:00",
@@ -912,7 +921,7 @@
   "10846": {
     "Name": "Event_Name_846",
     "Kr": "하이랜더 철도 폭주 사건 ~그리고 기차는 없었다~",
-    "Jp": "ハイランダー鉄道爆走事件 〜そして列車はなくなった〜",
+    "Jp": "ハイランダー鉄道爆走事件〜そして列車はなくなった〜",
     "En": "Highlander Railroad Runaway Incident: And the Train Disappeared",
     "Tw": "高地人鐵道暴走事件～於是列車消失了～",
     "OpenTime": "2026-07-08 11:00:00",
@@ -944,6 +953,16 @@
     "Tw": "我們是神秘學研究會！～學園的不可思議與古老的咒語～",
     "OpenTime": "2026-10-07 11:00:00",
     "CloseTime": "2026-10-21 10:59:59"
+  },
+  "10850": {
+    "Name": "Event_Name_850",
+    "Kr": "누구를 위한 예술인가 ~위작과 미학의 행방~",
+    "Jp": "誰が為の芸術～偽飾の絵画と美学の行方～",
+    "En": "To Whom Art Belongs: The Fate of Forgeries and Aesthetics",
+    "Tw": "為了誰而存在的藝術～偽畫與美學的去向～",
+    "OpenTime": "2026-11-11 11:00:00",
+    "CloseTime": "2026-11-25 10:59:59",
+    "Planable": true
   },
   "60001": {
     "Name": "Event_Name_60000",

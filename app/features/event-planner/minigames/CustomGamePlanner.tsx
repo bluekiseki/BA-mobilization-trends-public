@@ -236,7 +236,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
 
   return (
     <>
-      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('customGamePlanner.title')}</h2>
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t_ui('customExchange')}</h2>
       <div className="mt-4 space-y-4">
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg space-y-3">
           <div>
@@ -255,7 +255,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
               <input
                 type="number"
                 step="any"
-                placeholder={t('customGamePlanner.amountPlaceholder')}
+                placeholder={t_ui('amount')}
                 value={cost?.amount || ''}
                 onChange={(e) => setCost(((c) => (c ? { ...c, amount: parseFloat(e.target.value) || 0 } : null))(cost))}
                 className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
@@ -271,7 +271,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
                   <input
                     type="number"
                     step="any"
-                    placeholder={t('customGamePlanner.amountPlaceholder')}
+                    placeholder={t_ui('amount')}
                     value={reward.amount}
                     onChange={(e) =>
                       setRewards(
@@ -307,7 +307,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
                   <input
                     type="number"
                     step="any"
-                    placeholder={t('customGamePlanner.amountPlaceholder')}
+                    placeholder={t_ui('amount')}
                     value={reward.amount}
                     onChange={(e) =>
                       setOneTimeRewards(
@@ -345,7 +345,7 @@ export const CustomGamePlanner = ({ eventId, eventData, iconData, onCalculate, r
               className="w-full p-2 text-lg rounded border dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
             />
             <button onClick={handleSetMaxPlays} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0">
-              {t('customGamePlanner.setToMax')}
+              {t_ui('setToMax')}
             </button>
           </div>
         </div>

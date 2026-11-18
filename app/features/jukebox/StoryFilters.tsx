@@ -1,7 +1,9 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import React from 'react';
 import type { Student } from '~/types/data';
 import { AutoplayIcon, RepeatIcon, StopIcon } from '~/features/jukebox/jukeboxMetadata';
 import { useTranslation } from 'react-i18next';
+import { FaChevronDown } from 'react-icons/fa';
 
 export interface StoryFiltersProps {
   // Data
@@ -47,6 +49,10 @@ export interface StoryFiltersProps {
   setAutoScrollEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   playbackMode: 'autoplay' | 'repeat' | 'off';
   setPlaybackMode: React.Dispatch<React.SetStateAction<'autoplay' | 'repeat' | 'off'>>;
+  playOrder: 'random' | 'sequential';
+  setPlayOrder: React.Dispatch<React.SetStateAction<'random' | 'sequential'>>;
+  idRangeInput: { min: string; max: string };
+  setIdRangeInput: React.Dispatch<React.SetStateAction<{ min: string; max: string }>>;
   // i18n
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (...args: any[]) => string;
@@ -119,10 +125,16 @@ export default function StoryFilters({
   setAutoScrollEnabled,
   playbackMode,
   setPlaybackMode,
+  playOrder,
+  setPlayOrder,
+  idRangeInput,
+  setIdRangeInput,
   t,
   matcher,
 }: StoryFiltersProps) {
   const { t: t_ui } = useTranslation('ui');
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
+  const hasIdRange = idRangeInput.min !== '' || idRangeInput.max !== '';
   return (
     <div className="flex flex-col gap-5">
       {/* ── Options ── */}
@@ -173,6 +185,64 @@ export default function StoryFilters({
             )}
           </button>
         </div>
+
+        <button
+          onClick={() => setShowAdvanced((p) => !p)}
+          aria-expanded={showAdvanced}
+          className="flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            {t('playback.advanced')}
+            {hasIdRange && !showAdvanced && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+          </span>
+          <FaChevronDown className={`h-2.5 w-2.5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showAdvanced && (
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-neutral-600 dark:text-neutral-400">{t('playback.order')}</span>
+              <button
+                onClick={() => setPlayOrder((p) => (p === 'random' ? 'sequential' : 'random'))}
+                className="px-2 py-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-xs text-neutral-600 dark:text-neutral-300 transition-colors"
+              >
+                {playOrder === 'random' ? t('playback.order_random') : t('playback.order_sequential')}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-neutral-600 dark:text-neutral-400">{t('playback.id_range')}</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={idRangeInput.min}
+                  onChange={(e) => setIdRangeInput((p) => ({ ...p, min: e.target.value.replace(/\D/g, '') }))}
+                  aria-label={t('playback.id_range_from')}
+                  placeholder="1"
+                  className="w-16 px-2 py-1 text-xs bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-sky-400 dark:focus:border-sky-500 transition-colors"
+                />
+                <span className="text-xs text-neutral-400">~</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={idRangeInput.max}
+                  onChange={(e) => setIdRangeInput((p) => ({ ...p, max: e.target.value.replace(/\D/g, '') }))}
+                  aria-label={t('playback.id_range_to')}
+                  placeholder="999"
+                  className="w-16 px-2 py-1 text-xs bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-700 rounded-lg outline-none focus:border-sky-400 dark:focus:border-sky-500 transition-colors"
+                />
+                {(idRangeInput.min !== '' || idRangeInput.max !== '') && (
+                  <button onClick={() => setIdRangeInput({ min: '', max: '' })} className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors">
+                    {t('playback.id_range_clear')}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Main Story ── */}
@@ -253,7 +323,7 @@ export default function StoryFilters({
                     onChange={() => handleFilterToggle('favorStudents', id)}
                     className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer shrink-0"
                   />
-                  <img className="h-4 w-4 rounded-full" src={`data:image/webp;base64,${s.Portrait}`} alt={s.Name}></img>
+                  <SheetIcon sheet="student" id={id} alt={s.Name} className="h-4 w-4 rounded-full" />
                   <span className={`text-xs truncate ${spoilerFilters.favorStudents[id] ? 'text-neutral-900 dark:text-neutral-100 font-medium' : 'text-neutral-600 dark:text-neutral-400'}`}>
                     {s.Name}
                   </span>
@@ -290,7 +360,7 @@ export default function StoryFilters({
                     onChange={() => handleFilterToggle('memorialStudents', id)}
                     className="w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer shrink-0"
                   />
-                  <img className="h-4 w-4 rounded-full" src={`data:image/webp;base64,${s.Portrait}`} alt={s.Name}></img>
+                  <SheetIcon sheet="student" id={id} alt={s.Name} className="h-4 w-4 rounded-full" />
                   <span className={`text-xs truncate ${spoilerFilters.memorialStudents[id] ? 'text-neutral-900 dark:text-neutral-100 font-medium' : 'text-neutral-600 dark:text-neutral-400'}`}>
                     {s.Name}
                   </span>

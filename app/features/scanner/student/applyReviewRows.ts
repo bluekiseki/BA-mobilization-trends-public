@@ -3,8 +3,14 @@ import { useUndoRedoStore } from '~/store/planner/useUndoRedoStore';
 import type { StudentReviewRow } from './reviewTypes';
 import { projectReviewRow } from './reviewImpact';
 import { getCombatStylePlanGroupId, getCombatStyleRepresentativeId } from '~/utils/combatStyle';
+import { isUnrecruited } from '~/utils/student/recruitState';
 
 const NUMERIC_FIELDS = ['level', 'star', 'uw', 'uwLevel', 'ex', 'normal', 'passive', 'sub', 'affection', 'gear'] as const;
+
+function todayLocalDate(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
 
 // Merges recognized (non-null) fields into each row's GrowthPlan.current via the global store's updatePlan action,
 // reusing its target-invariant correction. Unrecognized (null) fields are left untouched. Returns the number applied.
@@ -12,7 +18,7 @@ export function applyReviewRows(rows: StudentReviewRow[]): number {
   const applicable = rows.filter((row) => row.apply && row.studentId !== null);
   if (!applicable.length) return 0;
 
-  const { growthPlans, addPlanForStudent, updatePlan } = useGlobalStore.getState();
+  const { growthPlans, addPlanForStudent, updatePlan, setPlanRecruited } = useGlobalStore.getState();
   useUndoRedoStore.getState().pushUndo(growthPlans);
 
   for (const row of applicable) {
@@ -20,6 +26,13 @@ export function applyReviewRows(rows: StudentReviewRow[]): number {
     // Resolve the plan from the live store at apply time, not from a scan-time snapshot.
     const existingPlan = useGlobalStore.getState().growthPlans.find((p) => p.studentId !== null && getCombatStylePlanGroupId(p.studentId) === getCombatStylePlanGroupId(studentId)) ?? null;
     const uuid = existingPlan?.uuid ?? addPlanForStudent(studentId);
+    // A student first seen by the scanner is treated as acquired on the scan date (recruit-order sorting)
+    if (!existingPlan) updatePlan(uuid, 'acquiredDate', todayLocalDate());
+    // A scanned student is recruited; an unrecruited plan would otherwise reset the scanned current values to the recruit baseline
+    if (existingPlan && isUnrecruited(existingPlan)) {
+      setPlanRecruited(uuid, true);
+      if (!existingPlan.acquiredDate) updatePlan(uuid, 'acquiredDate', todayLocalDate());
+    }
     const recognized = row.recognized;
     const projection = projectReviewRow(row, existingPlan);
 

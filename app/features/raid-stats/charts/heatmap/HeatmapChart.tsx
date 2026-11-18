@@ -29,7 +29,7 @@ const HeatmapChart = ({ isLoading, error, aggregatedChartData, layout, heatmapDa
   if (isLoading) {
     return <p className="p-4">{t('processingMessage')} ⏳</p>;
   }
-  if (!aggregatedChartData) return <p className="p-4">{t('noDataMessage')}</p>;
+  if (!aggregatedChartData) return <p className="px-4 py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">{t('noDataMessage')}</p>;
 
   const plotlyProps = {
     data: [

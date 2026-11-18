@@ -84,9 +84,7 @@ export const createAuthInstance = (env: Env) => {
         }),
       },
     },
-    // Account linking: allow linking GitHub (which has different email from username's synthetic email)
-    // Previously set skipStateCookieCheck: true as a workaround for suspected SameSite=Lax cookie loss on OAuth callback,
-    // but confirmed unnecessary.
+    // GitHub accounts may use a different email from the synthetic username-login address.
     account: {
       accountLinking: {
         enabled: true,

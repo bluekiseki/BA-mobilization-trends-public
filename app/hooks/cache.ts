@@ -1,7 +1,5 @@
 import { useRef, useCallback } from 'react';
-import * as xz from 'xz-decompress';
-import { processStream } from '../utils/xorProcess';
-const { XzReadableStream } = xz;
+import { gzipDecodeStream } from '../utils/xorProcess';
 
 export type fetchCacheProcessor<T> = (url: string, processor: (res: Response) => Promise<T>, doXor?: boolean) => Promise<T>;
 
@@ -25,15 +23,7 @@ export const useDataCache = <T>() => {
         if (!response.body) throw new Error(`Response body is null for ${url}`);
 
         // const startTime = performance.now();
-        let decompressedStream;
-        // xor
-        if (doXor) {
-          const xorStream = processStream(response.body);
-          // Decompress and process
-          decompressedStream = new Response(new XzReadableStream(xorStream));
-        } else {
-          decompressedStream = new Response(new XzReadableStream(response.body));
-        }
+        const decompressedStream = new Response(gzipDecodeStream(response.body, doXor));
 
         const data = await processor(decompressedStream);
 

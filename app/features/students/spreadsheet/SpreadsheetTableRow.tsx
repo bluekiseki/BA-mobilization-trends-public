@@ -6,6 +6,7 @@ import { NumInput, EquipmentInput, GearInput } from './SpreadsheetInputCells';
 import type { Row } from './spreadsheetSort';
 import { useTranslation } from 'react-i18next';
 import { CombatStylePortrait } from '~/components/student/CombatStylePortrait';
+import { isUnrecruited } from '~/utils/student/recruitState';
 
 const SKILLS = ['ex', 'normal', 'passive', 'sub'] as const;
 const SKILL_MAX: Record<(typeof SKILLS)[number], number> = { ex: 5, normal: 10, passive: 10, sub: 10 };
@@ -42,6 +43,14 @@ function SpreadsheetTableRowComponent({
   const rowBg = isAdded ? 'bg-white dark:bg-neutral-900' : 'bg-neutral-50 dark:bg-neutral-950';
   const cellId = useCallback((col: string) => `row-${rowIndex}-${col}`, [rowIndex]);
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
+  const { t: tPlanner } = useTranslation('planner');
+  // Unrecruited plans keep `current` at the recruit baseline, except the acquired star
+  const locked = plan !== null && isUnrecruited(plan);
+  const dash = (cellName: string, key?: string) => (
+    <td key={key} className={td} data-cell-id={cellId(cellName)}>
+      <span className="text-neutral-300 dark:text-neutral-600">-</span>
+    </td>
+  );
   const showIdentityColumns = screenWidth > 600;
 
   function starUwToIndex(star: number, uw: number): number {
@@ -72,11 +81,10 @@ function SpreadsheetTableRowComponent({
       </td>
 
       <td className={`${td} sticky z-10 bg-inherit`} style={{ left: L.icon, width: 32, minWidth: 32, maxWidth: 32 }}>
-        {row.portrait ? (
-          <CombatStylePortrait studentId={row.studentId} portraits={row.portraits} alt={row.name} className="rounded" />
-        ) : (
-          <div className="w-8 h-8 rounded bg-neutral-200 dark:bg-neutral-700" />
-        )}
+        {/* The sprite icon has no intrinsic height, so a percentage height inside a table cell collapses to 0 */}
+        <div className="aspect-square w-8">
+          <CombatStylePortrait studentId={row.studentId} alt={row.name} className="rounded" />
+        </div>
       </td>
 
       {showIdentityColumns && (
@@ -101,42 +109,58 @@ function SpreadsheetTableRowComponent({
 
       {plan ? (
         <>
-          <NumInput plan={plan} section="current" field="level" value={plan.current.level} min={1} max={90} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('level')} />
+          {locked ? (
+            dash('level')
+          ) : (
+            <NumInput plan={plan} section="current" field="level" value={plan.current.level} min={1} max={90} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('level')} />
+          )}
           <td className={td}>
             <select value={starUwToIndex(plan.current.star, plan.current.uw)} onChange={(e) => handleStarUw(plan.uuid, 'current', +e.target.value)} className={sel}>
               {starUwOptions.map((opt, i) => (
-                <option key={i} value={i} disabled={opt.uw === 0 && opt.star < row.minStar}>
+                <option key={i} value={i} disabled={(opt.uw === 0 && opt.star < row.minStar) || (locked && opt.uw > 0)}>
                   {opt.label}
                 </option>
               ))}
             </select>
           </td>
-          <NumInput
-            plan={plan}
-            section="current"
-            field="uwLevel"
-            value={plan.current.uwLevel}
-            min={1}
-            max={60}
-            disabled={plan.current.uw === 0}
-            updatePlan={updatePlan}
-            td={td}
-            inp={inp}
-            cellId={cellId('uwLevel')}
-          />
-          <NumInput plan={plan} section="current" field="affection" value={plan.current.affection} min={1} max={100} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('affection')} />
-          <NumInput
-            plan={plan}
-            section="current"
-            field="affectionExp"
-            value={plan.current.affectionExp}
-            min={0}
-            max={affectionExpToNextLevel[plan.current.affection] || 1}
-            updatePlan={updatePlan}
-            td={td}
-            inp={inp}
-            cellId={cellId('affectionExp')}
-          />
+          {locked ? (
+            dash('uwLevel')
+          ) : (
+            <NumInput
+              plan={plan}
+              section="current"
+              field="uwLevel"
+              value={plan.current.uwLevel}
+              min={1}
+              max={60}
+              disabled={plan.current.uw === 0}
+              updatePlan={updatePlan}
+              td={td}
+              inp={inp}
+              cellId={cellId('uwLevel')}
+            />
+          )}
+          {locked ? (
+            dash('affection')
+          ) : (
+            <NumInput plan={plan} section="current" field="affection" value={plan.current.affection} min={1} max={100} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('affection')} />
+          )}
+          {locked ? (
+            dash('affectionExp')
+          ) : (
+            <NumInput
+              plan={plan}
+              section="current"
+              field="affectionExp"
+              value={plan.current.affectionExp}
+              min={0}
+              max={affectionExpToNextLevel[plan.current.affection] || 1}
+              updatePlan={updatePlan}
+              td={td}
+              inp={inp}
+              cellId={cellId('affectionExp')}
+            />
+          )}
 
           <NumInput plan={plan} section="target" field="level" value={plan.target.level} min={1} max={90} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('targetLevel')} />
           <td className={td}>
@@ -163,21 +187,26 @@ function SpreadsheetTableRowComponent({
           />
           <NumInput plan={plan} section="target" field="affection" value={plan.target.affection} min={1} max={100} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('targetAffection')} />
 
-          {SKILLS.map((s) => (
-            <NumInput
-              key={`c-${s}`}
-              plan={plan}
-              section="current"
-              field={s}
-              value={plan.current[s]}
-              min={1}
-              max={SKILL_MAX[s]}
-              updatePlan={updatePlan}
-              td={td}
-              inp={inp}
-              cellId={cellId(`current-${s}`)}
-            />
-          ))}
+          {SKILLS.map((s) =>
+            locked ? (
+              dash(`current-${s}`, `c-${s}`)
+            ) : (
+              <NumInput
+                key={`c-${s}`}
+                plan={plan}
+                section="current"
+                field={s}
+                value={plan.current[s]}
+                min={1}
+                max={SKILL_MAX[s]}
+                disabled={locked}
+                updatePlan={updatePlan}
+                td={td}
+                inp={inp}
+                cellId={cellId(`current-${s}`)}
+              />
+            ),
+          )}
 
           {SKILLS.map((s) => (
             <NumInput
@@ -195,21 +224,25 @@ function SpreadsheetTableRowComponent({
             />
           ))}
 
-          {([0, 1, 2] as const).map((i) => (
-            <EquipmentInput
-              key={`ceq-${i}`}
-              plan={plan}
-              section="current"
-              index={i}
-              value={plan.current.equipment[i]}
-              handleEquip={handleEquip}
-              equip={plan.current.equipment}
-              td={td}
-              inp={inp}
-              cellId={cellId(`currentEquipment${i}`)}
-            />
-          ))}
-          {row.hasGear ? (
+          {([0, 1, 2] as const).map((i) =>
+            locked ? (
+              dash(`currentEquipment${i}`, `ceq-${i}`)
+            ) : (
+              <EquipmentInput
+                key={`ceq-${i}`}
+                plan={plan}
+                section="current"
+                index={i}
+                value={plan.current.equipment[i]}
+                handleEquip={handleEquip}
+                equip={plan.current.equipment}
+                td={td}
+                inp={inp}
+                cellId={cellId(`currentEquipment${i}`)}
+              />
+            ),
+          )}
+          {row.hasGear && !locked ? (
             <GearInput plan={plan} section="current" value={plan.current.gear} updatePlan={updatePlan} td={td} inp={inp} cellId={cellId('currentGear')} />
           ) : (
             <td className={td} data-cell-id={cellId('currentGear')}>
@@ -238,6 +271,16 @@ function SpreadsheetTableRowComponent({
               <span className="text-neutral-300 dark:text-neutral-600">-</span>
             </td>
           )}
+
+          <td className={td}>
+            <input
+              type="checkbox"
+              checked={!locked}
+              aria-label={tPlanner('growthCard.recruited')}
+              onChange={() => updatePlan(plan.uuid, 'recruited', locked ? undefined : false)}
+              className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
+            />
+          </td>
 
           <td className={td}>
             <input
@@ -290,7 +333,7 @@ function SpreadsheetTableRowComponent({
           <td className={td}></td>
         </>
       ) : (
-        <td colSpan={30} className="border-b border-neutral-100 dark:border-neutral-800 text-center text-neutral-300 dark:text-neutral-700 italic py-1">
+        <td colSpan={31} className="border-b border-neutral-100 dark:border-neutral-800 text-center text-neutral-300 dark:text-neutral-700 italic py-1">
           {t('messages.addPlanHint')}
         </td>
       )}

@@ -27,6 +27,8 @@ const getStageLabel = (minPoint: number) => {
 
 export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'minigame_ccg' });
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_planner } = useTranslation('planner');
   const locale = i18n.language as Locale;
 
   const [activeTab, setActiveTab] = useState<'overview' | 'mission' | 'calc'>('overview');
@@ -200,9 +202,9 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
   if (!ccgData) return null;
 
   const tabs = [
-    { id: 'overview' as const, name: t('overview', 'Overview') },
-    { id: 'mission' as const, name: t('missions', 'Missions') },
-    { id: 'calc' as const, name: t('calculator', 'Calculator') },
+    { id: 'overview' as const, name: t_ui('overview') },
+    { id: 'mission' as const, name: t_ui('mission') },
+    { id: 'calc' as const, name: t_ui('calculator') },
   ] as const;
 
   return (
@@ -229,7 +231,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
           <div className="space-y-4 animate-fadeIn text-sm dark:text-neutral-300">
             {/* Rules */}
             <div className="bg-neutral-50 dark:bg-neutral-700/50 p-4 rounded-lg">
-              <h3 className="font-bold mb-2 text-base dark:text-neutral-100">{t('game_rules', 'Game Rules')}</h3>
+              <h3 className="font-bold mb-2 text-base dark:text-neutral-100">{t_ui('gameRules', 'Game Rules')}</h3>
               <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-300">
                 <li>{t('desc_1', 'A roguelike deck-builder game.')}</li>
                 <li>{t('desc_2', 'Clear Stage 3-7 to unlock Sweep.')}</li>
@@ -239,7 +241,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
 
             {/* Cost Info */}
             <div className="flex items-center gap-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-              <span className="font-semibold text-sm text-blue-900 dark:text-blue-100">{t('entry_cost', 'Entry Cost')}:</span>
+              <span className="font-semibold text-sm text-blue-900 dark:text-blue-100">{t_ui('entryCost', 'Entry Cost')}:</span>
               <div className="flex items-center gap-2">
                 <ItemIcon type={entryItemTypeStr} itemId={String(entryItemId)} amount={entryCost} size={12} eventData={eventData} iconData={iconData} />
               </div>
@@ -254,7 +256,7 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
                 <table className="w-full text-left text-sm">
                   <thead className="bg-neutral-50 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300">
                     <tr>
-                      <th className="px-4 py-2 border-b dark:border-neutral-600 w-[20%] whitespace-nowrap">{t('stage', 'Stage')}</th>
+                      <th className="px-4 py-2 border-b dark:border-neutral-600 w-[20%] whitespace-nowrap">{t_planner('common.stage', 'Stage')}</th>
                       <th className="px-4 py-2 border-b dark:border-neutral-600">{t('rewards', 'Added Rewards')}</th>
                     </tr>
                   </thead>
@@ -302,10 +304,10 @@ export const MinigameCCGPlanner: React.FC<MinigameCCGPlannerProps> = ({ eventId,
               </span>
               <div className="space-x-2">
                 <button onClick={() => toggleAllMissions(true)} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
-                  {t('select_all', 'Select All')}
+                  {t_ui('selectAll')}
                 </button>
                 <button onClick={() => toggleAllMissions(false)} className="text-xs bg-neutral-400 text-white px-2 py-1 rounded hover:bg-neutral-500">
-                  {t('deselect_all', 'Deselect All')}
+                  {t_ui('deselectAll')}
                 </button>
               </div>
             </div>

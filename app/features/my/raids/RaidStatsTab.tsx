@@ -2,7 +2,8 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CartesianGrid, ComposedChart, Line, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from 'recharts';
 import { getBackgroundRatingColor, getCharacterStarValue } from '~/utils/raid/report';
-import type { Character, PortraitData } from '~/types/raidReport';
+import { SheetIcon } from '~/components/common/SheetIcon';
+import type { Character } from '~/types/raidReport';
 import { type_translation } from '~/components/raid/raidToString';
 import { CheckboxSelect, type CheckboxSelectOption } from '~/components/common/CheckboxSelect';
 import { IndexRangeSlider, useIndexRange } from '~/components/common/IndexRangeSlider';
@@ -23,7 +24,6 @@ interface RaidStatsTabProps {
   entries: RaidHistoryEntry[];
   raidOptions: RaidOption[];
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: Locale;
 }
 
@@ -116,6 +116,16 @@ function formatSecondsLabel(value: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+const ARMOR_TYPE_ORDER = ['LightArmor', 'HeavyArmor', 'Unarmed', 'ElasticArmor', 'CompositeArmor'];
+
+function sortArmorTypes(values: string[]) {
+  const rank = (value: string) => {
+    const index = ARMOR_TYPE_ORDER.indexOf(value);
+    return index === -1 ? ARMOR_TYPE_ORDER.length : index;
+  };
+  return [...values].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
 function uniqueStrings(values: string[]) {
   return Array.from(new Set(values.filter((value) => value.trim().length > 0))).sort((a, b) => a.localeCompare(b));
 }
@@ -161,11 +171,6 @@ function getScoreValues(points: ScorePoint[], metric: RaidResultMetric): number[
 
 function getRestrictionMetricValues(points: RestrictionPoint[]): number[] {
   return points.flatMap((point) => (Number.isFinite(point.metricValue) ? [point.metricValue] : []));
-}
-
-function getPortraitSrc(studentId: number, student: Student | undefined, portraitData: PortraitData) {
-  const portrait = portraitData[studentId] ?? student?.Portrait;
-  return portrait ? `data:image/webp;base64,${portrait}` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
 }
 
 function getStudentStarValue(student: RaidHistoryStudent, fallbackStar: number): number {
@@ -302,7 +307,7 @@ function DistributionStrip({ title, points, total }: { title: string; points: St
   );
 }
 
-export function RaidStatsTab({ entries, raidOptions, students, portraitData, locale }: RaidStatsTabProps) {
+export function RaidStatsTab({ entries, raidOptions, students, locale }: RaidStatsTabProps) {
   const { t } = useTranslation('mypage');
   const { t: td } = useTranslation('dashboard');
   const { t: tch } = useTranslation('charts');
@@ -315,7 +320,7 @@ export function RaidStatsTab({ entries, raidOptions, students, portraitData, loc
     return entries.map((entry) => {
       const raid = raidInfoByKey.get(`${entry.server}:${entry.raidId}`);
       const teams = getEntryTeams(entry);
-      const armorTypes = uniqueStrings(teams.map((team) => team.armorType ?? '').filter((armorType) => armorType.length > 0));
+      const armorTypes = sortArmorTypes(uniqueStrings(teams.map((team) => team.armorType ?? '').filter((armorType) => armorType.length > 0)));
       const flatStudents = teams.flatMap((team) => [
         ...team.m.flatMap((student) => (student ? [{ student, role: 'striker' as const }] : [])),
         ...team.s.flatMap((student) => (student ? [{ student, role: 'special' as const }] : [])),
@@ -342,7 +347,10 @@ export function RaidStatsTab({ entries, raidOptions, students, portraitData, loc
   const [restrictionMetric, setRestrictionMetric] = useState<RestrictionMetric>('floor');
 
   const scoreBossOptions = useMemo(() => uniqueStrings(normalizedEntries.filter(({ entry }) => entry.raidType === 'raid' || entry.raidType === 'eraid').map(({ boss }) => boss)), [normalizedEntries]);
-  const scoreArmorOptions = useMemo(() => uniqueStrings(normalizedEntries.filter(({ entry }) => entry.raidType === 'eraid').flatMap(({ armorTypes }) => armorTypes)), [normalizedEntries]);
+  const scoreArmorOptions = useMemo(
+    () => sortArmorTypes(uniqueStrings(normalizedEntries.filter(({ entry }) => entry.raidType === 'eraid').flatMap(({ armorTypes }) => armorTypes))),
+    [normalizedEntries],
+  );
   const restrictionBossOptions = useMemo(() => uniqueStrings(normalizedEntries.filter(({ entry }) => entry.raidType === 'multifloor').map(({ boss }) => boss)), [normalizedEntries]);
   const restrictionDifficultyOptions = useMemo(
     () => uniqueStrings(normalizedEntries.filter(({ entry }) => entry.raidType === 'multifloor').map(({ entry }) => entry.difficulty ?? '')),
@@ -790,7 +798,7 @@ export function RaidStatsTab({ entries, raidOptions, students, portraitData, loc
                   >
                     <div className="w-8 text-sm font-semibold text-neutral-500 dark:text-neutral-400">{index + 1}</div>
                     <div className="h-14 w-14 shrink-0 overflow-hidden rounded border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
-                      <img src={getPortraitSrc(item.studentId, item.student, portraitData)} alt={item.student.Name} className="h-full w-full object-cover" />
+                      <SheetIcon sheet="student" id={item.studentId} alt={item.student.Name} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium text-neutral-900 dark:text-neutral-100" title={item.student.Name}>

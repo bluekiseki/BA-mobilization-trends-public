@@ -2,15 +2,15 @@ import { dateEra, eraAnchors, type Era } from '../logic/eras';
 import { mergeByDay } from '../logic/fes';
 import { timelineExtras } from '../logic/timelineExtras';
 import { STORY_SCHEDULES } from '../data/schedules';
-import { Fragment, useMemo } from 'react';
+import { Fragment, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { LuArrowDownNarrowWide, LuArrowUpWideNarrow, LuFilterX, LuX } from 'react-icons/lu';
 import { useSearchParams } from 'react-router';
-import { readStoryFilters, STORY_CATEGORIES, storyQuery } from '../logic/navigation';
+import { readStoryFilters, splitSeriesTitle, STORY_CATEGORIES, storyQuery } from '../logic/navigation';
 import type { SeriesReleases } from '../logic/releaseDates';
 import { useStorySettings } from './useStorySettings';
 import { noticeImages, storyImages } from '../logic/noticeImages';
 import { seriesSlug } from '../logic/slugs';
-import { categoryLabel, characterLabel, eraLabel, episodeRange, filterSeries } from '../logic/storyIndex';
+import { categoryLabel, characterLabel, eraLabel, episodeRange, episodeTotal, filterSeries } from '../logic/storyIndex';
 import type { StoryIndex, StoryLang } from '../logic/types';
 import { storyCopy } from '../logic/uiText';
 import { FesRow } from './FesRow';
@@ -37,18 +37,39 @@ export function StoryList({ index, lang, langQuery, releases, character }: Story
   const [params, setParams] = useSearchParams();
   const { settings } = useStorySettings();
   const spoilers = settings?.spoilers ?? false;
-  const { query, category, sort, descending, year } = readStoryFilters(params, settings?.server);
+  const episodeTotals = settings?.episodeTotals ?? false;
+  const { query: urlQuery, categories, sort, descending, year } = readStoryFilters(params, settings?.server);
+  // Typing is kept in local state and written to the URL after a pause, so each keystroke does not navigate or rebuild the list.
+  const [draft, setDraft] = useState(urlQuery);
+  const query = useDeferredValue(draft);
   const t = storyCopy(lang);
   const update = (changes: Record<string, string | null>) =>
     setParams((previous) => new URLSearchParams(storyQuery(previous.toString(), { ...changes, focus: null })), { replace: true, preventScrollReset: true });
+  const pushed = useRef(urlQuery);
+  const composing = useRef(false);
+  // Only a URL change that did not come from this input (reset, back button) may overwrite the draft; overwriting during IME composition breaks it.
+  useEffect(() => {
+    if (urlQuery === pushed.current) return;
+    pushed.current = urlQuery;
+    setDraft(urlQuery);
+  }, [urlQuery]);
+  useEffect(() => {
+    if (draft === pushed.current) return;
+    const timer = setTimeout(() => {
+      if (composing.current) return;
+      pushed.current = draft;
+      update({ q: draft, year: null });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [draft]);
   const reset = () => update({ q: null, category: null, year: null, character: null, order: null });
   const matches = useMemo(
-    () => filterSeries(index, { category, query, lang, character, sort, descending, splitParts: category === '' || category === 'Main' || category === 'Group', releases }),
-    [index, category, query, lang, character, sort, descending, releases],
+    () => filterSeries(index, { category: categories, query, lang, character, sort, descending, splitParts: true, releases }),
+    [index, categories, query, lang, character, sort, descending, releases],
   );
   const filtering = query.trim() !== '' || character !== null;
   // On the timeline the Fes recruitments sit between the stories, which gives the dates a sense of time.
-  const extras = useMemo(() => (category === '' && !filtering ? timelineExtras(STORY_SCHEDULES, sort) : []), [category, filtering, sort]);
+  const extras = useMemo(() => (categories.length === 0 && !filtering ? timelineExtras(STORY_SCHEDULES, sort) : []), [categories, filtering, sort]);
   const years = [...new Set([...matches.flatMap((group) => (group.date ? [group.date.slice(0, 4)] : [])), ...extras.map((extra) => extra.date.slice(0, 4))])].sort();
   const groups = year ? matches.filter((group) => group.date?.startsWith(year)) : matches;
   const anchors = useMemo(() => eraAnchors(index, releases, sort), [index, releases, sort]);
@@ -73,14 +94,32 @@ export function StoryList({ index, lang, langQuery, releases, character }: Story
     <div className="flex flex-col gap-4">
       <label className="flex flex-col gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
         {t.search}
-        <input type="search" value={query} onChange={(event) => update({ q: event.target.value, year: null })} placeholder={t.search} className={`w-full ${storyControlClass}`} />
+        <input
+          type="search"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onCompositionStart={() => (composing.current = true)}
+          onCompositionEnd={(event) => {
+            composing.current = false;
+            setDraft(event.currentTarget.value);
+          }}
+          placeholder={t.search}
+          className={`w-full ${storyControlClass}`}
+        />
       </label>
       <div role="group" aria-label={t.category} className="flex flex-wrap gap-2">
-        {['', ...STORY_CATEGORIES].map((value) => (
-          <button key={value} type="button" aria-pressed={category === value} onClick={() => update({ category: value || null, year: null })} className={storyChipClass(category === value)}>
-            {value ? categoryLabel(value, lang) : t.timeline}
-          </button>
-        ))}
+        <button type="button" aria-pressed={categories.length === 0} onClick={() => update({ category: null, year: null })} className={storyChipClass(categories.length === 0)}>
+          {t.timeline}
+        </button>
+        {STORY_CATEGORIES.map((value) => {
+          const active = categories.includes(value);
+          const next = STORY_CATEGORIES.filter((item) => (item === value ? !active : categories.includes(item)));
+          return (
+            <button key={value} type="button" aria-pressed={active} onClick={() => update({ category: next.join(',') || null, year: null })} className={storyChipClass(active)}>
+              {categoryLabel(value, lang)}
+            </button>
+          );
+        })}
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
@@ -116,7 +155,7 @@ export function StoryList({ index, lang, langQuery, releases, character }: Story
             <LuX size={16} />
           </button>
         )}
-        {(filtering || year || category !== '' || descending) && (
+        {(filtering || year || categories.length > 0 || descending) && (
           <button type="button" onClick={reset} className={`${storyButtonClass} w-11 px-0`} aria-label={t.reset} title={t.reset}>
             <LuFilterX size={20} />
           </button>
@@ -171,20 +210,22 @@ export function StoryList({ index, lang, langQuery, releases, character }: Story
                     to={seriesPath(index, group.id, destinationQuery)}
                     className="grid gap-2 py-4 hover:bg-neutral-50 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-6 dark:hover:bg-neutral-800/60"
                   >
-                    <span className="flex min-w-0 flex-col gap-2">
+                    <span className="flex min-w-0 flex-col gap-1">
                       <span className="flex items-start gap-2">
                         <CategoryPill category={group.category} lang={lang} />
                         <SeriesTitle label={group.label} main={group.category === 'Main'} suffix={group.part?.label} />
                       </span>
-                      <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                         {group.category === 'Content' ? <span /> : <ReleaseLine releases={group.part?.releases ?? releases[group.id]} lang={lang} />}
-                        <span className="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
-                          {group.part ? episodeRange(group.part.episodes[0], group.part.episodes[1], lang) : episodeRange(1, index.series[group.id].stories.length, lang)}
-                        </span>
+                        {episodeTotals && (
+                          <span className="text-xs tabular-nums text-neutral-600 dark:text-neutral-300">
+                            {group.part ? episodeRange(group.part.episodes[0], group.part.episodes[1], lang) : episodeRange(1, episodeTotal(index, index.series[group.id], lang), lang)}
+                          </span>
+                        )}
                       </span>
                     </span>
-                    <span className="flex min-w-0 items-start gap-4">
-                      {spoilers && group.summary && <span className="line-clamp-3 min-w-0 flex-1 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">{group.summary}</span>}
+                    <span className={`flex min-w-0 items-start gap-4 ${splitSeriesTitle(group.label, group.category === 'Main').context ? 'md:pt-6' : ''}`}>
+                      {spoilers && group.summary && <span className="line-clamp-3 min-w-0 flex-1 text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">{group.summary}</span>}
                       <span className={`ml-auto w-32 shrink-0 sm:w-44 ${thumbnail?.length ? '' : 'hidden md:block'} ${spoilers ? '' : 'md:hidden'}`}>
                         <NoticeImages urls={thumbnail} size="thumb" />
                       </span>

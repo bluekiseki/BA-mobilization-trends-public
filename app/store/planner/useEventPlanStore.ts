@@ -1,3 +1,4 @@
+import { safeLocalStorage } from '../history/localPersistence';
 // stores/useEventPlanStore.ts
 
 import { create } from 'zustand';
@@ -17,6 +18,7 @@ import { defaultFieldEventConfig, type FieldEventConfig } from '~/types/minigame
 import { defaultInteractiveWorldRaidConfig, type InteractiveWorldRaidConfig } from '~/types/minigame/interactiveWorldRaid';
 import { defaultRoadPuzzleConfig, type RoadPuzzleConfig } from '~/types/minigame/roadPuzzle';
 import { defaultJankenConfig, type JankenConfig } from '~/types/minigame/janken';
+import { defaultTankConfig, type TankConfig } from '~/types/minigame/tank';
 import { defaultLocationConfig, type LocationConfig } from '~/types/minigame/location';
 import type { CcgRunInput } from '~/types/minigame/ccg';
 import { type EventPlan, type StagePrio } from '~/types/eventPlan';
@@ -34,6 +36,7 @@ interface EventPlanStoreState {
   setAlreadyPurchasedCounts: (eventId: number, counts: Record<number, number>) => void;
   setRunCounts: (eventId: number, counts: Record<number, number>) => void;
   setFirstClears: (eventId: number, clears: Record<number, boolean>) => void;
+  setClearedStages: (eventId: number, cleared: Record<string, boolean>) => void;
   setStagePrio: (eventId: number, prio: Record<number, StagePrio>) => void;
   setPriorityItemId: (eventId: number, itemId: number | null) => void;
   setCompletedMissions: (eventId: number, missions: Set<number>) => void;
@@ -69,6 +72,7 @@ interface EventPlanStoreState {
   setInteractiveWorldRaidConfig: (eventId: number, config: InteractiveWorldRaidConfig) => void;
   setRoadPuzzleConfig: (eventId: number, config: RoadPuzzleConfig) => void;
   setMinigameJankenConfig: (eventId: number, config: JankenConfig) => void;
+  setMinigameTankConfig: (eventId: number, config: TankConfig) => void;
   setLocationConfig: (eventId: number, config: LocationConfig) => void;
 
   setTotalRewardCurrentAmount: (eventId: number, amount: number) => void;
@@ -126,6 +130,7 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setAlreadyPurchasedCounts: (eventId, counts) => updatePlanForEvent(eventId, { alreadyPurchasedCounts: counts }),
         setRunCounts: (eventId, counts) => updatePlanForEvent(eventId, { runCounts: counts }),
         setFirstClears: (eventId, clears) => updatePlanForEvent(eventId, { firstClears: clears }),
+        setClearedStages: (eventId, cleared) => updatePlanForEvent(eventId, { clearedStages: cleared }),
         setStagePrio: (eventId, prio) => updatePlanForEvent(eventId, { stagePrio: prio }),
         setPriorityItemId: (eventId, itemId) => updatePlanForEvent(eventId, { priorityItemId: itemId }),
         setCompletedMissions: (eventId, missions) =>
@@ -163,10 +168,11 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
         setInteractiveWorldRaidConfig: (eventId, config) => updatePlanForEvent(eventId, { interactiveWorldRaidConfig: config }),
         setRoadPuzzleConfig: (eventId, config) => updatePlanForEvent(eventId, { roadPuzzleConfig: config }),
         setMinigameJankenConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameJankenConfig: config }),
+        setMinigameTankConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameTankConfig: config }),
         setLocationConfig: (eventId, config) => updatePlanForEvent(eventId, { locationConfig: config }),
         setTotalRewardCurrentAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardCurrentAmount: amount }),
         setTotalRewardTargetAmount: (eventId, amount) => updatePlanForEvent(eventId, { totalRewardTargetAmount: amount }),
-        setCachedTotalItems: (eventId, cached) => updatePlanForEvent(eventId, { cachedTotalItems: cached }),
+        setCachedTotalItems: (eventId, cached) => set((state) => ({ plans: { ...state.plans, [eventId]: { ...state.plans[eventId], cachedTotalItems: cached } } })),
         setMinigameCCGConfig: (eventId, config) => updatePlanForEvent(eventId, { minigameCCGConfig: config }),
         setMinigameMissionStatus: (eventId, status) => updatePlanForEvent(eventId, { minigameMissionStatus: status }),
 
@@ -175,14 +181,15 @@ export const useEventPlanStore = create<EventPlanStoreState>()(
     },
     {
       name: 'event-plans-v2',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
     },
   ),
 );
 
 // Custom hooks for easy use of eventId's plans
 export const usePlanForEvent = (eventId: number) => {
-  const plan = useEventPlanStore((state) => state.plans[eventId || ''] || defaultPlan);
+  const savedPlan = useEventPlanStore((state) => state.plans[eventId || '']);
+  const plan = useMemo(() => ({ ...defaultPlan, ...savedPlan }), [savedPlan]);
 
   const actions = useEventPlanStore((state) => state);
 
@@ -211,6 +218,7 @@ export const usePlanForEvent = (eventId: number) => {
     setFirstClears: (updater: (prev: Record<number, boolean>) => Record<number, boolean>) => {
       if (eventId) actions.setFirstClears(eventId, updater(plan.firstClears || {}));
     },
+    setClearedStages: (cleared: Record<string, boolean>) => eventId && actions.setClearedStages(eventId, cleared),
     setStagePrio: (updater: (prev: Record<number, StagePrio>) => Record<number, StagePrio>) => {
       if (eventId) actions.setStagePrio(eventId, updater(plan.stagePrio || {}));
     },
@@ -269,6 +277,9 @@ export const usePlanForEvent = (eventId: number) => {
     setMinigameJankenConfig: (config: JankenConfig) => {
       if (eventId) actions.setMinigameJankenConfig(eventId, config);
     },
+    setMinigameTankConfig: (config: TankConfig) => {
+      if (eventId) actions.setMinigameTankConfig(eventId, config);
+    },
     setTotalRewardCurrentAmount: (amount: number) => eventId && actions.setTotalRewardCurrentAmount(eventId, amount),
     setTotalRewardTargetAmount: (amount: number) => eventId && actions.setTotalRewardTargetAmount(eventId, amount),
     setCachedTotalItems: (cached: {
@@ -290,6 +301,7 @@ export const usePlanForEvent = (eventId: number) => {
     ...plan,
     // Farming optimization priority item
     priorityItemId: plan.priorityItemId ?? null,
+    clearedStages: plan.clearedStages ?? {},
     // Minigame fields: provide defaults so consumers always get a valid value
     finalCardFlips: plan.finalCardFlips ?? 0,
     treasureStartRound: plan.treasureStartRound ?? 1,
@@ -318,6 +330,7 @@ export const usePlanForEvent = (eventId: number) => {
     interactiveWorldRaidConfig: plan.interactiveWorldRaidConfig ?? defaultInteractiveWorldRaidConfig,
     roadPuzzleConfig: plan.roadPuzzleConfig ?? defaultRoadPuzzleConfig,
     minigameJankenConfig: plan.minigameJankenConfig ?? defaultJankenConfig,
+    minigameTankConfig: plan.minigameTankConfig ?? defaultTankConfig,
     locationConfig: plan.locationConfig ?? defaultLocationConfig,
     setLocationConfig: (config: LocationConfig) => eventId && actions.setLocationConfig(eventId, config),
     ...setters,

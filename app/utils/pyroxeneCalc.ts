@@ -1,3 +1,4 @@
+import type { ParseKeys, TOptions } from 'i18next';
 import type { DistributionData, TicketBatch } from './gachaEngine';
 import { getEraidTicketExpiry, getEraidTicketAvailableFrom } from './gachaRules';
 
@@ -29,6 +30,8 @@ export const PYROXENE_PER_EVENT: Record<number, number> = {
   862: 1920, // It’s our Engine
   10849: 1900, //
   863: 960, //
+  864: 1990, // Start Your Engines!
+  10850: 1860,
 };
 
 export function getEventPyroxeneReward(eventSeason: number): number {
@@ -114,7 +117,14 @@ export interface PyroxeneConfig {
   selectedEraidTicketIds?: string[];
   /** Global policy: force-drain a ticket batch's remaining pull units at its last usable banner before it expires, instead of letting it expire unused. */
   consumeExpiringTickets?: boolean;
+  /** Recruit-charge stacks currently held for the normal-recruitment counter (0–199). */
+  chargeNormal?: number;
+  /** Recruit-charge stacks currently held for the limited-recruitment counter (0–199). */
+  chargeLimited?: number;
 }
+
+/* Clamp a user-entered stack count to the valid 0–199 range (200 triggers and resets immediately). */
+export const clampCharge = (value: number | undefined): number => Math.min(199, Math.max(0, Math.floor(value ?? 0)));
 
 /* Normalize manual + eraid tickets into engine-ready TicketBatch[] */
 export function buildInitialTicketBatches(config: Pick<PyroxeneConfig, 'manualTicketBatches' | 'selectedEraidTicketIds'>, schedules: PlannerSchedule[]): TicketBatch[] {
@@ -226,9 +236,12 @@ export interface CustomIncome {
   amount: number;
 }
 
+/** Translation key under `planner:gacha.income`. */
+export type PyroLogKey = ParseKeys<'planner', TOptions, 'gacha.income'>;
+
 export interface TimelineLog {
   title?: string;
-  i18nKey?: string;
+  i18nKey?: PyroLogKey;
   params?: Record<string, string | number>;
   amount: number;
 }
@@ -450,7 +463,7 @@ export function calculatePyroxeneTimeline(
 
     endingSchedules.forEach((sch) => {
       let reward = 0;
-      let logKey = '';
+      let logKey: PyroLogKey | undefined;
 
       switch (sch.type) {
         case 'Raid':
@@ -478,7 +491,7 @@ export function calculatePyroxeneTimeline(
 
     startingSchedules.forEach((sch) => {
       let reward = 0;
-      let logKey = '';
+      let logKey: PyroLogKey | undefined;
 
       switch (sch.type) {
         case 'Event':

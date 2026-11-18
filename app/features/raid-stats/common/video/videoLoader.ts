@@ -1,14 +1,14 @@
 import { cdn } from '~/utils/cdn';
 import { videoDumpURL } from '~/data/livedataServer.json';
 import type { VideoEntry, VideoOrigin } from './types';
-import { combineScopes, findJpReference, mergeVideoLists, parseLegacyVideos, parseRaidLinks, parseRemoteFile, parseUnifiedVideos, toDataServer, type RaidLink, type WebServer } from './videoMerge';
+import { combineScopes, findLinkedSeasons, mergeVideoLists, parseLegacyVideos, parseRaidLinks, parseRemoteFile, parseUnifiedVideos, toDataServer, type RaidLink, type WebServer } from './videoMerge';
 
 export type RemoteStatus = 'loading' | 'ok' | 'failed';
 
 export interface MergedVideoState {
   videos: VideoEntry[];
   remote: RemoteStatus;
-  /** JP season whose videos are shown as reference for this GL season, if linked. */
+  /** First linked season, if any. Linked videos retain their own server and season. */
   referenceRaidId: string | null;
   /** True once every source settled. Partial results are emitted earlier. */
   done: boolean;
@@ -35,8 +35,8 @@ async function loadSeason(origin: VideoOrigin, signal: AbortSignal, withRemote: 
   const server = toDataServer(origin.server);
   const [local, legacy, remote] = await Promise.all([
     optional(cdn(`/video/${server}-${origin.raidId}.json`), signal),
-    // Per-season files from before the merge existed are JP only.
-    server === 'jp' ? optional(cdn(`/video/raid-jp-${origin.raidId}.json`), signal) : Promise.resolve(null),
+    // Existing per-season files may be legacy arrays or unified documents on either server.
+    optional(cdn(`/video/raid-${server}-${origin.raidId}.json`), signal),
     withRemote && videoDumpURL
       ? getJson(`${videoDumpURL}/${server}-${origin.raidId}.json`, signal).then(
           (doc) => ({ doc, failed: false }),
@@ -45,8 +45,8 @@ async function loadSeason(origin: VideoOrigin, signal: AbortSignal, withRemote: 
       : Promise.resolve({ doc: null, failed: false }),
   ]);
   // The newest local run goes first so it wins over older per-season files for the same video.
-  const localVideos = mergeVideoLists(parseUnifiedVideos(local, origin), parseLegacyVideos(legacy, origin));
-  return { videos: mergeVideoLists(localVideos, parseRemoteFile(remote.doc, origin)), links: parseRaidLinks(local), remoteFailed: remote.failed };
+  const localVideos = mergeVideoLists(parseUnifiedVideos(local, origin), mergeVideoLists(parseUnifiedVideos(legacy, origin), parseLegacyVideos(legacy, origin)));
+  return { videos: mergeVideoLists(localVideos, parseRemoteFile(remote.doc, origin)), links: [...parseRaidLinks(local), ...parseRaidLinks(legacy)], remoteFailed: remote.failed };
 }
 
 /**
@@ -61,15 +61,26 @@ export async function loadMergedVideos(server: WebServer, raidId: string, signal
     if (!signal.aborted) emit({ ...state });
   };
 
-  // The season itself is shown first; the JP reference season is added once the link is known.
-  const [current, remoteRaids] = await Promise.all([loadSeason(origin, signal, true), server === 'kr' && videoDumpURL ? optional(`${videoDumpURL}/raids.json`, signal) : Promise.resolve(null)]);
-  publish({ videos: current.videos, remote: current.remoteFailed ? 'failed' : 'ok' });
+  // The season itself is shown first; linked cross-server seasons are added once the link is known.
+  const currentSeason = loadSeason(origin, signal, true).then((season) => {
+    publish({ videos: season.videos, remote: season.remoteFailed ? 'failed' : 'ok' });
+    return season;
+  });
+  const [current, remoteRaids] = await Promise.all([currentSeason, videoDumpURL ? optional(`${videoDumpURL}/raids.json`, signal) : Promise.resolve(null)]);
 
-  const referenceId = server === 'kr' ? findJpReference([...current.links, ...parseRaidLinks(remoteRaids)], raidId) : null;
-  if (!referenceId || signal.aborted) {
+  const linked = findLinkedSeasons([...current.links, ...parseRaidLinks(remoteRaids)], origin);
+  if (linked.length === 0 || signal.aborted) {
     publish({ done: true });
     return;
   }
-  const reference = await loadSeason({ server: 'jp', raidId: referenceId }, signal, false);
-  publish({ videos: combineScopes(current.videos, reference.videos), referenceRaidId: referenceId, done: true });
+  const references = await Promise.all(linked.map((season) => loadSeason(season, signal, season.server === 'kr')));
+  publish({
+    videos: combineScopes(
+      current.videos,
+      references.flatMap((season) => season.videos),
+    ),
+    referenceRaidId: linked[0].raidId,
+    remote: current.remoteFailed || references.some((season) => season.remoteFailed) ? 'failed' : 'ok',
+    done: true,
+  });
 }

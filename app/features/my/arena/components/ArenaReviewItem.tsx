@@ -1,4 +1,3 @@
-import type { PortraitData } from '~/types/raidReport';
 import type { Student } from '~/types/plannerData';
 import { updateTeamSlot, type ArenaDraft } from '~/features/my/arena/scan/records';
 import { ArenaTeamRow, StudentPortrait, TeamHeader, wonRowTint } from './ArenaTeamRow';
@@ -18,7 +17,6 @@ export interface ReviewItem {
 interface Props {
   item: ReviewItem;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   onChange: (item: ReviewItem) => void;
   onPick: (side: 'me' | 'opponent', index: number) => void;
   onSave: () => void;
@@ -26,7 +24,7 @@ interface Props {
 }
 
 // In-game result colors: "Win" is yellow, "Lose" is gray.
-export function ArenaReviewItem({ item, students, portraitData, onChange, onPick, onSave, onDiscard }: Props) {
+export function ArenaReviewItem({ item, students, onChange, onPick, onSave, onDiscard }: Props) {
   const { draft } = item;
   const setDamage = (side: 'me' | 'opponent', index: number, damage: number | null) => {
     onChange({ ...item, draft: { ...draft, [side]: updateTeamSlot(draft[side], index, { damage }) } });
@@ -43,7 +41,7 @@ export function ArenaReviewItem({ item, students, portraitData, onChange, onPick
     <span className="flex min-w-0 items-center gap-1">
       {avatarId !== null && (
         <span className="w-5 shrink-0">
-          <StudentPortrait id={avatarId} portraitData={portraitData} name={students[String(avatarId)]?.Name} />
+          <StudentPortrait id={avatarId} name={students[String(avatarId)]?.Name} />
         </span>
       )}
       <input
@@ -69,7 +67,6 @@ export function ArenaReviewItem({ item, students, portraitData, onChange, onPick
               team={draft[side]}
               scores={side === 'me' ? item.myScores : item.opponentScores}
               students={students}
-              portraitData={portraitData}
               onPick={(i) => onPick(side, i)}
               onDamageChange={(i, d) => setDamage(side, i, d)}
             />

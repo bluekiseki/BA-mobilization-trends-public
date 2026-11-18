@@ -43,7 +43,6 @@
       "dashboard": "Board",
       "planner": "Planner",
       "help": "Help",
-      "viewDescription": "Guide",
       "reportBug": "Report / Feedback",
       "viewCode": "View Code",
       "theme": "Theme",
@@ -54,6 +53,7 @@
       "jukebox": "BGM Player",
       "notices": "Notice Archive",
       "itemScanner": "Item Scanner",
+      "inventory": "Inventory",
       "studentScanner": "Student Growth Scanner",
       "eventPlanner": "Event Farming Planner",
       "gachaPlanner": "Pyroxene & Recruit/Gacha Planner",
@@ -85,15 +85,6 @@
       "unsupported": {
         "message": "Your preferred language isn't supported. You can help translate or select a language.",
         "contribute_button": "Contribute on GitHub"
-      }
-    },
-    "helpSidebar": {
-      "title": "Help Guide",
-      "noGuide": "No guides available for this page.",
-      "startGuide": "Start Guide",
-      "driver": {
-        "next": "Next ➔",
-        "prev": "⬅ Prev"
       }
     },
     "bugReport": {
@@ -184,11 +175,13 @@
     "heatmap": {
       "title": "Student Mobilization Trends by Assault",
       "description1": "View which Assaults each student has been mobilized for",
+      "studentsPageNotice": "Per-student usage trends will be merged into the Stats tab of the Student List.",
       "description2": "Data is weighted by student level relative to the level cap. For example, if the cap is 90, a Lv. 45 student mobilization counts as 0.5 (45/90).",
       "processingMessage": "Loading, decompressing, and processing data...",
       "noDataMessage": "No data to display. Please select at least one Star Level.",
       "usage_statistics": "Usage Statistics",
       "usage_desc": "Compare pick rates by star level across raids.",
+      "usage_total_pick": "Total Pick",
       "control": {
         "selectStudent": "Select Student",
         "studentSearchPlaceholder": "Enter student name, role, Academy, or squad type",
@@ -310,6 +303,11 @@
     "switchToRank": "Switch to Rank",
     "switchToScore": "Switch to Score",
     "binSize": "Interval (Bin Size)",
+    "yAxisScale": "Y-axis scale",
+    "chartOptions": "Chart options",
+    "xAxisLabel": "X-axis label",
+    "scaleCumulative": "Cumulative",
+    "scaleLinear": "Linear",
     "bracketFilter": "Difficulty Bracket Filter",
     "playerCount": "Players",
     "donutChartTitle": "Tier / Difficulty Combination Distribution",
@@ -426,13 +424,13 @@
     },
     "videos_select_boss": "Select a boss type to view videos.",
     "videos_empty": "No videos available.",
+    "videos_stats_server": "Video statistics: {{server}} videos",
     "videos_scope_label": "Video scope",
     "videos_scope_all": "All",
     "videos_scope_current": "This season",
     "videos_scope_reference": "{{raid}} reference",
     "videos_reference_title": "Played in another server's identical season",
-    "videos_candidate": "Candidate",
-    "videos_basic_analysis": "Basic",
+    "videos_basic_analysis": "Title",
     "videos_basic_analysis_title": "Score and difficulty were read from the title only",
     "videos_sort_score_desc": "Score (High to Low)",
     "videos_sort_score_asc": "Score (Low to High)",
@@ -443,7 +441,7 @@
     "videos_party_info_missing": "Student party information unavailable",
     "videos_view_results": "View videos ({{count}})",
     "videos_filter_tl": "TL Only",
-    "videos_show_original_title": "Original",
+    "videos_translate_title": "Translate",
     "videos_description": "Description",
     "videos_copy_link": "Copy link",
     "videos_copy_failed": "Could not copy. Long-press or select the link to copy it.",

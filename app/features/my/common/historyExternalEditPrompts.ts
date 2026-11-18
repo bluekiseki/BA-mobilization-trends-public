@@ -91,6 +91,7 @@ Recruitment entry schema (entries has at most 2,000 items):
 - server: required; either "GL" (Global/KR) or "JP".
 - date: required string in YYYY-MM-DD format.
 - pullCount: required integer from 1 through 100000.
+- goalPullCount: optional integer from 1 through pullCount. It is the pull at which the goal was first obtained, excluding pulls made afterwards (for example toward a deliberate pity). Omit it when the goal was obtained on the last pull.
 - initialCharge: optional integer from 0 through 199. It is the starting recruit-charge counter; on a banner with both normal and limited pickups, it is the normal counter.
 - initialChargeLimited: optional integer from 0 through 199. Use only for the starting limited counter on a banner that has both pickup types.
 - results: required array with at most 10,000 result objects. It may be empty.

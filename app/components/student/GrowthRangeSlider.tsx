@@ -14,6 +14,8 @@ interface GrowthRangeSliderProps {
   onChange: (value: GrowthRangeValue) => void;
   disabled?: Partial<Record<'current' | 'target', boolean>>;
   invalid?: Partial<Record<'current' | 'target', boolean>>;
+  /** Hides the current handle (no meaningful current value, e.g. an unrecruited student). */
+  hideCurrent?: boolean;
   marks?: readonly GrowthRangeMark[];
   formatValue?: (value: number) => string;
 }
@@ -26,7 +28,21 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 export const moveGrowthRange = (value: GrowthRangeValue, role: Role, next: number): GrowthRangeValue =>
   role === 'current' ? { current: next, target: Math.max(value.target, next) } : { current: Math.min(value.current, next), target: next };
 
-export function GrowthRangeSlider({ label, currentLabel, targetLabel, min, max, step = 1, value, onChange, disabled, invalid, marks, formatValue = String }: GrowthRangeSliderProps) {
+export function GrowthRangeSlider({
+  label,
+  currentLabel,
+  targetLabel,
+  min,
+  max,
+  step = 1,
+  value,
+  onChange,
+  disabled,
+  invalid,
+  hideCurrent = false,
+  marks,
+  formatValue = String,
+}: GrowthRangeSliderProps) {
   const railRef = useRef<HTMLDivElement>(null);
   const gestureRef = useRef<Gesture | null>(null);
   const draftRef = useRef<GrowthRangeValue>(value);
@@ -222,7 +238,7 @@ export function GrowthRangeSlider({ label, currentLabel, targetLabel, min, max, 
             </span>
           </>
         )}
-        {marker('current')}
+        {!hideCurrent && marker('current')}
         {marker('target')}
       </div>
     </div>

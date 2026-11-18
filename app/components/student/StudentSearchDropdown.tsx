@@ -5,6 +5,7 @@ import type { Student } from '~/types/data';
 import type { Locale } from '~/utils/i18n/config';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
 import { SearchableDropdown } from '~/components/common/SearchableDropdown';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { CombatStylePortrait } from '~/components/student/CombatStylePortrait';
 import { isCombatStyleFormOne } from '~/utils/combatStyle';
 import { SQUAD_TYPE_COLORS } from '~/utils/gameColors';
@@ -17,9 +18,11 @@ interface StudentSearchDropdownProps {
   priorityStudentIds?: ReadonlySet<number>;
   /** Hide secondary combat-style forms only in views that combine the two forms. */
   mergeCombatStyleForms?: boolean;
+  /** Empty the search box after a pick, for pickers that add to a list instead of holding a selection. */
+  clearOnSelect?: boolean;
 }
 
-function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudentId, hideLavel, priorityStudentIds, mergeCombatStyleForms = false }: StudentSearchDropdownProps) {
+function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudentId, hideLavel, priorityStudentIds, mergeCombatStyleForms = false, clearOnSelect = false }: StudentSearchDropdownProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const selectedStudent = selectedStudentId ? students[selectedStudentId] : null;
@@ -115,6 +118,7 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
   const handleSelectStudent = (id: number) => {
     setSelectedStudentId(id);
     setShowDropdown(false);
+    if (clearOnSelect) setSearchTerm('');
   };
 
   return (
@@ -170,9 +174,9 @@ function StudentSearchDropdown({ students, selectedStudentId, setSelectedStudent
                   >
                     <div className="h-10 w-10 rounded-full overflow-hidden">
                       {mergeCombatStyleForms ? (
-                        <CombatStylePortrait studentId={Number(id)} portraits={students} alt={`${student.Name}'s icon`} imageClassName="rounded-full" />
+                        <CombatStylePortrait studentId={Number(id)} alt={`${student.Name}'s icon`} imageClassName="rounded-full" />
                       ) : (
-                        <img src={`data:image/webp;base64,${student.Portrait}`} alt={`${student.Name}'s icon`} width={40} height={40} className="h-full w-full object-cover" />
+                        <SheetIcon sheet="student" id={id} alt={`${student.Name}'s icon`} />
                       )}
                     </div>
                   </div>

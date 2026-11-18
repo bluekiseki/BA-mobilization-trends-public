@@ -3,7 +3,6 @@ import { data, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 import type { LastData, TimelineData } from '~/features/raid-stats/live/livetype';
 import type { Student } from '~/types/data';
 import { isTotalAssault } from '~/utils/raid/report';
-import type { PortraitData } from '~/types/raidReport';
 import { useDataCacheJson } from '~/hooks/useDataCacheJson';
 import RankScatterChart, { type PredictionData } from '~/features/raid-stats/live/RankScatterChart';
 import type { EliminationScoreModels, ScoreModel } from '~/features/raid-stats/live/scorePredictor';
@@ -33,6 +32,7 @@ import { LiveVideoSection } from '~/features/raid-stats/live/LiveVideoSection';
 import { PlatinumCutWidget } from '~/features/raid-stats/live/PlatinumCutWidget';
 import { ScoreTimeConverter } from '~/features/raid-stats/live/ScoreTimeConverter';
 import { countAbnormalRecords, filterAbnormalRecords } from '~/features/raid-stats/live/abnormalRecords';
+import { toLocations } from '~/utils/raidLocation';
 
 const RANKS_TO_PLOT = [
   1,
@@ -129,7 +129,6 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
   };
 
   try {
-    // Using a common function to call both data points in parallel cleanly!
     const [lastData, timelineData, totalAssaultTrajectories, eliminationRaidTrajectories, totalAssaultModel, eliminationRaidModel] = await Promise.all([
       fetchWithR2Fallback<LastData>('lastdata.json', lastdataURL),
       fetchWithR2Fallback<TimelineData>('timeline.json', timelineURL),
@@ -188,13 +187,7 @@ export const handle: AppHandle = {
     return [
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(locale)}.students.bin`),
-        as: 'fetch',
-        crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
-        href: cdn('/w/students_portrait.json'),
+        href: cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -227,7 +220,6 @@ export default function LiveDashboardPage() {
   // const [timelineData, setTimelineData] = useState<TimelineData>(timelineData_f as any);
 
   const [studentData, setStudentData] = useState<Record<string, Student>>({});
-  const [portraitData, setPortraitData] = useState<PortraitData>({});
   const fetchStudents = useDataCacheJson<Record<string, Student>>();
   const { t: t_d, i18n } = useTranslation('dashboardIndex');
   const { t } = useTranslation('liveDashboard');
@@ -240,10 +232,9 @@ export default function LiveDashboardPage() {
   useEffect(() => {
     console.log('useeffet');
     setIsReady(false);
-    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as unknown)])
-      .then(([studentJson, portraitJson]) => {
+    fetchStudents(cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`))
+      .then((studentJson) => {
         setStudentData(studentJson);
-        setPortraitData(portraitJson as PortraitData);
         setIsReady(true);
       })
       .catch((err: unknown) => {
@@ -266,11 +257,11 @@ export default function LiveDashboardPage() {
         <h1 className="text-5xl font-extrabold text-neutral-900 dark:text-white leading-tight">{raidInfos[0].Boss}</h1>
 
         <div className="flex justify-center items-center gap-2 mt-4">
-          <span className="inline-block px-3 py-1 text-sm font-semibold text-black bg-ba-btn-blue rounded-full">
-            {(isRaid ? tg('raid') : tg('eraid')).replace(/Assault/gi, '').trim()} {/* 総力戦 */}
-          </span>
-          <span className="inline-flex items-center px-3 py-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">
-            <TerrainIconGameStyle terrain={raidInfos[0].Location as Terrain} size={'1.2em'} />
+          <span className="inline-block px-3 py-1 text-sm font-semibold text-black bg-ba-btn-blue rounded-full">{(isRaid ? tg('raid') : tg('eraid')).replace(/Assault/gi, '').trim()}</span>
+          <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">
+            {toLocations(raidInfos[0].Location).map((terrain) => (
+              <TerrainIconGameStyle key={terrain} terrain={terrain as Terrain} size={'1.2em'} />
+            ))}
           </span>
           <span className="inline-block px-3 py-1 text-sm font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">
             {getMostDifficultLevel(raidInfos[0])} {/* Lunatic */}
@@ -352,7 +343,7 @@ export default function LiveDashboardPage() {
               </section>
 
               <section>
-                <Top10Rankings isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
+                <Top10Rankings isRaid={isRaid} lastData={lastData} raidInfos={raidInfos} server={server} studentData={studentData} />
               </section>
 
               <section>
@@ -369,7 +360,7 @@ export default function LiveDashboardPage() {
         </>
       )}
 
-      <LiveVideoSection raidInfos={raidInfos} studentData={studentData} portraitData={portraitData} />
+      <LiveVideoSection raidInfos={raidInfos} studentData={studentData} />
     </main>
   );
 }

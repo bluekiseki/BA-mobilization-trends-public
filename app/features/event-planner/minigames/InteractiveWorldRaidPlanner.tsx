@@ -101,6 +101,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'interactive_world_raid' });
 
   const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
 
   const [activeTab, setActiveTab] = useState<'calc' | 'ticket'>('calc');
   const [activePhase, setActivePhase] = useState(INITIAL_ACTIVE_PHASE);
@@ -406,7 +407,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
                 max={9999}
                 className="w-16 text-center text-sm py-1 rounded border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-800"
               />
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('runs_unit')} ×</span>
+              <span className="text-xs text-neutral-500 dark:text-neutral-400">{t_ui('runsUnit')} ×</span>
               <CustomNumberInput
                 value={totalParties}
                 onChange={(val) => updateDiffField(bg.WorldRaidBossGroupId, 'diffExtraParties', activeDiff, Math.max(0, (val ?? 1) - 1))}
@@ -416,7 +417,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
               />
               <span className="text-xs text-neutral-500 dark:text-neutral-400 shrink-0">{t('total_parties')}</span>
               <span className="flex items-center gap-1 ml-auto tabular-nums shrink-0 text-xs text-neutral-400 dark:text-neutral-500">
-                <ItemIcon type={bossTicketType} itemId={bossTicketId} amount={0} size={7} eventData={eventData} iconData={iconData} />×{ticketsPerRun}/{t('runs_unit')}
+                <ItemIcon type={bossTicketType} itemId={bossTicketId} amount={0} size={7} eventData={eventData} iconData={iconData} />×{ticketsPerRun}/{t_ui('runsUnit')}
               </span>
             </div>
 
@@ -586,7 +587,7 @@ export const InteractiveWorldRaidPlanner: React.FC<Props> = ({ eventId, eventDat
                 {allStoriesCleared ? t('deselect_all_stories') : t('select_all_stories')}
               </button>
               <button onClick={resetAllCounts} className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 dark:text-red-400 font-semibold">
-                {t('reset_all')}
+                {t_ui('resetAll')}
               </button>
             </div>
 

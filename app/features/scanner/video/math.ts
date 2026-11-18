@@ -308,7 +308,9 @@ export function expandGridRoi(grid: Grid, boxes: CellBbox[], height: number): bo
 
 export function assignCells(boxes: CellBbox[], grid: Grid, offset: number, segment = 0): { cells: GridCell[]; offset: number; correction: number } {
   const { roi, cellH, cellW, pitch, originY, columns } = grid;
-  const full = boxes.filter((b) => b.h >= cellH * 0.92 && b.w >= cellW * 0.9 && b.y >= roi.y + cellH * 0.04 && b.y + b.h <= roi.bottom - cellH * 0.1);
+  // Edge margins must match top and bottom: the ROI is built with 0.12/0.08 cell slack, so a stricter bottom margin
+  // would drop the lowest initial row, which only reverse (downward) scrolling never brings back into the middle.
+  const full = boxes.filter((b) => b.h >= cellH * 0.92 && b.w >= cellW * 0.9 && b.y >= roi.y + cellH * 0.04 && b.y + b.h <= roi.bottom - cellH * 0.04);
   const residuals = full.map((b) => {
     const row = (b.y + b.h / 2 - offset - originY) / pitch;
     return (row - Math.round(row)) * pitch;

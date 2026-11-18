@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { RaidInfo } from '~/types/data';
-import type { PortraitData, ReportStudentData } from '~/types/raidReport';
+import type { ReportStudentData } from '~/types/raidReport';
 import { VideoPageView } from '~/features/raid-stats/common/video/VideoPageView';
 import { isTotalAssault } from '~/utils/raid/report';
 import { localeLink } from '~/utils/localeLink';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { type_translation_tab, typecolor } from '~/components/raid/raidToString';
 
-export function LiveVideoSection({ raidInfos, studentData, portraitData }: { raidInfos: RaidInfo[]; studentData: ReportStudentData; portraitData: PortraitData }) {
+export function LiveVideoSection({ raidInfos, studentData }: { raidInfos: RaidInfo[]; studentData: ReportStudentData }) {
   const { t, i18n } = useTranslation('liveDashboard');
   const { t: t_d } = useTranslation('dashboard');
   const { t: t_ui } = useTranslation('ui');
@@ -78,7 +78,7 @@ export function LiveVideoSection({ raidInfos, studentData, portraitData }: { rai
         </div>
       )}
 
-      <VideoPageView raidInfo={selectedRaidInfo} server="jp" portraitData={portraitData} studentData={studentData} isGrandAssault={isEraid} activeTab={activeTab} />
+      <VideoPageView raidInfo={selectedRaidInfo} server="jp" studentData={studentData} isGrandAssault={isEraid} activeTab={activeTab} />
     </section>
   );
 }

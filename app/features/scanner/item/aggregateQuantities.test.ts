@@ -11,14 +11,14 @@ const ticket: IconEntry = {
   localizeEtc: { NameEn: 'Ticket', NameKr: '티켓', NameJp: 'チケット' },
 };
 
-function photo(id: string, quantities: number[]): ImageScanResult {
+function photo(id: string, quantities: number[], icon: IconEntry = ticket): ImageScanResult {
   return {
     kind: 'image',
     id,
     fileName: id,
     objectUrl: '',
     results: quantities.map((quantity, index) => ({
-      icon: ticket,
+      icon,
       quantity,
       similarity: 0.9,
       quantityConfidence: 0.8,
@@ -28,15 +28,30 @@ function photo(id: string, quantities: number[]): ImageScanResult {
 }
 
 describe('aggregateConfirmedQuantities', () => {
-  it('adds separate stacks of the same recognized ticket within one file', () => {
-    expect(aggregateConfirmedQuantities([photo('a', [3, 2])], { 'a::0': true, 'a::1': true }, {}).get(ticket.inventoryKey)).toBe(5);
+  it('takes the larger cell for duplicated items that are not summed', () => {
+    expect(aggregateConfirmedQuantities([photo('a', [3, 2])], { 'a::0': true, 'a::1': true }, {}).get(ticket.inventoryKey)).toBe(3);
+  });
+
+  it.each([
+    ['gift', { isGift: true }],
+    ['eleph', { itemCategory: 2 }],
+    ['base OOPart', { inventoryKey: 'Item_120', numericId: '120', itemCategory: 3 }],
+  ])('adds separate stacks of a %s within one file', (_label, overrides) => {
+    const icon: IconEntry = { ...ticket, ...overrides };
+    expect(aggregateConfirmedQuantities([photo('a', [3, 2], icon)], { 'a::0': true, 'a::1': true }, {}).get(icon.inventoryKey)).toBe(5);
+  });
+
+  it('does not add OOPart selection tickets', () => {
+    const icon: IconEntry = { ...ticket, inventoryKey: 'Item_9000', numericId: '9000', itemCategory: 3 };
+    expect(aggregateConfirmedQuantities([photo('a', [3, 2], icon)], { 'a::0': true, 'a::1': true }, {}).get(icon.inventoryKey)).toBe(3);
   });
 
   it('takes the maximum file total rather than summing across uploads', () => {
-    const entries = [photo('a', [3, 2]), photo('b', [4, 3])];
+    const gift: IconEntry = { ...ticket, isGift: true };
+    const entries = [photo('a', [3, 2], gift), photo('b', [4, 3], gift)];
     const confirmed = Object.fromEntries(entries.flatMap((entry) => entry.results.map((_, index) => [makeInstanceKey(entry.id, index), true])));
-    expect(aggregateConfirmedQuantities(entries, confirmed, {}).get(ticket.inventoryKey)).toBe(7);
-    expect(aggregateConfirmedQuantities(entries.toReversed(), confirmed, {}).get(ticket.inventoryKey)).toBe(7);
+    expect(aggregateConfirmedQuantities(entries, confirmed, {}).get(gift.inventoryKey)).toBe(7);
+    expect(aggregateConfirmedQuantities(entries.toReversed(), confirmed, {}).get(gift.inventoryKey)).toBe(7);
   });
 
   it('uses edits and omits unconfirmed instances', () => {
@@ -45,9 +60,10 @@ describe('aggregateConfirmedQuantities', () => {
   });
 
   it('recomputes the maximum when confirmation is cancelled or a file is deleted', () => {
-    const entries = [photo('a', [3, 2]), photo('b', [4, 3])];
+    const gift: IconEntry = { ...ticket, isGift: true };
+    const entries = [photo('a', [3, 2], gift), photo('b', [4, 3], gift)];
     const confirmed = { 'a::0': true, 'a::1': true, 'b::0': true, 'b::1': false };
-    expect(aggregateConfirmedQuantities(entries, confirmed, {}).get(ticket.inventoryKey)).toBe(5);
-    expect(aggregateConfirmedQuantities([entries[1]], confirmed, {}).get(ticket.inventoryKey)).toBe(4);
+    expect(aggregateConfirmedQuantities(entries, confirmed, {}).get(gift.inventoryKey)).toBe(5);
+    expect(aggregateConfirmedQuantities([entries[1]], confirmed, {}).get(gift.inventoryKey)).toBe(4);
   });
 });

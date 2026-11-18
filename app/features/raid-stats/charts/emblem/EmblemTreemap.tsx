@@ -1,16 +1,15 @@
+import { SheetImageDef, SheetSvgIcon } from '~/components/common/SheetIcon';
 import { useMemo } from 'react';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import type { AggregationType, TreemapSourceEntry } from './types';
 import type { TooltipContentProps } from 'recharts';
 import { useTranslation } from 'react-i18next';
-import { cdn } from '~/utils/cdn';
 import type { TFunction } from 'i18next';
 
 interface EmblemTreemapProps {
   data: TreemapSourceEntry[];
   totalCount: number;
   t_s: TFunction<'club'>;
-  portraitData: Record<number, string>;
   aggregationType: AggregationType;
 }
 
@@ -71,6 +70,11 @@ const SCHOOL_COLORS = [
   '#A9A9A9',
 ];
 
+// Every leaf's student_hd icon shares this one <image> via <use> (see CustomizedContent's
+// depth === 0 case) instead of each leaf decoding and rescaling its own copy — with
+// student_separate aggregation there can be hundreds of leaves on screen at once.
+const STUDENT_HD_DEF_ID = 'emblem-treemap-student-hd-sheet';
+
 interface CustomizedContentProps {
   depth: number;
   x: number;
@@ -80,12 +84,11 @@ interface CustomizedContentProps {
   name: string;
   schoolColor?: string;
   iconId?: number;
-  portraitData?: Record<number, string>;
   children?: unknown;
 }
 
 const CustomizedContent = (props: CustomizedContentProps) => {
-  const { depth, x, y, width, height, name, schoolColor, iconId, portraitData, children } = props;
+  const { depth, x, y, width, height, name, schoolColor, iconId } = props;
 
   if (width < 2 || height < 2) return null;
 
@@ -127,9 +130,6 @@ const CustomizedContent = (props: CustomizedContentProps) => {
       strokeWidth = 0;
   }
 
-  const isLeaf = !children || (Array.isArray(children) && children.length === 0);
-  const portraitBase64 = isLeaf && iconId && portraitData ? portraitData[iconId] : null;
-
   // (Label position calculation logic follows the user-modified version)
   let labelX = x + 6,
     labelY = y + 18,
@@ -154,25 +154,15 @@ const CustomizedContent = (props: CustomizedContentProps) => {
   // const maxImageSize = Math.max(width, height);
   // imageSize = Math.min(maxImageSize, NATURAL_IMAGE_SIZE);
 
-  // const useHighRes = width * height > 150 * 150; // High-res condition requested by user
-  const useHighRes = Math.max(width, height) > 100 || width * height > 5_000; // High-res condition requested by user
-  const highResPath = cdn(`/img/portrait/${iconId}.webp`);
-  const lowResPath = `data:image/webp;base64,${portraitBase64}`;
-
-  // Default path is lowResPath. If high-res is available, use highResPath.
-  const initialHref = useHighRes ? highResPath : lowResPath;
-
-  // 4. Error Handler (On high-res loading failure)
-  const handleImageError = (e: React.SyntheticEvent<SVGImageElement>) => {
-    // If current href ends with .png (high-res path) and fallback (lowResPath) exists
-    if (e.currentTarget.href.baseVal.endsWith('.webp') && lowResPath) {
-      // Replace href with lowResPath (base64)
-      e.currentTarget.setAttribute('href', lowResPath);
-    }
-  };
-
   return (
     <g>
+      {/* Declared once, on the root node, so every leaf below can reference it by id. */}
+      {depth === 0 && (
+        <defs>
+          <SheetImageDef sheet="student_hd" id={STUDENT_HD_DEF_ID} />
+        </defs>
+      )}
+
       {/* 1. Basic Rectangle */}
       <rect
         x={x}
@@ -188,18 +178,8 @@ const CustomizedContent = (props: CustomizedContentProps) => {
         }}
       />
 
-      {/* 2. Render Portrait Image (isLeaf && canRenderImage) */}
-      {iconId ? (
-        <image
-          href={initialHref}
-          x={x}
-          y={y}
-          width={width}
-          height={height}
-          preserveAspectRatio="xMidYMid slice"
-          onError={handleImageError} // Connect Error Handler
-        />
-      ) : null}
+      {/* 2. Render student icon from the 2x sheet (leaf nodes only carry iconId) */}
+      {iconId ? <SheetSvgIcon sheet="student_hd" id={iconId} x={x} y={y} width={width} height={height} preserveAspectRatio="xMidYMid slice" sharedDefId={STUDENT_HD_DEF_ID} /> : null}
 
       {/* 3. Render Label (depth 1, 2, 3) */}
       {false && depth < 4 ? (
@@ -228,7 +208,6 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
   data,
   totalCount,
   t_s,
-  portraitData,
   aggregationType, // Receive prop
 }) => {
   const { t } = useTranslation('emblemCounter');
@@ -415,7 +394,7 @@ const EmblemTreemap: React.FC<EmblemTreemapProps> = ({
     // (Keep user-modified height of 600px)
     <div className="w-full h-96 md:h-[600px] mb-6">
       <ResponsiveContainer width="100%" height="100%">
-        <Treemap data={hierarchyData} dataKey="count" nameKey="name" isAnimationActive={false} content={(props) => <CustomizedContent {...props} portraitData={portraitData} />}>
+        <Treemap data={hierarchyData} dataKey="count" nameKey="name" isAnimationActive={false} content={(props) => <CustomizedContent {...props} />}>
           <Tooltip content={<CustomTooltip totalCount={totalCount} />} />
         </Treemap>
       </ResponsiveContainer>

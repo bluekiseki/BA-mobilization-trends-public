@@ -253,6 +253,12 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
 
   const activeDifficulties = useMemo(() => new Set(legendDifficulties.filter((name) => difficultySettings[name]?.isVisible)), [legendDifficulties, difficultySettings]);
 
+  // Number of players per tier within the selected rank range.
+  const legendCounts = useMemo(
+    () => Object.fromEntries(legendDifficulties.map((name) => [name, timeDataByDifficulty[name]?.length ?? 0])) as Partial<Record<DifficultyName, number>>,
+    [legendDifficulties, timeDataByDifficulty],
+  );
+
   const toggleDifficultyVisibility = (name: DifficultyName) => {
     setDifficultySettings((prev) => ({
       ...prev,
@@ -273,7 +279,7 @@ export default function RaidClearStatusGraph({ scores, tierCounter, boss, server
       <div>
         <h3 className="text-xl font-bold text-center mb-2">{t('clearTimeDistribution')}</h3>
         <div className="mb-2">
-          <DifficultyLegend difficulties={legendDifficulties} activeDifficulties={activeDifficulties} onToggle={toggleDifficultyVisibility} />
+          <DifficultyLegend difficulties={legendDifficulties} activeDifficulties={activeDifficulties} onToggle={toggleDifficultyVisibility} counts={legendCounts} />
         </div>
         <div className="-mx-4 sm:mx-0">
           {histogramData.length > 0 ? (

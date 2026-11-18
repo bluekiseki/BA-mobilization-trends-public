@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getAllStages } from '../../../utils/missionDescription';
 import { computeAcquiredItems } from '../logic/acquiredItems';
 import { useTranslation } from 'react-i18next';
-import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, StudentData } from '~/types/plannerData';
 import { ApCalculator } from '~/features/event-planner/components/ApCalculator';
 import { BonusSelector } from '~/features/event-planner/components/BonusSelector';
 import type { TotalBonusMap } from '~/features/event-planner/types';
@@ -34,6 +34,8 @@ import type { TotalRewardResult } from '~/features/event-planner/types';
 import { DreamMakerPlanner } from '~/features/event-planner/minigames/MinigameDreamPlanner';
 import type { DreamMakerResult } from '~/features/event-planner/minigames/dreamMaker/type';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
+import { computeDailyAp } from '~/features/event-planner/logic/apDaily';
+import { resolveApConfig } from '~/utils/ApCalculatorConfig';
 import { CardMatchPlanner } from '~/features/event-planner/minigames/CardMatchPlanner';
 import type { CardMatchResult } from '~/types/minigame/cardMatch';
 import { MinigameCCGPlanner } from '../minigames/MinigameCCGPlanner';
@@ -50,6 +52,8 @@ import { RoadPuzzlePlanner } from '../minigames/RoadPuzzlePlanner';
 import type { RoadPuzzleResult } from '../../../types/minigame/roadPuzzle';
 import { MinigameJankenPlanner } from '../minigames/MinigameJankenPlanner';
 import type { MinigameJankenResult } from '../../../types/minigame/janken';
+import { MinigameTankPlanner } from '../minigames/MinigameTankPlanner';
+import type { MinigameTankResult } from '../../../types/minigame/tank';
 import { LocationPlanner } from '../minigames/LocationPlanner';
 import { defaultLocationConfig, locationConfigSchema } from '~/types/minigame/location';
 import { calculateLocation, getLocationSpendableCurrency } from '~/features/event-planner/logic/locationPlanner';
@@ -81,6 +85,7 @@ type SubTabId =
   | 'field_event'
   | 'road_puzzle'
   | 'minigame_janken'
+  | 'minigame_tank'
   | 'minigame_location'
   | 'ap_calc'
   | 'currency_input';
@@ -93,10 +98,9 @@ export interface EventPlannerProp {
   eventData: EventData;
   iconData: IconData;
   allStudents: StudentData;
-  studentPortraits: StudentPortraitData;
 }
 
-export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studentPortraits }: EventPlannerProp) => {
+export const EventPlanner = ({ eventId, eventData, iconData, allStudents }: EventPlannerProp) => {
   const { t } = useTranslation(['planner', 'game']);
   const tabNavRef = useRef<HTMLDivElement | null>(null);
 
@@ -134,6 +138,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
   const [interactiveWorldRaidResult, setInteractiveWorldRaidResult] = useState<InteractiveWorldRaidResult | null>(null);
   const [roadPuzzleResult, setRoadPuzzleResult] = useState<RoadPuzzleResult | null>(null);
   const [minigameJankenResult, setMinigameJankenResult] = useState<MinigameJankenResult | null>(null);
+  const [minigameTankResult, setMinigameTankResult] = useState<MinigameTankResult | null>(null);
 
   const [totalRewardResult, setTotalRewardResult] = useState<TotalRewardResult | null>(null);
   const [totalBonus, setTotalBonus] = useState<TotalBonusMap>({});
@@ -146,6 +151,11 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
 
   // Misc
   const { plan: shopPlan, setCachedTotalItems, setLocationConfig } = usePlanForEvent(eventId);
+  // Owned AP follows the saved AP calculator settings, so it is known without opening the AP tab.
+  useEffect(() => {
+    const config = resolveApConfig(shopPlan.apConfig, eventData.season.EventContentOpenTime, eventData.season.EventContentCloseTime || eventData.season.ExtensionTime);
+    setAvailableAp(computeDailyAp(config).total);
+  }, [shopPlan.apConfig, eventData.season]);
   const locationState = useMemo(() => {
     if (!eventData.location) return null;
     const parsed = locationConfigSchema.safeParse(shopPlan.locationConfig);
@@ -178,13 +188,13 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     allTabs.push({ id: 'goals', name: `${n++}. ${t('ui.targetSettings')}`, subTabs: goalsSubTabs });
 
     if (eventData.interactive_world_raid) {
-      allTabs.push({ id: 'interactive_world_raid', name: `${n++}. ${t('minigame.interactive_world_raid')}` });
+      allTabs.push({ id: 'interactive_world_raid', name: `${n++}. ${t('interactive_world_raid.title')}` });
     }
 
     // --- Create sub-tabs by filtering only existing minigames ---
     const minigameSubTabs: { id: SubTabId; name: string }[] = [];
     if (eventData.box_gacha) {
-      minigameSubTabs.push({ id: 'box', name: t('minigame.roulette') });
+      minigameSubTabs.push({ id: 'box', name: t('box_gacha.title') });
     }
     if (eventData.season.EventContentTypeStr.includes('Treasure')) {
       minigameSubTabs.push({ id: 'treasure', name: t('minigame.treasureHunt') });
@@ -199,7 +209,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       minigameSubTabs.push({ id: 'dice_race', name: t('minigame.diceRace') });
     }
     if (eventData.minigame_dream) {
-      minigameSubTabs.push({ id: 'minigame_dream', name: t('minigame.minigame_dream') });
+      minigameSubTabs.push({ id: 'minigame_dream', name: t('dream_maker.title') });
     }
     if (eventData.minigame_ccg) {
       minigameSubTabs.push({ id: 'minigame_ccg', name: t('minigame.minigame_ccg') });
@@ -214,13 +224,16 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       minigameSubTabs.push({ id: 'clue_search', name: t('minigame.clue_search') });
     }
     if (eventData.field) {
-      minigameSubTabs.push({ id: 'field_event', name: t('minigame.field_event') });
+      minigameSubTabs.push({ id: 'field_event', name: t('field_event.title') });
     }
     if (eventData.minigame_road_puzzle) {
-      minigameSubTabs.push({ id: 'road_puzzle', name: t('minigame.minigame_road') });
+      minigameSubTabs.push({ id: 'road_puzzle', name: t('road_puzzle.title') });
     }
     if (eventData.minigame_janken) {
-      minigameSubTabs.push({ id: 'minigame_janken', name: t('minigame.minigame_janken') });
+      minigameSubTabs.push({ id: 'minigame_janken', name: t('minigame_janken.title') });
+    }
+    if (eventData.minigame_tank) {
+      minigameSubTabs.push({ id: 'minigame_tank', name: t('minigame.minigame_tank') });
     }
     if (eventData.location) {
       minigameSubTabs.push({ id: 'minigame_location', name: t('minigame.minigame_location') });
@@ -337,6 +350,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
         interactiveWorldRaidResult,
         roadPuzzleResult,
         minigameJankenResult,
+        minigameTankResult,
         locationState,
       }),
     [
@@ -361,6 +375,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
       interactiveWorldRaidResult,
       roadPuzzleResult,
       minigameJankenResult,
+      minigameTankResult,
       locationState,
     ],
   );
@@ -404,11 +419,32 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
     }
   }, [acquiredItemsResult, availableAp]);
 
+  // Mirror the tab selection into the URL hash (#main or #main/sub) without adding history entries
+  const writeTabHash = (mainId: MainTabId, subId?: SubTabId | null) => {
+    const hash = subId ? `#${mainId}/${subId}` : `#${mainId}`;
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}${hash}`);
+  };
+
   const handleMainTabClick = (tabId: MainTabId) => {
     setActiveMainTab(tabId);
-    // If sub-tabs exist, automatically activate the first one
-    // const mainTab = TABS.find((t) => t.id === tabId);
+    const tab = TABS.find((t) => t.id === tabId);
+    writeTabHash(tabId, activeSubTabs[tabId] || tab?.subTabs?.[0]?.id);
   };
+
+  const handleSubTabClick = (subId: SubTabId) => {
+    setActiveSubTabs((prev) => ({ ...prev, [activeMainTab]: subId }));
+    writeTabHash(activeMainTab, subId);
+  };
+
+  // Restore the tab from the URL hash after mount (kept out of the initial state to avoid hydration mismatch)
+  useEffect(() => {
+    const [mainId, subId] = window.location.hash.slice(1).split('/');
+    const tab = TABS.find((t) => t.id === mainId);
+    if (!tab) return;
+    setActiveMainTab(tab.id);
+    const sub = tab.subTabs?.find((s) => s.id === subId);
+    if (sub) setActiveSubTabs((prev) => ({ ...prev, [tab.id]: sub.id }));
+  }, [TABS]);
 
   return (
     <>
@@ -444,12 +480,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 return (
                   <button
                     key={subTab.id}
-                    onClick={() =>
-                      setActiveSubTabs((prev) => ({
-                        ...prev,
-                        [activeMainTab]: subTab.id,
-                      }))
-                    }
+                    onClick={() => handleSubTabClick(subTab.id)}
                     className={`
                             px-3 text-[11px] font-bold transition-all
                             ${isActive ? ' border-b-2 border-blue-200 text-blue-700 dark:text-blue-300' : ' border-neutral-200 text-neutral-500 dark:text-neutral-400'}
@@ -476,7 +507,6 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                   eventData={eventData as WithNonNullable<EventData, 'currency' | 'bonus'>}
                   iconData={iconData}
                   allStudents={allStudents}
-                  studentPortraits={studentPortraits}
                   onBonusCalculate={setTotalBonus}
                 />
               </div>
@@ -495,12 +525,9 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                     allStages={allStages}
                     totalBonus={totalBonus}
                     allStudents={allStudents}
-                    studentPortraits={studentPortraits}
                   />
                 )}
-                {activeSubTab === 'growth' && (
-                  <StudentGrowthPlanner eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} onCalculate={setStudentGrowthNeeds} studentPortraits={studentPortraits} />
-                )}
+                {activeSubTab === 'growth' && <StudentGrowthPlanner eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} onCalculate={setStudentGrowthNeeds} />}
                 {activeSubTab === 'mission' && <MissionPlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setMissionResult} />}
                 {eventData.total_reward && activeSubTab === 'total_reward' && <TotalRewardPlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setTotalRewardResult} />}
               </div>
@@ -586,6 +613,9 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 {activeSubTab === 'minigame_janken' && eventData.minigame_janken && (
                   <MinigameJankenPlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setMinigameJankenResult} remainingCurrency={finalCurrencyBalance} />
                 )}
+                {activeSubTab === 'minigame_tank' && eventData.minigame_tank && (
+                  <MinigameTankPlanner eventId={eventId} eventData={eventData} iconData={iconData} onCalculate={setMinigameTankResult} remainingCurrency={finalCurrencyBalance} />
+                )}
                 {activeSubTab === 'minigame_location' && locationState && (
                   <LocationPlanner
                     eventData={eventData}
@@ -652,10 +682,9 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                 allStages={allStages}
                 iconData={iconData}
                 allStudents={allStudents}
-                studentPortraits={studentPortraits}
                 availableAp={availableAp}
                 totalBonus={totalBonus}
-                onNavigateToTab={eventData.bonus ? handleMainTabClick : undefined}
+                onNavigateToTab={handleMainTabClick}
               />
             )}
 
@@ -721,12 +750,7 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
                           return (
                             <button
                               key={subTab.id}
-                              onClick={() =>
-                                setActiveSubTabs((prev) => ({
-                                  ...prev,
-                                  [activeMainTab]: subTab.id,
-                                }))
-                              }
+                              onClick={() => handleSubTabClick(subTab.id)}
                               className={`
                                   w-full text-left px-3 py-2 rounded-md text-xs font-medium transition-colors
                                   ${isActiveSub ? 'text-blue-600 bg-blue-50/50 dark:text-blue-400 dark:bg-blue-900/10' : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-neutral-300'}
@@ -757,7 +781,6 @@ export const EventPlanner = ({ eventId, eventData, iconData, allStudents, studen
           remainingCurrency={finalCurrencyBalance}
           acquiredItemsResult={acquiredItemsResult}
           allStudents={allStudents}
-          studentPortraits={studentPortraits}
         />
       )}
     </>

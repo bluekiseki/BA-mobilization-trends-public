@@ -47,23 +47,22 @@
     "fes_400": "If you've got pyroxenes to spare but a thin roster, saving up for 400 pulls on your first Fes is a solid move. The 3-star rate doubles to 6%, and Fes students only show up there. Early on, basic missions alone can get you most of the way to 400 pulls without much effort."
   },
   "charge": {
-    "title": "4. The charge (soft pity) system",
-    "b1": "Every pull builds up charge. It's what replaced the old recruitment points.",
-    "b2": "At 100 charge you're guaranteed a 3-star. It's a coinflip whether it's actually the pickup.",
-    "b3": "Hit 200 charge, and the pickup is guaranteed outright.",
-    "b4": "Charge resets the moment you land the pickup. That's fine if you only wanted one — the reset happens right as you finish. This only matters if you're going for two students on the same banner. You get the first one, charge goes to 0, and the second one starts from scratch.",
-    "status_note": "This already launched on the Japan server. It hasn't reached KR/Global yet, and looks likely to arrive with the Makoto (Swimsuit) and Satsuki (Swimsuit) banner planned for November."
+    "title": "4. The Recruitment Stack (soft pity) system",
+    "b1": "Every pull builds up Recruitment Stack. It's what replaced the old recruitment points.",
+    "b2": "At 100 Recruitment Stack you're guaranteed a 3-star. It's a coinflip whether it's actually the pickup.",
+    "b3": "Hit 200 Recruitment Stack, and the pickup is guaranteed outright.",
+    "b4": "Recruitment Stack resets the moment you land the pickup. That's fine if you only wanted one — the reset happens right as you finish. This only matters if you're going for two students on the same banner. You get the first one, the stack goes to 0, and the second one starts from scratch."
   },
   "carryover": {
-    "title": "4-1. Charge carryover",
-    "b1": "If you miss the pickup within the window, the charge rolls over to the next banner.",
+    "title": "4-1. Recruitment Stack carryover",
+    "b1": "If you miss the pickup within the window, the Recruitment Stack rolls over to the next banner.",
     "b2": "Limited only rolls into limited, though, and normal only into normal. They never cross.",
-    "b3": "Special formats like Archive recruitment don't carry charge at all."
+    "b3": "Special formats like Archive recruitment don't carry Recruitment Stack at all."
   },
   "ticket_bonus": {
-    "title": "4-2. Pull-count bonuses",
-    "b1": "Certain pull counts during a pickup earn you rewards. 10-pull tickets are part of that — a kind of payback on the pyroxenes you spent.",
-    "b2": "Unlike charge, none of this carries over. It all resets when the pickup ends.",
+    "title": "4-2. Recruitment Mileage",
+    "b1": "Recruitment Mileage earns you rewards at certain pull counts during a pickup. 10-pull tickets are part of that — a kind of payback on the pyroxenes you spent.",
+    "b2": "Unlike Recruitment Stack, none of this carries over. It all resets when the pickup ends.",
     "b3": "10-pull tickets land at 70, 130, 150, 170, 270, 330, 350, and 370 pulls. Nothing after 370.",
     "b4": "Once you've got what you came for, check how far the next ticket milestone is before deciding whether to keep going."
   },
@@ -99,7 +98,7 @@
     "ceiling_desc": "Collect a set number of pulls, 200, and you're guaranteed to get your target student.",
     "half_ceiling_term": "Soft pity",
     "half_ceiling_desc": "At the halfway point, 100 pulls, a 3-star is guaranteed, with a 50% chance it's the pickup. It's a newer system from the revamp.",
-    "charge_term": "Charge",
+    "charge_term": "Recruitment Stack",
     "charge_desc": "A stack that builds with every pull. It resets to zero when you land the pickup, and otherwise carries into the next banner.",
     "pull10_term": "10-pull",
     "pull10_desc": "The unit for counting pulls done together as a batch — ten at once is a 10-pull.",

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import type { Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { Student, StudentData } from '~/types/plannerData';
 import { PageHeader } from '~/components/common/PageHeader';
 import { ScanProgressPanel } from '~/components/common/ScanProgressPanel';
 import { StudentPickerBottomSheet } from '~/features/my/arena/components/StudentPickerBottomSheet';
@@ -27,31 +27,25 @@ const LOAD_MESSAGES = { loadingData: 'Downloading models…', loadingClassifier:
 
 function useStudents(locale: Locale) {
   const [students, setStudents] = useState<Record<string, Student>>({});
-  const [portraits, setPortraits] = useState<StudentPortraitData>({});
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [studentsRes, portraitsRes] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
+      const studentsRes = await fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`));
       const studentData: StudentData = await studentsRes.json();
-      const portraitData: StudentPortraitData = await portraitsRes.json();
       if (cancelled) return;
-      const merged: Record<string, Student> = {};
-      for (const [id, student] of Object.entries(studentData)) merged[id] = { ...student, Portrait: portraitData[Number(id)] };
-      setStudents(merged);
-      setPortraits(portraitData);
+      setStudents(studentData);
     })();
     return () => {
       cancelled = true;
     };
   }, [locale]);
-  const portraitData = useMemo(() => Object.fromEntries(Object.entries(portraits).map(([id, p]) => [Number(id), p])) as Record<number, string>, [portraits]);
-  return { students, portraitData };
+  return { students };
 }
 
 export function ArenaPage() {
   const { i18n } = useTranslation();
   const locale = i18n.language as Locale;
-  const { students, portraitData } = useStudents(locale);
+  const { students } = useStudents(locale);
   const records = useArenaHistoryStore((s) => s.records);
   const seasonKey = useArenaHistoryStore((s) => s.seasonKey);
   const server = useArenaHistoryStore((s) => s.server);
@@ -182,7 +176,7 @@ export function ArenaPage() {
       <ArenaSeasonBar serverLocked={profileServer !== null} />
 
       {/* Lookup comes first: it is what players need mid-match; uploading new reports is secondary. */}
-      <ArenaSearch records={records} search={search} onSearchChange={setSearch} students={students} portraitData={portraitData} locale={locale} />
+      <ArenaSearch records={records} search={search} onSearchChange={setSearch} students={students} locale={locale} />
 
       <h2 className="mb-2 text-base font-semibold text-neutral-800 dark:text-neutral-200">Add Combat Reports</h2>
 
@@ -260,7 +254,6 @@ export function ArenaPage() {
               key={item.key}
               item={item}
               students={students}
-              portraitData={portraitData}
               onChange={updateReview}
               onPick={(side, index) => setPicking({ key: item.key, side, index })}
               onSave={() => saveReviews([item])}
@@ -273,7 +266,6 @@ export function ArenaPage() {
       <ArenaHistory
         query={query}
         students={students}
-        portraitData={portraitData}
         locale={locale}
         onUseTeam={(team, side, battle) => {
           setSearch({ ...search, nickname: '', slots: slotsFromTeam(team), side, battle });
@@ -281,7 +273,7 @@ export function ArenaPage() {
         }}
       />
 
-      <StudentPickerBottomSheet isOpen={picking !== null} students={students} portraitData={portraitData} locale={locale} onSelect={(s) => pickStudent(s.id)} onClose={() => setPicking(null)} />
+      <StudentPickerBottomSheet isOpen={picking !== null} students={students} locale={locale} onSelect={(s) => pickStudent(s.id)} onClose={() => setPicking(null)} />
     </div>
   );
 }

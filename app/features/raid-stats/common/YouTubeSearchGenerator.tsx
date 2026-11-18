@@ -10,6 +10,7 @@ import { isTotalAssault } from '../../../utils/raid/report';
 import { type_translation } from '../../../components/raid/raidToString';
 import { getKstTime } from '~/data/globalRaidDates';
 import { cdn } from '~/utils/cdn';
+import { toLocations } from '~/utils/raidLocation';
 
 // --- Props ---
 export type DefenseType = 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
@@ -164,8 +165,8 @@ export function YouTubeSearchGenerator({ raidInfo, showType, partyStudentIds }: 
     parts.push(convertLocale(raidInfo.Boss, bossNameData, locale, searchLang));
 
     // 2. Terrain
-    if (includeTerrain && raidInfo.Location) {
-      parts.push(convertLocale(raidInfo.Location, terrain_translation, locale, searchLang));
+    if (includeTerrain) {
+      toLocations(raidInfo.Location).forEach((terrain) => parts.push(convertLocale(terrain, terrain_translation, locale, searchLang)));
     }
 
     // Determined target defense type (selected value if array, default boss type if boolean)

@@ -3,8 +3,8 @@
 import { raidToString } from '../../../components/raid/raidToString';
 import { difficultyInfo } from '~/utils/difficultyPolicy';
 import type { DifficultyName, DifficultySelect } from '~/utils/difficultyPolicy';
-import type { BinnedDataRow, ChartData, GameServer, RaidInfoFiltered, RawDataRow } from '~/types/data';
-import { tsvParseRows } from 'd3-dsv';
+import type { ChartData, GameServer, RaidInfoFiltered } from '~/types/data';
+import { column, parseTable, type ColumnTable } from '../../../utils/columnTable';
 import type { fetchCacheProcessor } from '../../../hooks/cache';
 import type { Locale } from '../../../utils/i18n/config';
 import { cdn } from '../../../utils/cdn';
@@ -18,7 +18,8 @@ export interface ProcessChartDataParams {
   histogramMode: 'absolute' | 'percent';
   selectedDifficulties: Set<string>;
   xLabels: RaidInfoFiltered[];
-  rawTsvData: RawDataRow[];
+  /** Per-student tables (one per outfit when combined). Columns: x (season), y (rank), z (grade), d (difficulty index) */
+  tables: ColumnTable[];
   locale: Locale;
 }
 
@@ -82,178 +83,156 @@ function getSelectedCountOfHistogramClass(raidInfo: RaidInfoFiltered, difficulti
   }, 0);
 }
 
-export const getRawTsvData = async (server: GameServer, selectedStudentId: number | null, fetchAndProcessWithCache: fetchCacheProcessor<string>) => {
-  const mainDataUrl = cdn(`/w/map/${server}/${selectedStudentId}.bin`);
+export const getStudentTable = (server: GameServer, selectedStudentId: number | null, fetchAndProcessWithCache: fetchCacheProcessor<ColumnTable>) =>
+  fetchAndProcessWithCache(cdn(`/w/v2/map/${server}/${selectedStudentId}.bin`), async (res) => parseTable(await res.arrayBuffer()));
 
-  const mainDataText = await fetchAndProcessWithCache(mainDataUrl, (res) => res.text());
-  const rawTsvData: RawDataRow[] = tsvParseRows(mainDataText, (row): RawDataRow => ({
-    x: +row[0],
-    y: +row[1],
-    z: +row[2],
-    w: +row[3],
-    difficulty: difficultyInfo[+row[4]].name,
-  }));
-  return rawTsvData;
-};
-
-export const getRawTsvDataForCombatStyleView = async (
+export const getStudentTablesForCombatStyleView = async (
   server: GameServer,
   selectedStudentId: number | null,
   viewMode: 'separate' | 'combined',
-  fetchAndProcessWithCache: fetchCacheProcessor<string>,
+  fetchAndProcessWithCache: fetchCacheProcessor<ColumnTable>,
 ) => {
   const groupIds = viewMode === 'combined' ? getCombatStyleGroupRosterIds(selectedStudentId ?? 0) : [selectedStudentId];
-  if (groupIds.length <= 1) return getRawTsvData(server, selectedStudentId, fetchAndProcessWithCache);
-  const rowSets = await Promise.all(groupIds.map((id) => getRawTsvData(server, id, fetchAndProcessWithCache)));
-  return rowSets.flat();
+  return Promise.all(groupIds.map((id) => getStudentTable(server, id, fetchAndProcessWithCache)));
 };
 
 /**
  * Calculate chart data
  */
-export const processChartData = ({
-  rankWidth,
-  hideXThreshold,
-  xRange,
-  heatmapMode,
-  histogramMode,
-  selectedDifficulties,
-  xLabels,
-  rawTsvData,
-  locale,
-}: ProcessChartDataParams): ProcessChartDataResult => {
-  const newXlabelIndexMap = xLabels.map((v) => v.index);
-
-  const rawData = rawTsvData;
-  const binnedRawData: BinnedDataRow[] = rawData
-    .filter((row) => {
-      return newXlabelIndexMap.includes(row.x);
-    })
-    .map((row) => {
-      const x = newXlabelIndexMap.indexOf(row.x);
-      const { y, z, w, difficulty } = row;
-      const bin = Math.floor((row.y - 1) / rankWidth);
-      const y_prime = `${bin * rankWidth + 1}-${(bin + 1) * rankWidth}`;
-      return { x, y, z, w, y_prime, difficulty };
-    });
-
-  const finalDataByZ = new Map<number, ChartData>();
-  const zValues = [...new Set(binnedRawData.map((d) => d.z))].sort((a, b) => a - b);
-
-  const allXBase = [...new Set(binnedRawData.map((d) => d.x))].sort((a, b) => a - b);
-
-  const minX = allXBase.length > 0 ? Math.min(...allXBase) : 0;
-  const maxX = allXBase.length > 0 ? Math.max(...allXBase, 0) : 150;
-  const fullXRange: [number, number] = [minX, maxX];
-
-  const difficultiesToInclude = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
-
-  // 1st filtering
-  const binnedData = binnedRawData.filter(({ difficulty }) => difficultiesToInclude.has(difficulty)).filter(({ x }) => x >= xRange[0] && x <= xRange[1]);
-
-  const rawXTotals = new Map<number, number>();
-  binnedData.forEach(({ x }) => {
-    rawXTotals.set(x, (rawXTotals.get(x) || 0) + 1 /*w*/);
+export const processChartData = ({ rankWidth, hideXThreshold, xRange, heatmapMode, histogramMode, selectedDifficulties, xLabels, tables, locale }: ProcessChartDataParams): ProcessChartDataResult => {
+  // Season x -> position in xLabels, -1 when the season is not listed
+  let maxSeason = 0;
+  for (const v of xLabels) maxSeason = Math.max(maxSeason, v.index);
+  const xPos = new Int32Array(maxSeason + 1).fill(-1);
+  xLabels.forEach((v, i) => {
+    if (xPos[v.index] < 0) xPos[v.index] = i;
   });
 
-  const allPossibleX = [...Array(maxX + 1).keys()];
-  const allX = allPossibleX
-    // .filter(x => (rawXTotals.get(x) || 0) >= hideXThreshold * (xLabels[x].MaxLv || 1))
-    .filter((x) => (rawXTotals.get(x) || 0) >= hideXThreshold)
-    .filter((x) => x >= xRange[0] && x <= xRange[1]);
+  const difficultiesToInclude = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
+  const includeDifficulty = new Uint8Array(256);
+  difficultyInfo.forEach((d, i) => {
+    if (difficultiesToInclude.has(d.name)) includeDifficulty[i] = 1;
+  });
 
-  const allYPrime = [...new Set(binnedData.map((d) => d.y_prime))]
-    .sort((a, b) => {
-      return parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]);
-    })
-    .reverse();
+  // 1st pass: find the unfiltered ranges (fullXRange, z values) and the number of rank bins
+  const zSeen = new Set<number>();
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let maxY = 0;
+  for (const table of tables) {
+    const tx = column(table, 'x'),
+      ty = column(table, 'y'),
+      tz = column(table, 'z');
+    for (let i = 0; i < table.rows; i++) {
+      const sx = tx[i];
+      if (sx > maxSeason || xPos[sx] < 0) continue;
+      const x = xPos[sx];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (ty[i] > maxY) maxY = ty[i];
+      zSeen.add(tz[i]);
+    }
+  }
+  const zValues = [...zSeen].sort((a, b) => a - b);
+  const hasData = minX !== Infinity;
+  const fullXRange: [number, number] = [hasData ? minX : 0, Math.max(maxX, 0)];
+  maxX = Math.max(maxX, 0);
+  const nx = maxX + 1;
+  const nb = hasData ? Math.floor((maxY - 1) / rankWidth) + 1 : 0;
 
-  // const allXLabels = allX.map(x => raidToString(xLabels[x], locale, false, true) || x.toString());
+  // 2nd pass: counts per [x][bin], in total and per z
+  const total = new Int32Array(nx * nb);
+  const countByZ = new Map<number, Int32Array>(zValues.map((z) => [z, new Int32Array(nx * nb)]));
+  for (const table of tables) {
+    const tx = column(table, 'x'),
+      ty = column(table, 'y'),
+      tz = column(table, 'z'),
+      td = column(table, 'd');
+    for (let i = 0; i < table.rows; i++) {
+      const sx = tx[i];
+      if (sx > maxSeason || xPos[sx] < 0) continue;
+      const x = xPos[sx];
+      if (!includeDifficulty[td[i]] || x < xRange[0] || x > xRange[1]) continue;
+      const cell = x * nb + Math.floor((ty[i] - 1) / rankWidth);
+      total[cell]++;
+      const zCount = countByZ.get(tz[i]);
+      if (zCount) zCount[cell]++;
+    }
+  }
+
+  const xOverTotals = new Float64Array(nx);
+  const yOverTotals = new Float64Array(nb);
+  for (let x = 0; x < nx; x++) {
+    for (let b = 0; b < nb; b++) {
+      const n = total[x * nb + b];
+      xOverTotals[x] += n;
+      yOverTotals[b] += n;
+    }
+  }
+
+  const allX: number[] = [];
+  for (let x = 0; x < nx; x++) {
+    if (xOverTotals[x] >= hideXThreshold && x >= xRange[0] && x <= xRange[1]) allX.push(x);
+  }
+  const allBins: number[] = []; // Higher rank bins on top
+  for (let b = nb - 1; b >= 0; b--) {
+    if (yOverTotals[b] > 0) allBins.push(b);
+  }
+  const allYPrime = allBins.map((b) => `${b * rankWidth + 1}-${(b + 1) * rankWidth}`);
+
   const allXLabels = allX.map((x) => raidToString(xLabels[x], locale, false, false, false, true));
   const allXLabels_show = allX.map((x) => raidToString(xLabels[x], locale, true, true) || x.toString());
 
-  const totalWMap = new Map<string, number>();
-  binnedData.forEach(({ x, y_prime }) => {
-    const key = `${x}|${y_prime}`;
-    totalWMap.set(key, (totalWMap.get(key) || 0) + 1 /*w*/);
-  });
-
-  const xOverTotals = new Map<number, number>();
-  const yOverTotals = new Map<string, number>();
-  binnedData.forEach(({ x, y_prime }) => {
-    // const w_normalized = (xLabels[x].MaxLv > 0) ? w / xLabels[x].MaxLv : 0;
-    const w_normalized = 1; /*w*/
-    xOverTotals.set(x, (xOverTotals.get(x) || 0) + w_normalized);
-    yOverTotals.set(y_prime, (yOverTotals.get(y_prime) || 0) + w_normalized);
-  });
-
-  const zValueCounter = binnedData
-    .filter((d) => allX.includes(d.x))
-    .map((d) => d.z)
-    .reduce((acc, z) => {
-      acc.set(z, (acc.get(z) || 0) + 1);
-      return acc;
-    }, new Map<number, number>());
+  const zValueCounter = new Map<number, number>();
+  const finalDataByZ = new Map<number, ChartData>();
 
   for (const z of zValues) {
-    const subset = binnedData.filter((d) => d.z === z);
-    const wSumMap = new Map<string, number>();
-    subset.forEach(({ x, y_prime }) => {
-      const key = `${x}|${y_prime}`;
-      wSumMap.set(key, (wSumMap.get(key) || 0) + 1 /*w*/);
-    });
+    const zCount = countByZ.get(z);
+    if (!zCount) continue;
+    const xTotals = new Float64Array(nx);
+    const yTotals = new Float64Array(nb);
+    for (let x = 0; x < nx; x++) {
+      for (let b = 0; b < nb; b++) {
+        const n = zCount[x * nb + b];
+        xTotals[x] += n;
+        yTotals[b] += n;
+      }
+    }
+    const inAllX = allX.reduce((sum, x) => sum + xTotals[x], 0);
+    if (inAllX > 0) zValueCounter.set(z, inAllX);
 
-    const heatmapZ: (number | null)[][] = allYPrime.map((y_prime) =>
+    const heatmapZ: (number | null)[][] = allBins.map((b) =>
       allX.map((x) => {
-        const key = `${x}|${y_prime}`;
-        if (!totalWMap.has(key)) return null;
-        const wSum = wSumMap.get(key) || 0;
-        if (heatmapMode === 'percent') {
-          const totalW = totalWMap.get(key) || 1;
-          return totalW > 0 ? (wSum / totalW) * 100 : 0;
-        } else {
-          const [rankStart, rankEnd] = y_prime.split('-').map((v) => parseInt(v));
-          // return (xLabels[x].MaxLv > 0) ? wSum / getAllCountOfHistogramclass(
-          const count = getSelectedCountOfHistogramClass(xLabels[x], difficultiesToInclude, rankStart, rankEnd, rankWidth);
-          if (wSum / count > 2) {
-            console.log('error, a/b>2', x, xLabels[x].Alias, [wSum, count], [rankStart, rankEnd], xLabels[x].Cnt, difficultiesToInclude, xLabels[x]);
-            // throw "error, a/b>2"
-          }
-          return (100 * wSum) / count;
-          // xLabels[x].MaxLv Cancel -> Unfamiliar Statistics
+        const totalW = total[x * nb + b];
+        if (totalW === 0) return null;
+        const wSum = zCount[x * nb + b];
+        if (heatmapMode === 'percent') return (wSum / totalW) * 100;
+        const rankStart = b * rankWidth + 1;
+        const rankEnd = (b + 1) * rankWidth;
+        const count = getSelectedCountOfHistogramClass(xLabels[x], difficultiesToInclude, rankStart, rankEnd, rankWidth);
+        if (wSum / count > 2) {
+          console.log('error, a/b>2', x, xLabels[x].Alias, [wSum, count], [rankStart, rankEnd], xLabels[x].Cnt, difficultiesToInclude, xLabels[x]);
         }
+        return (100 * wSum) / count;
       }),
     );
 
-    const xTotals = new Map<number, number>();
-    const yTotals = new Map<string, number>();
-    subset.forEach(({ x, y_prime }) => {
-      // const w_normalized = (xLabels[x].MaxLv > 0) ? w / xLabels[x].MaxLv : 0;
-      const w_normalized = 1; /*w*/
-      xTotals.set(x, (xTotals.get(x) || 0) + w_normalized);
-      yTotals.set(y_prime, (yTotals.get(y_prime) || 0) + w_normalized);
-    });
-
     const topBarValues = allX.map((x) => {
-      const numerator = xTotals.get(x) || 0;
+      const numerator = xTotals[x];
       if (histogramMode === 'percent') {
-        const denominator = xOverTotals.get(x) || 1;
-        return denominator > 0 ? (numerator / denominator) * 100 : 0;
-      } else {
-        // if (x < 10) return numerator / 15000;
-        // else return numerator / 20000
-        const count = Array.from(difficultiesToInclude).reduce((total, difficulty) => total + (xLabels[x].Cnt[difficulty as DifficultyName] || 0), 0);
-        return count > 0 ? (100 * numerator) / count : 0;
+        const denominator = xOverTotals[x] || 1;
+        return (numerator / denominator) * 100;
       }
+      const count = Array.from(difficultiesToInclude).reduce((sum, difficulty) => sum + (xLabels[x].Cnt[difficulty as DifficultyName] || 0), 0);
+      return count > 0 ? (100 * numerator) / count : 0;
     });
 
-    const rightBarValues = allYPrime.map((y) => {
-      const numerator = yTotals.get(y) || 0;
+    const rightBarValues = allBins.map((b) => {
+      const numerator = yTotals[b];
       if (histogramMode === 'percent') {
-        const denominator = yOverTotals.get(y) || 1;
-        return denominator > 0 ? (numerator / denominator) * 100 : 0;
+        const denominator = yOverTotals[b] || 1;
+        return (numerator / denominator) * 100;
       }
-
       return numerator;
     });
 
@@ -271,7 +250,6 @@ export const processChartData = ({
 
   return {
     chartDataByZ: finalDataByZ,
-    // availableZValues:new Set(zValues),
     availableZValueCounter: zValueCounter,
     fullXRange,
   };

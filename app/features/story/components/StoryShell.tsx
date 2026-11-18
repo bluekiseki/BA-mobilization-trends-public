@@ -14,10 +14,11 @@ interface StoryShellProps {
   langQuery: string;
   error: string | null;
   loading: boolean;
+  detail?: boolean; // a series or episode page: its own title is the heading, so the section header is left out
   children: ReactNode;
 }
 
-export function StoryShell({ lang, onLang, langQuery, error, loading, children }: StoryShellProps) {
+export function StoryShell({ lang, onLang, langQuery, error, loading, detail = false, children }: StoryShellProps) {
   const t = storyCopy(lang);
   const { settings, save } = useStorySettings();
   const [editing, setEditing] = useState(false);
@@ -25,45 +26,49 @@ export function StoryShell({ lang, onLang, langQuery, error, loading, children }
   const { series } = useParams();
   const params = new URLSearchParams(langQuery);
   const flowQuery = storyQuery(langQuery, { selected: series ?? params.get('selected') ?? params.get('focus') });
+  const settingsButton = settings && (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      aria-label="Settings"
+      title="Settings"
+      className="inline-flex size-11 items-center justify-center text-neutral-600 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ba-btn-blue-dark dark:text-neutral-400 dark:hover:text-white"
+    >
+      <LuSettings size={20} />
+    </button>
+  );
   return (
-    <div className="min-h-screen bg-white px-4 py-6 text-neutral-900 sm:px-6 dark:bg-neutral-900 dark:text-neutral-100">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{t.title}</h1>
-        <div className="flex items-center gap-4">
-          {settings && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              aria-label="Settings"
-              title="Settings"
-              className="inline-flex size-11 items-center justify-center text-neutral-600 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ba-btn-blue-dark dark:text-neutral-400 dark:hover:text-white"
-            >
-              <LuSettings size={20} />
-            </button>
-          )}
+    <div className="relative min-h-screen bg-white px-4 py-6 text-neutral-900 sm:px-6 dark:bg-neutral-900 dark:text-neutral-100">
+      {detail && <div className="absolute right-4 top-6 sm:right-6">{settingsButton}</div>}
+      {!detail && (
+        <div className="mb-5 flex flex-col gap-2">
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{t.description}</p>
         </div>
-      </div>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{t.description}</p>
-      <nav aria-label={t.title} className="my-5 flex gap-5 border-b border-neutral-200 dark:border-neutral-700">
-        {[
-          { active: flow, to: `/utils/story/map${flowQuery}`, label: t.flow },
-          { active: !flow, to: storyListPath(langQuery), label: t.list },
-        ].map((tab) => (
-          <StoryLink
-            key={tab.label}
-            to={tab.to}
-            aria-current={tab.active ? 'page' : undefined}
-            className={`flex min-h-12 items-center border-b-2 px-1 text-sm font-semibold ${tab.active ? 'border-ba-btn-blue-dark text-neutral-900 dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'}`}
-          >
-            {tab.label}
-          </StoryLink>
-        ))}
-      </nav>
+      )}
+      {!detail && (
+        <nav aria-label={t.title} className="mb-5 flex items-center gap-5 border-b border-neutral-200 dark:border-neutral-700">
+          {[
+            { active: flow, to: `/utils/story/map${flowQuery}`, label: t.flow },
+            { active: !flow, to: storyListPath(langQuery), label: t.list },
+          ].map((tab) => (
+            <StoryLink
+              key={tab.label}
+              to={tab.to}
+              aria-current={tab.active ? 'page' : undefined}
+              className={`flex min-h-12 items-center border-b-2 px-1 text-sm font-semibold ${tab.active ? 'border-ba-btn-blue-dark text-neutral-900 dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'}`}
+            >
+              {tab.label}
+            </StoryLink>
+          ))}
+          <span className="ml-auto">{settingsButton}</span>
+        </nav>
+      )}
       {(settings === null || editing) && (
         <StorySettingsPanel
           lang={lang}
           onLang={onLang}
-          initial={settings ?? { server: lang === 'ko' ? 'kr' : 'jp', spoilers: false }}
+          initial={settings ?? { server: lang === 'ko' ? 'gl' : 'jp', spoilers: false, episodeTotals: false }}
           onSave={(next) => {
             save(next);
             setEditing(false);

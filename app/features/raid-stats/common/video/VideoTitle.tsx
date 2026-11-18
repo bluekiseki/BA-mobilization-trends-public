@@ -15,7 +15,7 @@ export function useTitleDictionary(studentData: ReportStudentData, locale: Local
   useEffect(() => {
     let cancelled = false;
     const others = SUPORTED_SHORT_LOCALES.filter((l) => l !== target);
-    Promise.all(others.map((l) => fetchStudents(cdn(`/w/${l}.students.bin`)).then((data) => [l, data] as const)))
+    Promise.all(others.map((l) => fetchStudents(cdn(`/w/v2/${l}.students.bin`)).then((data) => [l, data] as const)))
       .then((entries) => {
         if (!cancelled) setOtherStudents(Object.fromEntries(entries));
       })

@@ -5,6 +5,7 @@ import * as d3Selection from 'd3-selection';
 import * as d3Zoom from 'd3-zoom';
 import * as d3Drag from 'd3-drag';
 import 'd3-transition';
+import { SheetIcon, useIconSheet } from '~/components/common/SheetIcon';
 import { useNetworkData } from './useNetworkData';
 import { NetworkControls } from './NetworkControls';
 import { RankingPanel } from './RankingPanel';
@@ -118,6 +119,7 @@ export function StudentNetworkGraph({
   const { t: t_common } = useTranslation('common');
   const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
+  const iconSheet = useIconSheet('student');
 
   const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
     { id: 'filter', label: t('sidebarTabs.filter') },
@@ -304,14 +306,26 @@ export function StudentNetworkGraph({
       .attr('r', (n) => r(n) + 2)
       .attr('fill', '#e5e7eb');
 
-    nodeEl
-      .append('image')
-      .attr('href', (n) => n.portrait)
-      .attr('x', (n) => -r(n))
-      .attr('y', (n) => -r(n))
-      .attr('width', (n) => r(n) * 2)
-      .attr('height', (n) => r(n) * 2)
-      .attr('clip-path', (n) => `url(#nc-${n.id})`);
+    // Each portrait is a nested <svg> whose viewBox crops the shared sprite sheet.
+    if (iconSheet) {
+      const [cellW, cellH] = iconSheet.index.cell;
+      nodeEl
+        .filter((n) => iconSheet.index.items[String(n.id)] !== undefined)
+        .append('g')
+        // Clip on a wrapper: on the nested <svg> itself the clip path would resolve in the viewBox coordinate system.
+        .attr('clip-path', (n) => `url(#nc-${n.id})`)
+        .append('svg')
+        .attr('x', (n) => -r(n))
+        .attr('y', (n) => -r(n))
+        .attr('width', (n) => r(n) * 2)
+        .attr('height', (n) => r(n) * 2)
+        .attr('viewBox', (n) => `${iconSheet.index.items[String(n.id)][0]} ${iconSheet.index.items[String(n.id)][1]} ${cellW} ${cellH}`)
+        .attr('overflow', 'hidden')
+        .append('image')
+        .attr('href', iconSheet.url)
+        .attr('width', iconSheet.index.size[0])
+        .attr('height', iconSheet.index.size[1]);
+    }
 
     nodeEl
       .filter((n) => n.id === focusId)
@@ -402,7 +416,7 @@ export function StudentNetworkGraph({
     return () => {
       sim.stop();
     };
-  }, [graph, buildEdgeMap, getNeighbors]);
+  }, [graph, iconSheet, buildEdgeMap, getNeighbors]);
 
   useEffect(() => {
     if (focusId === null || !graph) {
@@ -414,7 +428,6 @@ export function StudentNetworkGraph({
     const partners = (edgeMapRef.current.get(focusId) ?? []).map((p) => ({
       id: p.id,
       name: nodeByIdRef.current.get(p.id)?.name ?? `ID:${p.id}`,
-      portrait: nodeByIdRef.current.get(p.id)?.portrait ?? '',
       weight: p.weight,
       pct: Math.round((p.weight / totalW) * 100),
     }));
@@ -424,7 +437,6 @@ export function StudentNetworkGraph({
       setSelectedNode({
         id: simNode.id,
         name: simNode.name,
-        portrait: simNode.portrait,
         totalAppearances: simNode.totalAppearances,
         partners,
       });
@@ -547,11 +559,13 @@ export function StudentNetworkGraph({
                         }}
                         className="w-full flex items-center gap-2 py-1.5 px-1 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors rounded"
                       >
-                        {n.portrait ? (
-                          <img src={n.portrait} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />
-                        )}
+                        <SheetIcon
+                          sheet="student"
+                          id={n.id}
+                          alt=""
+                          className="w-6 h-6 rounded-full shrink-0"
+                          fallback={<div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />}
+                        />
                         <span className="text-sm truncate" title={n.name}>
                           {n.name}
                         </span>

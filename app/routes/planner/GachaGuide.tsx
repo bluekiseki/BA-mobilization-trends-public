@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaArrowLeft } from 'react-icons/fa';
-import { loadPortraitMap } from '~/utils/studentPortraitMap';
 import { cdn } from '~/utils/cdn';
 import { PickupStudentIcon } from '~/components/student/PickupStudentIcon';
 import type { Student } from '~/types/data';
@@ -79,18 +78,6 @@ export default function GachaGuide() {
   const glossaryKeys = locale === 'ko' ? ([...baseGlossaryKeys, 'foresight'] as const) : baseGlossaryKeys;
   const oddsRows = ['row1', 'row2', 'row3'] as const;
 
-  // Portraits for the two students named in this guide (Kisaki, Hanako (Swimsuit)) — fetched lazily via
-  // the same shared/cached loader the nav avatar picker uses, so it's a no-op if already warm.
-  const [portraitMap, setPortraitMap] = useState<Record<string, string>>({});
-  useEffect(() => {
-    let alive = true;
-    void loadPortraitMap()
-      .then((m) => alive && setPortraitMap(m))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
   const KISAKI_ID = 20039;
   const HANAKO_SWIMSUIT_ID = 10074;
   // "Key support" examples for the priority list — several names, not one pick.
@@ -127,7 +114,7 @@ export default function GachaGuide() {
   }, [locale]);
 
   // Renders one PickupStudentIcon from just an id — name/fest/limited/bulletType all come from the
-  // studentInfo fetched above, portrait from the shared portrait map. Returns null while either
+  // studentInfo fetched above Returns null while it
   // hasn't loaded yet, or if id is null (the dynamic Fes picks resolve after the fetch completes).
   const renderStudentIcon = (id: number | null, ueStar?: number) => {
     if (id === null) return null;
@@ -135,17 +122,7 @@ export default function GachaGuide() {
     if (!info) return null;
     const isFes = (info.IsLimited ?? []).includes(3);
     return (
-      <PickupStudentIcon
-        key={id}
-        studentId={id}
-        name={info.Name}
-        portrait={portraitMap[id]}
-        fest={isFes}
-        limited={!isFes && (info.IsLimited ?? []).includes(1)}
-        bulletType={info.BulletType}
-        ueStar={ueStar}
-        locale={locale}
-      />
+      <PickupStudentIcon key={id} studentId={id} name={info.Name} fest={isFes} limited={!isFes && (info.IsLimited ?? []).includes(1)} bulletType={info.BulletType} ueStar={ueStar} locale={locale} />
     );
   };
 
@@ -215,7 +192,7 @@ export default function GachaGuide() {
               {t('priority.ranking_link1')}
             </Link>{' '}
             {t('priority.ranking_mid')}{' '}
-            <Link to={localeLink(locale, '/charts/jp/heatmap')} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+            <Link to={localeLink(locale, '/students/10000?tab=stats')} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
               {t('priority.ranking_link2')}
             </Link>
             {t('priority.ranking_post')}
@@ -243,7 +220,6 @@ export default function GachaGuide() {
         </Section>
 
         <Section title={t('charge.title')}>
-          <p>{t('charge.status_note')}</p>
           <Bullets items={[t('charge.b1'), t('charge.b2'), t('charge.b3'), t('charge.b4')]} />
         </Section>
 

@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { combineScopes, findJpReference, matchesScope, mergeVideoLists, parseLegacyVideos, parseRaidLinks, parseRemoteFile, parseUnifiedVideos, toDataServer, toWebServer } from './videoMerge';
+import {
+  combineScopes,
+  findLinkedSeasons,
+  findJpReference,
+  matchesScope,
+  mergeVideoLists,
+  parseLegacyVideos,
+  parseRaidLinks,
+  parseRemoteFile,
+  parseUnifiedVideos,
+  toDataServer,
+  toWebServer,
+} from './videoMerge';
 import type { VideoEntry } from './types';
 
 const id = 'abcdefghijk';
@@ -88,5 +100,22 @@ describe('scopes', () => {
     expect(all.filter((v) => matchesScope(v, 'all'))).toHaveLength(2);
     expect(all.filter((v) => matchesScope(v, 'current'))).toHaveLength(1);
     expect(all.filter((v) => matchesScope(v, 'reference'))).toHaveLength(1);
+  });
+});
+
+describe('cross-server season links', () => {
+  it('resolves JP to all explicitly linked GL seasons without duplicate requests', () => {
+    const links = [
+      { jp: 'R90', gl: 'R87' },
+      { jp: 'R90', gl: 'R88' },
+      { jp: 'R90', gl: 'R87' },
+      { jp: 'E90', gl: 'E87' },
+    ];
+    expect(findLinkedSeasons(links, { server: 'jp', raidId: 'R90' })).toEqual([
+      { server: 'kr', raidId: 'R87' },
+      { server: 'kr', raidId: 'R88' },
+    ]);
+    expect(findLinkedSeasons(links, { server: 'kr', raidId: 'R87' })).toEqual([{ server: 'jp', raidId: 'R90' }]);
+    expect(findLinkedSeasons(links, { server: 'jp', raidId: 'R91' })).toEqual([]);
   });
 });

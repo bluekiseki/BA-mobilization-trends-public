@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Student } from '~/types/data';
 import { StudentIcon } from '~/components/student/studentIcon';
@@ -49,14 +48,6 @@ export function GoalStatusSummary({ statuses, tacticalCoinStatus, studentsRecord
   const { t: t_ui } = useTranslation('ui');
 
   const noDeadlineLabel = t('planStatus.noDeadlineDate');
-
-  const portraitData = useMemo(() => {
-    const result: Record<number, string> = {};
-    for (const [id, s] of Object.entries(studentsRecord)) {
-      if (s.Portrait) result[Number(id)] = s.Portrait;
-    }
-    return result;
-  }, [studentsRecord]);
 
   const atRiskCount = statuses.filter((status) => status.status === 'at_risk').length;
   const coveredCount = statuses.filter((status) => status.status === 'covered_by_eligma').length;
@@ -114,7 +105,7 @@ export function GoalStatusSummary({ statuses, tacticalCoinStatus, studentsRecord
                 >
                   <div className="flex items-start gap-2">
                     <div className="w-10 shrink-0">
-                      <StudentIcon character={character} student={studentsRecord[status.studentId]} portraitData={portraitData} />
+                      <StudentIcon character={character} student={studentsRecord[status.studentId]} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">

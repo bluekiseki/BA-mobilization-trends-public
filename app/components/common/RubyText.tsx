@@ -20,7 +20,6 @@ type RubyPart = {
  * @returns {React.ReactElement}
  */
 const RubyText: React.FC<RubyTextProps> = ({ children }) => {
-  // useMemo ensures the parsing logic only runs when the input string changes.
   const parsedParts = useMemo((): (string | RubyPart)[] => {
     if (typeof children !== 'string') return [children];
 

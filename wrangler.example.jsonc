@@ -46,12 +46,13 @@
     {
       "binding": "DB",
       "database_name": "your-db-name",
-      "database_id": "your-d1-database-id",
+      "database_id": "00000000-0000-0000-0000-000000000001",
     },
     {
       "binding": "ba_user",
       "database_name": "your-user-db-name",
-      "database_id": "your-d1-database-id",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+      "migrations_dir": "db/auth",
     },
   ],
 }

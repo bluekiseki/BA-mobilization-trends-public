@@ -1,6 +1,6 @@
-export const SERVERS = ['jp', 'kr'] as const;
+export const SERVERS = ['jp', 'gl'] as const;
 export type Server = (typeof SERVERS)[number];
-export const SERVER_LABELS: Record<Server, string> = { jp: 'JP', kr: 'Global' };
+export const SERVER_LABELS: Record<Server, string> = { jp: 'JP', gl: 'Global' };
 
 type CsvValue = string | number | boolean | null | undefined;
 

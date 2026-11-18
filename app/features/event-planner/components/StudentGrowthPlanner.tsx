@@ -3,7 +3,7 @@ import { MaterialNeedsSection } from '../../../components/student/MaterialNeedsS
 import { StudentGrowthPlanCard } from '../../../components/student/StudentGrowthPlanCard';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
 import { buildUwDemandFromPlans, calcUwMaterialXp } from '~/utils/uwMaterialXp';
-import type { EventData, IconData, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, Student, StudentData } from '~/types/plannerData';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { useTranslation } from 'react-i18next';
 import { localeLink } from '~/utils/localeLink';
@@ -15,15 +15,15 @@ interface StudentGrowthPlannerProps {
   eventData: EventData;
   iconData: IconData;
   allStudents: StudentData;
-  studentPortraits: StudentPortraitData;
   onCalculate: (needs: Record<string, number>) => void;
 }
 
-export const StudentGrowthPlanner = ({ eventId, eventData, iconData, allStudents, studentPortraits, onCalculate }: StudentGrowthPlannerProps) => {
+export const StudentGrowthPlanner = ({ eventId, eventData, iconData, allStudents, onCalculate }: StudentGrowthPlannerProps) => {
   // const [isCollapsed, setIsCollapsed] = useState(false);
   const { growthPlans, addPlan, materialInventory } = useGlobalStore();
 
   const { t, i18n } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
 
   const plansForThisEvent = useMemo(() => growthPlans.filter((p) => p.includedInEvents.includes(eventId)), [growthPlans, eventId]);
@@ -38,12 +38,6 @@ export const StudentGrowthPlanner = ({ eventId, eventData, iconData, allStudents
     const demand = buildUwDemandFromPlans(plansForThisEvent, allStudents);
     return calcUwMaterialXp(materialInventory, demand);
   }, [plansForThisEvent, allStudents, materialInventory]);
-
-  useEffect(() => {
-    Object.entries(allStudents).map(([studentId, student]) => {
-      student.Portrait = studentPortraits[parseInt(studentId)];
-    });
-  }, [allStudents, studentPortraits]);
 
   useEffect(() => {
     onCalculate(calculatedNeeds);
@@ -76,11 +70,11 @@ export const StudentGrowthPlanner = ({ eventId, eventData, iconData, allStudents
 
   return (
     <>
-      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t('page.studentGrowthPlanner')}</h2>
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{t_ui('studentGrowthPlanner')}</h2>
 
       <div className="mt-4 space-y-4">
         <div className="text-right">
-          <a href={localeLink(locale, '/planner/students')} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline dark:text-blue-400">
+          <a href={localeLink(locale, '/students')} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline dark:text-blue-400">
             {t('ui.goToFullPage')}
           </a>
         </div>
@@ -91,7 +85,6 @@ export const StudentGrowthPlanner = ({ eventId, eventData, iconData, allStudents
                 key={plan.uuid}
                 plan={plan}
                 allStudents={allStudents}
-                studentPortraits={studentPortraits}
                 studentOptions={studentOptions}
                 eventData={eventData}
                 iconData={iconData}

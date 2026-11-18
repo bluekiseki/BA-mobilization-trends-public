@@ -165,7 +165,7 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
               disabled={!avgRates}
               title={!avgRates ? t('runAvgCalcFirst') : t('setMaxPullsTooltip')}
             >
-              {t('setToMax')}
+              {t_ui('setToMax')}
             </button>
           </div>
         </div>
@@ -198,10 +198,10 @@ export const FortuneGachaPlanner = ({ eventId, eventData, iconData, onCalculate,
               <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-neutral-200 dark:border-neutral-600">
-                    <th className="text-left py-1 pr-2 font-semibold text-neutral-600 dark:text-neutral-400">{t('name')}</th>
+                    <th className="text-left py-1 pr-2 font-semibold text-neutral-600 dark:text-neutral-400">{t_ui('nameLabel')}</th>
                     <th className="text-right py-1 pr-2 font-semibold text-neutral-600 dark:text-neutral-400">{t('baseProb')}</th>
                     <th className="text-right py-1 pr-2 font-semibold text-neutral-600 dark:text-neutral-400">{t('maxProb')}</th>
-                    <th className="text-left py-1 font-semibold text-neutral-600 dark:text-neutral-400">{t('rewards')}</th>
+                    <th className="text-left py-1 font-semibold text-neutral-600 dark:text-neutral-400">{t_ui('rewards')}</th>
                   </tr>
                 </thead>
                 <tbody>

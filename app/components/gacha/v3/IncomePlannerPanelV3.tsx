@@ -28,7 +28,7 @@ import {
 } from '~/utils/gachaEngine';
 import type { BannerPeriod } from '~/utils/gachaData';
 import type { BannerStrategy, Student } from '~/types/gacha';
-import { buildInitialTicketBatches, type CustomIncome, type PlannerSchedule, type PyroxeneConfig, type SimulationStats } from '~/utils/pyroxeneCalc';
+import { buildInitialTicketBatches, clampCharge, type CustomIncome, type PlannerSchedule, type PyroxeneConfig, type SimulationStats } from '~/utils/pyroxeneCalc';
 
 import SimulationResultViewV3 from './SimulationResultViewV3';
 import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
@@ -70,7 +70,6 @@ interface Props {
   region: 'KR' | 'JP';
   /** Student IDs the player already owns (from the Student Planner's growth-plan roster) — dupe pulls of these pay eligma from the very first roll of the sim. */
   ownedStudentIds?: number[];
-  portraitMap: Record<number, string>;
   pyroxeneIcon?: string | null;
   apIcon?: string | null;
   elephIconMap?: Record<string, string>;
@@ -105,7 +104,6 @@ export default function IncomePlannerPanelV3({
   allStudents,
   region,
   ownedStudentIds,
-  portraitMap,
   pyroxeneIcon,
   ticket1Icon,
   ticket10Icon,
@@ -212,6 +210,7 @@ export default function IncomePlannerPanelV3({
     try {
       const initialTicketBatches = buildInitialTicketBatches(config, schedules);
       const consumeExpiringTickets = config.consumeExpiringTickets ?? true;
+      const initialCharge = { normal: clampCharge(config.chargeNormal), limited: clampCharge(config.chargeLimited) };
       if (useWasm) {
         if (workerRefs.current.length === 0) {
           for (let i = 0; i < WORKER_COUNT; i++) workerRefs.current.push(new GachaSimWorker());
@@ -224,8 +223,9 @@ export default function IncomePlannerPanelV3({
           initialTicketBatches,
           consumeExpiringTickets,
           region,
+          initialCharge,
         );
-        const { strategiesJson, bannerPoolsJson, activeBannerIds, initialOwnedIds, ticketBatchesJson } = payload;
+        const { strategiesJson, bannerPoolsJson, activeBannerIds, initialOwnedIds, ticketBatchesJson, initialChargeNormal, initialChargeLimited } = payload;
         const runId = ++runIdRef.current;
         const N = workerRefs.current.length;
         const perWorker = Math.ceil(simCount / N);
@@ -325,6 +325,8 @@ export default function IncomePlannerPanelV3({
             initialOwnedIds,
             ticketBatchesJson,
             consumeExpiringTickets,
+            initialChargeNormal,
+            initialChargeLimited,
           });
         });
       } else {
@@ -344,6 +346,7 @@ export default function IncomePlannerPanelV3({
               initialTicketBatches,
               consumeExpiringTickets,
               region,
+              initialCharge,
             );
             setSimTiming({ totalMs: performance.now() - start, count: simCount });
             setGachaSimResult(res);
@@ -384,7 +387,6 @@ export default function IncomePlannerPanelV3({
   const resultProps = {
     result: gachaSimResult,
     initialPyroxenes: config.currentPyroxene,
-    portraitMap,
     pyroxeneIcon,
     elephIconMap,
     bankruptcyRate,
@@ -395,7 +397,7 @@ export default function IncomePlannerPanelV3({
   };
   const runButton = (
     <button type="button" className="v3-primary" onClick={handleRun} disabled={isSimulating}>
-      {isSimulating ? tg('result.panel.btn_running') : stale ? tBase('gacha.v3.run.recalc') : tg('tabs.result')}
+      {isSimulating ? tBase('button.simRunning') : stale ? tBase('gacha.v3.run.recalc') : tg('tabs.result')}
     </button>
   );
   const resultState = isSimulating ? 'running' : stale ? 'stale' : gachaSimResult ? 'ready' : 'empty';
@@ -509,7 +511,7 @@ export default function IncomePlannerPanelV3({
                 {isSimulating
                   ? conditionsChanged
                     ? tBase('gacha.v3.run.running_prev')
-                    : tg('result.panel.btn_running')
+                    : tBase('button.simRunning')
                   : stale
                     ? tBase('gacha.v3.run.stale')
                     : gachaSimResult
@@ -582,7 +584,7 @@ export default function IncomePlannerPanelV3({
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       {effectiveOwnedStudentIds.length}/{ownedStudentCount}
                       {tBase('affectionTab.units.students')} ·{' '}
-                      <Link to={localeLink(locale, '/planner/students')} state={{ view: 'table' }} className="underline">
+                      <Link to={localeLink(locale, '/students?view=table')} className="underline">
                         {tBase('button.goToPlanner')}
                       </Link>
                     </p>

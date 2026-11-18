@@ -70,7 +70,7 @@
     "weeklyIncome": "每週收入",
     "permitsPerWeek": "許可證/週",
     "dailyInputHint": "每日輸入：使用下面的日程表日曆輸入每日金額。",
-    "defaultMaxFloor": "預設最大層數",
+    "defaultMaxFloor": "制約解除決戰到達層數(所有賽季)",
     "noMfPeriods": "日程中沒有能力而發WB期間。"
   },
   "elephCard": {
@@ -148,6 +148,20 @@
     "growthSpendEleph": "{{item}} 目標達成消耗",
     "growthSpendDefault": "成長支出",
     "elephGoalReached": "{{studentName}} - 艾蕾芙 (目標達成)",
-    "goalLabel": "(目標)"
+    "goalLabel": "(目標)",
+    "coinShopAuto": "綜合戰術考試商店(自動購買)"
+  },
+  "assumeAll": {
+    "title": "預期收入假設",
+    "raid": "獲得全部總力戰分數獎勵",
+    "eraid": "獲得全部大決戰分數獎勵",
+    "eventTitle": "活動收入",
+    "eventMode": {
+      "planner": "使用活動規劃器結果",
+      "all": "合計全部商店與任務獎勵(不含關卡刷取)"
+    }
+  },
+  "autoBuy": {
+    "jfd": "每月於綜合戰術考試商店購買至上限"
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useTranslation } from 'react-i18next';
 import { computeRankings } from './computeRankings';
 import type { NetworkGraph, NetworkNode } from './types';
@@ -84,11 +85,13 @@ export function RankingPanel({ graph, focusId, onFocus }: RankingPanelProps) {
               className={`w-full flex items-center gap-1.5 px-2 py-1 text-left transition-colors ${isFocused ? 'bg-neutral-100 dark:bg-neutral-800' : 'hover:bg-neutral-50 dark:hover:bg-neutral-900'}`}
             >
               <span className="text-xs text-neutral-400 w-4 shrink-0 text-right tabular-nums">{i + 1}</span>
-              {node.portrait ? (
-                <img src={node.portrait} alt="" className="w-6 h-6 rounded-full shrink-0 object-cover" />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />
-              )}
+              <SheetIcon
+                sheet="student"
+                id={node.id}
+                alt=""
+                className="w-6 h-6 rounded-full shrink-0"
+                fallback={<div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />}
+              />
               <span className="flex-1 text-sm truncate" title={node.name}>
                 {node.name}
               </span>

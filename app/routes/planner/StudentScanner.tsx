@@ -4,6 +4,8 @@ import { getInstance } from '~/middleware/i18next';
 import { ClientOnly } from '~/components/common/ClientOnly';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/StudentScanner';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
+import type { AppHandle } from '~/types/link';
 
 const StudentScannerPage = lazy(() =>
   import('~/features/scanner/student/StudentScannerPage').then((m) => ({
@@ -45,3 +47,7 @@ export default function StudentScannerRoute() {
     </ClientOnly>
   );
 }
+
+export const handle: AppHandle = {
+  preload: () => studentSheetPreloadLinks(),
+};

@@ -4,12 +4,14 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGlobalStore, type GrowthPlan } from '~/store/planner/useGlobalStore';
 import { useResourcePlanStore } from '~/store/planner/useResourcePlanStore';
-import type { ContentItem, EventData, IconData, IconInfos, Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import { SheetIcon } from '~/components/common/SheetIcon';
+import type { ContentItem, EventData, IconData, IconInfos, Student, StudentData } from '~/types/plannerData';
 import eventListJsonRaw from '~/data/jp/eventList.json';
 import type { EventListData } from '~/types/eventList';
 const eventList = eventListJsonRaw as unknown as EventListData;
 
 // Sub-components
+import { StudentPlanStatTable } from './StudentPlanStatTable';
 import { GrowthAccordion } from './GrowthAccordion';
 import { BasicStatsTab } from './BasicStatsTab';
 import { SkillsTab } from './SkillsTab';
@@ -23,6 +25,7 @@ import { MAX_LEVEL, uwMaxLevelMap } from '../../utils/student/const';
 import { FiChevronsUp, FiTarget, FiTrash2, FiX, FiSearch, FiChevronsDown, FiHelpCircle, FiInfo, FiPlus } from 'react-icons/fi';
 import { IoSync } from 'react-icons/io5';
 import { StarRating } from '~/components/student/StarRating';
+import { isUnrecruited, normalizePlan } from '~/utils/student/recruitState';
 import { getStarValue } from '~/utils/raid/report';
 import { getGiftAffectionList } from '../../utils/student/giftAffectionList';
 import { getCombatStyleGroupRosterIds, getCombatStyleRepresentativeId } from '~/utils/combatStyle';
@@ -31,13 +34,14 @@ import { getCombatStyleGroupRosterIds, getCombatStyleRepresentativeId } from '~/
 interface StudentGrowthPlanCardProps {
   plan: GrowthPlan;
   allStudents: StudentData;
-  studentPortraits: StudentPortraitData;
   studentOptions: [string, Student][];
   contentItems?: ContentItem[];
   eventData?: EventData;
   iconData?: IconData;
   iconInfos?: IconInfos;
   onClose: () => void;
+  // Hosted in a fixed-student page: hides delete/close and the student switcher
+  embedded?: boolean;
 }
 
 // Linear star-value helpers (same as StudentElephCard)
@@ -271,8 +275,8 @@ function GoalRowCard({ goal, visibleSVs, contentItems, starBtnCls, onUpdate, onR
 }
 
 // --- Main Component ---
-export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, contentItems = [], eventData, iconData, onClose }: StudentGrowthPlanCardProps) => {
-  const { updatePlan, removePlan, toggleEventInclusion } = useGlobalStore();
+export const StudentGrowthPlanCard = ({ plan, allStudents, contentItems = [], eventData, iconData, onClose, embedded = false }: StudentGrowthPlanCardProps) => {
+  const { updatePlan, removePlan, toggleEventInclusion, setPlanRecruited } = useGlobalStore();
   const { targetGoals, addTargetGoal, updateTargetGoal, removeTargetGoal, setFinalGoal } = useResourcePlanStore();
   const { t } = useTranslation(['planner', 'game', 'common']);
   const { t: t_ui } = useTranslation('ui');
@@ -280,6 +284,8 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ stats: false, skills: false, equipment: false, potential: false, affection: false, targets: false });
   const [showTargetPending, setShowTargetPending] = useState(false);
   const [activeHelp, setActiveHelp] = useState<string | null>(null);
+  // Unrecruited plans keep `current` at the recruit baseline (enforced by the store); only the goal side is edited
+  const currentLocked = isUnrecruited(plan);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const representativeId = plan.studentId === null ? null : getCombatStyleRepresentativeId(plan.studentId);
@@ -334,9 +340,20 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
     [updatePlan, plan.uuid],
   );
 
+  const handleRecruitedChange = (recruited: boolean) => {
+    if (recruited !== currentLocked) return;
+    // Switching to unrecruited discards the entered current values, so confirm when anything would be lost
+    if (!recruited) {
+      const reset = normalizePlan({ ...plan, recruited: false });
+      if (JSON.stringify(reset.current) !== JSON.stringify(plan.current) && !window.confirm(t('growthCard.unrecruitedConfirm'))) return;
+    }
+    setPlanRecruited(plan.uuid, recruited);
+  };
+
   // --- Action Generators ---
   const generateActions = (section: string) => {
     const update = (field: string, val: unknown) => updatePlan(plan.uuid, field, val);
+    const sides = currentLocked ? (['target'] as const) : (['current', 'target'] as const);
     return {
       onTargetMax: () => {
         if (section === 'stats') {
@@ -381,7 +398,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
       },
       onFullMax: () => {
         if (section === 'stats') {
-          (['current', 'target'] as const).forEach((t) => {
+          sides.forEach((t) => {
             update(`${t}.level`, MAX_LEVEL);
             update(`${t}.star`, 5);
             update(`${t}.uw`, 4);
@@ -390,23 +407,23 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
             update(`${t}.gear`, 2);
           });
         } else if (section === 'skills') {
-          ['current', 'target'].forEach((t) => {
+          sides.forEach((t) => {
             update(`${t}.ex`, 5);
             update(`${t}.normal`, 10);
             update(`${t}.passive`, 10);
             update(`${t}.sub`, 10);
           });
         } else if (section === 'equipment') {
-          ['current', 'target'].forEach((t) => update(`${t}.equipment`, [10, 10, 10]));
+          sides.forEach((t) => update(`${t}.equipment`, [10, 10, 10]));
         } else if (section === 'potential') {
-          ['current', 'target'].forEach((t) => update(`${t}.potential`, { hp: 25, atk: 25, heal: 25 }));
+          sides.forEach((t) => update(`${t}.potential`, { hp: 25, atk: 25, heal: 25 }));
         } else if (section === 'affection') {
-          (['current', 'target'] as const).forEach((t) => update(`${t}.affection`, Math.max(plan[t].affection, 50)));
+          sides.forEach((t) => update(`${t}.affection`, Math.max(plan[t].affection, 50)));
         }
       },
       onFullReset: () => {
         if (section === 'stats') {
-          ['current', 'target'].forEach((t) => {
+          sides.forEach((t) => {
             update(`${t}.level`, 1);
             update(`${t}.star`, studentInfo?.StarGrade || 1);
             update(`${t}.uw`, 0);
@@ -415,18 +432,18 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
             update(`${t}.gear`, 0);
           });
         } else if (section === 'skills') {
-          ['current', 'target'].forEach((t) => {
+          sides.forEach((t) => {
             update(`${t}.ex`, 1);
             update(`${t}.normal`, 1);
             update(`${t}.passive`, 1);
             update(`${t}.sub`, 1);
           });
         } else if (section === 'equipment') {
-          ['current', 'target'].forEach((t) => update(`${t}.equipment`, [0, 0, 0]));
+          sides.forEach((t) => update(`${t}.equipment`, [0, 0, 0]));
         } else if (section === 'potential') {
-          ['current', 'target'].forEach((t) => update(`${t}.potential`, { hp: 0, atk: 0, heal: 0 }));
+          sides.forEach((t) => update(`${t}.potential`, { hp: 0, atk: 0, heal: 0 }));
         } else if (section === 'affection') {
-          ['current', 'target'].forEach((t) => update(`${t}.affection`, 1));
+          sides.forEach((t) => update(`${t}.affection`, 1));
         }
       },
     };
@@ -462,13 +479,22 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
       ((plan.current.level < 90 || plan.current.uw === 0) && Object.values(plan.current.potential).some((v) => v > 0)),
   };
 
+  // A section whose current and target match shows one value; a locked current is never "the same"
+  const same = (a: unknown, b: unknown) => !currentLocked && JSON.stringify(a) === JSON.stringify(b);
+  const unchanged = {
+    stats: same([plan.current.level, plan.current.star, plan.current.uw], [plan.target.level, plan.target.star, plan.target.uw]),
+    skills: same([plan.current.ex, plan.current.normal, plan.current.passive, plan.current.sub], [plan.target.ex, plan.target.normal, plan.target.passive, plan.target.sub]),
+    eq: same(plan.current.equipment, plan.target.equipment),
+    pot: same(plan.current.potential, plan.target.potential),
+    affection: same(plan.current.affection, plan.target.affection),
+  };
   const formatSkill = (val: number, max: number) => (val === max ? 'M' : val);
   const summaries = {
     stats: {
       // Return JSX instead of a string
       cur: (
         <div className="flex items-center gap-1.5">
-          <span>Lv.{plan.current.level}</span>
+          <span>Lv.{currentLocked ? '-' : plan.current.level}</span>
           <span className="text-neutral-300 dark:text-neutral-450">/</span>
           <div className="-mt-0.5">
             <StarRating n={getStarValue(plan.current.star, plan.current.uw)} />
@@ -486,12 +512,12 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
       ),
     },
     skills: {
-      cur: `${formatSkill(plan.current.ex, 5)}${formatSkill(plan.current.normal, 10)}${formatSkill(plan.current.passive, 10)}${formatSkill(plan.current.sub, 10)}`,
+      cur: currentLocked ? '-' : `${formatSkill(plan.current.ex, 5)}${formatSkill(plan.current.normal, 10)}${formatSkill(plan.current.passive, 10)}${formatSkill(plan.current.sub, 10)}`,
       tar: `${formatSkill(plan.target.ex, 5)}${formatSkill(plan.target.normal, 10)}${formatSkill(plan.target.passive, 10)}${formatSkill(plan.target.sub, 10)}`,
     },
-    eq: { cur: `T${plan.current.equipment.join('/')}`, tar: `T${plan.target.equipment.join('/')}` },
+    eq: { cur: currentLocked ? '-' : `T${plan.current.equipment.join('/')}`, tar: `T${plan.target.equipment.join('/')}` },
     pot: {
-      cur: `${plan.current.potential.hp}/${plan.current.potential.atk}/${plan.current.potential.heal}`,
+      cur: currentLocked ? '-' : `${plan.current.potential.hp}/${plan.current.potential.atk}/${plan.current.potential.heal}`,
       tar: `${plan.target.potential.hp}/${plan.target.potential.atk}/${plan.target.potential.heal}`,
     },
   };
@@ -548,26 +574,45 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
 
         <div className="flex items-center justify-between px-3 pt-3 pb-2 bg-neutral-50/50 dark:bg-neutral-800/30">
           {/* Left: macOS Signal Colors with Permanent Icons */}
-          <div className="flex items-center gap-2">
-            {/* Delete Button (Yellow/Amber) */}
-            <button
-              onClick={() => {
-                // if (confirm(t('common.confirmRemove')))
-                removePlan(plan.uuid);
-              }}
-              className="w-5 h-5 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 flex items-center justify-center text-white transition-colors "
-              title={t('common.remove')}
-            >
-              <FiTrash2 size={11} strokeWidth={2.5} />
-            </button>
-            {/* Close Button (Red) */}
-            <button onClick={onClose} className="w-5 h-5 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center text-[#926600] transition-colors " title={t_ui('close')}>
-              <FiX size={11} strokeWidth={2.5} />
-            </button>
-          </div>
+          {embedded ? (
+            <span />
+          ) : (
+            <div className="flex items-center gap-2">
+              {/* Delete Button (Yellow/Amber) */}
+              <button
+                onClick={() => {
+                  // if (confirm(t('common.confirmRemove')))
+                  removePlan(plan.uuid);
+                }}
+                className="w-5 h-5 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 flex items-center justify-center text-white transition-colors "
+                title={t('common.remove')}
+              >
+                <FiTrash2 size={11} strokeWidth={2.5} />
+              </button>
+              {/* Close Button (Red) */}
+              <button onClick={onClose} className="w-5 h-5 rounded-full bg-[#FEBC2E] hover:bg-[#FEBC2E]/80 flex items-center justify-center text-[#926600] transition-colors " title={t_ui('close')}>
+                <FiX size={11} strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
 
           {/* Right: Cost Hint Toggle + Student ID */}
           <div className="flex items-center gap-2">
+            {plan.studentId !== null && (
+              <div className="flex items-center overflow-hidden rounded border border-neutral-200 dark:border-neutral-700 divide-x divide-neutral-200 dark:divide-neutral-700 text-[10px] font-bold">
+                {([true, false] as const).map((recruited) => (
+                  <button
+                    key={String(recruited)}
+                    type="button"
+                    aria-pressed={currentLocked !== recruited}
+                    onClick={() => handleRecruitedChange(recruited)}
+                    className={`px-2 py-0.5 transition-colors ${currentLocked !== recruited ? 'bg-blue-600 text-white dark:bg-blue-500' : 'bg-white text-neutral-500 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700'}`}
+                  >
+                    {recruited ? t('growthCard.recruited') : t('growthCard.unrecruited')}
+                  </button>
+                ))}
+              </div>
+            )}
             {plan.studentId && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-200/50 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">ID: {plan.studentId}</div>}
           </div>
         </div>
@@ -578,9 +623,9 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
         <div className="flex items-center gap-4">
           {/* Portrait: Keep portrait image small to save space */}
           <div className="shrink-0">
-            {displayFormId && studentPortraits[displayFormId] ? (
+            {displayFormId ? (
               <div className="w-10 h-10 rounded-full object-cover ring-2 ring-neutral-50 dark:ring-neutral-800 shrink-0 overflow-hidden" style={{ backgroundColor: bulletColor || '#f3f4f6' }}>
-                <img src={`data:image/webp;base64,${studentPortraits[displayFormId]}`} className="w-full h-full object-cover" alt="" />
+                <SheetIcon sheet="student" id={displayFormId} alt="" />
               </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
@@ -589,22 +634,26 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
 
           {/* Student Search Dropdown: Secure maximum horizontal width */}
           <div className="flex-1 min-w-0 text-xs">
-            <StudentSearchDropdown
-              students={allStudents}
-              selectedStudentId={plan.studentId}
-              setSelectedStudentId={(id) => {
-                const representativeStudentId = getCombatStyleRepresentativeId(id);
-                updatePlan(plan.uuid, 'studentId', representativeStudentId);
-                setDisplayFormId(representativeStudentId);
-                const newStudent = allStudents[representativeStudentId];
-                if (newStudent && !('Name' in (newStudent.Gear ?? {}))) {
-                  updatePlan(plan.uuid, 'current.gear', 0);
-                  updatePlan(plan.uuid, 'target.gear', 0);
-                }
-              }}
-              hideLavel={true}
-              mergeCombatStyleForms
-            />
+            {embedded ? (
+              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{displayStudentInfo?.Name}</p>
+            ) : (
+              <StudentSearchDropdown
+                students={allStudents}
+                selectedStudentId={plan.studentId}
+                setSelectedStudentId={(id) => {
+                  const representativeStudentId = getCombatStyleRepresentativeId(id);
+                  updatePlan(plan.uuid, 'studentId', representativeStudentId);
+                  setDisplayFormId(representativeStudentId);
+                  const newStudent = allStudents[representativeStudentId];
+                  if (newStudent && !('Name' in (newStudent.Gear ?? {}))) {
+                    updatePlan(plan.uuid, 'current.gear', 0);
+                    updatePlan(plan.uuid, 'target.gear', 0);
+                  }
+                }}
+                hideLavel={true}
+                mergeCombatStyleForms
+              />
+            )}
             {alternateFormId !== undefined && displayStudentInfo && (
               <button
                 type="button"
@@ -613,11 +662,17 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
                 className="mt-2 inline-flex items-center gap-1.5 rounded border border-neutral-200 bg-white px-2 py-1 text-[11px] text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
               >
                 <span>{t('growthCard.switchForm')}</span>
-                {studentPortraits[alternateFormId] && <img src={`data:image/webp;base64,${studentPortraits[alternateFormId]}`} alt="" className="h-5 w-5 rounded-full object-cover" />}
+                <SheetIcon sheet="student" id={alternateFormId} alt="" className="h-5 w-5 rounded-full" />
               </button>
             )}
           </div>
         </div>
+
+        {currentLocked && (
+          <p className="mt-3 rounded border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800/50 dark:text-neutral-300">
+            {t('growthCard.unrecruitedNote')}
+          </p>
+        )}
 
         {/* 3. Global Actions Toolbar (Redesigned) */}
 
@@ -701,15 +756,25 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
       <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-neutral-50 dark:divide-neutral-800 bg-white dark:bg-neutral-900 custom-scrollbar border-t border-neutral-100 dark:border-neutral-800">
         {studentInfo ? (
           <>
+            <StudentPlanStatTable plan={plan} allStudents={allStudents} />
             <GrowthAccordion
               title={t('growthCard.stats')}
               isOpen={openSections.stats}
               onToggle={() => setOpenSections((p) => ({ ...p, stats: !p.stats }))}
               currentSummary={summaries.stats.cur}
               targetSummary={summaries.stats.tar}
+              unchanged={unchanged.stats}
               {...generateActions('stats')}
             >
-              <BasicStatsTab plan={plan} studentInfo={studentInfo} handlePlanChange={handlePlanChange} rankOptions={rankOptions} iconData={iconData} eventData={eventData} />
+              <BasicStatsTab
+                plan={plan}
+                studentInfo={studentInfo}
+                handlePlanChange={handlePlanChange}
+                rankOptions={rankOptions}
+                iconData={iconData}
+                eventData={eventData}
+                currentLocked={currentLocked}
+              />
             </GrowthAccordion>
             <GrowthAccordion
               title={t('game:skills')}
@@ -717,9 +782,10 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
               onToggle={() => setOpenSections((p) => ({ ...p, skills: !p.skills }))}
               currentSummary={summaries.skills.cur}
               targetSummary={summaries.skills.tar}
+              unchanged={unchanged.skills}
               {...generateActions('skills')}
             >
-              <SkillsTab plan={plan} studentInfo={displayStudentInfo} handlePlanChange={handlePlanChange} iconData={iconData} eventData={eventData} />
+              <SkillsTab plan={plan} studentInfo={displayStudentInfo} handlePlanChange={handlePlanChange} iconData={iconData} eventData={eventData} currentLocked={currentLocked} />
             </GrowthAccordion>
 
             <GrowthAccordion
@@ -728,11 +794,12 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
               onToggle={() => setOpenSections((p) => ({ ...p, equipment: !p.equipment }))}
               currentSummary={summaries.eq.cur}
               targetSummary={summaries.eq.tar}
+              unchanged={unchanged.eq}
               {...generateActions('equipment')}
               isWarning={warnings.equipment}
               warningText={t('equipmentTab.levelLockWarning')}
             >
-              <EquipmentTab plan={plan} studentInfo={studentInfo} iconData={iconData} eventData={eventData} />
+              <EquipmentTab plan={plan} studentInfo={studentInfo} iconData={iconData} eventData={eventData} currentLocked={currentLocked} />
             </GrowthAccordion>
 
             <GrowthAccordion
@@ -741,19 +808,21 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
               onToggle={() => setOpenSections((p) => ({ ...p, potential: !p.potential }))}
               currentSummary={summaries.pot.cur}
               targetSummary={summaries.pot.tar}
+              unchanged={unchanged.pot}
               {...generateActions('potential')}
               isWarning={warnings.potential}
               warningText={t('potentialTab.unlockCondition')}
             >
-              <PotentialTab plan={plan} iconData={iconData} eventData={eventData} studentInfo={studentInfo} />
+              <PotentialTab plan={plan} iconData={iconData} eventData={eventData} studentInfo={studentInfo} currentLocked={currentLocked} />
             </GrowthAccordion>
 
             <GrowthAccordion
               title={t('game:affection')}
               isOpen={openSections.affection}
               onToggle={() => setOpenSections((p) => ({ ...p, affection: !p.affection }))}
-              currentSummary={`Rank ${plan.current.affection}`}
+              currentSummary={currentLocked ? '-' : `Rank ${plan.current.affection}`}
               targetSummary={`Rank ${plan.target.affection}`}
+              unchanged={unchanged.affection}
               {...generateActions('affection')}
             >
               {eventData?.icons.Item && iconData ? (
@@ -764,7 +833,7 @@ export const StudentGrowthPlanCard = ({ plan, allStudents, studentPortraits, con
                   iconData={iconData}
                   handlePlanChange={handlePlanChange}
                   allStudents={allStudents}
-                  studentPortraits={studentPortraits}
+                  currentLocked={currentLocked}
                 />
               ) : (
                 <div className="p-6 text-center text-xs text-neutral-400">Loading Affection Data...</div>

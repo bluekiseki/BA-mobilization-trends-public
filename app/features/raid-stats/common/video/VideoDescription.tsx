@@ -51,7 +51,7 @@ export function VideoDescription({ description, title, url, dict }: { descriptio
           setShowOriginal(false);
           setOpen(true);
         }}
-        className="-my-1 min-h-8 shrink-0 rounded-sm px-1 sm:min-h-6 font-pretendard text-xs font-normal text-neutral-600 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-neutral-300 dark:hover:text-white dark:focus-visible:outline-blue-400"
+        className="-my-1 min-h-8 shrink-0 rounded-sm px-1 sm:min-h-6 font-pretendard text-[10px] font-normal text-neutral-400 hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-neutral-500 dark:hover:text-white dark:focus-visible:outline-blue-400"
       >
         {t('videos_description')}
       </button>

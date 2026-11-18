@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     // Gets the stored theme from localStorage when the component is mounted.
-    // If you have a theme that you previously set, update the status with that value.
+    // Restore the saved theme preference.
     const storedTheme = localStorage.getItem('theme') as Theme | null;
     if (storedTheme) {
       setTheme(storedTheme);
@@ -88,7 +88,7 @@ export function useTheme() {
 }
 
 // Cycle through the available theme modes with a single click.
-export const ThemeDropdown = ({ isMobileText = false }: { isMobileText?: boolean }) => {
+export const ThemeDropdown = () => {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
 
@@ -114,10 +114,9 @@ export const ThemeDropdown = ({ isMobileText = false }: { isMobileText?: boolean
         onClick={() => setTheme(nextTheme[theme])}
         aria-label={t(theme === 'light' ? 'lightMode' : theme === 'dark' ? 'darkMode' : 'systemTheme')}
         title={t(theme === 'light' ? 'lightMode' : theme === 'dark' ? 'darkMode' : 'systemTheme')}
-        className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
+        className="flex items-center text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
       >
         {currentIcon}
-        <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('theme')}</span>
       </button>
     </div>
   );

@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Legend, ReferenceLine } from 'recharts';
 import { FaListUl, FaChevronDown, FaChevronUp, FaTimes, FaPlus } from 'react-icons/fa';
 import { CustomNumberInput } from '../common/CustomInput';
+import { SheetSvgIcon } from '../common/SheetIcon';
+import type { PyroLogKey } from '~/utils/pyroxeneCalc';
 
 interface LogEntry {
-  i18nKey?: string;
+  i18nKey?: PyroLogKey;
   params?: Record<string, string | number>;
   title?: string;
   amount: number;
@@ -42,7 +44,7 @@ export interface CustomLineConfig {
 
 export interface BannerStudentMarker {
   date: string;
-  students: { id: number; name: string; portrait?: string }[];
+  students: { id: number; name: string }[];
 }
 
 interface Props {
@@ -83,11 +85,8 @@ function StudentMarkerLabel({ viewBox, students }: { viewBox?: { x?: number; y?:
           <circle cx={cx} cy={cy} r={PORTRAIT_SIZE / 2} />
         </clipPath>
       </defs>
-      {first.portrait ? (
-        <image href={first.portrait} x={px} y={py} width={PORTRAIT_SIZE} height={PORTRAIT_SIZE} clipPath={`url(#${clipId})`} />
-      ) : (
-        <circle cx={cx} cy={cy} r={PORTRAIT_SIZE / 2} fill="#737373" fillOpacity={0.7} />
-      )}
+      <circle cx={cx} cy={cy} r={PORTRAIT_SIZE / 2} fill="#737373" fillOpacity={0.7} />
+      <SheetSvgIcon sheet="student" id={first.id} x={px} y={py} width={PORTRAIT_SIZE} height={PORTRAIT_SIZE} clipPath={`url(#${clipId})`} />
       {extra > 0 && (
         <g>
           <circle cx={badgeCx} cy={badgeCy} r={BADGE_R} fill={badgeBg} />
@@ -110,7 +109,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const { t: t_ui } = useTranslation('ui');
   const { t: t_game } = useTranslation('game');
-  const t_dynamic = t as (key: string, options?: Record<string, string | number>) => string;
+  const { t: t_planner } = useTranslation('planner');
   const [showDetails, setShowDetails] = useState(false);
   const [newPercentile, setNewPercentile] = useState<number | null>(null);
   // This stores excluded groups. Fixed daily income is hidden by default.
@@ -119,8 +118,8 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
   const logDescription = (log: LogEntry) => {
     if (log.i18nKey === 'log.multifloor' && log.params?.name != null) return String(log.params.name);
     if (!log.i18nKey) return log.title ?? '';
-    if (!log.params) return t_dynamic(log.i18nKey);
-    return t_dynamic(log.i18nKey, log.params);
+    if (!log.params) return t(log.i18nKey);
+    return t(log.i18nKey, log.params);
   };
   const logGroup = (log: LogEntry) => {
     if (log.i18nKey === 'log.multifloor') return 'game:multifloor';
@@ -139,7 +138,6 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
     if (log.i18nKey === 'log.event') return t_game('event');
     if (log.i18nKey === 'log.fixed_daily' || log.i18nKey === 'log.fixed_daily_sunday') return t('log.fixed_daily');
     if (log.i18nKey === 'log.mainstory' || log.i18nKey === 'log.ministory') return t_game('story');
-    if (log.i18nKey === 'log.mainstory') return t('stats.items.mainstory');
     if (log.i18nKey === 'log.monthly_extra') return t('stats.items.monthly');
     if (log.i18nKey === 'log.ap_refresh') return t('stats.items.ap_refresh');
     if (log.i18nKey === 'log.term_ticket_acquired' || log.i18nKey === 'log.term_ticket_acquired_expiry' || log.i18nKey === 'log.term_ticket_expired') return t('settings.ticket_batches_title');
@@ -158,7 +156,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
       const log = probTimeline.flatMap((point) => point.logs).find((entry) => logGroup(entry) === id);
       return { id, name: log ? logGroupName(log) : id, total };
     });
-  }, [probTimeline, t_dynamic]);
+  }, [probTimeline, t]);
 
   // Compact tooltip: each percentile line and its "+tickets" pair collapse into one row
   // ("12,345 + 1,200") instead of two — the old 8-row tooltip was too tall and repetitive.
@@ -169,7 +167,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
   const percentileRows = [
     { key: 'pyroxeneHigh', label: t('chart.lucky'), color: '#60a5fa' },
     { key: 'pyroxeneAvg', label: t_ui('avg'), color: '#2563eb' },
-    { key: 'pyroxeneLow', label: t('chart.unlucky'), color: '#94a3b8' },
+    { key: 'pyroxeneLow', label: t_planner('gacha.income.chart.lower_10'), color: '#94a3b8' },
     { key: 'pyroxeneWorst', label: t('chart.worst'), color: '#ef4444' },
   ] as const;
   const renderTooltip = ({ active, payload, label }: { active?: boolean; payload?: readonly TooltipPayloadEntry[]; label?: string | number }) => {
@@ -293,7 +291,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
               <Legend iconType="plainline" wrapperStyle={{ fontSize: '11px', paddingTop: '10px', color: '#a3a3a3' }} />
 
               {/* Each percentile has paired "with tickets" line (same color, finer dash) */}
-              <Line type="monotone" dataKey="pyroxeneHigh" stroke="#60a5fa" strokeWidth={1} dot={false} name={t('chart.upper_10')} />
+              <Line type="monotone" dataKey="pyroxeneHigh" stroke="#60a5fa" strokeWidth={1} dot={false} name={t_planner('gacha.income.chart.lucky')} />
               <Line
                 type="monotone"
                 dataKey="pyroxeneHighWithTickets"
@@ -301,7 +299,7 @@ export default function PyroTimelineChart({ probTimeline, customLines = [], cust
                 strokeWidth={1}
                 dot={false}
                 strokeDasharray="1 2"
-                name={`${t('chart.upper_10')} (+${t('chart.ticket_balance_name')})`}
+                name={`${t_planner('gacha.income.chart.lucky')} (+${t('chart.ticket_balance_name')})`}
               />
               <Line type="monotone" dataKey="pyroxeneAvg" stroke="#2563eb" strokeWidth={2} dot={false} name={t_ui('avg')} />
               <Line

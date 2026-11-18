@@ -15,6 +15,8 @@ interface GrowthAccordionProps {
   title: string;
   currentSummary: React.ReactNode;
   targetSummary: React.ReactNode;
+  /** Current and target are the same, so only one value is shown instead of an arrow between two. */
+  unchanged?: boolean;
   isOpen: boolean;
   onToggle: () => void;
   // Actions
@@ -32,6 +34,7 @@ export const GrowthAccordion = ({
   title,
   currentSummary,
   targetSummary,
+  unchanged,
   isOpen,
   onToggle,
   onTargetMax,
@@ -74,8 +77,12 @@ export const GrowthAccordion = ({
             <div className="flex items-center gap-1.5 text-xs truncate opacity-70 group-hover:opacity-100 transition-opacity">
               {/* <span className="font-mono text-neutral-500 dark:text-neutral-400">{currentSummary}</span> */}
               <span className={`font-mono font-semibold ${isWarning ? 'text-amber-600 dark:text-amber-500' : 'text-neutral-500 dark:text-neutral-200'}`}>{currentSummary}</span>
-              <span className="text-neutral-500 dark:text-neutral-400 text-[10px]">→</span>
-              <span className={`font-mono font-semibold ${isWarning ? 'text-amber-600 dark:text-amber-500' : 'text-blue-600 dark:text-blue-400'}`}>{targetSummary}</span>
+              {!unchanged && (
+                <>
+                  <span className="text-neutral-500 dark:text-neutral-400 text-[10px]">→</span>
+                  <span className={`font-mono font-semibold ${isWarning ? 'text-amber-600 dark:text-amber-500' : 'text-blue-600 dark:text-blue-400'}`}>{targetSummary}</span>
+                </>
+              )}
             </div>
           </div>
         </div>

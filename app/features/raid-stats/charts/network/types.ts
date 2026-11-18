@@ -14,7 +14,7 @@ export interface RaidSeasonMeta {
   file: string;
   aggFile: string | null;
   boss: string | null;
-  location: string | null;
+  location: string | string[] | null;
   date: string | null;
   cnt: Record<string, number> | null;
   diffCutoffs: Record<string, number>;
@@ -53,7 +53,6 @@ export interface SeasonItem {
 export interface NetworkNode {
   id: number;
   name: string;
-  portrait: string;
   totalAppearances: number;
 }
 

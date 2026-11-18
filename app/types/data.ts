@@ -48,7 +48,6 @@ export interface Student {
   TacticRole: 'DamageDealer' | 'Healer' | 'Supporter' | 'Tanker' | 'Vehicle';
   School: string;
   BulletType: 'Explosion' | 'Mystic' | 'Pierce' | 'Sonic' | 'Chemical';
-  Portrait?: string;
   CombatStyleIndex?: 1 | 2; // for hosino
   FamilyName?: string;
   BirthDay: string;
@@ -56,12 +55,16 @@ export interface Student {
   DefaultOrder: number;
 }
 
+export type RaidArmorType = 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
+
 export interface RaidInfo {
   Id: string;
   Boss: string;
-  Type?: 'LightArmor' | 'HeavyArmor' | 'Unarmed' | 'ElasticArmor' | 'CompositeArmor';
+  Type?: RaidArmorType;
+  /** Every armor type the boss has in this season. Used for filtering only; a season can have several. */
+  ArmorTypes?: RaidArmorType[];
   Date: string;
-  Location: string;
+  Location: string | string[];
   Alias?: string;
   MaxLv: number;
   Cnt: {

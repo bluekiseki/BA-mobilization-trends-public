@@ -5,7 +5,7 @@ import { loadScheduleDataV2 } from '~/utils/calender.data.v2';
 
 interface BossDataEntry {
   name: Record<string, string>;
-  teran: string;
+  teran: string | string[];
   armorType: string;
 }
 
@@ -95,8 +95,8 @@ export function getRaidSeasonPeriods(type: 'raid' | 'eraid'): Record<string, { s
   return periods;
 }
 
-function buildLiveRaidInfos(server: GameServer = 'jp'): RaidInfo[] {
-  const current = getCurrentLiveRaid(server);
+function buildLiveRaidInfos(server: GameServer = 'jp', scheduled?: ReturnType<typeof getCurrentLiveRaid>): RaidInfo[] {
+  const current = scheduled ?? getCurrentLiveRaid(server);
   if (!current) return [];
 
   const season = current.id.split('-')[1];
@@ -149,3 +149,13 @@ export const getUniqueLiveRaids = () => {
     return true;
   });
 };
+
+/** All announced seasons, including future seasons without a statistics dashboard. */
+export function getScheduledRaidInfo(locale: Locale, server: GameServer = 'jp'): RaidInfo[] {
+  const bosses = bossData as unknown as BossDataMap;
+  const language = locale === 'zh-Hant' ? 'zh_Hant' : locale;
+  return (loadScheduleDataV2({ server, tracksToLoad: ['raid'] }).tracks.raid ?? [])
+    .filter((item) => item.type === 'raid' || item.type === 'eraid')
+    .flatMap((item) => buildLiveRaidInfos(server, item))
+    .map((raid) => ({ ...raid, Boss: bosses[raid.Boss]?.name[language] ?? raid.Boss }));
+}

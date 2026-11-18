@@ -33,6 +33,8 @@ export function applySession({ user, profiles: rawProfiles }: SessionPayload): b
   }
 
   void import('./anonymousPlannerSnapshot.client').then(async ({ preserveAnonymousPlannerSnapshot, clearAnonymousPlannerSnapshot }) => {
+    const current = useAuthStore.getState();
+    if (current.user?.id !== user.id || current.activeProfileId !== defaultProfile.id) return;
     preserveAnonymousPlannerSnapshot(user.id, defaultProfile.id);
     const hasServerData = await useSyncStore.getState().initializeProfile(user.id, defaultProfile.id);
     if (hasServerData) clearAnonymousPlannerSnapshot(user.id, defaultProfile.id);

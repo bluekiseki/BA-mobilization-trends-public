@@ -134,7 +134,7 @@
       "pointExchange": "Recruitment Point Exchange"
     },
     "bannerType": {
-      "chargeSystem": "Call Charge",
+      "chargeSystem": "Recruitment Stack",
       "pointSystem": "Recruitment Points"
     },
     "tabs": {
@@ -143,7 +143,8 @@
     "studentStats": {
       "mostRecruited": "Top 3 Recruited Students",
       "recordedThreeStarNote": "Based on recorded 3★ students",
-      "allAcquisitions": "All Acquisitions"
+      "allAcquisitions": "All",
+      "excludePityExchange": "Excl. Pity & Exchange"
     },
     "summary": {
       "heading": "All-Time Summary",
@@ -158,6 +159,7 @@
       "empty": "No recruitment records saved yet.",
       "unknownBanner": "Unknown recruitment",
       "entryMeta": "{{date}} · <1>{{pulls}} pulls</1> · {{threeStar}} × 3★ · {{goal}} goal",
+      "goalPulls": "goal met at pull {{count}}",
       "edit": "Edit"
     },
     "stats": {
@@ -177,6 +179,7 @@
       "threeStarDescription": "Only normal recruitment results are counted; half-pity/pity calls and recruitment point exchanges are excluded.",
       "goalTicketsTitle": "Recruitment Pulls Used",
       "goalTicketsSubtitle": "{{n}} goal students",
+      "goalTicketsDescription": "Only recruitments where the goal was met are counted. If a recruitment has 'Pulls to goal' set, pulls only up to that point count (extra pulls made afterwards, e.g. toward a deliberate pity, are excluded).",
       "halfPityTitle": "Half-Pity Pickups",
       "halfPitySubtitle": "{{hit}} / {{total}} · binomial",
       "halfPityDescription": "Calculated assuming a 50% pickup chance at each half-pity."
@@ -186,22 +189,25 @@
       "editTitle": "Edit Recruitment Record",
       "bannerLabel": "Select Recruitment",
       "bannerSearchPlaceholder": "Search by student name or date",
-      "initialChargeLabel": "Starting Call Charge",
-      "initialChargeNormalLabel": "Starting Call Charge (Normal)",
-      "initialChargeLimitedLabel": "Starting Call Charge (Limited)",
+      "goalPullCountLabel": "Pulls to goal",
+      "goalPullCountPlaceholder": "Defaults to total recruitments",
+      "initialChargeLabel": "Starting Recruitment Stack",
+      "initialChargeNormalLabel": "Starting Recruitment Stack (Normal)",
+      "initialChargeLimitedLabel": "Starting Recruitment Stack (Limited)",
       "resultsHeading": "3★ Results",
       "selectBannerFirst": "Select a recruitment first.",
       "unknownStudent": "Student #{{id}}",
       "deleteResult": "Delete 3★ result",
       "errorNoBanner": "Please select a recruitment.",
       "errorPullCount": "Total recruitments must be an integer of 1 or more.",
-      "errorInitialCharge": "Starting call charge must be between 0 and 199.",
+      "errorGoalPullCount": "Pulls to goal must be an integer from 1 up to the total recruitments.",
+      "errorInitialCharge": "Starting Recruitment Stack must be between 0 and 199.",
       "errorGuaranteed": "The number of guaranteed results exceeds the total recruitments.",
       "errorDuplicateFirst": "A student can only be recorded once as a first acquisition.",
       "errorPickupNotInBanner": "Pickup can only be a student featured in this recruitment.",
       "errorGoalNotInBanner": "Goal students can only be students featured in this recruitment.",
       "errorPickupMustBeGoal": "A student obtained as a pickup must be included as a goal student.",
-      "errorNoPointExchange": "Recruitment point exchange cannot be recorded under the Call Charge system.",
+      "errorNoPointExchange": "Recruitment point exchange cannot be recorded under the Recruitment Stack system.",
       "errorNoPity": "Half-pity/pity cannot be recorded under the legacy Recruitment Points system."
     }
   }

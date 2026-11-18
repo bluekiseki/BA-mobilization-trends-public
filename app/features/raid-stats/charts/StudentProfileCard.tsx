@@ -1,3 +1,5 @@
+import { CombatTypeIcon } from '~/components/common/CombatTypeIcon';
+import { summonsOf, useSummonCatalog } from '~/features/students/data/useSummons';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -15,20 +17,19 @@ import { TerrainIconGameStyle, type Terrain } from '../../../components/raid/ter
 import { formatSkillBuffDesc } from '../../../components/student/SkillDisplay';
 import { getPreferenceIcon, type GiftEntry } from '../../../components/student/GiftStudentSheet';
 import { SQUAD_TYPE_COLORS } from '~/utils/gameColors';
+import { SheetIcon, useIconSheet } from '~/components/common/SheetIcon';
 
-interface Props {
-  portraitData: Record<number, string> | null;
-}
-
-export default function StudentProfileCard({ portraitData }: Props) {
+export default function StudentProfileCard() {
   const [studentData, setStudentsData] = useState<Record<string, Student>>({});
   // const { t, i18n } = useTranslation('planner');
-  const { t, i18n } = useTranslation(['planner', 'game', 'stat']);
+  const { t, i18n } = useTranslation(['planner', 'game', 'stat', 'students']);
   const { t: t_club } = useTranslation('club');
   const { t: t_chart } = useTranslation('game');
   const { t: t_g } = useTranslation('game');
+  const buffSheet = useIconSheet('buff');
 
   const locale = i18n.language as Locale;
+  const summonCatalog = useSummonCatalog(locale);
   const lowerFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
   const t_chart_dynamic = t_chart as (key: string) => string;
 
@@ -77,13 +78,12 @@ export default function StudentProfileCard({ portraitData }: Props) {
   }, []);
 
   const student = studentData?.[studentId];
-  const portrait = portraitData?.[studentId];
 
   const eventDataCompat = useMemo(() => (iconInfos ? { icons: iconInfos } : null), [iconInfos]);
 
   const displayedGifts = useMemo(() => {
     if (!eventDataCompat || !student) return [];
-    return getPreferredGiftList(student, eventDataCompat as EventData);
+    return getPreferredGiftList(student, eventDataCompat);
   }, [student, eventDataCompat]);
 
   const giftsByPref = useMemo(() => {
@@ -110,10 +110,11 @@ export default function StudentProfileCard({ portraitData }: Props) {
       const val = data.Parameters?.[paramIndex]?.[level - 1];
       return val !== undefined ? `<strong class="text-blue-600 dark:text-blue-400 font-bold">${val}</strong>` : match;
     });
-    return formatSkillBuffDesc(rawDesc, t);
+    return formatSkillBuffDesc(rawDesc, t, buffSheet);
   };
 
-  const allSkills = [
+  const skillOrder: Record<string, number> = { EX: 0, Normal: 1, 'Normal+': 1, Passive: 2, 'Passive+': 2, Sub: 3 };
+  const allSkillsUnsorted = [
     ...(student.Skills.Ex
       ? student.Skills.Ex.ExtraSkills
         ? [{ ...student.Skills.Ex, type: 'EX' }, ...student.Skills.Ex.ExtraSkills.map((s) => ({ ...s, type: 'EX' }))]
@@ -122,7 +123,19 @@ export default function StudentProfileCard({ portraitData }: Props) {
     showUE && student.Skills.GearPublic ? { ...student.Skills.GearPublic, type: 'Normal+' } : { ...student.Skills.Public, type: 'Normal' },
     showUW && student.Skills.WeaponPassive ? { ...student.Skills.WeaponPassive, type: 'Passive+' } : { ...student.Skills.Passive, type: 'Passive' },
     { ...student.Skills.ExtraPassive, type: 'Sub' },
+    // Summon skills follow the level of the student skill they belong to, so they share its badge and level selector
+    ...summonsOf(student, summonCatalog).flatMap((summon) =>
+      summon.skills.map((skill) => ({
+        ...skill,
+        Icon: '',
+        Effects: [],
+        summonName: summon.Name,
+        type: { Ex: 'EX', Public: 'Normal', Passive: 'Passive', ExtraPassive: 'Sub' }[skill.follows],
+      })),
+    ),
   ];
+  // In game order, with each summon skill right after the student skills it follows (the sort is stable)
+  const allSkills = [...allSkillsUnsorted].sort((a, b) => (skillOrder[a.type] ?? 9) - (skillOrder[b.type] ?? 9));
 
   const hasGear = !!student.Skills.GearPublic;
 
@@ -161,8 +174,14 @@ export default function StudentProfileCard({ portraitData }: Props) {
             }[student.BulletType],
           }}
         >
-          {portrait ? (
-            <img src={`data:image/webp;base64,${portrait}`} className="w-18 h-18 object-cover  border border-neutral-200 dark:border-neutral-700 rounded-full" alt={student.Name} />
+          {studentId ? (
+            <SheetIcon
+              sheet="student"
+              id={studentId}
+              alt={student.Name}
+              className="w-18 h-18 border border-neutral-200 dark:border-neutral-700 rounded-full"
+              fallback={<div className="w-18 h-18 bg-neutral-200 animate-pulse border border-neutral-200 dark:border-neutral-700" />}
+            />
           ) : (
             <div className="w-18 h-18 bg-neutral-200 animate-pulse border border-neutral-200 dark:border-neutral-700" />
           )}
@@ -198,8 +217,8 @@ export default function StudentProfileCard({ portraitData }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-y-2 mt-3 w-full">
             {/* Attack/Defense types */}
             <div className="flex gap-1">
-              <Badge label="ATK" value={type_translation[student.BulletType][getLocaleShortName(locale)]} color={typeColors.Bullet[student.BulletType]} />
-              <Badge label="DEF" value={type_translation[student.ArmorType][getLocaleShortName(locale)]} color={typeColors.Armor[student.ArmorType]} />
+              <Badge kind="attack" label="ATK" value={type_translation[student.BulletType][getLocaleShortName(locale)]} color={typeColors.Bullet[student.BulletType]} />
+              <Badge kind="defense" label="DEF" value={type_translation[student.ArmorType][getLocaleShortName(locale)]} color={typeColors.Armor[student.ArmorType]} />
             </div>
 
             {/* Unit Type / Tactical Role */}
@@ -255,17 +274,7 @@ export default function StudentProfileCard({ portraitData }: Props) {
                       <td className="py-2 align-middle">
                         <div className="flex flex-wrap gap-1">
                           {gifts.map((gift) => (
-                            <ItemIcon
-                              key={gift.id}
-                              type="Item"
-                              itemId={gift.id}
-                              amount={0}
-                              size={10}
-                              eventData={eventDataCompat as EventData}
-                              iconData={iconData}
-                              allStudents={studentData}
-                              studentPortraits={portraitData ?? undefined}
-                            />
+                            <ItemIcon key={gift.id} type="Item" itemId={gift.id} amount={0} size={10} eventData={eventDataCompat as EventData} iconData={iconData} allStudents={studentData} />
                           ))}
                         </div>
                       </td>
@@ -321,7 +330,12 @@ export default function StudentProfileCard({ portraitData }: Props) {
                     <span className={`shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm ${SKILL_BADGE[skill.type] ?? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500'}`}>
                       {skill.type.includes('+') ? t(getSkillTypeKey(skill.type)) + '+' : t(getSkillTypeKey(skill.type))}
                     </span>
-                    <span className="text-sm font-bold text-neutral-700 dark:text-neutral-200 truncate leading-tight">{skill.Name}</span>
+                    <span
+                      className="text-sm font-bold text-neutral-700 dark:text-neutral-200 truncate leading-tight"
+                      title={'summonName' in skill ? `${t('students:summon')} · ${skill.summonName} · ${skill.Name}` : skill.Name}
+                    >
+                      {'summonName' in skill ? `${t('students:summon')} · ${skill.summonName} · ${skill.Name}` : skill.Name}
+                    </span>
                   </div>
                   <select
                     value={skill.type === 'EX' ? exLevel : normalLevel}
@@ -490,10 +504,12 @@ export default function StudentProfileCard({ portraitData }: Props) {
 
 // --- Sub-components ---
 
-function Badge({ label, value, color }: { label: string; value: string; color: string }) {
+function Badge({ kind, label, value, color }: { kind: 'attack' | 'defense'; label: string; value: string; color: string }) {
   return (
     <div className="flex border border-neutral-100 dark:border-neutral-700 rounded">
-      <span className="bg-neutral-100 dark:bg-neutral-700 px-1.5 py-1 text-xs font-bold text-neutral-500 border-r border-white dark:border-neutral-800 leading-none flex items-center">{label}</span>
+      <span className="bg-neutral-100 dark:bg-neutral-700 px-1.5 py-1 text-neutral-700 dark:text-neutral-200 border-r border-white dark:border-neutral-800 leading-none flex items-center">
+        <CombatTypeIcon kind={kind} title={label} className="h-3.5 w-3.5" />
+      </span>
       <span className="px-2 py-1 text-xs font-bold text-white leading-none flex items-center" style={{ backgroundColor: color }}>
         {value}
       </span>

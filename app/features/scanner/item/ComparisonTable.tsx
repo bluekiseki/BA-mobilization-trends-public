@@ -66,7 +66,7 @@ export function ComparisonTable({ rows, finalOverrides, onEditFinal }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-200 dark:border-neutral-700 text-xs text-neutral-500">
-                <th className="px-2 py-1 text-left sm:px-3">{t('tableItem')}</th>
+                <th className="px-2 py-1 text-left sm:px-3">{t_ui('item')}</th>
                 <th className="px-1 py-1 text-center w-5 sm:px-2"></th>
                 <th className="px-2 py-1 text-right sm:px-3">{t('tableConfidence')}</th>
                 <th className="px-2 py-1 text-right sm:px-3">{t('tableCurrent')}</th>
@@ -99,6 +99,14 @@ export function ComparisonTable({ rows, finalOverrides, onEditFinal }: Props) {
                         onChange={(e) => onEditFinal(key, Math.max(0, parseInt(e.target.value, 10) || 0))}
                         className="w-20 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-1.5 py-0.5 text-right text-neutral-800 dark:text-neutral-200 text-xs focus:border-blue-500 focus:outline-none"
                       />
+                      {row.duplicates && (
+                        <div
+                          className="mt-0.5 text-[10px] leading-tight text-neutral-500 dark:text-neutral-400"
+                          title={row.duplicates.mode === 'sum' ? t('duplicateSumHint', { count: row.duplicates.parts.length }) : t('duplicateMaxHint', { count: row.duplicates.parts.length })}
+                        >
+                          {row.duplicates.mode === 'sum' ? row.duplicates.parts.join('+') : t('duplicateMax', { value: Math.max(...row.duplicates.parts) })}
+                        </div>
+                      )}
                     </td>
                     <td
                       className={[

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ReportEntry } from '../../../../types/raidReport';
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -10,6 +10,12 @@ import { difficultyInfo, getDifficultyFromScoreAndBoss, type DifficultyName } fr
 import { DIFFICULTY_COLORS } from '~/data/raidInfo';
 import { computeDifficultyGroupTicks } from '~/features/raid-stats/dashboard/difficultyHistogramTicks';
 import DifficultyLegend from '../DifficultyLegend';
+import ChartOptions from '../ChartOptions';
+import StackedTick from '../StackedTick';
+import { formatScoreInMillions, useXTickCount, X_AXIS_HEIGHT, xLabelLines } from '../xLabel';
+import type { XLabelKind } from '../xLabel';
+import { plotValues, yAxisConfig } from '../yScale';
+import type { YScale } from '../yScale';
 
 export const ScoreDistributionChart: React.FC<{
   data: ReportEntry[];
@@ -17,6 +23,9 @@ export const ScoreDistributionChart: React.FC<{
   server: GameServer;
 }> = React.memo(({ data, raid, server }) => {
   const { t: t_raidInfo } = useTranslation('raidInfo');
+  const tickCount = useXTickCount();
+  const [yScale, setYScale] = useState<YScale>('linear');
+  const [xLabels, setXLabels] = useState<ReadonlySet<XLabelKind>>(() => new Set<XLabelKind>(['score', 'time']));
 
   const chartData = useMemo(() => {
     if (data.length === 0) return [];
@@ -51,10 +60,10 @@ export const ScoreDistributionChart: React.FC<{
     const pixelsPerBin = typeof window !== 'undefined' && window.innerWidth < 640 ? 3 : 10;
     const totalBinBudget = typeof window !== 'undefined' ? Math.max(20, (window.innerWidth - 50) / pixelsPerBin) : 100;
 
-    const points: { key: string; scoreRange: string; time: string; axisLabel: string; count: number; difficulty: DifficultyName; color: string }[] = [];
+    const points: { key: string; scoreRange: string; time: string; axisScore: string; count: number; difficulty: DifficultyName; color: string }[] = [];
 
-    // Iterate low-to-high difficulty so buckets read left-to-right as ascending score, matching the original chart.
-    for (const { name: difficulty } of [...difficultyInfo].reverse()) {
+    // Iterate high-to-low difficulty so buckets read left-to-right as descending score (rank increases to the right), like the other histograms.
+    for (const { name: difficulty } of difficultyInfo) {
       const scores = byDifficulty.get(difficulty);
       if (!scores || scores.length === 0) continue;
 
@@ -73,19 +82,18 @@ export const ScoreDistributionChart: React.FC<{
         buckets.set(bucketStart, (buckets.get(bucketStart) || 0) + 1);
       });
 
-      const sortedEntries = Array.from(buckets.entries()).sort((a, b) => a[0] - b[0]);
+      const sortedEntries = Array.from(buckets.entries()).sort((a, b) => b[0] - a[0]);
       for (const [score, count] of sortedEntries) {
         // Time is derived from the bucket's exact raw score, not a rounded-for-display one - no
         // reason to feed the tooltip's time calculation a lossy value when the real number is
         // right here. The tooltip shows the bucket's exact range (like the overview histogram's
         // bin tooltip does) instead of a single rounded point.
         const timeTxt = formatTimeToTimestamp(calculateTimeFromScore(score, raid.Boss, server, raid.Id) || 0);
-        const axisScoreTxt = `${(score / 1000000).toFixed(3)}M`;
         points.push({
           key: `${difficulty}|${score}`,
           scoreRange: `${score.toLocaleString()} ~ ${(score + bucketSize).toLocaleString()}`,
           time: timeTxt,
-          axisLabel: `${axisScoreTxt} (${timeTxt})`,
+          axisScore: formatScoreInMillions(score),
           count,
           difficulty,
           color: DIFFICULTY_COLORS[difficulty] || '#8884d8',
@@ -104,17 +112,38 @@ export const ScoreDistributionChart: React.FC<{
       chartData,
       (d) => d.difficulty,
       (d) => d.key,
-      10,
+      tickCount,
     );
-    // Buckets are ordered by ascending score (low difficulty to high); show the legend high-to-low to match the other histograms.
-    return { groupStartNames: result.groupStartNames, dividerLabels: result.dividerNames, tickLabels: result.tickNames, distinctDifficulties: [...result.distinctDifficulties].reverse() };
+    return { groupStartNames: result.groupStartNames, dividerLabels: result.dividerNames, tickLabels: result.tickNames, distinctDifficulties: result.distinctDifficulties };
+  }, [chartData, tickCount]);
+
+  const difficultyCounts = useMemo(() => {
+    const result: Partial<Record<DifficultyName, number>> = {};
+    for (const d of chartData) result[d.difficulty] = (result[d.difficulty] ?? 0) + d.count;
+    return result;
   }, [chartData]);
+
+  const counts = useMemo(() => chartData.map((d) => d.count), [chartData]);
+  const plotData = useMemo(() => {
+    const plots = plotValues(counts, yScale);
+    return chartData.map((d, i) => ({ ...d, plot: plots[i] }));
+  }, [chartData, counts, yScale]);
+  const yAxis = useMemo(() => yAxisConfig(counts, yScale), [counts, yScale]);
+
+  const getTickLines = (value: string): string[] => {
+    const entry = chartData.find((d) => d.key === value);
+    if (!entry) return [value];
+    return xLabelLines(xLabels, entry.axisScore, entry.time, groupStartNames.has(value) ? t_raidInfo(entry.difficulty, entry.difficulty) : undefined);
+  };
 
   return (
     <div className="h-100 space-y-2">
-      <DifficultyLegend difficulties={distinctDifficulties} />
+      <div className="flex items-center justify-between gap-2">
+        <DifficultyLegend difficulties={distinctDifficulties} counts={difficultyCounts} />
+        <ChartOptions yScale={yScale} onYScaleChange={setYScale} xLabels={xLabels} onXLabelsChange={setXLabels} />
+      </div>
       <ResponsiveContainer width="100%" height="90%">
-        <BarChart data={chartData}>
+        <BarChart data={plotData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
           <XAxis
             dataKey="key"
@@ -124,16 +153,10 @@ export const ScoreDistributionChart: React.FC<{
             // and thins further as needed - safer than forcing every candidate to render, which
             // overlaps badly once a difficulty prefix lengthens a label.
             ticks={tickLabels}
-            height={40}
-            tickFormatter={(value: string) => {
-              const entry = chartData.find((d) => d.key === value);
-              if (!entry) return value;
-              if (!groupStartNames.has(value)) return entry.axisLabel;
-              return `${t_raidInfo(entry.difficulty, entry.difficulty)} ${entry.axisLabel}`;
-            }}
-            style={{ fontSize: '11px' }}
+            height={X_AXIS_HEIGHT}
+            tick={(props) => <StackedTick {...props} getLines={getTickLines} />}
           />
-          <YAxis stroke="#94a3b8" />
+          <YAxis stroke="#94a3b8" allowDecimals={false} domain={yAxis.domain} ticks={yAxis.ticks} tickFormatter={yAxis.tickFormatter} />
           {/* <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155' }} /> */}
           <Tooltip
             // @ts-expect-error - Recharts type system doesn't match our custom content signature
@@ -142,7 +165,7 @@ export const ScoreDistributionChart: React.FC<{
               payload,
             }: {
               active?: boolean;
-              payload?: Array<{ fill?: string; name?: string; value?: number; payload?: { scoreRange?: string; time?: string; difficulty?: DifficultyName; color?: string } }>;
+              payload?: Array<{ fill?: string; name?: string; value?: number; payload?: { count?: number; scoreRange?: string; time?: string; difficulty?: DifficultyName; color?: string } }>;
             }) => {
               if (active && payload && payload.length) {
                 const item = payload[0];
@@ -151,7 +174,7 @@ export const ScoreDistributionChart: React.FC<{
                 const difficulty = item?.payload?.difficulty;
                 const color = item?.payload?.color ?? item?.fill ?? '#000';
                 const name = item?.name ?? '';
-                const value = item?.value ?? 0;
+                const value = item?.payload?.count ?? 0;
                 return (
                   <div className="rounded border bg-white p-3 text-sm dark:border-neutral-700 dark:bg-neutral-800">
                     <p className="font-semibold text-neutral-700 dark:text-neutral-200">{scoreRange}</p>
@@ -170,7 +193,7 @@ export const ScoreDistributionChart: React.FC<{
             }}
           />
           <Bar
-            dataKey="count"
+            dataKey="plot"
             name="count"
             shape={(props: BarShapeProps) => {
               const entry = props.payload as { color?: string };

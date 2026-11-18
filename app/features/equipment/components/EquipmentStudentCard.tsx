@@ -1,16 +1,17 @@
 import React from 'react';
 import { MdArrowForward } from 'react-icons/md';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 
 interface EquipmentStudentCardProps {
   plan: GrowthPlan;
   studentName: string;
-  portraitSrc: string | null;
+  studentId: number | null;
   isSelected: boolean;
   onClick: () => void;
 }
 
-export const EquipmentStudentCard = React.memo(({ plan, studentName, portraitSrc, isSelected, onClick }: EquipmentStudentCardProps) => {
+export const EquipmentStudentCard = React.memo(({ plan, studentName, studentId, isSelected, onClick }: EquipmentStudentCardProps) => {
   const hasChanges = plan.current.equipment.some((cur, i) => cur !== plan.target.equipment[i]);
   const currentSlots = plan.current.equipment.join('/');
   const targetSlots = plan.target.equipment.join('/');
@@ -26,13 +27,9 @@ export const EquipmentStudentCard = React.memo(({ plan, studentName, portraitSrc
     >
       {/* Portrait */}
       <div className="relative">
-        {portraitSrc ? (
-          <img src={portraitSrc} alt={studentName} className="w-8 h-8 rounded-full object-cover" loading="lazy" />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
-            <span className="text-[10px] text-neutral-400">?</span>
-          </div>
-        )}
+        <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex items-center justify-center">
+          {studentId ? <SheetIcon sheet="student" id={studentId} alt={studentName} /> : <span className="text-[10px] text-neutral-400">?</span>}
+        </div>
         {isSelected && (
           <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center">
             <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">

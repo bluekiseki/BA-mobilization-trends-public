@@ -69,6 +69,247 @@ afterEach(() => {
 });
 
 describe('syncStore revision sync', () => {
+  it('seeds the edit clock from shared storage before the first edit after initialization resets it', async () => {
+    const { useSyncStore, useGlobalStore } = await loadSyncModules();
+    const { clearEditOrder, currentEditIds } = await import('./crossTabEditOrder');
+    const key = useGlobalStore.persist.getOptions().name;
+    if (!key) throw new Error('Missing storage key');
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        state: {},
+        version: 0,
+        syncContext: {
+          userId: 'user-1',
+          profileId: 'profile-1',
+          external: true,
+          edits: { growthPlans: '99:other-tab' },
+        },
+      }),
+    );
+    clearEditOrder();
+    useSyncStore.setState({ currentUserId: 'user-1', currentProfileId: 'profile-1', isPulling: true });
+    useSyncStore.getState().push('growthPlans', { growthPlans: [], ownedGifts: { gift: 1 }, materialInventory: {} });
+    expect(Number(currentEditIds().growthPlans.split(':')[0])).toBeGreaterThan(99);
+    useSyncStore.getState().clearAccountData();
+  });
+
+  it.each([1, 2])('reconciles an unacknowledged mirrored edit on pull (server revision %s)', async (serverRevision) => {
+    vi.useFakeTimers();
+    const { useSyncStore } = await loadSyncModules();
+    const { adoptCrossTabChanges } = await import('./syncStore');
+    const value = { growthPlans: [], ownedGifts: { gift: 20 }, materialInventory: {} };
+    useSyncStore.setState({ currentUserId: 'user-1', currentProfileId: 'profile-1', isInitialized: true, status: 'synced', revisions: { growthPlans: 1 } });
+    adoptCrossTabChanges(new Map([['growthPlans', null]]), new Map([['growthPlans', value]]), { growthPlans: '1:closed-tab' });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          graphqlResponse({ profileAllData: [{ key: 'growthPlans', value: { ...value, ownedGifts: { gift: 5 } }, revision: serverRevision, schemaVersion: 1, updatedAt: 1_700_000_000 }] }),
+        ),
+      ),
+    );
+    await useSyncStore.getState().pullAll();
+    expect(useSyncStore.getState().pendingKeys.has('growthPlans')).toBe(true);
+    if (serverRevision === 2) {
+      expect(useSyncStore.getState().status).toBe('conflict');
+      expect(useSyncStore.getState().conflicts.growthPlans.localValue).toEqual(value);
+    } else {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => Promise.resolve(syncAppliedResponse('growthPlans', 2))),
+      );
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(useSyncStore.getState().pendingKeys.size).toBe(0);
+      expect(useSyncStore.getState().status).toBe('synced');
+    }
+    useSyncStore.getState().clearAccountData();
+  });
+
+  it('does not report a conflict when another tab acknowledges the in-flight edit first', async () => {
+    vi.useFakeTimers();
+    const { useSyncStore } = await loadSyncModules();
+    const { receiveSyncRevisions } = await import('./syncStore');
+    const { currentEditIds } = await import('./crossTabEditOrder');
+    const value = { growthPlans: [], ownedGifts: { gift: 1 }, materialInventory: {} };
+    let resolveWrite: ((response: Response) => void) | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        if (parseGraphqlRequest(init).query.includes('profileAllData')) {
+          return Promise.resolve(
+            graphqlResponse({ profileAllData: [{ key: 'growthPlans', value: { growthPlans: [], ownedGifts: {}, materialInventory: {} }, schemaVersion: 1, revision: 1, updatedAt: 1_700_000_000 }] }),
+          );
+        }
+        return new Promise((resolve) => {
+          resolveWrite = resolve;
+        });
+      }),
+    );
+    useSyncStore.setState({ currentUserId: 'user-1', currentProfileId: 'prof_1' });
+    await useSyncStore.getState().pullAll();
+    useSyncStore.getState().push('growthPlans', value);
+    await vi.advanceTimersByTimeAsync(10_000);
+    receiveSyncRevisions(JSON.stringify({ userId: 'user-1', profileId: 'prof_1', revisions: { growthPlans: 2 }, edits: { growthPlans: currentEditIds().growthPlans }, lastModifiedAt: null }));
+    resolveWrite?.(graphqlResponse({ syncProfileData: [{ key: 'growthPlans', status: 'CONFLICT', revision: 2, serverValue: value, schemaVersion: 1, updatedAt: 1_700_000_000 }] }));
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(useSyncStore.getState().conflicts).toEqual({});
+    expect(useSyncStore.getState().status).toBe('synced');
+    useSyncStore.getState().clearAccountData();
+  });
+
+  it('updates the saved time only when another tab acknowledges the mirrored edit', async () => {
+    const { useSyncStore } = await loadSyncModules();
+    const { adoptCrossTabChanges, receiveSyncRevisions } = await import('./syncStore');
+    const oldTime = Date.now() - 180_000;
+    const savedTime = Date.now();
+    useSyncStore.setState({ currentUserId: 'user-1', currentProfileId: 'profile-1', isInitialized: true, status: 'synced', lastModifiedAt: oldTime });
+    adoptCrossTabChanges(new Map([['growthPlans', null]]), new Map([['growthPlans', { growthPlans: [], ownedGifts: { gift: 20 }, materialInventory: {} }]]), { growthPlans: '1:remote' });
+    expect(useSyncStore.getState().status).toBe('syncing');
+    const acknowledge = (editId: string) =>
+      receiveSyncRevisions(JSON.stringify({ userId: 'user-1', profileId: 'profile-1', revisions: { growthPlans: 2 }, edits: { growthPlans: editId }, lastModifiedAt: savedTime }));
+    acknowledge('unrelated');
+    expect(useSyncStore.getState().lastModifiedAt).toBe(oldTime);
+    acknowledge('1:remote');
+    expect(useSyncStore.getState().lastModifiedAt).toBe(savedTime);
+    expect(useSyncStore.getState().status).toBe('synced');
+    useSyncStore.getState().clearAccountData();
+  });
+
+  it('does not publish empty planner data to other tabs while initialization awaits the server', async () => {
+    const { useSyncStore, useGlobalStore } = await loadSyncModules();
+    const value = { growthPlans: [], ownedGifts: { gift: 5 }, materialInventory: {} };
+    useGlobalStore.setState(value);
+    const storageKey = useGlobalStore.persist.getOptions().name;
+    if (!storageKey) throw new Error('Missing planner storage key');
+    const before = localStorage.getItem(storageKey);
+    let finishPull: ((response: Response) => void) | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            finishPull = resolve;
+          }),
+      ),
+    );
+    const initialization = useSyncStore.getState().initializeProfile('user-1', 'profile-1');
+    expect(useGlobalStore.getState().ownedGifts).toEqual({});
+    expect(localStorage.getItem(storageKey)).toBe(before);
+    await vi.waitFor(() => {
+      expect(finishPull).toBeDefined();
+    });
+    expect(localStorage.getItem(storageKey)).toBe(before);
+    finishPull?.(graphqlResponse({ profileAllData: [{ key: 'growthPlans', value, schemaVersion: 1, revision: 1 }] }));
+    await initialization;
+    expect(useGlobalStore.getState().ownedGifts).toEqual({ gift: 5 });
+  });
+
+  it('discards legacy cache-only pending data on reload and preserves the server plan', async () => {
+    const { useSyncStore } = await loadSyncModules();
+    const outbox = await import('./syncOutbox.client');
+    const { useEventPlanStore } = await import('./planner/useEventPlanStore');
+    await outbox.putSyncOutboxEntry({
+      userId: 'user-1',
+      profileId: 'profile-1',
+      key: 'eventPlans:1',
+      baseRevision: 0,
+      desiredValue: { cachedTotalItems: { savedAt: 10, gained: {}, spent: {}, availableAp: 100 } },
+      schemaVersion: 1,
+      generation: 1,
+      updatedAt: 10,
+    });
+    const value = { selectedStudents: ['10'], ownedCurrency: { 100: 42 } };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(graphqlResponse({ profileAllData: [{ key: 'eventPlans:1', value, schemaVersion: 1, revision: 3, updatedAt: 20 }] }))),
+    );
+    await useSyncStore.getState().initializeProfile('user-1', 'profile-1');
+    expect(useSyncStore.getState().conflicts).toEqual({});
+    expect(useSyncStore.getState().pendingKeys.size).toBe(0);
+    expect(useEventPlanStore.getState().plans['1']).toEqual(value);
+    await vi.waitFor(async () => {
+      expect(await outbox.getSyncOutboxEntries('user-1', 'profile-1')).toEqual([]);
+    });
+  });
+
+  it('does not report a conflict for matching event edits with different caches or property order', async () => {
+    const { useSyncStore } = await loadSyncModules();
+    const outbox = await import('./syncOutbox.client');
+    await outbox.putSyncOutboxEntry({
+      userId: 'user-1',
+      profileId: 'profile-1',
+      key: 'eventPlans:1',
+      baseRevision: 1,
+      desiredValue: { selectedStudents: ['10'], ownedCurrency: { 100: 42 } },
+      schemaVersion: 1,
+      generation: 1,
+      updatedAt: 10,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          graphqlResponse({
+            profileAllData: [{ key: 'eventPlans:1', value: { ownedCurrency: { 100: 42 }, selectedStudents: ['10'], cachedTotalItems: { savedAt: 20 } }, schemaVersion: 1, revision: 2, updatedAt: 20 }],
+          }),
+        ),
+      ),
+    );
+    await useSyncStore.getState().initializeProfile('user-1', 'profile-1');
+    expect(useSyncStore.getState().conflicts).toEqual({});
+    expect(useSyncStore.getState().pendingKeys.size).toBe(0);
+    expect(useSyncStore.getState().revisions['eventPlans:1']).toBe(2);
+  });
+
+  it('keeps genuine event edits pending when they differ from the server after reload', async () => {
+    const { useSyncStore } = await loadSyncModules();
+    const outbox = await import('./syncOutbox.client');
+    await outbox.putSyncOutboxEntry({
+      userId: 'user-1',
+      profileId: 'profile-1',
+      key: 'eventPlans:1',
+      baseRevision: 1,
+      desiredValue: { selectedStudents: ['20'] },
+      schemaVersion: 1,
+      generation: 1,
+      updatedAt: 10,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(graphqlResponse({ profileAllData: [{ key: 'eventPlans:1', value: { selectedStudents: ['10'] }, schemaVersion: 1, revision: 2, updatedAt: 20 }] }))),
+    );
+    await useSyncStore.getState().initializeProfile('user-1', 'profile-1');
+    expect(useSyncStore.getState().conflicts['eventPlans:1'].localValue).toEqual({ selectedStudents: ['20'] });
+    useSyncStore.getState().clearAccountData();
+  });
+
+  it('does not delete a newer outbox edit while cleaning an old cache-only entry', async () => {
+    await loadSyncModules();
+    const outbox = await import('./syncOutbox.client');
+    const old = { userId: 'user-1', profileId: 'profile-1', key: 'eventPlans:1', baseRevision: 1, desiredValue: { cachedTotalItems: {} }, schemaVersion: 1, generation: 1, updatedAt: 10 };
+    const newer = { ...old, desiredValue: { selectedStudents: ['20'] }, generation: 2, updatedAt: 20 };
+    await outbox.putSyncOutboxEntry(newer);
+    await outbox.deleteSyncOutboxEntry('user-1', 'profile-1', 'eventPlans:1', old);
+    expect(await outbox.getSyncOutboxEntries('user-1', 'profile-1')).toEqual([newer]);
+  });
+
+  it('clears history immediately on profile initialization even when planner values do not change', async () => {
+    const { useSyncStore } = await loadSyncModules();
+    const { editHistory, snapshot } = await import('./history/history');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(graphqlResponse({ profileAllData: [] }))),
+    );
+    editHistory.seed('plan', snapshot(1));
+    editHistory.observe('plan', snapshot(null));
+    editHistory.commit();
+    const initialization = useSyncStore.getState().initializeProfile('user-1', 'profile-2');
+    expect(editHistory.entries).toHaveLength(0);
+    expect(editHistory.cursor).toBe(0);
+    await initialization;
+  });
+
   it('stores server revisions from pullAll and sends baseRevision on push', async () => {
     vi.useFakeTimers();
     const { useSyncStore } = await loadSyncModules();
@@ -339,6 +580,7 @@ describe('syncStore revision sync', () => {
 
   it('does not drop an edit made while a stale-refresh pull is in flight', async () => {
     const { useSyncStore, useGlobalStore } = await loadSyncModules();
+    const { editHistory, snapshot } = await import('./history/history');
     let resolveSecondPull: ((response: Response) => void) | undefined;
     let pullCount = 0;
     const fetchMock = vi.fn((_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -358,15 +600,143 @@ describe('syncStore revision sync', () => {
     expect(useSyncStore.getState().isInitialized).toBe(true);
 
     const secondPull = useSyncStore.getState().pullAll();
-    // Simulates a user edit landing while useSyncWatcher's stale-tab refresh pull is still in flight.
+    editHistory.clear();
+    editHistory.seed('growthPlans', snapshot(useGlobalStore.getState().ownedGifts));
+    const stop = useGlobalStore.subscribe((state) => editHistory.observe('growthPlans', snapshot(state.ownedGifts)));
+    try {
+      // Simulates a user edit landing while useSyncWatcher's stale-tab refresh pull is still in flight.
+      useGlobalStore.setState({ ownedGifts: { local: 1 } });
+      useSyncStore.getState().push('growthPlans', { growthPlans: [], ownedGifts: { local: 1 }, materialInventory: {} });
+      editHistory.commit();
+      expect(editHistory.entries).toHaveLength(1);
+      expect(useSyncStore.getState().pendingKeys.has('growthPlans')).toBe(true);
+
+      resolveSecondPull?.(graphqlResponse({ profileAllData: [] }));
+      await secondPull;
+
+      expect(useGlobalStore.getState().ownedGifts).toEqual({ local: 1 });
+      expect(useSyncStore.getState().pendingKeys.has('growthPlans')).toBe(true);
+      expect(editHistory.entries).toHaveLength(1);
+      expect(editHistory.entries[0].changes[0]).toMatchObject({ before: snapshot({}), after: snapshot({ local: 1 }) });
+    } finally {
+      stop();
+    }
+  });
+
+  it('preserves a resolved value while applying unrelated rows without another request', async () => {
+    const { useSyncStore, useGlobalStore } = await loadSyncModules();
+    let resolveSecondPull: ((response: Response) => void) | undefined;
+    let pullCount = 0;
+    const fetchMock = vi.fn((): Promise<Response> => {
+      pullCount += 1;
+      if (pullCount === 1) return Promise.resolve(graphqlResponse({ profileAllData: [] }));
+      if (pullCount === 2) {
+        return new Promise((resolve) => {
+          resolveSecondPull = resolve;
+        });
+      }
+      // A later normal pull can still apply a newer server version.
+      return Promise.resolve(
+        graphqlResponse({
+          profileAllData: [{ key: 'growthPlans', value: { growthPlans: [], ownedGifts: { later: 1 }, materialInventory: {} }, schemaVersion: 1, revision: 6 }],
+        }),
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await useSyncStore.getState().initializeProfile('user_1', 'prof_1');
+
+    const secondPull = useSyncStore.getState().pullAll();
+
+    // An edit lands mid-pull and is then resolved in favor of the server (e.g. the user clicks "keep
+    // server" on a conflict) before the pull's own response — which still carries the pre-resolution
+    // value — comes back.
     useSyncStore.getState().push('growthPlans', { growthPlans: [], ownedGifts: { local: 1 }, materialInventory: {} });
-    expect(useSyncStore.getState().pendingKeys.has('growthPlans')).toBe(true);
+    useSyncStore.setState({
+      conflicts: {
+        growthPlans: {
+          key: 'growthPlans',
+          localValue: { growthPlans: [], ownedGifts: { local: 1 }, materialInventory: {} },
+          serverValue: { growthPlans: [], ownedGifts: { serverWins: 1 }, materialInventory: {} },
+          serverRevision: 5,
+          schemaVersion: 1,
+          localUpdatedAt: Date.now(),
+          serverUpdatedAt: null,
+        },
+      },
+    });
+    useSyncStore.getState().resolveConflict('growthPlans', 'server');
+
+    resolveSecondPull?.(
+      graphqlResponse({
+        profileAllData: [
+          { key: 'growthPlans', value: { growthPlans: [], ownedGifts: { local: 1 }, materialInventory: {} }, schemaVersion: 1, revision: 1 },
+          { key: 'equipmentPlan', value: { farmingDays: 7 }, schemaVersion: 1, revision: 2 },
+        ],
+      }),
+    );
+    await secondPull;
+
+    expect(pullCount).toBe(2);
+    expect(useSyncStore.getState().isPulling).toBe(false);
+    expect(useGlobalStore.getState().ownedGifts).toEqual({ serverWins: 1 });
+    expect(useSyncStore.getState().revisions.growthPlans).toBe(5);
+    const { useEquipmentPlanStore } = await import('./planner/useEquipmentPlanStore');
+    expect(useEquipmentPlanStore.getState().farmingDays).toBe(7);
+
+    await useSyncStore.getState().pullAll();
+    expect(pullCount).toBe(3);
+    expect(useGlobalStore.getState().ownedGifts).toEqual({ later: 1 });
+    expect(useSyncStore.getState().revisions.growthPlans).toBe(6);
+  });
+
+  it("discards a superseded pull response instead of evaluating it against a newer pull's stale-check bookkeeping", async () => {
+    const { useSyncStore, useGlobalStore } = await loadSyncModules();
+    let resolveFirstPull: ((response: Response) => void) | undefined;
+    let resolveSecondPull: ((response: Response) => void) | undefined;
+    let pullCount = 0;
+    const fetchMock = vi.fn((_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const request = parseGraphqlRequest(init);
+      if (request.query.includes('profileAllData')) {
+        pullCount += 1;
+        if (pullCount === 1)
+          return new Promise((resolve) => {
+            resolveFirstPull = resolve;
+          });
+        return new Promise((resolve) => {
+          resolveSecondPull = resolve;
+        });
+      }
+      return Promise.resolve(syncAppliedResponse('growthPlans', 1));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    useSyncStore.setState({ currentProfileId: 'prof_1' });
+
+    const firstPull = useSyncStore.getState().pullAll();
+    await vi.waitFor(() => {
+      expect(resolveFirstPull).toBeDefined();
+    });
+    // A second pull starts (e.g. a stale-tab refresh) while the first is still in flight, clearing
+    // and reusing the module-level keysWrittenSincePullStart bookkeeping for itself.
+    const secondPull = useSyncStore.getState().pullAll();
+    await vi.waitFor(() => {
+      expect(resolveSecondPull).toBeDefined();
+    });
+
+    // An edit lands while both are in flight — tracked only under the second pull's bookkeeping.
+    useGlobalStore.setState({ ownedGifts: { local: 1 } });
+    useSyncStore.getState().push('growthPlans', { growthPlans: [], ownedGifts: { local: 1 }, materialInventory: {} });
+
+    // The first pull's response (reflecting server state from before the edit) lands first. It must
+    // be dropped outright by the pullSequence guard — never reaching the keysWrittenSincePullStart
+    // check at all, so it can't be misjudged against the second pull's bookkeeping.
+    resolveFirstPull?.(graphqlResponse({ profileAllData: [{ key: 'growthPlans', value: { growthPlans: [], ownedGifts: { stale: 1 }, materialInventory: {} }, schemaVersion: 1, revision: 1 }] }));
+    expect(await firstPull).toBe(false);
+    expect(useGlobalStore.getState().ownedGifts).toEqual({ local: 1 });
 
     resolveSecondPull?.(graphqlResponse({ profileAllData: [] }));
     await secondPull;
-
     expect(useGlobalStore.getState().ownedGifts).toEqual({ local: 1 });
-    expect(useSyncStore.getState().pendingKeys.has('growthPlans')).toBe(true);
   });
 
   it("attributes an edit made while initializeProfile's outbox read is pending to the new profile", async () => {

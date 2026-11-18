@@ -29,6 +29,7 @@ interface Props {
 export default function PlannerGuide({ collapsed, onToggle, gachaTestPath, oldVersionPath }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.intro' });
   const { t: tGacha } = useTranslation('planner', { keyPrefix: 'gacha' });
+  const { t: t_planner } = useTranslation('planner');
 
   const steps = [
     { title: t('feat1_title'), desc: t('feat1_desc') },
@@ -60,7 +61,7 @@ export default function PlannerGuide({ collapsed, onToggle, gachaTestPath, oldVe
           </span>
           <button type="button" onClick={onToggle} className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
             <FaChevronUp size={9} />
-            {t('hideGuide')}
+            {t_planner('ui.hidePast')}
           </button>
         </div>
 

@@ -7,7 +7,7 @@ import eventList from '~/data/jp/eventList.json';
 import type { EventListData } from '~/types/eventList';
 import { useDataCache } from '~/hooks/cache';
 import type { Student } from '~/types/data';
-import { eventConvertor, FilterIcon, GENERAL_CATEGORIES, mainStoryChapters, otherStoryTitles, XREF_PREFIXES, type OtherStoryData } from '~/features/jukebox/jukeboxMetadata';
+import { eventListId, eventSortKey, FilterIcon, GENERAL_CATEGORIES, mainStoryChapters, namedEventKeys, otherStoryTitles, XREF_PREFIXES, type OtherStoryData } from '~/features/jukebox/jukeboxMetadata';
 import { data } from 'react-router';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 import { FaSortAmountUp, FaSortAmountDown } from 'react-icons/fa';
@@ -15,12 +15,10 @@ import type { Route } from './+types/jukebox';
 import { getInstance } from '~/middleware/i18next';
 import type { AppHandle } from '~/types/link';
 import { cdn } from '~/utils/cdn';
-import { useHelpKey } from '~/hooks/usePageHelp';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
 import Player from '~/features/jukebox/Player';
 import StoryFilters from '~/features/jukebox/StoryFilters';
-import type { StudentPortraitData } from '~/types/plannerData';
-import { filterBgm, getActiveFilters, type SpoilerFilters } from '~/features/jukebox/jukeboxFilters';
+import { compareBgmId, filterBgm, getActiveFilters, parseIdBound, xrefMatchesFilters, type SpoilerFilters } from '~/features/jukebox/jukeboxFilters';
 import { PageHeader } from '~/components/common/PageHeader';
 import { type YTPlayer, type BgmEntry, type XrefEntry, type Language, getLocalizedTextArr, getLocalizedText, BgmItem } from '~/features/jukebox/BgmItem';
 
@@ -43,11 +41,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export const handle: AppHandle = {
   preload: (rawData) => {
     const loaderData = rawData as { locale: Locale };
-    return [
-      { rel: 'preload', href: cdn(`/w/${getLocaleShortName(loaderData.locale)}.students.bin`), as: 'fetch', crossOrigin: 'anonymous' },
-      { rel: 'preload', href: cdn(`/w/students_portrait.json`), as: 'fetch', crossOrigin: 'anonymous' },
-      ...createLinkHreflang(`/utils/jukebox`),
-    ];
+    return [{ rel: 'preload', href: cdn(`/w/v2/${getLocaleShortName(loaderData.locale)}.students.bin`), as: 'fetch', crossOrigin: 'anonymous' }, ...createLinkHreflang(`/utils/jukebox`)];
   },
 };
 
@@ -83,6 +77,8 @@ export default function JukeboxPage() {
   const [playbackMode, setPlaybackMode] = useState<'autoplay' | 'repeat' | 'off'>('autoplay');
   const [showStoryNames, setShowStoryNames] = useState(false);
   const [sortOrder, setSortOrder] = useState<'ascending' | 'descending'>('ascending');
+  const [idRangeInput, setIdRangeInput] = useState({ min: '', max: '' });
+  const [playOrder, setPlayOrder] = useState<'random' | 'sequential'>('random');
   const [isAutoScrollEnabled, setAutoScrollEnabled] = useState(true);
   const [isFilterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [sectionSearch, setSectionSearch] = useState({
@@ -93,7 +89,6 @@ export default function JukeboxPage() {
   });
 
   const fetchStudents = useDataCache<Record<string, Student>>();
-  useHelpKey('jukebox');
   const matcher = useSearchMatcher(locale);
 
   // --- Data Fetch ---
@@ -102,7 +97,7 @@ export default function JukeboxPage() {
       const response = await fetch(cdn('/w/bgm_database_combined.json'));
       const raw: unknown = await response.json();
       const d = raw as BgmEntry[];
-      setAllBgm(d.sort((a, b) => Number(a.id) - Number(b.id)));
+      setAllBgm(d.sort((a, b) => compareBgmId(a.id, b.id)));
     };
     void loadBgm();
   }, []);
@@ -110,13 +105,7 @@ export default function JukeboxPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const studentsRes = await fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`), (r) => r.json());
-
-        const setStudentPortraits: StudentPortraitData = await (await fetch(cdn(`/w/students_portrait.json`))).json();
-        if (studentsRes)
-          for (const i in setStudentPortraits) {
-            if (studentsRes[i]) studentsRes[i].Portrait = setStudentPortraits[i];
-          }
+        const studentsRes = await fetchStudents(cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`), (r) => r.json());
 
         const studentJson = studentsRes || {};
         const eventJson = eventList as unknown as EventListData;
@@ -137,9 +126,9 @@ export default function JukeboxPage() {
               const localeMap: Record<string, 'En' | 'Jp' | 'Kr' | 'Tw'> = { en: 'En', ko: 'Kr', ja: 'Jp', 'zh-Hant': 'Tw' };
               eventStories.set(
                 String(xref.title),
-                (!Number.isNaN(Number(xref.title)) ? eventJson[eventConvertor[Number(xref.title) as keyof typeof eventConvertor]]?.[localeMap[locale]] : '') ||
-                  (Number(xref.title) ? eventJson[eventConvertor[Number(xref.title) as keyof typeof eventConvertor]]?.Jp : '') ||
-                  xref.title.toString(),
+                eventJson[eventListId(xref.title) ?? '']?.[localeMap[locale]] ||
+                  eventJson[eventListId(xref.title) ?? '']?.Jp ||
+                  (namedEventKeys[String(xref.title)] ? t(`named_events.${namedEventKeys[String(xref.title)]}`, String(xref.title)) : xref.title.toString()),
               );
             }
             if ((xref.type === 'Favor_Story' || xref.type === 'Memorial') && xref.title) {
@@ -149,7 +138,7 @@ export default function JukeboxPage() {
           }),
         );
 
-        setEventStoryList(Array.from(eventStories.entries()).sort((a, b) => Number(isNaN(Number(a[0]))) - Number(isNaN(Number(b[0]))) || Number(b[0]) - Number(a[0])));
+        setEventStoryList(Array.from(eventStories.entries()).sort((a, b) => Number(isNaN(Number(a[0]))) - Number(isNaN(Number(b[0]))) || eventSortKey(b[0]) - eventSortKey(a[0])));
         setStudentFilterList(Array.from(students.entries()).sort((a, b) => a[1].Name.localeCompare(b[1].Name)));
         setMainStoryList(Array.from(mainStories.entries()).sort((a, b) => -Number(new Date(mainStoryChapters[a[0]]?.date || 0)) + Number(new Date(mainStoryChapters[b[0]]?.date || 0))));
         setSpoilerFilters((prev) => ({
@@ -172,6 +161,8 @@ export default function JukeboxPage() {
   // --- Active filters (used in filtering effect and render) ---
   const activeFilters = useMemo(() => getActiveFilters(spoilerFilters), [spoilerFilters]);
 
+  const idRange = useMemo(() => ({ min: parseIdBound(idRangeInput.min), max: parseIdBound(idRangeInput.max) }), [idRangeInput]);
+
   const hasAnyActiveFilter = useMemo(() => Object.values(activeFilters).some((arr) => arr.length > 0), [activeFilters]);
 
   // A link from another page (?bgm=<id>) selects that track once the list is loaded.
@@ -180,12 +171,6 @@ export default function JukeboxPage() {
     const entry = allBgm.find((b) => b.id === requestedBgm);
     if (entry) setCurrentSong(entry);
   }, [requestedBgm, allBgm]);
-
-  // --- Filtering Effect ---
-  useEffect(() => {
-    if (isLoading || error) return;
-    setFilteredBgm(filterBgm({ allBgm, activeFilters, searchTerm, sortOrder, matcher }));
-  }, [searchTerm, activeFilters, allBgm, isLoading, error, sortOrder, matcher]);
 
   // --- Scroll ---
   const bgmListContainerRef = useRef<HTMLDivElement>(null);
@@ -214,19 +199,29 @@ export default function JukeboxPage() {
   }, [currentSong, isAutoScrollEnabled, scrollToBgm]);
 
   // --- Playback ---
-  const playNextRandomSong = useCallback(() => {
-    if (filteredBgm.length === 0) return;
-    let idx: number;
-    do {
-      idx = Math.floor(Math.random() * filteredBgm.length);
-    } while (filteredBgm.length > 1 && (filteredBgm[idx].id === currentSong?.id || !filteredBgm[idx].youtube_url));
-    setCurrentSong(filteredBgm[idx]);
-  }, [filteredBgm, currentSong?.id]);
+  // Picks from the filtered list, so the search, story filters and the id range all limit what plays.
+  const playSong = useCallback(
+    (order: 'random' | 'sequential') => {
+      const playable = filteredBgm.filter((bgm) => bgm.youtube_url);
+      if (playable.length === 0) return;
+      if (order === 'sequential') {
+        // Follows the list order and wraps around; starts from the first track if the current one is not in the list.
+        const index = playable.findIndex((bgm) => bgm.id === currentSong?.id);
+        setCurrentSong(playable[(index + 1) % playable.length]);
+        return;
+      }
+      const candidates = playable.length > 1 ? playable.filter((bgm) => bgm.id !== currentSong?.id) : playable;
+      setCurrentSong(candidates[Math.floor(Math.random() * candidates.length)]);
+    },
+    [filteredBgm, currentSong?.id],
+  );
+  const playRandomSong = useCallback(() => playSong('random'), [playSong]);
+  const playNextSong = useCallback(() => playSong(playOrder), [playSong, playOrder]);
 
-  const playNextRef = useRef(playNextRandomSong);
+  const playNextRef = useRef(playNextSong);
   useEffect(() => {
-    playNextRef.current = playNextRandomSong;
-  }, [playNextRandomSong]);
+    playNextRef.current = playNextSong;
+  }, [playNextSong]);
 
   const stableOnSongEnd = useCallback(
     (player: YTPlayer | null) => {
@@ -350,27 +345,13 @@ export default function JukeboxPage() {
   };
 
   // --- xref helpers ---
-  const isXrefMatchingActive = useCallback(
-    (xref: XrefEntry): boolean => {
-      const { general, mainStories, eventStories, favorStudents, memorialStudents } = activeFilters;
-      if (xref.type === 'Favor_Story' && favorStudents.includes(String(xref.title))) return true;
-      if (xref.type === 'Memorial' && memorialStudents.includes(String(xref.title))) return true;
-      if (xref.type === 'UI' && general.includes('Other')) return true;
-      if ((xref.type === 'raid' || xref.type === 'limitraid') && general.includes('Raid')) return true;
-      if ((xref.type === 'main_work' || xref.type === 'event_work') && general.includes('Work')) return true;
-      if (xref.type === 'Main_Story' && mainStories.includes(String(xref.title))) return true;
-      if (xref.type === 'Event_Story' && eventStories.includes(String(xref.title))) return true;
-      if (xref.type === 'Group_Story' && general.includes('GroupStory')) return true;
-      if (xref.type === 'Mini_Story' && general.includes('MiniStory')) return true;
-      if (xref.type === 'Work_Story' && general.includes('WorkStory')) return true;
-      return false;
-    },
-    [activeFilters],
-  );
+  const isXrefMatchingActive = useCallback((xref: XrefEntry): boolean => xrefMatchesFilters(xref, activeFilters), [activeFilters]);
 
   const renderXrefLine = useCallback(
     (xref: XrefEntry, bgm: BgmEntry): string => {
-      const name_title = getLocalizedTextArr(xref.name, locale as Language) || getLocalizedTextArr(xref.name, 'ko') || getLocalizedTextArr(xref.name, 'en');
+      // Names are keyed by ja/en/ko/zh_Hant, while the locale code is zh-Hant for Traditional Chinese
+      const nameKey: Language = locale === 'zh-Hant' ? 'zh_Hant' : (locale as Language);
+      const name_title = getLocalizedTextArr(xref.name, nameKey) || getLocalizedTextArr(xref.name, 'ko') || getLocalizedTextArr(xref.name, 'en');
       let name = Array.isArray(name_title) ? (showStoryNames ? name_title.join(' - ') : name_title[0] || '') : name_title;
 
       const episodeString = xref.episode ? t('meta.episode', { x: xref.episode }) : '';
@@ -390,7 +371,10 @@ export default function JukeboxPage() {
           return `${getPrefix('Main_Story')} ${title} ${name}`;
         }
         case 'Event_Story': {
-          const eventName = (!Number.isNaN(Number(xref.title)) && eventData[eventConvertor[Number(xref.title) as keyof typeof eventConvertor]]?.[localeMap[locale]]) || xref.title?.toString();
+          const event = eventData[eventListId(xref.title) ?? ''];
+          // Events that are not translated yet (e.g. En/Tw missing) fall back to the Japanese name
+          const namedKey = namedEventKeys[String(xref.title)];
+          const eventName = event?.[localeMap[locale]] || event?.Jp || (namedKey ? t(`named_events.${namedKey}`, String(xref.title)) : xref.title?.toString());
           return `${getPrefix('Event_Story')} ${eventName} ${name}`;
         }
         case 'Favor_Story':
@@ -404,9 +388,9 @@ export default function JukeboxPage() {
         case 'UI':
           return `${getPrefix('UI')} ${name}`;
         case 'raid':
-          return `${getPrefix('raid')} ${xref.title}`;
+          return `${getPrefix('raid')} ${name || xref.title}`;
         case 'limitraid':
-          return `${getPrefix('limitraid')} ${xref.title}`;
+          return `${getPrefix('limitraid')} ${name || xref.title}`;
         case 'Group_Story': {
           const gt = xref.title && String(xref.title) in otherStoryData.Group_Story ? t_club(otherStoryData.Group_Story[String(xref.title) as keyof typeof otherStoryData.Group_Story], language) : '';
           return `${getPrefix('Group_Story')} ${gt} - ${name}`;
@@ -423,6 +407,12 @@ export default function JukeboxPage() {
     },
     [locale, language, showStoryNames, t, t_club, eventData, studentData, otherStoryData],
   );
+
+  // --- Filtering Effect (search also covers the xref lines shown for the active filters) ---
+  useEffect(() => {
+    if (isLoading || error) return;
+    setFilteredBgm(filterBgm({ allBgm, activeFilters, searchTerm, idRange, sortOrder, matcher, xrefText: renderXrefLine }));
+  }, [searchTerm, activeFilters, allBgm, isLoading, error, idRange, sortOrder, matcher, renderXrefLine]);
 
   // --- Filter chip label helpers ---
   const chipClass =
@@ -514,7 +504,7 @@ export default function JukeboxPage() {
               </button>
             ))}
             <button
-              onClick={playNextRandomSong}
+              onClick={playRandomSong}
               disabled={filteredBgm.length === 0}
               className="shrink-0 ml-1 text-xs font-semibold px-3 py-1 rounded-full bg-sky-500 hover:bg-sky-600 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
@@ -550,6 +540,10 @@ export default function JukeboxPage() {
                 setAutoScrollEnabled={setAutoScrollEnabled}
                 playbackMode={playbackMode}
                 setPlaybackMode={setPlaybackMode}
+                playOrder={playOrder}
+                setPlayOrder={setPlayOrder}
+                idRangeInput={idRangeInput}
+                setIdRangeInput={setIdRangeInput}
                 t={t}
                 matcher={matcher}
               />
@@ -687,6 +681,10 @@ export default function JukeboxPage() {
                 setAutoScrollEnabled={setAutoScrollEnabled}
                 playbackMode={playbackMode}
                 setPlaybackMode={setPlaybackMode}
+                playOrder={playOrder}
+                setPlayOrder={setPlayOrder}
+                idRangeInput={idRangeInput}
+                setIdRangeInput={setIdRangeInput}
                 t={t}
                 matcher={matcher}
               />
@@ -696,7 +694,7 @@ export default function JukeboxPage() {
       )}
 
       {/* ── Fixed bottom player ── */}
-      <Player song={currentSong} onClose={() => setCurrentSong(null)} onSongEnd={stableOnSongEnd} onTitleClick={scrollToBgm} onNextSong={playNextRandomSong} />
+      <Player song={currentSong} onClose={() => setCurrentSong(null)} onSongEnd={stableOnSongEnd} onTitleClick={scrollToBgm} onNextSong={playNextSong} />
     </div>
   );
 }

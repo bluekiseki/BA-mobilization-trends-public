@@ -122,3 +122,12 @@ export function projectReviewRow(row: StudentReviewRow, plan: Pick<GrowthPlan, '
     ],
   };
 }
+
+// 'new' = no existing plan yet; 'changed' = at least one value differs from the existing plan.
+export type ReviewChangeKind = 'new' | 'changed';
+
+export function reviewRowChangeKind(row: StudentReviewRow, plan: Pick<GrowthPlan, 'current' | 'target'> | null): ReviewChangeKind | null {
+  if (row.studentId === null) return null;
+  if (plan === null) return 'new';
+  return projectReviewRow(row, plan).items.some((item) => item.currentBefore !== item.currentAfter || item.targetBefore !== item.targetAfter) ? 'changed' : null;
+}

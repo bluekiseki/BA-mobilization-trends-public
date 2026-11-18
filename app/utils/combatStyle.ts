@@ -1,19 +1,6 @@
 /**
- * Combat-style merged student ID management.
- *
- * Students whose combat-style variants are separate roster ids but were
- * originally collapsed in raw record data. Every dataset treats
- * these ids as fully independent BY DEFAULT, exactly like any other student.
- *
- * This list exists so the handful of features that intentionally show a
- * combined view (ranking, network analysis: always merged; heatmap: merged by
- * default with a toggle) can look up which ids belong together. Call the
- * helpers below explicitly at those specific spots only — never fold merging
- * into a shared/default data-fetching path.
- *
- * The two IDs in each group represent one student with different combat
- * styles. Features that use a combined view display both portraits so the
- * underlying styles remain recognizable.
+ * Related roster IDs for views that combine combat styles.
+ * Shared data loaders keep the IDs separate; combined views use these helpers explicitly.
  */
 
 export const COMBAT_STYLE_GROUPS: number[][] = [

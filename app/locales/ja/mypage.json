@@ -143,7 +143,8 @@
     "studentStats": {
       "mostRecruited": "募集回数 TOP 3",
       "recordedThreeStarNote": "記録に追加された★3生徒が対象",
-      "allAcquisitions": "すべての獲得"
+      "allAcquisitions": "すべて",
+      "excludePityExchange": "天井・交換を除く"
     },
     "summary": {
       "heading": "全期間サマリー",
@@ -158,6 +159,7 @@
       "empty": "募集記録はまだありません。",
       "unknownBanner": "不明な募集",
       "entryMeta": "{{date}} · <1>募集{{pulls}}回</1> · ★3 {{threeStar}}人 · 目標 {{goal}}人",
+      "goalPulls": "{{count}}回目で目標達成",
       "edit": "編集"
     },
     "stats": {
@@ -177,6 +179,7 @@
       "threeStarDescription": "通常募集の結果のみ計算し、半天井・天井による獲得と呼び出しポイント交換は除外します。",
       "goalTicketsTitle": "消費した募集回数",
       "goalTicketsSubtitle": "目標 {{n}}人",
+      "goalTicketsDescription": "目標を達成した募集のみ計算します。記録に「目標達成までの回数」を入力した場合は、その回数までを消費とみなします（意図的な天井などでその後に引いた分は除外）。",
       "halfPityTitle": "半天井ピックアップ",
       "halfPitySubtitle": "{{hit}} / {{total}} · 二項分布",
       "halfPityDescription": "半天井ごとにピックアップ募集確率を50%として計算します。"
@@ -186,6 +189,8 @@
       "editTitle": "募集記録を編集",
       "bannerLabel": "募集を選択",
       "bannerSearchPlaceholder": "生徒名または日付で検索",
+      "goalPullCountLabel": "目標達成までの回数",
+      "goalPullCountPlaceholder": "未入力の場合は総募集回数",
       "initialChargeLabel": "開始時の呼び出しチャージ",
       "initialChargeNormalLabel": "開始時の呼び出しチャージ（通常）",
       "initialChargeLimitedLabel": "開始時の呼び出しチャージ（限定）",
@@ -195,6 +200,7 @@
       "deleteResult": "★3結果を削除",
       "errorNoBanner": "募集を選択してください。",
       "errorPullCount": "総募集回数は1以上の整数である必要があります。",
+      "errorGoalPullCount": "目標達成までの回数は1以上、総募集回数以下の整数である必要があります。",
       "errorInitialCharge": "開始時の呼び出しチャージは0〜199の範囲で入力してください。",
       "errorGuaranteed": "保証結果数が総募集回数を超えています。",
       "errorDuplicateFirst": "同じ生徒は初回募集として一度しか記録できません。",

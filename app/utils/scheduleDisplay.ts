@@ -2,6 +2,7 @@ import bossDataJson from '~/data/bossdata.json';
 import eventListJson from '~/data/jp/eventList.json';
 import type { EventListData } from '~/types/eventList';
 import { type_translation } from '~/components/raid/raidToString';
+import type { i18n as I18nInstance } from 'i18next';
 import { getLocaleShortName, type Locale, type LocaleShortName } from '~/utils/i18n/config';
 import type { MultiLang, ScheduleItemV2 } from '~/utils/calender.data.v2';
 
@@ -15,6 +16,9 @@ export interface I18nLike {
   language: string;
   getFixedT(lng: string, ns: string, keyPrefix?: string): (key: string) => string;
 }
+
+/** Accepts a real i18next instance or a minimal stand-in; i18next's strictly typed `t` is not assignable to `I18nLike`. */
+export type I18nInput = I18nLike | I18nInstance;
 
 export function getMLText(ml: MultiLang | undefined, locale: Locale): string | undefined {
   if (!ml) return undefined;
@@ -44,7 +48,15 @@ export function getArmorDisplayName(armorType: string | undefined, locale: Local
   return (type_translation as Record<string, Record<LocaleShortName, string>>)[armorType]?.[short] ?? armorType;
 }
 
-export function getItemTitle(item: ScheduleItemV2, locale: Locale, i18n: I18nLike): string {
+// Schedule parts can be written as "first" or "2nd"; display them as plain numbers.
+function formatPart(part: number | string): string {
+  if (typeof part === 'number') return String(part);
+  if (part === 'first') return '1';
+  return /^\d+/.exec(part)?.[0] ?? part;
+}
+
+export function getItemTitle(item: ScheduleItemV2, locale: Locale, i18nInput: I18nInput): string {
+  const i18n = i18nInput as I18nLike;
   if (item.bossKey) return getBossName(item.bossKey, locale) ?? item.bossKey;
   if (item.eventId) return getEventName(item.eventId, locale) ?? item.eventId;
 
@@ -63,21 +75,23 @@ export function getItemTitle(item: ScheduleItemV2, locale: Locale, i18n: I18nLik
   if (item.details?.storyTitleKey) {
     const tJukebox = i18n.getFixedT(locale, 'jukebox', 'main_story');
     const titlePart = tJukebox(item.details.storyTitleKey);
-    return item.details.part ? `${titlePart} Part.${item.details.part}` : titlePart;
+    return item.details.part ? `${titlePart} Part.${formatPart(item.details.part)}` : titlePart;
   }
   if (item.details?.storyTitleMulti) {
     const text = getMLText(item.details.storyTitleMulti, locale) ?? '';
-    return item.details.part ? `${text} Part.${item.details.part}` : text;
+    return item.details.part ? `${text} Part.${formatPart(item.details.part)}` : text;
   }
   if (item.details?.ministoryTitle) {
     const storyTitle = getMLText(item.details.ministoryTitle, locale) ?? '';
     return i18n.t('calendar:story.mini', { title: storyTitle });
   }
+  if (item.i18nKey && item.type === 'tacticalRelay') return `${i18n.t(item.i18nKey)} ${item.details?.phase?.toUpperCase() ?? ''}`.trim();
   if (item.i18nKey) return i18n.t(item.i18nKey);
   return item.id;
 }
 
-export function getItemLabel(item: ScheduleItemV2, i18n: I18nLike): string | undefined {
+export function getItemLabel(item: ScheduleItemV2, i18nInput: I18nInput): string | undefined {
+  const i18n = i18nInput as I18nLike;
   switch (item.type) {
     case 'raid':
       return i18n.t('game:raid');

@@ -1,0 +1,1 @@
+ALTER TABLE profile_data ADD COLUMN revision INTEGER NOT NULL DEFAULT 0;

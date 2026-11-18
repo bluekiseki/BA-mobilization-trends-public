@@ -41,16 +41,25 @@ export interface RecruitedStudentRankGroup {
   count: number;
 }
 
-export const DEFAULT_SIMULATION_COUNT = 10_000;
+export const DEFAULT_SIMULATION_COUNT = 100_000;
+/** Counts below this re-run on their own as they are typed; from here up the run is started with the button. */
+export const AUTO_RUN_BELOW_SIMULATION_COUNT = 10_000;
 export const MIN_SIMULATION_COUNT = 100;
-export const MAX_SIMULATION_COUNT = 100_000;
+export const MAX_SIMULATION_COUNT = 10_000_000;
+/** Samples between progress callbacks, each carrying the stats of the samples finished so far. */
+const PROGRESS_STEP = 10_000;
+
+/** Default run size: 10,000 samples per recorded recruitment. */
+export function defaultGachaHistorySimulationCount(recordCount: number): number {
+  return Math.min(MAX_SIMULATION_COUNT, Math.max(MIN_SIMULATION_COUNT, AUTO_RUN_BELOW_SIMULATION_COUNT * recordCount));
+}
 
 export function isValidGachaHistorySimulationCount(value: number): boolean {
   return Number.isInteger(value) && value >= MIN_SIMULATION_COUNT && value <= MAX_SIMULATION_COUNT;
 }
 
 export function shouldAutoRunGachaHistorySimulation(value: number): boolean {
-  return isValidGachaHistorySimulationCount(value) && value < DEFAULT_SIMULATION_COUNT;
+  return isValidGachaHistorySimulationCount(value) && value < AUTO_RUN_BELOW_SIMULATION_COUNT;
 }
 
 export function calculateTopRecruitedStudentGroups(entries: GachaHistoryEntry[], scope: StudentRecruitmentScope): RecruitedStudentRankGroup[] {
@@ -200,7 +209,13 @@ function simulateGoalPulls(entry: GachaHistoryEntry, banner: BannerPeriod, goalI
   return simulateChargeGoal(normalGoalCount, normalInitial, rng) + simulateChargeGoal(limitedGoalCount, limitedInitial, rng);
 }
 
-export function calculateGachaHistoryStats(entries: GachaHistoryEntry[], banners: Map<string, BannerPeriod>, simulationCount = DEFAULT_SIMULATION_COUNT): GachaHistoryStats {
+export function calculateGachaHistoryStats(
+  entries: GachaHistoryEntry[],
+  banners: Map<string, BannerPeriod>,
+  simulationCount = DEFAULT_SIMULATION_COUNT,
+  /** Called every PROGRESS_STEP simulated samples with the number finished so far and the stats those samples give. */
+  onProgress?: (completed: number, partial: GachaHistoryStats) => void,
+): GachaHistoryStats {
   let eligiblePulls = 0;
   let normalThreeStars = 0;
   let normalMean = 0;
@@ -228,7 +243,7 @@ export function calculateGachaHistoryStats(entries: GachaHistoryEntry[], banners
 
     const goals = new Set(entry.results.filter((result) => result.countTowardGoal).map((result) => result.studentId));
     if (goals.size > 0) {
-      actualGoalPulls += entry.pullCount;
+      actualGoalPulls += entry.goalPullCount ?? entry.pullCount;
       goalCount += goals.size;
       goalEntries.push({ entry, banner, goalIds: [...goals] });
     }
@@ -252,24 +267,28 @@ export function calculateGachaHistoryStats(entries: GachaHistoryEntry[], banners
         })()
       : null;
 
-  const goalSamples: number[] = [];
-  if (goalEntries.length > 0) {
-    for (let sampleIndex = 0; sampleIndex < simulationCount; sampleIndex++) {
-      const rng = createRng(0x9e3779b9 ^ sampleIndex);
-      goalSamples.push(goalEntries.reduce((sum, item) => sum + simulateGoalPulls(item.entry, item.banner, item.goalIds, rng), 0));
-    }
-  }
-
-  return {
+  const halfPity = binomialSummary(halfPityCount, 0.5, halfPityPickupCount);
+  const statsFor = (goalSamples: number[]): GachaHistoryStats => ({
     threeStar,
-    halfPity: binomialSummary(halfPityCount, 0.5, halfPityPickupCount),
+    halfPity,
     goals: buildHistogram(goalSamples, actualGoalPulls, true),
     eligiblePulls,
     normalThreeStars,
     halfPityCount,
     halfPityPickupCount,
     goalCount,
-  };
+  });
+
+  const goalSamples: number[] = [];
+  if (goalEntries.length > 0) {
+    for (let sampleIndex = 0; sampleIndex < simulationCount; sampleIndex++) {
+      const rng = createRng(0x9e3779b9 ^ sampleIndex);
+      goalSamples.push(goalEntries.reduce((sum, item) => sum + simulateGoalPulls(item.entry, item.banner, item.goalIds, rng), 0));
+      if (onProgress && (sampleIndex + 1) % PROGRESS_STEP === 0 && sampleIndex + 1 < simulationCount) onProgress(sampleIndex + 1, statsFor(goalSamples));
+    }
+  }
+
+  return statsFor(goalSamples);
 }
 
 export function calculateGachaHistoryStatsByBanner(entries: GachaHistoryEntry[], banners: Map<string, BannerPeriod>, simulationCount = DEFAULT_SIMULATION_COUNT): BannerGachaHistoryStats[] {

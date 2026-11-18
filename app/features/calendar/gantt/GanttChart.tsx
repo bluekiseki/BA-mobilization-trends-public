@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiZoomIn, FiZoomOut } from 'react-icons/fi';
-import type { Student, StudentPortraitData } from '~/types/plannerData';
+import type { Student } from '~/types/plannerData';
 import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
 import type { Locale } from '~/utils/i18n/config';
 import { BASE_PIXELS_PER_HOUR, CAMPAIGN_COLORS } from './constants';
@@ -28,7 +28,6 @@ export interface GanttChartProps {
     tracks: Record<string, ScheduleItemV2[]>;
     timeRange: { min: number; max: number };
     studentData: Record<number, Student> | null;
-    studentPortraits: StudentPortraitData | null;
     birthdayTrackItems: ScheduleItemV2[];
   };
 
@@ -50,7 +49,7 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
   // Destructure controller for easier usage
   const { scrollContainerRef, calculateLeftPx, calculateWidthPx, scrollLeft, viewportWidth, pixelsPerHour, markers, nowMarkerLeft, zoomIn, zoomOut } = controller;
 
-  const { tracks, timeRange, studentData, studentPortraits, birthdayTrackItems } = data;
+  const { tracks, timeRange, studentData, birthdayTrackItems } = data;
 
   const totalWidth = ((timeRange.max - timeRange.min) / MS_PER_HOUR) * pixelsPerHour;
 
@@ -76,7 +75,6 @@ export function GanttChart({ data, controller, mode, className }: GanttChartProp
     calculateLeftPx,
     calculateWidthPx,
     studentData,
-    studentPortraits,
     scrollLeft,
     viewportWidth,
     pixelsPerHour,

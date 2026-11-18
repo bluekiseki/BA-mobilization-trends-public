@@ -75,6 +75,8 @@ const HEADER_IDS = [
   'useEligma',
   'eligmaPrice',
   'eligmaStock',
+  // Appended last so CSVs exported before this column existed still import (missing column = recruited)
+  'recruited',
 ] as const;
 
 export interface CsvMetadata {
@@ -149,6 +151,7 @@ export function plansToCsv(growthPlans: GrowthPlan[], allStudents: CsvStudentDat
         plan.useEligmaForStar ? 'yes' : 'no',
         safeStr(plan.eligmaInfo?.price),
         safeStr(plan.eligmaInfo?.stock),
+        plan.recruited === false ? 'no' : 'yes',
       ];
 
       return row;
@@ -403,6 +406,10 @@ export function csvToPlans(csvContent: string, existingPlans: GrowthPlan[], allS
     // Others
     const acquiredDate = getCell('acquiredDate').trim();
     if (acquiredDate) plan.acquiredDate = acquiredDate;
+
+    const recruitedCell = getCell('recruited').toLowerCase();
+    if (recruitedCell === 'no') plan.recruited = false;
+    else if (recruitedCell === 'yes') plan.recruited = undefined;
 
     const eligmaUse = getCell('useEligma').toLowerCase().trim();
     plan.useEligmaForStar = eligmaUse !== 'no' && eligmaUse !== '';

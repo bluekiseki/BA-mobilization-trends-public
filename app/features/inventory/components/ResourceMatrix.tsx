@@ -19,6 +19,9 @@ interface ResourceMatrixProps {
   getItemKey: (rowKey: string, colKey: string) => string | null;
   inventory: Record<string, number>;
   needed?: Record<string, number>;
+  /** Pool-corrected overrides (e.g. gear covered by universal blueprints); a present key replaces the raw owned/needed comparison. */
+  deficitByKey?: Record<string, number>;
+  diffByKey?: Record<string, number>;
   eventData: EventData;
   iconData: IconData;
   locale: Locale;
@@ -28,7 +31,22 @@ interface ResourceMatrixProps {
   onEditItem: (itemKey: string) => void;
 }
 
-export function ResourceMatrix({ rows, cols, getItemKey, inventory, needed = {}, eventData, iconData, locale, showTarget, displayMode, activeKey, onEditItem }: ResourceMatrixProps) {
+export function ResourceMatrix({
+  rows,
+  cols,
+  getItemKey,
+  inventory,
+  needed = {},
+  deficitByKey,
+  diffByKey,
+  eventData,
+  iconData,
+  locale,
+  showTarget,
+  displayMode,
+  activeKey,
+  onEditItem,
+}: ResourceMatrixProps) {
   const { t } = useTranslation('planner');
   // Slightly larger than the shared default — the matrix's grid cells have room to spare and
   // small equipment-tier icons are hard to tell apart at the default size.
@@ -54,14 +72,21 @@ export function ResourceMatrix({ rows, cols, getItemKey, inventory, needed = {},
               const [category, id] = parts;
               const owned = inventory[itemKey] ?? 0;
               const need = needed[itemKey] ?? 0;
-              const status = !showTarget || need <= 0 ? null : owned >= need ? 'ok' : 'short';
+              const override = deficitByKey != null && itemKey in deficitByKey ? deficitByKey[itemKey] : null;
+              const status = !showTarget || need <= 0 ? null : override != null ? (override > 0 ? 'short' : 'ok') : owned >= need ? 'ok' : 'short';
+              const amount =
+                override != null && displayMode === 'deficit'
+                  ? override
+                  : override != null && displayMode === 'diff' && diffByKey
+                    ? (diffByKey[itemKey] ?? 0)
+                    : getDisplayAmount(owned, need, displayMode);
               return (
                 <div key={col.key} className="flex justify-center">
                   <ResourceIconButton
                     itemKey={itemKey}
                     category={category}
                     id={id}
-                    amount={getDisplayAmount(owned, need, displayMode)}
+                    amount={amount}
                     icons={eventData.icons}
                     iconData={iconData}
                     size={size}

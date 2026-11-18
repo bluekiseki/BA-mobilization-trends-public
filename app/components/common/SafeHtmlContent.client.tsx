@@ -25,9 +25,12 @@ export function SafeHtmlContent({ html, className }: SafeHtmlContentProps) {
       const original = img.getAttribute('src') ?? '';
       if (!isArchivable(original)) return;
       img.dataset.archiveTried = '1';
-      archiveImageUrl(original).then((url) => {
-        img.src = url;
-      });
+      archiveImageUrl(original)
+        .then((url) => {
+          img.src = url;
+        })
+        // Hashing can fail outside secure contexts; the image then stays broken.
+        .catch(() => undefined);
     };
     container.addEventListener('error', handleError, true);
     return () => container.removeEventListener('error', handleError, true);

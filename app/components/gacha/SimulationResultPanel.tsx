@@ -8,15 +8,14 @@ import type { GlobalAggregatedResult } from '~/utils/gachaEngine';
 interface Props {
   result: GlobalAggregatedResult | null;
   initialPyroxenes: number;
-  portraitMap: Record<number, string>;
   bankruptcyRate: number | null;
 }
 
-export default function SimulationResultPanel({ result, initialPyroxenes, portraitMap, bankruptcyRate }: Props) {
+export default function SimulationResultPanel({ result, initialPyroxenes, bankruptcyRate }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result' });
 
   if (result) {
-    return <SimulationResultView result={result} initialPyroxenes={initialPyroxenes} portraitMap={portraitMap} bankruptcyRate={bankruptcyRate} />;
+    return <SimulationResultView result={result} initialPyroxenes={initialPyroxenes} bankruptcyRate={bankruptcyRate} />;
   }
 
   return (

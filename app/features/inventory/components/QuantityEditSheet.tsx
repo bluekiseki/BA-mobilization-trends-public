@@ -7,7 +7,6 @@ import { CustomNumberInput } from '~/components/common/CustomInput';
 import { GiftAffectionGroups } from '~/components/student/GiftStudentSheet';
 import { type GiftStudentEntry } from '~/utils/student/giftStudents';
 import { StudentAvatar } from '~/features/inventory/components/StudentAvatar';
-import type { StudentPortraitData } from '~/types/plannerData';
 
 interface PerStudentNeed {
   studentId: number;
@@ -31,7 +30,6 @@ interface QuantityEditSheetProps {
   // All users (Opart/eleph only); hides section if undefined.
   allUsers?: { studentId: number; name: string }[];
   giftStudents?: GiftStudentEntry[];
-  studentPortraits?: StudentPortraitData;
   // Resource-projection panel for items the planner models (eligma, eleph, AP, coins...).
   // Rendered at the top of the scroll area; also widens the desktop sidebar when present.
   projectionSection?: React.ReactNode;
@@ -60,7 +58,6 @@ export function QuantityEditSheet({
   perStudentNeeds = [],
   allUsers,
   giftStudents,
-  studentPortraits,
   projectionSection,
   expandedContent,
   expandedLabel,
@@ -216,7 +213,7 @@ export function QuantityEditSheet({
                 <div className="flex items-center gap-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
                   <RiHeartLine size={11} /> {t('affectionTab.giftIndex.studentsWhoLike')} ({giftStudents.length})
                 </div>
-                <GiftAffectionGroups students={giftStudents} studentPortraits={studentPortraits} emptyMessage={t('affectionTab.giftIndex.noStudents')} />
+                <GiftAffectionGroups students={giftStudents} emptyMessage={t('affectionTab.giftIndex.noStudents')} />
               </div>
             ) : (
               <div className="space-y-5">
@@ -230,7 +227,7 @@ export function QuantityEditSheet({
                         {perStudentNeeds.map((s) => (
                           <tr key={s.studentId} className="border-b border-neutral-50 dark:border-neutral-800/60 last:border-0">
                             <td className="py-1.5 flex items-center gap-2">
-                              <StudentAvatar name={s.name} portrait={studentPortraits?.[s.studentId]} />
+                              <StudentAvatar name={s.name} studentId={s.studentId} />
                               <span className="truncate text-neutral-700 dark:text-neutral-200">{s.name}</span>
                             </td>
                             <td className="py-1.5 text-right font-mono text-neutral-500 dark:text-neutral-400 whitespace-nowrap">{s.amount.toLocaleString()}</td>
@@ -249,7 +246,7 @@ export function QuantityEditSheet({
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
                         {allUsers.map((s) => (
-                          <StudentAvatar key={s.studentId} name={s.name} portrait={studentPortraits?.[s.studentId]} />
+                          <StudentAvatar key={s.studentId} name={s.name} studentId={s.studentId} />
                         ))}
                       </div>
                     )}

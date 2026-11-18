@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import eventList from '../app/data/jp/eventList.json' with { type: 'json' };
 import siteConfig from '../app/data/livedataServer.json' with { type: 'json' };
 import jpRaidList from '../app/data/jp/full.raidinfo.json' with { type: 'json' };
@@ -45,6 +45,7 @@ for (const raid of krRaidList) raidLastmod.set(`/dashboard/kr/${raid.Id}`, toDat
 // Keep this list in sync with robots.txt's Allow rules — a sitemap entry blocked by
 // robots.txt is a well-known Search Console warning.
 const staticPages = [
+  { path: '/students', changefreq: 'weekly', priority: '0.8' },
   { path: '/', changefreq: 'daily', priority: '1.0' },
   { path: '/planner/event', changefreq: 'daily', priority: '0.9' },
   { path: '/calendar', changefreq: 'daily', priority: '0.9' },
@@ -85,7 +86,21 @@ const raidPages = raidPaths.map((path) => ({
   lastmod: raidLastmod.get(path),
 }));
 
-const pages = [...staticPages, ...eventPages, ...raidPages];
+// Use the same public catalog as the student loaders, including in CI without local assets.
+let studentCatalog;
+try {
+  studentCatalog = JSON.parse(await readFile(new URL('../public/schaledb.com/en.students.min.json', import.meta.url), 'utf8'));
+} catch (error) {
+  if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') throw error;
+  const response = await fetch(`https://${siteConfig.cdn}/assets/schaledb.com/en.students.min.json`, { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error(`Cannot generate student sitemap: HTTP ${response.status}`);
+  studentCatalog = await response.json();
+}
+const studentPages = Object.values(studentCatalog).map((student) => {
+  if (!Number.isSafeInteger(student.Id) || student.Id <= 0) throw new Error('Invalid student sitemap ID');
+  return { path: `/students/${student.Id}`, changefreq: 'weekly', priority: '0.6' };
+});
+const pages = [...staticPages, ...eventPages, ...raidPages, ...studentPages];
 
 const escapeXml = (value) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 

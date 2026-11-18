@@ -8,10 +8,12 @@ interface DifficultyLegendProps {
   // When provided, chips become toggle buttons (e.g. wired to a difficulty visibility setting).
   activeDifficulties?: Set<DifficultyName>;
   onToggle?: (difficulty: DifficultyName) => void;
+  // Optional per-difficulty number shown beside each chip label.
+  counts?: Partial<Record<DifficultyName, number>>;
 }
 
 // Shared color legend for histograms that color bars by difficulty tier.
-export default function DifficultyLegend({ difficulties, activeDifficulties, onToggle }: DifficultyLegendProps) {
+export default function DifficultyLegend({ difficulties, activeDifficulties, onToggle, counts }: DifficultyLegendProps) {
   const { t: t_raidInfo } = useTranslation('raidInfo');
 
   return (
@@ -20,6 +22,7 @@ export default function DifficultyLegend({ difficulties, activeDifficulties, onT
         key: name,
         label: t_raidInfo(name, name),
         color: DIFFICULTY_COLORS[name],
+        count: counts?.[name],
         active: activeDifficulties ? activeDifficulties.has(name) : true,
         onClick: onToggle ? () => onToggle(name) : undefined,
       }))}

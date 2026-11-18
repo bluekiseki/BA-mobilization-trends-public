@@ -1,17 +1,17 @@
+import { EditHistoryMenu } from './EditHistoryMenu';
 //'use client'
 // app/components/Navigation.tsx
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useRouteLoaderData } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { issuesURL, loginEnabled } from '~/data/livedataServer.json';
 
-import { HiOutlineQuestionMarkCircle, HiOutlineBars3, HiOutlineXMark, HiOutlineLightBulb, HiOutlineFlag, HiChevronDown, HiOutlineUserCircle } from 'react-icons/hi2';
+import { HiOutlineQuestionMarkCircle, HiOutlineBars3, HiOutlineXMark, HiOutlineFlag, HiChevronDown, HiOutlineUserCircle } from 'react-icons/hi2';
 
 import { PyroxenesIcon } from '../common/SvgIcons';
 import { localeLink } from '~/utils/localeLink';
 import { needsDocumentLoad, useLeaveIsolatedDocument } from '~/hooks/isolatedRoutes';
 import { DEFAULT_LOCALE, SUPORTED_LOCALES, type Locale } from '~/utils/i18n/config';
-import { useHelpStore } from '~/store/helpStore';
 import { type GameServer } from '~/types/data';
 
 import { LanguageBanner } from './LanguageMismatchBanner';
@@ -42,16 +42,7 @@ interface NavLink {
 const navLinks: NavLink[] = [
   { key: 'dashboard', label: 'dashboard', path: (c: string | null) => `/dashboard/${c || 'jp'}`, regex: /\/dashboard\/(kr|jp)/ },
   { key: 'ranking', label: 'ranking', path: (c: string | null) => `/charts/${c || 'jp'}/ranking`, regex: /\/charts\/(kr|jp)\/ranking$/ },
-  { key: 'heatmap', label: 'heatmap', path: (c: string | null) => `/charts/${c || 'jp'}/heatmap`, regex: /\/charts\/(kr|jp)\/heatmap$/ },
-];
-
-const helpWhitelist = [
-  /^(?:\/(?:ko|ja|zh-Hant))?\/dashboard\/(kr|jp)\/\w/,
-  /^(?:\/(?:ko|ja|zh-Hant))?\/charts/,
-  /^(?:\/(?:ko|ja|zh-Hant))?\/planner\//,
-  /^(?:\/(?:ko|ja|zh-Hant))?\/scanner\//,
-  /^(?:\/(?:ko|ja|zh-Hant))?\/utils\/jukebox/,
-  // /^(?:\/(?:ko|ja|zh-Hant))?\/live/,
+  { key: 'heatmap', label: 'heatmap', path: () => '/students/10000?tab=stats', regex: /\/charts\/(kr|jp)\/heatmap$|\/students\/[^/]+/ },
 ];
 
 // ==========================================
@@ -112,7 +103,10 @@ const LanguageBannerController = () => {
   const { hasShownLanguageBanner, _hasHydrated, setHasShownLanguageBanner } = useLanguageBannerStore();
   const { pathname, search } = useLocation();
   const { i18n } = useTranslation();
-  const locale = i18n.language as Locale;
+  // The root loader's locale is authoritative; i18n.language is only synced to it in a later effect
+  // in root.tsx, so it can still be stale when this component's effect first runs.
+  const rootData = useRouteLoaderData<{ locale?: Locale }>('root');
+  const locale = rootData?.locale ?? (i18n.language as Locale);
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -154,9 +148,10 @@ const LanguageBannerController = () => {
       });
       setShowBanner(true);
     } else {
-      if (!bannerData) {
-        setHasShownLanguageBanner();
-      }
+      // Browser language matches the page: drop any banner left over from a stale locale
+      setBannerData(null);
+      setShowBanner(false);
+      setHasShownLanguageBanner();
     }
   }, [_hasHydrated, hasShownLanguageBanner, pathname, search, locale]);
 
@@ -187,11 +182,9 @@ const LanguageBannerController = () => {
   );
 };
 
-export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugModal }: { isHelpAvailable: boolean; isMobileText?: boolean; onOpenBugModal: () => void }) => {
+export const HelpDropdown = ({ onOpenBugModal }: { onOpenBugModal: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  const openSidebar = useHelpStore((state) => state.openSidebar);
 
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
   const { t: t_ui } = useTranslation('ui');
@@ -203,26 +196,18 @@ export const HelpDropdown = ({ isHelpAvailable, isMobileText = false, onOpenBugM
     <>
       <div className="relative flex items-center" ref={ref}>
         {/* 1. Help icon button (opens dropdown on click) */}
-        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          title={t('help')}
+          aria-label={t('help')}
+          className="flex items-center text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
+        >
           <HiOutlineQuestionMarkCircle className="text-xl" strokeWidth={1.5} />
-          <span className={`${isMobileText ? 'block' : 'hidden xl:block'} text-sm font-medium`}>{t('help')}</span>
         </button>
 
         {/* 2. Dropdown menu */}
         {isOpen && (
           <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
-            {isHelpAvailable && (
-              <button
-                onClick={() => {
-                  openSidebar();
-                  setIsOpen(false);
-                }}
-                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors text-left"
-              >
-                <HiOutlineLightBulb className="text-lg" /> {t('viewDescription')}
-              </button>
-            )}
-
             <button
               onClick={() => {
                 onOpenBugModal();
@@ -269,12 +254,14 @@ const MoreDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; i
   // Nav labels live under common:navigation (not the jukebox/notices/planner namespaces they
   // link to) so opening the nav doesn't drag in those whole namespaces just for one label each.
   const { t: t_nav } = useTranslation('common', { keyPrefix: 'navigation' });
+  // const { t: t_students } = useTranslation('students');
 
   useOutsideClick(ref, () => setIsOpen(false));
 
   const calendarPath = '/calendar';
 
   const moreItems = [
+    // { key: 'student-book', to: '/students', label: t_students('title'), regex: /(?:^|\/(?:ko|ja|zh-Hant))\/students(?:\/|$)/ },
     { key: 'favor-stats', to: '/charts/favor', label: t_nav('favorStats') },
     { key: 'jukebox', to: '/utils/jukebox', label: t_nav('jukebox'), regex: /\/utils\/jukebox/ },
     { key: 'notices', to: '/notices', label: t_nav('notices'), regex: /\/notices/ },
@@ -287,7 +274,7 @@ const MoreDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale; i
     <div className="relative flex items-center" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
+        className={`lg:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
           isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
         }`}
       >
@@ -326,7 +313,9 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
   const plannerItems = [
     { key: 'event', to: '/planner/event', label: t('eventPlanner') },
     { key: 'gacha', to: '/planner/gacha', label: t('gachaPlanner') },
-    { key: 'students', to: '/planner/students', label: t_ui('studentGrowthPlanner') },
+    { key: 'students', to: '/students', label: t_ui('studentGrowthPlanner') },
+    { key: 'students-legacy', to: '/planner/students', label: t_ui('studentGrowthPlannerLegacy') },
+    { key: 'inventory', to: '/planner/inventory', label: t('inventory') },
     { key: 'equipment', to: '/planner/equipment', label: t('equipmentFarmingPlanner') },
     { key: 'favor', to: '/utils/favor', label: t('favorCalculator') },
     { key: 'my-raids', to: '/my/raids', label: t_mypage('raids.title') },
@@ -337,7 +326,7 @@ const PlannerDropdown = ({ locale, isActive, activeLinkStyle }: { locale: Locale
     <div className="relative flex items-center" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
+        className={`lg:text-base text-sm whitespace-nowrap font-semibold transition-colors flex items-center gap-0.5 ${
           isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
         }`}
       >
@@ -368,12 +357,14 @@ const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pat
   const { t } = useTranslation('common', { keyPrefix: 'navigation' });
   const { t: t_ui } = useTranslation('ui');
   const { t: t_mypage } = useTranslation('mypage');
-  const isPlannerActive = /\/planner\/|\/utils\/favor|\/my\/(raids|gacha)/.test(pathname);
+  const isPlannerActive = /\/planner\/|\/students$|\/utils\/favor|\/my\/(raids|gacha)/.test(pathname);
 
   const plannerItems = [
     { key: 'event', to: '/planner/event', label: t('eventPlanner') },
     { key: 'gacha', to: '/planner/gacha', label: t('gachaPlanner') },
-    { key: 'students', to: '/planner/students', label: t_ui('studentGrowthPlanner') },
+    { key: 'students', to: '/students', label: t_ui('studentGrowthPlanner') },
+    { key: 'students-legacy', to: '/planner/students', label: t_ui('studentGrowthPlannerLegacy') },
+    { key: 'inventory', to: '/planner/inventory', label: t('inventory') },
     { key: 'equipment', to: '/planner/equipment', label: t('equipmentFarmingPlanner') },
     { key: 'favor', to: '/utils/favor', label: t('favorCalculator') },
     { key: 'my-raids', to: '/my/raids', label: t_mypage('raids.title') },
@@ -406,12 +397,14 @@ const MobilePlannerGroup = ({ locale, pathname, onClose }: { locale: Locale; pat
 const MobileMoreGroup = ({ locale, pathname, onClose }: { locale: Locale; pathname: string; onClose: () => void }) => {
   const { t: t_c } = useTranslation('common');
   const { t: t_nav } = useTranslation('common', { keyPrefix: 'navigation' });
+  // const { t: t_students } = useTranslation('students');
   const { t: t_ui } = useTranslation('ui');
   const isMoreActive = /\/charts\/favor(?:\/|$)|\/utils\/jukebox|\/notices|\/calendar(?:\/|$)|\/scanner\//.test(pathname);
 
   const calendarPath = '/calendar';
 
-  const moreItems = [
+  const moreItems: { key: string; to: string; label: string; regex?: RegExp }[] = [
+    // { key: 'student-book', to: '/students', label: t_students('title'), regex: /(?:^|\/(?:ko|ja|zh-Hant))\/students(?:\/|$)/ },
     { key: 'favor-stats', to: '/charts/favor', label: t_nav('favorStats') },
     { key: 'jukebox', to: '/utils/jukebox', label: t_nav('jukebox') },
     { key: 'notices', to: '/notices', label: t_nav('notices') },
@@ -425,7 +418,7 @@ const MobileMoreGroup = ({ locale, pathname, onClose }: { locale: Locale; pathna
       <span className={`text-base font-bold ${isMoreActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>{t_ui('etc')}</span>
       <div className="flex flex-col gap-3 pl-3 border-l-2 border-neutral-100 dark:border-neutral-800">
         {moreItems.map((item) => {
-          const isActive = pathname.includes(item.to);
+          const isActive = item.regex ? item.regex.test(pathname) : pathname.includes(item.to);
           return (
             <Link
               key={item.key}
@@ -487,8 +480,7 @@ export const Navigation = () => {
     currentServer = null;
   }
 
-  const isHelpAvailable = helpWhitelist.some((pattern) => pattern.test(pathname));
-  const isPlannerActive = /\/planner\/|\/utils\/favor|\/my\/(raids|gacha)/.test(pathname);
+  const isPlannerActive = /\/planner\/|\/students$|\/utils\/favor|\/my\/(raids|gacha)/.test(pathname);
   const activeLinkStyle = "relative after:content-[''] after:absolute after:left-0 after:bottom-[2px] after:w-full after:h-[4px] after:bg-yellow-500 after:-z-10 dark:after:bg-ba-btn-yellow";
 
   return (
@@ -499,23 +491,24 @@ export const Navigation = () => {
         <LanguageBannerController />
       </div>
 
-      <header ref={headerRef} className="sticky top-0 z-100 w-full bg-white/95 dark:bg-neutral-800 backdrop-blur-md">
+      <header ref={headerRef} className="sticky top-0 z-100 isolate w-full">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-white/95 backdrop-blur-md dark:bg-neutral-800" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-4 lg:px-6 flex justify-between items-center h-14">
           {/* Left: Logo */}
           <Link to={localeLink(locale, '/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <PyroxenesIcon />
-            <span className="hidden min-[320px]:flex md:hidden font-extrabold  ">{t_c('site-title')}</span>
+            <span className="hidden min-[380px]:flex lg:hidden font-extrabold  ">{t_c('site-title')}</span>
           </Link>
 
           {/* Center: Navigation links (Desktop) */}
-          <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-7 items-center">
+          <nav className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 gap-7 items-center">
             {navLinks.map((link) => {
               const isActive = link.regex.test(pathname);
               return (
                 <Link
                   key={link.key}
                   to={localeLink(locale, link.path(country))}
-                  className={`md:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'}`}
+                  className={`lg:text-base text-sm whitespace-nowrap font-semibold transition-colors ${isActive ? activeLinkStyle : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'}`}
                 >
                   {link.label == 'ranking' ? t_ui('ranking') : t(link.label)}
                 </Link>
@@ -527,20 +520,21 @@ export const Navigation = () => {
 
           {/* Right: Utilities (Icons common to desktop & mobile) */}
           <div className="flex items-center gap-3 sm:gap-5">
-            <ThemeDropdown />
-            <LocaleDropdown currentLocale={locale} />
-            <HelpDropdown isHelpAvailable={isHelpAvailable} onOpenBugModal={() => setIsBugModalOpen(true)} />
-
             {/* Show desktop toggle switch only if server selection is available on the current page */}
             {currentServer && (
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <ServerToggleSwitch currentServer={currentServer} variant="dropdown" />
               </div>
             )}
 
+            <ThemeDropdown />
+            <LocaleDropdown currentLocale={locale} />
+            <EditHistoryMenu />
+            <HelpDropdown onOpenBugModal={() => setIsBugModalOpen(true)} />
+
             {/* Account menu (desktop) — mobile folds this into the hamburger menu. Hidden entirely when login is not live and no session exists. */}
             {(user || loginEnabled) && (
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 {user ? (
                   <AccountMenu />
                 ) : (
@@ -557,7 +551,7 @@ export const Navigation = () => {
             )}
 
             {/* Mobile hamburger icon */}
-            <div className="relative md:hidden">
+            <div className="relative lg:hidden">
               <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-neutral-600 dark:text-neutral-300 mt-2  ml-1">
                 {isMobileMenuOpen ? <HiOutlineXMark className="text-2xl" strokeWidth={1.5} /> : <HiOutlineBars3 className="text-2xl" strokeWidth={1.5} />}
               </button>
@@ -568,7 +562,7 @@ export const Navigation = () => {
 
         {/* Mobile hamburger menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-14 left-0 w-full max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 shadow-xl px-5 py-5 space-y-5 z-10">
+          <div className="lg:hidden absolute top-14 left-0 w-full max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 shadow-xl px-5 py-5 space-y-5 z-10">
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => {
                 const isActive = link.regex.test(pathname);

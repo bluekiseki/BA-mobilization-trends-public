@@ -1,5 +1,135 @@
 [
   {
+    "date": "2026-11-17",
+    "changes": {
+      "en": [
+        "Gacha Planner: Added an input for the pull number at which your goal was achieved when recording results",
+        "Event Planner: Improved efficiency calculations and display for event farming and shop exchanges relative to Commissions",
+        "Total Assault & Grand Assault dashboards: Added Global server clear videos alongside JP videos"
+      ],
+      "ko": [
+        "가챠 플래너: 가챠 기록에 목표 달성 회차 입력 추가",
+        "이벤트 플래너: 특별의뢰 대비 이벤트 파밍·상점 교환 효율 계산 및 표시 개선",
+        "총력전·대결전 대시보드: 글로벌 서버 공략 영상도 함께 표시"
+      ],
+      "ja": [
+        "ガチャプランナー: ガチャ記録に目標を達成した募集回数の入力欄を追加",
+        "イベントプランナー: 特別依頼に対するイベント周回・ショップ交換の効率計算と表示を改善",
+        "総力戦・大決戦ダッシュボード: グローバル版の攻略動画もあわせて表示"
+      ],
+      "zh-Hant": ["招募規劃：招募紀錄新增達成目標時的抽數輸入欄位", "活動規劃：改善活動刷關與商店兌換相對於委託的效率計算與顯示", "總力戰・大決戰儀表板：同時顯示全球伺服器攻略影片"]
+    },
+    "to": ["/planner/gacha", "/planner/event", "/dashboard/jp"]
+  },
+  {
+    "date": "2026-11-16",
+    "changes": {
+      "en": ["Added undo/redo", "Added restoring a profile to an earlier state", "Improved sync stability when editing across multiple tabs"],
+      "ko": ["실행 취소·다시 실행 추가", "프로필을 이전 상태로 복원하는 기능 추가", "여러 탭 동시 편집 시 동기화 안정성 개선"],
+      "ja": ["元に戻す・やり直す機能を追加", "プロフィールを以前の状態に復元する機能を追加", "複数タブでの同時編集時の同期の安定性を改善"],
+      "zh-Hant": ["新增復原與重做功能", "新增將設定檔還原至先前狀態的功能", "改善多分頁同時編輯時的同步穩定性"]
+    },
+    "to": [null, null, null]
+  },
+  {
+    "date": "2026-11-11",
+    "changes": {
+      "en": [
+        "BGM Player: Added a BGM number range and play order for repeat playback",
+        "BGM Player: Usage labels are now shown in your language, and search covers usages",
+        "Student Trends and Student Planner pages were merged into the Student List"
+      ],
+      "ko": ["BGM 플레이어: 반복 재생용 BGM 번호 범위·재생 순서 설정 추가", "BGM 플레이어: 사용처 이름 다국어 표시, 검색에 사용처 포함", "학생별 동향·학생 플래너 페이지를 학생 리스트로 통합"],
+      "ja": [
+        "BGMプレイヤー: リピート再生用のBGM番号範囲・再生順の設定を追加",
+        "BGMプレイヤー: 使用箇所の名前を多言語で表示、検索に使用箇所を含める",
+        "生徒別動向・生徒プランナーページを生徒リストに統合"
+      ]
+    },
+    "to": ["/utils/jukebox", "/utils/jukebox", "/students"]
+  },
+  {
+    "date": "2026-11-10",
+    "changes": {
+      "en": ["Gacha Planner: Added fields to enter your current Normal/Limited recruit stacks"],
+      "ko": ["가챠 플래너: 현재 일반/한정 모집 스택을 입력하는 칸 추가"],
+      "ja": ["ガチャプランナー: 現在の通常/限定募集スタックを入力する欄を追加"]
+    },
+    "to": ["/planner/gacha"]
+  },
+  {
+    "date": "2026-11-02",
+    "changes": {
+      "en": [
+        "Student Planner: Added support for students that are not recruited yet",
+        "Inventory: The resource graph now includes upcoming event, Total Assault, Grand Assault, and Limit Break Assault rewards, plus optional Joint Firing Drill shop auto-buy",
+        "Student Planner: Shortages that upcoming rewards will cover are shown in amber",
+        "[Report] Dashboard: Fixed Grand Assault rankings looking scrambled",
+        "Dashboard: Fixed empty party slots shifting positions and overlapping formation icons on mobile",
+        "Mobilization Ranking: Added a list to pick the start/end raid",
+        "Mobilization Ranking & Heatmap: Added a boss armor type filter, and the heatmap range can also be picked from a list"
+      ],
+      "ko": [
+        "학생 플래너: 아직 모집하지 않은 학생 지원 추가",
+        "인벤토리: 자원 그래프에 예정된 이벤트·총력전·대결전·제약해제결전 보상과 종합전술시험 상점 자동 구매(선택) 반영",
+        "학생 플래너: 예정된 보상으로 채워질 부족 재화를 주황색으로 표시",
+        "[제보] 대시보드: 대결전 순위가 뒤섞여 보이던 문제 수정",
+        "대시보드: 파티의 빈 자리가 밀려 표시되던 문제와 모바일에서 편성 아이콘이 겹치던 문제 수정",
+        "출전 순위: 시작·종료 총력전·대결전을 목록에서 선택 가능",
+        "출전 순위·히트맵: 보스 방어 타입 필터 추가, 히트맵도 기간을 목록에서 선택 가능"
+      ],
+      "ja": [
+        "生徒プランナー: まだ獲得していない生徒に対応",
+        "インベントリ: リソースグラフにイベント・総力戦・大決戦・制約解除決戦の今後の報酬と、総合戦術試験ショップの自動購入（任意）を反映",
+        "生徒プランナー: 今後の報酬で補える不足素材をオレンジ色で表示",
+        "[報告] ダッシュボード: 大決戦の順位が入り乱れて表示される問題を修正",
+        "ダッシュボード: パーティの空き枠の位置がずれる問題と、モバイルで編成アイコンが重なる問題を修正",
+        "出撃ランキング: 開始・終了の総力戦・大決戦を一覧から選択可能に",
+        "出撃ランキング・ヒートマップ: ボス防御タイプのフィルターを追加、ヒートマップも期間を一覧から選択可能に"
+      ]
+    },
+    "to": ["/planner/students", "/planner/inventory", "/dashboard"]
+  },
+  {
+    "date": "2026-11-01",
+    "changes": {
+      "en": ["Student Planner: Added a skill filter (skill type, damage range, effects such as heal / buff / debuff / CC) with buff icons, per-option counts, and an option search in filter lists"],
+      "ko": ["학생 플래너: 스킬 필터 추가 (스킬 유형, 피해 범위, 회복·버프·디버프·군중제어 등 효과) - 버프 아이콘, 옵션별 학생 수, 필터 목록 검색 지원"],
+      "ja": ["生徒プランナー: スキルフィルターを追加（スキルの種類、ダメージ範囲、回復・バフ・デバフ・CCなどの効果）。バフアイコン、項目ごとの人数表示、フィルター一覧内の検索に対応"]
+    },
+    "to": ["/planner/students"]
+  },
+  {
+    "date": "2026-10-31",
+    "changes": {
+      "en": ["Event Planner: Fixed the Railroad Puzzle map tab where tile counts could not be edited on PC"],
+      "ko": ["이벤트 플래너: 철도 퍼즐 맵 탭에서 PC로 타일 개수를 수정할 수 없던 문제 수정"],
+      "ja": ["イベントプランナー: 鉄道パズルのマップタブでPCからタイル数を編集できない問題を修正"]
+    },
+    "to": ["/planner/event"]
+  },
+  {
+    "date": "2026-10-28",
+    "changes": {
+      "en": [
+        "Event Planner: Added Railroad Puzzle spending to the results, improved number inputs, fixed mobile scrolling in the currency overlay",
+        "Event Planner: The floating currency panel can be swiped aside to hide it"
+      ],
+      "ko": ["이벤트 플래너: 철도 퍼즐 소모량 반영, 숫자 입력 개선, 재화 현황 창 모바일 스크롤 수정", "이벤트 플래너: 플로팅 재화창을 옆으로 밀어 숨기기 추가"],
+      "ja": ["イベントプランナー: 鉄道パズルの消費量を反映、数値入力を改善、通貨画面のモバイルスクロールを修正", "イベントプランナー: フローティング通貨パネルを横にスワイプして隠せるように"]
+    },
+    "to": ["/planner/event", "/planner/event"]
+  },
+  {
+    "date": "2026-10-25",
+    "changes": {
+      "en": ["Dashboard: Added a Y-axis scale option (Linear, log, √x, Cumulative) to the score and clear time distribution charts"],
+      "ko": ["대시보드: 점수·클리어 시간 분포 그래프에 Y축 스케일 선택 추가 (Linear, log, √x, 누적)"],
+      "ja": ["ダッシュボード: スコア・クリア時間の分布グラフにY軸スケールの選択を追加（Linear、log、√x、累積）"]
+    },
+    "to": ["/dashboard"]
+  },
+  {
     "date": "2026-10-24",
     "changes": {
       "en": ["Relationship Rank Calculator: Improved gift conversion options", "Dashboard: Improved the list of formations including the selected party"],

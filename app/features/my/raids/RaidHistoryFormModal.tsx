@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { HiOutlineXMark, HiOutlineSquare2Stack, HiOutlineClipboard, HiOutlineClipboardDocumentCheck, HiOutlineArrowPath, HiOutlineTrash } from 'react-icons/hi2';
 import { CustomNumberInput } from '~/components/common/CustomInput';
 import { RAID_TROPHIES, type RaidTrophy } from '~/types/resourcePlan';
-import type { PortraitData } from '~/types/raidReport';
 import type { RaidHistoryEntry, RaidHistoryServer, RaidHistoryStudent, RaidHistoryTeam, RaidType } from '~/types/raidHistory';
 import type { Student } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
@@ -430,7 +429,6 @@ interface RaidHistoryFormModalProps {
   serverOptions: { value: RaidHistoryServer; label: string }[];
   defaultServer: RaidHistoryServer;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: Locale;
   initialEntry?: RaidHistoryEntry;
   onClose: () => void;
@@ -621,7 +619,7 @@ function buildInitialTeams(entry: RaidHistoryEntry | undefined, type: RaidType |
   );
 }
 
-export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer, students, portraitData, initialEntry, onClose, onSave, onDelete }: RaidHistoryFormModalProps) {
+export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer, students, initialEntry, onClose, onSave, onDelete }: RaidHistoryFormModalProps) {
   const { t } = useTranslation('mypage');
   const { t: td } = useTranslation('dashboard');
   const { t: tc } = useTranslation('common');
@@ -1209,7 +1207,7 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
                         className="inline-flex items-center gap-1 rounded border border-neutral-300 px-2 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
                       >
                         {copiedTeamIndex === teamIndex ? <HiOutlineClipboardDocumentCheck className="h-4 w-4" /> : <HiOutlineSquare2Stack className="h-4 w-4" />}
-                        {copiedTeamIndex === teamIndex ? tp('dataExchange.clipboardCopied') : t_ui('copy')}
+                        {copiedTeamIndex === teamIndex ? tp('dataExchange.aiPromptCopied') : t_ui('copy')}
                       </button>
                       <button
                         type="button"
@@ -1248,7 +1246,6 @@ export function RaidHistoryFormModal({ raidOptions, serverOptions, defaultServer
                     m={team.m}
                     s={team.s}
                     students={students}
-                    portraitData={portraitData}
                     teamMemberCount={isRestriction ? 10 : 6}
                     activeSlot={activeSlot?.teamIndex === teamIndex ? activeSlot : null}
                     activePicker={

@@ -1,6 +1,7 @@
-import type { RaidInfo, Student } from '~/types/data';
+import type { RaidInfo } from '~/types/data';
 import { difficultyInfo } from '~/components/raid/Difficulty';
-import { getCombatStyleDisplayId, getCombatStyleGroupRosterIds } from '~/utils/combatStyle';
+import { getCombatStyleDisplayId } from '~/utils/combatStyle';
+import { matchesBossType, type BossTypeSelect } from '../bossType';
 import type { RankStudent, RatingData, RawRatingData, RecruitTypeFilter, TacticRoleFilter } from './types';
 
 export interface ProcessRankingInput {
@@ -12,6 +13,7 @@ export interface ProcessRankingInput {
   selectedTacticRoles: Set<TacticRoleFilter>;
   selectedRecruitTypes: Set<RecruitTypeFilter>;
   selectedDifficulties: Set<string>;
+  selectedBossTypes: Set<BossTypeSelect>;
   raidInfo: RaidInfo[];
   selectedStudentType: string;
   studentMap: Record<number, RankStudent>;
@@ -29,6 +31,7 @@ export function processRankingData({
   selectedTacticRoles,
   selectedRecruitTypes,
   selectedDifficulties,
+  selectedBossTypes,
   raidInfo,
   selectedStudentType,
   studentMap,
@@ -70,6 +73,7 @@ export function processRankingData({
 
     // Filter by difficulty before calculating the per-difficulty average.
     if (!difficultiesToInclude.has(difficulty)) continue;
+    if (!matchesBossType(raidInfo[raidIdNum], selectedBossTypes)) continue;
 
     if (displayValue) {
       const participantCount = raidInfo[raidIdNum].Cnt[difficulty];
@@ -115,10 +119,6 @@ export function processRankingData({
       id: displayId,
       name: studentMap[displayId].Name,
       bullettype: studentMap[displayId].BulletType,
-      portrait: studentMap[displayId].Portrait,
-      portraits: getCombatStyleGroupRosterIds(displayId)
-        .map((id) => studentMap[id]?.Portrait)
-        .filter((portrait): portrait is Student['Portrait'] => Boolean(portrait)),
       total: total,
       count: total,
       ratings: ratings,

@@ -20,6 +20,7 @@ interface BoxGachaPlannerProps {
 export const BoxGachaPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: BoxGachaPlannerProps) => {
   const { boxGachaStartBox: startBox, boxGachaEndBox: finalTotalBoxes, setBoxGachaStartBox: setStartBox, setBoxGachaEndBox: setFinalTotalBoxes } = usePlanForEvent(eventId);
   const { t } = useTranslation('planner', { keyPrefix: 'box_gacha' });
+  const { t: t_ui } = useTranslation('ui');
 
   const boxGachaData = eventData.box_gacha;
 
@@ -139,7 +140,7 @@ export const BoxGachaPlanner = ({ eventId, eventData, iconData, onCalculate, rem
             />
             <span className="shrink-0 dark:text-neutral-300">{t('toBox')}</span>
             <button onClick={handleSetMaxBoxes} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded-lg shrink-0" title={t('setMaxBoxesTooltip')}>
-              {t('setToMax')}
+              {t_ui('setToMax')}
             </button>
           </div>
         </div>
@@ -166,7 +167,7 @@ export const BoxGachaPlanner = ({ eventId, eventData, iconData, onCalculate, rem
                     <thead>
                       <tr className="bg-neutral-100 dark:bg-neutral-700">
                         <th className="text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-neutral-200 whitespace-nowrap">{t('roundHeader')}</th>
-                        <th className="hidden md:table-cell text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-neutral-200 whitespace-nowrap">{t('totalCost')}</th>
+                        <th className="hidden md:table-cell text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-neutral-200 whitespace-nowrap">{t_ui('totalCost')}</th>
                         <th className="text-left p-2 border border-neutral-300 dark:border-neutral-600 dark:text-neutral-200">{t('totalRewards')}</th>
                       </tr>
                     </thead>
@@ -234,7 +235,7 @@ export const BoxGachaPlanner = ({ eventId, eventData, iconData, onCalculate, rem
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <div className="bg-red-50 dark:bg-red-900/40 p-3 rounded-lg">
-                    <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t('totalCost')}</h4>
+                    <h4 className="font-semibold text-red-800 dark:text-red-300 mb-2">{t_ui('totalCost')}</h4>
                     <div className="flex">
                       <ItemIcon type={costItemKey.split('_')[0]} itemId={costItemKey.split('_')[1]} amount={Math.ceil(totalCost)} size={10} eventData={eventData} iconData={iconData} />
                     </div>

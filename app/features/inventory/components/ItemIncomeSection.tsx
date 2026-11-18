@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import PvpCoinSection from '~/features/inventory/components/PvpCoinSection';
 import { RaidConfigFields } from './RaidConfigFields';
-import { calcMultifloorWBs, MULTIFLOOR_WB_KEYS } from '~/features/inventory/logic/resourceEventAdapters';
+import { MULTIFLOOR_WB_KEYS } from '~/features/inventory/logic/resourceEventAdapters';
+import { multifloorSeasonTotals, type MultifloorRewards, type RewardServer } from '~/utils/itemOutlook';
 import { DEFAULT_RAID_CONFIG } from '~/data/raidCoinData';
 import type { RaidDetailConfig } from '~/data/raidCoinData';
 import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
@@ -49,6 +50,8 @@ interface WBProps {
   multifloorDefaultMaxFloor: number;
   multifloorMaxFloors: Record<string, number>;
   mfSchedule: ScheduleItemV2[];
+  rewards: MultifloorRewards | null;
+  server: RewardServer;
   onUpdate: (patch: Record<string, unknown>) => void;
 }
 
@@ -236,6 +239,7 @@ function ExpertPermitSection({ expertPermit }: { expertPermit: ExpertPermitProps
 function WBSection({ wb }: { wb: WBProps }) {
   const { t, i18n } = useTranslation('resources');
   const locale = i18n.language as Locale;
+  const maxFloorCap = Math.max(97, ...Object.values(wb.rewards ?? {}).flatMap((floors) => Object.keys(floors).map(Number)));
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
@@ -243,25 +247,16 @@ function WBSection({ wb }: { wb: WBProps }) {
         <input
           type="number"
           min={0}
-          max={97}
+          max={maxFloorCap}
           value={wb.multifloorDefaultMaxFloor || ''}
           placeholder="0"
           onChange={(e) =>
             wb.onUpdate({
-              multifloorDefaultMaxFloor: Math.min(97, Math.max(0, Number(e.target.value) || 0)),
+              multifloorDefaultMaxFloor: Math.min(maxFloorCap, Math.max(0, Number(e.target.value) || 0)),
             })
           }
           className={`w-16 ${INPUT_CLS}`}
         />
-        {wb.multifloorDefaultMaxFloor >= 14 &&
-          (() => {
-            const [d0, d1, d2] = calcMultifloorWBs(wb.multifloorDefaultMaxFloor);
-            return (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                → {d0}+{d1}+{d2}
-              </span>
-            );
-          })()}
       </div>
 
       {wb.mfSchedule.length === 0 && <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('income.noMfPeriods')}</p>}
@@ -271,8 +266,9 @@ function WBSection({ wb }: { wb: WBProps }) {
           {wb.mfSchedule.map((item) => {
             const override = wb.multifloorMaxFloors[item.id];
             const effective = override ?? wb.multifloorDefaultMaxFloor;
-            const [wb0, wb1, wb2] = effective >= 14 ? calcMultifloorWBs(effective) : [0, 0, 0];
-            const total = wb0 + wb1 + wb2;
+            const totals = wb.rewards && effective > 0 ? multifloorSeasonTotals(wb.rewards, item, wb.server, effective) : {};
+            const wbAmounts = MULTIFLOOR_WB_KEYS.map((key) => totals[key] ?? 0);
+            const total = wbAmounts.reduce((sum, amount) => sum + amount, 0);
             const title = getItemTitle(item, locale, i18n);
             return (
               <div key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -285,11 +281,11 @@ function WBSection({ wb }: { wb: WBProps }) {
                   <input
                     type="number"
                     min={0}
-                    max={97}
+                    max={maxFloorCap}
                     value={override ?? ''}
                     placeholder={wb.multifloorDefaultMaxFloor > 0 ? String(wb.multifloorDefaultMaxFloor) : '—'}
                     onChange={(e) => {
-                      const v = Math.min(97, Math.max(0, Number(e.target.value) || 0));
+                      const v = Math.min(maxFloorCap, Math.max(0, Number(e.target.value) || 0));
                       const next = { ...wb.multifloorMaxFloors };
                       if (v <= 0) delete next[item.id];
                       else next[item.id] = v;
@@ -298,9 +294,7 @@ function WBSection({ wb }: { wb: WBProps }) {
                     className={`w-16 ${INPUT_CLS}`}
                   />
                   {total > 0 && (
-                    <span className={`text-xs ${override !== undefined ? 'text-neutral-700 dark:text-neutral-200' : 'text-neutral-400 dark:text-neutral-500'}`}>
-                      → {wb0}+{wb1}+{wb2}
-                    </span>
+                    <span className={`text-xs ${override !== undefined ? 'text-neutral-700 dark:text-neutral-200' : 'text-neutral-400 dark:text-neutral-500'}`}>→ {wbAmounts.join('+')}</span>
                   )}
                 </div>
               </div>

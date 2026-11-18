@@ -43,7 +43,6 @@
       "dashboard": "ボード",
       "planner": "プランナー",
       "help": "ヘルプ",
-      "viewDescription": "説明を見る",
       "reportBug": "フィードバックを送信",
       "viewCode": "コードを見る",
       "theme": "テーマ",
@@ -54,6 +53,7 @@
       "jukebox": "BGMプレーヤー",
       "notices": "お知らせアーカイブ",
       "itemScanner": "アイテムスキャナー",
+      "inventory": "インベントリ",
       "studentScanner": "生徒育成スキャナー",
       "eventPlanner": "イベント周回プランナー",
       "gachaPlanner": "青輝石・募集/ガチャ計画",
@@ -85,15 +85,6 @@
       "unsupported": {
         "message": "ご希望の言語はサポートされていません。翻訳に貢献するか、別の言語を選択してください。",
         "contribute_button": "GitHubで貢献する"
-      }
-    },
-    "helpSidebar": {
-      "title": "使用指南",
-      "noGuide": "目前頁面沒有指南。",
-      "startGuide": "開始指南",
-      "driver": {
-        "next": "下一步 ➔",
-        "prev": "⬅ 上一步"
       }
     },
     "bugReport": {
@@ -184,11 +175,13 @@
     "heatmap": {
       "title": "生徒別 総力戦・大決戦編成トレンド",
       "description1": "各生徒がどの総力戦・大決戦に出撃したかを確認できます",
+      "studentsPageNotice": "生徒別の動向は、生徒リストの統計タブに統合される予定です。",
       "description2": "最大レベルを基準として、生徒のレベルに応じて出撃回数が補正されます。（例：最大レベルが90の時にLv. 45の生徒を出撃させた場合、45/90 = 0.5回として計算）",
       "processingMessage": "データの読み込み、解凍、処理中です...",
       "noDataMessage": "表示するデータがありません。フィルターでレアリティを1つ以上選択してください。",
       "usage_statistics": "採用率統計",
       "usage_desc": "総力戦・大決戦ごとの星数別採用率を比較します。",
+      "usage_total_pick": "合計採用率",
       "control": {
         "selectStudent": "生徒を選択",
         "studentSearchPlaceholder": "生徒名、役割、学園名などで検索",
@@ -309,6 +302,11 @@
     "switchToRank": "ランク表示に切り替え",
     "switchToScore": "スコア表示に切り替え",
     "binSize": "間隔 (Bin Size)",
+    "yAxisScale": "Y軸スケール",
+    "chartOptions": "グラフオプション",
+    "xAxisLabel": "X軸ラベル",
+    "scaleCumulative": "累積",
+    "scaleLinear": "線形",
     "bracketFilter": "難易度段階フィルター",
     "playerCount": "人数",
     "donutChartTitle": "Tier / 難易度組み合わせ分布",
@@ -425,13 +423,13 @@
     },
     "videos_select_boss": "動画を見るにはボスタイプを選択してください。",
     "videos_empty": "動画がありません。",
+    "videos_stats_server": "動画統計：{{server}}の動画が対象",
     "videos_scope_label": "動画の範囲",
     "videos_scope_all": "すべて",
     "videos_scope_current": "今回",
     "videos_scope_reference": "{{raid}} 参考",
     "videos_reference_title": "同条件の別サーバーのシーズンの動画",
-    "videos_candidate": "候補",
-    "videos_basic_analysis": "簡易解析",
+    "videos_basic_analysis": "タイトル",
     "videos_basic_analysis_title": "タイトルのみからスコアと難易度を読み取りました",
     "videos_sort_score_desc": "スコア高い順",
     "videos_sort_score_asc": "スコア低い順",
@@ -442,7 +440,7 @@
     "videos_party_info_missing": "生徒編成情報なし",
     "videos_view_results": "動画を表示（{{count}}件）",
     "videos_filter_tl": "TLのみ",
-    "videos_show_original_title": "原文",
+    "videos_translate_title": "翻訳",
     "videos_description": "概要欄",
     "videos_copy_link": "リンクをコピー",
     "videos_copy_failed": "コピーできませんでした。リンクを長押しするか、選択してコピーしてください。",

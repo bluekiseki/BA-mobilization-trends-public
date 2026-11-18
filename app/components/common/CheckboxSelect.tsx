@@ -30,9 +30,11 @@ interface CheckboxSelectProps<T extends string> {
   className?: string;
   /** Overrides the trigger button's classes entirely (default styling otherwise). Use to match a neighboring native <select>. */
   buttonClassName?: string;
+  /** Set to false to keep the joined label text on the trigger even when every selected option has a color. Defaults to true. */
+  colorDotsInTrigger?: boolean;
 }
 
-export function CheckboxSelect<T extends string>({ ariaLabel, options, selectedValues, onChange, allOption, className, buttonClassName }: CheckboxSelectProps<T>) {
+export function CheckboxSelect<T extends string>({ ariaLabel, options, selectedValues, onChange, allOption, className, buttonClassName, colorDotsInTrigger = true }: CheckboxSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isAllSelected = allOption !== undefined && selectedValues.has(allOption.value);
@@ -72,7 +74,7 @@ export function CheckboxSelect<T extends string>({ ariaLabel, options, selectedV
   const selectedLabels = isAllSelected ? allOption.label : selectedOptions.map(({ label }) => label).join(', ');
   // When every selected option carries a color, show compact dots instead of the (potentially
   // long) joined label text — the label is still available via the button's title tooltip.
-  const showColorDots = !isAllSelected && selectedOptions.length > 0 && selectedOptions.every((option) => option.color || option.colorClassName);
+  const showColorDots = colorDotsInTrigger && !isAllSelected && selectedOptions.length > 0 && selectedOptions.every((option) => option.color || option.colorClassName);
 
   return (
     <div className={`relative ${className ?? ''}`} ref={dropdownRef}>

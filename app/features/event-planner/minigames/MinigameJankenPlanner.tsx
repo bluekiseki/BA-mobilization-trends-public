@@ -21,6 +21,9 @@ interface MinigameJankenPlannerProps {
 
 export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ eventId, eventData, iconData, remainingCurrency, onCalculate }) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'minigame_janken' });
+  const { t: t_planner } = useTranslation('planner');
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_game } = useTranslation('game');
   const locale = i18n.language as Locale;
 
   const [activeTab, setActiveTab] = useState<'overview' | 'story' | 'normal' | 'challenge' | 'mission'>('overview');
@@ -146,7 +149,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
       // Score-threshold mission: {0} = stage reference, {1} = required score
       const stageId = mission.CompleteConditionParameter?.[1];
       const stage = allStagesMap.get(stageId);
-      const stageLabel = stage ? (stage.JankenStageType === 3 ? t('section_challenge', 'Challenge') : `${t('normal', 'Normal')} ${stage.StageNumber}`) : '';
+      const stageLabel = stage ? (stage.JankenStageType === 3 ? t_planner('common.challenge', 'Challenge') : `${t_game('difficulties.normal')} ${stage.StageNumber}`) : '';
       desc = desc.replace('{0}', stageLabel).replace('{1}', mission.CompleteConditionCount.toLocaleString());
     } else if (mission.CompleteConditionParameter && mission.CompleteConditionParameter.length > 1) {
       // Equipment tier mission: {0} = target tier
@@ -239,11 +242,11 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
   if (!jankenData) return null;
 
   const tabs = [
-    { id: 'overview' as const, name: t('overview', 'Overview'), icon: null },
-    { id: 'story' as const, name: t('story', 'Story'), icon: FaRegStar },
-    { id: 'normal' as const, name: t('normal', 'Normal'), icon: FaRedoAlt },
-    { id: 'challenge' as const, name: t('section_challenge', 'Challenge'), icon: FaTrophy },
-    { id: 'mission' as const, name: t('missions', 'Missions'), icon: FaTasks },
+    { id: 'overview' as const, name: t_ui('overview'), icon: null },
+    { id: 'story' as const, name: t_game('story'), icon: FaRegStar },
+    { id: 'normal' as const, name: t_game('difficulties.normal'), icon: FaRedoAlt },
+    { id: 'challenge' as const, name: t_planner('common.challenge', 'Challenge'), icon: FaTrophy },
+    { id: 'mission' as const, name: t_ui('mission'), icon: FaTasks },
   ] as const;
 
   const renderRewardIcons = (rewards: StageReward[] | undefined, size = 9) => {
@@ -253,7 +256,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
       if (hideOneTimeRewards && isOneTimeTag) return;
       const amount = isOneTimeTag ? r.RewardAmount : r.RewardAmount * (r.RewardProb / 10000);
       if (amount <= 0) return;
-      const label = r.RewardTagStr === 'FirstClear' ? t('label_first', 'First') : r.RewardTagStr === 'ThreeStar' ? t('label_three_star', '3★') : undefined;
+      const label = r.RewardTagStr === 'FirstClear' ? t('label_first', 'First') : r.RewardTagStr === 'ThreeStar' ? t_ui('threeStar', '3★') : undefined;
       const labelColor = r.RewardTagStr === 'FirstClear' ? 'bg-blue-600' : r.RewardTagStr === 'ThreeStar' ? 'bg-amber-500' : undefined;
       // Keep one-time (FirstClear/ThreeStar) rewards separate from repeatable (Default/Rare) rewards
       // for the same item, so a first-clear bonus doesn't get merged into the per-run drop icon.
@@ -293,7 +296,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
           }`}
         >
           {hideOneTimeRewards ? <FaEyeSlash /> : <FaEye />}
-          {hideOneTimeRewards ? t('show_onetime_rewards', 'Show One-Time Rewards') : t('hide_onetime_rewards', 'Hide One-Time Rewards')}
+          {hideOneTimeRewards ? t_planner('button.showOneTimeRewards') : t_planner('button.hideOneTimeRewards')}
         </button>
       </div>
 
@@ -315,17 +318,16 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
         {activeTab === 'overview' && (
           <div className="space-y-4 text-sm dark:text-neutral-300">
             <div className="bg-neutral-50 dark:bg-neutral-700/50 p-4 rounded-lg">
-              <h3 className="font-bold mb-2 text-base dark:text-neutral-100">{t('game_rules', 'Game Rules')}</h3>
+              <h3 className="font-bold mb-2 text-base dark:text-neutral-100">{t_ui('gameRules', 'Game Rules')}</h3>
               <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-300">
                 <li>{t('desc_1', 'A rock-paper-scissors battle: winning deals heavy damage, a tie damages both sides, and losing damages only you.')}</li>
                 <li>{t('desc_2', 'Hands with a lower win rate deal more damage when they win.')}</li>
                 <li>{t('desc_3', 'Losing or giving up fully refunds the entry cost, so there is no risk in retrying.')}</li>
-                <li>{t('desc_4', 'No daily play limit, so there is no need to rush.')}</li>
               </ul>
             </div>
 
             <div className="flex items-center gap-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-              <span className="font-semibold text-sm text-blue-900 dark:text-blue-100">{t('entry_cost', 'Entry Cost')}:</span>
+              <span className="font-semibold text-sm text-blue-900 dark:text-blue-100">{t_ui('entryCost', 'Entry Cost')}:</span>
               {renderCost(storyStages[0]?.StageEnterCostAmount ?? normalStages[0]?.StageEnterCostAmount ?? 0, entryItemId, entryItemTypeStr, 12)}
             </div>
 
@@ -338,7 +340,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                   <thead className="bg-neutral-50 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300">
                     <tr>
                       <th className="px-4 py-2 border-b dark:border-neutral-600 w-[20%] whitespace-nowrap">{t('tier', 'Tier')}</th>
-                      <th className="px-4 py-2 border-b dark:border-neutral-600">{t('cost', 'Cost')}</th>
+                      <th className="px-4 py-2 border-b dark:border-neutral-600">{t_game('cost')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
@@ -366,7 +368,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                     </option>
                   ))}
                 </select>
-                <span className="text-sm text-neutral-500 dark:text-neutral-400">{t('cost', 'Cost')}:</span>
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">{t_game('cost')}:</span>
                 {renderCost(
                   tierCosts.slice(0, Math.max(0, config.equipmentTargetTier - 1)).reduce((sum, v) => sum + v, 0),
                   equipItemId,
@@ -387,7 +389,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
               >
                 <FaCheckDouble />
-                {t('clear_all', 'Clear All')}
+                {t_planner('mission.clearAll')}
               </button>
             </div>
             <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
@@ -397,7 +399,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                   <div key={stage.Id} className="p-3 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
                     <div className="w-full sm:w-40 sm:shrink-0">
                       <div className="font-semibold text-sm text-neutral-800 dark:text-neutral-200">
-                        {t('story', 'Story')} {stage.StageNumber}
+                        {t_game('story')} {stage.StageNumber}
                       </div>
                       <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex items-center gap-1">{renderCost(stage.StageEnterCostAmount)}</div>
                     </div>
@@ -431,7 +433,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
               >
                 <FaCheckDouble />
-                {t('include_onetime_all', 'Include One-Time (All)')}
+                {`${t_planner('button.includeOneTimeRewards')} (${t_ui('all')})`}
               </button>
             </div>
             <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
@@ -443,7 +445,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="w-full sm:w-48 sm:shrink-0">
                         <h4 className="font-bold text-sm text-blue-600 dark:text-blue-400 truncate">
-                          {t('normal', 'Normal')} {stage.StageNumber}
+                          {t_game('difficulties.normal')} {stage.StageNumber}
                         </h4>
                         <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex items-center gap-1">{renderCost(stage.StageEnterCostAmount)}</div>
                         <label className="flex items-center space-x-2 mt-2 cursor-pointer select-none group">
@@ -454,7 +456,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
                             className="h-3.5 w-3.5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
                           />
                           <span className="text-xs text-neutral-600 dark:text-neutral-300 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
-                            {t('include_onetime', 'Include One-Time')}
+                            {t_planner('button.includeOneTimeRewards')}
                           </span>
                         </label>
                       </div>
@@ -494,7 +496,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
             <div className="p-3">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="w-full sm:w-48 sm:shrink-0">
-                  <h4 className="font-bold text-sm text-blue-600 dark:text-blue-400">{t('section_challenge', 'Challenge')}</h4>
+                  <h4 className="font-bold text-sm text-blue-600 dark:text-blue-400">{t_planner('common.challenge', 'Challenge')}</h4>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex items-center gap-1">{renderCost(challengeStage.StageEnterCostAmount)}</div>
                   <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none">
                     <input
@@ -587,7 +589,7 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
         {(activeTab === 'story' || activeTab === 'normal' || activeTab === 'challenge') && (
           <div className="space-y-4">
             <div className="flex justify-between items-center text-sm font-medium pt-2 border-t border-neutral-200 dark:border-neutral-700">
-              <span className="dark:text-neutral-200">{t('cost', 'Cost')}:</span>
+              <span className="dark:text-neutral-200">{t_game('cost')}:</span>
               <span className={`flex items-center gap-1 ${currentCurrencyAmount < calcResult.totalCost ? 'text-red-500' : 'text-neutral-700 dark:text-neutral-300'}`}>
                 <ItemIcon type={entryItemTypeStr} itemId={String(entryItemId)} amount="" size={9} eventData={eventData} iconData={iconData} />
                 {calcResult.totalCost.toLocaleString()}
@@ -626,10 +628,10 @@ export const MinigameJankenPlanner: React.FC<MinigameJankenPlannerProps> = ({ ev
               </span>
               <div className="space-x-2">
                 <button onClick={() => toggleAllMissions(true)} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
-                  {t('select_all', 'Select All')}
+                  {t_ui('selectAll')}
                 </button>
                 <button onClick={() => toggleAllMissions(false)} className="text-xs bg-neutral-400 text-white px-2 py-1 rounded hover:bg-neutral-500">
-                  {t('deselect_all', 'Deselect All')}
+                  {t_ui('deselectAll')}
                 </button>
               </div>
             </div>

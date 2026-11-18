@@ -50,7 +50,7 @@ export const formatMissionDescription = (mission: MissionText, stages: Stage[], 
     const bossData_typed = bossData as unknown as Record<string, { name: Record<string, string> }>;
     fill(0, bossData_typed[String(params[2] ?? '')]?.name?.[locale] || '?');
   } else if (mission.CompleteConditionType == 191) {
-    // "装備T{0}を達成": equipment tier in the second parameter.
+    // Equipment-tier missions store the tier in the second parameter.
     fill(0, String(params[1] ?? '?'));
   } else if (mission.CompleteConditionType == 117 || mission.CompleteConditionType == 119 || mission.CompleteConditionType == 94) {
     // "area {0}" (area numbering not known from the data) and "FULL Combo on {0} difficulty {1}"

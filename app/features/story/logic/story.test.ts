@@ -7,7 +7,7 @@ import { timelineExtras } from './timelineExtras';
 import { PROLOGUE_ID, withPrologue } from './prologue';
 import { withScheduleNames } from './scheduleNames';
 import { relationGraph } from './relationGraph';
-import { buildSeriesReleases, episodeLabel, filterSeries, listCategories, neighbours, pickText, summaryParts, type SeriesGroup } from './storyIndex';
+import { buildSeriesReleases, episodeLabel, episodeNumber, episodeSlot, episodeTotal, filterSeries, listCategories, neighbours, pickText, summaryParts, type SeriesGroup } from './storyIndex';
 import type { StoryIndex } from './types';
 import { anniversaryLabel } from './uiText';
 
@@ -37,7 +37,7 @@ const schedule = (main: string[], event: string[]): ServerSchedule => ({
 });
 const schedules = {
   jp: schedule(['2021-02-04 11:00:00', '2021-03-11 11:00:00'], ['2021-04-29 12:30:00']),
-  kr: schedule(['2021-11-09 11:00:00', '2021-11-09 11:00:00'], ['2021-12-01 12:30:00']),
+  gl: schedule(['2021-11-09 11:00:00', '2021-11-09 11:00:00'], ['2021-12-01 12:30:00']),
 };
 const releases = buildSeriesReleases(index, schedules);
 const options = { category: 'Main', query: '', lang: 'en' as const, character: null, sort: 'jp' as const, releases };
@@ -69,7 +69,7 @@ describe('story index', () => {
   });
 
   it('sorts by release and puts undated series last', () => {
-    const events = (sort: 'jp' | 'kr') => filterSeries(index, { ...options, category: 'Event', sort }).map((g) => [g.id, g.date]);
+    const events = (sort: 'jp' | 'gl') => filterSeries(index, { ...options, category: 'Event', sort }).map((g) => [g.id, g.date]);
     expect(events('jp')).toEqual([
       ['Event/5', '2021-04-29 12:30'],
       ['Event/6', null],
@@ -102,10 +102,10 @@ describe('release dates', () => {
   });
 
   it('keeps parts opened at the same time apart for stories and merges them in the list', () => {
-    const kr = seriesReleases(['main', 'vol1_ch1'], schedules.kr);
-    expect(kr).toHaveLength(2);
-    expect(ownRelease(kr, 3)?.label).toBe('Part 2');
-    expect(collapseSameDate(kr)).toMatchObject([{ date: '2021-11-09 11:00', label: 'Part 1, Part 2', estimated: false }]);
+    const gl = seriesReleases(['main', 'vol1_ch1'], schedules.gl);
+    expect(gl).toHaveLength(2);
+    expect(ownRelease(gl, 3)?.label).toBe('Part 2');
+    expect(collapseSameDate(gl)).toMatchObject([{ date: '2021-11-09 11:00', label: 'Part 1, Part 2', estimated: false }]);
   });
 
   it('numbers the steps stories belong to', () => {
@@ -340,18 +340,18 @@ describe('fes recruitment on the timeline', () => {
         { ...pickup('Hoshino', '2022-07-20 11:00'), studentId: 10045 },
       ],
     };
-    const kr: ServerSchedule = {
+    const gl: ServerSchedule = {
       ...schedule,
       pickup: [
         { ...pickup('Hoshino', '2023-01-31 11:00'), studentId: 10045 },
         { ...pickup('Mika', '2023-07-25 11:00'), studentId: 10059 },
       ],
     };
-    const events = fesEvents({ jp, kr }, 'kr');
-    expect(events.map((event) => Object.keys(event.releases).sort())).toEqual([['jp', 'kr'], ['kr']]);
+    const events = fesEvents({ jp, gl }, 'gl');
+    expect(events.map((event) => Object.keys(event.releases).sort())).toEqual([['gl', 'jp'], ['gl']]);
     expect(events[0].releases.jp?.[0].date).toBe('2022-07-20 11:00');
     expect(events.map((event) => event.anniversary)).toEqual([1, null]);
-    expect(fesEvents({ jp, kr }, 'jp').map((event) => event.anniversary)).toEqual([0.5, 1]);
+    expect(fesEvents({ jp, gl }, 'jp').map((event) => event.anniversary)).toEqual([0.5, 1]);
   });
 
   it('skips a Fes recruitment that only has reruns', () => {
@@ -404,19 +404,19 @@ describe('names from the schedule data', () => {
 describe('promotional videos on the timeline', () => {
   const videos = [
     { id: 'teaser', title: { en: 'Teaser PV' }, videos: { jp: { date: '2020-07-17', url: 'https://example.com/a' } } },
-    { id: '7th', title: { en: '7th PV' }, videos: { jp: { date: '2026-04-19', url: 'https://example.com/b' }, kr: { date: '2026-08-15', url: 'https://example.com/c' } } },
+    { id: '7th', title: { en: '7th PV' }, videos: { jp: { date: '2026-04-19', url: 'https://example.com/b' }, gl: { date: '2026-08-15', url: 'https://example.com/c' } } },
   ];
   const empty: ServerSchedule = { main: [], group: [], mini: [], event: [], pickup: [] };
 
   it('lists the videos of a server by the day they went up there, and leaves out a video the server does not have', () => {
-    const schedules = { jp: empty, kr: empty };
+    const schedules = { jp: empty, gl: empty };
     expect(timelineExtras(schedules, 'jp', videos).map((extra) => (extra.kind === 'pv' ? `${extra.pv.id}@${extra.date}` : ''))).toEqual(['teaser@2020-07-17', '7th@2026-04-19']);
-    expect(timelineExtras(schedules, 'kr', videos).map((extra) => (extra.kind === 'pv' ? `${extra.pv.id}@${extra.date}` : ''))).toEqual(['7th@2026-08-15']);
+    expect(timelineExtras(schedules, 'gl', videos).map((extra) => (extra.kind === 'pv' ? `${extra.pv.id}@${extra.date}` : ''))).toEqual(['7th@2026-08-15']);
   });
 
   it('sorts videos and Fes recruitments together', () => {
     const withFes: ServerSchedule = { ...empty, pickup: [{ studentId: 10033, name: 'Wakamo', startTime: '2022-01-26 12:30', fest: true, rerun: false }] };
-    const kinds = timelineExtras({ jp: withFes, kr: empty }, 'jp', videos).map((extra) => extra.kind);
+    const kinds = timelineExtras({ jp: withFes, gl: empty }, 'jp', videos).map((extra) => extra.kind);
     expect(kinds).toEqual(['pv', 'fes', 'pv']);
   });
 });
@@ -452,9 +452,9 @@ describe('the game prologue', () => {
       event: [],
       pickup: [],
     });
-    const releases = buildSeriesReleases(withPrologue(base), { jp: schedule('2021-02-04'), kr: schedule('2021-11-09') });
+    const releases = buildSeriesReleases(withPrologue(base), { jp: schedule('2021-02-04'), gl: schedule('2021-11-09') });
     expect(releases[PROLOGUE_ID].jp?.[0].date).toBe('2021-02-04 11:00');
-    expect(releases[PROLOGUE_ID].kr?.[0].date).toBe('2021-11-09 11:00');
+    expect(releases[PROLOGUE_ID].gl?.[0].date).toBe('2021-11-09 11:00');
     const groups = filterSeries(withPrologue(base), { category: 'Main', query: '', lang: 'ko', character: null, sort: 'jp', releases });
     expect(groups.map((group) => group.id)).toEqual([PROLOGUE_ID, 'V1']);
   });
@@ -507,7 +507,7 @@ describe('club stories released on different days', () => {
       ['2021-02-04 11:00:00', '1'],
       ['2021-08-26 11:00:00', '2'],
     ]),
-    kr: schedule([
+    gl: schedule([
       ['2021-11-09 11:00:00', '1'],
       ['2022-04-19 11:00:00', '2'],
     ]),
@@ -520,11 +520,54 @@ describe('club stories released on different days', () => {
       ['2021-02-04', [1, 1], 1],
       ['2021-08-26', [2, 2], 1],
     ]);
-    expect(rows[1].part?.releases.kr?.[0].date).toBe('2022-04-19 11:00');
+    expect(rows[1].part?.releases.gl?.[0].date).toBe('2022-04-19 11:00');
   });
 
   it('is listed once when the parts are not split, or while searching', () => {
     expect(filterSeries(clubIndex, options)).toHaveLength(1);
     expect(filterSeries(clubIndex, { ...options, splitParts: true, query: '매화' })).toHaveLength(1);
+  });
+});
+
+describe('episode numbers', () => {
+  // A prologue and afterwords sit in the list but have no number, so the list position runs ahead of the game's number
+  const withPrologue: StoryIndex = {
+    series: { 'Event/1': { c: 'Event', name: { en: 'Event' }, r: [], stories: ['1', '2', '3', '4'] } },
+    stories: {
+      '1': { s: 'Event/1', o: 1, t: { en: 'Prologue' }, l: undefined },
+      '2': { s: 'Event/1', o: 2, t: { en: 'A' }, l: { ko: '제1화', ja: '第1話', en: 'Episode 1' } },
+      '3': { s: 'Event/1', o: 3, t: { en: 'B' }, l: { ko: '제2화', ja: '第2話', en: 'Episode 2' } },
+      '4': { s: 'Event/1', o: 4, t: { en: 'C' }, l: { ko: '후일담', ja: '後日談その1', en: 'Afterword' } },
+    },
+    chars: {},
+    cs: {},
+    vs: {},
+    bgm: {},
+  } as unknown as StoryIndex;
+  const series = withPrologue.series['Event/1'];
+
+  it('reads the number in the label', () => {
+    expect(episodeNumber(withPrologue.stories['3'], 'ko')).toBe(2);
+    expect(episodeNumber(withPrologue.stories['3'], 'ja')).toBe(2);
+    expect(episodeNumber(withPrologue.stories['3'], 'en')).toBe(2);
+  });
+
+  it('gives a prologue and an afterword no number, even when the label has a digit', () => {
+    expect(episodeNumber(withPrologue.stories['1'], 'ko')).toBeNull();
+    expect(episodeNumber(withPrologue.stories['4'], 'ko')).toBeNull();
+    expect(episodeNumber(withPrologue.stories['4'], 'ja')).toBeNull();
+  });
+
+  it('shows the number of the label instead of the place in the list', () => {
+    expect(episodeSlot(withPrologue, series, '3', 'ko')).toBe(2);
+    expect(episodeSlot(withPrologue, series, '1', 'ko')).toBeNull();
+    expect(episodeTotal(withPrologue, series, 'ko')).toBe(2);
+  });
+
+  it('falls back to the place in the list for a series without numbered stories', () => {
+    const plain = { ...withPrologue, stories: { '1': { s: 'Event/1', o: 1, t: { en: 'X' } }, '2': { s: 'Event/1', o: 2, t: { en: 'Y' } } } } as unknown as StoryIndex;
+    const plainSeries = { ...series, stories: ['1', '2'] };
+    expect(episodeSlot(plain, plainSeries, '2', 'ko')).toBe(2);
+    expect(episodeTotal(plain, plainSeries, 'ko')).toBe(2);
   });
 });

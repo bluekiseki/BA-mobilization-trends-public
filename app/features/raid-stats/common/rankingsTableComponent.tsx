@@ -1,6 +1,6 @@
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { isTotalAssault } from '../../../utils/raid/report';
-import type { PortraitData, ReportEntryRank, ReportStudentData } from '../../../types/raidReport';
+import type { ReportEntryRank, ReportStudentData } from '../../../types/raidReport';
 import { formatTimeToTimestamp } from '~/utils/time';
 // import type { RankRange } from '../dashboard/teamDetail/rankFilter';
 import type { GameServer, RaidInfo } from '~/types/data';
@@ -12,11 +12,10 @@ import React from 'react';
 export const RankCard: React.FC<{
   entry: ReportEntryRank;
   studentData: ReportStudentData;
-  portraitData: PortraitData;
   // rank: number;
   raid: RaidInfo;
   server: GameServer;
-}> = ({ entry, studentData, portraitData, raid, server }) => {
+}> = ({ entry, studentData, raid, server }) => {
   return (
     <div className="bg-white dark:bg-neutral-800 rounded-lg p-2 sm:p-0.75 border border-neutral-200 dark:border-neutral-700 hover:border-teal-500 transition-colors sm:flex sm:items-center">
       {/* RANK & SCORE Section */}
@@ -60,11 +59,11 @@ export const RankCard: React.FC<{
         {entry?.t?.map((team, i) => (
           <div key={i} className="flex flex-row items-center justify-center w-full gap-x-2">
             {team.m.map((c, j) => (
-              <StudentIcon key={`${i}-m-${c?.id}-${j}`} character={c} student={studentData[c?.id]} portraitData={portraitData} />
+              <StudentIcon key={`${i}-m-${c?.id}-${j}`} character={c} student={studentData[c?.id]} />
             ))}
             <div className="shrink-0 text-2xl mx-0 sm:mx-1 text-neutral-400 dark:text-neutral-500">|</div>
             {team.s.map((c, j) => (
-              <StudentIcon key={`${i}-s-${c?.id}-${j}`} character={c} student={studentData[c?.id]} portraitData={portraitData} />
+              <StudentIcon key={`${i}-s-${c?.id}-${j}`} character={c} student={studentData[c?.id]} />
             ))}
           </div>
         ))}
@@ -78,7 +77,6 @@ export const RankingsTableComponent: React.FC<{
   currentPage: number;
   itemsPerPage: number;
   studentData: ReportStudentData;
-  portraitData: PortraitData;
   paginatedData: ReportEntryRank[];
   handlePageChange: (page: number) => void;
   // showRank: boolean;
@@ -94,7 +92,6 @@ export const RankingsTableComponent: React.FC<{
     currentPage,
     itemsPerPage,
     studentData,
-    portraitData,
     paginatedData,
     // showRank,
     // activeRange,
@@ -123,7 +120,6 @@ export const RankingsTableComponent: React.FC<{
               key={entry.r}
               entry={entry}
               studentData={studentData}
-              portraitData={portraitData}
               // rank = { i+1 + (currentPage-1)*itemsPerPage+ activeRange.min - 1}
               raid={raidInfo}
               server={server}

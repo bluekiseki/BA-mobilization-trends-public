@@ -7,7 +7,7 @@ import { FiTrendingUp } from 'react-icons/fi';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { CombatStylePortrait } from '~/components/student/CombatStylePortrait';
-import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, StudentData } from '~/types/plannerData';
 import type { WithNonNullable } from '~/utils/WithNonNullable';
 
 interface BonusSelectorProps {
@@ -15,14 +15,12 @@ interface BonusSelectorProps {
   eventData: WithNonNullable<EventData, 'currency' | 'bonus'>; //NonNullable<EventData["currency"|"bonus"]>;
   iconData: IconData;
   allStudents: StudentData;
-  studentPortraits: StudentPortraitData;
   onBonusCalculate: (bonusMap: TotalBonusMap) => void;
 }
 
 type BonusStudent = {
   id: string;
   name: string;
-  portrait: string;
   totalBonusValue: number;
 };
 
@@ -57,10 +55,12 @@ const calculateBonusMap = (studentIds: string[], eventData: BonusSelectorProps['
   return bonusMap;
 };
 
-export const BonusSelector = ({ eventId, eventData, iconData, allStudents, studentPortraits, onBonusCalculate }: BonusSelectorProps) => {
+const EMPTY_SELECTED_STUDENTS: string[] = [];
+
+export const BonusSelector = ({ eventId, eventData, iconData, allStudents, onBonusCalculate }: BonusSelectorProps) => {
   const bonusData = eventData.bonus;
   const { plan, setSelectedStudents } = usePlanForEvent(eventId);
-  const { selectedStudents } = plan;
+  const selectedStudents = plan.selectedStudents ?? EMPTY_SELECTED_STUDENTS;
   const growthPlans = useGlobalStore((state) => state.growthPlans);
 
   const myStudentPool = useMemo(() => {
@@ -79,8 +79,6 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
   const { t } = useTranslation('planner');
   const { t: t_ui } = useTranslation('ui');
 
-  if (!selectedStudents) return null;
-
   const bonusStudents = useMemo(() => {
     return Object.keys(bonusData)
       .map((id) => {
@@ -90,12 +88,11 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
         return {
           id,
           name: studentInfo?.Name || id,
-          portrait: studentPortraits[Number(id)],
           totalBonusValue,
         };
       })
       .sort((a, b) => b.totalBonusValue - a.totalBonusValue);
-  }, [bonusData, allStudents, studentPortraits]);
+  }, [bonusData, allStudents]);
 
   const handleSelectAll = useCallback(() => {
     setSelectedStudents(bonusStudents.map((s) => s.id));
@@ -216,7 +213,7 @@ export const BonusSelector = ({ eventId, eventData, iconData, allStudents, stude
           </div>
         )}
         <div className="aspect-square w-full">
-          <CombatStylePortrait studentId={Number(student.id)} portraits={studentPortraits} alt={student.name} />
+          <CombatStylePortrait studentId={Number(student.id)} alt={student.name} />
         </div>
         <div
           className={`p-0.5 text-center grow flex flex-col justify-center

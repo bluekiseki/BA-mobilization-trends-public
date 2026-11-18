@@ -10,8 +10,6 @@ export interface RatingData {
   bullettype: Student['BulletType'];
   total: number;
   count: number;
-  portrait: Student['Portrait'];
-  portraits: Student['Portrait'][];
   ratings: {
     [key: string]: number;
   };

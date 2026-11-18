@@ -48,7 +48,7 @@ export interface BannerPeriod {
   isLimitedBanner: boolean;
   isRerunBanner: boolean;
   isRecall: boolean; // Archive pickup. In this case, 100 new Elephs are not granted.
-  freePulls: number; // Automatically calculated (0 or 100)
+  freePulls: number; // Explicit CSV value if given, otherwise automatically calculated (0 or 100)
   /** Whether this banner uses the "recruit charge" pity system (post Makoto (Swimsuit) patch) instead of the legacy spark-point system. */
   useChargeSystem: boolean;
 
@@ -65,6 +65,7 @@ interface CsvRow {
   fest: string; // "true" | "false" -> FES status
   prediction: string;
   bannerType: string;
+  freePulls?: string; // Optional explicit free pull count (e.g. 200 on KR/GL Makoto/Satsuki Swimsuit), overrides the FES-adjacency rule
 }
 
 /**
@@ -83,6 +84,8 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
   });
 
   const groupedMap = new Map<string, BannerPeriod>();
+  // Explicit free pull counts from the CSV, keyed by banner group id
+  const explicitFreePulls = new Map<string, number>();
 
   data.forEach((row) => {
     // Validate required data
@@ -137,6 +140,11 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
     const group = groupedMap.get(groupKey);
     if (!group) return;
 
+    const explicit = Number(row.freePulls?.trim());
+    if (row.freePulls?.trim() && Number.isFinite(explicit)) {
+      explicitFreePulls.set(groupKey, Math.max(explicitFreePulls.get(groupKey) ?? 0, explicit));
+    }
+
     // Update group attributes (OR condition)
     if (isFes) group.isFes = true;
     if (isLimitedCsv) group.isLimitedBanner = true;
@@ -164,10 +172,17 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
   // 2. Sort chronologically
   const sortedBanners = Array.from(groupedMap.values()).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
-  // 3. Auto-grant logic for 100 free pulls (publisher business rules)
-  // Rule: 100 free pulls if a [Limited] and [New (not Rerun)] banner is immediately before or after a [FES] banner
+  // 3. Free pull logic (publisher business rules)
+  // An explicit CSV value always wins. Otherwise: 100 free pulls if a [Limited] and [New (not Rerun)]
+  // banner is immediately before or after a [FES] banner.
   for (let i = 0; i < sortedBanners.length; i++) {
     const current = sortedBanners[i];
+
+    const explicit = explicitFreePulls.get(current.id);
+    if (explicit !== undefined) {
+      current.freePulls = explicit;
+      continue;
+    }
 
     // Free pull candidates: Limited & New (not Rerun) & not FES. Some free pulls were granted
     // during FES itself (e.g. S.Hoshino), but recent trend is limited banners before/after FES.
@@ -196,10 +211,6 @@ export const parseAndGroupBanners = (region: 'KR' | 'JP' = 'KR', schaleStudentDa
 
   return sortedBanners;
 };
-
-/* Portrait key normalizer moved to a lightweight module so nav/auth code can reuse it
-   without pulling papaparse + CSV assets into their bundle. */
-export { normalizePortraitMap } from './studentPortraitMap';
 
 /**
  * Retrieves the list of all students (used to configure the 'regular pool' in the simulator).

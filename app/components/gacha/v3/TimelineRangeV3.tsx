@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Area, CartesianGrid, ComposedChart, Label, Line, ReferenceArea, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { SheetSvgIcon } from '~/components/common/SheetIcon';
 import type { BannerStudentMarker, CustomLineConfig, ProbTimelinePoint } from './timelineTypes';
 
 const criteria = [
@@ -26,22 +27,19 @@ function MarkerLabel({ marker, lane, viewBox }: MarkerLabelProps) {
       {visibleStudents.map((student, index) => {
         const offset = index * 17 - ((visibleStudents.length - 1) * 17) / 2;
         const clipId = `v3-marker-${marker.date}-${student.id}`;
-        return student.portrait ? (
+        return (
           <g key={student.id}>
             <defs>
               <clipPath id={clipId}>
                 <circle cx={offset} cy={12} r={12} />
               </clipPath>
             </defs>
-            <image href={student.portrait} x={offset - 12} y={0} width={24} height={24} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
-            <circle cx={offset} cy={12} r={12} fill="none" stroke="var(--v3-ticket)" />
-          </g>
-        ) : (
-          <g key={student.id} transform={`translate(${offset}, 12)`}>
-            <circle r={12} fill="var(--color-neutral-200)" stroke="var(--v3-ticket)" />
-            <text textAnchor="middle" dominantBaseline="central" fontSize={8} fontWeight={700} fill="var(--color-neutral-800)">
+            <circle cx={offset} cy={12} r={12} fill="var(--color-neutral-200)" />
+            <text x={offset} y={12} textAnchor="middle" dominantBaseline="central" fontSize={8} fontWeight={700} fill="var(--color-neutral-800)">
               {student.name.slice(0, 2)}
             </text>
+            <SheetSvgIcon sheet="student" id={student.id} x={offset - 12} y={0} width={24} height={24} clipPath={`url(#${clipId})`} />
+            <circle cx={offset} cy={12} r={12} fill="none" stroke="var(--v3-ticket)" />
           </g>
         );
       })}

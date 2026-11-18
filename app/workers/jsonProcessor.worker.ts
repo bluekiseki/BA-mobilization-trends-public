@@ -1,7 +1,4 @@
-import * as xz from 'xz-decompress';
-import { processStream } from '../utils/xorProcess';
-
-const { XzReadableStream } = xz;
+import { gzipDecodeStream } from '../utils/xorProcess';
 
 /**
  * Get the URL from the main thread and handle fetch, XOR, decompression, and JSON parsing.
@@ -15,15 +12,8 @@ self.onmessage = async (event: MessageEvent<{ url: string; doXor: boolean }>) =>
     if (!response.ok) throw new Error(`Failed to fetch ${url} (${response.status})`);
     if (!response.body) throw new Error(`Response body is null for ${url}`);
 
-    let streamToDecompress: ReadableStream<Uint8Array> = response.body;
-
-    // 1. Process XOR stream (if needed)
-    if (doXor) {
-      streamToDecompress = processStream(response.body);
-    }
-
-    // 2. XZ decompression
-    const decompressedStream = new XzReadableStream(streamToDecompress);
+    // 1. XOR (if needed) + 2. gzip decompression
+    const decompressedStream = gzipDecodeStream(response.body, doXor);
 
     // 3. Wrap the stream in a Response object and parse using .json() method
     const finalResponse = new Response(decompressedStream);

@@ -119,7 +119,7 @@ const buildJustin163Json = (): string => {
   return JSON.stringify(toJustin163(growthPlans, materialInventory, ownedGifts), null, 2);
 };
 
-export const ExportImportPanel: FC = () => {
+export const ExportImportPanel: FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useTranslation('planner');
   const [activeTab, setActiveTab] = useState<'export' | 'import'>('export');
   const [inputText, setInputText] = useState('');
@@ -276,10 +276,10 @@ export const ExportImportPanel: FC = () => {
     <div>
       {/* Header */}
       <div className="px-2 sm:px-4 pt-3 border-b border-neutral-200 dark:border-neutral-700">
-        <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 pb-2">{t('dataExchange.title')}</h2>
+        {!compact && <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 pb-2">{t('dataExchange.title')}</h2>}
         <div className="flex">
           <button onClick={() => switchTab('export')} className={tabClass('export')}>
-            {t('dataExchange.tabExport')}
+            {t('dataExchange.export')}
           </button>
           <button onClick={() => switchTab('import')} className={tabClass('import')}>
             {t('dataExchange.tabImport')}
@@ -315,7 +315,7 @@ export const ExportImportPanel: FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleExportDownload}
-                className="flex-1 py-2 text-sm font-medium transition-opacity bg-ba-btn-blue dark:bg-ba-btn-blue-dark text-neutral-900 dark:text-neutral-900 hover:opacity-80"
+                className={`${compact ? 'px-4' : 'flex-1'} py-2 text-sm font-medium transition-opacity bg-ba-btn-blue dark:bg-ba-btn-blue-dark text-neutral-900 hover:opacity-80`}
               >
                 {t('dataExchange.saveToFile')}
               </button>
@@ -327,7 +327,7 @@ export const ExportImportPanel: FC = () => {
                     : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-ba-btn-blue/10 hover:border-ba-btn-blue dark:hover:bg-ba-btn-blue/20 dark:hover:border-ba-btn-blue'
                 }`}
               >
-                {exportCopied ? `✓ ${t('dataExchange.clipboardCopied')}` : t('dataExchange.copyClipboard')}
+                {exportCopied ? `✓ ${t('dataExchange.aiPromptCopied')}` : t('dataExchange.copyClipboard')}
               </button>
             </div>
           </>
@@ -384,7 +384,7 @@ export const ExportImportPanel: FC = () => {
                     : 'border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-ba-btn-blue/10 hover:border-ba-btn-blue dark:hover:bg-ba-btn-blue/20 dark:hover:border-ba-btn-blue'
                 }`}
               >
-                {inputCopied ? `✓ ${t('dataExchange.clipboardCopied')}` : t('dataExchange.copyClipboard')}
+                {inputCopied ? `✓ ${t('dataExchange.aiPromptCopied')}` : t('dataExchange.copyClipboard')}
               </button>
               <button
                 onClick={() => void handleCopyAiPrompt()}

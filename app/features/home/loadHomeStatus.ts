@@ -19,7 +19,8 @@ import jpRaidCsvRaw from '~/data/jp/schedule/raid.csv?raw';
 import jpEraidCsvRaw from '~/data/jp/schedule/eraid.csv?raw';
 import { sortChangelog } from '~/utils/changelog';
 import changelogJson from '~/data/changelog.json';
-import { type StatusRaid, getBossName, extractLocation, extractBossKeyAndArmorType } from '~/features/home/homeStatus';
+import { type StatusRaid, getBossName, extractLocations, extractBossKeyAndArmorType } from '~/features/home/homeStatus';
+import { toLocations } from '~/utils/raidLocation';
 
 const eventListJson = eventListJsonRaw as unknown as EventListData;
 // ─── Constants ──────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
         jpRaid = {
           id: liveRaids[0].Id,
           bossName: liveRaids[0].Boss || liveRaids[0].Id,
-          location: liveRaids[0].Location,
+          locations: toLocations(liveRaids[0].Location),
           isGrand,
           status: 'live',
           startDateIso: new Date(startDate).toISOString(),
@@ -102,7 +103,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
         jpRaid = {
           id: `R${activeJpRaid.season}`,
           bossName: getBossName(activeJpRaid.boss, localeShort),
-          location: extractLocation(activeJpRaid.boss),
+          locations: extractLocations(activeJpRaid.boss),
           isGrand: false,
           status: 'active',
           noLink: true,
@@ -118,7 +119,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
         jpRaid = {
           id: `E${activeJpERaid.season}`,
           bossName: getBossName(bossKey, localeShort),
-          location: extractLocation(bossKey),
+          locations: extractLocations(bossKey),
           isGrand: true,
           status: 'active',
           noLink: true,
@@ -138,7 +139,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
           jpRaid = {
             id: `R${nextJpRaid.season}`,
             bossName: getBossName(nextJpRaid.boss, localeShort),
-            location: extractLocation(nextJpRaid.boss),
+            locations: extractLocations(nextJpRaid.boss),
             isGrand: false,
             status: 'upcoming',
             startDateIso: new Date(getKstTime(nextJpRaid.startTime)).toISOString(),
@@ -153,7 +154,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
           jpRaid = {
             id: `E${nextJpERaid.season}`,
             bossName: getBossName(bossKey, localeShort),
-            location: extractLocation(bossKey),
+            locations: extractLocations(bossKey),
             isGrand: true,
             status: 'upcoming',
             endDateIso: new Date(getKstTime(nextJpERaid.endTime)).toISOString(),
@@ -184,7 +185,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
       glRaid = {
         id: jpId,
         bossName: jpInfo ? getBossName(jpInfo.Boss, localeShort) : getBossName(nextKrRaid.boss, localeShort),
-        location: jpInfo?.Location ?? '',
+        locations: toLocations(jpInfo?.Location),
         isGrand: false,
         status: isActive ? 'active' : 'upcoming',
         endDateIso: new Date(getKstTime(nextKrRaid.endTime)).toISOString(),
@@ -204,7 +205,7 @@ export function loadHomeStatus({ context }: LoaderFunctionArgs) {
         glRaid = {
           id: jpId,
           bossName: jpInfo ? getBossName(jpInfo.Boss, localeShort) : nextKrERaid.boss1,
-          location: jpInfo?.Location ?? '',
+          locations: toLocations(jpInfo?.Location),
           isGrand: true,
           status: isActive ? 'active' : 'upcoming',
           endDateIso: new Date(getKstTime(nextKrERaid.endTime)).toISOString(),

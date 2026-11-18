@@ -62,6 +62,8 @@ export function simulate_strategies_chunk(
   initial_owned_ids: Uint32Array,
   ticket_batches_json: string,
   consume_expiring_tickets: boolean,
+  initial_charge_normal: number,
+  initial_charge_limited: number,
 ): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -121,7 +123,21 @@ export interface InitOutput {
     o: number,
     p: bigint,
   ) => number;
-  readonly simulate_strategies_chunk: (a: number, b: number, c: number, d: number, e: number, f: bigint, g: number, h: number, i: number, j: number, k: number) => [number, number];
+  readonly simulate_strategies_chunk: (
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    e: number,
+    f: bigint,
+    g: number,
+    h: number,
+    i: number,
+    j: number,
+    k: number,
+    l: number,
+    m: number,
+  ) => [number, number];
   readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

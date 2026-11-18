@@ -18,6 +18,7 @@ import type { FieldEventResult } from '~/types/minigame/fieldEvent';
 import type { InteractiveWorldRaidResult } from '../../../types/minigame/interactiveWorldRaid';
 import type { RoadPuzzleResult } from '../../../types/minigame/roadPuzzle';
 import type { MinigameJankenResult } from '../../../types/minigame/janken';
+import type { MinigameTankResult } from '../../../types/minigame/tank';
 import type { calculateLocation } from '~/features/event-planner/logic/locationPlanner';
 
 export interface AcquiredItemsInput {
@@ -42,6 +43,7 @@ export interface AcquiredItemsInput {
   interactiveWorldRaidResult: InteractiveWorldRaidResult | null;
   roadPuzzleResult: RoadPuzzleResult | null;
   minigameJankenResult: MinigameJankenResult | null;
+  minigameTankResult: MinigameTankResult | null;
   locationState: { result: ReturnType<typeof calculateLocation> } | null;
 }
 
@@ -74,6 +76,7 @@ export function computeAcquiredItems({
   interactiveWorldRaidResult,
   roadPuzzleResult,
   minigameJankenResult,
+  minigameTankResult,
   locationState,
 }: AcquiredItemsInput): AcquiredItemsResult {
   const totalItems: Record<string, TransactionItemAmount> = {};
@@ -168,8 +171,9 @@ export function computeAcquiredItems({
   if (cardMatchResult) recordCostAndRewards('cardMatch', cardMatchResult.totalCosts, cardMatchResult.totalRewards);
   if (clueSearchResult) recordCostAndRewards('clueSearch', clueSearchResult.cost, clueSearchResult.rewards);
   if (fieldEventResult) recordCostAndRewards('fieldEvent', fieldEventResult.cost, fieldEventResult.rewards);
-  if (roadPuzzleResult) record('roadPuzzle_reward', roadPuzzleResult.rewards, 1);
+  if (roadPuzzleResult) recordCostAndRewards('roadPuzzle', roadPuzzleResult.cost, roadPuzzleResult.rewards);
   if (minigameJankenResult) recordCostAndRewards('minigame_janken', minigameJankenResult.cost, minigameJankenResult.rewards);
+  if (minigameTankResult) recordCostAndRewards('minigame_tank', minigameTankResult.cost, minigameTankResult.rewards);
   if (interactiveWorldRaidResult) recordCostAndRewards('interactiveWorldRaid', interactiveWorldRaidResult.cost, interactiveWorldRaidResult.rewards);
 
   record('studentGrowth_cost', studentGrowthNeeds, -1);

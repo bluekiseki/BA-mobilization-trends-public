@@ -918,6 +918,32 @@ pub fn run_strategies_chunk(
     initial_ticket_batches: &[TicketBatch],
     consume_expiring_tickets: bool,
 ) -> SimChunkResult {
+    run_strategies_chunk_with_charge(
+        strategies,
+        banner_pools,
+        sim_count,
+        rng,
+        initial_owned_ids,
+        initial_ticket_batches,
+        consume_expiring_tickets,
+        0,
+        0,
+    )
+}
+
+/// Same as `run_strategies_chunk`, but every run starts with the given recruit-charge stacks
+/// (normal / limited counters) instead of 0.
+pub fn run_strategies_chunk_with_charge(
+    strategies: &[BannerStrategy],
+    banner_pools: &FxHashMap<String, BannerPoolData>,
+    sim_count: u32,
+    rng: &mut Rng,
+    initial_owned_ids: &[u32],
+    initial_ticket_batches: &[TicketBatch],
+    consume_expiring_tickets: bool,
+    initial_charge_normal: u32,
+    initial_charge_limited: u32,
+) -> SimChunkResult {
     let mut result = SimChunkResult::new();
 
     // Match the JS engine's non-banner ticket checkpoints. A ticket batch can become available or expire
@@ -1036,6 +1062,8 @@ pub fn run_strategies_chunk(
             state.mark_owned(slot);
         }
         state.ticket_pool.extend_from_slice(initial_ticket_batches);
+        state.charge_normal = initial_charge_normal;
+        state.charge_limited = initial_charge_limited;
 
         for (strategy_index, strategy) in strategies.iter().enumerate() {
             let Some(pool_data) = banner_pools.get(&strategy.banner_id) else {
@@ -1490,6 +1518,27 @@ mod tests {
         s.targets.clear();
         s.min_pulls = min_pulls;
         s
+    }
+
+    #[test]
+    fn initial_charge_makes_the_hard_pity_hit_within_the_first_ten_pull() {
+        let pools = pools_map("b", ticket_pool_banner(0));
+        let strategies = [must_strat("b", 10001, 200)];
+
+        // 190 stacks already held -> the 200th pull of the first 10-pull is a guaranteed pickup.
+        let result = run_strategies_chunk_with_charge(
+            &strategies,
+            &pools,
+            200,
+            &mut Rng::new(5),
+            &[],
+            &[],
+            false,
+            190,
+            0,
+        );
+        assert_eq!(result.success_count, 200);
+        assert_eq!(result.pulls.bucket("inf").unwrap().sum, 200 * 10);
     }
 
     #[test]

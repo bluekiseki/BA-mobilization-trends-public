@@ -15,6 +15,7 @@ import { getResourceDistributionMean, getResourceDistributionPercentile } from '
 import type { ResourceDistributionEntry, ResourceEvent, ResourcePlanEvent } from '~/features/inventory/logic/resourceTimeline';
 import { RESOURCE_SOURCES, type ResourceSource } from '~/data/resourceSources';
 import type { ScheduleItemV2 } from '~/utils/calender.data.v2';
+import type { IncomeByKey, IncomeKind } from '~/utils/itemOutlook';
 import { asSimMetricAccumulator, type DistributionData, type GlobalAggregatedResult } from '~/utils/gachaEngine';
 import type { EventPlan } from '~/types/eventPlan';
 import type { StageFarmingPlan } from '~/types/resourcePlan';
@@ -340,19 +341,23 @@ export function eventsFromEventEleph(eventPlans: Record<string, Partial<EventPla
   return result;
 }
 
-/**
- * Event planner → eligma deterministic lump sums on event dates.
- * `eventItems` is already filtered and dated by the caller.
- */
-export function eventsFromEventEligma(eventItems: { date: string; eligma: number }[]): ResourceEvent[] {
-  return eventItems
-    .filter((e) => e.date && e.eligma > 0)
-    .map((e) => ({
-      itemKey: 'Item_23',
-      delta: e.eligma,
-      date: e.date,
-      source: 'event_eligma',
-    }));
+const INCOME_LABELS: Record<IncomeKind, { labelKey: string; param?: 'title' | 'boss' }> = {
+  coinShop: { labelKey: 'resources:eventLabels.coinShopAuto' },
+  event: { labelKey: 'resources:eventLabels.title', param: 'title' },
+  eventFixed: { labelKey: 'resources:eventLabels.title', param: 'title' },
+  raid: { labelKey: 'resources:eventLabels.raidBoss', param: 'boss' },
+  eraid: { labelKey: 'resources:eventLabels.eraidBoss', param: 'boss' },
+  multifloor: { labelKey: 'resources:eventLabels.mfBoss', param: 'boss' },
+};
+
+/** Dated lump sums from expected income (event plans, assumed shop/raid/multifloor rewards) for any item. */
+export function eventsFromExpectedIncome(incomeByKey: IncomeByKey): ResourceEvent[] {
+  return Object.entries(incomeByKey).flatMap(([itemKey, incomes]) =>
+    incomes.map((income): ResourceEvent => {
+      const { labelKey, param } = INCOME_LABELS[income.kind];
+      return { itemKey, delta: income.amount, date: income.date, source: `income_${income.kind}`, labelKey, labelParams: param ? { [param]: income.name } : undefined };
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -553,40 +558,7 @@ export function eventsFromExpertPermit(mode: 'weekly_max' | 'daily', weeklyMax: 
 }
 
 // ---------------------------------------------------------------------------
-// MULTIFLOOR WB (Item_2000/2001/2002) adapter
-// Floor 14+ cycles HP/ATK/Healing WB every 3 floors; amount scales with floor (1/2/3).
+// Multifloor WB items. Their income comes from the season reward tables (see itemOutlook).
 // ---------------------------------------------------------------------------
 
 export const MULTIFLOOR_WB_KEYS = ['Item_2000', 'Item_2001', 'Item_2002'] as const;
-
-export function calcMultifloorWBs(maxFloor: number): [number, number, number] {
-  const counts: [number, number, number] = [0, 0, 0];
-  for (let f = 14; f <= Math.min(maxFloor, 97); f++) {
-    const typeIdx = (f - 14) % 3;
-    const amount = f <= 28 ? 1 : f <= 34 ? 2 : 3;
-    counts[typeIdx] += amount;
-  }
-  return counts;
-}
-
-export function eventsFromMultifloorWBs(
-  multifloorItems: ScheduleItemV2[],
-  maxFloors: Record<string, number>,
-  startDate: string,
-  getScheduleTitle: (item: ScheduleItemV2) => string,
-  defaultMaxFloor = 0,
-): ResourceEvent[] {
-  const result: ResourceEvent[] = [];
-  for (const item of multifloorItems) {
-    const maxFloor = maxFloors[item.id] ?? defaultMaxFloor;
-    if (!maxFloor || maxFloor < 14) continue;
-    const endDate = item.endTime ? item.endTime.slice(0, 10) : item.startTime.slice(0, 10);
-    if (endDate < startDate) continue;
-    const [wb0, wb1, wb2] = calcMultifloorWBs(maxFloor);
-    const bossTitle = getScheduleTitle(item);
-    if (wb0 > 0) result.push({ itemKey: 'Item_2000', delta: wb0, date: endDate, source: 'multifloor_wb', labelKey: 'resources:eventLabels.mfBoss', labelParams: { boss: bossTitle } });
-    if (wb1 > 0) result.push({ itemKey: 'Item_2001', delta: wb1, date: endDate, source: 'multifloor_wb', labelKey: 'resources:eventLabels.mfBoss', labelParams: { boss: bossTitle } });
-    if (wb2 > 0) result.push({ itemKey: 'Item_2002', delta: wb2, date: endDate, source: 'multifloor_wb', labelKey: 'resources:eventLabels.mfBoss', labelParams: { boss: bossTitle } });
-  }
-  return result;
-}

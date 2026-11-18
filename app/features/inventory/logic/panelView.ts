@@ -17,13 +17,13 @@ export interface InlinePanelFilterTypesInput {
   availableStages: unknown[];
   panelEntryList: PurchasePanelEntry[];
   iconInfos: IconInfos | null;
-  t_planner: ((key: 'equipment.tabStages') => string) & ((key: never) => string);
+  t_planner: ((key: 'equipment.statStages') => string) & ((key: never) => string);
 }
 
 /** Filter tabs for the inline purchase panel: stages (if any) plus one tab per shop item type present. */
 export function buildInlinePanelFilterTypes({ availableStages, panelEntryList, iconInfos, t_planner }: InlinePanelFilterTypesInput): Array<{ id: string; label: string }> {
   const types: Array<{ id: string; label: string }> = [];
-  if (availableStages.length > 0) types.push({ id: 'stages', label: t_planner('equipment.tabStages') });
+  if (availableStages.length > 0) types.push({ id: 'stages', label: t_planner('equipment.statStages') });
   const seenTypes = new Set<string>();
   for (const entry of panelEntryList) {
     const parts = splitItemKey(entry.gainItemKey);

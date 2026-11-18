@@ -1,5 +1,6 @@
 // app/components/planner/resources/StudentElephCard.tsx
 import { useState, useMemo } from 'react';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useTranslation } from 'react-i18next';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import { StarRating } from '~/components/student/StarRating';
@@ -14,7 +15,6 @@ import type { ContentItem } from '~/types/plannerData';
 interface Props {
   studentId: number;
   studentName: string;
-  studentIcon?: string;
   plan?: GrowthPlan;
   simStat?: StudentSimulationStat;
   minStar?: number;
@@ -323,7 +323,7 @@ function FinalGoalSection({ currentSV, studentId, plan, finalGoal, contentItems,
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function StudentElephCard({ studentId, studentName, studentIcon, plan, simStat, minStar, goals, onAddGoal, onUpdateGoal, onRemoveGoal, contentItems = [], onRemove }: Props) {
+export default function StudentElephCard({ studentId, studentName, plan, simStat, minStar, goals, onAddGoal, onUpdateGoal, onRemoveGoal, contentItems = [], onRemove }: Props) {
   const { t } = useTranslation('resources');
   const { materialInventory, updateMaterialInventory, updatePlan, addPlanForStudent } = useGlobalStore();
   const { targetGoals, setFinalGoal } = useResourcePlanStore();
@@ -373,7 +373,7 @@ export default function StudentElephCard({ studentId, studentName, studentIcon, 
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center gap-2">
-        {studentIcon && <img src={`data:image/webp;base64,${studentIcon}`} alt="" className="w-8 h-8 rounded object-cover shrink-0" />}
+        <SheetIcon sheet="student" id={studentId} alt="" className="w-8 h-8 rounded shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-neutral-800 dark:text-neutral-100 truncate">{studentName}</div>
           {totalElephNeeded !== null ? (

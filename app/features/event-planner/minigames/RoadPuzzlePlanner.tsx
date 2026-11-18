@@ -10,6 +10,7 @@ import { defaultRoadPuzzleConfig, type RoadPuzzleConfig } from '~/types/minigame
 import { solveRoadPuzzle, type SolveResult } from '~/features/event-planner/logic/solveRoadPuzzle';
 import { ROAD_PUZZLE_MAPS, calculateMapRails } from '~/data/roadPuzzleMaps';
 import { RoadPuzzleMapSolver } from './RoadPuzzleMapSolver';
+import { NumberInput } from '../../../components/common/NumberInput';
 import { SimRunButton } from '../components/SimRunButton';
 import { runAsync } from '~/utils/runAsync';
 import { simulateRoadPuzzleMapDraws, type MapStats, buildRoundInfos } from '~/features/event-planner/logic/roadPuzzleSim';
@@ -25,9 +26,20 @@ interface McResult {
   perMap: Record<string, MapStats>;
 }
 
-export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }: RoadPuzzlePlannerProps) => {
+export const RoadPuzzlePlanner = (props: RoadPuzzlePlannerProps) => {
+  const data = props.eventData.minigame_road_puzzle;
+  return data ? <RoadPuzzlePlannerContent {...props} eventData={{ ...props.eventData, minigame_road_puzzle: data }} /> : null;
+};
+
+const RoadPuzzlePlannerContent = ({
+  eventId,
+  eventData,
+  iconData,
+  onCalculate,
+}: RoadPuzzlePlannerProps & { eventData: RoadPuzzlePlannerProps['eventData'] & { minigame_road_puzzle: NonNullable<RoadPuzzlePlannerProps['eventData']['minigame_road_puzzle']> } }) => {
   const { t } = useTranslation('planner', { keyPrefix: 'road_puzzle' });
   const { t: t_ui } = useTranslation('ui');
+  const { t: t_planner } = useTranslation('planner');
   const [activeTab, setActiveTab] = useState<'overview' | 'calculator' | 'maps'>('overview');
   const [mapsRound, setMapsRound] = useState<number>(1);
   const [simCount, setSimCount] = useState(1000);
@@ -38,7 +50,6 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
   const config: RoadPuzzleConfig = roadPuzzleConfig ?? defaultRoadPuzzleConfig;
 
   const roadPuzzleData = eventData.minigame_road_puzzle;
-  if (!roadPuzzleData) return null;
 
   const tileTypes = useMemo(() => {
     const types = new Set<number>();
@@ -233,13 +244,13 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400">
-                    <th className="text-left py-2 pr-3 font-semibold whitespace-nowrap">{t('round')}</th>
+                    <th className="text-left py-2 pr-3 font-semibold whitespace-nowrap">{t_ui('round')}</th>
                     {tileTypes.map((type) => (
                       <th key={type} className="hidden sm:table-cell text-center py-2 px-2 font-semibold whitespace-nowrap">
                         {tileTypeName(type)}
                       </th>
                     ))}
-                    <th className="text-left py-2 pl-3 font-semibold">{t('rewards')}</th>
+                    <th className="text-left py-2 pl-3 font-semibold">{t_ui('rewards')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -247,7 +258,19 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                     // const isSelected = info.isLoop ? includesLoop : info.round >= startStage && info.round <= Math.min(effectiveEndStage, lastNonLoopRound);
                     return (
                       <tr key={info.uniqueId} className={`border-b border-neutral-300 dark:border-neutral-600`}>
-                        <td className="py-2 pr-3 font-medium text-neutral-800 dark:text-neutral-200 whitespace-nowrap">{info.isLoop ? t('roundLoop') : t('roundLabel', { round: info.round })}</td>
+                        <td className="py-2 pr-3 font-medium text-neutral-800 dark:text-neutral-200 whitespace-nowrap">
+                          {info.isLoop ? (
+                            <>
+                              <span className="sm:hidden">{t('roundLoopShort')}</span>
+                              <span className="hidden sm:inline">{t('roundLoop')}</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="sm:hidden">{info.round}</span>
+                              <span className="hidden sm:inline">{t('roundLabel', { round: info.round })}</span>
+                            </>
+                          )}
+                        </td>
                         {tileTypes.map((type) => {
                           if (info.isLoop) {
                             const counts = info.maps.map((m) => m.toPlace[type] ?? 0).filter((c) => c > 0);
@@ -276,7 +299,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                           }
                         })}
                         <td className="py-2 pl-3">
-                          <div className="flex flex-wrap gap-1 items-center">
+                          <div className="flex flex-wrap gap-1 items-center max-sm:[zoom:0.8]">
                             {info.reward?.parcelId.map((id, idx) => (
                               <ItemIcon
                                 key={`r${idx}`}
@@ -324,7 +347,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
             {roundInfos
               .filter((info) => info.round === mapsRound)
               .map((info) => (
-                <div key={info.round} className="space-y-4">
+                <div key={info.round} className="flex flex-col gap-4">
                   {info.maps.map((m, mapIndex) => {
                     const mapData = ROAD_PUZZLE_MAPS[m.name];
                     // Build game inventory for this map (AvailableRailTileAmount by type)
@@ -334,12 +357,19 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                     }
                     const mapDisplayName = getMapDisplayName(info.round, mapIndex + 1, m.name, info.maps.length, m.toPlace);
                     return (
-                      <div key={m.name} className="border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 space-y-2">
+                      <div key={`${info.round}-${mapIndex}-${m.name}`} className={`space-y-2 ${mapIndex > 0 ? 'border-t border-neutral-200 dark:border-neutral-700 pt-4' : ''}`}>
                         <div className="font-semibold text-sm text-neutral-700 dark:text-neutral-300">{mapDisplayName}</div>
                         {!mapData ? (
                           <div className="text-sm text-neutral-400 dark:text-neutral-500 italic">{t('mapDataMissing')}</div>
                         ) : (
-                          <RoadPuzzleMapSolver mapName={m.name} mapData={mapData} tileTypes={tileTypes} tileTypeName={tileTypeName} gameInventory={gameInv} />
+                          <RoadPuzzleMapSolver
+                            key={tileTypes.map((type) => gameInv[type]).join('-')}
+                            mapName={m.name}
+                            mapData={mapData}
+                            tileTypes={tileTypes}
+                            tileTypeName={tileTypeName}
+                            gameInventory={gameInv}
+                          />
                         )}
                       </div>
                     );
@@ -366,7 +396,7 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
               : 0;
 
             return (
-              <div className="space-y-5 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg text-sm">
+              <div className="space-y-5 p-2 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg text-sm">
                 {/* Simulation — runs for ALL maps, independent of range */}
                 <div className="space-y-3 border-b dark:border-neutral-700 pb-4">
                   <h3 className="font-bold text-base dark:text-neutral-200">{t('mcTitle')}</h3>
@@ -374,25 +404,25 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                   <div className="flex flex-wrap gap-3 items-end">
                     <div>
                       <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t('mcSimCount')}</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={100000}
-                        step={1}
-                        value={simCount}
-                        onChange={(e) => {
-                          setSimCount(Math.max(1, parseInt(e.target.value) || 1));
-                          setMcResult(null);
-                        }}
-                        className="w-28 p-1.5 border rounded dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
-                      />
+                      <div className="w-32">
+                        <NumberInput
+                          value={simCount}
+                          onChange={(v) => {
+                            setSimCount(v);
+                            setMcResult(null);
+                          }}
+                          min={1}
+                          max={100000}
+                          narrowButtonType="plus_only"
+                        />
+                      </div>
                     </div>
                     <SimRunButton
                       isRunning={isSimulating}
                       onClick={handleRunMC}
                       className="px-4 py-1.5 text-sm font-semibold bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg"
                     >
-                      {t('mcRun')}
+                      {t_planner('button.runSimulation')}
                     </SimRunButton>
                   </div>
 
@@ -441,24 +471,16 @@ export const RoadPuzzlePlanner = ({ eventId, eventData, iconData, onCalculate }:
                   <h3 className="font-bold text-base dark:text-neutral-200">{t('planTitle')}</h3>
                   <div className="flex flex-wrap gap-3 items-end">
                     <div>
-                      <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t('startStage')}</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={startStage}
-                        onChange={(e) => setRoadPuzzleConfig({ ...config, startStage: Math.max(1, parseInt(e.target.value) || 1) })}
-                        className="w-20 p-1.5 border rounded dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
-                      />
+                      <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t_ui('start')}</label>
+                      <div className="w-28">
+                        <NumberInput value={startStage} onChange={(v) => setRoadPuzzleConfig({ ...config, startStage: v })} min={1} max={Infinity} narrowButtonType="plus_only" />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t('endStage')}</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={effectiveEndStage}
-                        onChange={(e) => setRoadPuzzleConfig({ ...config, endStage: Math.max(1, parseInt(e.target.value) || lastNonLoopRound) })}
-                        className="w-20 p-1.5 border rounded dark:bg-neutral-700 dark:border-neutral-600 dark:text-neutral-200"
-                      />
+                      <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t_ui('end')}</label>
+                      <div className="w-28">
+                        <NumberInput value={effectiveEndStage} onChange={(v) => setRoadPuzzleConfig({ ...config, endStage: v })} min={1} max={Infinity} narrowButtonType="plus_only" />
+                      </div>
                     </div>
                     <div className="text-xs text-neutral-500 dark:text-neutral-400 pb-1.5">
                       {selectedRounds.filter((r) => !r.isLoop).length > 0 && (

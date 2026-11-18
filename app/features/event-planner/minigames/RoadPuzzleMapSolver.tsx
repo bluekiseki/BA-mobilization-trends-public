@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FiRotateCcw } from 'react-icons/fi';
 import { NumberInput } from '~/components/common/NumberInput';
 import type { MapData } from '~/data/roadPuzzleMaps';
 import { solveRoadPuzzle, type SolveResult } from '~/features/event-planner/logic/solveRoadPuzzle';
@@ -28,6 +29,7 @@ interface Props {
 
 export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInventory }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'road_puzzle' });
+  const { t: t_ui } = useTranslation('ui');
   const { isDark } = useIsDarkState();
   const [result, setResult] = useState<SolveResult | null>(null);
   const [inventory, setInventory] = useState<Record<number, number>>(gameInventory);
@@ -38,6 +40,12 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
     const r = solveRoadPuzzle(mapData.grid, mapData.rowOffset, inventory, mapData.goalEntry, mapData.startEntry);
     setResult(r);
   }, [autoSolve, inventory, mapData]);
+
+  const hasInventory = tileTypes.some((type) => (inventory[type] ?? 0) > 0);
+
+  function resetInventory() {
+    setInventory(gameInventory);
+  }
 
   function setByInventory(type: number, value: number) {
     const max = gameInventory[type] ?? 0;
@@ -60,31 +68,42 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
       {/* Inventory inputs */}
       <div className="space-y-2">
         <div>
-          <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1.5">{t('mapInventoryLabel')}</div>
+          <div className="flex items-center gap-1 mb-1.5">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{t('mapInventoryLabel')}</span>
+            <button onClick={resetInventory} className="p-0.5 text-neutral-500 dark:text-neutral-400" aria-label={t_ui('reset')} title={t_ui('reset')}>
+              <FiRotateCcw size={10} />
+            </button>
+          </div>
           <div className="flex flex-wrap gap-3">
             {tileTypes.map((type) => (
               <div key={type}>
                 <label className={`block text-xs font-semibold mb-0.5 ${TILE_TYPE_COLORS[type as 1]}`}>{tileTypeName(type)}</label>
-                <div className="w-32">
-                  <NumberInput value={inventory[type] ?? 0} onChange={(value) => setByInventory(type, value)} min={0} max={gameInventory[type] ?? 0} narrowButtonType="all" />
+                <div className="w-38 sm:w-36">
+                  <NumberInput value={inventory[type] ?? 0} onChange={(value) => setByInventory(type, value)} min={0} max={gameInventory[type] ?? 0} narrowButtonType="all" fluidInput />
                 </div>
               </div>
             ))}
           </div>
         </div>
         <div>
-          <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1.5">{t('mapPoolLabel')}</div>
+          <div className="flex items-center gap-1 mb-1.5">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{t('mapPoolLabel')}</span>
+            <button onClick={resetInventory} className="p-0.5 text-neutral-500 dark:text-neutral-400" aria-label={t_ui('reset')} title={t_ui('reset')}>
+              <FiRotateCcw size={10} />
+            </button>
+          </div>
           <div className="flex flex-wrap gap-3">
             {tileTypes.map((type) => (
               <div key={type}>
                 <label className={`block text-xs font-semibold mb-0.5 ${TILE_TYPE_COLORS[type as 1]}`}>{tileTypeName(type)}</label>
-                <div className="w-32">
+                <div className="w-38 sm:w-36">
                   <NumberInput
                     value={(gameInventory[type] ?? 0) - (inventory[type] ?? 0)}
                     onChange={(value) => setByUndrawn(type, value)}
                     min={0}
                     max={gameInventory[type] ?? 0}
                     narrowButtonType="all"
+                    fluidInput
                   />
                 </div>
               </div>
@@ -112,38 +131,25 @@ export function RoadPuzzleMapSolver({ mapData, tileTypes, tileTypeName, gameInve
             <div className="text-red-500 dark:text-red-400">{t('noPathFound')}</div>
           ) : (
             <>
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="font-bold text-neutral-800 dark:text-neutral-200">{t('minTiles', { count: result.minTiles })}</span>
+              <div className="font-bold text-neutral-800 dark:text-neutral-200">{t('minTiles', { count: result.minTiles })}</div>
+              {/* Required count per tile type; "have/need" and the shortage are shown only when an inventory is entered */}
+              <div className="grid grid-cols-3 gap-2">
                 {tileTypes.map((type) => {
-                  const cnt = result.tileCounts[type] ?? 0;
-                  if (!cnt) return null;
+                  const need = result.tileCounts[type] ?? 0;
+                  const have = inventory[type] ?? 0;
+                  const shortage = need - have;
                   return (
-                    <span key={type} className={`px-1.5 py-0.5 rounded text-xs font-bold ${TILE_TYPE_BG[type as 1]} ${TILE_TYPE_COLORS[type as 1]}`}>
-                      {tileTypeName(type)}: {cnt}
-                    </span>
+                    <div key={type} className={`px-2 py-1 rounded ${TILE_TYPE_BG[type as 1]}`}>
+                      <div className={`text-xs font-semibold ${TILE_TYPE_COLORS[type as 1]}`}>{tileTypeName(type)}</div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-lg font-bold leading-tight text-neutral-800 dark:text-neutral-100">{need}</span>
+                        {hasInventory && <span className="text-xs text-neutral-500 dark:text-neutral-400">/ {have}</span>}
+                        {hasInventory && shortage > 0 && <span className="text-xs font-bold text-red-600 dark:text-red-400">-{shortage}</span>}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-
-              {/* Inventory comparison */}
-              {tileTypes.some((type) => (inventory[type] ?? 0) > 0) && (
-                <div className="flex flex-wrap gap-2">
-                  {tileTypes.map((type) => {
-                    const have = inventory[type] ?? 0;
-                    const need = result.tileCounts[type] ?? 0;
-                    if (!need) return null;
-                    const diff = have - need;
-                    return (
-                      <span
-                        key={type}
-                        className={`text-xs px-1.5 py-0.5 rounded font-bold ${diff >= 0 ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20' : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'}`}
-                      >
-                        {tileTypeName(type)}: {have}/{need} ({diff >= 0 ? `+${diff}` : diff})
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
             </>
           )}
         </div>

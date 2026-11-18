@@ -3,8 +3,10 @@ import { devtools } from 'zustand/middleware';
 import { difficultyInfo, type DifficultySelect } from '~/utils/difficultyPolicy';
 import type { ChartData, GameServer, RaidInfo, RaidInfoFiltered } from '~/types/data';
 import type { fetchCacheProcessor } from '~/hooks/cache';
-import { getRawTsvDataForCombatStyleView, processChartData } from '~/features/raid-stats/charts/chartDataProcessor';
+import type { ColumnTable } from '~/utils/columnTable';
+import { getStudentTablesForCombatStyleView, processChartData } from '~/features/raid-stats/charts/chartDataProcessor';
 import type { Locale } from '~/utils/i18n/config';
+import { matchesBossType, type BossTypeSelect } from './bossType';
 
 interface State {
   selectedStudentId: number;
@@ -20,6 +22,7 @@ interface State {
   chartDataByZ: Map<number, ChartData>;
   error: string | null;
   selectedDifficulties: Set<DifficultySelect>;
+  selectedBossTypes: Set<BossTypeSelect>;
   raidInfo: RaidInfo[];
   combatStyleViewMode: 'separate' | 'combined';
 }
@@ -34,8 +37,9 @@ interface Actions {
   setHideXThreshold: (threshold: number) => void;
   setXRange: (range: [number, number]) => void;
   setSelectedDifficulties: (difficulties: Set<DifficultySelect>) => void;
+  setSelectedBossTypes: (types: Set<BossTypeSelect>) => void;
   setCombatStyleViewMode: (mode: 'separate' | 'combined') => void;
-  fetchAndProcessChartData: (server: GameServer, fetchAndProcessWithCache: fetchCacheProcessor<string>, locale: Locale) => Promise<void>;
+  fetchAndProcessChartData: (server: GameServer, fetchAndProcessWithCache: fetchCacheProcessor<ColumnTable>, locale: Locale) => Promise<void>;
   getFilteredRaidInfoByDifficulty: () => RaidInfoFiltered[];
   setRaidInfo: (raidInfo: RaidInfo[]) => void;
 }
@@ -55,9 +59,13 @@ const initialState: State = {
   chartDataByZ: new Map(),
   error: null,
   selectedDifficulties: new Set(['All']),
+  selectedBossTypes: new Set(['All']),
   raidInfo: [],
   combatStyleViewMode: 'combined',
 };
+
+// Monotonic id of the latest chart request; older responses are discarded
+let latestRequestId = 0;
 
 // Create Store
 export const useChartControlsStore = create<State & Actions>()(
@@ -71,6 +79,7 @@ export const useChartControlsStore = create<State & Actions>()(
     setHideXThreshold: (threshold) => set({ hideXThreshold: threshold }),
     setXRange: (range) => set({ xRange: range }),
     setSelectedDifficulties: (difficulties) => set({ selectedDifficulties: difficulties }),
+    setSelectedBossTypes: (types) => set({ selectedBossTypes: types }),
     setCombatStyleViewMode: (mode) => set({ combatStyleViewMode: mode }),
     handleZSelectionChange: (z) =>
       set((state) => {
@@ -88,11 +97,12 @@ export const useChartControlsStore = create<State & Actions>()(
         return { selectedZValues: newSet };
       }),
     getFilteredRaidInfoByDifficulty: () => {
-      const { raidInfo, selectedDifficulties } = get();
+      const { raidInfo, selectedDifficulties, selectedBossTypes } = get();
       const difficultiesToShow = selectedDifficulties.has('All') ? new Set(difficultyInfo.filter((d) => d.name !== 'Extreme').map((d) => d.name)) : selectedDifficulties;
       return raidInfo
         .map((raid, index) => ({ ...raid, index }))
         .filter((raidInfo) => {
+          if (!matchesBossType(raidInfo, selectedBossTypes)) return false;
           for (const difficulty of difficultiesToShow) {
             if (difficulty in raidInfo.Cnt) return true;
           }
@@ -107,6 +117,8 @@ export const useChartControlsStore = create<State & Actions>()(
 
       const xLabels = getFilteredRaidInfoByDifficulty();
 
+      const requestId = ++latestRequestId;
+
       if (!selectedStudentId) {
         set({ isLoading: false, chartDataByZ: new Map() });
         return;
@@ -114,9 +126,10 @@ export const useChartControlsStore = create<State & Actions>()(
 
       set({ isLoading: true, error: null });
 
-      const rawTsvData = await getRawTsvDataForCombatStyleView(server, selectedStudentId, combatStyleViewMode, fetchAndProcessWithCache);
-
       try {
+        const tables = await getStudentTablesForCombatStyleView(server, selectedStudentId, combatStyleViewMode, fetchAndProcessWithCache);
+        if (requestId !== latestRequestId) return;
+
         const result = processChartData({
           rankWidth,
           hideXThreshold,
@@ -125,7 +138,7 @@ export const useChartControlsStore = create<State & Actions>()(
           histogramMode,
           selectedDifficulties,
           xLabels,
-          rawTsvData,
+          tables,
           locale,
         });
 
@@ -137,6 +150,7 @@ export const useChartControlsStore = create<State & Actions>()(
           fullXRange: result.fullXRange,
         });
       } catch (e) {
+        if (requestId !== latestRequestId) return;
         set({ isLoading: false, error: (e as Error).message });
       }
     },

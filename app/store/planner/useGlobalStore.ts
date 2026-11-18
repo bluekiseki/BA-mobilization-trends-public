@@ -1,8 +1,10 @@
+import { safeLocalStorage } from '../history/localPersistence';
 // app/store/planner/useGlobalStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { type GrowthPlan } from '~/types/growthPlan';
 import { uwMaxLevelMap } from '~/utils/student/const';
+import { normalizePlan, normalizePlans } from '~/utils/student/recruitState';
 export type { GrowthPlan };
 
 export type GrowthRangeField =
@@ -60,7 +62,9 @@ interface GlobalState {
   resetOwnedGifts: () => void;
   togglePlanSelection: (uuid: string) => void;
   selectAllPlans: (selected: boolean) => void;
-  addPlanForStudent: (studentId: number, currentStar?: number, targetStar?: number) => string;
+  addPlanForStudent: (studentId: number, currentStar?: number, targetStar?: number, recruited?: boolean) => string;
+  /** Switching to unrecruited resets `current` to the recruit baseline (acquired star and pieces are kept). */
+  setPlanRecruited: (uuid: string, recruited: boolean) => void;
   materialInventory: Record<string, number>;
   updateMaterialInventory: (key: string, amount: number) => void;
   resetMaterialInventory: () => void;
@@ -80,7 +84,6 @@ export const useGlobalStore = create<GlobalState>()(
         if (hasUnselectedPlan) {
           console.warn('A new plan cannot be added because a plan with no student selected already exists.');
           alert('A new plan cannot be added because a plan with no student selected already exists.');
-          // You can also add logic to alert users (e.g., toast, alert, etc.)
           return;
         }
 
@@ -128,7 +131,7 @@ export const useGlobalStore = create<GlobalState>()(
         set({ growthPlans: [...get().growthPlans, newPlan] });
         return newPlan.uuid;
       },
-      addPlanForStudent: (studentId, currentStar = 1, targetStar = 5) => {
+      addPlanForStudent: (studentId, currentStar = 1, targetStar = 5, recruited = true) => {
         const existing = get().growthPlans.find((p) => p.studentId === studentId);
         if (existing) return existing.uuid;
         const newPlan: GrowthPlan = {
@@ -155,9 +158,18 @@ export const useGlobalStore = create<GlobalState>()(
           useEligmaForStar: false,
           eligmaInfo: { price: 1, stock: 20 },
           isSelected: true,
+          ...(recruited ? {} : { recruited: false }),
         };
-        set({ growthPlans: [...get().growthPlans, newPlan] });
+        set({ growthPlans: [...get().growthPlans, normalizePlan(newPlan)] });
         return newPlan.uuid;
+      },
+      setPlanRecruited: (uuid, recruited) => {
+        set((state) => ({
+          growthPlans: state.growthPlans.map((plan) => {
+            if (plan.uuid !== uuid) return plan;
+            return normalizePlan({ ...plan, recruited: recruited ? undefined : false });
+          }),
+        }));
       },
       removePlan: (uuid) => {
         set({ growthPlans: get().growthPlans.filter((p) => p.uuid !== uuid) });
@@ -209,7 +221,7 @@ export const useGlobalStore = create<GlobalState>()(
                   }
                 }
               }
-              return newPlan;
+              return normalizePlan(newPlan);
             }
             return p;
           });
@@ -242,7 +254,7 @@ export const useGlobalStore = create<GlobalState>()(
               next.target.uwLevel = targetRank.uw === 0 ? 1 : Math.min(next.target.uwLevel, uwMaxLevelMap[targetRank.uw]);
               if (next.target.uw > 0 && next.current.uw > 0) next.target.uwLevel = Math.max(next.target.uwLevel, next.current.uwLevel);
             }
-            return next;
+            return normalizePlan(next);
           }),
         }));
       },
@@ -260,7 +272,7 @@ export const useGlobalStore = create<GlobalState>()(
           }),
         }));
       },
-      setGrowthPlans: (plans) => set({ growthPlans: plans }),
+      setGrowthPlans: (plans) => set({ growthPlans: normalizePlans(plans) }),
       updateOwnedGifts: (itemId, amount) =>
         set((state) => {
           const newOwnedGifts = { ...state.ownedGifts };
@@ -297,7 +309,12 @@ export const useGlobalStore = create<GlobalState>()(
     }),
     {
       name: 'global-growth-plans-v2',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
+      // Plans restored from storage go through the same normalization as every other write path
+      merge: (persisted, current) => {
+        const restored = persisted as Partial<GlobalState> | undefined;
+        return { ...current, ...restored, growthPlans: normalizePlans(restored?.growthPlans ?? current.growthPlans) };
+      },
     },
   ),
 );

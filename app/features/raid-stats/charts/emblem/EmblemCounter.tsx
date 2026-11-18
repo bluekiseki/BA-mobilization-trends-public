@@ -1,7 +1,7 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import emblemDataList from '~/data/jp/emblem_counter/list.json';
-import type { PortraitData } from '../../../../types/raidReport';
 // import Group_Name_Translation from '~/locales/club.json';
 // const s_locale = Group_Name_Translation as any;
 import { IoTriangleSharp } from 'react-icons/io5';
@@ -187,7 +187,6 @@ export function EmblemCounter({}) {
   const [prevEmblemData, setPrevEmblemData] = useState<EmblemCountData>([]);
 
   const [studentData, setStudentData] = useState<StudentCollection>({});
-  const [portraitData, setPortraitData] = useState<PortraitData>({}); // State for portraits
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(true); // Specific loader for data file changes
   const [error, setError] = useState<string | null>(null);
@@ -262,13 +261,10 @@ export function EmblemCounter({}) {
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([
-      fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)).then((v) => v.json()) as unknown,
-      fetch(cdn('/w/students_portrait.json')).then((v) => v.json()) as unknown,
-    ])
-      .then(([studentJson, portraitJson]) => {
+    fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
+      .then((v) => v.json())
+      .then((studentJson: unknown) => {
         setStudentData(studentJson as StudentCollection);
-        setPortraitData(portraitJson as PortraitData);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -303,7 +299,6 @@ export function EmblemCounter({}) {
     }
 
     // Create dynamic import promises (no fetch)
-    // We assume the JSON files use default export
     const currentDataPromise = (
       emblemDataModules[currentModulePath] as () => Promise<{
         default: EmblemCountData;
@@ -338,8 +333,8 @@ export function EmblemCounter({}) {
     totalRaidPlayers: number;
   } => {
     // Wait for all data to be ready
-    if (isLoading || !studentData || Object.keys(studentData).length === 0 || Object.keys(portraitData).length === 0) {
-      // console.log('displayData: [],', { isLoading, studentData, portraitData });
+    if (isLoading || !studentData || Object.keys(studentData).length === 0) {
+      // console.log('displayData: [],', { isLoading, studentData });
       return {
         displayData: [],
         totalCount: 0,
@@ -442,7 +437,7 @@ export function EmblemCounter({}) {
       totalDelta,
       totalRaidPlayers,
     };
-  }, [emblemData, prevEmblemData, studentData, portraitData, tierFilter, bondLevelFilter, aggregationType, t, isLoading, sortKey, sortOrder]);
+  }, [emblemData, prevEmblemData, studentData, tierFilter, bondLevelFilter, aggregationType, t, isLoading, sortKey, sortOrder]);
 
   // Trend chart for the expanded row: the clicked key as the primary line plus a few
   // nearby-rank keys as faint, non-interactive context lines.
@@ -461,12 +456,12 @@ export function EmblemCounter({}) {
       trendContext: neighbors
         .map((d) => ({
           label: isGroup ? groupT(d.name) : d.name,
-          iconUri: d.iconId && portraitData[d.iconId] ? `data:image/webp;base64,${portraitData[d.iconId]}` : undefined,
+          iconId: d.iconId ?? undefined,
           points: timelines.get(d.name) ?? [],
         }))
         .filter((s) => s.points.length > 0),
     };
-  }, [expandedName, allDatasets, orderedList, displayData, studentData, portraitData, tierFilter, bondLevelFilter, aggregationType, t, t_s, isLoading]);
+  }, [expandedName, allDatasets, orderedList, displayData, studentData, tierFilter, bondLevelFilter, aggregationType, t, t_s, isLoading]);
 
   const treemapSourceData = useMemo((): TreemapSourceEntry[] => {
     // 1. Verify data load
@@ -604,7 +599,7 @@ export function EmblemCounter({}) {
             </span>
           </div>
 
-          <EmblemTreemap data={treemapSourceData} totalCount={totalCount} t_s={t_s} portraitData={portraitData} aggregationType={aggregationType} />
+          <EmblemTreemap data={treemapSourceData} totalCount={totalCount} t_s={t_s} aggregationType={aggregationType} />
 
           <div className="overflow-x-auto">
             {/* Added table-fixed for mobile layout */}
@@ -655,8 +650,14 @@ export function EmblemCounter({}) {
                         <td className="px-2 py-2 font-medium align-middle text-center">{r + 1}</td>
                         {/* Image cell with shrink-0 */}
                         <td className="py-1 px-0.5 align-middle">
-                          {item.iconId && portraitData[item.iconId] ? (
-                            <img src={`data:image/webp;base64,${portraitData[item.iconId]}`} alt="" className="w-10 h-10 rounded-full object-cover block" loading="lazy" />
+                          {item.iconId ? (
+                            <SheetIcon
+                              sheet="student"
+                              id={item.iconId}
+                              alt=""
+                              className="w-10 h-10 rounded-full"
+                              fallback={<div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 inline-block"></div>}
+                            />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 inline-block"></div>
                           )}

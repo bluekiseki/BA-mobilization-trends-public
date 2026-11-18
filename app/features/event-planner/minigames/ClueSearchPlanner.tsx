@@ -61,7 +61,17 @@ const getLocalizedDesc = (
 };
 
 // --- Component ---
-export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }: ClueSearchPlannerProps) => {
+export const ClueSearchPlanner = (props: ClueSearchPlannerProps) => {
+  const data = props.eventData.clue;
+  return data ? <ClueSearchPlannerContent {...props} eventData={{ ...props.eventData, clue: data }} /> : null;
+};
+
+const ClueSearchPlannerContent = ({
+  eventId,
+  eventData,
+  iconData,
+  onCalculate,
+}: ClueSearchPlannerProps & { eventData: ClueSearchPlannerProps['eventData'] & { clue: NonNullable<ClueSearchPlannerProps['eventData']['clue']> } }) => {
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'clue_search' });
   const { t: t_ui } = useTranslation('ui');
   const [activeHint, setActiveHint] = useState<string | null>(null);
@@ -73,7 +83,6 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
   const config: ClueSearchConfig = clueSearchConfig ?? defaultClueSearchConfig;
 
   const clueData = eventData.clue;
-  if (!clueData) return null;
 
   // Lookup maps
   const roundMap = useMemo(() => {
@@ -345,7 +354,7 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
   }, [eventData.shop, clueData]);
 
   const tabs: { id: ClueSearchTab; name: string }[] = [
-    { id: 'info', name: t('tabInfo') },
+    { id: 'info', name: t_ui('info') },
     { id: 'calculator', name: t_ui('calculator') },
   ];
 
@@ -424,7 +433,7 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
                           </div>
                         </th>
                       ))}
-                      <th className="border-b border-neutral-200 py-1.5 pl-4 text-left font-medium text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">{t('rewards')}</th>
+                      <th className="border-b border-neutral-200 py-1.5 pl-4 text-left font-medium text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">{t_ui('obtainedRewards')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -553,7 +562,7 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
 
                   {/* Round completion rewards */}
                   {isSearchGuide && (
-                    <h4 className="mb-2 mt-3 border-t border-neutral-200 pt-3 text-sm font-medium text-neutral-700 dark:border-neutral-700 dark:text-neutral-300">{t('guide863.roundRewards')}</h4>
+                    <h4 className="mb-2 mt-3 border-t border-neutral-200 pt-3 text-sm font-medium text-neutral-700 dark:border-neutral-700 dark:text-neutral-300">{t_ui('rewards')}</h4>
                   )}
                   <div className="flex flex-wrap gap-1">
                     {round.Reward.RewardParcelId.map((id, idx) => (
@@ -620,7 +629,7 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
             {displayResult && (
               <div className="pt-4 border-t dark:border-neutral-700 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-base dark:text-neutral-200">{t('resultTitle')}</h3>
+                  <h3 className="font-bold text-base dark:text-neutral-200">{t_ui('calculationResult')}</h3>
                   {!searchModel && hasShopClues && (
                     <button
                       onClick={handleAutoBuyFromShop}
@@ -676,7 +685,7 @@ export const ClueSearchPlanner = ({ eventId, eventData, iconData, onCalculate }:
                     </div>
                   </div>
                   <div className="bg-green-50 dark:bg-green-900/40 p-3 rounded-lg">
-                    <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t('rewards')}</h4>
+                    <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2">{t_ui('obtainedRewards')}</h4>
                     {isSearchGuide && <p className="mb-2 text-xs text-green-800 dark:text-green-200">{t('guide863.rewardIncludes')}</p>}
                     <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
                       {Object.entries(displayResult.rewards)

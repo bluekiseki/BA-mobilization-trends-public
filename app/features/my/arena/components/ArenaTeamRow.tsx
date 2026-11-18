@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
-import { LuShield, LuSword } from 'react-icons/lu';
-import type { PortraitData } from '~/types/raidReport';
+import { CombatTypeIcon } from '~/components/common/CombatTypeIcon';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import type { Student } from '~/types/plannerData';
 import type { ArenaTeam } from '~/features/my/arena/types';
 import { teamSlots } from '~/features/my/arena/scan/records';
@@ -13,7 +13,6 @@ interface Props {
   // Recognition scores in display order (strikers, then specials); low ones are outlined for review.
   scores?: number[];
   students: Record<string, Student>;
-  portraitData: PortraitData;
   onPick?: (index: number) => void;
   onDamageChange?: (index: number, damage: number | null) => void;
   // Matchup summaries aggregate several battles, so one battle's damage would be misleading there.
@@ -21,18 +20,17 @@ interface Props {
 }
 
 // Plain portrait: the combat report has no star/weapon info, so StudentIcon's overlays would show wrong values.
-export function StudentPortrait({ id, portraitData, name, className = '' }: { id: number; portraitData: PortraitData; name?: string; className?: string }) {
-  const src = portraitData[id];
-  return src ? (
-    <img src={`data:image/webp;base64,${src}`} alt={name ?? ''} title={name} className={`aspect-square w-full object-cover ${className}`} />
-  ) : (
-    <div title={name} className={`aspect-square w-full bg-neutral-200 dark:bg-neutral-800 ${className}`} />
+export function StudentPortrait({ id, name, className = '' }: { id: number; name?: string; className?: string }) {
+  return (
+    <div title={name} className={`aspect-square w-full bg-neutral-200 dark:bg-neutral-800 ${className}`}>
+      <SheetIcon sheet="student" id={id} alt={name ?? ''} />
+    </div>
   );
 }
 
 const formatDamage = (damage: number | null) => (damage === null ? '-' : damage.toLocaleString());
 
-export function ArenaTeamRow({ team, scores, students, portraitData, onPick, onDamageChange, hideDamage = false }: Props) {
+export function ArenaTeamRow({ team, scores, students, onPick, onDamageChange, hideDamage = false }: Props) {
   const slots = teamSlots(team);
   return (
     <div className="flex items-start gap-1">
@@ -40,7 +38,7 @@ export function ArenaTeamRow({ team, scores, students, portraitData, onPick, onD
         const student = students[String(slot.id)];
         const score = scores?.[index];
         const low = score !== undefined && score < LOW_CONFIDENCE;
-        const icon = <StudentPortrait id={slot.id} portraitData={portraitData} name={student?.Name} />;
+        const icon = <StudentPortrait id={slot.id} name={student?.Name} />;
         return (
           <div key={index} className={`flex min-w-10 max-w-14 flex-1 basis-14 flex-col items-center ${slot.role === 'special' && slots[index - 1]?.role === 'striker' ? 'ml-2' : ''}`}>
             {onPick ? (
@@ -72,8 +70,8 @@ export function ArenaTeamRow({ team, scores, students, portraitData, onPick, onD
 
 // Attack/defense mark, same sword/shield convention as the in-game combat report.
 export function RoleIcon({ role, className = 'h-4 w-4' }: { role: 'attack' | 'defense'; className?: string }) {
-  const Icon = role === 'attack' ? LuSword : LuShield;
-  return <Icon className={`shrink-0 text-neutral-700 dark:text-neutral-200 ${className}`} title={role === 'attack' ? 'Attack' : 'Defense'} aria-label={role === 'attack' ? 'Attack' : 'Defense'} />;
+  const label = role === 'attack' ? 'Attack' : 'Defense';
+  return <CombatTypeIcon kind={role} title={label} className={`text-neutral-700 dark:text-neutral-200 ${className}`} />;
 }
 
 // Per-team result in the in-game colors: "Win" yellow, "Lose" gray. Attached to the team, not the row, so the winner

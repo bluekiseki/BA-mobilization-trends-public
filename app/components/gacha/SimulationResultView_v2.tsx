@@ -7,6 +7,7 @@ import { meanFromDist, ticketCreditedDist, type GlobalAggregatedResult } from '~
 import type { BannerStrategy } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import type { Locale } from '~/utils/i18n/config';
 import RcTooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
@@ -26,7 +27,6 @@ interface Props {
   simple?: boolean;
   result: GlobalAggregatedResult | null;
   initialPyroxenes: number;
-  portraitMap: Record<number, string>;
   pyroxeneIcon?: string | null;
   elephIconMap?: Record<string, string>;
   bankruptcyRate: number | null;
@@ -61,7 +61,6 @@ export default function SimulationResultView_v2({
   simple = false,
   result,
   initialPyroxenes,
-  portraitMap,
   pyroxeneIcon,
   elephIconMap = {},
   bankruptcyRate,
@@ -74,6 +73,7 @@ export default function SimulationResultView_v2({
   const { t: tGacha } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: t_ui } = useTranslation('ui');
   const { t: t_g } = useTranslation('game');
+  const { t: t_planner } = useTranslation('planner');
   const matcher = useSearchMatcher(i18n.language as Locale);
   type StudentFilterKey = 'pickup' | 'fes' | 'star3' | 'star2' | 'star1';
   const [tab, setTab] = useState<ChartTab>('net');
@@ -267,7 +267,7 @@ export default function SimulationResultView_v2({
                 <div className="text-base font-bold text-neutral-600 dark:text-neutral-300">{fmt(result.cost.avg('inf'))}</div>
                 <div className="text-[10px] text-neutral-400 dark:text-neutral-500">
                   ≈{Math.round(result.cost.avg('inf') / 120).toLocaleString()}
-                  {t('pulls_short')}
+                  {t_planner('gacha.banner_planner.unit_pulls')}
                 </div>
               </div>
             </div>
@@ -484,7 +484,7 @@ export default function SimulationResultView_v2({
               {val != null && isPyroxeneTab && (
                 <div className="text-[9px] text-neutral-400 dark:text-neutral-500 mt-0.5 whitespace-nowrap">
                   {Math.round(val / 120).toLocaleString()}
-                  {t('pulls_short')}
+                  {t_planner('gacha.banner_planner.unit_pulls')}
                 </div>
               )}
             </div>
@@ -582,7 +582,7 @@ export default function SimulationResultView_v2({
                 {/* 2-col scrollable grid */}
                 <div className="max-h-52 overflow-y-auto custom-scrollbar">
                   {filtered.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-neutral-400">{t_ui('noSearchResults')}</div>
+                    <div className="py-6 text-center text-xs text-neutral-400">{t_ui('noResults')}</div>
                   ) : (
                     <div className="grid grid-cols-2 divide-x divide-neutral-100 dark:divide-neutral-800">
                       {filtered.map((stat) => {
@@ -596,15 +596,13 @@ export default function SimulationResultView_v2({
                             }`}
                           >
                             <div className="relative shrink-0">
-                              {portraitMap[stat.studentId] ? (
-                                <img
-                                  src={`data:image/webp;base64,${portraitMap[stat.studentId]}`}
-                                  alt={stat.name}
-                                  className="w-7 h-7 rounded-full object-cover border border-neutral-200 dark:border-neutral-700"
-                                />
-                              ) : (
-                                <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[10px] font-bold">{stat.name.charAt(0)}</div>
-                              )}
+                              <SheetIcon
+                                sheet="student"
+                                id={stat.studentId}
+                                alt={stat.name}
+                                className="w-7 h-7 rounded-full border border-neutral-200 dark:border-neutral-700"
+                                fallback={<div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[10px] font-bold">{stat.name.charAt(0)}</div>}
+                              />
                               {/* {elephIconMap[String(stat.studentId)] && (
                                 <img
                                   src={`data:image/webp;base64,${elephIconMap[String(stat.studentId)]}`}
@@ -643,15 +641,13 @@ export default function SimulationResultView_v2({
                   <div className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="relative shrink-0">
-                        {portraitMap[selected.studentId] ? (
-                          <img
-                            src={`data:image/webp;base64,${portraitMap[selected.studentId]}`}
-                            alt={selected.name}
-                            className="w-10 h-10 rounded-full object-cover border border-neutral-200 dark:border-neutral-700"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold">{selected.name.charAt(0)}</div>
-                        )}
+                        <SheetIcon
+                          sheet="student"
+                          id={selected.studentId}
+                          alt={selected.name}
+                          className="w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-700"
+                          fallback={<div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold">{selected.name.charAt(0)}</div>}
+                        />
                         {/* {elephIconMap[String(selected.studentId)] && (
                           <img
                             src={`data:image/webp;base64,${elephIconMap[String(selected.studentId)]}`}

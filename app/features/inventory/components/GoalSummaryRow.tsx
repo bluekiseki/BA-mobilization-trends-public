@@ -10,25 +10,7 @@ interface GoalSummaryRowProps {
   iconData: IconData;
 }
 
-/**
- * Thin XP coverage summary — owned / required, as plain numbers — for one or more fungible
- * material pools (activity reports, equipment enhancement stones, unique weapon growth
- * materials). Shown below the inventory filter bar only while goal comparison is on.
- *
- * No separate deficit figure: owned/required already implies it, and repeating it as its own
- * signed number was redundant. Coverage is instead conveyed by coloring the owned/required pair
- * itself (green once covered, red while short).
- *
- * One representative icon per line (not a breakdown): an earlier version broke the deficit down
- * into itemized icons (and, for unique weapons, a second icon group for the firing-pin
- * alternative), but that made a single line read as two separate, unlabeled breakdowns side by
- * side. A single icon next to the label avoids that — it's purely a visual anchor for the label's
- * item type, not new information. Rendered as a plain <img> (not the ItemIcon component) since
- * only the raw icon bitmap is needed here, none of ItemIcon's border/size/fallback chrome.
- *
- * Deliberately a single row, not a card: per CLAUDE.md, no nested container repeats the page's
- * own background/padding.
- */
+/** XP coverage for fungible material pools, shown while comparing inventory against goals. */
 export const GoalSummaryRow = ({ pools, iconData }: GoalSummaryRowProps) => {
   const { t } = useTranslation(['planner', 'game']);
   const tStr = t as (k: string) => string;
@@ -54,7 +36,7 @@ export const GoalSummaryRow = ({ pools, iconData }: GoalSummaryRowProps) => {
               </Tooltip>
             )}
             <span className={`tabular-nums font-medium ${covered ? 'text-green-500' : 'text-red-400'}`}>
-              {Math.floor(p.ownedXp).toLocaleString()} / {Math.ceil(p.requiredXp).toLocaleString()} XP
+              {Math.floor(Math.min(p.ownedXp, p.requiredXp)).toLocaleString()} / {Math.ceil(Math.max(p.ownedXp, p.requiredXp)).toLocaleString()} XP
             </span>
           </div>
         );

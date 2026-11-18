@@ -134,7 +134,7 @@
       "pointExchange": "招募點數兌換"
     },
     "bannerType": {
-      "chargeSystem": "呼叫充能",
+      "chargeSystem": "招募堆疊",
       "pointSystem": "招募點數"
     },
     "tabs": {
@@ -143,7 +143,8 @@
     "studentStats": {
       "mostRecruited": "招募次數 TOP 3",
       "recordedThreeStarNote": "以紀錄中新增的3★學生為準",
-      "allAcquisitions": "所有獲得方式"
+      "allAcquisitions": "全部",
+      "excludePityExchange": "不含保底・兌換"
     },
     "summary": {
       "heading": "全期間總覽",
@@ -158,6 +159,7 @@
       "empty": "尚未儲存任何招募紀錄。",
       "unknownBanner": "未知招募",
       "entryMeta": "{{date}} · <1>招募{{pulls}}次</1> · 3★{{threeStar}}名 · 目標{{goal}}名",
+      "goalPulls": "第{{count}}次達成目標",
       "edit": "編輯"
     },
     "stats": {
@@ -177,6 +179,7 @@
       "threeStarDescription": "僅計算一般招募結果，不含半保底、保底與招募點數兌換。",
       "goalTicketsTitle": "消耗的招募次數",
       "goalTicketsSubtitle": "目標 {{n}}名",
+      "goalTicketsDescription": "僅計算已達成目標的招募。若記錄中填寫了「達成目標次數」，則只計算到該次數為止（之後為刻意保底等額外抽取的次數不計入）。",
       "halfPityTitle": "半保底精選",
       "halfPitySubtitle": "{{hit}} / {{total}} · 二項分布",
       "halfPityDescription": "以每次半保底 50% 的精選機率計算。"
@@ -186,22 +189,25 @@
       "editTitle": "編輯招募紀錄",
       "bannerLabel": "選擇招募",
       "bannerSearchPlaceholder": "以學生名稱或日期搜尋",
-      "initialChargeLabel": "起始呼叫充能",
-      "initialChargeNormalLabel": "起始呼叫充能（常駐）",
-      "initialChargeLimitedLabel": "起始呼叫充能（限定）",
+      "goalPullCountLabel": "達成目標次數",
+      "goalPullCountPlaceholder": "未填時為總招募次數",
+      "initialChargeLabel": "起始招募堆疊",
+      "initialChargeNormalLabel": "起始招募堆疊（常駐）",
+      "initialChargeLimitedLabel": "起始招募堆疊（限定）",
       "resultsHeading": "3★ 招募結果",
       "selectBannerFirst": "請先選擇招募。",
       "unknownStudent": "學生 #{{id}}",
       "deleteResult": "刪除 3★ 結果",
       "errorNoBanner": "請選擇招募。",
       "errorPullCount": "總招募次數必須為 1 以上的整數。",
-      "errorInitialCharge": "起始呼叫充能必須介於 0 至 199 之間。",
+      "errorGoalPullCount": "達成目標次數必須為 1 以上、不超過總招募次數的整數。",
+      "errorInitialCharge": "起始招募堆疊必須介於 0 至 199 之間。",
       "errorGuaranteed": "保證結果數超過總招募次數。",
       "errorDuplicateFirst": "同一位學生的首次招募只能記錄一次。",
       "errorPickupNotInBanner": "精選只能選擇本次招募中的學生。",
       "errorGoalNotInBanner": "目標學生只能選擇本次招募中的學生。",
       "errorPickupMustBeGoal": "以精選招募的學生必須列入目標學生。",
-      "errorNoPointExchange": "呼叫充能方式無法記錄招募點數兌換。",
+      "errorNoPointExchange": "招募堆疊方式無法記錄招募點數兌換。",
       "errorNoPity": "傳統招募點數方式無法記錄半保底／保底。"
     }
   }

@@ -29,7 +29,7 @@ export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
   return data({
     siteTitle: i18n.t('common:title'),
-    title: i18n.t('planner:page.itemScanner'),
+    title: i18n.t('planner:itemScanner.title'),
     description: i18n.t('planner:page.description.itemScanner'),
   });
 }

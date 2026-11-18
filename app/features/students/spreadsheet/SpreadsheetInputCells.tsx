@@ -97,9 +97,10 @@ interface EquipmentInputProps {
   td: string;
   inp: string;
   cellId?: string;
+  disabled?: boolean;
 }
 
-function EquipmentInputComponent({ plan, section, index, value, handleEquip, equip, td, inp, cellId }: EquipmentInputProps) {
+function EquipmentInputComponent({ plan, section, index, value, handleEquip, equip, td, inp, cellId, disabled }: EquipmentInputProps) {
   const [displayValue, setDisplayValue] = useState(String(value));
   // console.log('[EquipmentInputComponent]', { plan, section, index, value, handleEquip, equip, td, inp, cellId })
 
@@ -143,6 +144,7 @@ function EquipmentInputComponent({ plan, section, index, value, handleEquip, equ
         value={parseInt(displayValue, 10) || null}
         min={0}
         max={10}
+        disabled={disabled}
         disableArrowStep
         className={inp}
         onChange={(val) => {
@@ -187,9 +189,10 @@ interface GearInputProps {
   td: string;
   inp: string;
   cellId?: string;
+  disabled?: boolean;
 }
 
-function GearInputComponent({ plan, section, value, updatePlan, td, inp, cellId }: GearInputProps) {
+function GearInputComponent({ plan, section, value, updatePlan, td, inp, cellId, disabled }: GearInputProps) {
   const [displayValue, setDisplayValue] = useState(String(value));
 
   useEffect(() => {
@@ -231,6 +234,7 @@ function GearInputComponent({ plan, section, value, updatePlan, td, inp, cellId 
         value={parseInt(displayValue, 10) || null}
         min={0}
         max={2}
+        disabled={disabled}
         disableArrowStep
         className={inp}
         onChange={(val) => {

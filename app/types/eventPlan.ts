@@ -13,6 +13,7 @@ import { customGameItemSchema } from '~/types/minigame/customGame';
 import { interactiveWorldRaidConfigSchema } from '~/types/minigame/interactiveWorldRaid';
 import { roadPuzzleConfigSchema } from '~/types/minigame/roadPuzzle';
 import { jankenConfigSchema } from '~/types/minigame/janken';
+import { tankConfigSchema } from '~/types/minigame/tank';
 import { locationConfigSchema } from '~/types/minigame/location';
 
 export const stagePrioSchema = z.enum(['include', 'exclude', 'priority']);
@@ -25,6 +26,8 @@ export const eventPlanSchema = z.object({
   alreadyPurchasedCounts: z.record(z.string(), z.number()),
   runCounts: z.record(z.string(), z.number()),
   firstClears: z.record(z.string(), z.boolean()),
+  // Resource-efficiency tab: stages already cleared (first-clear reward claimed), keyed by "<category>:<stage number>".
+  clearedStages: z.record(z.string(), z.boolean()).optional(),
   stagePrio: z.record(z.string(), stagePrioSchema),
   priorityItemId: z.number().nullable().optional(),
   completedMissions: z.array(z.number()),
@@ -60,6 +63,7 @@ export const eventPlanSchema = z.object({
   interactiveWorldRaidConfig: interactiveWorldRaidConfigSchema.optional(),
   roadPuzzleConfig: roadPuzzleConfigSchema.optional(),
   minigameJankenConfig: jankenConfigSchema.optional(),
+  minigameTankConfig: tankConfigSchema.optional(),
   locationConfig: locationConfigSchema.optional(),
   cachedTotalItems: z
     .object({

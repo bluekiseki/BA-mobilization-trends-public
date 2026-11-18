@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EventPlanner } from './EventPlanner';
-import type { EventData, IconData, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, StudentData } from '~/types/plannerData';
 
 interface EventPlannerLoaderProp {
   isLoading: boolean;
@@ -9,9 +9,8 @@ interface EventPlannerLoaderProp {
   eventData: EventData | null;
   iconData: IconData | null;
   allStudents: StudentData;
-  studentPortraits: StudentPortraitData;
 }
-export const EventPlannerLoader = ({ isLoading, error, eventId, eventData, iconData, allStudents, studentPortraits }: EventPlannerLoaderProp) => {
+export const EventPlannerLoader = ({ isLoading, error, eventId, eventData, iconData, allStudents }: EventPlannerLoaderProp) => {
   const { t } = useTranslation('planner');
   const { t: t_ui } = useTranslation('ui');
 
@@ -20,5 +19,5 @@ export const EventPlannerLoader = ({ isLoading, error, eventId, eventData, iconD
   if (!eventData) return <div className="text-center p-8">{t('error.eventDataDisplayFailed')}</div>;
   if (!iconData) return <div className="text-center p-8">Unable to display icon data.</div>;
 
-  return <EventPlanner eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />;
+  return <EventPlanner eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} />;
 };

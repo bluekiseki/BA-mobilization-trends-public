@@ -13,6 +13,7 @@ interface Props {
 export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }: Props) {
   const { t } = useTranslation(['planner', 'game']);
   const { t: t_g } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -32,7 +33,7 @@ export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }
       // Prepare translated header labels (must match HEADER_IDS order in plannerCsvExchange.ts)
       const headerLabels = [
         'Student ID',
-        t('spreadsheet.headerField.name') || 'Name',
+        t_ui('nameLabel') || 'Name',
         // Base stats (Current)
         t_g('level') || 'Level',
         t_g('rank') || 'Rank',
@@ -69,6 +70,7 @@ export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }
         t('spreadsheet.headerField.useEligma') || 'Use Eligma',
         t('spreadsheet.headerField.eligmaPrice') || 'Eligma Price',
         t('spreadsheet.headerField.eligmaStock') || 'Eligma Stock',
+        t('growthCard.recruited') || 'Recruited',
       ];
 
       // Prepare translated metadata
@@ -140,7 +142,7 @@ export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }
           title={t('dataExchange.csvExportTooltip') || 'Export spreadsheet as CSV for Excel editing'}
         >
           <MdDownload size={14} />
-          {t('dataExchange.csvExport') || 'Export CSV'}
+          {t('ui.exportCsv') || 'Export CSV'}
         </button>
 
         <div
@@ -156,7 +158,7 @@ export function SpreadsheetCsvTools({ growthPlans, allStudents, setGrowthPlans }
         >
           <label className="flex items-center gap-1.5 cursor-pointer">
             <MdUpload size={14} />
-            {t('dataExchange.csvImport') || 'Import CSV'}
+            {t('ui.importCsv') || 'Import CSV'}
             <input
               type="file"
               accept=".csv"

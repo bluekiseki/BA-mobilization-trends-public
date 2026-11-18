@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { GAMESERVER_LIST, type FullData, type GameServer, type Student } from '~/types/data';
 import { loadRaidInfosById } from '~/utils/loadRaidInfo';
 import { isTotalAssault } from '~/utils/raid/report';
-import type { PortraitData, ReportEntry, ReportEntryRank, ReportStudentData } from '~/types/raidReport';
+import type { ReportEntry, ReportEntryRank, ReportStudentData } from '~/types/raidReport';
 // import type { loader as rootLorder } from '~/root';
 import { HiOutlineChartPie, HiOutlineUsers, HiArrowRight } from 'react-icons/hi2'; // Icon example
 
@@ -18,14 +18,16 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import type { AppHandle } from '~/types/link';
 import { useDataCacheJson } from '~/hooks/useDataCacheJson';
+import { fetchTierCuts, fullDataUrl, loadFullData, loadTierCuts, tierCutsUrl, type TierCuts } from '~/features/raid-stats/dashboard/fullData';
 import OverviewDashboardUI from '~/features/raid-stats/dashboard/OverviewDashboardUI';
 import TierSummary from '~/features/raid-stats/dashboard/TierSummary';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/$server.$id';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/hooks/usePageHelp';
 import { localeLink } from '~/utils/localeLink';
+import { formatLocations } from '~/utils/raidLocation';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return createMetaDescriptor(`${loaderData.metaTitle} | ${loaderData.siteTitle}`, loaderData.metaDescription, '/img/3.webp', loaderData.canonicalUrl);
@@ -52,8 +54,9 @@ export const handle: AppHandle = {
     if (!raidInfos || !id || !raidInfos.length) return [];
     const isRaid = isTotalAssault(raidInfos[0]);
 
-    const raidDataUrl = isRaid ? cdn(`/w/${server}/raid/${id.replace(/\w/, '')}.bin`) : cdn(`/w/${server}/eraid/${id.replace(/\w/, '')}-${raidInfos[0].Type}.bin`);
+    const raidDataUrl = isRaid ? cdn(`/w/v2/${server}/raid/${id.replace(/\w/, '')}.bin`) : cdn(`/w/v2/${server}/eraid/${id.replace(/\w/, '')}-${raidInfos[0].Type}.bin`);
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: raidDataUrl,
@@ -62,13 +65,13 @@ export const handle: AppHandle = {
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(locale)}.students.bin`),
+        href: cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
       {
         rel: 'preload',
-        href: cdn(`/fulldata/${server}/${id}.bin`),
+        href: fullDataUrl(server, id),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -81,20 +84,7 @@ export const handle: AppHandle = {
   },
 };
 
-export function restoreFromDifferenceArray(diffArray: Int32Array): Int32Array {
-  if (!diffArray || diffArray.length === 0) return new Int32Array();
-
-  const original: Int32Array = new Int32Array(diffArray.length);
-  original[0] = diffArray[0];
-
-  for (let i = 1; i < diffArray.length; i++) {
-    original[i] = original[i - 1] - diffArray[i];
-  }
-
-  return original;
-}
-
-export function loader({ context, params, request }: LoaderFunctionArgs) {
+export async function loader({ context, params, request }: LoaderFunctionArgs) {
   const { server, id } = params;
   if (!server || !id || !GAMESERVER_LIST.includes(server as GameServer)) {
     throw new Response('Not Found', { status: 404 });
@@ -133,11 +123,15 @@ export function loader({ context, params, request }: LoaderFunctionArgs) {
     server: server.toUpperCase(),
     season: raid.Id,
     boss: raid.Boss,
-    location: raid.Location,
+    location: formatLocations(raid.Location),
     raidType,
   };
 
+  // The header tier card is rendered on the server from this small file. On failure or timeout the client fetches it instead.
+  const tiers = await fetchTierCuts(new URL(tierCutsUrl(server as GameServer, id), request.url).href, AbortSignal.timeout(1500)).catch(() => null);
+
   return data({
+    tiers,
     locale,
     metaTitle: i18n.t('dashboard:detailMetaTitle', metaVariables),
     metaDescription: i18n.t('dashboard:detailMetaDescription', metaVariables),
@@ -159,7 +153,7 @@ export function headers({}: Route.HeadersArgs) {
 }
 
 export default function RaidDetailsPage() {
-  const { raidInfos, server, isGrandAssault, id } = useLoaderData<typeof loader>();
+  const { raidInfos, server, isGrandAssault, id, tiers: serverTiers } = useLoaderData<typeof loader>();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const mainView = searchParams.get('view') === 'detail' ? 'detail' : 'overview'; // Default value 'overview'
@@ -169,14 +163,6 @@ export default function RaidDetailsPage() {
     return ['All', ...types];
   }, [isGrandAssault, raidInfos]);
 
-  const isRaid = isTotalAssault(raidInfos[0]);
-  const helpKeys = useMemo(() => {
-    return [
-      'dashboard.common', // 1. Common guide to show unconditionally
-      isRaid ? 'dashboard.raid' : 'dashboard.elimination', // 2. Conditional-only guide
-    ];
-  }, [isRaid]);
-  useHelpKey(helpKeys);
   const activeTab = useMemo(() => {
     const tabFromUrl = searchParams.get('tab');
 
@@ -208,23 +194,22 @@ export default function RaidDetailsPage() {
   // Data caching and state
   const [cachedData, setCachedData] = useState<Record<string, ReportEntryRank[]>>({});
   const [studentData, setStudentData] = useState<ReportStudentData>({});
-  const [portraitData, setPortraitData] = useState<PortraitData>({});
   const [loading, setLoading] = useState(true);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [fullData, setFullData] = useState<FullData | null>(null);
+  const [clientTiers, setClientTiers] = useState<TierCuts | null>(null);
+  const tiers = serverTiers ?? clientTiers;
   const [overviewLoading, setOverviewLoading] = useState(false);
 
   const fetchStudents = useDataCacheJson<Record<string, Student>>();
   const fetchRaidData = useDataCacheJson<ReportEntry[]>();
-  const fetchFullData = useDataCacheJson<FullData>();
 
   // Loading common data (student info, etc.)
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as unknown)])
-      .then(([studentJson, portraitJson]) => {
+    fetchStudents(cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`))
+      .then((studentJson) => {
         setStudentData(studentJson);
-        setPortraitData(portraitJson as PortraitData);
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -233,28 +218,22 @@ export default function RaidDetailsPage() {
       });
   }, [locale]);
 
+  // Fallback for when the server could not read the tier file
+  useEffect(() => {
+    setClientTiers(null);
+    if (serverTiers) return;
+    loadTierCuts(server, id)
+      .then(setClientTiers)
+      .catch((err: unknown) => {
+        console.error('Failed to load tier cuts:', err);
+      });
+  }, [server, id, serverTiers]);
+
   useEffect(() => {
     setFullData(null);
     setOverviewLoading(true);
-    Promise.all([
-      // fetch(`/fulldata/${server}/${id}.json`).then(res => res.json())
-      // fetchFullData(`/fulldata/${server}/${id}.bin`, res => res.json()),
-      fetchFullData(cdn(`/fulldata/${server}/${id}.bin`)),
-    ])
-      .then(([data]) => {
-        const newdata = {
-          rank: new Int32Array(),
-          tier_counter: {},
-        } as FullData;
-
-        newdata.rank = restoreFromDifferenceArray(Int32Array.from(data.rank));
-        if (data.rank_1) newdata.rank_1 = restoreFromDifferenceArray(Int32Array.from(data.rank_1)); // [...data.rank_1])
-        if (data.rank_2) newdata.rank_2 = restoreFromDifferenceArray(Int32Array.from(data.rank_2)); // [...data.rank_2)
-        if (data.rank_3) newdata.rank_3 = restoreFromDifferenceArray(Int32Array.from(data.rank_3)); // [...data.rank_3])
-        if (data.rank_default) newdata.rank_default = structuredClone(data.rank_default);
-        if (data.tier_counter) newdata.tier_counter = structuredClone(data.tier_counter);
-        setFullData(newdata);
-      })
+    loadFullData(server, id)
+      .then(setFullData)
       .catch((err: unknown) => {
         console.error('Failed to load common data:', err);
         setFullData(null);
@@ -285,7 +264,7 @@ export default function RaidDetailsPage() {
     const raidInfo = isGrandAssault ? raidInfos.find((r) => r.Type === activeTab) : raidInfos[0];
     if (!raidInfo) return;
 
-    const raidDataUrl = isGrandAssault ? cdn(`/w/${server}/eraid/${raidInfo.Id.replace(/\w/, '')}-${raidInfo.Type}.bin`) : cdn(`/w/${server}/raid/${raidInfo.Id.replace(/\w/, '')}.bin`);
+    const raidDataUrl = isGrandAssault ? cdn(`/w/v2/${server}/eraid/${raidInfo.Id.replace(/\w/, '')}-${raidInfo.Type}.bin`) : cdn(`/w/v2/${server}/raid/${raidInfo.Id.replace(/\w/, '')}.bin`);
 
     setDashboardLoading(true);
     fetchRaidData(raidDataUrl)
@@ -294,7 +273,9 @@ export default function RaidDetailsPage() {
           .sort((a, b) => -a.s + b.s)
           .map((v, i) => {
             const vv = v as ReportEntryRank;
-            vv.typeRanking = i + 1;
+            // Entries are sparse (only parties that were collected), so the array index is not the rank.
+            // `b` is the rank within this attribute; `r` is the overall rank. Older files have neither, so fall back to the position.
+            vv.typeRanking = v.b ?? (isGrandAssault ? i + 1 : v.r);
             return vv;
           });
         setCachedData((prev) => ({ ...prev, [typeKey]: reportRankJson }));
@@ -376,7 +357,7 @@ export default function RaidDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 mb-8 ">
         <RaidHeader raidInfo={currentRaidInfo} server={server} isGrandAssault={isGrandAssault} allData={anyDashboardData} showType={isGrandAssault && activeTab !== 'All'} />
 
-        <TierSummary fullData={fullData} raidInfos={raidInfos} server={server} activeTab={activeTab} />
+        <TierSummary tiers={tiers} raidInfos={raidInfos} server={server} activeTab={activeTab} />
       </div>
 
       {/* --- Step 1: Main View Selector (Always displayed) --- */}
@@ -491,7 +472,7 @@ export default function RaidDetailsPage() {
               {dashboardLoading ? (
                 <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
               ) : currentDashboardData ? (
-                <DashboardUI dashboardData={currentDashboardData} studentData={studentData} portraitData={portraitData} raidInfo={currentRaidInfo} server={server} />
+                <DashboardUI dashboardData={currentDashboardData} studentData={studentData} raidInfo={currentRaidInfo} server={server} />
               ) : (
                 <div className="min-h-[25vh] text-center px-2 pb-30 sm:px-2 flex justify-center items-center text-2xl">
                   {

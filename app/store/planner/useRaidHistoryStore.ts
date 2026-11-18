@@ -1,3 +1,4 @@
+import { safeLocalStorage } from '../history/localPersistence';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { RaidHistoryData, RaidHistoryEntry } from '~/types/raidHistory';
@@ -20,7 +21,7 @@ export const useRaidHistoryStore = create<RaidHistoryState>()(
     }),
     {
       name: 'raid-history-v1',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({ entries: state.entries }),
     },
   ),

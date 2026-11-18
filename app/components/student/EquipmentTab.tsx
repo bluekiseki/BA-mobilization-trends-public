@@ -33,6 +33,7 @@ const EditableLevelDisplay = ({
   onChange,
   prefix = '',
   textClassName = '',
+  disabled = false,
 }: {
   value: number;
   max: number;
@@ -40,6 +41,7 @@ const EditableLevelDisplay = ({
   onChange: (val: number) => void;
   prefix?: string;
   textClassName?: string;
+  disabled?: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localVal, setLocalVal] = useState(value);
@@ -56,6 +58,14 @@ const EditableLevelDisplay = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleCommit();
   };
+
+  if (disabled) {
+    return (
+      <div className={`flex items-center gap-1 px-1 py-0.5 opacity-30 select-none ${textClassName}`}>
+        <span className="font-bold">-</span>
+      </div>
+    );
+  }
 
   if (isEditing) {
     return (
@@ -93,9 +103,11 @@ interface EquipmentTabProps {
   studentInfo: Student | null;
   iconData?: IconData;
   eventData?: EventData;
+  /** Unrecruited plan: `current` is fixed to the recruit baseline. */
+  currentLocked?: boolean;
 }
 
-export const EquipmentTab = ({ plan, studentInfo, iconData, eventData }: EquipmentTabProps) => {
+export const EquipmentTab = ({ plan, studentInfo, iconData, eventData, currentLocked = false }: EquipmentTabProps) => {
   const { t } = useTranslation('planner');
   const { t: tUi } = useTranslation('ui');
   const updateGrowthRange = useGlobalStore((state) => state.updateGrowthRange);
@@ -109,7 +121,7 @@ export const EquipmentTab = ({ plan, studentInfo, iconData, eventData }: Equipme
     updateGrowthRange(plan.uuid, { kind: 'equipment', index }, value.current, value.target);
   };
 
-  const renderTierInfo = (tier: number, equipType: string, isInvalid: boolean, onChange: (val: number) => void, isTarget = false) => {
+  const renderTierInfo = (tier: number, equipType: string, isInvalid: boolean, onChange: (val: number) => void, isTarget = false, disabled = false) => {
     const equipId = getEquipmentId(equipType, tier);
     const iconBase64 = equipId && iconData?.Equipment?.[equipId];
     const colorClass = isInvalid
@@ -127,7 +139,7 @@ export const EquipmentTab = ({ plan, studentInfo, iconData, eventData }: Equipme
         ) : (
           <div className="w-6 h-6 bg-neutral-200/50 dark:bg-neutral-800/50 rounded-md" />
         )}
-        <EditableLevelDisplay value={tier} max={MAX_TIER} min={0} onChange={onChange} prefix="T" textClassName={`font-mono text-sm ${colorClass}`} />
+        <EditableLevelDisplay value={tier} max={MAX_TIER} min={0} onChange={onChange} disabled={disabled} prefix="T" textClassName={`font-mono text-sm ${colorClass}`} />
       </div>
     );
   };
@@ -152,8 +164,13 @@ export const EquipmentTab = ({ plan, studentInfo, iconData, eventData }: Equipme
               <span className="font-bold text-sm text-neutral-800 dark:text-neutral-100 tracking-wide uppercase">{t(`common.${equipType}`, equipType)}</span>
 
               <div className="flex items-center gap-1">
-                {renderTierInfo(currentTier, equipType, isCurrentInvalid, (val) =>
-                  handleSliderChange(index as 0 | 1 | 2, moveGrowthRange({ current: currentTier, target: targetTier }, 'current', val)),
+                {renderTierInfo(
+                  currentTier,
+                  equipType,
+                  isCurrentInvalid,
+                  (val) => handleSliderChange(index as 0 | 1 | 2, moveGrowthRange({ current: currentTier, target: targetTier }, 'current', val)),
+                  false,
+                  currentLocked,
                 )}
 
                 <span className={`text-[10px] px-1 ${hasWarning ? 'text-rose-300' : 'text-neutral-400 dark:text-neutral-500'}`}>➜</span>
@@ -178,6 +195,8 @@ export const EquipmentTab = ({ plan, studentInfo, iconData, eventData }: Equipme
               value={{ current: currentTier, target: targetTier }}
               marks={Array.from({ length: MAX_TIER + 1 }, (_, tier) => ({ value: tier }))}
               invalid={{ current: isCurrentInvalid, target: isTargetInvalid }}
+              disabled={{ current: currentLocked }}
+              hideCurrent={currentLocked}
               onChange={(value) => handleSliderChange(index as 0 | 1 | 2, value)}
             />
 

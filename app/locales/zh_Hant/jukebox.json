@@ -15,12 +15,12 @@
   },
   "selection": {
     "main_story": "選擇主線故事",
-    "event_story": "選擇活動故事",
+    "event_story": "選擇活動",
     "favor_story": "選擇關係故事",
     "memorial": "選擇紀念大廳"
   },
   "search": {
-    "placeholder": "搜尋標題、作曲者...",
+    "placeholder": "搜尋標題、作曲者、使用場景...",
     "student_name": "搜尋學生名稱...",
     "no_results": "無結果。必須設定過濾器以防止劇透，然後才會顯示結果。"
   },
@@ -33,7 +33,15 @@
     "autoplay_next": "自動播放下一首",
     "autoplay_scroll": "播放時自動滾動",
     "repeat_current": "重複播放當前曲目",
-    "stop_after": "播放後停止"
+    "stop_after": "播放後停止",
+    "advanced": "進階選項",
+    "order": "播放順序",
+    "order_random": "隨機",
+    "order_sequential": "依編號",
+    "id_range": "編號範圍",
+    "id_range_from": "起始編號",
+    "id_range_to": "結束編號",
+    "id_range_clear": "清除"
   },
   "status": {
     "error": "發生錯誤。"
@@ -93,11 +101,14 @@
     "final_ch4": "第1部Final篇第4章誘騙者決戰",
     "part2_prologue": "第2部序幕",
     "part2_vol0_ch1": "第2部第0篇第1章於杏花綻放的某個春日",
-    "part2_vol1_ch1": "第2部第1篇第1章",
-    "part2_vol1_ch2": "第2部第1篇第2章",
-    "part2_vol2_ch1": "第2部第2篇第1章",
+    "part2_vol1_ch1": "第2部第1篇第1章讓格黑娜再次偉大！",
+    "part2_vol1_ch2": "第2部第1篇第2章我們化作烈焰",
+    "part2_vol2_ch1": "第2部第2篇第1章映照於眼眸的水平線",
     "part2_ex_lore_ch1": "第2部Ex.怪談追蹤篇第1章正午的陽炎",
     "part2_ex_lore_ch2": "第2部Ex.怪談追蹤篇第2章潛伏於鐵桶之物",
     "part2_ex_lore_ch3": "第2部Ex.怪談追蹤篇第3章夢中的列車"
+  },
+  "named_events": {
+    "valentine": "情人節"
   }
 }

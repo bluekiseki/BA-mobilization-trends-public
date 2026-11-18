@@ -56,8 +56,8 @@ startTime,titleKey,volume,chapter,part,prediction,episodes
 2026-08-18 11:00:00,part2_vol0_ch1,0,1,,,
 2026-08-18 11:00:00,part2_ex_lore_ch1,Ex. ロア追跡,1,,,
 2026-09-15 11:00:00,part2_ex_lore_ch2,Ex. ロア追跡,2,,,
-2026-11-24 11:00:00,part2_vol1_ch1,1,1,,,
-2026-12-01 11:00:00,part2_vol1_ch2,1,2,,,
+2026-11-10 11:00:00,part2_vol1_ch1,1,1,,,
+2026-11-10 11:00:00,part2_vol1_ch2,1,2,,,
 2026-12-08 11:00:00,part2_vol2_ch1,2,1,first,true,1-8
 2026-12-22 11:00:00,part2_vol2_ch1,2,1,2nd,true,9-14
 2027-02-02 11:00:00,part2_ex_lore_ch3,Ex. ロア追跡,3,,true,

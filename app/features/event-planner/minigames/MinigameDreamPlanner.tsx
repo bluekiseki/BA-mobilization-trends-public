@@ -132,7 +132,7 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
     // 1. Check the lack of repetition of repetitions
     const targetItemDeficit = remainingCurrency[conversionTargetInfo.targetItemId] || 0;
     if (targetItemDeficit >= 0) {
-      alert(t('calculator.noLoopsNeeded', 'no Loops Needed'));
+      alert(t('calculator.noLoopsNeeded', 'No additional loops are needed.'));
       return;
     }
 
@@ -140,7 +140,7 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
     const avgEpPointsPerLoop = simResult.avgEventPoints / simConfig.targetLoops;
 
     if (avgEpPointsPerLoop <= 0) {
-      alert(t('calculator.errorNetEpLoss', 'error Net Ep Loss'));
+      alert(t('calculator.errorNetEpLoss', 'Average event points per loop are zero or negative, so loops cannot be maximized.'));
       return;
     }
 
@@ -171,7 +171,7 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
       setNeedsToRunSimulationAfterUpdate(true);
       // handleRunSimulation()
     } else {
-      alert(t('calculator.noLoopsNeeded', 'no Loops Needed'));
+      alert(t('calculator.noLoopsNeeded', 'No additional loops are needed.'));
     }
   }, [simResult, simConfig, conversionTargetInfo, dreamData, remainingCurrency, setSimConfig, t]);
 
@@ -524,7 +524,7 @@ export const DreamMakerPlanner = ({ eventId, eventData, iconData, onCalculate, r
               <h3 className="font-bold text-base dark:text-neutral-100">{t('calculator.settingsTitle')}</h3>
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col">
-                  <label>{t('calculator.simRuns')}</label>
+                  <label>{t_ui('simRuns')}</label>
                   <CustomNumberInput
                     value={(simConfig && simConfig.simRuns) || null}
                     onChange={(e) =>

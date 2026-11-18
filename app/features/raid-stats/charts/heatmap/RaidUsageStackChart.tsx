@@ -16,6 +16,7 @@ import type { Locale } from '~/utils/i18n/config';
 import { difficultyInfo } from '../../../../components/raid/Difficulty';
 import { type DifficultySelect } from '~/utils/difficultyPolicy';
 import { CheckboxSelect, type CheckboxSelectOption } from '../../../../components/common/CheckboxSelect';
+import { formatLocations } from '~/utils/raidLocation';
 
 interface RaidUsageData {
   raidId: string;
@@ -75,7 +76,7 @@ export const RaidUsageStackChart: React.FC = () => {
     }
 
     const xLabels = getFilteredRaidInfoByDifficulty();
-    type RaidInfo = { Boss?: string; Location?: string; Date?: string };
+    type RaidInfo = { Boss?: string; Location?: string | string[]; Date?: string };
     const raidInfoMap = new Map<string, RaidInfo>();
 
     if (xLabels && xLabels.length > 0) {
@@ -96,7 +97,7 @@ export const RaidUsageStackChart: React.FC = () => {
     raidLabels.forEach((label: string) => {
       const matchedInfo = raidInfoMap.get(label);
       const bossName = matchedInfo?.Boss ?? '';
-      const teran = matchedInfo?.Location ?? '';
+      const teran = formatLocations(matchedInfo?.Location);
 
       const dateLabel = matchedInfo?.Date ?? '';
 
@@ -210,6 +211,13 @@ export const RaidUsageStackChart: React.FC = () => {
       const dataRow = payload[0]?.payload as (RaidUsageData & Record<number, number>) | undefined;
       if (!dataRow) return null;
       const total = dataRow.totalCount ?? 0;
+      // Negative star keys are assist picks
+      let ownTotal = 0;
+      let assistTotal = 0;
+      Object.entries(dataRow.breakdown).forEach(([s, val]) => {
+        if (Number(s) < 0) assistTotal += val;
+        else ownTotal += val;
+      });
 
       return (
         <div className="rounded border bg-white p-3 text-sm shadow-xl dark:border-neutral-700 dark:bg-neutral-800 z-50">
@@ -235,14 +243,31 @@ export const RaidUsageStackChart: React.FC = () => {
                 <div className="flex items-center gap-1 w-16">
                   <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }}></span>
                   <span className="text-neutral-600 dark:text-neutral-300">
-                    <StarRating n={Math.abs(Number(star))} />
+                    <StarRating n={Number(star)} />
                   </span>
                 </div>
                 <span className="font-mono font-medium text-neutral-800 dark:text-neutral-200 ml-auto">{val.toLocaleString()}%</span>
               </div>
             );
           })}
-          <div className="mt-2 pt-1 border-t dark:border-neutral-600 text-right text-xs text-neutral-500">Total Pick: {total.toLocaleString()} %</div>
+          <div className="mt-2 pt-1 border-t dark:border-neutral-600 flex flex-col gap-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            {assistantFilter === 'all' && (
+              <>
+                <div className="flex justify-between gap-3">
+                  <span>{t_chart('rank_normal')}</span>
+                  <span className="font-mono">{ownTotal.toLocaleString()}%</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span>{t_chart('rank_assist')}</span>
+                  <span className="font-mono">{assistTotal.toLocaleString()}%</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between gap-3 font-medium text-neutral-700 dark:text-neutral-200">
+              <span>{t('usage_total_pick')}</span>
+              <span className="font-mono">{total.toLocaleString()}%</span>
+            </div>
+          </div>
         </div>
       );
     }
@@ -338,7 +363,7 @@ export const RaidUsageStackChart: React.FC = () => {
               <button
                 key={mode}
                 onClick={() => setAssistantFilter(mode)}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${assistantFilter === mode ? 'bg-white dark:bg-neutral-600 shadow-sm text-blue-600 dark:text-blue-300' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}
+                className={`whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded transition-all ${assistantFilter === mode ? 'bg-white dark:bg-neutral-600 shadow-sm text-blue-600 dark:text-blue-300' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}
               >
                 {mode === 'all' ? t_ui('all') : mode === 'own' ? t_chart('rank_normal') : t_chart('rank_assist')}
               </button>

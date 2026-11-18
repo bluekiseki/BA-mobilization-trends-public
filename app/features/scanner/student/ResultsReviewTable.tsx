@@ -1,12 +1,16 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiChevronDown, FiChevronLeft, FiRotateCcw } from 'react-icons/fi';
+import { FiChevronDown, FiChevronLeft, FiFilter, FiRotateCcw } from 'react-icons/fi';
 import type { StudentReviewRow } from '~/features/scanner/student/reviewTypes';
-import { projectReviewRow, type ReviewImpactItem, type ReviewImpactKey } from '~/features/scanner/student/reviewImpact';
+import { projectReviewRow, reviewRowChangeKind, type ReviewImpactItem, type ReviewImpactKey } from '~/features/scanner/student/reviewImpact';
 import type { ReviewOverlayField, StudentCurrent } from '~/features/scanner/student/types';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { ReviewInputCell } from './ReviewInputCell';
 import { getCombatStylePlanGroupId } from '~/utils/combatStyle';
+import { isUnrecruited } from '~/utils/student/recruitState';
+import { StarRating } from '~/components/student/StarRating';
+import { getStarValue } from '~/utils/raid/report';
 
 interface Props {
   rows: StudentReviewRow[];
@@ -72,10 +76,10 @@ const overlayValuePosition: Record<ReviewOverlayField, string> = {
 const toGradeIndex = (star: number, uw: number) => (uw > 0 ? 4 + uw : Math.max(0, star - 1));
 const isSkillKey = (key: ReviewImpactKey) => key === 'ex' || key === 'normal' || key === 'passive' || key === 'sub';
 
-function formatEditorValue(key: ReviewImpactKey, editor: EditConfig, value: number, emptyLabel: string) {
+function formatEditorValue(key: ReviewImpactKey, editor: EditConfig, value: number, emptyLabel: string, withMax = true) {
   if (value === 0) return emptyLabel;
   const formatted = editor.valuePrefix ? `${editor.valuePrefix}${value}` : isSkillKey(key) ? `Lv.${value}` : String(value);
-  return isSkillKey(key) && value === editor.max ? `${formatted} MAX` : formatted;
+  return withMax && isSkillKey(key) && value === editor.max ? `${formatted} MAX` : formatted;
 }
 
 function ImpactCell({
@@ -90,6 +94,7 @@ function ImpactCell({
   currentLabel,
   targetLabel,
   emptyLabel,
+  currentBeforeUnknown,
 }: {
   item: ReviewImpactItem;
   editor: EditConfig;
@@ -102,12 +107,17 @@ function ImpactCell({
   currentLabel: string;
   targetLabel: string;
   emptyLabel: string;
+  /** The plan's current values are only the recruit baseline (unrecruited student), so the "before" is shown as a dash. */
+  currentBeforeUnknown: boolean;
 }) {
   const currentChanged = item.currentBefore !== item.currentAfter;
   const targetChanged = item.targetBefore !== item.targetAfter;
   const format = (value: number) => formatEditorValue(item.key, editor, value, emptyLabel);
-  const currentText = `${currentLabel} ${format(item.currentBefore)}${currentChanged ? `→${format(item.currentAfter)}` : ''}`;
-  const targetText = `${targetLabel} ${format(item.targetBefore)}${targetChanged ? `→${format(item.targetAfter)}` : ''}`;
+  // Diff lines are space-constrained, so omit the MAX suffix there.
+  const formatDiff = (value: number) => formatEditorValue(item.key, editor, value, emptyLabel, false);
+  const formatCurrentBefore = () => (currentBeforeUnknown ? '-' : formatDiff(item.currentBefore));
+  const currentText = `${currentLabel} ${formatCurrentBefore()}${currentChanged ? `→${formatDiff(item.currentAfter)}` : ''}`;
+  const targetText = `${targetLabel} ${formatDiff(item.targetBefore)}${targetChanged ? `→${formatDiff(item.targetAfter)}` : ''}`;
 
   return (
     <div
@@ -144,8 +154,8 @@ function ImpactCell({
         <span className="w-6 shrink-0 truncate" title={currentLabel}>
           {currentLabel}
         </span>
-        {format(item.currentBefore)}
-        {currentChanged ? `→${format(item.currentAfter)}` : ''}
+        {formatCurrentBefore()}
+        {currentChanged ? `→${formatDiff(item.currentAfter)}` : ''}
       </span>
       <span
         title={targetText}
@@ -154,8 +164,8 @@ function ImpactCell({
         <span className="w-6 shrink-0 truncate" title={targetLabel}>
           {targetLabel}
         </span>
-        {format(item.targetBefore)}
-        {targetChanged ? `→${format(item.targetAfter)}` : ''}
+        {formatDiff(item.targetBefore)}
+        {targetChanged ? `→${formatDiff(item.targetAfter)}` : ''}
       </span>
     </div>
   );
@@ -268,6 +278,7 @@ function ReviewCard({
   ];
   const gradeIndex = row.recognized.uw !== null && row.recognized.uw > 0 ? 4 + row.recognized.uw : row.recognized.star !== null ? row.recognized.star - 1 : '';
   const formatGrade = (star: number, uw: number) => gradeOptions[toGradeIndex(star, uw)]?.label ?? '—';
+  const renderGrade = (star: number, uw: number) => (star > 0 ? <StarRating n={getStarValue(star, uw)} size={16} /> : '—');
   const gradeCurrentChanged = starItem.currentBefore !== starItem.currentAfter || uwItem.currentBefore !== uwItem.currentAfter;
   const gradeTargetChanged = starItem.targetBefore !== starItem.targetAfter || uwItem.targetBefore !== uwItem.targetAfter;
   const renderItem = (key: ReviewImpactKey) => {
@@ -287,6 +298,7 @@ function ReviewCard({
         currentLabel={tPlanner('common.current')}
         targetLabel={tPlanner('common.target')}
         emptyLabel={tPlanner('common.tierNone')}
+        currentBeforeUnknown={plan !== null && isUnrecruited(plan)}
       />
     );
   };
@@ -311,10 +323,16 @@ function ReviewCard({
     <article>
       <div className={`flex items-center justify-between gap-2 border-b border-neutral-200 py-1 dark:border-neutral-700 ${row.studentId === null ? 'opacity-60' : ''}`}>
         <div className="flex min-w-0 items-center gap-1.5">
-          {row.portrait && <img src={`data:image/webp;base64,${row.portrait}`} alt="" className="h-7 w-7 shrink-0 object-cover" />}
+          {row.studentId !== null && <SheetIcon sheet="student" id={row.studentId} alt="" className="h-7 w-7 shrink-0" />}
           <span className="truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100" title={row.name || tPlanner('growthCard.selectStudentPrompt')}>
             {row.name || tPlanner('growthCard.selectStudentPrompt')}
           </span>
+          {row.studentId !== null && plan === null && <span className="bg-blue-100 px-1 text-xs font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">{t('newStudent')}</span>}
+          {plan !== null && isUnrecruited(plan) && (
+            <span className="shrink-0 bg-neutral-200 px-1 text-xs font-medium text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">
+              {tPlanner('growthCard.unrecruited')} → {tPlanner('growthCard.recruited')}
+            </span>
+          )}
           <span className="text-xs text-neutral-500 dark:text-neutral-400">{row.confidence === null ? '—' : `${Math.round(row.confidence * 100)}%`}</span>
         </div>
       </div>
@@ -444,8 +462,13 @@ function ReviewCard({
                   <span className="w-6 shrink-0 truncate" title={tPlanner('common.current')}>
                     {tPlanner('common.current')}
                   </span>
-                  {formatGrade(starItem.currentBefore, uwItem.currentBefore)}
-                  {gradeCurrentChanged ? `→${formatGrade(starItem.currentAfter, uwItem.currentAfter)}` : ''}
+                  {renderGrade(starItem.currentBefore, uwItem.currentBefore)}
+                  {gradeCurrentChanged && (
+                    <>
+                      <span aria-hidden>→</span>
+                      {renderGrade(starItem.currentAfter, uwItem.currentAfter)}
+                    </>
+                  )}
                 </span>
                 <span
                   title={`${tPlanner('common.target')} ${formatGrade(starItem.targetBefore, uwItem.targetBefore)}${gradeTargetChanged ? `→${formatGrade(starItem.targetAfter, uwItem.targetAfter)}` : ''}`}
@@ -454,8 +477,13 @@ function ReviewCard({
                   <span className="w-6 shrink-0 truncate" title={tPlanner('common.target')}>
                     {tPlanner('common.target')}
                   </span>
-                  {formatGrade(starItem.targetBefore, uwItem.targetBefore)}
-                  {gradeTargetChanged ? `→${formatGrade(starItem.targetAfter, uwItem.targetAfter)}` : ''}
+                  {renderGrade(starItem.targetBefore, uwItem.targetBefore)}
+                  {gradeTargetChanged && (
+                    <>
+                      <span aria-hidden>→</span>
+                      {renderGrade(starItem.targetAfter, uwItem.targetAfter)}
+                    </>
+                  )}
                 </span>
               </div>
               {renderItem('uwLevel')}
@@ -482,12 +510,26 @@ export function ResultsReviewTable({ rows, onToggleApply, onEditField, onEditSta
   const { t: tPlanner } = useTranslation('planner');
   const [activeIndex, setActiveIndex] = useState(0);
   const [listExpanded, setListExpanded] = useState(false);
+  const [changedOnly, setChangedOnly] = useState(false);
+  const [confirmed, setConfirmed] = useState<ReadonlySet<number>>(new Set());
+  const growthPlans = useGlobalStore((s) => s.growthPlans);
+  // New and changed students stay flagged with a colored dot until the user confirms them.
+  const pendingReview = useMemo(
+    () =>
+      rows.map((row) => {
+        const groupId = row.studentId === null ? null : getCombatStylePlanGroupId(row.studentId);
+        const plan = groupId === null ? null : (growthPlans.find((p) => p.studentId !== null && getCombatStylePlanGroupId(p.studentId) === groupId) ?? null);
+        return reviewRowChangeKind(row, plan);
+      }),
+    [rows, growthPlans],
+  );
   const applyCount = rows.filter((row) => row.apply).length;
   const activeRow = rows[activeIndex];
   useEffect(() => setActiveIndex((index) => Math.min(index, Math.max(0, rows.length - 1))), [rows.length]);
   if (!activeRow) return null;
   const isLast = activeIndex === rows.length - 1;
   const confirm = () => {
+    setConfirmed((prev) => new Set(prev).add(activeIndex));
     if (isLast) onApply();
     else setActiveIndex((index) => index + 1);
   };
@@ -495,23 +537,37 @@ export function ResultsReviewTable({ rows, onToggleApply, onEditField, onEditSta
     <div className="space-y-1">
       <div className="flex items-start gap-1">
         <nav aria-label={t('reviewListLabel')} className={`flex flex-1 gap-1 py-0.5 ${listExpanded ? 'flex-wrap' : 'overflow-x-auto'}`}>
-          {rows.map((row, index) => (
-            <button
-              key={`${row.studentId ?? 'unknown'}-${index}`}
-              onClick={() => setActiveIndex(index)}
-              title={`${row.name || tPlanner('growthCard.selectStudentPrompt')} · ${row.apply ? tPlanner('common.include') : tPlanner('common.exclude')}`}
-              aria-current={index === activeIndex ? 'step' : undefined}
-              className={`relative h-8 w-8 shrink-0 overflow-hidden border ${index === activeIndex ? 'border-blue-600 dark:border-blue-400' : 'border-neutral-200 dark:border-neutral-700'} ${row.apply ? '' : 'bg-neutral-200 grayscale dark:bg-neutral-800'}`}
-            >
-              {row.portrait ? (
-                <img src={`data:image/webp;base64,${row.portrait}`} alt="" className={`h-full w-full object-cover ${row.apply ? '' : 'opacity-40'}`} />
-              ) : (
-                <span className={`text-xs ${row.apply ? '' : 'opacity-40'}`}>{index + 1}</span>
-              )}
-              {!row.apply && <span aria-hidden className="absolute left-1/2 top-[-20%] h-[140%] w-px -rotate-45 bg-neutral-500 dark:bg-neutral-400" />}
-            </button>
-          ))}
+          {rows.map((row, index) =>
+            changedOnly && !pendingReview[index] && index !== activeIndex ? null : (
+              <button
+                key={`${row.studentId ?? 'unknown'}-${index}`}
+                onClick={() => setActiveIndex(index)}
+                title={`${row.name || tPlanner('growthCard.selectStudentPrompt')} · ${row.apply ? tPlanner('common.include') : tPlanner('common.exclude')}`}
+                aria-current={index === activeIndex ? 'step' : undefined}
+                className={`relative h-8 w-8 shrink-0 overflow-hidden border ${index === activeIndex ? 'border-blue-600 dark:border-blue-400' : 'border-neutral-200 dark:border-neutral-700'} ${row.apply ? '' : 'bg-neutral-200 grayscale dark:bg-neutral-800'}`}
+              >
+                {row.studentId !== null ? (
+                  <SheetIcon sheet="student" id={row.studentId} alt="" className={`h-full w-full ${row.apply ? '' : 'opacity-40'}`} />
+                ) : (
+                  <span className={`text-xs ${row.apply ? '' : 'opacity-40'}`}>{index + 1}</span>
+                )}
+                {pendingReview[index] && !confirmed.has(index) && (
+                  <span aria-hidden className={`absolute right-0 top-0 h-1.5 w-1.5 ${pendingReview[index] === 'new' ? 'bg-blue-500' : 'bg-[#febc15]'}`} />
+                )}
+                {!row.apply && <span aria-hidden className="absolute left-1/2 top-[-20%] h-[140%] w-px -rotate-45 bg-neutral-500 dark:bg-neutral-400" />}
+              </button>
+            ),
+          )}
         </nav>
+        <button
+          onClick={() => setChangedOnly((value) => !value)}
+          aria-pressed={changedOnly}
+          title={t('changedOnly')}
+          aria-label={t('changedOnly')}
+          className={`shrink-0 border p-1.5 ${changedOnly ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' : 'border-neutral-200 text-neutral-500 hover:text-neutral-700 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+        >
+          <FiFilter />
+        </button>
         <button
           onClick={() => setListExpanded((value) => !value)}
           title={listExpanded ? t('collapseList') : t('expandList')}

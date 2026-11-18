@@ -4,8 +4,6 @@ export interface Row {
   studentId: number;
   name: string;
   school: string;
-  portrait: string | undefined;
-  portraits: Record<number, string | undefined>;
   plan: GrowthPlan | null;
   hasGear: boolean;
   minStar: number;
@@ -91,7 +89,8 @@ function compareValues(a: string | number | null, b: string | number | null, fie
   return ((a as number) || 0) - ((b as number) || 0);
 }
 
-export function compareRows(a: Row, b: Row, sortStack: SortField[]): number {
+/** `baseOrder` (studentId -> position) replaces the academy/name fallback when the caller already ordered the students, e.g. by the directory's sort. */
+export function compareRows(a: Row, b: Row, sortStack: SortField[], baseOrder?: ReadonlyMap<number, number>): number {
   // Added rows are always displayed first
   const aHasPlan = a.plan ? 1 : 0;
   const bHasPlan = b.plan ? 1 : 0;
@@ -128,6 +127,11 @@ export function compareRows(a: Row, b: Row, sortStack: SortField[]): number {
     if (cmp !== 0) {
       return direction === 'asc' ? cmp : -cmp;
     }
+  }
+
+  if (baseOrder) {
+    const diff = (baseOrder.get(a.studentId) ?? Number.MAX_SAFE_INTEGER) - (baseOrder.get(b.studentId) ?? Number.MAX_SAFE_INTEGER);
+    if (diff !== 0) return diff;
   }
 
   // If no sort, order by Academy > Name

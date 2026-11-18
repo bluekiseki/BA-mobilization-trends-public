@@ -18,15 +18,17 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 
 import { processRankingData } from '~/features/raid-stats/charts/ranking/processRankingData';
+import { RaidPicker, type RaidPickerOption } from '~/features/raid-stats/charts/ranking/RaidPicker';
+import { getBossTypeOptions, matchesBossType, type BossTypeSelect } from '~/features/raid-stats/charts/bossType';
 import { RankingChart } from '~/features/raid-stats/charts/ranking/chart';
 import { PlayIcon, StopIcon } from '~/components/common/SvgIcons';
 import { PageHeader } from '~/components/common/PageHeader';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/hooks/usePageHelp';
 import { getCurrentGlobalraid } from '~/data/globalRaidDates';
 import { type RecruitTypeFilter, type RankStudent, type TacticRoleFilter, type RawRatingData } from '~/features/raid-stats/charts/ranking/types';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
@@ -44,14 +46,7 @@ export function loader({ context, params }: LoaderFunctionArgs) {
 }
 
 export const links: Route.LinksFunction = () => {
-  return [
-    {
-      rel: 'preload',
-      href: cdn(`/w/students_portrait.json`),
-      crossOrigin: 'anonymous',
-      as: 'fetch',
-    },
-  ];
+  return [];
 };
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -71,21 +66,22 @@ export const handle: AppHandle = {
     const localeTyped = locale as Locale;
 
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
-        href: cdn(`/w/${server}/play_rate_rank.bin`),
+        href: cdn(`/w/v2/${server}/play_rate_rank.bin`),
         crossOrigin: 'anonymous',
         as: 'fetch',
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(localeTyped)}.students.bin`),
+        href: cdn(`/w/v2/${getLocaleShortName(localeTyped)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${server}/${getLocaleShortName(localeTyped)}.raid_info.bin`),
+        href: cdn(`/w/v2/${server}/${getLocaleShortName(localeTyped)}.raid_info.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -108,7 +104,6 @@ export default function RankingChartPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [displayMode, setDisplayMode] = useState<'total' | 'average'>('average');
 
-  // Inside your RankingChartPage component
   const [selectedSquadType, setSelectedSquadType] = useState<string>('All');
   const [selectedTacticRoles, setSelectedTacticRoles] = useState<Set<TacticRoleFilter>>(new Set(['All']));
   const [selectedStudentType, setSelectedStudentType] = useState<string>('All');
@@ -124,6 +119,7 @@ export default function RankingChartPage() {
   }, []);
   const [selectedRaidIds, setSelectedRaidIds] = useState<number[]>([0, 134]);
   const [selectedDifficulties, setSelectedDifficulties] = useState<Set<string>>(new Set(['All']));
+  const [selectedBossTypes, setSelectedBossTypes] = useState<Set<BossTypeSelect>>(new Set(['All']));
   const [isPlaying, setIsPlaying] = useState(false);
   const currentLocale = useTranslation().i18n.language as Locale;
   const { t, i18n } = useTranslation('charts', { keyPrefix: 'ranking' });
@@ -133,8 +129,6 @@ export default function RankingChartPage() {
   const locale = i18n.language as Locale;
 
   const { server } = useLoaderData<typeof loader>();
-
-  useHelpKey('chart.ranking');
 
   // Create a ref for the SVG container
   const containerRef = useRef<HTMLDivElement>(null);
@@ -170,20 +164,12 @@ export default function RankingChartPage() {
     const fetchDataAndStudents = async () => {
       try {
         const [ratings, students, raids] = await Promise.all([
-          fetchData(cdn(`/w/${server}/play_rate_rank.bin`), (res) => res.json() as unknown as Promise<RawRatingData>),
-          fetchStudents(cdn(`/w/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as unknown as Promise<Record<string, RankStudent>>),
-          fetchRaids(cdn(`/w/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as unknown as Promise<RaidInfo[]>),
+          fetchData(cdn(`/w/v2/${server}/play_rate_rank.bin`), (res) => res.json() as unknown as Promise<RawRatingData>),
+          fetchStudents(cdn(`/w/v2/${getLocaleShortName(currentLocale)}.students.bin`), (res) => res.json() as unknown as Promise<Record<string, RankStudent>>),
+          fetchRaids(cdn(`/w/v2/${server}/${getLocaleShortName(currentLocale)}.raid_info.bin`), (res) => res.json() as unknown as Promise<RaidInfo[]>),
         ]);
 
         setAllStudents(students);
-
-        await (async () => {
-          const students_portrait: Record<string, string> = await fetch(cdn('/w/students_portrait.json')).then((res) => res.json());
-          Object.entries(students).map(([studentId, student]) => {
-            student.Portrait = students_portrait[parseInt(studentId)];
-          });
-          setAllStudents(students);
-        })();
 
         const nameMap: Record<number, RankStudent> = {};
         for (const key in students) {
@@ -217,6 +203,7 @@ export default function RankingChartPage() {
         selectedTacticRoles,
         selectedRecruitTypes,
         selectedDifficulties,
+        selectedBossTypes,
         raidInfo,
         selectedStudentType,
         studentMap,
@@ -232,6 +219,7 @@ export default function RankingChartPage() {
       selectedTacticRoles,
       selectedRecruitTypes,
       selectedDifficulties,
+      selectedBossTypes,
       raidInfo,
       selectedStudentType,
       studentMap,
@@ -248,6 +236,7 @@ export default function RankingChartPage() {
   const filteredRaidInfoByDifficulty = raidInfo
     .map((raid, index) => ({ ...raid, index }))
     .filter((raid) => {
+      if (!matchesBossType(raid, selectedBossTypes)) return false;
       for (const difficulty of difficultiesToShow) {
         if (difficulty in raid.Cnt) return true;
       }
@@ -266,6 +255,20 @@ export default function RankingChartPage() {
     map[raid.index] = raidToString(raid, locale, true);
     return map;
   }, {});
+
+  const pickerOptions: RaidPickerOption[] = filteredRaidInfoByDifficulty.map((raid) => ({
+    index: raid.index,
+    text: `${raid.Id} ${raidToString(raid, locale, true)}`,
+    label: (
+      <>
+        <span className="font-bold text-blue-600 dark:text-blue-400">{raid.Id}</span> {raidToString(raid, locale, true)}
+      </>
+    ),
+  }));
+
+  // Keep the range ordered by moving the opposite handle when the handles would cross
+  const pickStart = (next: number) => setSelectedRaidIds([next, Math.max(next, selectedRaidIds[1])]);
+  const pickEnd = (next: number) => setSelectedRaidIds([Math.min(next, selectedRaidIds[0]), next]);
 
   const markMap: Record<number, React.ReactNode> = filteredRaidInfoByDifficulty.reduce<Record<number, React.ReactNode>>((map, raid) => {
     map[raid.index] = ' ';
@@ -425,6 +428,19 @@ export default function RankingChartPage() {
                   className="w-32"
                 />
               </div>
+
+              <div className="flex items-center space-x-2 py-0.5">
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">{t_g('boss_armor_type')}</label>
+                <CheckboxSelect<BossTypeSelect>
+                  ariaLabel={t_g('boss_armor_type')}
+                  options={getBossTypeOptions(locale)}
+                  colorDotsInTrigger={false}
+                  selectedValues={selectedBossTypes}
+                  onChange={(next) => setSelectedBossTypes(next.size === 0 ? new Set(['All']) : next)}
+                  allOption={{ value: 'All', label: t_ui('all') }}
+                  className="w-32"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -483,12 +499,19 @@ export default function RankingChartPage() {
           <div className="flex justify-between items-center text-xs sm:text-sm mt-3 text-neutral-600 dark:text-neutral-400">
             {filteredRaidInfoByDifficulty.length ? (
               <>
-                <div className="text-left flex flex-col sm:flex-row">
-                  {/* <div className="font-bold text-blue-600 dark:text-blue-400 sm:inline">{raidInfo[selectedRaidIds[0]].Id}</div> */}
-                  <div className="font-bold text-blue-600 dark:text-blue-400 sm:inline">{filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[0])].Id}</div>
-                  {/* <div className="sm:ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[Math.max(filteredRaidInfoByDifficulty[0].index, selectedRaidIds[0])], locale, true)}</div> */}
-                  <div className="sm:ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[0])], locale, true)}</div>
-                </div>
+                <RaidPicker options={pickerOptions} value={filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[0])].index} onSelect={pickStart} align="left" ariaLabel={t_ui('start')}>
+                  {(chevron) => (
+                    <div className="text-left flex flex-col sm:flex-row">
+                      {/* <div className="font-bold text-blue-600 dark:text-blue-400 sm:inline">{raidInfo[selectedRaidIds[0]].Id}</div> */}
+                      <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                        {filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[0])].Id}
+                        {chevron}
+                      </div>
+                      {/* <div className="sm:ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[Math.max(filteredRaidInfoByDifficulty[0].index, selectedRaidIds[0])], locale, true)}</div> */}
+                      <div className="sm:ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[0])], locale, true)}</div>
+                    </div>
+                  )}
+                </RaidPicker>
                 <div className="font-semibold text-neutral-800 dark:text-white px-2 whitespace-nowrap">
                   {/* {t('total_x', { 'x': selectedRaidIds[1] - selectedRaidIds[0] + 1 })} -  */}
                   {t('total_x').replace(
@@ -507,12 +530,19 @@ export default function RankingChartPage() {
                   )}
                   {/* {t('total_x')} */}
                 </div>
-                <div className="text-right flex flex-col sm:flex-row">
-                  {/* <div className="font-bold text-blue-600 dark:text-blue-400">{raidInfo[selectedRaidIds[1]].Id}</div> */}
-                  <div className="font-bold text-blue-600 dark:text-blue-400">{filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[1])].Id}</div>
-                  {/* <div className="ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[Math.min(filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length-1].index, selectedRaidIds[1])], locale, true)}</div> */}
-                  <div className="ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[1])], locale, true)}</div>
-                </div>
+                <RaidPicker options={pickerOptions} value={filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[1])].index} onSelect={pickEnd} align="right" ariaLabel={t_ui('end')}>
+                  {(chevron) => (
+                    <div className="text-right flex flex-col sm:flex-row">
+                      {/* <div className="font-bold text-blue-600 dark:text-blue-400">{raidInfo[selectedRaidIds[1]].Id}</div> */}
+                      <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center justify-end gap-0.5">
+                        {filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[1])].Id}
+                        {chevron}
+                      </div>
+                      {/* <div className="ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[Math.min(filteredRaidInfoByDifficulty[filteredRaidInfoByDifficulty.length-1].index, selectedRaidIds[1])], locale, true)}</div> */}
+                      <div className="ml-2 sm:inline">{raidToStringTsx(filteredRaidInfoByDifficulty[toFilteredRaidId(selectedRaidIds[1])], locale, true)}</div>
+                    </div>
+                  )}
+                </RaidPicker>
               </>
             ) : (
               <> {t('total_x').replace(/{x}/, '0')}</>

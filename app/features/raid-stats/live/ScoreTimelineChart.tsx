@@ -215,7 +215,7 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
     return Array.from(days);
   }, [processedTimelineData]);
 
-  // 3. Filtering optimization (Removed 'new Date' and 'indexOf')
+  // Filter using cached timestamps and day indices.
   const filteredDataPoints = useMemo(() => {
     if (!isChartVisible && prevFilteredDataRef.current.length > 0) {
       return prevFilteredDataRef.current;
@@ -266,7 +266,7 @@ export const ScoreTimelineChart: FC<ScoreTimelineChartProps> = ({ isRaid, timeli
         rankEntries = activeTab === 'total' ? ((pointData.total as ReportEntry[]) ?? []) : ((pointData[activeTab] as { d?: ReportEntry[] })?.d ?? []);
       }
 
-      // [Core Optimization] Eliminated .find() and find all necessary rank scores in a single loop.
+      // Collect the required rank scores in one pass.
       const ranksToFind = new Set(activeRanks);
       const foundScores: Record<number, number> = {};
       let foundCount = 0;

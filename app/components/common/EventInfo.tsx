@@ -42,7 +42,7 @@ export function eventTagTranslation(tag: string, t: TFunction<['planner', 'game'
   if (tag == 'Stage') return t('common.stage');
   else if (tag == 'Shop') return t('common.shop');
   else if (tag == 'Mission') return t('ui:mission');
-  else if (tag == 'BoxGacha') return `${t('ui.minigame')} - ${t('minigame.roulette')}`;
+  else if (tag == 'BoxGacha') return `${t('ui.minigame')} - ${t('box_gacha.title')}`;
   else if (tag == 'FortuneGachaShop') return `${t('ui.minigame')} - ${t('minigame.omikuji')}`;
   else if (tag == 'DiceRace') return `${t('ui.minigame')} - ${t('minigame.diceRace')}`;
   else if (tag == 'Concentration') return `${t('ui.minigame')} - ${t('minigame.card_match')}`;
@@ -50,12 +50,13 @@ export function eventTagTranslation(tag: string, t: TFunction<['planner', 'game'
   else if (tag == 'CardShop') return `${t('ui.minigame')} - ${t('placeholder.cardGacha')}`;
   else if (tag == 'MiniGameCCG') return `${t('ui.minigame')} - ${t('minigame.minigame_ccg')}`;
   else if (tag == 'MiniGameDefense') return `${t('ui.minigame')} - ${t('minigame.minigame_defense')}`;
-  else if (tag == 'MinigameDreamMaker') return `${t('ui.minigame')} - ${t('minigame.minigame_dream')}`;
+  else if (tag == 'MinigameDreamMaker') return `${t('ui.minigame')} - ${t('dream_maker.title')}`;
   else if (tag == 'ClueSearch') return `${t('ui.minigame')} - ${t('minigame.clue_search')}`;
-  else if (tag == 'MiniGameRoad') return `${t('ui.minigame')} - ${t('minigame.minigame_road')}`;
+  else if (tag == 'MiniGameRoad') return `${t('ui.minigame')} - ${t('road_puzzle.title')}`;
   else if (tag == 'MiniGameShooting') return `${t('ui.minigame')} - ${t('minigame.minigame_shooting')}`;
-  else if (tag == 'MinigameJanken') return `${t('ui.minigame')} - ${t('minigame.minigame_janken')}`;
-  else if (tag == 'InteractiveWorldRaid') return t('minigame.interactive_world_raid');
+  else if (tag == 'MinigameJanken') return `${t('ui.minigame')} - ${t('minigame_janken.title')}`;
+  else if (tag == 'MiniGameTank') return `${t('ui.minigame')} - ${t('minigame.minigame_tank')}`;
+  else if (tag == 'InteractiveWorldRaid') return t('interactive_world_raid.title');
   return tag;
 }
 

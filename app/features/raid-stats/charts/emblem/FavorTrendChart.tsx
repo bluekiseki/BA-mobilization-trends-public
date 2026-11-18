@@ -1,5 +1,6 @@
 // app/components/emblem/FavorTrendChart.tsx
 
+import { SheetSvgIcon } from '~/components/common/SheetIcon';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, usePlotArea, useYAxisScale, type TooltipContentProps } from 'recharts';
@@ -23,8 +24,8 @@ export type FavorTrendMode = 'percent' | 'absolute';
 export interface FavorTrendContextSeries {
   /** Display name — used as the accessible title / text fallback. */
   label: string;
-  /** Portrait data URI shown on the right rail (falls back to a 3-char text tag). */
-  iconUri?: string;
+  /** Student id whose icon is shown on the right rail (falls back to a 3-char text tag). */
+  iconId?: number;
   points: FavorTrendPoint[];
 }
 
@@ -104,12 +105,12 @@ function ContextIconRail({ context, mode, color }: { context: FavorTrendContextS
           <g key={i}>
             <title>{s.label}</title>
             {Math.abs(y - yLine) > 1 && <path d={`M ${plot.x + plot.width} ${yLine} L ${railX} ${y}`} fill="none" stroke={color} strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.3} />}
-            {s.iconUri ? (
+            {s.iconId ? (
               <>
                 <clipPath id={clipId}>
                   <circle cx={cx} cy={y} r={ICON / 2} />
                 </clipPath>
-                <image href={s.iconUri} x={railX} y={y - ICON / 2} width={ICON} height={ICON} clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMid slice" />
+                <SheetSvgIcon sheet="student" id={s.iconId} x={railX} y={y - ICON / 2} width={ICON} height={ICON} clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMid slice" />
                 <circle cx={cx} cy={y} r={ICON / 2} fill="none" stroke={color} strokeWidth={1} />
               </>
             ) : (

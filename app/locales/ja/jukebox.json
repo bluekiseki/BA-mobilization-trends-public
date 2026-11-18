@@ -15,12 +15,12 @@
   },
   "selection": {
     "main_story": "メインストーリー選択",
-    "event_story": "イベントストーリー選択",
+    "event_story": "イベント選択",
     "favor_story": "絆ストーリー選択",
     "memorial": "メモリアルロビー選択"
   },
   "search": {
-    "placeholder": "タイトル、作曲者で検索...",
+    "placeholder": "タイトル、作曲者、使用場面で検索...",
     "student_name": "生徒名検索...",
     "no_results": "結果はありません。 結果を表示する前に、ネタバレを防止するためのフィルタを設定する必要があります。"
   },
@@ -33,7 +33,15 @@
     "autoplay_next": "次の曲を自動再生",
     "autoplay_scroll": "再生時に自動スクロール",
     "repeat_current": "現在の曲をリピート",
-    "stop_after": "再生後に停止"
+    "stop_after": "再生後に停止",
+    "advanced": "詳細オプション",
+    "order": "再生順",
+    "order_random": "ランダム",
+    "order_sequential": "番号順",
+    "id_range": "番号範囲",
+    "id_range_from": "開始番号",
+    "id_range_to": "終了番号",
+    "id_range_clear": "解除"
   },
   "status": {
     "error": "エラーが発生しました。"
@@ -99,5 +107,8 @@
     "part2_ex_lore_ch1": "第2部 Ex.ロア追跡編 第1章 正午の陽炎",
     "part2_ex_lore_ch2": "第2部 Ex.ロア追跡編 第2章 ドラム缶の中に潜むもの",
     "part2_ex_lore_ch3": "第2部 Ex.ロア追跡編 第3章 夢の中の列車"
+  },
+  "named_events": {
+    "valentine": "バレンタイン"
   }
 }

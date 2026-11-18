@@ -53,14 +53,16 @@ describe('cached birthday markup', () => {
 
   it('starts portraits before hydration and avoids a second request', async () => {
     setup();
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ '10000': 'AAAA', '10001': 'invalid"url' }) });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ cell: [10, 10], columns: 2, size: [20, 20], items: { '10000': [10, 0], '10001x': [0, 0] } }) });
     vi.stubGlobal('fetch', fetchMock);
     const html = document.head.innerHTML;
-    runInline("loadBirthdayPortraits('/portraits.json');");
-    loadBirthdayPortraits('/portraits.json');
-    await vi.waitFor(() => expect(rules('birthday-portraits')).toContain('data:image/webp;base64,AAAA'));
+    runInline("loadBirthdayPortraits('/portraits.json', '/sheet.webp');");
+    loadBirthdayPortraits('/portraits.json', '/sheet.webp');
+    await vi.waitFor(() => expect(rules('birthday-portraits')).toContain('url("/sheet.webp")'));
+    expect(rules('birthday-portraits')).toContain('background-size: 200% 200%');
+    expect(rules('birthday-portraits')).toContain('background-position: 100% 0%');
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(rules('birthday-portraits')).not.toContain('10001');
+    expect(rules('birthday-portraits')).not.toContain('10001x');
     expect(document.head.innerHTML).toBe(html);
   });
 
@@ -68,9 +70,9 @@ describe('cached birthday markup', () => {
     setup();
     const fetchMock = vi.fn().mockResolvedValue({ ok: false });
     vi.stubGlobal('fetch', fetchMock);
-    loadBirthdayPortraits('/portraits.json');
+    loadBirthdayPortraits('/portraits.json', '/sheet.webp');
     await vi.waitFor(() => expect(rules('birthday-portraits')).toBe(''));
-    loadBirthdayPortraits('/portraits.json');
+    loadBirthdayPortraits('/portraits.json', '/sheet.webp');
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

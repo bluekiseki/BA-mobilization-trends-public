@@ -8,11 +8,11 @@ import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
 import { resolveMaxPull } from '~/utils/gachaEngine';
 import { CustomNumberInput } from '../common/CustomInput';
+import { SheetIcon } from '../common/SheetIcon';
 
 interface Props {
   banners: BannerPeriod[];
   strategies: Record<string, BannerStrategy>;
-  portraitMap: Record<number, string>;
   onUpdateStrategy: (bannerId: string, updates: Partial<BannerStrategy>) => void;
   onUpdateStudentConfig: (bannerId: string, studentId: number, updates: Partial<StudentStrategyConfig>) => void;
   currentServer: 'KR' | 'JP';
@@ -29,7 +29,7 @@ const Badge = ({ children, variant, className = '' }: { children: React.ReactNod
   return <span className={`inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-bold border ${bgClass} ${className}`}>{children}</span>;
 };
 
-export default function BannerPlanner({ banners, strategies, portraitMap, onUpdateStrategy, onUpdateStudentConfig }: Props) {
+export default function BannerPlanner({ banners, strategies, onUpdateStrategy, onUpdateStudentConfig }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.banner_planner' });
   const { t: t_ui } = useTranslation('ui');
   const { t: t_g } = useTranslation('game');
@@ -143,15 +143,16 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
 
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {banner.pickupStudents.map((student) => {
-                      const imgSrc = portraitMap[student.id] ? `data:image/webp;base64,${portraitMap[student.id]}` : null;
                       return (
                         <Tooltip key={`header-${student.id}`} placement="top" overlay={<span className="text-xs">{student.name}</span>}>
                           <div className="relative">
-                            {imgSrc ? (
-                              <img src={imgSrc} className="w-10 h-10 rounded-full border border-neutral-300 dark:border-neutral-600 object-cover" alt={student.name} />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700" />
-                            )}
+                            <SheetIcon
+                              sheet="student"
+                              id={student.id}
+                              alt={student.name}
+                              className="w-10 h-10 rounded-full border border-neutral-300 dark:border-neutral-600"
+                              fallback={<div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700" />}
+                            />
                           </div>
                         </Tooltip>
                       );
@@ -213,7 +214,6 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
                       if (!config) return null;
 
                       const isTargeting = config.mode !== 'skip';
-                      const imgSrc = portraitMap[student.id] ? `data:image/webp;base64,${portraitMap[student.id]}` : null;
                       const rowOpacity = isTargeting ? 'opacity-100' : 'opacity-50 bg-neutral-50 dark:bg-neutral-800/30';
 
                       const handleModeChange = (newMode: 'skip' | 'must' | 'opportunistic') => {
@@ -261,11 +261,13 @@ export default function BannerPlanner({ banners, strategies, portraitMap, onUpda
 
                             <Tooltip placement="top" overlay={<span className="text-xs">{student.name}</span>}>
                               <div className="shrink-0 cursor-help flex flex-col items-center">
-                                {imgSrc ? (
-                                  <img src={imgSrc} className="w-12 h-12 rounded-md border border-neutral-300 dark:border-neutral-600 object-cover" alt={student.name} />
-                                ) : (
-                                  <div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-700 rounded-md" />
-                                )}
+                                <SheetIcon
+                                  sheet="student"
+                                  id={student.id}
+                                  alt={student.name}
+                                  className="w-12 h-12 rounded-md border border-neutral-300 dark:border-neutral-600"
+                                  fallback={<div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-700 rounded-md" />}
+                                />
                                 <span className="text-[9px] text-neutral-500 mt-0.5 truncate w-12 text-center">{student.name}</span>
                               </div>
                             </Tooltip>

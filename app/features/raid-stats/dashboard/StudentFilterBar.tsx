@@ -1,15 +1,14 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiX } from 'react-icons/fi';
 import { SearchableDropdown } from '~/components/common/SearchableDropdown';
-import type { PortraitData } from '../../../types/raidReport';
 import { createStudentFilter, type StudentFilterState } from './studentFilter';
 
 interface StudentFilterBarProps {
   filter: StudentFilterState;
   onChange: (filter: StudentFilterState) => void;
   studentNames: Map<number, string>;
-  portraitData?: PortraitData;
   searchFn: (query: string, excludedIds: Set<number>) => Array<[number, string]>;
   usageCounts?: Map<number, number>;
   filteredCount?: number;
@@ -19,18 +18,7 @@ interface StudentFilterBarProps {
   compact?: boolean;
 }
 
-export function StudentFilterBar({
-  filter,
-  onChange,
-  studentNames,
-  portraitData,
-  searchFn,
-  usageCounts,
-  filteredCount,
-  totalCount,
-  resultsPresentation = 'dropdown',
-  compact = false,
-}: StudentFilterBarProps) {
+export function StudentFilterBar({ filter, onChange, studentNames, searchFn, usageCounts, filteredCount, totalCount, resultsPresentation = 'dropdown', compact = false }: StudentFilterBarProps) {
   const { t } = useTranslation('dashboard');
   const { t: t_ui } = useTranslation('ui');
   const listboxId = useId();
@@ -90,7 +78,7 @@ export function StudentFilterBar({
                   }}
                   className={`flex ${touchHeight} items-center gap-1.5 rounded-full border px-2 text-xs ${mode === 'exclude' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300' : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300'}`}
                 >
-                  {portraitData?.[id] && <img className="h-6 w-6 rounded-full object-cover" src={`data:image/webp;base64,${portraitData[id]}`} alt="" />}
+                  <SheetIcon sheet="student" id={id} alt="" className="h-6 w-6 rounded-full" />
                   <span>{name}</span>
                   <FiX size={14} />
                 </button>
@@ -147,14 +135,14 @@ export function StudentFilterBar({
               listboxId={listboxId}
               onSelectIndex={(index) => addStudent(results[index][0])}
               resultsPresentation={resultsPresentation}
-              noResultsText={t_ui('noSearchResults')}
+              noResultsText={t_ui('noResults')}
               loadMoreText={t_ui('loadMore')}
               itemClassName="flex min-h-11 sm:min-h-7 w-full items-center gap-2 px-2 py-2 sm:py-1 text-left text-sm text-neutral-800 hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-700"
               items={results.map(([id, name]) => ({
                 id: String(id),
                 content: (
                   <>
-                    {portraitData?.[id] && <img className="h-7 w-7 sm:h-6 sm:w-6 shrink-0 rounded-full object-cover" src={`data:image/webp;base64,${portraitData[id]}`} alt="" />}
+                    <SheetIcon sheet="student" id={id} alt="" className="h-7 w-7 sm:h-6 sm:w-6 shrink-0 rounded-full" />
                     <span className="min-w-0 flex-1 truncate" title={name}>
                       {name}
                     </span>

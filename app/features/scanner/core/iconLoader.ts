@@ -110,6 +110,7 @@ async function loadIconData(onProgress: (progress: DownloadProgress) => void): P
         },
         dataUrl,
         isGift,
+        itemCategory: item.ItemCategory,
         numericId: String(id),
       });
     }

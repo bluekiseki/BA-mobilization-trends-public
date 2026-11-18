@@ -1,3 +1,4 @@
+import { ProfileHistory } from '~/features/account/components/ProfileHistory';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, redirect, useLoaderData, useRevalidator } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +21,6 @@ import StudentSearchDropdown from '~/components/student/StudentSearchDropdown';
 import type { Student } from '~/types/data';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName } from '~/utils/i18n/config';
-import { loadPortraitMap } from '~/utils/studentPortraitMap';
 import { LuTrash2, LuPlus, LuRefreshCw, LuDownload, LuUpload, LuTriangleAlert, LuPencil, LuX } from 'react-icons/lu';
 import { magicLinkLogin } from '~/data/livedataServer.json';
 import { env } from 'cloudflare:workers';
@@ -128,6 +128,11 @@ interface ProfileAllDataResponse {
 
 const PROFILE_ALL_DATA_QUERY = 'query ProfileAllData($id: ID!) { profileAllData(id: $id) { key value revision updatedAt } }';
 
+async function loadProfileStats(id: string): Promise<ProfileStats> {
+  const data = await callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id });
+  return getProfileStats(data.profileAllData);
+}
+
 const UPDATE_PROFILE_MUTATION =
   'mutation UpdateProfile($id: ID!, $input: UpdateProfileInput!) { updateProfile(id: $id, input: $input) { id name server isDefault sortOrder avatarStudentId createdAt updatedAt } }';
 
@@ -181,9 +186,9 @@ export default function SettingsPage() {
 
     // Each profile resolves independently; a failure keeps the previous value (or the placeholder)
     ids.forEach((id) => {
-      callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id })
-        .then((data) => {
-          if (!cancelled) setProfileStats((previous) => ({ ...previous, [id]: getProfileStats(data.profileAllData) }));
+      loadProfileStats(id)
+        .then((stats) => {
+          if (!cancelled) setProfileStats((previous) => ({ ...previous, [id]: stats }));
         })
         .catch(() => undefined);
     });
@@ -192,6 +197,11 @@ export default function SettingsPage() {
       cancelled = true;
     };
   }, [profileIdsKey]);
+
+  const refreshProfileStats = async (profileId: string) => {
+    const stats = await loadProfileStats(profileId);
+    setProfileStats((previous) => ({ ...previous, [profileId]: stats }));
+  };
 
   const handleDeleteProfile = async (profileId: string) => {
     if (profiles.length <= 1 || profileId === activeProfileId) return;
@@ -244,8 +254,7 @@ export default function SettingsPage() {
       );
       if (imported.syncProfileData.some((result) => result.status === 'CONFLICT')) throw new Error(t('settings.errors.failedToImportProfile'));
       if (profileId === activeProfileId) await useSyncStore.getState().pullAll();
-      const data: ProfileAllDataResponse = await callGql<ProfileAllDataResponse>(PROFILE_ALL_DATA_QUERY, { id: profileId });
-      setProfileStats((previous) => ({ ...previous, [profileId]: getProfileStats(data.profileAllData) }));
+      await refreshProfileStats(profileId);
     } catch (err) {
       setImportError(err instanceof Error ? err.message : t('settings.errors.failedToImportProfile'));
     } finally {
@@ -279,11 +288,11 @@ export default function SettingsPage() {
     if (pickerStudents || pickerLoading) return;
     setPickerLoading(true);
     try {
-      const [metaRes, portraitMap] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(i18n.language as Locale)}.students.min.json`)), loadPortraitMap()]);
+      const metaRes = await fetch(cdn(`/schaledb.com/${getLocaleShortName(i18n.language as Locale)}.students.min.json`));
       const meta: Record<string, Student> = await metaRes.json();
       const merged: Record<number, Student> = {};
       for (const [id, student] of Object.entries(meta)) {
-        merged[Number(id)] = { ...student, Portrait: portraitMap[id] };
+        merged[Number(id)] = student;
       }
       setPickerStudents(merged);
     } catch {
@@ -563,7 +572,16 @@ export default function SettingsPage() {
           {t('settings.profiles.title')}
         </h2>
 
-        {showImport && activeProfileId && authUser && <ImportDataBanner userId={authUser.id} profileId={activeProfileId} onDone={() => setShowImport(false)} />}
+        {showImport && activeProfileId && authUser && (
+          <ImportDataBanner
+            userId={authUser.id}
+            profileId={activeProfileId}
+            onDone={() => setShowImport(false)}
+            onImported={(profileId) => {
+              void refreshProfileStats(profileId).catch((error: unknown) => setProfileActionError(error instanceof Error ? error.message : t('settings.errors.failedToImportProfile')));
+            }}
+          />
+        )}
         {profileActionError && <p className="text-xs text-red-600 dark:text-red-400">{profileActionError}</p>}
         {importError && <p className="text-xs text-red-600 dark:text-red-400">{importError}</p>}
         {profileEditError && <p className="text-xs text-red-600 dark:text-red-400">{profileEditError}</p>}
@@ -700,7 +718,7 @@ export default function SettingsPage() {
                         </span>
                         {(
                           [
-                            ['students', '/planner/students'],
+                            ['students', '/students'],
                             ['equipmentPlans', '/planner/equipment'],
                             ['resourceGoals', '/planner/resources'],
                             ['gachaStrategies', '/planner/gacha'],
@@ -732,6 +750,7 @@ export default function SettingsPage() {
                   })()}
                 </div>
               </div>
+              {profile.id === activeProfileId && <ProfileHistory key={profile.id} />}
               {editingProfileId === profile.id && (
                 <div
                   className={`px-3 pt-3 pb-3 rounded-b-lg border border-t-0 space-y-2 ${

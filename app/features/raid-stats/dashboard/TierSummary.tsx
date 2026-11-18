@@ -1,7 +1,8 @@
 import { TIER_COLORS, TIER_ORDER } from '~/data/raidInfo';
 import { getBracketFromTotalScore, getDifficultyFromScoreAndBoss } from '../../../components/raid/Difficulty';
-import { useEffect, useMemo, useState } from 'react';
-import type { FullData, GameServer, RaidInfo } from '~/types/data';
+import { useMemo, useState } from 'react';
+import type { GameServer, RaidInfo } from '~/types/data';
+import type { TierCuts } from './fullData';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { formatTimeToTimestamp } from '~/utils/time';
 
@@ -44,45 +45,46 @@ const TierSummarySkeleton = () => (
 );
 
 interface TierSummaryProp {
-  fullData: FullData | null;
+  tiers: TierCuts | null;
   raidInfos?: RaidInfo[];
   server: GameServer;
   activeTab: string;
 }
-const TierSummary = ({ fullData, raidInfos, server, activeTab }: TierSummaryProp) => {
+const TierSummary = ({ tiers, raidInfos, server, activeTab }: TierSummaryProp) => {
   const [selectedTierName, setSelectedTierName] = useState('');
 
   const tierSummaryData = useMemo(() => {
-    if (!fullData) return null;
-    if (!raidInfos || !fullData || !raidInfos.length) return null;
+    if (!tiers) return null;
+    if (!raidInfos || !raidInfos.length) return null;
 
     const id = raidInfos[0].Id;
     const isGrandAssault = raidInfos.length > 1;
     const currentRaidInfo = isGrandAssault ? raidInfos.find((r) => r.Type === activeTab) || raidInfos[0] : raidInfos[0];
 
-    const totalPlayers = Object.values(fullData.tier_counter).reduce((a, b) => a + b, 0);
+    const totalPlayers = Object.values(tiers.tier_counter).reduce((a, b) => a + b, 0);
     if (totalPlayers === 0) return [];
 
     let cumulativeRank = 0;
     let cumulativePercentage = 0;
 
     const armorTypeIndex = raidInfos.findIndex((info) => info.Type === activeTab);
-    const key = (armorTypeIndex >= 0 ? `rank_${armorTypeIndex + 1}` : 'rank') as keyof FullData;
-    const fullDataPart = fullData[key] as Int32Array;
-    if (!fullDataPart) return null;
+    const key = armorTypeIndex >= 0 ? `rank_${armorTypeIndex + 1}` : 'rank';
+    // Score by 0-based rank position; positions past the end of a per-boss list are absent
+    const scoreAt = tiers.scores[key];
+    if (!scoreAt) return null;
     const isHideTime = isGrandAssault && activeTab == 'All';
 
     return TIER_ORDER.map((tierName) => {
       const tierKey = String(TIER_ORDER.length - TIER_ORDER.indexOf(tierName));
-      const count = fullData.tier_counter[tierKey] || 0;
+      const count = tiers.tier_counter[tierKey] || 0;
       if (count === 0) return null;
 
       const lowestRank = cumulativeRank + 1;
       cumulativeRank += count;
       const highestRank = cumulativeRank;
 
-      const highestScore = fullDataPart[lowestRank - 1];
-      const lowestScore = fullDataPart[highestRank - 1];
+      const highestScore = scoreAt[lowestRank - 1];
+      const lowestScore = scoreAt[highestRank - 1];
 
       // --- New Calculations ---
       const timeTopInSeconds = isHideTime ? null : calculateTimeFromScore(highestScore, currentRaidInfo.Boss, server, id) || 0;
@@ -110,18 +112,11 @@ const TierSummary = ({ fullData, raidInfos, server, activeTab }: TierSummaryProp
         startPercentage: startPercentage,
       };
     }).filter((v) => v != null);
-  }, [fullData, server, activeTab]);
-
-  // Sets the default selection tier for mobile views when data is loaded.
-  useEffect(() => {
-    if (tierSummaryData && tierSummaryData.length > 0 && !selectedTierName) {
-      setSelectedTierName(tierSummaryData[0].name);
-    }
-  }, [tierSummaryData, selectedTierName]);
+  }, [tiers, server, activeTab]);
 
   if (!tierSummaryData || !tierSummaryData.length) return <TierSummarySkeleton />;
-  const selectedTier = tierSummaryData?.find((t) => t.name === selectedTierName);
-  if (selectedTier == undefined) return <TierSummarySkeleton />;
+  // Mobile shows one tier at a time; default to the first. Derived here rather than set in an effect so the server render already has it.
+  const selectedTier = tierSummaryData.find((t) => t.name === selectedTierName) ?? tierSummaryData[0];
 
   return (
     <div className="w-full px-2 sm:px-4 mt-8 mb-8">

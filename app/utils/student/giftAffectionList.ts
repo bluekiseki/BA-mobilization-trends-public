@@ -1,7 +1,10 @@
 import type { EventData, Student } from '~/types/plannerData';
 import { HighFlowerBouquetItemIds, LowFlowerBouquetItemIds } from './const';
 
-export const getGiftAffectionList = (studentInfo: Student, eventData: EventData) => {
+type GiftStudent = Pick<Student, 'FavorItemTags' | 'FavorItemUniqueTags'>;
+type GiftEventData = { icons: { Item: Record<string, Pick<EventData['icons']['Item'][string], 'ItemCategory' | 'TagsStr' | 'Rarity'>> } };
+
+export const getGiftAffectionList = (studentInfo: GiftStudent, eventData: GiftEventData) => {
   const studentTags = [...(studentInfo.FavorItemTags || []), ...(studentInfo.FavorItemUniqueTags || [])];
   const allGifts = Object.entries(eventData.icons.Item)
     .filter(([, itemData]) => itemData.ItemCategory === 6)
@@ -39,4 +42,4 @@ export const isPreferredGift = (gift: { id: string; rarity: number; affectionPoi
 
 // Gifts worth showing on a student profile: no flower bouquets, and only gifts the student
 // actually prefers (above the base affection for their rarity).
-export const getPreferredGiftList = (studentInfo: Student, eventData: EventData) => getGiftAffectionList(studentInfo, eventData).filter(isPreferredGift);
+export const getPreferredGiftList = (studentInfo: GiftStudent, eventData: GiftEventData) => getGiftAffectionList(studentInfo, eventData).filter(isPreferredGift);

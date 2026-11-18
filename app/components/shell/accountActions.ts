@@ -1,6 +1,6 @@
 import { gqlFetch } from '~/utils/gqlFetch';
-import { SESSION_HINT_KEY, useAuthStore } from '~/store/authStore';
-import { useSyncStore } from '~/store/syncStore';
+import { clearAccountSession } from '~/store/clearAccountSession';
+import { downloadProfileFile } from '~/utils/profileFile';
 
 /**
  * Sign out, clear local account/planner state, and return to the home page.
@@ -18,13 +18,7 @@ export async function logoutAccount(): Promise<void> {
     console.error('Logout failed:', res.status, await res.text());
     return;
   }
-  useAuthStore.getState().logout();
-  useSyncStore.getState().clearAccountData();
-  try {
-    localStorage.removeItem(SESSION_HINT_KEY);
-  } catch {
-    // Storage may be unavailable (private browsing); non-fatal.
-  }
+  clearAccountSession();
   window.location.href = '/';
 }
 
@@ -40,13 +34,6 @@ export async function exportProfileData(profileId: string, name: string, server:
   const payload = {
     profile: { id: profileId, name, server },
     data: Object.fromEntries(res.profileAllData.map(({ key, value }) => [key, value])),
-    exportedAt: new Date().toISOString(),
   };
-
-  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `yuzu-${name.replace(/[^a-z0-9]/gi, '_')}-${server}.profile.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadProfileFile(payload, `yuzu-${name.replace(/[^a-z0-9]/gi, '_')}-${server}.profile.json`);
 }

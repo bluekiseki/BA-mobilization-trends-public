@@ -3,6 +3,7 @@ import { SERVERS, type Server } from './releaseDates';
 export interface StorySettings {
   server: Server; // server whose release dates are shown first
   spoilers: boolean; // show thumbnails and summaries
+  episodeTotals: boolean; // show how many episodes a story has (ranges, totals); off by default because it hints at the plot's length
 }
 
 const KEY = 'story-settings';
@@ -22,8 +23,8 @@ function read(): StorySettings | null {
   try {
     const parsed: unknown = raw ? JSON.parse(raw) : null;
     if (typeof parsed === 'object' && parsed !== null && 'server' in parsed && 'spoilers' in parsed) {
-      const server = SERVERS.find((candidate) => candidate === parsed.server);
-      if (server && typeof parsed.spoilers === 'boolean') value = { server, spoilers: parsed.spoilers };
+      const server = SERVERS.find((candidate) => candidate === parsed.server) ?? 'jp';
+      if (typeof parsed.spoilers === 'boolean') value = { server, spoilers: parsed.spoilers, episodeTotals: 'episodeTotals' in parsed && parsed.episodeTotals === true };
     }
   } catch {
     value = null;

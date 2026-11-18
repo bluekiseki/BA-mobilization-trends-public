@@ -42,7 +42,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, title
   if (!isOpen) return null;
 
   return (
-    // [Improvement 1] Maintain z-50 (Modal stays on top as the previously modified player is z-40)
+    // Keep the modal above the player (z-40).
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-neutral-900 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
         {/* Modal Header */}

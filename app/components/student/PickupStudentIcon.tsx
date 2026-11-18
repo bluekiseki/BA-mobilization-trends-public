@@ -3,22 +3,12 @@ import { useTranslation } from 'react-i18next';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
 import type { Locale } from '~/utils/i18n/config';
-import { localeLink } from '~/utils/localeLink';
+import { useStudentLink } from '~/features/students/logic/useStudentLink';
 import StarIcon from '~/components/student/StarIcon';
 import { CombatStylePortrait } from '~/components/student/CombatStylePortrait';
-import type { StudentPortraitData } from '~/types/plannerData';
-
-export const BULLET_COLORS: Record<string, string> = {
-  Explosion: '#b62915',
-  Pierce: '#bc8800',
-  Mystic: '#206d9b',
-  Sonic: '#9a46a8',
-  Chemical: '#137973',
-};
+import { BULLET_COLORS } from '~/utils/gameColors';
 
 interface PickupStudentIconProps {
-  portrait?: string;
-  studentPortraits?: StudentPortraitData;
   name: string;
   studentId: number;
   rerun?: boolean;
@@ -30,17 +20,14 @@ interface PickupStudentIconProps {
   locale: Locale;
 }
 
-export function PickupStudentIcon({ portrait, studentPortraits, name, studentId, rerun, fest, limited, bulletType, ueStar, locale }: PickupStudentIconProps) {
+export function PickupStudentIcon({ name, studentId, rerun, fest, limited, bulletType, ueStar, locale }: PickupStudentIconProps) {
   const { t: tg } = useTranslation('game');
+  const studentLink = useStudentLink(locale);
 
   return (
     <Tooltip placement="top" overlay={<span className="text-xs font-bold">{name}</span>} mouseEnterDelay={0.05}>
-      <Link to={localeLink(locale, '/charts/jp/heatmap')} state={{ studentId }} className="relative w-14 h-14 shrink-0 overflow-hidden rounded-lg block bg-neutral-100 dark:bg-neutral-800">
-        {studentPortraits ? (
-          <CombatStylePortrait studentId={studentId} portraits={studentPortraits} alt={name} imageClassName="object-top" />
-        ) : (
-          portrait && <img src={`data:image/webp;base64,${portrait}`} alt={name} className="w-full h-full object-cover object-top" />
-        )}
+      <Link to={studentLink(studentId)} className="relative w-14 h-14 shrink-0 overflow-hidden rounded-lg block bg-neutral-100 dark:bg-neutral-800">
+        <CombatStylePortrait studentId={studentId} alt={name} imageClassName="object-top" />
         {bulletType && <div className="h-1 w-full absolute bottom-0" style={{ backgroundColor: BULLET_COLORS[bulletType] }} />}
         {ueStar !== undefined && (
           <div className="absolute bottom-0.5 left-0.5">

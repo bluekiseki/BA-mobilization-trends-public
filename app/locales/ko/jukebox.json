@@ -15,12 +15,12 @@
   },
   "selection": {
     "main_story": "메인 스토리 선택",
-    "event_story": "이벤트 스토리 선택",
+    "event_story": "이벤트 선택",
     "favor_story": "인연 스토리 선택",
     "memorial": "메모리얼 로비 선택"
   },
   "search": {
-    "placeholder": "제목, 작곡가로 검색...",
+    "placeholder": "제목, 작곡가, 사용처로 검색...",
     "student_name": "학생 이름 검색...",
     "no_results": "결과가 없습니다. 스포일러 방지를 위해 필터를 설정해야 결과가 표시됩니다."
   },
@@ -33,7 +33,15 @@
     "autoplay_next": "다음 곡 자동재생",
     "autoplay_scroll": "다음 곡 재생 시 자동 스크롤",
     "repeat_current": "현재 곡 반복",
-    "stop_after": "재생 후 정지"
+    "stop_after": "재생 후 정지",
+    "advanced": "고급 옵션",
+    "order": "재생 순서",
+    "order_random": "랜덤",
+    "order_sequential": "번호순",
+    "id_range": "번호 범위",
+    "id_range_from": "시작 번호",
+    "id_range_to": "끝 번호",
+    "id_range_clear": "해제"
   },
   "status": {
     "error": "오류가 발생했습니다."
@@ -93,11 +101,14 @@
     "final_ch4": "1부 최종편 4장 프레나파테스 결전",
     "part2_prologue": "2부 프롤로그",
     "part2_vol0_ch1": "2부 0편 1장 살구꽃이 피는 어느 봄날에",
-    "part2_vol1_ch1": "2부 1편 1장",
-    "part2_vol1_ch2": "2부 1편 2장",
-    "part2_vol2_ch1": "2부 2편 1장",
+    "part2_vol1_ch1": "2부 1편 1장 게헨나를 다시 위대하게!",
+    "part2_vol1_ch2": "2부 1편 2장 우리는 불꽃이 되어",
+    "part2_vol2_ch1": "2부 2편 1장 눈동자에 비친 수평선",
     "part2_ex_lore_ch1": "2부 Ex. 로어추적 편 1장 정오의 아지랑이",
     "part2_ex_lore_ch2": "2부 Ex. 로어추적 편 2장 드럼통 속에 있는 것",
     "part2_ex_lore_ch3": "2부 Ex. 로어추적 편 3장 꿈속의 열차"
+  },
+  "named_events": {
+    "valentine": "발렌타인"
   }
 }

@@ -27,6 +27,7 @@ const emptyInput: AcquiredItemsInput = {
   interactiveWorldRaidResult: null,
   roadPuzzleResult: null,
   minigameJankenResult: null,
+  minigameTankResult: null,
   locationState: null,
 };
 
@@ -51,8 +52,9 @@ const fullInput: AcquiredItemsInput = {
   cardMatchResult: stub({ totalCosts: { Item_5: 2 }, totalRewards: { Item_6: 3 } }),
   clueSearchResult: stub(costRewards),
   fieldEventResult: stub(costRewards),
-  roadPuzzleResult: stub({ rewards: { Item_6: 7 } }),
+  roadPuzzleResult: stub({ cost: {}, rewards: { Item_6: 7 } }),
   minigameJankenResult: stub(costRewards),
+  minigameTankResult: stub(costRewards),
   interactiveWorldRaidResult: stub(costRewards),
   studentGrowthNeeds: { Item_5: 9, Item_2: 1 },
   minigameDefenseResult: stub(costRewards),

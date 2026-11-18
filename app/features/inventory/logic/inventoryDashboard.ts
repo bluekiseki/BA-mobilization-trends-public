@@ -3,6 +3,7 @@ import { calcUwRequiredXp, equipmentBlueprintId, equipmentId } from '~/data/grow
 import type { GrowthPlan } from '~/types/growthPlan';
 import type { IconInfos, Student, StudentData } from '~/types/plannerData';
 import { getBdNoteSchoolKey } from '~/features/inventory/logic/bdNoteSchool';
+import { applyUniversalBlueprints } from '~/utils/blueprintUtils';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
 import { compactPoolNet, computeSubPoolXp, FUNGIBLE_POOLS, UW_GROWTH_KEYS } from '~/utils/groupMaterialNeeds';
 import type { Locale } from '~/utils/i18n/config';
@@ -196,6 +197,8 @@ export function buildStudentResourceGroups(plans: GrowthPlan[], students: Studen
       }
     }
 
+    applyUniversalBlueprints(sharedInventory, studentNeeds, fungibleDeficitByKey, fungibleDiffByKey);
+
     const entries = filteredEntries.map((e) => ({ ...e, needed: studentNeeds[e.key] ?? 0 })).filter((e) => (e.needed > 0 || poolDemandKeys.has(e.key)) && !UW_GROWTH_KEYS.has(e.key));
 
     const requiredXp = studentPlans.reduce((sum, p) => sum + calcUwRequiredXp(p.current.uwLevel, p.target.uwLevel), 0);
@@ -210,7 +213,7 @@ export function buildStudentResourceGroups(plans: GrowthPlan[], students: Studen
 }
 
 // Types with a well-defined 2-axis structure that can also be viewed as a matrix.
-export const MATRIX_CAPABLE_TYPES = new Set<ItemType>(['Equipment', 'TacticalBD', 'TechNote']);
+export const MATRIX_CAPABLE_TYPES = new Set<ItemType>(['Equipment', 'TacticalBD', 'TechNote', 'Opart']);
 
 // ShopCategoryType enum (game master data). Raw names, untranslated — only values present in the catalog are ever shown.
 export const SHOP_CATEGORY_LABEL: Record<number, string> = {

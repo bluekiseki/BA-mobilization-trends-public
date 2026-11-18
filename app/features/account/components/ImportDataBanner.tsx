@@ -3,17 +3,30 @@ import { useTranslation } from 'react-i18next';
 import { LuCloudUpload, LuX, LuTriangleAlert } from 'react-icons/lu';
 import { gqlFetch } from '~/utils/gqlFetch';
 import { useSyncStore } from '~/store/syncStore';
+import { downloadProfileFile } from '~/utils/profileFile';
 
 interface Props {
   userId: string;
   profileId: string;
   onDone: () => void;
+  onImported: (profileId: string) => void;
 }
 
-export function ImportDataBanner({ userId, profileId, onDone }: Props) {
+export function ImportDataBanner({ userId, profileId, onDone, onImported }: Props) {
   const { t } = useTranslation('auth');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleDownloadBackup = async () => {
+    try {
+      const { getAnonymousPlannerSnapshot } = await import('~/store/anonymousPlannerSnapshot.client');
+      const snapshot = getAnonymousPlannerSnapshot(userId, profileId);
+      if (!snapshot) throw new Error(t('settings.errors.failedToExportProfile'));
+      downloadProfileFile({ data: snapshot.values }, `yuzu-local-${new Date().toISOString().slice(0, 10)}.profile.json`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('settings.errors.failedToExportProfile'));
+    }
+  };
 
   const handleImport = async () => {
     setLoading(true);
@@ -34,6 +47,7 @@ export function ImportDataBanner({ userId, profileId, onDone }: Props) {
       if (response.syncProfileData.some((result) => result.status === 'CONFLICT')) throw new Error(t('settings.errors.failedToImportProfile'));
       snapshotModule.clearAnonymousPlannerSnapshot(userId, profileId);
       await useSyncStore.getState().pullAll();
+      onImported(profileId);
       onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('settings.errors.failedToImportProfile'));
@@ -45,9 +59,15 @@ export function ImportDataBanner({ userId, profileId, onDone }: Props) {
   return (
     <div className="space-y-1">
       {error && (
-        <div className="flex items-center gap-2 text-xs text-red-600 dark:text-red-400 px-1">
-          <LuTriangleAlert size={13} className="shrink-0" />
-          <span>{error}</span>
+        <div className="space-y-1 text-xs text-red-600 dark:text-red-400 px-1">
+          <div className="flex items-center gap-2">
+            <LuTriangleAlert size={13} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+          <p className="text-neutral-600 dark:text-neutral-400">{t('settings.profiles.importFailedHint')}</p>
+          <button type="button" onClick={() => void handleDownloadBackup()} className="px-3 py-1.5 text-sm font-medium rounded-lg bg-ba-btn-gray hover:bg-neutral-300 text-neutral-900 transition">
+            {t('settings.profiles.downloadBackup')}
+          </button>
         </div>
       )}
       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-4 py-3">

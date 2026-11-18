@@ -10,13 +10,14 @@ import { MdLooks3, MdLooks4 } from 'react-icons/md';
 import { TerrainIconGameStyle, type Terrain } from '~/components/raid/teran';
 import type { PickupStudentInfo } from '~/utils/calender.data';
 import type { ScheduleItemV2, ScheduleItemDetailsV2 } from '~/utils/calender.data.v2';
-import type { Student, StudentPortraitData } from '~/types/plannerData';
+import type { Student } from '~/types/plannerData';
 import { localeLink } from '~/utils/localeLink';
 import type { Locale } from '~/utils/i18n/config';
 import { getMLText, getArmorDisplayName, getItemTitle, getItemLabel } from '~/utils/scheduleDisplay';
 
 import { TRACK_COLORS, CAMPAIGN_COLORS, STRIPE_PATTERN_STYLE } from './constants';
 import { MS_PER_HOUR } from '../../../utils/time';
+import { SheetIcon } from '~/components/common/SheetIcon';
 
 // --- Types ---
 type CalcLeftFunc = (start: string) => number;
@@ -27,7 +28,6 @@ interface GanttRenderProps {
   calculateLeftPx: CalcLeftFunc;
   calculateWidthPx: CalcWidthFunc;
   studentData: Record<number, Student> | null;
-  studentPortraits: StudentPortraitData | null;
   lane: number;
   laneHeight: number;
   colorMap?: Record<string, string>;
@@ -40,7 +40,6 @@ interface GanttTrackProps {
   calculateLeftPx: CalcLeftFunc;
   calculateWidthPx: CalcWidthFunc;
   studentData: Record<number, Student> | null;
-  studentPortraits: StudentPortraitData | null;
   scrollLeft: number;
   viewportWidth: number;
   colorMap?: Record<string, string>;
@@ -121,7 +120,6 @@ interface GanttTrackProps {
   calculateLeftPx: CalcLeftFunc;
   calculateWidthPx: CalcWidthFunc;
   studentData: Record<number, Student> | null;
-  studentPortraits: StudentPortraitData | null;
   scrollLeft: number;
   viewportWidth: number;
   colorMap?: Record<string, string>;
@@ -211,7 +209,7 @@ export function GanttTrack({ title, items, scrollLeft, viewportWidth, laneHeight
   );
 }
 // --- 1. Gantt Bar ---
-export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortraits, lane, laneHeight, colorMap, colorKey }: GanttRenderProps) {
+export function GanttBar({ item, calculateLeftPx, calculateWidthPx, lane, laneHeight, colorMap, colorKey }: GanttRenderProps) {
   const { t: t_c, i18n } = useTranslation(['common', 'game']);
   const locale = i18n.language as Locale;
   const isHydrated = useIsHydrated();
@@ -228,7 +226,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
     }
   }
 
-  const portrait = item.details?.studentId && studentPortraits ? studentPortraits[item.details.studentId] : null;
+  const portraitStudentId = item.details?.studentId || null;
 
   const displayTitle = getItemTitle(item, locale, i18n);
   const label = getItemLabel(item, i18n);
@@ -278,30 +276,21 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
             </div>
           )}
 
-          {portrait && (
-            <Link
-              to={localeLink(locale, `/charts/jp/heatmap`)}
-              state={
-                item.details
-                  ? {
-                      studentId: item.details?.studentId,
-                    }
-                  : undefined
-              }
-              className="relative -ml-3 z-20 shrink-0 flex items-end h-full"
-            >
+          {portraitStudentId && (
+            <Link to={localeLink(locale, `/students/${portraitStudentId}?tab=stats`)} className="relative -ml-3 z-20 shrink-0 flex items-end h-full">
               {/* <div className="relative -ml-3 z-20 shrink-0 select-none pointer-events-none flex items-end h-full"> */}
-              <img
-                src={`data:image/webp;base64,${portrait}`}
+              <SheetIcon
+                sheet="student"
+                id={portraitStudentId}
                 alt=""
-                className="h-[160%] w-auto max-w-none object-contain drop-shadow-lg translate-y-[10%]"
+                className="h-[160%] aspect-square max-w-none drop-shadow-lg translate-y-[10%]"
                 style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)' }}
               />
               {/* </div> */}
             </Link>
           )}
 
-          <div className={`flex flex-col justify-center min-w-0 z-10 pl-1 ${portrait ? '-ml-1' : ''}`}>
+          <div className={`flex flex-col justify-center min-w-0 z-10 pl-1 ${portraitStudentId ? '-ml-1' : ''}`}>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-bold leading-none whitespace-nowrap drop-shadow-sm" title={displayTitle}>
                 {displayTitle}
@@ -319,7 +308,7 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
 
               {(item.details?.terrain || item.details?.armorType) && !isEraid && (
                 <div className="flex items-center gap-0.5 opacity-90">
-                  {item.details?.terrain && <TerrainIconGameStyle terrain={item.details.terrain as Terrain} size="0.7em" />}
+                  {item.details?.terrain && [item.details.terrain].flat().map((terrain) => <TerrainIconGameStyle key={terrain} terrain={terrain as Terrain} size="0.7em" />)}
                   {item.details?.armorType && <ArmorIcon armorType={item.details.armorType} difficulty={item.details?.maxDifficulty} armorName={getArmorDisplayName(item.details.armorType, locale)} />}
                   {item.details?.jfd3rd && (
                     <TooltipComponent placement="top" overlay={<span className="text-xs">{getMLText(item.details.jfd3rd, locale)}</span>} mouseEnterDelay={0.05}>
@@ -372,14 +361,14 @@ export function GanttBar({ item, calculateLeftPx, calculateWidthPx, studentPortr
 const PickupStudentItem = ({
   student,
   index,
-  portrait,
+  studentId,
   studentName,
   laneHeight,
   TooltipComponent,
 }: {
   student: PickupStudentInfo;
   index: number;
-  portrait: string;
+  studentId: number;
   studentName: string;
   laneHeight: number;
   TooltipComponent: typeof Tooltip;
@@ -433,18 +422,16 @@ const PickupStudentItem = ({
       >
         {/* <div className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-125 origin-bottom"> */}
         <Link
-          to={localeLink(locale, `/charts/jp/heatmap`)} // Adjust according to the link function being used
-          state={{
-            studentId: student.id,
-          }}
+          to={localeLink(locale, `/students/${student.id}?tab=stats`)}
           onClick={handleLinkClick}
           className={`relative w-full h-full flex items-center justify-center transition-transform origin-bottom 
             ${isInvalidId ? 'cursor-default' : 'hover:scale-125 cursor-pointer'}
           `}
         >
-          <img
-            src={`data:image/webp;base64,${portrait}`}
-            className="h-[140%] w-auto max-w-none object-contain rounded-xl drop-shadow-md translate-y-[5%]"
+          <SheetIcon
+            sheet="student"
+            id={studentId}
+            className="h-[140%] aspect-square max-w-none rounded-xl drop-shadow-md translate-y-[5%]"
             alt={studentName}
             style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)' }}
           />
@@ -461,7 +448,7 @@ const PickupStudentItem = ({
   );
 };
 
-export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studentData, studentPortraits, lane, laneHeight }: GanttRenderProps) {
+export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studentData, lane, laneHeight }: GanttRenderProps) {
   const isHydrated = useIsHydrated();
   const width = Math.max(calculateWidthPx(item.startTime, item.endTime), 2);
   const left = calculateLeftPx(item.startTime);
@@ -492,11 +479,10 @@ export function GanttPickupBar({ item, calculateLeftPx, calculateWidthPx, studen
         <div className="sticky left-0 z-20 flex items-center h-full w-fit pl-3 pr-1">
           <div className="flex items-center -space-x-2 h-full">
             {students.map((s, idx) => {
-              const portrait = s.id && studentPortraits ? studentPortraits[s.id] : null;
               const studentName = studentData?.[s.id]?.Name || `ID: ${s.id}`;
 
-              if (!portrait) return null;
-              return <PickupStudentItem key={s.id} student={s} index={idx} portrait={portrait} studentName={studentName} laneHeight={laneHeight} TooltipComponent={TooltipComponent} />;
+              if (!s.id) return null;
+              return <PickupStudentItem key={s.id} student={s} index={idx} studentId={s.id} studentName={studentName} laneHeight={laneHeight} TooltipComponent={TooltipComponent} />;
             })}
           </div>
         </div>

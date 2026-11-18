@@ -1,6 +1,7 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import React, { useEffect, useRef, useState } from 'react';
 import type { VideoEntry, VideoStudent } from './types';
-import type { PortraitData, ReportStudentData } from '../../../../types/raidReport';
+import type { ReportStudentData } from '../../../../types/raidReport';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { useTranslation } from 'react-i18next';
 import { StarRating } from '~/components/student/StarRating';
@@ -15,6 +16,7 @@ import type { Locale } from '~/utils/i18n/config';
 import { calculateTimeFromScore } from '~/utils/calculateTimeFromScore';
 import { formatTimeToTimestamp } from '~/utils/time';
 import { InfiniteScrollList } from '~/components/common/InfiniteScrollList';
+import { CheckboxSelect } from '~/components/common/CheckboxSelect';
 import { VideoStatsPanel } from './VideoStatsPanel';
 import type { TitleDictionary } from './titleTranslation';
 import { useTitleDictionary, VideoTitle } from './VideoTitle';
@@ -27,19 +29,18 @@ import { matchesScope, type VideoScope } from './videoMerge';
 export const VideoPageView: React.FC<{
   raidInfo: RaidInfo;
   server: GameServer;
-  portraitData: PortraitData;
   studentData: ReportStudentData;
   isGrandAssault: boolean;
   activeTab: string;
-}> = ({ raidInfo, server, portraitData, studentData, isGrandAssault, activeTab }) => {
+}> = ({ raidInfo, server, studentData, isGrandAssault, activeTab }) => {
   const raidPeriod = React.useMemo(() => {
     const id = `${raidInfo.Id.startsWith('E') ? 'eraid' : 'raid'}-${raidInfo.Id.slice(1)}`;
     return loadScheduleDataV2({ server, tracksToLoad: ['raid'] }).tracks.raid?.find((item) => item.id === id);
   }, [server, raidInfo.Id]);
   const { t } = useTranslation(['dashboard', 'mypage']);
   const referencePeriod = React.useCallback(
-    (id: string): RaidPeriod | undefined =>
-      loadScheduleDataV2({ server: 'jp', tracksToLoad: ['raid'] }).tracks.raid?.find((item) => item.id === `${id.startsWith('E') ? 'eraid' : 'raid'}-${id.slice(1)}`),
+    (id: string, originServer: GameServer): RaidPeriod | undefined =>
+      loadScheduleDataV2({ server: originServer, tracksToLoad: ['raid'] }).tracks.raid?.find((item) => item.id === `${id.startsWith('E') ? 'eraid' : 'raid'}-${id.slice(1)}`),
     [],
   );
 
@@ -55,7 +56,7 @@ export const VideoPageView: React.FC<{
   const [sortBy, setSortBy] = useState<VideoSort>('score_desc');
   const resultsRef = useRef<HTMLDivElement>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [showOriginalTitle, setShowOriginalTitle] = useState(false);
+  const [translateTitle, setTranslateTitle] = useState(true);
   const titleDict = useTitleDictionary(studentData, locale);
 
   const videoStudentCounts = React.useMemo(() => {
@@ -77,7 +78,10 @@ export const VideoPageView: React.FC<{
 
   const { studentNames, searchFn } = useStudentFilterSearch(studentData, locale, videoStudentCounts);
   const updateFilters = (patch: Partial<VideoFilterState>) => setFilters((current) => ({ ...current, ...patch }));
-  const resetFilters = () => setFilters(createVideoFilters());
+  const resetFilters = () => {
+    setFilters(createVideoFilters());
+    setScope('all');
+  };
   const closeMobileFilters = () => setMobileFiltersOpen(false);
   const closeAndShowResults = () => {
     closeMobileFilters();
@@ -100,13 +104,16 @@ export const VideoPageView: React.FC<{
   );
   const filteredVideos = React.useMemo(() => videosBeforeScoreFilter.filter((video) => matchesVideoScore(video, filters)), [videosBeforeScoreFilter, filters]);
 
-  // JP reference videos are never part of this season's statistics.
+  // Cross-server videos are never part of this season's statistics.
   const statsVideos = React.useMemo(() => filteredVideos.filter((video) => !video.isReference), [filteredVideos]);
 
   const sortedVideos = React.useMemo(() => {
     return [...filteredVideos].sort((a, b) => {
-      if (sortBy === 'score_desc') return Number(b.score) - Number(a.score);
-      if (sortBy === 'score_asc') return Number(a.score) - Number(b.score);
+      // Videos without a score always go last. Number(undefined) is NaN and would break the comparator.
+      if (sortBy === 'score_desc' || sortBy === 'score_asc') {
+        if (a.score == null || b.score == null) return Number(a.score == null) - Number(b.score == null);
+        return sortBy === 'score_desc' ? b.score - a.score : a.score - b.score;
+      }
       if (sortBy === 'upload_desc') return (b.timestamp || 0) - (a.timestamp || 0);
       // upload_asc
       return (a.timestamp || Number.MAX_VALUE) - (b.timestamp || Number.MAX_VALUE);
@@ -117,19 +124,42 @@ export const VideoPageView: React.FC<{
     if (!videoData) return ['All'];
     const set = new Set<string>();
     for (const v of videoData) {
-      set.add(v.difficulty);
+      if (v.difficulty) set.add(v.difficulty);
     }
     const order = ['Lunatic', 'Torment', 'Insane', 'Extreme', 'Hardcore', 'Veryhard', 'Hard', 'Normal'];
-    const sorted = Array.from(set).sort((a, b) => {
-      if (!a) return 1;
-      if (!b) return -1;
-      return order.indexOf(a) - order.indexOf(b);
-    });
+    const sorted = Array.from(set).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     return ['All', ...sorted];
   }, [videoData]);
 
-  const activeFilterCount = getActiveVideoFilterCount(filters);
-  const advancedProps = { filters, isGrandAssault, onChange: updateFilters, studentNames, searchFn, portraitData, usageCounts: videoStudentCounts };
+  const activeFilterCount = getActiveVideoFilterCount(filters) + (scope !== 'all' ? 1 : 0);
+  const advancedProps = {
+    filters,
+    isGrandAssault,
+    onChange: updateFilters,
+    studentNames,
+    searchFn,
+    usageCounts: videoStudentCounts,
+    serverControl: merged.referenceRaidId ? (
+      <div className="flex min-h-11 items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200 sm:min-h-7">
+        <span>{t('videos_scope_label')}</span>
+        <CheckboxSelect<VideoScope>
+          ariaLabel={t('videos_scope_label')}
+          options={[
+            { value: server === 'jp' ? 'current' : 'reference', label: 'JP' },
+            { value: server === 'kr' ? 'current' : 'reference', label: 'GL·KR' },
+          ]}
+          selectedValues={new Set<VideoScope>(scope === 'all' ? ['current', 'reference'] : scope === 'none' ? [] : [scope])}
+          onChange={(values) => {
+            if (values.has('current') && values.has('reference')) setScope('all');
+            else if (values.has('current')) setScope('current');
+            else if (values.has('reference')) setScope('reference');
+            else setScope('none');
+          }}
+          buttonClassName="flex min-h-11 min-w-32 items-center justify-between gap-2 border border-neutral-300 bg-white px-2 text-base text-neutral-900 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 sm:min-h-7 sm:text-sm"
+        />
+      </div>
+    ) : undefined,
+  };
   const quickProps = { difficulty: filters.difficulty, sortBy, difficulties, onDifficultyChange: (difficulty: string) => updateFilters({ difficulty }), onSortChange: setSortBy };
 
   if (isGrandAssault && activeTab === 'All') {
@@ -192,21 +222,6 @@ export const VideoPageView: React.FC<{
           <span aria-live="polite">
             {filteredVideos.length} / {videoData?.length ?? 0}
           </span>
-          {merged.referenceRaidId && (
-            <div role="group" aria-label={t('videos_scope_label')} className="flex items-center gap-1">
-              {(['all', 'current', 'reference'] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={scope === value}
-                  onClick={() => setScope(value)}
-                  className={`min-h-11 px-3 sm:min-h-7 ${scope === value ? 'bg-ba-btn-blue text-neutral-950' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200'}`}
-                >
-                  {value === 'reference' ? t('videos_scope_reference', { raid: `JP ${merged.referenceRaidId}` }) : t(`videos_scope_${value}`)}
-                </button>
-              ))}
-            </div>
-          )}
           <div className="flex items-center gap-2">
             {activeFilterCount > 0 && (
               <button type="button" onClick={resetFilters} className="min-h-11 sm:min-h-7 px-2">
@@ -215,8 +230,8 @@ export const VideoPageView: React.FC<{
             )}
             {titleDict && (
               <label className="flex min-h-11 sm:min-h-7 cursor-pointer items-center gap-2">
-                <input type="checkbox" className="h-4 w-4" checked={showOriginalTitle} onChange={(event) => setShowOriginalTitle(event.target.checked)} />
-                {t('videos_show_original_title')}
+                <input type="checkbox" className="h-4 w-4" checked={translateTitle} onChange={(event) => setTranslateTitle(event.target.checked)} />
+                {t('videos_translate_title')}
               </label>
             )}
           </div>
@@ -224,7 +239,12 @@ export const VideoPageView: React.FC<{
       </div>
 
       {/* Stats panel */}
-      {statsVideos.length > 0 && <VideoStatsPanel videos={statsVideos} portraitData={portraitData} studentData={studentData} raidInfo={raidInfo} server={server} />}
+      {statsVideos.length > 0 && (
+        <div className="space-y-2">
+          {merged.referenceRaidId && <p className="text-xs text-neutral-500 dark:text-neutral-400">{t('videos_stats_server', { server: server === 'jp' ? 'JP' : 'GL·KR' })}</p>}
+          <VideoStatsPanel videos={statsVideos} studentData={studentData} raidInfo={raidInfo} server={server} />
+        </div>
+      )}
 
       {/* Video Grid */}
       <>
@@ -243,13 +263,12 @@ export const VideoPageView: React.FC<{
               <VideoCard
                 key={video.url}
                 video={video}
-                portraitData={portraitData}
                 studentData={studentData}
                 locale={locale}
-                raidPeriod={video.isReference && video.origin ? referencePeriod(video.origin.raidId) : raidPeriod}
+                raidPeriod={video.isReference && video.origin ? referencePeriod(video.origin.raidId, video.origin.server) : raidPeriod}
                 raidInfo={raidInfo}
                 server={server}
-                titleDict={showOriginalTitle ? null : titleDict}
+                titleDict={translateTitle ? titleDict : null}
                 descriptionDict={titleDict}
               />
             )}
@@ -269,7 +288,6 @@ export const VideoPageView: React.FC<{
 
 const VideoCard: React.FC<{
   video: VideoEntry;
-  portraitData: PortraitData;
   studentData: ReportStudentData;
   locale: Locale;
   raidPeriod?: RaidPeriod;
@@ -277,7 +295,7 @@ const VideoCard: React.FC<{
   server: GameServer;
   titleDict: TitleDictionary | null;
   descriptionDict: TitleDictionary | null;
-}> = ({ video, portraitData, studentData, locale, raidPeriod, raidInfo, server, titleDict, descriptionDict }) => {
+}> = ({ video, studentData, locale, raidPeriod, raidInfo, server, titleDict, descriptionDict }) => {
   const { t } = useTranslation('dashboard');
   const clearTime = React.useMemo(() => {
     if (typeof video.score !== 'number') return null;
@@ -322,7 +340,7 @@ const VideoCard: React.FC<{
       <Tooltip key={sIdx} placement="top" overlay={<span className="text-xs">{name}</span>} mouseEnterDelay={0.05}>
         <div className="flex w-11 sm:w-10 flex-col items-center">
           <div className="aspect-square w-full rounded-sm overflow-hidden bg-neutral-200 dark:bg-neutral-700">
-            {portraitData[student.id] && <img src={`data:image/webp;base64,${portraitData[student.id]}`} alt={name} className="w-full h-full object-cover" />}
+            <SheetIcon sheet="student" id={student.id} alt={name} />
           </div>
           {student.grade ? <StarRating n={isUE ? num + 6 : num} /> : <span className="text-[8px] text-neutral-400">?</span>}
         </div>
@@ -354,33 +372,31 @@ const VideoCard: React.FC<{
     <div className="flex flex-col h-full py-3 sm:py-0 sm:bg-neutral-50 sm:dark:bg-neutral-900 sm:border sm:border-neutral-200 sm:dark:border-neutral-700 sm:rounded-lg sm:overflow-hidden">
       <div className="flex gap-2.5 sm:block sm:gap-0">
         {/* YouTube Thumbnail */}
-        <a href={video.url} target="_blank" rel="noopener noreferrer" aria-label={video.title} className="block w-36 shrink-0 self-start sm:w-full hover:opacity-90 transition-opacity">
+        <a href={video.url} target="_blank" rel="noopener noreferrer" aria-label={video.title} className="relative block w-36 shrink-0 self-start sm:w-full hover:opacity-90 transition-opacity">
           {ytId ? (
             <div className="relative w-full aspect-video bg-neutral-200 dark:bg-neutral-800">
               <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="" loading="lazy" className="w-full h-full object-cover" />
               {video.has_tl && <span className="absolute top-1 left-1 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded font-bold">TL</span>}
-              {raidDayLabel && <span className="absolute top-1 right-1 bg-black/60 text-white text-[10px] px-1 py-0.5 rounded font-mono">{raidDayLabel}</span>}
             </div>
           ) : (
             <div className="w-full aspect-video bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 text-xs">No Thumbnail</div>
+          )}
+          {(video.origin?.server === 'kr' || raidDayLabel) && (
+            <span className="absolute top-1 right-1 bg-black/60 text-white text-[10px] px-1 py-0.5 rounded font-mono">
+              {[video.origin?.server === 'kr' ? 'GL' : null, raidDayLabel].filter(Boolean).join(' · ')}
+            </span>
           )}
         </a>
 
         <div className="min-w-0 flex-1 flex flex-col gap-1 sm:p-3">
           {/* Score + Difficulty + Upload Date */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {video.isReference && video.origin && (
-              <span className="text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 px-1.5 py-0.5 rounded font-mono" title={t('videos_reference_title')}>
-                {video.origin.server.toUpperCase()} {video.origin.raidId}
-              </span>
-            )}
-            {video.remoteCandidate && <span className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 px-1.5 py-0.5 rounded">{t('videos_candidate')}</span>}
-            {video.basicAnalysis && (
+            {(video.remoteCandidate || video.basicAnalysis) && video.score != null && (
               <span className="text-[10px] bg-neutral-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded text-neutral-600 dark:text-neutral-300" title={t('videos_basic_analysis_title')}>
                 {t('videos_basic_analysis')}
               </span>
             )}
-            <span className="text-[10px] bg-neutral-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded font-mono text-neutral-600 dark:text-neutral-300">{video.difficulty}</span>
+            {video.difficulty && <span className="text-[10px] bg-neutral-200 dark:bg-neutral-700 px-1.5 py-0.5 rounded font-mono text-neutral-600 dark:text-neutral-300">{video.difficulty}</span>}
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">{video.score?.toLocaleString()}</span>
             {clearTime && <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">@{clearTime}</span>}
             {uploadDateTime && <span className="text-[10px] text-neutral-400 dark:text-neutral-500">{uploadDateTime}</span>}

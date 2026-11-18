@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi2';
 import { StudentIcon } from '~/components/student/studentIcon';
-import type { Character, PortraitData } from '~/types/raidReport';
+import type { Character } from '~/types/raidReport';
 import { type_translation } from '~/components/raid/raidToString';
 import type { RaidHistoryEntry, RaidHistoryServer, RaidHistoryStudent, RaidHistoryTeam } from '~/types/raidHistory';
 import type { Student } from '~/types/plannerData';
@@ -37,7 +37,6 @@ interface RaidHistoryTableProps {
   entries: RaidHistoryEntry[];
   raidOptions: RaidOption[];
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: Locale;
   onEdit: (entry: RaidHistoryEntry) => void;
   onDelete: (id: string) => void;
@@ -89,19 +88,7 @@ function getTeamScoreTime(score: number | undefined, entry: RaidHistoryEntry, ra
   }
 }
 
-function RaidPartyPreview({
-  entry,
-  raidInfo,
-  students,
-  portraitData,
-  locale,
-}: {
-  entry: RaidHistoryEntry;
-  raidInfo: RaidOption | undefined;
-  students: Record<string, Student>;
-  portraitData: PortraitData;
-  locale: Locale;
-}) {
+function RaidPartyPreview({ entry, raidInfo, students, locale }: { entry: RaidHistoryEntry; raidInfo: RaidOption | undefined; students: Record<string, Student>; locale: Locale }) {
   const { t } = useTranslation('mypage');
   const teams = getEntryTeams(entry);
   const useWideGroupLayout = entry.raidType === 'eraid' || entry.raidType === 'jfd';
@@ -163,7 +150,7 @@ function RaidPartyPreview({
     };
     return (
       <div key={`${role}-${slot.id}-${index}`} className="w-full rounded">
-        <StudentIcon character={character} student={student} portraitData={portraitData} teamMemberCount={entry.raidType === 'multifloor' ? 10 : 6} size="responsive" />
+        <StudentIcon character={character} student={student} teamMemberCount={entry.raidType === 'multifloor' ? 10 : 6} size="responsive" />
       </div>
     );
   };
@@ -259,7 +246,7 @@ function formatRank(rank: number | undefined) {
   return typeof rank === 'number' && Number.isFinite(rank) ? rank.toLocaleString() : undefined;
 }
 
-export function RaidHistoryTable({ entries, raidOptions, students, portraitData, locale, onEdit, onDelete }: RaidHistoryTableProps) {
+export function RaidHistoryTable({ entries, raidOptions, students, locale, onEdit, onDelete }: RaidHistoryTableProps) {
   const { t } = useTranslation('mypage');
   const { t: t_g } = useTranslation('game');
   const raidInfoByKey = new Map(raidOptions.map((raid) => [`${raid.server}:${raid.id}`, raid]));
@@ -340,7 +327,7 @@ export function RaidHistoryTable({ entries, raidOptions, students, portraitData,
                 {difficultyLabel !== '-' && <div className="text-sm text-neutral-500 dark:text-neutral-400">{difficultyLabel}</div>}
 
                 <div className="min-w-0">
-                  <RaidPartyPreview entry={entry} raidInfo={raidInfo} students={students} portraitData={portraitData} locale={locale} />
+                  <RaidPartyPreview entry={entry} raidInfo={raidInfo} students={students} locale={locale} />
                 </div>
 
                 {(entry.noGuide || entry.guideUrl) && (

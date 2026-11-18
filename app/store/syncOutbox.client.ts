@@ -7,6 +7,7 @@ export interface PersistedSyncChange {
   schemaVersion: number;
   generation: number;
   updatedAt: number;
+  editId?: string;
 }
 
 const DATABASE_NAME = 'yuzu-sync';
@@ -54,16 +55,22 @@ export async function putSyncOutboxEntry(entry: PersistedSyncChange): Promise<vo
   db.close();
 }
 
-export async function deleteSyncOutboxEntry(userId: string, profileId: string, key: string): Promise<void> {
+export async function deleteSyncOutboxEntry(userId: string, profileId: string, key: string, expected?: PersistedSyncChange): Promise<void> {
   const id = entryId(userId, profileId, key);
   const db = await openDatabase();
   if (!db) {
-    memoryFallback.delete(id);
+    if (!expected || JSON.stringify(memoryFallback.get(id)) === JSON.stringify(expected)) memoryFallback.delete(id);
     return;
   }
 
   const transaction = db.transaction(STORE_NAME, 'readwrite');
-  transaction.objectStore(STORE_NAME).delete(id);
+  const store = transaction.objectStore(STORE_NAME);
+  if (expected) {
+    const request = store.get(id);
+    request.onsuccess = () => {
+      if (JSON.stringify(request.result) === JSON.stringify(expected)) store.delete(id);
+    };
+  } else store.delete(id);
   await waitForTransaction(transaction);
   db.close();
 }

@@ -1,7 +1,8 @@
 // app/components/planner/FloatingCurrencyStatus.tsx
 import { useState, useRef, useEffect } from 'react';
+import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { ItemIcon } from '../../../components/item/Icon';
-import type { EventData, IconData, TransactionEntry, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, TransactionEntry, StudentData } from '~/types/plannerData';
 import { getFreeStudentID } from '../logic/getFreeStudentId';
 import { CurrencyStatus } from './CurrencyStatus';
 import { FinalResultsDisplay } from './FinalResultsDisplay';
@@ -29,8 +30,12 @@ interface FloatingCurrencyStatusProps {
     totalApUsed: number;
   } | null; // for FinalResultsDisplay
   allStudents?: StudentData;
-  studentPortraits?: StudentPortraitData;
 }
+
+// Horizontal drag distance (px) required to toggle the collapsed state
+const SWIPE_THRESHOLD = 40;
+// Width (px) of the strip that stays visible while collapsed
+const PEEK_WIDTH = 28;
 
 const getShowItems = (eventData: WithNonNullable<EventData, 'currency'>, remainingCurrency: Record<number, number>) => {
   const items = eventData.currency
@@ -61,10 +66,12 @@ export const FloatingCurrencyStatus = ({
   remainingCurrency,
   acquiredItemsResult,
   allStudents,
-  studentPortraits,
 }: FloatingCurrencyStatusProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isHidden, setIsHidden] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const dragRef = useRef<{ startX: number; moved: boolean } | null>(null);
 
   const { t } = useTranslation('planner');
 
@@ -87,14 +94,69 @@ export const FloatingCurrencyStatus = ({
     };
   }, [isExpanded]);
 
+  const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    dragRef.current = { startX: e.clientX, moved: false };
+  };
+
+  const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const dx = e.clientX - drag.startX;
+    if (!drag.moved && Math.abs(dx) > 5) {
+      drag.moved = true;
+      // Capture only once a drag starts; capturing on pointerdown retargets the click and breaks child buttons
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    // Only allow dragging toward the hide direction (right) or the show direction (left)
+    setDragX(isHidden ? Math.min(0, dx) : Math.max(0, dx));
+  };
+
+  const handlePointerEnd = () => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    if (!isHidden && dragX > SWIPE_THRESHOLD) setIsHidden(true);
+    else if (isHidden && dragX < -SWIPE_THRESHOLD) setIsHidden(false);
+    setDragX(0);
+    // Keep `moved` until the trailing click event has been handled
+    setTimeout(() => {
+      dragRef.current = null;
+    }, 0);
+  };
+
+  const handleClickCapture = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const moved = dragRef.current?.moved ?? false;
+    if (moved) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+    // A tap on the collapsed strip only reveals the panel
+    if (isHidden) {
+      e.stopPropagation();
+      setIsHidden(false);
+    }
+  };
+
+  const hiddenOffset = `calc(100% + 1rem - ${PEEK_WIDTH}px + ${dragX}px)`;
+  const transform = isHidden ? `translateX(${hiddenOffset})` : `translateX(${dragX}px)`;
+
   return (
     <>
       {!isExpanded && (
-        <div data-component-name="FloatingCurrencyStatus" className="fixed bottom-4 right-4 z-50">
+        <div
+          data-component-name="FloatingCurrencyStatus"
+          className="fixed bottom-4 right-4 z-50 select-none"
+          style={{ transform, touchAction: 'pan-y', transition: dragX !== 0 ? 'none' : 'transform 200ms ease-out' }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onClickCapture={handleClickCapture}
+        >
           <div className="relative bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md rounded-xl shadow-lg border dark:border-neutral-700">
             <button
               onClick={() => setIsExpanded(true)}
-              className="absolute -top-3 -left-3 z-10 p-2 bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold rounded-full shadow-md transition-all hover:scale-110 active:scale-95"
+              className="absolute -top-3 -left-3 z-10 touch-pan-y p-2 bg-neutral-400 hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-700 text-white font-bold rounded-full shadow-md transition-all hover:scale-110 active:scale-95"
               aria-label="View more"
             >
               {/* <BsArrowsFullscreen size={14} /> */}
@@ -133,14 +195,14 @@ export const FloatingCurrencyStatus = ({
               </button>
             </div>
 
-            <div className="grow overflow-y-hidden sm:overflow-y-auto p-4 md:p-6">
+            <div className="grow min-h-0 overflow-y-auto overscroll-contain p-4 md:p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <div>
                   <CurrencyStatus eventData={eventData} iconData={iconData} ownedCurrency={ownedCurrency} setOwnedCurrency={setOwnedCurrency} remainingCurrency={remainingCurrency} />
                 </div>
                 <div>
                   {acquiredItemsResult ? (
-                    <FinalResultsDisplay acquiredItemsResult={acquiredItemsResult} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
+                    <FinalResultsDisplay acquiredItemsResult={acquiredItemsResult} eventData={eventData} iconData={iconData} allStudents={allStudents} />
                   ) : (
                     <div className="flex items-center justify-center h-full text-neutral-500">There is no calculation result.</div>
                   )}

@@ -8,6 +8,9 @@ import { ToggleButton } from '~/components/common/ToggleButton';
 import type { Student } from '~/types/plannerData';
 import type { ItemType } from '~/utils/itemType';
 
+// Taller lists on desktop (the 3-column layout has vertical room); mobile keeps the compact default.
+const MAIN_LIST_MAX_HEIGHT = 'max-h-40 sm:max-h-80';
+
 interface InventoryAdvancedFilterModalProps {
   open: boolean;
   onClose: () => void;
@@ -85,9 +88,9 @@ export function InventoryAdvancedFilterModal({
     >
       <div className="flex flex-col gap-5">
         <div className="grid grid-cols-2 items-start gap-x-4 gap-y-5 sm:grid-cols-3">
-          <ScrollableCheckboxGroup label={t_planner('cardmatch.label.type')} options={typeOptions} selected={selectedTypes} onChange={onChangeTypes} />
-          <ScrollableCheckboxGroup label={t_game('school')} options={schoolOptions} selected={selectedSchools} onChange={onChangeSchools} />
-          <ScrollableCheckboxGroup label={t_planner('ui.sortByRarity')} options={rarityOptions} selected={selectedRarities} onChange={onChangeRarities} />
+          <ScrollableCheckboxGroup label={t_planner('cardmatch.label.type')} options={typeOptions} selected={selectedTypes} onChange={onChangeTypes} listMaxHeightClassName={MAIN_LIST_MAX_HEIGHT} />
+          <ScrollableCheckboxGroup label={t_game('school')} options={schoolOptions} selected={selectedSchools} onChange={onChangeSchools} listMaxHeightClassName={MAIN_LIST_MAX_HEIGHT} />
+          <ScrollableCheckboxGroup label={t_planner('ui.sortByRarity')} options={rarityOptions} selected={selectedRarities} onChange={onChangeRarities} listMaxHeightClassName={MAIN_LIST_MAX_HEIGHT} />
         </div>
 
         <div>

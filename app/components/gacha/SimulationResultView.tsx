@@ -18,13 +18,12 @@ interface CustomBarProps {
 interface Props {
   result: GlobalAggregatedResult | null;
   initialPyroxenes: number;
-  portraitMap: Record<number, string>;
   bankruptcyRate: number | null;
 }
 
 type UnitType = 'pyroxenes' | 'pulls';
 
-export default function SimulationResultView({ result, initialPyroxenes, portraitMap: _portraitMap, bankruptcyRate }: Props) {
+export default function SimulationResultView({ result, initialPyroxenes, bankruptcyRate }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
 
   if (!result) return null;

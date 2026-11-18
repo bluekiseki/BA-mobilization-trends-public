@@ -43,7 +43,7 @@
       "scoreInvalid": "점수는 0 이상의 정수여야 합니다.",
       "scoreOptionalInvalid": "점수는 비워두거나 0 이상의 정수여야 합니다.",
       "rankInvalid": "등수는 비워두거나 1 이상의 정수여야 합니다.",
-      "floorInvalid": "제약해제결전 층수는 1~124 사이여야 합니다.",
+      "floorInvalid": "제약해제결전 단계는 1~124 사이여야 합니다.",
       "guideLinkInvalid": "공략 링크는 http:// 또는 https:// 형식이어야 합니다.",
       "armorGuideLinkInvalid": "속성별 공략 링크는 http:// 또는 https:// 형식이어야 합니다.",
       "assistDuplicate": "이미 이 총력전/대결전에서 조력자로 출전 중인 학생입니다.",
@@ -143,7 +143,8 @@
     "studentStats": {
       "mostRecruited": "모집 횟수 TOP 3",
       "recordedThreeStarNote": "기록에 추가된 3성 학생 기준",
-      "allAcquisitions": "모든 획득"
+      "allAcquisitions": "전체",
+      "excludePityExchange": "천장·교환 제외"
     },
     "summary": {
       "heading": "전체 기간 요약",
@@ -158,6 +159,7 @@
       "empty": "아직 저장된 모집 기록이 없습니다.",
       "unknownBanner": "알 수 없는 모집",
       "entryMeta": "{{date}} · <1>{{pulls}}회 모집</1> · 3성 {{threeStar}}명 · 목표 {{goal}}명",
+      "goalPulls": "{{count}}연차에 목표 달성",
       "edit": "수정"
     },
     "stats": {
@@ -177,6 +179,7 @@
       "threeStarDescription": "일반 모집 결과만 계산하며, 반천장·천장 호출과 모집 포인트 교환은 제외합니다.",
       "goalTicketsTitle": "소모한 모집 횟수",
       "goalTicketsSubtitle": "목표 {{n}}명",
+      "goalTicketsDescription": "목표를 달성한 모집만 계산합니다. 기록에 '목표 달성 연차'를 입력했다면 그 연차까지만 소모한 것으로 봅니다(고의천장 등으로 이후에 더 돌린 분량은 제외).",
       "halfPityTitle": "반천장 픽업",
       "halfPitySubtitle": "{{hit}} / {{total}} · 이항분포",
       "halfPityDescription": "반천장마다 픽업 모집 확률 50%로 계산합니다."
@@ -186,6 +189,8 @@
       "editTitle": "모집 기록 수정",
       "bannerLabel": "모집 선택",
       "bannerSearchPlaceholder": "학생 이름 또는 날짜로 검색",
+      "goalPullCountLabel": "목표 달성 연차",
+      "goalPullCountPlaceholder": "미입력 시 총 모집 횟수",
       "initialChargeLabel": "시작 모집 스택",
       "initialChargeNormalLabel": "시작 모집 스택 (통상)",
       "initialChargeLimitedLabel": "시작 모집 스택 (한정)",
@@ -195,6 +200,7 @@
       "deleteResult": "3성 결과 삭제",
       "errorNoBanner": "모집을 선택해 주세요.",
       "errorPullCount": "총 모집 횟수는 1 이상의 정수여야 합니다.",
+      "errorGoalPullCount": "목표 달성 연차는 1 이상, 총 모집 횟수 이하의 정수여야 합니다.",
       "errorInitialCharge": "시작 모집 스택은 0~199 사이여야 합니다.",
       "errorGuaranteed": "보장 결과 수가 총 모집 횟수보다 많습니다.",
       "errorDuplicateFirst": "같은 학생은 초회 모집으로 한 번만 기록할 수 있습니다.",

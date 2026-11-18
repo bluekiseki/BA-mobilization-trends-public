@@ -37,6 +37,8 @@ pnpm react-router typegen
 pnpx wrangler types
 
 pnpm copy-ort-wasm
+pnpm exec wrangler d1 execute DB --local --file=db/notices/schema.sql
+pnpm exec wrangler d1 migrations apply ba_user --local
 pnpm dev:cdn
 ```
 

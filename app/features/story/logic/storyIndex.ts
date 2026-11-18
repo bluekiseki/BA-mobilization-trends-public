@@ -14,9 +14,8 @@ export function toStoryLang(locale: string): StoryLang {
 
 export const LANG_LABELS: Record<StoryLang, string> = { en: 'English', ko: '한국어', ja: '日本語', 'zh-Hant': '繁體中文' };
 
-// Category filter values: '' is the timeline (main, event, group and mini stories, which link to each other),
-// 'all' also keeps bond stories and the rest, and any category name keeps just that category.
-export const ALL_CATEGORIES = 'all';
+// Category filter: none selected is the timeline (main, event, group and mini stories, which link to each other);
+// otherwise the series of the selected categories.
 export const TIMELINE_CATEGORIES = ['Main', 'Event', 'Group', 'Mini'];
 export function categoryLabel(category: string, lang: StoryLang = 'en'): string {
   return categoryNames[lang][category] ?? category;
@@ -53,6 +52,33 @@ const EPISODE_SHORT: Record<StoryLang, (n: number) => string> = {
 export function episodeRange(from: number, to: number, lang: StoryLang): string {
   if (from === to) return EPISODE_SHORT[lang](from);
   return lang === 'en' ? `Ep. ${from} - ${to}` : `${EPISODE_SHORT[lang](from)} - ${EPISODE_SHORT[lang](to)}`;
+}
+
+const EPISODE_NUMBER = /^(?:Episode\s*|Ep\.?\s*|제|第)?(\d+)\s*(?:화|話|话)?$/i;
+
+// Parse the episode number; prologues and afterwords may have no number.
+export function episodeNumber(story: IndexStory | undefined, lang: StoryLang): number | null {
+  const label = story?.l;
+  const text = (label?.[lang] ?? STORY_LANGS.map((other) => label?.[other]).find(Boolean))?.trim();
+  const match = text ? EPISODE_NUMBER.exec(text) : null;
+  return match?.[1] ? Number(match[1]) : null;
+}
+
+// The number to show for a story: the one in its label, so that it agrees with the title. The prologue and afterwords count in the list
+// but have no episode number, so they get none; a series whose stories carry no numbers falls back to the place in the list.
+export function episodeSlot(index: StoryIndex, series: IndexSeries, storyId: string, lang: StoryLang): number | null {
+  const numbers = series.stories.map((id) => episodeNumber(index.stories[id], lang));
+  if (numbers.every((value) => value === null)) {
+    const position = series.stories.indexOf(storyId);
+    return position < 0 ? null : position + 1;
+  }
+  return episodeNumber(index.stories[storyId], lang);
+}
+
+// The highest episode number of a series, or how many stories it has when none of them is numbered.
+export function episodeTotal(index: StoryIndex, series: IndexSeries, lang: StoryLang): number {
+  const numbers = series.stories.flatMap((id) => episodeNumber(index.stories[id], lang) ?? []);
+  return numbers.length > 0 ? Math.max(...numbers) : series.stories.length;
 }
 
 // The label in front of a title ("Episode 3", "Afterword"), as the game words it in each language. A language the game has no label
@@ -155,7 +181,7 @@ export function buildSeriesReleases(index: StoryIndex, schedules: Record<Server,
     const jp = seriesReleases(series.r, schedules.jp);
     // An event missing from the JP schedule still has its start time in the event list.
     if (jp.length === 0 && series.d) jp.push({ date: series.d, label: null, estimated: false });
-    result[id] = { jp, kr: seriesReleases(series.r, schedules.kr) };
+    result[id] = { jp, gl: seriesReleases(series.r, schedules.gl) };
   }
   return result;
 }
@@ -169,7 +195,7 @@ function characterNames(index: StoryIndex, keys: string[] | undefined): (string 
 }
 
 export interface FilterOptions {
-  category: string;
+  category: string | readonly string[]; // '' or an empty list is the timeline
   query: string;
   lang: StoryLang;
   character: string | null;
@@ -183,12 +209,14 @@ export interface FilterOptions {
 // Series of one category. With a query, only the stories (or series) that match are kept; the query also matches the names of characters.
 export function filterSeries(index: StoryIndex, { category, query, lang, character, sort, descending = false, era = null, splitParts = false, releases }: FilterOptions): SeriesGroup[] {
   const q = query.trim().toLowerCase();
+  const selected = typeof category === 'string' ? (category === '' ? [] : [category]) : category;
+  const timeline = selected.length === 0;
   const anchors = eraAnchors(index, releases, sort);
   const groups: SeriesGroup[] = [];
   for (const [id, series] of Object.entries(index.series)) {
     // A search or a character looks through every category, whatever the default timeline hides.
-    const everything = category === ALL_CATEGORIES || (category === '' && (q !== '' || character !== null));
-    if (!everything && (category === '' ? !TIMELINE_CATEGORIES.includes(series.c) : series.c !== category)) continue;
+    const everything = timeline && (q !== '' || character !== null);
+    if (!everything && (timeline ? !TIMELINE_CATEGORIES.includes(series.c) : !selected.includes(series.c))) continue;
     const seriesPart = ERA_CATEGORIES.includes(series.c) ? seriesEra(releases, id, anchors, sort) : null;
     if (era && seriesPart !== era) continue;
     const seriesMatches = q !== '' && matches(q, [id, ...STORY_LANGS.flatMap((l) => [series.name?.[l], series.r?.[0] === 'main' ? mainTitle(series.r[1], l, series.name?.[l]) : undefined])]);

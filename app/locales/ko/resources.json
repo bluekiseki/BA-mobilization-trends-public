@@ -70,7 +70,7 @@
     "weeklyIncome": "주간 수입",
     "permitsPerWeek": "허가/주",
     "dailyInputHint": "일일 입력: 아래 일정 달력을 사용하여 일일 금액을 입력하세요.",
-    "defaultMaxFloor": "기본 최대 층",
+    "defaultMaxFloor": "제약해제결전 도달 단계 (모든 시즌)",
     "noMfPeriods": "일정에 능력 개방 WB 기간이 없습니다."
   },
   "elephCard": {
@@ -148,6 +148,20 @@
     "growthSpendEleph": "{{item}} 목표 달성 지출",
     "growthSpendDefault": "성장 지출",
     "elephGoalReached": "{{studentName}} - 엘레프 (목표 도달)",
-    "goalLabel": "(목표)"
+    "goalLabel": "(목표)",
+    "coinShopAuto": "종합전술시험 상점 (자동 구매)"
+  },
+  "assumeAll": {
+    "title": "예정 수입 가정",
+    "raid": "총력전 점수 보상 전량 획득",
+    "eraid": "대결전 점수 보상 전량 획득",
+    "eventTitle": "이벤트 수입",
+    "eventMode": {
+      "planner": "이벤트 플래너 결과 사용",
+      "all": "상점·임무 보상 전부 합산 (스테이지 파밍 제외)"
+    }
+  },
+  "autoBuy": {
+    "jfd": "종합전술시험 상점에서 매달 최대치 구매"
   }
 }

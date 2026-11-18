@@ -37,6 +37,8 @@ interface CardMatchPlannerProps {
 
 export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: CardMatchPlannerProps) => {
   const { t } = useTranslation('planner', { keyPrefix: 'cardmatch' });
+  const { t: t_ui } = useTranslation('ui');
+  const { t: t_planner } = useTranslation('planner');
 
   // UI State
   const [isRunning, setIsRunning] = useState(false);
@@ -388,11 +390,11 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left: Settings */}
               <div className="space-y-4">
-                <h3 className="font-bold text-neutral-800 dark:text-neutral-200 border-b pb-2 dark:border-neutral-700">{t('ui.settings', 'Settings')}</h3>
+                <h3 className="font-bold text-neutral-800 dark:text-neutral-200 border-b pb-2 dark:border-neutral-700">{t_ui('settings')}</h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">{t('label.startRound', 'Start Round')}</label>
+                    <label className="block text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-1">{t_ui('startRound', 'Start Round')}</label>
                     <input
                       type="number"
                       min={1}
@@ -445,7 +447,7 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
                       onClick={handleRunSimulationButton}
                       className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 rounded shadow-sm transition-all active:scale-95"
                     >
-                      {t('button.run', 'Run Sim')}
+                      {t_planner('button.runSimulation')}
                     </SimRunButton>
                   </div>
                 </div>
@@ -596,7 +598,7 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
                 <thead className="text-xs text-neutral-700 uppercase bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-400">
                   <tr>
                     <th className="px-4 py-3 w-1/3">{t('label.type')}</th>
-                    <th className="px-4 py-3">{t('label.reward')}</th>
+                    <th className="px-4 py-3">{t_ui('reward')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-neutral-700 bg-white dark:bg-neutral-800">
@@ -639,8 +641,8 @@ export const CardMatchPlanner = ({ eventId, eventData, iconData, onCalculate, re
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-neutral-700 uppercase bg-neutral-50 dark:bg-neutral-700 dark:text-neutral-400">
                   <tr>
-                    <th className="px-4 py-3 w-24">{t('label.round')}</th>
-                    <th className="px-4 py-3">{t('label.reward')}</th>
+                    <th className="px-4 py-3 w-24">{t_ui('round')}</th>
+                    <th className="px-4 py-3">{t_ui('reward')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-neutral-700 bg-white dark:bg-neutral-800">

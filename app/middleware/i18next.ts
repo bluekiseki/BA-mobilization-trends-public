@@ -32,7 +32,8 @@ export const [i18nextMiddleware, getLocale, getInstance] = createI18nextMiddlewa
     cookie: localeCookie, // The cookie to store the user preference
   },
   // React already escapes rendered strings; i18next escaping would double-escape (e.g. "&" -> "&amp;" in titles)
-  i18next: { resources, interpolation: { escapeValue: false } },
+  // An empty string is a deliberate translation (e.g. a unit that one language leaves out); since i18next 27 it would otherwise fall back to the key
+  i18next: { resources, interpolation: { escapeValue: false }, returnEmptyString: true },
   plugins: [initReactI18next], // Plugins you may need, like react-i18next
 });
 

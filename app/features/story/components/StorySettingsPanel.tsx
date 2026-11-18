@@ -19,6 +19,7 @@ export function StorySettingsPanel({ lang, onLang, initial, onSave, onCancel }: 
   const [language, setLanguage] = useState(lang);
   const [server, setServer] = useState(initial.server);
   const [spoilers, setSpoilers] = useState(initial.spoilers);
+  const [episodeTotals, setEpisodeTotals] = useState(initial.episodeTotals);
   useEffect(() => {
     const element = dialog.current;
     if (element && !element.open) element.showModal();
@@ -45,7 +46,7 @@ export function StorySettingsPanel({ lang, onLang, initial, onSave, onCancel }: 
         onSubmit={(event) => {
           event.preventDefault();
           onLang(language);
-          onSave({ server, spoilers });
+          onSave({ server, spoilers, episodeTotals });
         }}
       >
         <h2 id="story-settings-title" className="text-lg font-bold">
@@ -74,6 +75,15 @@ export function StorySettingsPanel({ lang, onLang, initial, onSave, onCancel }: 
           <div role="radiogroup" aria-labelledby="story-setting-spoilers" className="flex flex-wrap gap-2">
             {choice('Hide', !spoilers, () => setSpoilers(false))}
             {choice('Show', spoilers, () => setSpoilers(true))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <p id="story-setting-episodes" className="text-sm font-semibold">
+            Total episode count of each story
+          </p>
+          <div role="radiogroup" aria-labelledby="story-setting-episodes" className="flex flex-wrap gap-2">
+            {choice('Hide', !episodeTotals, () => setEpisodeTotals(false))}
+            {choice('Show', episodeTotals, () => setEpisodeTotals(true))}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">

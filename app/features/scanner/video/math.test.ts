@@ -7,6 +7,12 @@ const obs = (quantity: number | null, key = 'Item_10'): Observation => ({ ...pre
 const grid = (overrides: Partial<Grid>): Grid => ({ columns: [100, 230], originY: 100, pitch: 100, cellH: 80, cellW: 100, roi: { x: 40, right: 290, y: 50, bottom: 360 }, ...overrides });
 
 describe('video math', () => {
+  it('keeps the lowest and highest rows of the initial ROI so scrolling in either direction observes them', () => {
+    const g = grid({ roi: { x: 40, right: 290, y: 100 - 40 - 0.12 * 80, bottom: 100 + 100 + 40 + 0.08 * 80 } });
+    const boxes = [0, 1].map((row) => ({ x: 50, y: 60 + row * 100, w: 100, h: 80 }));
+    expect(assignCells(boxes, g, 0).cells.map((c) => c.row)).toEqual([0, 1]);
+  });
+
   it('recognition anchoring requires three independent columns and rejects repeated identities', () => {
     const g = grid({ originY: 50 });
     const tracks = new Map<string, Track>();

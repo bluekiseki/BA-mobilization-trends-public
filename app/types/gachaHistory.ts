@@ -18,6 +18,8 @@ export interface GachaHistoryEntry {
   server: GachaHistoryServer;
   date: string;
   pullCount: number;
+  /** Pull at which the goal was first met; later pulls (e.g. toward a deliberate pity) are excluded. Omitted = the goal was met on the last pull. */
+  goalPullCount?: number;
   /**
    * Starting "recruit charge" for this banner. On a single-type banner it is that banner's counter
    * (normal, or limited when the banner has no normal-recruitment pickup). On a banner that runs a

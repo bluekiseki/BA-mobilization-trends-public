@@ -1,9 +1,24 @@
-import type { ReactNode } from 'react';
+import { useSyncExternalStore, type ReactNode } from 'react';
+import {
+  getPersistenceConflicts,
+  hasPersistenceConflicts,
+  hasPersistenceFailures,
+  hasPersistenceReadFailures,
+  persistenceRevision,
+  retryLocalPersistence,
+  subscribePersistence,
+} from '~/store/history/localPersistence';
 import { useTranslation } from 'react-i18next';
 import { LuRefreshCw } from 'react-icons/lu';
 import { SYNC_STALE_BUTTON_MS, useSyncStore } from '~/store/syncStore';
 import { useIsStale, useRelativeTime } from '~/hooks/useRelativeTime';
 import type { Locale } from '~/utils/i18n/config';
+
+function useConflictCount() {
+  const serverCount = useSyncStore((state) => Object.keys(state.conflicts).length);
+  useSyncExternalStore(subscribePersistence, persistenceRevision, () => 0);
+  return serverCount + getPersistenceConflicts().length;
+}
 
 /**
  * Small colored dot for a collapsed trigger (account icon / hamburger button).
@@ -15,7 +30,7 @@ export function SyncStatusDot() {
   const { t } = useTranslation('auth', { keyPrefix: 'settings' });
   const status = useSyncStore((s) => s.status);
   const isInitialized = useSyncStore((s) => s.isInitialized);
-  const conflictCount = useSyncStore((s) => Object.keys(s.conflicts).length);
+  const conflictCount = useConflictCount();
 
   if (conflictCount > 0) {
     return (
@@ -43,8 +58,9 @@ export function SyncStatusLine() {
   const status = useSyncStore((s) => s.status);
   const isInitialized = useSyncStore((s) => s.isInitialized);
   const lastModifiedAt = useSyncStore((s) => s.lastModifiedAt);
+  const pendingCount = useSyncStore((s) => s.pendingKeys.size);
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
-  const conflictCount = useSyncStore((s) => Object.keys(s.conflicts).length);
+  const conflictCount = useConflictCount();
   const rejected = useSyncStore((s) => s.rejected);
   const relative = useRelativeTime(lastModifiedAt, locale);
   const isStale = useIsStale(lastSyncedAt, SYNC_STALE_BUTTON_MS);
@@ -53,16 +69,18 @@ export function SyncStatusLine() {
   let tone = 'text-neutral-500 dark:text-neutral-400';
   let icon: ReactNode = null;
 
-  if (status === 'syncing') {
+  if (conflictCount > 0) {
+    text = t('profiles.syncConflictCount', { count: conflictCount });
+    tone = 'text-red-600 dark:text-red-400';
+  } else if (status === 'syncing') {
     text = t('profiles.syncing');
     tone = 'text-blue-600 dark:text-blue-400';
     icon = <LuRefreshCw className="animate-spin" size={11} />;
-  } else if (status === 'conflict') {
-    text = t('profiles.syncConflictCount', { count: conflictCount });
-    tone = 'text-red-600 dark:text-red-400';
   } else if (status === 'error') {
     text = t('profiles.syncError');
     tone = 'text-red-600 dark:text-red-400';
+  } else if (pendingCount > 0) {
+    text = t('profiles.syncPending');
   } else if (!isInitialized) {
     text = t('profiles.notSynced');
   } else if (status === 'synced' || lastModifiedAt != null) {
@@ -95,5 +113,54 @@ export function SyncStatusLine() {
         </p>
       )}
     </>
+  );
+}
+
+/** Device persistence and remote acknowledgement are independent states. */
+export function EditingSaveStatus({ localOnly = false, className = '' }: { localOnly?: boolean; className?: string }) {
+  const { t } = useTranslation();
+  const profileId = useSyncStore((state) => state.currentProfileId);
+  const status = useSyncStore((state) => state.status);
+  const pending = useSyncStore((state) => state.pendingKeys.size);
+  const initialized = useSyncStore((state) => state.isInitialized);
+  const conflicts = useSyncStore((state) => Object.keys(state.conflicts).length);
+  const rejected = useSyncStore((state) => Object.keys(state.rejected).length);
+  useSyncExternalStore(subscribePersistence, persistenceRevision, () => 0);
+  const localFailure = hasPersistenceFailures();
+  const localConflict = hasPersistenceConflicts();
+  const label = conflicts ? 'serverConflict' : status === 'error' || rejected ? 'serverError' : status === 'syncing' ? 'serverSaving' : pending || !initialized ? 'serverPending' : 'serverSaved';
+  if (localOnly && !localFailure) return null;
+  return (
+    <div className={`space-y-1 text-xs leading-relaxed ${className}`} aria-live="polite">
+      <p hidden={!!profileId && !localFailure} className={localFailure ? 'text-red-600 dark:text-red-400' : 'text-neutral-500 dark:text-neutral-400'}>
+        {localConflict
+          ? t('auth:settings.profiles.syncConflictCount', { count: getPersistenceConflicts().length })
+          : t(hasPersistenceReadFailures() ? 'ui:history.storageReadError' : localFailure ? 'ui:history.storageError' : 'ui:history.deviceSaved')}
+        {localFailure && !localConflict && (
+          <>
+            {' '}
+            ·{' '}
+            <button type="button" className="underline underline-offset-2" onClick={retryLocalPersistence}>
+              {t('ui:history.retry')}
+            </button>
+          </>
+        )}
+      </p>
+      {!localOnly && profileId && (
+        <p className={label === 'serverError' || conflicts ? 'text-red-600 dark:text-red-400' : 'text-neutral-500 dark:text-neutral-400'}>
+          {label === 'serverError' && !localFailure && <>{t('ui:history.deviceSaved')} · </>}
+          {t(`ui:history.${label}`)}
+          {label === 'serverError' && (
+            <>
+              {' '}
+              ·{' '}
+              <button type="button" className="underline underline-offset-2" onClick={() => void useSyncStore.getState().forceSync()}>
+                {t('ui:history.retry')}
+              </button>
+            </>
+          )}
+        </p>
+      )}
+    </div>
   );
 }

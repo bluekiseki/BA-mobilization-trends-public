@@ -52,7 +52,7 @@ export function findAvailableStages({ editingKey, campaigns, server }: Available
 
 export interface PanelEntryListInput {
   editingKey: string | null;
-  studentsWithPortrait: Record<number, Student>;
+  studentsById: Record<number, Student>;
   growthPlans: GrowthPlan[];
   firstPickupByStudent: Record<number, string>;
   iconInfos: IconInfos | null;
@@ -65,7 +65,7 @@ export interface PanelEntryListInput {
 /** Purchase-panel rows (coin shop and expert-permit shop entries) for the item being edited. */
 export function buildPanelEntryList({
   editingKey,
-  studentsWithPortrait,
+  studentsById,
   growthPlans,
   firstPickupByStudent,
   iconInfos,
@@ -82,7 +82,7 @@ export function buildPanelEntryList({
   const shopDef = COIN_SHOP_BY_COIN_KEY[shopDefKey];
   if (shopDef) {
     if (editingKey === 'Currency_18') {
-      entries.push(...buildExpertPermitEntries(studentsWithPortrait, growthPlans, iconInfos, locale, targetGoals, materialInventory));
+      entries.push(...buildExpertPermitEntries(studentsById, growthPlans, iconInfos, locale, targetGoals, materialInventory));
     } else {
       for (const item of shopDef.items) {
         const sid = item.gainItemKey.startsWith('Item_') ? Number(item.gainItemKey.slice(5)) : NaN;
@@ -107,7 +107,7 @@ export function buildPanelEntryList({
   if (editingKey.startsWith('Item_')) {
     const studentId = Number(editingKey.slice(5));
     if (!isNaN(studentId) && studentId >= 10000) {
-      const meta = studentsWithPortrait[studentId];
+      const meta = studentsById[studentId];
       const plan = growthPlans.find((p) => p.studentId === studentId);
       const isAtMax = plan != null && isElephGoalReached(plan, studentId, targetGoals, materialInventory);
       for (const def of COIN_SHOP_DEFS) {

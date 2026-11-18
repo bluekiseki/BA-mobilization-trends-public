@@ -17,3 +17,9 @@ export const getDefaultApConfig = (startTime: string, endTime: string): ApCalcul
   bonusAp: 0,
   apPackageDates: [],
 });
+
+/** Saved settings with empty dates filled from the event window; defaults when nothing is saved. */
+export const resolveApConfig = (saved: ApCalculatorConfig | undefined, startTime: string, endTime: string): ApCalculatorConfig => {
+  const defaults = getDefaultApConfig(startTime, endTime);
+  return saved ? { ...saved, startDate: saved.startDate || defaults.startDate, endDate: saved.endDate || defaults.endDate } : defaults;
+};

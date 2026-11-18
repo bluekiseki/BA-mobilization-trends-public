@@ -1,1067 +1,1212 @@
 [
   {
-    "Id": "E0",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2024-01-16",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 19929, "Torment": 2244, "Insane": 17682, "Normal": 3 }
-  },
-  {
-    "Id": "E0",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2024-01-16",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 19929, "Insane": 19926, "Normal": 3 }
-  },
-  {
-    "Id": "E0",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2024-01-16",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 19929, "Insane": 19926, "Normal": 3 }
-  },
-  {
-    "Id": "E1",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2024-02-20",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Insane": 19974, "Extreme": 26 }
-  },
-  {
-    "Id": "E1",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2024-02-20",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Insane": 18032, "Extreme": 1968 }
-  },
-  {
-    "Id": "E1",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2024-02-20",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Torment": 2665, "Insane": 17326, "Extreme": 9 }
-  },
-  {
-    "Id": "E2",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
-    "Type": "LightArmor",
-    "Date": "2024-03-19",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Insane": 20000 }
-  },
-  {
-    "Id": "E2",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
-    "Type": "HeavyArmor",
-    "Date": "2024-03-19",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Torment": 6650, "Insane": 13350 }
-  },
-  {
-    "Id": "E2",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
-    "Type": "Unarmed",
-    "Date": "2024-03-19",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Insane": 20000 }
-  },
-  {
-    "Id": "E3",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2024-04-23",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Insane": 20000 }
-  },
-  {
-    "Id": "E3",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2024-04-23",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Insane": 20000 }
-  },
-  {
-    "Id": "E3",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2024-04-23",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 20000, "Torment": 2826, "Insane": 17174 }
-  },
-  {
-    "Id": "E4",
-    "Boss": "\u30db\u30c9",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2024-05-21",
-    "Alias": "\u30db\u30c9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 17200, "Insane": 17200 }
-  },
-  {
-    "Id": "E4",
-    "Boss": "\u30db\u30c9",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2024-05-21",
-    "Alias": "\u30db\u30c9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 17200, "Torment": 1526, "Insane": 15674 }
-  },
-  {
-    "Id": "E4",
-    "Boss": "\u30db\u30c9",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2024-05-21",
-    "Alias": "\u30db\u30c9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 17200, "Insane": 17200 }
-  },
-  {
-    "Id": "E5",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2024-06-18",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 14095, "Insane": 13473, "Extreme": 620, "Hardcore": 1, "Veryhard": 1 }
-  },
-  {
-    "Id": "E5",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2024-06-18",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 14095, "Torment": 7014, "Insane": 7009, "Extreme": 69, "Hardcore": 1, "Veryhard": 2 }
-  },
-  {
-    "Id": "E5",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2024-06-18",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 14095, "Insane": 13435, "Extreme": 652, "Hard": 1, "Hardcore": 6, "Veryhard": 1 }
-  },
-  {
-    "Id": "E6",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2024-07-16",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 5160, "Insane": 7340 }
-  },
-  {
-    "Id": "E6",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2024-07-16",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E6",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2024-07-16",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E7",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2024-08-13",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12105, "Insane": 395 }
-  },
-  {
-    "Id": "E7",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2024-08-13",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E7",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2024-08-13",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12497, "Extreme": 3 }
-  },
-  {
-    "Id": "E8",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2024-09-10",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E8",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2024-09-10",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E8",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2024-09-10",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 10296, "Insane": 2204 }
-  },
-  {
-    "Id": "E9",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
-    "Type": "LightArmor",
-    "Date": "2024-10-15",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E9",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
-    "Type": "HeavyArmor",
-    "Date": "2024-10-15",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 6615, "Insane": 5885 }
-  },
-  {
-    "Id": "E9",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
-    "Type": "Unarmed",
-    "Date": "2024-10-15",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12497, "Extreme": 3 }
-  },
-  {
-    "Id": "E10",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2024-11-12",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E10",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2024-11-12",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E10",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2024-11-12",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 8167, "Insane": 4333 }
-  },
-  {
-    "Id": "E11",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2024-12-10",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 10864, "Insane": 1636 }
-  },
-  {
-    "Id": "E11",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2024-12-10",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E11",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2024-12-10",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12467, "Extreme": 33 }
-  },
-  {
-    "Id": "E12",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
-    "Type": "LightArmor",
-    "Date": "2025-01-14",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E12",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
-    "Type": "HeavyArmor",
-    "Date": "2025-01-14",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 10823, "Insane": 1677 }
-  },
-  {
-    "Id": "E12",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
-    "Type": "ElasticArmor",
-    "Date": "2025-01-14",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E13",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2025-02-11",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E13",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2025-02-11",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12388, "Insane": 112 }
-  },
-  {
-    "Id": "E13",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2025-02-11",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E14",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
-    "Type": "ElasticArmor",
-    "Date": "2025-03-11",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 11118, "Insane": 1382 }
-  },
-  {
-    "Id": "E14",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2025-03-11",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E14",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2025-03-11",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E15",
-    "Boss": "\u30af\u30ed\u30ab\u30b2",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2025-04-08",
-    "Alias": "\u30af\u30ed\u30ab\u30b2-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E15",
-    "Boss": "\u30af\u30ed\u30ab\u30b2",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "ElasticArmor",
-    "Date": "2025-04-08",
-    "Alias": "\u30af\u30ed\u30ab\u30b2-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 11910, "Insane": 590 }
-  },
-  {
-    "Id": "E15",
-    "Boss": "\u30af\u30ed\u30ab\u30b2",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2025-04-08",
-    "Alias": "\u30af\u30ed\u30ab\u30b2-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
     "Id": "R15",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2022-06-14",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 1000, "Extreme": 1000 }
+    "Alias": "カイテン-市街地",
+    "MaxLv": 75,
+    "Cnt": { "All": 77398, "Extreme": 17112, "Hardcore": 42954, "Veryhard": 11138, "Hard": 3860, "Normal": 2334 }
   },
   {
-    "Id": "E16",
-    "Boss": "\u30b1\u30bb\u30c9",
-    "Location": "\u5c4b\u5916",
-    "Type": "ElasticArmor",
-    "Date": "2025-05-06",
-    "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E16",
-    "Boss": "\u30b1\u30bb\u30c9",
-    "Location": "\u5c4b\u5916",
-    "Type": "HeavyArmor",
-    "Date": "2025-05-06",
-    "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E16",
-    "Boss": "\u30b1\u30bb\u30c9",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2025-05-06",
-    "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
-  },
-  { "Id": "R16", "Boss": "\u30d3\u30ca\u30fc", "Location": "\u5c4b\u5916", "Date": "2022-06-28", "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916", "MaxLv": 90, "Cnt": { "All": 10000, "Extreme": 10000 } },
-  {
-    "Id": "E17",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "ElasticArmor",
-    "Date": "2025-06-03",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E17",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2025-06-03",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 11317, "Insane": 1183 }
-  },
-  {
-    "Id": "E17",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2025-06-03",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
+    "Id": "R16",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2022-06-28",
+    "Alias": "ビナー-屋外",
+    "MaxLv": 75,
+    "Cnt": { "All": 77555, "Extreme": 26977, "Hardcore": 34858, "Veryhard": 9169, "Hard": 3439, "Normal": 3112 }
   },
   {
     "Id": "R17",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ペロロジラ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2022-07-12",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Extreme": 10000 }
-  },
-  {
-    "Id": "E18",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "LightArmor",
-    "Date": "2025-07-01",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
-  },
-  {
-    "Id": "E18",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "HeavyArmor",
-    "Date": "2025-07-01",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E18",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
-    "Type": "Unarmed",
-    "Date": "2025-07-01",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
+    "Alias": "ペロロジラ-屋内",
+    "MaxLv": 75,
+    "Cnt": { "All": 69312, "Extreme": 14747, "Hardcore": 39259, "Veryhard": 7944, "Hard": 3550, "Normal": 3812 }
   },
   {
     "Id": "R18",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ヒエロニムス",
+    "Location": "屋内",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2022-07-26",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Extreme": 10000 }
+    "Alias": "ヒエロニムス-屋内",
+    "MaxLv": 75,
+    "Cnt": { "All": 69347, "Extreme": 16962, "Hardcore": 34112, "Veryhard": 11175, "Hard": 3546, "Normal": 3552 }
   },
   {
-    "Id": "E19",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
-    "Type": "LightArmor",
-    "Date": "2025-07-29",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E19",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
-    "Type": "HeavyArmor",
-    "Date": "2025-07-29",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E19",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
-    "Type": "Unarmed",
-    "Date": "2025-07-29",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 11847, "Insane": 653 }
-  },
-  { "Id": "R19", "Boss": "\u30b1\u30bb\u30c9", "Location": "\u5c4b\u5916", "Date": "2022-08-09", "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5916", "MaxLv": 90, "Cnt": { "All": 10000, "Extreme": 10000 } },
-  {
-    "Id": "E20",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5c4b\u5916",
-    "Type": "LightArmor",
-    "Date": "2025-08-19",
-    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
-  },
-  {
-    "Id": "E20",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5c4b\u5916",
-    "Type": "ElasticArmor",
-    "Date": "2025-08-19",
-    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
-  },
-  {
-    "Id": "E20",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5c4b\u5916",
-    "Type": "Unarmed",
-    "Date": "2025-08-19",
-    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12500, "Insane": 12500 }
+    "Id": "R19",
+    "Boss": "ケセド",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2022-08-09",
+    "Alias": "ケセド-屋外",
+    "MaxLv": 75,
+    "Cnt": { "All": 70507, "Extreme": 17575, "Hardcore": 36812, "Veryhard": 8618, "Hard": 3495, "Normal": 4007 }
   },
   {
     "Id": "R20",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2022-08-23",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Extreme": 10000 }
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 75,
+    "Cnt": { "All": 70460, "Extreme": 14729, "Hardcore": 37339, "Veryhard": 8410, "Hard": 4478, "Normal": 5504 }
   },
-  { "Id": "R21", "Boss": "\u30db\u30c9", "Location": "\u5e02\u8857\u5730", "Date": "2022-09-13", "Alias": "\u30db\u30c9-\u5e02\u8857\u5730", "MaxLv": 90, "Cnt": { "All": 10000, "Extreme": 10000 } },
+  {
+    "Id": "R21",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2022-09-13",
+    "Alias": "ホド-市街地",
+    "MaxLv": 78,
+    "Cnt": { "All": 89004, "Extreme": 20912, "Hardcore": 35722, "Veryhard": 13949, "Hard": 10473, "Normal": 7948 }
+  },
   {
     "Id": "R22",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "シロ＆クロ",
+    "Location": "市街地",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2022-09-27",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 10000 }
+    "Alias": "シロ＆クロ-市街地",
+    "MaxLv": 78,
+    "Cnt": { "All": 85524, "Insane": 10022, "Extreme": 24015, "Hardcore": 36033, "Veryhard": 8823, "Hard": 3485, "Normal": 3146 }
   },
   {
     "Id": "R23",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2022-10-11",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 9225, "Extreme": 775 }
+    "Alias": "カイテン-屋外",
+    "MaxLv": 78,
+    "Cnt": { "All": 82381, "Insane": 9225, "Extreme": 15847, "Hardcore": 37900, "Veryhard": 11746, "Hard": 4868, "Normal": 2795 }
   },
   {
     "Id": "R24",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2022-10-25",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 10000 }
+    "Alias": "ビナー-市街地",
+    "MaxLv": 78,
+    "Cnt": { "All": 83841, "Insane": 10975, "Extreme": 20968, "Hardcore": 33457, "Veryhard": 10400, "Hard": 4210, "Normal": 3831 }
   },
-  { "Id": "R25", "Boss": "\u30db\u30c9", "Location": "\u5e02\u8857\u5730", "Date": "2022-11-08", "Alias": "\u30db\u30c9-\u5e02\u8857\u5730", "MaxLv": 90, "Cnt": { "All": 10000, "Insane": 10000 } },
+  {
+    "Id": "R25",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2022-11-08",
+    "Alias": "ホド-市街地",
+    "MaxLv": 78,
+    "Cnt": { "All": 93220, "Insane": 10348, "Extreme": 17386, "Hardcore": 34465, "Veryhard": 13696, "Hard": 9564, "Normal": 7761 }
+  },
   {
     "Id": "R26",
-    "Boss": "\u30b1\u30bb\u30c9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ケセド",
+    "Location": "屋内",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2022-11-22",
-    "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 5977, "Extreme": 4023 }
+    "Alias": "ケセド-屋内",
+    "MaxLv": 78,
+    "Cnt": { "All": 91856, "Insane": 5977, "Extreme": 21542, "Hardcore": 39212, "Veryhard": 12048, "Hard": 6111, "Normal": 6966 }
   },
   {
     "Id": "R27",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ペロロジラ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2022-12-06",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 6945, "Extreme": 3055 }
+    "Alias": "ペロロジラ-屋内",
+    "MaxLv": 78,
+    "Cnt": { "All": 91352, "Insane": 6945, "Extreme": 26408, "Hardcore": 38576, "Veryhard": 9602, "Hard": 4790, "Normal": 5031 }
   },
   {
     "Id": "R28",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2022-12-20",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 10000 }
+    "Alias": "カイテン-市街地",
+    "MaxLv": 80,
+    "Cnt": { "All": 90332, "Insane": 10968, "Extreme": 21074, "Hardcore": 39309, "Veryhard": 11558, "Hard": 4672, "Normal": 2751 }
   },
   {
     "Id": "R29",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ヒエロニムス",
+    "Location": "屋内",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2023-01-03",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 3166, "Extreme": 6834 }
+    "Alias": "ヒエロニムス-屋内",
+    "MaxLv": 80,
+    "Cnt": { "All": 88646, "Insane": 3166, "Extreme": 28076, "Hardcore": 36620, "Veryhard": 12618, "Hard": 4256, "Normal": 3910 }
   },
-  { "Id": "R30", "Boss": "\u30d3\u30ca\u30fc", "Location": "\u5c4b\u5916", "Date": "2023-01-17", "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916", "MaxLv": 90, "Cnt": { "All": 21676, "Insane": 21676 } },
-  { "Id": "R31", "Boss": "\u30b1\u30bb\u30c9", "Location": "\u5c4b\u5916", "Date": "2023-01-31", "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5916", "MaxLv": 90, "Cnt": { "All": 11254, "Insane": 11254 } },
+  {
+    "Id": "R30",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2023-01-17",
+    "Alias": "ビナー-屋外",
+    "MaxLv": 80,
+    "Cnt": { "All": 92856, "Insane": 21676, "Extreme": 27476, "Hardcore": 27660, "Veryhard": 9190, "Hard": 3575, "Normal": 3279 }
+  },
+  {
+    "Id": "R31",
+    "Boss": "ケセド",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2023-01-31",
+    "Alias": "ケセド-屋外",
+    "MaxLv": 80,
+    "Cnt": { "All": 115078, "Insane": 11254, "Extreme": 30218, "Hardcore": 41488, "Veryhard": 14732, "Hard": 7827, "Normal": 9559 }
+  },
   {
     "Id": "R32",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-02-14",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 13634, "Insane": 13634 }
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 80,
+    "Cnt": { "All": 115473, "Insane": 13634, "Extreme": 42762, "Hardcore": 39489, "Veryhard": 10382, "Hard": 4474, "Normal": 4732 }
   },
-  { "Id": "R33", "Boss": "\u30db\u30c9", "Location": "\u5e02\u8857\u5730", "Date": "2023-02-28", "Alias": "\u30db\u30c9-\u5e02\u8857\u5730", "MaxLv": 90, "Cnt": { "All": 16037, "Insane": 16037 } },
+  {
+    "Id": "R33",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2023-02-28",
+    "Alias": "ホド-市街地",
+    "MaxLv": 80,
+    "Cnt": { "All": 109534, "Insane": 16037, "Extreme": 31909, "Hardcore": 32439, "Veryhard": 14338, "Hard": 8650, "Normal": 6161 }
+  },
   {
     "Id": "R34",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ヒエロニムス",
+    "Location": "市街地",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2023-03-14",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 16294, "Insane": 16294 }
+    "Alias": "ヒエロニムス-市街地",
+    "MaxLv": 80,
+    "Cnt": { "All": 110162, "Insane": 16294, "Extreme": 38193, "Hardcore": 32377, "Veryhard": 14430, "Hard": 4678, "Normal": 4190 }
   },
   {
     "Id": "R35",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2023-03-28",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 19616, "Insane": 19616 }
+    "Alias": "カイテン-屋外",
+    "MaxLv": 83,
+    "Cnt": { "All": 113214, "Insane": 19616, "Extreme": 33196, "Hardcore": 39871, "Veryhard": 12595, "Hard": 4676, "Normal": 3260 }
   },
   {
     "Id": "R36",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-04-11",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 10000 }
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 83,
+    "Cnt": { "All": 110204, "Insane": 11092, "Extreme": 38050, "Hardcore": 38822, "Veryhard": 10682, "Hard": 5183, "Normal": 6375 }
   },
-  { "Id": "R37", "Boss": "\u30b4\u30ba", "Location": "\u5c4b\u5185", "Date": "2023-04-25", "Alias": "\u30b4\u30ba-\u5c4b\u5185", "MaxLv": 90, "Cnt": { "All": 11878, "Insane": 11878 } },
+  {
+    "Id": "R37",
+    "Boss": "ゴズ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
+    "Date": "2023-04-25",
+    "Alias": "ゴズ-屋内",
+    "MaxLv": 83,
+    "Cnt": { "All": 116706, "Insane": 11878, "Extreme": 35209, "Hardcore": 39192, "Veryhard": 15461, "Hard": 8401, "Normal": 6565 }
+  },
   {
     "Id": "R38",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "シロ＆クロ",
+    "Location": "市街地",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-05-09",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 10000, "Insane": 10000 }
+    "Alias": "シロ＆クロ-市街地",
+    "MaxLv": 83,
+    "Cnt": { "All": 108418, "Insane": 17462, "Extreme": 46074, "Hardcore": 31720, "Veryhard": 8086, "Hard": 2453, "Normal": 2623 }
   },
   {
     "Id": "R39",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2023-05-23",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 15000, "Insane": 15000 }
+    "Alias": "ビナー-市街地",
+    "MaxLv": 83,
+    "Cnt": { "All": 109372, "Insane": 29318, "Extreme": 33670, "Hardcore": 30506, "Veryhard": 9193, "Hard": 3320, "Normal": 3365 }
   },
-  { "Id": "R40", "Boss": "\u30b1\u30bb\u30c9", "Location": "\u5c4b\u5185", "Date": "2023-06-06", "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5185", "MaxLv": 90, "Cnt": { "All": 13050, "Insane": 13050 } },
+  {
+    "Id": "R40",
+    "Boss": "ケセド",
+    "Location": "屋内",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2023-06-06",
+    "Alias": "ケセド-屋内",
+    "MaxLv": 83,
+    "Cnt": { "All": 104507, "Insane": 13050, "Extreme": 39947, "Hardcore": 33355, "Veryhard": 10070, "Hard": 3810, "Normal": 4275 }
+  },
   {
     "Id": "R41",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ペロロジラ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-06-20",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 13492, "Insane": 13492 }
+    "Alias": "ペロロジラ-屋内",
+    "MaxLv": 83,
+    "Cnt": { "All": 103080, "Insane": 13492, "Extreme": 40993, "Hardcore": 33863, "Veryhard": 8285, "Hard": 3057, "Normal": 3390 }
   },
   {
     "Id": "R42",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ヒエロニムス",
+    "Location": "屋内",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2023-07-04",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 21846, "Insane": 21846 }
+    "Alias": "ヒエロニムス-屋内",
+    "MaxLv": 83,
+    "Cnt": { "All": 102599, "Insane": 21846, "Extreme": 37003, "Hardcore": 27734, "Veryhard": 10415, "Hard": 2747, "Normal": 2854 }
   },
   {
     "Id": "R43",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-07-18",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 21155, "Insane": 21155 }
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 83,
+    "Cnt": { "All": 109103, "Insane": 21155, "Extreme": 47510, "Hardcore": 28039, "Veryhard": 7850, "Hard": 1967, "Normal": 2582 }
   },
   {
     "Id": "R44",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ヒエロニムス",
+    "Location": "市街地",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2023-08-29",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 3456, "Insane": 8544 }
+    "Alias": "ヒエロニムス-市街地",
+    "MaxLv": 85,
+    "Cnt": { "All": 122121, "Torment": 3456, "Insane": 30068, "Extreme": 34087, "Hardcore": 30412, "Veryhard": 14950, "Hard": 4584, "Normal": 4564 }
   },
   {
     "Id": "R45",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2023-09-19",
-    "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 1469, "Insane": 10531 }
+    "Alias": "ビナー-屋外",
+    "MaxLv": 85,
+    "Cnt": { "All": 114104, "Torment": 1469, "Insane": 58089, "Extreme": 18748, "Hardcore": 22073, "Veryhard": 8451, "Hard": 2481, "Normal": 2793 }
   },
   {
     "Id": "R46",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ゴズ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-10-03",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 19568, "Torment": 1447, "Insane": 18121 }
+    "Alias": "ゴズ-屋内",
+    "MaxLv": 85,
+    "Cnt": { "All": 112359, "Torment": 1447, "Insane": 18121, "Extreme": 38070, "Hardcore": 31311, "Veryhard": 13291, "Hard": 5656, "Normal": 4463 }
   },
   {
     "Id": "R47",
-    "Boss": "\u30b1\u30bb\u30c9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ケセド",
+    "Location": "屋内",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2023-10-17",
-    "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 15000, "Torment": 2020, "Insane": 12980 }
+    "Alias": "ケセド-屋内",
+    "MaxLv": 85,
+    "Cnt": { "All": 108242, "Torment": 2020, "Insane": 29528, "Extreme": 35017, "Hardcore": 25164, "Veryhard": 9415, "Hard": 3256, "Normal": 3842 }
   },
   {
     "Id": "R48",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "シロ＆クロ",
+    "Location": "市街地",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-10-31",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 1449, "Insane": 10551 }
+    "Alias": "シロ＆クロ-市街地",
+    "MaxLv": 85,
+    "Cnt": { "All": 119612, "Torment": 1449, "Insane": 29320, "Extreme": 44156, "Hardcore": 30010, "Veryhard": 8644, "Hard": 2522, "Normal": 3511 }
   },
   {
     "Id": "R49",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5c4b\u5916",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2023-11-14",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 1817, "Insane": 10183 }
+    "Alias": "カイテン-屋外",
+    "MaxLv": 85,
+    "Cnt": { "All": 112304, "Torment": 1817, "Insane": 31544, "Extreme": 31496, "Hardcore": 31307, "Veryhard": 10591, "Hard": 3076, "Normal": 2473 }
   },
   {
     "Id": "R50",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2023-11-28",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 22092, "Torment": 1248, "Insane": 20844 }
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 85,
+    "Cnt": { "All": 109560, "Torment": 1248, "Insane": 20844, "Extreme": 39971, "Hardcore": 30305, "Veryhard": 9452, "Hard": 3425, "Normal": 4315 }
   },
   {
     "Id": "R51",
-    "Boss": "\u30db\u30c9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ホド",
+    "Location": "屋内",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2023-12-12",
-    "Alias": "\u30db\u30c9-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 15000, "Torment": 5029, "Insane": 9971 }
+    "Alias": "ホド-屋内",
+    "MaxLv": 85,
+    "Cnt": { "All": 105799, "Torment": 5029, "Insane": 36457, "Extreme": 25700, "Hardcore": 22974, "Veryhard": 9068, "Hard": 3293, "Normal": 3278 }
   },
   {
     "Id": "R52",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2024-01-02",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
-    "MaxLv": 90,
-    "Cnt": { "All": 17075, "Torment": 1454, "Insane": 15621 }
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 85,
+    "Cnt": { "All": 106279, "Torment": 1454, "Insane": 15621, "Extreme": 35655, "Hardcore": 29852, "Veryhard": 11988, "Hard": 6491, "Normal": 5218 }
+  },
+  {
+    "Id": "E0",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2024-01-16",
+    "Alias": "カイテン-市街地",
+    "MaxLv": 85,
+    "Cnt": { "All": 86137, "Torment": 2244, "Insane": 30504, "Extreme": 22671, "Hardcore": 24200, "Veryhard": 3991, "Hard": 1664, "Normal": 863 }
+  },
+  {
+    "Id": "E0",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2024-01-16",
+    "Alias": "カイテン-市街地",
+    "MaxLv": 85,
+    "Cnt": { "All": 86137, "Insane": 31918, "Extreme": 22733, "Hardcore": 24928, "Veryhard": 3920, "Hard": 1717, "Normal": 921 }
+  },
+  {
+    "Id": "E0",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2024-01-16",
+    "Alias": "カイテン-市街地",
+    "MaxLv": 85,
+    "Cnt": { "All": 86137, "Insane": 27945, "Extreme": 23393, "Hardcore": 27163, "Veryhard": 4539, "Hard": 1896, "Normal": 1201 }
   },
   {
     "Id": "R53",
-    "Boss": "\u30b4\u30ba",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2024-02-06",
-    "Alias": "\u30b4\u30ba-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 21541, "Torment": 5861, "Insane": 15680 }
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 131832, "Torment": 5861, "Insane": 15680, "Extreme": 38884, "Hardcore": 37368, "Veryhard": 16742, "Hard": 8742, "Normal": 8555 }
+  },
+  {
+    "Id": "E1",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2024-02-20",
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 23910, "Insane": 22414, "Extreme": 1496 }
+  },
+  {
+    "Id": "E1",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2024-02-20",
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 23910, "Insane": 18226, "Extreme": 5670, "Hardcore": 11, "Veryhard": 3 }
+  },
+  {
+    "Id": "E1",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2024-02-20",
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 23910, "Torment": 2666, "Insane": 20646, "Extreme": 596, "Hardcore": 1, "Veryhard": 1 }
   },
   {
     "Id": "R54",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2024-03-05",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 5789, "Insane": 6211 }
+    "Alias": "ホバークラフト-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 113984, "Torment": 5789, "Insane": 15492, "Extreme": 38430, "Hardcore": 32083, "Veryhard": 13309, "Hard": 6043, "Normal": 2838 }
+  },
+  {
+    "Id": "E2",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "Type": "LightArmor",
+    "Date": "2024-03-19",
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 87,
+    "Cnt": { "All": 93259, "Insane": 31850, "Extreme": 32869, "Hardcore": 22842, "Veryhard": 3197, "Hard": 1395, "Normal": 1106 }
+  },
+  {
+    "Id": "E2",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "Type": "HeavyArmor",
+    "Date": "2024-03-19",
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 87,
+    "Cnt": { "All": 93259, "Torment": 6651, "Insane": 28986, "Extreme": 33047, "Hardcore": 19209, "Veryhard": 2962, "Hard": 1316, "Normal": 1088 }
+  },
+  {
+    "Id": "E2",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "Type": "Unarmed",
+    "Date": "2024-03-19",
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 87,
+    "Cnt": { "All": 93259, "Insane": 32906, "Extreme": 32633, "Hardcore": 22069, "Veryhard": 3215, "Hard": 1388, "Normal": 1048 }
   },
   {
     "Id": "R55",
-    "Boss": "\u30d3\u30ca\u30fc",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2024-04-09",
-    "Alias": "\u30d3\u30ca\u30fc-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 3650, "Insane": 8350 }
+    "Alias": "ビナー-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 114586, "Torment": 3650, "Insane": 51757, "Extreme": 22455, "Hardcore": 22104, "Veryhard": 8674, "Hard": 2637, "Normal": 3309 }
+  },
+  {
+    "Id": "E3",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2024-04-23",
+    "Alias": "カイテン-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 93292, "Insane": 35746, "Extreme": 24784, "Hardcore": 25876, "Veryhard": 3805, "Hard": 1825, "Normal": 1256 }
+  },
+  {
+    "Id": "E3",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2024-04-23",
+    "Alias": "カイテン-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 93292, "Insane": 38672, "Extreme": 24074, "Hardcore": 24175, "Veryhard": 3489, "Hard": 1680, "Normal": 1202 }
+  },
+  {
+    "Id": "E3",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2024-04-23",
+    "Alias": "カイテン-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 93292, "Torment": 2826, "Insane": 31380, "Extreme": 24775, "Hardcore": 27082, "Veryhard": 4001, "Hard": 1758, "Normal": 1470 }
   },
   {
     "Id": "R56",
-    "Boss": "\u30b1\u30bb\u30c9",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ケセド",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2024-05-07",
-    "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 11994, "Torment": 10810, "Insane": 1184 }
+    "Alias": "ケセド-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 121912, "Torment": 10810, "Insane": 33746, "Extreme": 29871, "Hardcore": 26056, "Veryhard": 10302, "Hard": 4297, "Normal": 6830 }
+  },
+  {
+    "Id": "E4",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2024-05-21",
+    "Alias": "ホド-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 88140, "Insane": 28341, "Extreme": 24243, "Hardcore": 24996, "Veryhard": 5398, "Hard": 3056, "Normal": 2106 }
+  },
+  {
+    "Id": "E4",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2024-05-21",
+    "Alias": "ホド-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 88140, "Torment": 1527, "Insane": 29911, "Extreme": 24587, "Hardcore": 22854, "Veryhard": 4610, "Hard": 2549, "Normal": 2102 }
+  },
+  {
+    "Id": "E4",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2024-05-21",
+    "Alias": "ホド-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 88140, "Insane": 26798, "Extreme": 24255, "Hardcore": 25931, "Veryhard": 5594, "Hard": 3068, "Normal": 2494 }
   },
   {
     "Id": "R57",
-    "Boss": "\u30af\u30ed\u30ab\u30b2",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "クロカゲ",
+    "Location": "市街地",
+    "ArmorTypes": ["ElasticArmor"],
     "Date": "2024-06-04",
-    "Alias": "\u30af\u30ed\u30ab\u30b2-\u5e02\u8857\u5730",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 5435, "Insane": 6565 }
+    "Alias": "クロカゲ-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 109631, "Torment": 5435, "Insane": 21638, "Extreme": 36861, "Hardcore": 27295, "Veryhard": 9888, "Hard": 4860, "Normal": 3654 }
+  },
+  {
+    "Id": "E5",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2024-06-18",
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 83730, "Insane": 19015, "Extreme": 31835, "Hardcore": 23089, "Veryhard": 5079, "Hard": 2771, "Normal": 1941 }
+  },
+  {
+    "Id": "E5",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2024-06-18",
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 83730, "Torment": 7032, "Insane": 15310, "Extreme": 33042, "Hardcore": 20150, "Veryhard": 4033, "Hard": 2379, "Normal": 1784 }
+  },
+  {
+    "Id": "E5",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2024-06-18",
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 83730, "Insane": 19141, "Extreme": 31556, "Hardcore": 23162, "Veryhard": 5068, "Hard": 2712, "Normal": 2091 }
   },
   {
     "Id": "R58",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2024-07-02",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
-    "MaxLv": 90,
-    "Cnt": { "All": 12000, "Torment": 8264, "Insane": 3736 }
+    "Alias": "ホバークラフト-屋外",
+    "MaxLv": 87,
+    "Cnt": { "All": 103523, "Torment": 8264, "Insane": 14705, "Extreme": 36185, "Hardcore": 26316, "Veryhard": 11211, "Hard": 4446, "Normal": 2396 }
+  },
+  {
+    "Id": "E6",
+    "Boss": "シロ＆クロ",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2024-07-16",
+    "Alias": "シロ＆クロ-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 91244, "Torment": 5160, "Insane": 27049, "Extreme": 33047, "Hardcore": 20407, "Veryhard": 3032, "Hard": 1388, "Normal": 1161 }
+  },
+  {
+    "Id": "E6",
+    "Boss": "シロ＆クロ",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2024-07-16",
+    "Alias": "シロ＆クロ-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 91244, "Insane": 32037, "Extreme": 34919, "Hardcore": 18985, "Veryhard": 2838, "Hard": 1329, "Normal": 1136 }
+  },
+  {
+    "Id": "E6",
+    "Boss": "シロ＆クロ",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2024-07-16",
+    "Alias": "シロ＆クロ-市街地",
+    "MaxLv": 87,
+    "Cnt": { "All": 91244, "Insane": 31315, "Extreme": 33616, "Hardcore": 20440, "Veryhard": 3128, "Hard": 1448, "Normal": 1297 }
   },
   {
     "Id": "R59",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ヒエロニムス",
+    "Location": "屋内",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2024-07-30",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5c4b\u5185",
+    "Alias": "ヒエロニムス-屋内",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
+    "Cnt": { "All": 139011, "Torment": 19636, "Insane": 37827, "Extreme": 26148, "Hardcore": 28445, "Veryhard": 14318, "Hard": 5304, "Normal": 7333 }
   },
-  { "Id": "R60", "Boss": "\u30b1\u30bb\u30c9", "Location": "\u5c4b\u5185", "Date": "2024-08-27", "Alias": "\u30b1\u30bb\u30c9-\u5c4b\u5185", "MaxLv": 90, "Cnt": { "All": 12500, "Torment": 12500 } },
+  {
+    "Id": "E7",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2024-08-13",
+    "Alias": "カイテン-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 96158, "Torment": 12105, "Insane": 33012, "Extreme": 22504, "Hardcore": 21871, "Veryhard": 3905, "Hard": 1656, "Normal": 1105 }
+  },
+  {
+    "Id": "E7",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2024-08-13",
+    "Alias": "カイテン-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 96158, "Insane": 41801, "Extreme": 23965, "Hardcore": 23223, "Veryhard": 4059, "Hard": 1922, "Normal": 1188 }
+  },
+  {
+    "Id": "E7",
+    "Boss": "カイテン",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2024-08-13",
+    "Alias": "カイテン-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 96158, "Insane": 35999, "Extreme": 25400, "Hardcore": 26516, "Veryhard": 4622, "Hard": 2131, "Normal": 1490 }
+  },
+  {
+    "Id": "R60",
+    "Boss": "ケセド",
+    "Location": "屋内",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2024-08-27",
+    "Alias": "ケセド-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 110177, "Torment": 12848, "Insane": 30694, "Extreme": 28436, "Hardcore": 21746, "Veryhard": 9075, "Hard": 2942, "Normal": 4436 }
+  },
+  {
+    "Id": "E8",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2024-09-10",
+    "Alias": "ビナー-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 85736, "Insane": 45678, "Extreme": 19279, "Hardcore": 16349, "Veryhard": 2434, "Hard": 1029, "Normal": 967 }
+  },
+  {
+    "Id": "E8",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2024-09-10",
+    "Alias": "ビナー-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 85736, "Insane": 45758, "Extreme": 18721, "Hardcore": 16668, "Veryhard": 2490, "Hard": 1084, "Normal": 1015 }
+  },
+  {
+    "Id": "E8",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2024-09-10",
+    "Alias": "ビナー-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 85736, "Torment": 10296, "Insane": 33403, "Extreme": 18840, "Hardcore": 17865, "Veryhard": 2920, "Hard": 1186, "Normal": 1226 }
+  },
   {
     "Id": "R61",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5185",
+    "Boss": "ペロロジラ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2024-10-01",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5185",
+    "Alias": "ペロロジラ-屋内",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 8136, "Insane": 4364 }
+    "Cnt": { "All": 97883, "Torment": 8136, "Insane": 25385, "Extreme": 30932, "Hardcore": 20436, "Veryhard": 7643, "Hard": 2183, "Normal": 3168 }
+  },
+  {
+    "Id": "E9",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "Type": "LightArmor",
+    "Date": "2024-10-15",
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 75920, "Insane": 19594, "Extreme": 29446, "Hardcore": 17867, "Veryhard": 4367, "Hard": 2552, "Normal": 2094 }
+  },
+  {
+    "Id": "E9",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "Type": "HeavyArmor",
+    "Date": "2024-10-15",
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 75920, "Torment": 6622, "Insane": 10952, "Extreme": 28674, "Hardcore": 19357, "Veryhard": 4929, "Hard": 2939, "Normal": 2447 }
+  },
+  {
+    "Id": "E9",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "Type": "Unarmed",
+    "Date": "2024-10-15",
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 75920, "Insane": 17726, "Extreme": 28822, "Hardcore": 19211, "Veryhard": 4763, "Hard": 2823, "Normal": 2575 }
   },
   {
     "Id": "R62",
-    "Boss": "\u30db\u30c9",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ホド",
+    "Location": "市街地",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2024-10-29",
-    "Alias": "\u30db\u30c9-\u5e02\u8857\u5730",
+    "Alias": "ホド-市街地",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 7149, "Insane": 5351 }
+    "Cnt": { "All": 102415, "Torment": 7149, "Insane": 32383, "Extreme": 25192, "Hardcore": 21353, "Veryhard": 9233, "Hard": 3209, "Normal": 3896 }
   },
-  { "Id": "R63", "Boss": "\u30b4\u30ba", "Location": "\u5c4b\u5185", "Date": "2024-11-26", "Alias": "\u30b4\u30ba-\u5c4b\u5185", "MaxLv": 0, "Cnt": { "All": 0 } },
-  { "Id": "R64", "Boss": "\u30d3\u30ca\u30fc", "Location": "\u5c4b\u5916", "Date": "2024-12-31", "Alias": "\u30d3\u30ca\u30fc-\u5c4b\u5916", "MaxLv": 90, "Cnt": { "All": 12500, "Torment": 12500 } },
+  {
+    "Id": "E10",
+    "Boss": "ヒエロニムス",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2024-11-12",
+    "Alias": "ヒエロニムス-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 81674, "Insane": 35763, "Extreme": 23093, "Hardcore": 16646, "Veryhard": 3574, "Hard": 1315, "Normal": 1283 }
+  },
+  {
+    "Id": "E10",
+    "Boss": "ヒエロニムス",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2024-11-12",
+    "Alias": "ヒエロニムス-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 80826, "Insane": 29936, "Extreme": 27578, "Hardcore": 17203, "Veryhard": 3578, "Hard": 1322, "Normal": 1209 }
+  },
+  {
+    "Id": "E10",
+    "Boss": "ヒエロニムス",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2024-11-12",
+    "Alias": "ヒエロニムス-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 80560, "Torment": 8169, "Insane": 21552, "Extreme": 26353, "Hardcore": 17581, "Veryhard": 4008, "Hard": 1455, "Normal": 1442 }
+  },
+  {
+    "Id": "E11",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2024-12-10",
+    "Alias": "ホバークラフト-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 76365, "Torment": 11003, "Insane": 9979, "Extreme": 27832, "Hardcore": 19152, "Veryhard": 4630, "Hard": 2480, "Normal": 1289 }
+  },
+  {
+    "Id": "E11",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2024-12-10",
+    "Alias": "ホバークラフト-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 76256, "Insane": 20839, "Extreme": 28269, "Hardcore": 19168, "Veryhard": 4399, "Hard": 2369, "Normal": 1212 }
+  },
+  {
+    "Id": "E11",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2024-12-10",
+    "Alias": "ホバークラフト-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 75518, "Insane": 17099, "Extreme": 27320, "Hardcore": 21382, "Veryhard": 5497, "Hard": 2691, "Normal": 1529 }
+  },
+  {
+    "Id": "R64",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
+    "Date": "2024-12-31",
+    "Alias": "ビナー-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 95556, "Torment": 13010, "Insane": 43696, "Extreme": 15850, "Hardcore": 11956, "Veryhard": 7034, "Hard": 1704, "Normal": 2306 }
+  },
+  {
+    "Id": "E12",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "Type": "LightArmor",
+    "Date": "2025-01-14",
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 83322, "Insane": 37549, "Extreme": 28215, "Hardcore": 13262, "Veryhard": 2092, "Hard": 1043, "Normal": 1161 }
+  },
+  {
+    "Id": "E12",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "Type": "HeavyArmor",
+    "Date": "2025-01-14",
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 82964, "Torment": 10870, "Insane": 25052, "Extreme": 29983, "Hardcore": 12765, "Veryhard": 2083, "Hard": 1005, "Normal": 1206 }
+  },
+  {
+    "Id": "E12",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "Type": "ElasticArmor",
+    "Date": "2025-01-14",
+    "Alias": "シロ＆クロ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 81201, "Insane": 22461, "Extreme": 33622, "Hardcore": 19976, "Veryhard": 2687, "Hard": 1168, "Normal": 1287 }
+  },
   {
     "Id": "R65",
-    "Boss": "\u30da\u30ed\u30ed\u30b8\u30e9",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2025-01-28",
-    "Alias": "\u30da\u30ed\u30ed\u30b8\u30e9-\u5c4b\u5916",
+    "Alias": "ペロロジラ-屋外",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
+    "Cnt": { "All": 115097, "Torment": 17502, "Insane": 28998, "Extreme": 27981, "Hardcore": 22519, "Veryhard": 9388, "Hard": 3453, "Normal": 5256 }
+  },
+  {
+    "Id": "E13",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2025-02-11",
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 72018, "Insane": 28736, "Extreme": 23197, "Hardcore": 14492, "Veryhard": 2714, "Hard": 1485, "Normal": 1394 }
+  },
+  {
+    "Id": "E13",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2025-02-11",
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 71704, "Torment": 12394, "Insane": 15477, "Extreme": 24227, "Hardcore": 14219, "Veryhard": 2667, "Hard": 1406, "Normal": 1314 }
+  },
+  {
+    "Id": "E13",
+    "Boss": "ゴズ",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2025-02-11",
+    "Alias": "ゴズ-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 71861, "Insane": 27140, "Extreme": 22294, "Hardcore": 16500, "Veryhard": 2937, "Hard": 1571, "Normal": 1419 }
   },
   {
     "Id": "R66",
-    "Boss": "\u30b7\u30ed\uff06\u30af\u30ed",
-    "Location": "\u5c4b\u5185",
+    "Boss": "シロ＆クロ",
+    "Location": "屋内",
+    "ArmorTypes": ["Unarmed"],
     "Date": "2025-02-25",
-    "Alias": "\u30b7\u30ed\uff06\u30af\u30ed-\u5c4b\u5185",
+    "Alias": "シロ＆クロ-屋内",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 11402, "Insane": 1098 }
+    "Cnt": { "All": 90145, "Torment": 11402, "Insane": 29616, "Extreme": 29507, "Hardcore": 10282, "Veryhard": 6463, "Hard": 1119, "Normal": 1756 }
+  },
+  {
+    "Id": "E14",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "Type": "ElasticArmor",
+    "Date": "2025-03-11",
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 68021, "Torment": 11134, "Insane": 17877, "Extreme": 22168, "Hardcore": 13040, "Veryhard": 2000, "Hard": 885, "Normal": 917 }
+  },
+  {
+    "Id": "E14",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2025-03-11",
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 68819, "Insane": 23799, "Extreme": 27682, "Hardcore": 13670, "Veryhard": 1727, "Hard": 902, "Normal": 1039 }
+  },
+  {
+    "Id": "E14",
+    "Boss": "ペロロジラ",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2025-03-11",
+    "Alias": "ペロロジラ-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 69555, "Insane": 31921, "Extreme": 21721, "Hardcore": 12361, "Veryhard": 1732, "Hard": 841, "Normal": 979 }
   },
   {
     "Id": "R67",
-    "Boss": "\u30ab\u30a4\u30c6\u30f3",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2025-03-25",
-    "Alias": "\u30ab\u30a4\u30c6\u30f3-\u5e02\u8857\u5730",
+    "Alias": "カイテン-市街地",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
+    "Cnt": { "All": 87318, "Torment": 13897, "Insane": 31422, "Extreme": 18968, "Hardcore": 13430, "Veryhard": 6522, "Hard": 1429, "Normal": 1650 }
+  },
+  {
+    "Id": "E15",
+    "Boss": "クロカゲ",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2025-04-08",
+    "Alias": "クロカゲ-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 67028, "Insane": 20001, "Extreme": 25165, "Hardcore": 16160, "Veryhard": 3141, "Hard": 1524, "Normal": 1037 }
+  },
+  {
+    "Id": "E15",
+    "Boss": "クロカゲ",
+    "Location": "市街地",
+    "Type": "ElasticArmor",
+    "Date": "2025-04-08",
+    "Alias": "クロカゲ-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 66198, "Torment": 11965, "Insane": 12188, "Extreme": 22009, "Hardcore": 14658, "Veryhard": 2854, "Hard": 1552, "Normal": 972 }
+  },
+  {
+    "Id": "E15",
+    "Boss": "クロカゲ",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2025-04-08",
+    "Alias": "クロカゲ-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 67125, "Insane": 23160, "Extreme": 22652, "Hardcore": 15544, "Veryhard": 3139, "Hard": 1565, "Normal": 1065 }
   },
   {
     "Id": "R68",
-    "Boss": "\u30b0\u30ec\u30b4\u30ea\u30aa",
-    "Location": "\u5c4b\u5185",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2025-04-22",
-    "Alias": "\u30b0\u30ec\u30b4\u30ea\u30aa-\u5c4b\u5185",
+    "Alias": "グレゴリオ-屋内",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 11860, "Insane": 640 }
+    "Cnt": { "All": 87182, "Torment": 11860, "Insane": 12765, "Extreme": 30803, "Hardcore": 17305, "Veryhard": 8017, "Hard": 3194, "Normal": 3238 }
+  },
+  {
+    "Id": "E16",
+    "Boss": "ケセド",
+    "Location": "屋外",
+    "Type": "ElasticArmor",
+    "Date": "2025-05-06",
+    "Alias": "ケセド-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 63449, "Insane": 26917, "Extreme": 19800, "Hardcore": 12680, "Veryhard": 2098, "Hard": 927, "Normal": 1027 }
+  },
+  {
+    "Id": "E16",
+    "Boss": "ケセド",
+    "Location": "屋外",
+    "Type": "HeavyArmor",
+    "Date": "2025-05-06",
+    "Alias": "ケセド-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 64808, "Insane": 29336, "Extreme": 19488, "Hardcore": 11751, "Veryhard": 2034, "Hard": 985, "Normal": 1214 }
+  },
+  {
+    "Id": "E16",
+    "Boss": "ケセド",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2025-05-06",
+    "Alias": "ケセド-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 64391, "Torment": 13229, "Insane": 16041, "Extreme": 18927, "Hardcore": 12018, "Veryhard": 2049, "Hard": 955, "Normal": 1172 }
   },
   {
     "Id": "R69",
-    "Boss": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "ヒエロニムス",
+    "Location": "市街地",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2025-05-20",
-    "Alias": "\u30d2\u30a8\u30ed\u30cb\u30e0\u30b9-\u5e02\u8857\u5730",
+    "Alias": "ヒエロニムス-市街地",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Torment": 12500 }
+    "Cnt": { "All": 79277, "Torment": 14675, "Insane": 23439, "Extreme": 20369, "Hardcore": 10906, "Veryhard": 6481, "Hard": 1440, "Normal": 1967 }
+  },
+  {
+    "Id": "E17",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "Type": "ElasticArmor",
+    "Date": "2025-06-03",
+    "Alias": "ビナー-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 63265, "Insane": 30903, "Extreme": 16866, "Hardcore": 11951, "Veryhard": 1883, "Hard": 826, "Normal": 836 }
+  },
+  {
+    "Id": "E17",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2025-06-03",
+    "Alias": "ビナー-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 64618, "Torment": 11322, "Insane": 25304, "Extreme": 14445, "Hardcore": 10079, "Veryhard": 1748, "Hard": 781, "Normal": 939 }
+  },
+  {
+    "Id": "E17",
+    "Boss": "ビナー",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2025-06-03",
+    "Alias": "ビナー-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 64619, "Insane": 34402, "Extreme": 16384, "Hardcore": 10318, "Veryhard": 1735, "Hard": 787, "Normal": 993 }
   },
   {
     "Id": "R70",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2025-06-17",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
+    "Alias": "ホバークラフト-屋外",
     "MaxLv": 90,
-    "Cnt": { "All": 12470, "Torment": 12470 }
+    "Cnt": { "All": 78596, "Torment": 13055, "Insane": 10852, "Extreme": 26906, "Hardcore": 15979, "Veryhard": 7543, "Hard": 2612, "Normal": 1649 }
+  },
+  {
+    "Id": "E18",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "Type": "LightArmor",
+    "Date": "2025-07-01",
+    "Alias": "カイテン-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 69615, "Torment": 13525, "Insane": 20800, "Extreme": 17579, "Hardcore": 13361, "Veryhard": 2192, "Hard": 1100, "Normal": 1058 }
+  },
+  {
+    "Id": "E18",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "Type": "HeavyArmor",
+    "Date": "2025-07-01",
+    "Alias": "カイテン-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 69231, "Insane": 31832, "Extreme": 18817, "Hardcore": 14247, "Veryhard": 2217, "Hard": 1101, "Normal": 1017 }
+  },
+  {
+    "Id": "E18",
+    "Boss": "カイテン",
+    "Location": "市街地",
+    "Type": "Unarmed",
+    "Date": "2025-07-01",
+    "Alias": "カイテン-市街地",
+    "MaxLv": 90,
+    "Cnt": { "All": 69277, "Insane": 30103, "Extreme": 19898, "Hardcore": 14740, "Veryhard": 2261, "Hard": 1167, "Normal": 1108 }
   },
   {
     "Id": "R71",
-    "Boss": "\u30b2\u30d6\u30e9",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ゲブラ",
+    "Location": "屋外",
+    "ArmorTypes": ["LightArmor"],
     "Date": "2025-07-15",
-    "Alias": "\u30b2\u30d6\u30e9-\u5c4b\u5916",
+    "Alias": "ゲブラ-屋外",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Lunatic": 1049, "Torment": 6012, "Insane": 5439 }
+    "Cnt": { "All": 102877, "Lunatic": 1049, "Torment": 6012, "Insane": 12420, "Extreme": 30948, "Hardcore": 28042, "Veryhard": 14740, "Hard": 6912, "Normal": 2754 }
+  },
+  {
+    "Id": "E19",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "Type": "LightArmor",
+    "Date": "2025-07-29",
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 67934, "Insane": 19812, "Extreme": 24666, "Hardcore": 15267, "Veryhard": 3718, "Hard": 2285, "Normal": 2186 }
+  },
+  {
+    "Id": "E19",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "Type": "HeavyArmor",
+    "Date": "2025-07-29",
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 66511, "Insane": 18153, "Extreme": 23511, "Hardcore": 16031, "Veryhard": 3996, "Hard": 2495, "Normal": 2325 }
+  },
+  {
+    "Id": "E19",
+    "Boss": "グレゴリオ",
+    "Location": "屋内",
+    "Type": "Unarmed",
+    "Date": "2025-07-29",
+    "Alias": "グレゴリオ-屋内",
+    "MaxLv": 90,
+    "Cnt": { "All": 67236, "Torment": 11912, "Insane": 7168, "Extreme": 23490, "Hardcore": 16273, "Veryhard": 3817, "Hard": 2392, "Normal": 2184 }
   },
   {
     "Id": "R72",
-    "Boss": "\u30af\u30ed\u30ab\u30b2",
-    "Location": "\u5e02\u8857\u5730",
+    "Boss": "クロカゲ",
+    "Location": "市街地",
+    "ArmorTypes": ["ElasticArmor"],
     "Date": "2025-08-05",
-    "Alias": "\u30af\u30ed\u30ab\u30b2-\u5e02\u8857\u5730",
+    "Alias": "クロカゲ-市街地",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Lunatic": 661, "Torment": 11839 }
+    "Cnt": { "All": 87225, "Lunatic": 661, "Torment": 13981, "Insane": 14942, "Extreme": 26986, "Hardcore": 20225, "Veryhard": 4684, "Hard": 4111, "Normal": 1635 }
+  },
+  {
+    "Id": "E20",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "Type": "LightArmor",
+    "Date": "2025-08-19",
+    "Alias": "ビナー-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 69856, "Torment": 15796, "Insane": 22540, "Extreme": 16083, "Hardcore": 11151, "Veryhard": 2232, "Hard": 1030, "Normal": 1024 }
+  },
+  {
+    "Id": "E20",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "Type": "ElasticArmor",
+    "Date": "2025-08-19",
+    "Alias": "ビナー-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 68446, "Insane": 30614, "Extreme": 20109, "Hardcore": 13537, "Veryhard": 2365, "Hard": 969, "Normal": 852 }
+  },
+  {
+    "Id": "E20",
+    "Boss": "ビナー",
+    "Location": "屋外",
+    "Type": "Unarmed",
+    "Date": "2025-08-19",
+    "Alias": "ビナー-屋外",
+    "MaxLv": 90,
+    "Cnt": { "All": 69788, "Insane": 36238, "Extreme": 17472, "Hardcore": 11724, "Veryhard": 2249, "Hard": 1051, "Normal": 1054 }
   },
   {
     "Id": "R73",
-    "Boss": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8",
-    "Location": "\u5c4b\u5916",
+    "Boss": "ホバークラフト",
+    "Location": "屋外",
+    "ArmorTypes": ["HeavyArmor"],
     "Date": "2025-09-02",
-    "Alias": "\u30db\u30d0\u30fc\u30af\u30e9\u30d5\u30c8-\u5c4b\u5916",
+    "Alias": "ホバークラフト-屋外",
     "MaxLv": 90,
-    "Cnt": { "All": 12500, "Lunatic": 591, "Torment": 11909 }
+    "Cnt": { "All": 84527, "Lunatic": 591, "Torment": 13499, "Insane": 11673, "Extreme": 28079, "Hardcore": 19955, "Veryhard": 5409, "Hard": 4045, "Normal": 1276 }
   }
 ]

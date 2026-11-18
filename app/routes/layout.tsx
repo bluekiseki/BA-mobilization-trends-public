@@ -3,6 +3,8 @@ import { Outlet, data } from 'react-router';
 import type { Route } from './+types/layout'; // React Router v7 type auto-generation
 import { SUPORTED_LOCALES, type Locale } from '../utils/i18n/config'; // List of supported languages
 
+export { shouldRevalidateOnPathOrLang as shouldRevalidate } from '../utils/revalidate';
+
 export function loader({ params }: Route.LoaderArgs) {
   const { locale } = params;
 

@@ -8,6 +8,8 @@
 // Pure derivation: the consumer passes every store slice and the build-time
 // schedule tracks; the hook does no fetching and reads no stores itself.
 import { useCallback, useMemo, useDeferredValue } from 'react';
+import { useExpectedIncome } from '~/hooks/useExpectedIncome';
+import type { IncomeByKey } from '~/utils/itemOutlook';
 import { useTranslation } from 'react-i18next';
 import {
   buildResourceTimelines,
@@ -22,14 +24,13 @@ import {
   eventsFromDailySources,
   eventsFromContentYields,
   eventsFromGachaItems,
-  eventsFromEventEligma,
+  eventsFromExpectedIncome,
   eventsFromEventEleph,
   eventsFromHardStage,
   eventsFromPvpIncome,
   eventsFromJfdCoins,
   eventsFromRaidRewards,
   eventsFromExpertPermit,
-  eventsFromMultifloorWBs,
   mergeResourceEvents,
   MULTIFLOOR_WB_KEYS,
 } from '~/features/inventory/logic/resourceEventAdapters';
@@ -148,6 +149,9 @@ export interface ResourceProjection {
   activePlans: Array<GrowthPlan & { studentId: number }>;
   growthSpendEvents: ResourceEvent[];
   extraCoinEvents: ResourceEvent[];
+
+  /** Expected acquisitions per item, as consumed by the timeline. */
+  expectedIncome: IncomeByKey;
 
   // Overview-tab derivations
   studentGoalStatuses: StudentGoalStatus[];
@@ -466,7 +470,6 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
             ),
             eventsFromRaidRewards(raidSchedule, raidGlobalConfig, eraidGlobalConfig, raidDetailConfigs, startDate, getScheduleTitle),
             eventsFromExpertPermit(expertPermitMode, expertPermitWeeklyMax, expertPermitDailyAmounts, startDate, days),
-            eventsFromMultifloorWBs(mfSchedule, multifloorMaxFloors, startDate, getScheduleTitle, multifloorDefaultMaxFloor),
           )
         : [],
     [
@@ -492,6 +495,20 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
     ],
   );
 
+  // ── Expected income (event plans + assumed shop/raid/multifloor rewards) ──
+  // Items an adapter above already models are skipped so the same reward is not counted twice.
+  const modeledItemKeys = useMemo(() => new Set(extraCoinEvents.map((event) => event.itemKey)), [extraCoinEvents]);
+  const expectedIncome = useExpectedIncome({
+    server,
+    events: server === 'kr' ? krEvents : jpEvents,
+    raidItems: raidSchedule,
+    multifloorItems: mfSchedule,
+    today: startDate,
+    getTitle: getScheduleTitle,
+    skipKeys: modeledItemKeys,
+  });
+  const expectedIncomeEvents = useMemo(() => eventsFromExpectedIncome(expectedIncome), [expectedIncome]);
+
   // ── Tracking items ───────────────────────────────────────────────────────
   const trackingItems = useMemo(
     (): TrackingItem[] =>
@@ -515,11 +532,9 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
   const timelineKeys = useMemo(() => {
     if (!enabled) return new Set<string>();
     const keys = new Set(itemSearchExtraKeys ?? []);
-    if (selectedItemKey && trackingItems.some((item) => item.key === selectedItemKey)) keys.add(selectedItemKey);
+    if (selectedItemKey && (trackingItems.some((item) => item.key === selectedItemKey) || expectedIncome[selectedItemKey]?.length)) keys.add(selectedItemKey);
     return keys;
-  }, [enabled, selectedItemKey, itemSearchExtraKeys, trackingItems]);
-
-  const eligmaEventItems = useMemo(() => (eventItemsByKey['Item_23'] ?? []).map((i) => ({ date: i.date, eligma: i.amount })), [eventItemsByKey]);
+  }, [enabled, selectedItemKey, itemSearchExtraKeys, trackingItems, expectedIncome]);
 
   const allEvents = useMemo(
     () =>
@@ -532,8 +547,7 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
             growthSpendEvents,
             extraCoinEvents,
             eventsFromGachaItems(gachaResult, startDate, trackingStudentIds),
-            eligmaEventItems.length ? eventsFromEventEligma(eligmaEventItems) : [],
-            trackingStudentIds.length ? eventsFromEventEleph(eventPlans, eventScheduleMap, trackingStudentIds) : [],
+            expectedIncomeEvents,
           ),
     [
       purchaseEvents,
@@ -547,9 +561,7 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
       extraCoinEvents,
       gachaResult,
       trackingStudentIds,
-      eligmaEventItems,
-      eventPlans,
-      eventScheduleMap,
+      expectedIncomeEvents,
       timelineKeys,
     ],
   );
@@ -596,7 +608,6 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
     // in the horizon) is one of the most expensive things this hook does, so skip it entirely
     // when there's nothing to check it against (e.g. no active growth-plan goals at all).
     if (!growthPlanDeductions.studentGoalSummaries.some((s) => s.date)) return [];
-    const eventEligmaItems = (eventItemsByKey['Item_23'] ?? []).map((item) => ({ date: item.date, eligma: item.amount }));
     const events = mergeResourceEvents(
       eventsFromPurchaseEvents(purchaseEvents, startDate),
       eventsFromDailySources(dailySourceAmounts, startDate, days),
@@ -604,7 +615,7 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
       growthSpendEvents,
       extraCoinEvents,
       eventsFromGachaItems(gachaResult, startDate, [], { includeEligma: true }),
-      eventEligmaItems.length > 0 ? eventsFromEventEligma(eventEligmaItems) : [],
+      expectedIncomeEvents,
     );
     return (
       buildResourceTimelines(
@@ -627,7 +638,7 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
     growthSpendEvents,
     extraCoinEvents,
     gachaResult,
-    eventItemsByKey,
+    expectedIncomeEvents,
     deferredMaterialInventory,
     getScheduleTitle,
   ]);
@@ -689,6 +700,7 @@ export function useResourceProjection(options: UseResourceProjectionOptions): Re
     activePlans,
     growthSpendEvents,
     extraCoinEvents,
+    expectedIncome,
     studentGoalStatuses,
     tacticalCoinStatus,
   };

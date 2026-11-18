@@ -1,3 +1,4 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import Tooltip from 'rc-tooltip';
@@ -12,6 +13,7 @@ export interface FormState {
   server: GachaHistoryServer;
   date: string;
   pullCount: string;
+  goalPullCount: string;
   initialCharge: string;
   initialChargeLimited: string;
   notes: string;
@@ -21,7 +23,7 @@ export interface LuckRangePoint {
   id: string;
   label: string;
   date: string;
-  students: Array<{ id: number; name: string; portrait?: string }>;
+  students: Array<{ id: number; name: string }>;
   min: number;
   max: number;
 }
@@ -32,12 +34,13 @@ export function createForm(server: GachaHistoryServer, entry?: GachaHistoryEntry
         server: entry.server,
         date: entry.date,
         pullCount: String(entry.pullCount),
+        goalPullCount: entry.goalPullCount === undefined ? '' : String(entry.goalPullCount),
         initialCharge: entry.initialCharge === undefined ? '0' : String(entry.initialCharge),
         initialChargeLimited: entry.initialChargeLimited === undefined ? '0' : String(entry.initialChargeLimited),
         notes: entry.notes ?? '',
         results: entry.results,
       }
-    : { bannerId: '', server, date: new Date().toISOString().slice(0, 10), pullCount: '', initialCharge: '0', initialChargeLimited: '0', notes: '', results: [] };
+    : { bannerId: '', server, date: new Date().toISOString().slice(0, 10), pullCount: '', goalPullCount: '', initialCharge: '0', initialChargeLimited: '0', notes: '', results: [] };
 }
 export function bannerLabel(banner: BannerPeriod, studentNames: Map<number, string>): string {
   return `${banner.startTime.slice(0, 10)} · ${banner.pickupStudents.map((student) => studentNames.get(student.id) ?? student.name).join(' / ')}`;
@@ -319,12 +322,13 @@ export function BannerLuckRangeChart({ title, points: allPoints }: { title: stri
               <div key={point.id} className="flex min-w-0 justify-center px-0.5" title={point.label} aria-label={point.students.map((student) => student.name).join(', ')}>
                 <span className="flex -space-x-4">
                   {point.students.map((student) =>
-                    student.portrait ? (
-                      <img
+                    student.id ? (
+                      <SheetIcon
                         key={student.id}
-                        src={`data:image/webp;base64,${student.portrait}`}
+                        sheet="student"
+                        id={student.id}
                         alt={student.name}
-                        className="aspect-square w-6 shrink-0 rounded-full border border-white bg-neutral-100 object-cover dark:border-neutral-900 dark:bg-neutral-800"
+                        className="aspect-square w-6 shrink-0 rounded-full border border-white bg-neutral-100 dark:border-neutral-900 dark:bg-neutral-800"
                       />
                     ) : (
                       <span

@@ -1,6 +1,5 @@
+import { historyList, historyValues, writeWithHistory, type HistoryWrite } from './profileHistory';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { validateProfileDataValue } from '../../app/schemas/profileDataValidation';
-import { assertCanCreateKey } from './profileDataLimits';
 import { MAX_PROFILES_PER_USER, sanitizeProfileName, toGraphQLProfileServer } from '../../app/utils/profileServer';
 
 type D1Database = Cloudflare.Env['ba_user'];
@@ -22,12 +21,9 @@ type ProfileSource = {
   updated_at?: number;
 };
 
-function parseStoredJson(value: string): unknown {
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return value;
-  }
+async function requireOwner(context: GqlContext, id: string) {
+  const owner = await context.userDb.prepare('SELECT user_id FROM user_profiles WHERE id = ?').bind(id).first<{ user_id: string }>();
+  if (!context.userId || owner?.user_id !== context.userId) throw new Error('Unauthorized');
 }
 
 /** Accepts null (clear) or a positive integer student id. */
@@ -99,7 +95,7 @@ function createGraphQLSchema() {
 
       input SyncProfileDataChangeInput {
         key: String!
-        value: JSON!
+        value: JSON
         schemaVersion: Int!
         baseRevision: Int!
       }
@@ -128,13 +124,20 @@ function createGraphQLSchema() {
         updatedAt: Int!
       }
 
+      type HistoryPoint { recordedAt: Float! closed: Boolean! disabled: Boolean before: Float keys: [String!] requestId: String }
+      input HistoryRevision { key: String! revision: Int! }
       type Query {
+        profileHistory(id: ID!, before: Float): [HistoryPoint!]!
+        profileHistoryPreview(id: ID!, at: Float!): [KeyValue!]!
+
         me: User
         profile(id: ID!): Profile
         profileAllData(id: ID!): [KeyValue!]!
       }
 
       type Mutation {
+        restoreProfileHistory(profileId: ID!, at: Float!, revisions: [HistoryRevision!]!, requestId: String!, fingerprint: String!): Float!
+
         createProfile(input: CreateProfileInput!): Profile!
         updateProfile(id: ID!, input: UpdateProfileInput!): Profile!
         deleteProfile(id: ID!): Boolean!
@@ -152,6 +155,14 @@ function createGraphQLSchema() {
         updatedAt: (profile: ProfileSource) => profile.updatedAt ?? profile.updated_at,
       },
       Query: {
+        profileHistory: async (_: unknown, { id, before }: { id: string; before?: number }, context: GqlContext) => {
+          await requireOwner(context, id);
+          return historyList(context.userDb, id, before);
+        },
+        profileHistoryPreview: async (_: unknown, { id, at }: { id: string; at: number }, context: GqlContext) => {
+          await requireOwner(context, id);
+          return (await historyValues(context.userDb, id, at)).map((row) => ({ ...row, revision: 0, updatedAt: 0 }));
+        },
         me: async (_: unknown, __: unknown, context: GqlContext) => {
           const { userId, userDb } = context;
           if (!userId) return null;
@@ -229,6 +240,31 @@ function createGraphQLSchema() {
       },
 
       Mutation: {
+        restoreProfileHistory: async (
+          _: unknown,
+          args: { profileId: string; at: number; revisions: Array<{ key: string; revision: number }>; requestId: string; fingerprint: string },
+          context: GqlContext,
+        ) => {
+          await requireOwner(context, args.profileId);
+          if (!args.revisions.length || args.revisions.length > 500 || new Set(args.revisions.map((row) => row.key)).size !== args.revisions.length) throw new Error('Invalid keys');
+          const values = await historyValues(context.userDb, args.profileId, args.at);
+          const latest = await historyList(context.userDb, args.profileId);
+          const changes = args.revisions.map((row) => ({
+            key: row.key,
+            baseRevision: row.revision,
+            value: values.find((value) => value.key === row.key)?.value ?? null,
+            schemaVersion: values.find((value) => value.key === row.key)?.schemaVersion ?? 1,
+          }));
+          return (
+            await writeWithHistory(context.userDb, args.profileId, changes, {
+              before: latest[0]?.recordedAt ?? args.at,
+              keys: args.revisions.map((row) => row.key),
+              requestId: args.requestId,
+              sourceAt: args.at,
+              fingerprint: args.fingerprint,
+            })
+          ).recordedAt;
+        },
         createProfile: async (_: unknown, { input }: { input: { name: string; server: string } }, context: GqlContext) => {
           const { userId, userDb } = context;
           if (!userId) throw new Error('Unauthorized');
@@ -325,53 +361,10 @@ function createGraphQLSchema() {
             throw new Error('Unauthorized');
           }
 
-          validateProfileDataValue(key, value);
-
-          const now = Math.floor(Date.now() / 1000);
-          const jsonValue = typeof value === 'string' ? value : JSON.stringify(value);
-
-          if (baseRevision !== undefined) {
-            const existing = await userDb.prepare('SELECT revision FROM profile_data WHERE profile_id = ? AND key = ?').bind(profileId, key).first<{ revision: number }>();
-
-            if (!existing) {
-              if (baseRevision !== 0) throw new Error('SYNC_CONFLICT');
-              await assertCanCreateKey(userDb, profileId);
-              try {
-                await userDb
-                  .prepare('INSERT INTO profile_data (profile_id, key, value, schema_version, updated_at, revision) VALUES (?, ?, ?, ?, ?, 1)')
-                  .bind(profileId, key, jsonValue, schemaVersion, now)
-                  .run();
-              } catch {
-                throw new Error('SYNC_CONFLICT');
-              }
-              return true;
-            }
-
-            const result = await userDb
-              .prepare('UPDATE profile_data SET value = ?, schema_version = ?, updated_at = ?, revision = revision + 1 WHERE profile_id = ? AND key = ? AND revision = ?')
-              .bind(jsonValue, schemaVersion, now, profileId, key, baseRevision)
-              .run();
-
-            if (result.meta.changes !== 1) throw new Error('SYNC_CONFLICT');
-            return true;
-          }
-
-          const present = await userDb.prepare('SELECT 1 AS present FROM profile_data WHERE profile_id = ? AND key = ?').bind(profileId, key).first();
-          if (!present) await assertCanCreateKey(userDb, profileId);
-
-          await userDb
-            .prepare(
-              `INSERT INTO profile_data (profile_id, key, value, schema_version, updated_at, revision)
-               VALUES (?, ?, ?, ?, ?, 1)
-               ON CONFLICT(profile_id, key) DO UPDATE SET
-                 value = excluded.value,
-                 schema_version = excluded.schema_version,
-                 updated_at = excluded.updated_at,
-                 revision = profile_data.revision + 1`,
-            )
-            .bind(profileId, key, jsonValue, schemaVersion, now)
-            .run();
-
+          const current = await userDb.prepare('SELECT revision FROM profile_data WHERE profile_id = ? AND key = ?').bind(profileId, key).first<{ revision: number }>();
+          const changes: HistoryWrite[] = [{ key, value, schemaVersion, baseRevision: baseRevision ?? current?.revision ?? 0 }];
+          const result = await writeWithHistory(userDb, profileId, changes);
+          if (result.results[0]?.status !== 'APPLIED') throw new Error('SYNC_CONFLICT');
           return true;
         },
 
@@ -393,91 +386,8 @@ function createGraphQLSchema() {
           const profile = await userDb.prepare('SELECT user_id FROM user_profiles WHERE id = ?').bind(profileId).first<{ user_id: string }>();
           if (!profile || profile.user_id !== userId) throw new Error('Unauthorized');
 
-          const results: Array<{
-            key: string;
-            status: 'APPLIED' | 'CONFLICT' | 'REJECTED';
-            revision: number;
-            serverValue?: unknown;
-            schemaVersion?: number;
-            updatedAt?: number;
-            message?: string;
-          }> = [];
-
-          for (const change of changes) {
-            // Validate per key so one oversized/invalid value cannot block the rest of the batch.
-            try {
-              validateProfileDataValue(change.key, change.value);
-            } catch (error) {
-              results.push({ key: change.key, status: 'REJECTED', revision: 0, message: error instanceof Error ? error.message : String(error) });
-              continue;
-            }
-            const now = Math.floor(Date.now() / 1000);
-            const jsonValue = typeof change.value === 'string' ? change.value : JSON.stringify(change.value);
-            const existing = await userDb
-              .prepare('SELECT value, schema_version, revision, updated_at FROM profile_data WHERE profile_id = ? AND key = ?')
-              .bind(profileId, change.key)
-              .first<{ value: string; schema_version: number; revision: number; updated_at: number }>();
-
-            if (!existing) {
-              if (change.baseRevision !== 0) {
-                results.push({ key: change.key, status: 'CONFLICT', revision: 0, serverValue: null, schemaVersion: 1, updatedAt: 0 });
-                continue;
-              }
-              try {
-                await assertCanCreateKey(userDb, profileId);
-              } catch (error) {
-                results.push({ key: change.key, status: 'REJECTED', revision: 0, message: error instanceof Error ? error.message : String(error) });
-                continue;
-              }
-
-              try {
-                await userDb
-                  .prepare('INSERT INTO profile_data (profile_id, key, value, schema_version, updated_at, revision) VALUES (?, ?, ?, ?, ?, 1)')
-                  .bind(profileId, change.key, jsonValue, change.schemaVersion, now)
-                  .run();
-                results.push({ key: change.key, status: 'APPLIED', revision: 1, updatedAt: now });
-              } catch {
-                const current = await userDb
-                  .prepare('SELECT value, schema_version, revision, updated_at FROM profile_data WHERE profile_id = ? AND key = ?')
-                  .bind(profileId, change.key)
-                  .first<{ value: string; schema_version: number; revision: number; updated_at: number }>();
-                results.push({
-                  key: change.key,
-                  status: 'CONFLICT',
-                  revision: current?.revision ?? 0,
-                  serverValue: current ? parseStoredJson(current.value) : null,
-                  schemaVersion: current?.schema_version ?? 1,
-                  updatedAt: current?.updated_at ?? 0,
-                });
-              }
-              continue;
-            }
-
-            const result = await userDb
-              .prepare('UPDATE profile_data SET value = ?, schema_version = ?, updated_at = ?, revision = revision + 1 WHERE profile_id = ? AND key = ? AND revision = ?')
-              .bind(jsonValue, change.schemaVersion, now, profileId, change.key, change.baseRevision)
-              .run();
-
-            if (result.meta.changes === 1) {
-              results.push({ key: change.key, status: 'APPLIED', revision: change.baseRevision + 1, updatedAt: now });
-              continue;
-            }
-
-            const current = await userDb
-              .prepare('SELECT value, schema_version, revision, updated_at FROM profile_data WHERE profile_id = ? AND key = ?')
-              .bind(profileId, change.key)
-              .first<{ value: string; schema_version: number; revision: number; updated_at: number }>();
-            results.push({
-              key: change.key,
-              status: 'CONFLICT',
-              revision: current?.revision ?? existing.revision,
-              serverValue: current ? parseStoredJson(current.value) : null,
-              schemaVersion: current?.schema_version ?? existing.schema_version,
-              updatedAt: current?.updated_at ?? existing.updated_at,
-            });
-          }
-
-          return results;
+          if (new Set(changes.map((change) => change.key)).size !== changes.length) throw new Error('Duplicate key');
+          return (await writeWithHistory(userDb, profileId, changes)).results;
         },
       },
 
@@ -499,6 +409,7 @@ export function getOrCreateYogaServer(allowedOrigins: string[]) {
     const schema = createGraphQLSchema();
     yogaInstance = createYoga<ServerCtx, UserCtx>({
       schema,
+      logging: 'warn',
       // Exact allowlist instead of Yoga's default of reflecting any request Origin.
       cors: { origin: allowedOrigins, credentials: true },
       context: ({ request, userDb }) => ({

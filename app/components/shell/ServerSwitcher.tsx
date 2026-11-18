@@ -35,7 +35,7 @@ export const ServerToggleSwitch = ({ currentServer, variant = 'toggle' }: Server
 
   if (variant === 'dropdown') {
     return (
-      <div className="relative md:pl-4 md:border-l border-neutral-200 dark:border-neutral-700" ref={dropdownRef}>
+      <div className="relative lg:pr-4 lg:border-r border-neutral-200 dark:border-neutral-700" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-1.5 text-sm font-semibold text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors"

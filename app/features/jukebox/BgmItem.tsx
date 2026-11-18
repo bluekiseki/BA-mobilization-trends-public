@@ -5,12 +5,13 @@ import RubyText from '~/components/common/RubyText';
 import { FiChevronDown, FiExternalLink } from 'react-icons/fi';
 
 // --- TYPE DEFINITIONS ---
-export type Language = 'en' | 'jp' | 'ko' | 'tw';
+export type Language = 'en' | 'jp' | 'ko' | 'tw' | 'zh_Hant';
 interface LocalizedName {
   ja?: string | string[] | null;
   ko?: string | string[] | null;
   en?: string | string[] | null;
   tw?: string | string[] | null;
+  zh_Hant?: string | string[] | null;
 }
 interface LocalizedObj {
   ja?: string | string[] | null;
@@ -18,6 +19,7 @@ interface LocalizedObj {
   ko?: string | string[] | null;
   en?: string | string[] | null;
   tw?: string | string[] | null;
+  zh_Hant?: string | string[] | null;
   Name?: string | null;
 }
 export interface XrefEntry {
@@ -25,6 +27,8 @@ export interface XrefEntry {
   title?: string | number | null;
   name?: LocalizedObj;
   episode?: string | number | null;
+  /** For UI usages that belong to an event: the Event_Story title, so the usage is listed under that event's filter. */
+  event?: string;
 }
 export interface BgmEntry {
   id: string;

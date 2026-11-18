@@ -33,8 +33,8 @@ season,startTime,endTime,boss1,boss2,boss3,difficulty1,difficulty2,difficulty3,p
 32,2026-08-11 11:00:00,2026-08-18 03:59:59,Perorozilla_Outdoor_HeavyArmor,Perorozilla_Outdoor_Unarmed,Perorozilla_Outdoor_ElasticArmor,Torment,Torment,Insane
 33,2026-09-08 11:00:00,2026-09-15 03:59:59,EN0006_Street_Unarmed,EN0006_Street_LightArmor,EN0006_Street_ElasticArmor,Torment,Torment,Insane
 34,2026-10-06 11:00:00,2026-10-13 03:59:59,HoverCraft_Outdoor_Unarmed,HoverCraft_Outdoor_ElasticArmor,HoverCraft_Outdoor_LightArmor,Torment,Torment,Insane
-35,2026-11-03 11:00:00,2026-11-10 03:59:59,HOD_Indoor_HeavyArmor,HOD_Indoor_ElasticArmor,HOD_Indoor_LightArmor,Torment,Torment,Insane,true
-36,2026-12-01 11:00:00,2026-12-08 03:59:59,Binah_Outdoor_LightArmor,Binah_Outdoor_HeavyArmor,Binah_Outdoor_ElasticArmor,Torment,Torment,Insane,true
+35,2026-11-03 11:00:00,2026-11-10 03:59:59,HOD_Indoor_HeavyArmor,HOD_Indoor_ElasticArmor,HOD_Indoor_LightArmor,Torment,Torment,Insane
+36,2026-12-01 11:00:00,2026-12-08 03:59:59,Binah_Outdoor_LightArmor,Binah_Outdoor_HeavyArmor,Binah_Outdoor_ElasticArmor,Torment,Torment,Insane
 37,2026-12-29 11:00:00,2027-01-05 03:59:59,ShiroKuro_Street_LightArmor,ShiroKuro_Street_Unarmed,ShiroKuro_Street_ElasticArmor,Torment,Torment,Insane,true
 38,2027-01-26 11:00:00,2027-02-02 03:59:59,EN0010_Outdoor_Unarmed,EN0010_Outdoor_LightArmor,EN0010_Outdoor_HeavyArmor,Torment,Torment,Insane,true
-39,2027-03-02 11:00:00,2027-03-09 03:59:59,???,???,???,Torment,Torment,Insane,true
+39,2027-03-02 11:00:00,2027-03-09 03:59:59,Goz_Indoor_HeavyArmor,Goz_Indoor_LightArmor,Goz_Indoor_Unarmed,Torment,Torment,Insane,true

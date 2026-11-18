@@ -17,9 +17,11 @@ interface RankFilterProps {
   activeRangeId: string;
   onRangeChange: (min: number, max: number, id?: string) => void;
   raidInfo: RaidInfo;
+  /** Number of ranks that actually have party data; buttons beyond it are hidden. */
+  dataCount: number;
 }
 
-export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, onRangeChange, raidInfo }) => {
+export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, onRangeChange, raidInfo, dataCount }) => {
   // Actively utilize local state for immediate UI responsiveness.
   const [minRankInput, setMinRankInput] = useState(currentMin);
   const [maxRankInput, setMaxRankInput] = useState(currentMax);
@@ -47,17 +49,17 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
         const startRank = currentCount;
         const endRank = currentCount + count - 1;
 
-        // Min button: Difficulty starting point (e.g., 1, 10001...)
-        mins.push({
-          value: startRank,
-          label: diff.name, // Save difficulty name
-        });
+        // Skip difficulties that have no party data at all
+        if (startRank <= dataCount) {
+          // Min button: Difficulty starting point (e.g., 1, 10001...)
+          mins.push({
+            value: startRank,
+            label: diff.name, // Save difficulty name
+          });
 
-        // Max button: Difficulty end point
-        maxs.push({
-          value: endRank,
-          label: diff.name, // Save difficulty name
-        });
+          // Max button: Difficulty end point. A difficulty cut off by the data ends at the last ranked party instead.
+          maxs.push(endRank <= dataCount ? { value: endRank, label: diff.name } : { value: dataCount });
+        }
 
         // Update next difficulty count
         currentCount += count;
@@ -68,7 +70,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
     // Exclude numbers that already exist as difficulty boundaries to prevent duplicates
     const fixedCuts = [100, 1000, 10000, 12000, 15000, 20000];
     fixedCuts.forEach((cut) => {
-      if (cut <= raidInfo.Cnt.All && !maxs.find((m) => m.value === cut)) {
+      if (cut <= Math.min(raidInfo.Cnt.All, dataCount) && !maxs.find((m) => m.value === cut)) {
         maxs.push({ value: cut }); // No label
       }
     });
@@ -78,7 +80,7 @@ export const RankFilter: React.FC<RankFilterProps> = ({ currentMin, currentMax, 
     maxs.sort((a, b) => a.value - b.value);
 
     return { minOptions: mins, maxOptions: maxs };
-  }, [raidInfo]);
+  }, [raidInfo, dataCount]);
 
   // --- 2. Asynchronous handler (To prevent UI blocking) ---
   const handleApply = (newMin: number, newMax: number) => {

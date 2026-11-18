@@ -1,18 +1,16 @@
 // src/components/ApCalculator.tsx
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlanForEvent } from '~/store/planner/useEventPlanStore';
 // import { ChevronIcon } from '../../../components/common/SvgIcons';
 import type { IconData } from '~/types/plannerData';
 import { getGlobalEventDates } from '~/data/globalEventDates';
-import { getDefaultApConfig } from '../../../utils/ApCalculatorConfig';
+import { getDefaultApConfig, resolveApConfig } from '../../../utils/ApCalculatorConfig';
 import { CustomNumberInput } from '../../../components/common/CustomInput';
 import { IoIosClose } from 'react-icons/io';
 import { FaRedo } from 'react-icons/fa';
-
-// AP generation per hour by cafe rank
-const CAFE_AP_PER_HOUR = [0, 0, 0, 0, 0, 0, 19.49, 22.32, 25.15, 27.97, 30.8]; // Ranks 0 to 10
+import { computeDailyAp, toLocalISOString, type DailyBreakdown } from '../logic/apDaily';
 
 interface ApCalculatorProps {
   eventId: number;
@@ -21,21 +19,6 @@ interface ApCalculatorProps {
   iconData: IconData;
   onCalculate: (totalAp: number) => void;
   totalApUsed?: number;
-}
-
-interface DailyBreakdown {
-  natural: number;
-  dailyQuests: number;
-  cafe: number;
-  gem: number;
-  pvp: number;
-  weekly: number;
-  attendance: number;
-  spendHard: number;
-  spendExchange: number;
-  spendMisc: number;
-  total: number;
-  apPackage: number;
 }
 
 interface SelectConfigItem {
@@ -56,13 +39,6 @@ interface NumberConfigItem {
 
 type ConfigGridItem = SelectConfigItem | NumberConfigItem;
 
-const toLocalISOString = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 const formatDateTimeForInput = (date: Date): string => {
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -74,17 +50,13 @@ const formatDateTimeForInput = (date: Date): string => {
 
 const DAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 type DayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-const AP_PER_MINUTE = 1 / 6;
 
 export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculate, totalApUsed = 0 }: ApCalculatorProps) => {
   // const [isCollapsed, setIsCollapsed] = useState(false);
   const [showDetails, setShowDetails] = useState(false); // Details display state
 
-  const { setApConfig: setConfig, apConfig: config } = usePlanForEvent(eventId);
-  if (config) {
-    if (!config.startDate) config.startDate = startTime.slice(0, 16);
-    if (!config.endDate) config.endDate = endTime.slice(0, 16);
-  }
+  const { setApConfig: setConfig, apConfig: savedConfig } = usePlanForEvent(eventId);
+  const config = useMemo(() => resolveApConfig(savedConfig, startTime, endTime), [savedConfig, startTime, endTime]);
 
   const [result, setResult] = useState<{
     daily: Record<string, DailyBreakdown>;
@@ -95,126 +67,10 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
   const { t: t_g } = useTranslation('game');
   const { t: t_ui } = useTranslation('ui');
 
-  if (!config) return null;
-
   const handleCalculate = useCallback(() => {
-    const dailyBreakdown: Record<string, DailyBreakdown> = {};
-    let totalAp = 0;
-    if (!config) return;
-
-    const start = new Date(config.startDate);
-    const end = new Date(config.endDate);
-    const attendanceBaseDate = new Date(config.attendanceStartDate);
-
-    const apPackageEffectiveDays = new Set<string>();
-    const sortedPackageDates = [...config.apPackageDates].sort();
-    let lastPackageEndDate: Date | null = null;
-
-    sortedPackageDates.forEach((startDateStr) => {
-      const packageStartDate = new Date(startDateStr);
-      // Adjust start date because a new package cannot be started before the previous package ends
-      if (lastPackageEndDate && packageStartDate <= lastPackageEndDate) {
-        packageStartDate.setTime(lastPackageEndDate.getTime() + 24 * 60 * 60 * 1000); // Start from the next day
-      }
-
-      for (let i = 0; i < 14; i++) {
-        const effectiveDate = new Date(packageStartDate);
-        effectiveDate.setDate(effectiveDate.getDate() + i);
-        apPackageEffectiveDays.add(toLocalISOString(effectiveDate));
-      }
-      // Record the end date (14 days later) of the current package
-      lastPackageEndDate = new Date(packageStartDate);
-      lastPackageEndDate.setDate(lastPackageEndDate.getDate() + 13);
-    });
-
-    // const totalDurationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
-    // totalAp += totalDurationMinutes * AP_PER_MINUTE;
-
-    totalAp = Object.values(dailyBreakdown).reduce((sum, daily) => sum + daily.total, 0);
-    totalAp += config.bonusAp;
-
-    const loopStartDate = new Date(start);
-    loopStartDate.setHours(0, 0, 0, 0);
-
-    for (let d = new Date(loopStartDate); d <= end; d.setDate(d.getDate() + 1)) {
-      // const dateString = d.toISOString().slice(0, 10);
-      const dateString = toLocalISOString(d);
-      const isFirstDay = dateString === toLocalISOString(start);
-      const isLastDay = dateString === toLocalISOString(end);
-
-      const daily: DailyBreakdown = {
-        natural: 0,
-        dailyQuests: 170,
-        cafe: 0,
-        gem: config.gemRefills * 120,
-        pvp: config.pvpRefills * 90,
-        weekly: 0,
-        attendance: 0,
-        spendHard: config.hardStages * 20,
-        spendExchange: config.exchangeRuns * config.exchangeCost,
-        spendMisc: config.miscDailySpend,
-        total: 0,
-        apPackage: apPackageEffectiveDays.has(dateString) ? 150 : 0,
-      };
-
-      if (isFirstDay && isLastDay) {
-        // If the event ends within a day
-        const durationMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
-        daily.natural = durationMinutes * AP_PER_MINUTE;
-        const startHour = start.getHours();
-        const endHour = end.getHours();
-        daily.cafe = Math.max(0, endHour - (startHour + 1) + 1) * CAFE_AP_PER_HOUR[config.cafeRank];
-        daily.spendHard = 0;
-        daily.spendExchange = 0;
-        daily.spendMisc = 0;
-      } else if (isFirstDay) {
-        // First day
-        const minutesInDay = 24 * 60 - (start.getHours() * 60 + start.getMinutes());
-        daily.natural = minutesInDay * AP_PER_MINUTE;
-        daily.cafe = (24 - (start.getHours() + 1)) * CAFE_AP_PER_HOUR[config.cafeRank];
-        daily.spendHard = 0;
-        daily.spendExchange = 0;
-        daily.spendMisc = 0;
-      } else if (isLastDay) {
-        // Last day
-        const minutesInDay = end.getHours() * 60 + end.getMinutes();
-        daily.natural = minutesInDay * AP_PER_MINUTE;
-        daily.cafe = end.getHours() * CAFE_AP_PER_HOUR[config.cafeRank];
-        daily.spendHard = 0;
-        daily.spendExchange = 0;
-        daily.spendMisc = 0;
-      } else {
-        // Middle day
-        daily.natural = 24 * 60 * AP_PER_MINUTE;
-        daily.cafe = 24 * CAFE_AP_PER_HOUR[config.cafeRank];
-      }
-
-      const dayOfWeek = d.getDay();
-      if (dayOfWeek === 2) daily.weekly = 150;
-      else if (dayOfWeek === 5) daily.weekly = 200;
-
-      const diffTime = d.getTime() - attendanceBaseDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const currentAttendanceDay = config.attendanceStartDay + diffDays;
-
-      if (currentAttendanceDay > 0) {
-        const cycleDay = (currentAttendanceDay - 1) % 10;
-        if (cycleDay === 3) daily.attendance = 50;
-        else if (cycleDay === 8) daily.attendance = 100;
-      }
-
-      const gains = daily.natural + daily.dailyQuests + daily.cafe + daily.gem + daily.pvp + daily.weekly + daily.attendance + daily.apPackage;
-      const spends = daily.spendHard + daily.spendExchange + daily.spendMisc;
-      daily.total = Math.round(gains - spends);
-
-      dailyBreakdown[dateString] = daily;
-      totalAp += daily.total;
-    }
-
-    const finalTotal = Math.round(totalAp);
-    setResult({ daily: dailyBreakdown, total: finalTotal });
-
-    onCalculate(finalTotal);
+    const next = computeDailyAp(config);
+    setResult(next);
+    onCalculate(next.total);
   }, [config]);
 
   useEffect(() => {
@@ -528,7 +384,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                             +{daily.dailyQuests} {t('apBreakdown.dailyQuests')}
                           </span>
                           <span>
-                            +{Math.round(daily.cafe)} {t('apBreakdown.cafe')}
+                            +{Math.round(daily.cafe)} {t_ui('cafe')}
                           </span>
                           {daily.gem > 0 && (
                             <span>
@@ -547,7 +403,7 @@ export const ApCalculator = ({ eventId, startTime, endTime, iconData, onCalculat
                           )}
                           {daily.weekly > 0 && (
                             <span>
-                              +{daily.weekly} {t('apSource.weeklyQuests')}
+                              +{daily.weekly} {t_ui('weeklyQuests')}
                             </span>
                           )}
                           {daily.attendance > 0 && (

@@ -19,7 +19,10 @@ export function NoticeImg({ src, className }: NoticeImgProps) {
   const handleError = () => {
     if (fellBack || !isArchivable(src)) return;
     setFellBack(true);
-    archiveImageUrl(src).then(setCurrent);
+    // Hashing can fail outside secure contexts; the image then stays broken.
+    archiveImageUrl(src)
+      .then(setCurrent)
+      .catch(() => undefined);
   };
 
   return <img src={current} alt="" className={className} onError={handleError} />;

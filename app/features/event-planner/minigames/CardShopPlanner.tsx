@@ -221,7 +221,7 @@ export const CardShopPlanner = ({ eventId, eventData, iconData, onRatesCalculate
                 disabled={!rates}
                 title={!rates ? t('cardShop.runEfficiencyCalcFirst') : t('cardShop.calcFlipsForNeededItems')}
               >
-                {t('button.setToMax')}
+                {t_ui('max')}
               </button>
             </div>
           </div>

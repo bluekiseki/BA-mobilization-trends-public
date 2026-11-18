@@ -29,8 +29,8 @@ async function main() {
     .use(Fetch)
     .use(I18nextBrowserLanguageDetector)
     .init({
-      fallbackLng: 'en', // Change this to your default language
-      // Here we only want to detect the language from the html tag
+      fallbackLng: 'en',
+      // Detect the language from the HTML tag.
       // since the middleware already detected the language server-side
       load: 'currentOnly',
       // Load every namespace the server render used up front, in parallel
@@ -41,6 +41,8 @@ async function main() {
       detection: { order: ['htmlTag'], caches: [] },
       // React already escapes rendered strings; must match the server config to avoid hydration mismatches
       interpolation: { escapeValue: false },
+      // An empty string is a deliberate translation (e.g. a unit that one language leaves out); since i18next 27 it would otherwise fall back to the key
+      returnEmptyString: true,
       // Refresh cached translations with each deployment so newly added keys are available.
       // In dev the commit hash does not change when uncommitted locale files change, so use a fresh value to bypass stale browser caches.
       backend: { loadPath: cdn(`/locales/{{lng}}/{{ns}}.json?v=${import.meta.env.DEV ? Date.now() : __COMMIT_SHA__}`) },

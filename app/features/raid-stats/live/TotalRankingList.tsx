@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import type { PortraitData, ReportEntry, ReportStudentData } from '~/types/raidReport';
+import type { ReportEntry, ReportStudentData } from '~/types/raidReport';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { StudentIcon } from '../../../components/student/studentIcon';
 import { formatTimeToTimestamp } from '~/utils/time';
@@ -24,7 +24,6 @@ interface TotalRankingListProps {
   raidInfos: RaidInfo[];
   server: string;
   studentData: ReportStudentData;
-  portraitData: PortraitData;
 }
 
 // --- Individual Boss Party Component ---
@@ -34,8 +33,7 @@ const BossTeamDetails: FC<{
   raidInfo: RaidInfo; // Pass the specific RaidInfo for this boss
   server: GameServer;
   studentData: ReportStudentData;
-  portraitData: PortraitData;
-}> = ({ entry, bossName, raidInfo, server, studentData, portraitData }) => {
+}> = ({ entry, bossName, raidInfo, server, studentData }) => {
   if (!entry || !raidInfo) return null;
 
   const { i18n } = useTranslation('dashboard');
@@ -64,7 +62,6 @@ const BossTeamDetails: FC<{
                 key={`${i}-m-${c?.id}-${j}`}
                 character={c} // Pass the full character object
                 student={studentData[c?.id]}
-                portraitData={portraitData}
               />
             ))}
             <div className="shrink-0 text-xl mx-0.5 text-neutral-400 dark:text-neutral-500">|</div>
@@ -73,7 +70,6 @@ const BossTeamDetails: FC<{
                 key={`${i}-s-${c?.id}-${j}`}
                 character={c} // Pass the full character object
                 student={studentData[c?.id]}
-                portraitData={portraitData}
               />
             ))}
           </div>
@@ -88,8 +84,7 @@ const TotalRankCard: FC<{
   entry: TotalRankEntry;
   raidInfos: RaidInfo[];
   studentData: ReportStudentData;
-  portraitData: PortraitData;
-}> = ({ entry, raidInfos, studentData, portraitData }) => {
+}> = ({ entry, raidInfos, studentData }) => {
   return (
     <div className=" py-4">
       {/* Overall Rank and Score */}
@@ -105,22 +100,22 @@ const TotalRankCard: FC<{
       </div>
       {/* Detailed Party Info for Each Boss */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <BossTeamDetails entry={entry.boss1} bossName={raidInfos[0]?.Type || 'Boss 1'} studentData={studentData} portraitData={portraitData} server={'jp'} raidInfo={raidInfos[0]} />
-        <BossTeamDetails entry={entry.boss2} bossName={raidInfos[1]?.Type || 'Boss 2'} studentData={studentData} portraitData={portraitData} server={'jp'} raidInfo={raidInfos[1]} />
-        <BossTeamDetails entry={entry.boss3} bossName={raidInfos[2]?.Type || 'Boss 3'} studentData={studentData} portraitData={portraitData} server={'jp'} raidInfo={raidInfos[2]} />
+        <BossTeamDetails entry={entry.boss1} bossName={raidInfos[0]?.Type || 'Boss 1'} studentData={studentData} server={'jp'} raidInfo={raidInfos[0]} />
+        <BossTeamDetails entry={entry.boss2} bossName={raidInfos[1]?.Type || 'Boss 2'} studentData={studentData} server={'jp'} raidInfo={raidInfos[1]} />
+        <BossTeamDetails entry={entry.boss3} bossName={raidInfos[2]?.Type || 'Boss 3'} studentData={studentData} server={'jp'} raidInfo={raidInfos[2]} />
       </div>
     </div>
   );
 };
 
 // --- Final List Component ---
-export const TotalRankingList: FC<TotalRankingListProps> = ({ title, data, raidInfos, studentData, portraitData }) => {
+export const TotalRankingList: FC<TotalRankingListProps> = ({ title, data, raidInfos, studentData }) => {
   return (
     <>
       <h3 className="font-semibold text-lg mb-4">{title}</h3>
       <div className="space-y-4">
         {data.map((entry) => (
-          <TotalRankCard key={entry.rank} entry={entry} raidInfos={raidInfos} studentData={studentData} portraitData={portraitData} />
+          <TotalRankCard key={entry.rank} entry={entry} raidInfos={raidInfos} studentData={studentData} />
         ))}
       </div>
     </>

@@ -26,6 +26,7 @@ import type { CustomIncome, PlannerSchedule, SimulationStats } from '~/utils/pyr
 import IncomeSettingsPanel from './IncomeSettingsPanel';
 import APSchedulePanel from './APSchedulePanel';
 import SimulationResultPanel from './SimulationResultPanel';
+import { SheetIcon } from '../common/SheetIcon';
 import GachaSimWorker from '~/workers/gacha-sim.worker?worker';
 
 type SimWorkerOutMsg =
@@ -57,7 +58,6 @@ interface Props {
   allStudents: Student[];
   /** Server region — determines when Archive Recruitment starts excluding ARCHIVE_STUDENT_IDS from the normal off-rate pool. */
   region: 'KR' | 'JP';
-  portraitMap: Record<number, string>;
   gachaSimResult: GlobalAggregatedResult | null;
   setGachaSimResult: (next: GlobalAggregatedResult | null) => void;
   bankruptcyRate: number | null;
@@ -73,6 +73,7 @@ const StatsPanel = ({ config, stats, planSuccessRate, hasSimulation }: { config:
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.stats' });
 
   const { t: t_g } = useTranslation('game');
+  const { t: t_planner } = useTranslation('planner');
   const fmt = (n: number) => Math.round(n).toLocaleString();
   const successColor = planSuccessRate >= 90 ? 'text-blue-600' : planSuccessRate >= 50 ? 'text-yellow-500' : 'text-red-600';
   const totalBalance = config.currentPyroxene + stats.totalIncome - stats.expense.ap - stats.expense.gacha;
@@ -84,7 +85,7 @@ const StatsPanel = ({ config, stats, planSuccessRate, hasSimulation }: { config:
           <FaChartPie className="text-blue-500 dark:text-blue-400" /> {t('title')}
         </h4>
         <div className="text-sm font-bold bg-neutral-100 dark:bg-neutral-800 px-3 py-1 rounded-full dark:text-neutral-300">
-          {t('survival_rate')}:{' '}
+          {t_planner('gacha.income.chart.survival_rate')}:{' '}
           {hasSimulation ? <span className={`text-lg ${successColor}`}>{planSuccessRate.toFixed(1)}%</span> : <span className="text-lg text-neutral-400 dark:text-neutral-500">--</span>}
         </div>
       </div>
@@ -199,17 +200,7 @@ const TabButton = ({ active, onClick, children }: { active: boolean; onClick: ()
 // ---------------------------------------------------------------------------
 type StudentFilter = 'star1' | 'star2' | 'star3' | 'fes' | 'pickup';
 
-const StudentDetailSection = ({
-  result,
-  portraitMap,
-  strategies,
-  allStudents,
-}: {
-  result: GlobalAggregatedResult;
-  portraitMap: Record<number, string>;
-  strategies: Record<string, import('~/types/gacha').BannerStrategy>;
-  allStudents: Student[];
-}) => {
+const StudentDetailSection = ({ result, strategies, allStudents }: { result: GlobalAggregatedResult; strategies: Record<string, import('~/types/gacha').BannerStrategy>; allStudents: Student[] }) => {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
 
   const { t: t_g } = useTranslation('game');
@@ -300,7 +291,6 @@ const StudentDetailSection = ({
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-5">
         {filtered.map((stat) => {
-          const imgSrc = portraitMap[stat.studentId] ? `data:image/webp;base64,${portraitMap[stat.studentId]}` : null;
           const isExpanded = expandedId === stat.studentId;
           return (
             <div key={stat.studentId} className="group bg-white dark:bg-neutral-900 rounded border border-neutral-200 dark:border-neutral-800 overflow-hidden">
@@ -310,11 +300,15 @@ const StudentDetailSection = ({
               >
                 <div className="flex items-center gap-3">
                   <div className="relative shrink-0">
-                    {imgSrc ? (
-                      <img src={imgSrc} alt={stat.name} className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800" />
-                    ) : (
-                      <div className="w-11 h-11 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold text-neutral-500">{stat.name.charAt(0)}</div>
-                    )}
+                    <SheetIcon
+                      sheet="student"
+                      id={stat.studentId}
+                      alt={stat.name}
+                      className="w-11 h-11 rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
+                      fallback={
+                        <div className="w-11 h-11 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-xs font-bold text-neutral-500">{stat.name.charAt(0)}</div>
+                      }
+                    />
                     <div
                       className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-neutral-900 ${rateColor(stat.obtainRate)}`}
                       title={`Obtain Rate: ${stat.obtainRate.toFixed(1)}%`}
@@ -388,7 +382,6 @@ export default function IncomePlannerPanel({
   strategies,
   allStudents,
   region,
-  portraitMap,
   gachaSimResult,
   setGachaSimResult,
   bankruptcyRate,
@@ -399,6 +392,7 @@ export default function IncomePlannerPanel({
   const { t: tg } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: ti } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const { t: tr } = useTranslation('planner', { keyPrefix: 'gacha.result' });
+  const { t: t_planner } = useTranslation('planner');
 
   const [activeTab, setActiveTab] = useState<TabId>('income');
   const [simCount, setSimCount] = useState(40000);
@@ -548,7 +542,7 @@ export default function IncomePlannerPanel({
       <div className="bg-white dark:bg-neutral-900 rounded-xl border border-blue-100 dark:border-neutral-800 shadow-sm p-5 flex flex-col gap-3 transition-colors">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-base font-bold text-neutral-800 dark:text-neutral-100">{tr('panel.title')}</h2>
+            <h2 className="text-base font-bold text-neutral-800 dark:text-neutral-100">{t_planner('button.runSimulation')}</h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
               <Trans
                 i18nKey="gacha.result.panel.desc"
@@ -596,7 +590,7 @@ export default function IncomePlannerPanel({
                 }`}
               >
                 {isSimulating ? <FaSpinner className="animate-spin" /> : <FaPlay />}
-                {isSimulating ? tr('panel.btn_running') : tr('panel.btn_start')}
+                {isSimulating ? t_planner('button.simRunning') : tr('panel.btn_start')}
               </button>
             </div>
           </div>
@@ -618,7 +612,7 @@ export default function IncomePlannerPanel({
         {/* Timing */}
         {!isSimulating && simTiming && (
           <p className="text-xs text-neutral-400 dark:text-neutral-500 tabular-nums">
-            {tr('timing.total')} {formatDuration(simTiming.totalMs)} &nbsp;{tr('timing.separator')}&nbsp; 1{tr('timing.per_iteration')} {formatDuration(simTiming.totalMs / simTiming.count)}
+            {t_planner('ui.total')} {formatDuration(simTiming.totalMs)} &nbsp;{tr('timing.separator')}&nbsp; 1{tr('timing.per_iteration')} {formatDuration(simTiming.totalMs / simTiming.count)}
           </p>
         )}
       </div>
@@ -647,8 +641,8 @@ export default function IncomePlannerPanel({
           {activeTab === 'schedule' && <APSchedulePanel schedules={schedules} apOverrides={apOverrides} onApChange={onApChange} />}
           {activeTab === 'result' && (
             <div className="flex flex-col gap-4">
-              <SimulationResultPanel result={gachaSimResult} initialPyroxenes={config.currentPyroxene} portraitMap={portraitMap} bankruptcyRate={bankruptcyRate} />
-              {gachaSimResult && <StudentDetailSection result={gachaSimResult} portraitMap={portraitMap} strategies={strategies} allStudents={allStudents} />}
+              <SimulationResultPanel result={gachaSimResult} initialPyroxenes={config.currentPyroxene} bankruptcyRate={bankruptcyRate} />
+              {gachaSimResult && <StudentDetailSection result={gachaSimResult} strategies={strategies} allStudents={allStudents} />}
             </div>
           )}
         </div>

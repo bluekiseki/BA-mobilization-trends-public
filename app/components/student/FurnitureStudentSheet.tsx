@@ -2,7 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { RiSofaLine } from 'react-icons/ri';
 
-import type { EventData, IconData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData } from '~/types/plannerData';
 import { ItemIconView } from '../item/ItemIconView';
 import type { FurnitureStudentEntry } from '../../utils/student/furnitureInteractionList';
 import { StudentPortraitList, StudentSheetModal } from './StudentSheetModal';
@@ -10,14 +10,12 @@ import { StudentPortraitList, StudentSheetModal } from './StudentSheetModal';
 export const FurnitureStudentSheet = ({
   furnitureId,
   students,
-  studentPortraits,
   eventData,
   iconData,
   onClose,
 }: {
   furnitureId: string;
   students: FurnitureStudentEntry[];
-  studentPortraits?: StudentPortraitData;
   eventData: EventData;
   iconData: IconData;
   onClose: () => void;
@@ -35,11 +33,7 @@ export const FurnitureStudentSheet = ({
         </p>
       }
     >
-      <StudentPortraitList
-        students={students.map((student) => ({ studentId: Number(student.id), name: student.name }))}
-        studentPortraits={studentPortraits}
-        emptyMessage={t('affectionTab.furnitureIndex.noStudents')}
-      />
+      <StudentPortraitList students={students.map((student) => ({ studentId: Number(student.id), name: student.name }))} emptyMessage={t('affectionTab.furnitureIndex.noStudents')} />
     </StudentSheetModal>
   );
 };

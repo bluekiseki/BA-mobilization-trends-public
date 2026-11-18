@@ -4,21 +4,23 @@ import { useTranslation } from 'react-i18next';
 import birthdays from '~/data/birthdays.json';
 import { cdn } from '~/utils/cdn';
 import type { Locale } from '~/utils/i18n/config';
-import { localeLink } from '~/utils/localeLink';
+import { useStudentLink } from '~/features/students/logic/useStudentLink';
 import { loadBirthdayPortraits, updateBirthdayDates } from './birthdayStyles.js';
 import birthdayScript from './birthdayStyles.js?raw';
 
-const portraitUrl = cdn('/w/students_portrait.json');
+const portraitIndexUrl = cdn('/w/icons/student.json');
+const portraitSheetUrl = cdn('/w/icons/student.webp');
 // Use the source text so SSR and the obfuscated client bundle emit identical scripts.
-const bootstrap = `(()=>{${birthdayScript.replace(/^export /gm, '')}\nupdateBirthdayDates();loadBirthdayPortraits(${JSON.stringify(portraitUrl)});})();`;
+const bootstrap = `(()=>{${birthdayScript.replace(/^export /gm, '')}\nupdateBirthdayDates();loadBirthdayPortraits(${JSON.stringify(portraitIndexUrl)},${JSON.stringify(portraitSheetUrl)});})();`;
 
 export function BirthdayWidget({ locale }: { locale: Locale }) {
   const { t } = useTranslation('common');
+  const studentLink = useStudentLink(locale);
 
   useEffect(() => {
     // Inline scripts run during HTML parsing; effects also cover client navigation.
     updateBirthdayDates();
-    loadBirthdayPortraits(portraitUrl);
+    loadBirthdayPortraits(portraitIndexUrl, portraitSheetUrl);
     const timer = window.setInterval(updateBirthdayDates, 60_000);
     window.addEventListener('pageshow', updateBirthdayDates);
     document.addEventListener('visibilitychange', updateBirthdayDates);
@@ -44,18 +46,12 @@ export function BirthdayWidget({ locale }: { locale: Locale }) {
             students.map((student) => {
               const name = locale === 'en' ? student.name_en : locale === 'ko' ? student.name_ko : locale === 'ja' ? student.name_ja : student.name_zh;
               return (
-                <Link
-                  key={`${student.id}-${dateKey}`}
-                  data-birthday={dateKey}
-                  to={localeLink(locale, '/charts/jp/heatmap')}
-                  state={{ studentId: student.id }}
-                  className="flex-col items-center gap-1 shrink-0 group"
-                >
+                <Link key={`${student.id}-${dateKey}`} data-birthday={dateKey} to={studentLink(student.id)} className="flex-col items-center gap-1 shrink-0 group">
                   <div
                     data-birthday-portrait={student.id}
                     role="img"
                     aria-label={name}
-                    className="w-12 h-12 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 bg-cover bg-top transition-transform group-hover:scale-105"
+                    className="w-12 h-12 rounded-full border-2 border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 transition-transform group-hover:scale-105"
                   />
                   <span className="text-xs font-semibold text-center w-14 leading-tight text-neutral-600 dark:text-neutral-400">{name}</span>
                   <span className="text-xs font-bold px-1 py-0.5 rounded bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">

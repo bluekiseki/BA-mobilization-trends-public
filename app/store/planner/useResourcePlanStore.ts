@@ -1,3 +1,4 @@
+import { safeLocalStorage } from '../history/localPersistence';
 // app/store/planner/useResourcePlanStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -88,6 +89,9 @@ const defaults: ResourcePlanData = {
   expertPermitMode: 'weekly_max',
   expertPermitWeeklyMax: 0,
   expertPermitDailyAmounts: {},
+  assumeAllIncome: {},
+  eventIncomeMode: 'planner',
+  autoBuyShopItems: {},
 };
 
 // ─── Sync export ──────────────────────────────────────────────────────────────
@@ -327,7 +331,15 @@ export const useResourcePlanStore = create<ResourcePlanState>()(
     }),
     {
       name: 'resource-plan-v2',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeLocalStorage),
+      partialize: getResourcePlanData,
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<ResourcePlanState>;
+        const server = saved.server === 'jp' ? 'jp' : 'kr';
+        const kr = { ...defaults, ...saved.kr };
+        const jp = { ...defaults, ...saved.jp };
+        return { ...current, server, kr, jp, ...(server === 'jp' ? jp : kr) };
+      },
     },
   ),
 );

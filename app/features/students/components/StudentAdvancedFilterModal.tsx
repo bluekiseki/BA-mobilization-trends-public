@@ -1,3 +1,4 @@
+import { CombatTypeIcon } from '~/components/common/CombatTypeIcon';
 import { useTranslation } from 'react-i18next';
 import type { CheckboxSelectOption } from '~/components/common/CheckboxSelect';
 import { FilterModal } from '~/components/common/FilterModal';
@@ -10,10 +11,15 @@ import { StarRating } from '~/components/student/StarRating';
 import type { Student } from '~/types/plannerData';
 import { SQUAD_TYPE_COLORS } from '~/utils/gameColors';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
+import { SkillFilterGroups } from '~/features/students/skillFilter/SkillFilterGroups';
+import { createSkillFilter, isSkillFilterActive, type SkillFilterState, type SkillOptionCounts } from '~/features/students/skillFilter/skillFilter';
 import { AFFECTION_BUCKETS, LEVEL_BUCKETS, type AffectionRangeKey, type LevelRangeKey } from './progressFilterBuckets';
+import { ATTACK_TYPES, DEFENSE_TYPES } from '~/features/students/logic/studentFilterFields';
 
 export interface StudentAdvancedFilters {
   goalsOnly: boolean;
+  /** Only plans of students that are not recruited yet. */
+  unrecruitedOnly: boolean;
   schools: Set<string>;
   attackTypes: Set<Student['BulletType']>;
   defenseTypes: Set<Student['ArmorType']>;
@@ -24,12 +30,13 @@ export interface StudentAdvancedFilters {
   starGrades: Set<string>;
   levelRanges: Set<LevelRangeKey>;
   affectionRanges: Set<AffectionRangeKey>;
+  skill: SkillFilterState;
 }
 
 type RecruitType = '0' | '1' | '2' | '3' | '4';
 
 /** How many currently-matching items have each option's value, per filter group — shown as a trailing count on each checkbox. */
-export type StudentFilterOptionCounts = Record<keyof Omit<StudentAdvancedFilters, 'goalsOnly'>, Record<string, number>>;
+export type StudentFilterOptionCounts = Record<keyof Omit<StudentAdvancedFilters, 'goalsOnly' | 'unrecruitedOnly' | 'skill'>, Record<string, number>>;
 
 interface Props {
   open: boolean;
@@ -39,6 +46,7 @@ interface Props {
   schools: readonly string[];
   locale: Locale;
   optionCounts: StudentFilterOptionCounts;
+  skillOptionCounts: SkillOptionCounts;
 }
 
 // Star grade + unique weapon (UW) are treated as one combined scale via getCharacterStarValue,
@@ -55,8 +63,6 @@ const STAR_GRADE_COMBOS = [
   { star: 1, uw: 0, labelKey: 'star1' },
 ] as const;
 
-const ATTACK_TYPES = ['Explosion', 'Pierce', 'Mystic', 'Sonic', 'Chemical'] as const;
-const DEFENSE_TYPES = ['LightArmor', 'HeavyArmor', 'Unarmed', 'ElasticArmor', 'CompositeArmor'] as const;
 const ATTACK_TYPE_COLORS: Record<Student['BulletType'], string> = {
   Explosion: '#b62915',
   Pierce: '#bc8800',
@@ -64,7 +70,7 @@ const ATTACK_TYPE_COLORS: Record<Student['BulletType'], string> = {
   Sonic: '#9a46a8',
   Chemical: '#137973',
 };
-export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, schools, locale, optionCounts }: Props) {
+export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, schools, locale, optionCounts, skillOptionCounts }: Props) {
   const { t } = useTranslation('planner');
   const { t: t_game } = useTranslation('game');
   const { t: t_ui } = useTranslation('ui');
@@ -127,7 +133,7 @@ export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, s
     label: bucket.key,
     count: optionCounts.affectionRanges[bucket.key] ?? 0,
   }));
-  const hasFilters = filters.goalsOnly || Object.values(filters).some((values) => values instanceof Set && values.size > 0);
+  const hasFilters = filters.goalsOnly || filters.unrecruitedOnly || isSkillFilterActive(filters.skill) || Object.values(filters).some((values) => values instanceof Set && values.size > 0);
 
   return (
     <FilterModal
@@ -138,6 +144,7 @@ export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, s
       onReset={() =>
         onChange({
           goalsOnly: false,
+          unrecruitedOnly: false,
           schools: new Set(),
           attackTypes: new Set(),
           defenseTypes: new Set(),
@@ -147,6 +154,7 @@ export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, s
           starGrades: new Set(),
           levelRanges: new Set(),
           affectionRanges: new Set(),
+          skill: createSkillFilter(),
         })
       }
     >
@@ -154,16 +162,21 @@ export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, s
         <ToggleButton active={filters.goalsOnly} onClick={() => onChange({ ...filters, goalsOnly: !filters.goalsOnly })}>
           {t('ui.showGoalsOnly')}
         </ToggleButton>
+        <ToggleButton active={filters.unrecruitedOnly} onClick={() => onChange({ ...filters, unrecruitedOnly: !filters.unrecruitedOnly })}>
+          {t('ui.unrecruitedOnly')}
+        </ToggleButton>
         <div className="grid grid-cols-2 items-start gap-x-4 gap-y-5 sm:grid-cols-3">
           <ScrollableCheckboxGroup label={t_game('school')} options={schoolOptions} selected={filters.schools} onChange={(schools) => onChange({ ...filters, schools })} />
           <ScrollableCheckboxGroup
             label={t_dashboard('searchYouTube.attackType')}
+            labelIcon={<CombatTypeIcon kind="attack" />}
             options={attackOptions}
             selected={filters.attackTypes}
             onChange={(attackTypes) => onChange({ ...filters, attackTypes })}
           />
           <ScrollableCheckboxGroup
             label={t_dashboard('searchYouTube.defenseType')}
+            labelIcon={<CombatTypeIcon kind="defense" />}
             options={defenseOptions}
             selected={filters.defenseTypes}
             onChange={(defenseTypes) => onChange({ ...filters, defenseTypes })}
@@ -189,6 +202,7 @@ export function StudentAdvancedFilterModal({ open, onClose, filters, onChange, s
             selected={filters.affectionRanges}
             onChange={(affectionRanges) => onChange({ ...filters, affectionRanges })}
           />
+          <SkillFilterGroups filter={filters.skill} onChange={(skill) => onChange({ ...filters, skill })} counts={skillOptionCounts} />
         </div>
       </div>
     </FilterModal>

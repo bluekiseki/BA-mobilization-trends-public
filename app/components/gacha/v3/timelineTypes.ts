@@ -1,5 +1,6 @@
+import type { PyroLogKey } from '~/utils/pyroxeneCalc';
 export interface LogEntry {
-  i18nKey?: string;
+  i18nKey?: PyroLogKey;
   params?: Record<string, string | number>;
   title?: string;
   amount: number;
@@ -37,5 +38,5 @@ export interface CustomLineConfig {
 
 export interface BannerStudentMarker {
   date: string;
-  students: { id: number; name: string; portrait?: string }[];
+  students: { id: number; name: string }[];
 }

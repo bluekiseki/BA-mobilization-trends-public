@@ -82,6 +82,7 @@ const gachaHistoryEntrySchema = z.object({
   server: z.enum(['GL', 'JP']),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   pullCount: z.number().int().min(1).max(100_000),
+  goalPullCount: z.number().int().min(1).max(100_000).optional(),
   initialCharge: z.number().int().min(0).max(199).optional(),
   initialChargeLimited: z.number().int().min(0).max(199).optional(),
   results: z.array(gachaHistoryResultSchema).max(10_000),
@@ -131,7 +132,7 @@ export const ProfileDataSchemas = {
 
   gachaHistory: z.object({
     entries: z.array(gachaHistoryEntrySchema).max(2000),
-    simulationCount: z.number().int().min(100).max(100_000).optional(),
+    simulationCount: z.number().int().min(100).max(10_000_000).optional(),
   }),
 
   gameInfo: z.object({
@@ -180,12 +181,14 @@ export function validateProfileDataValue(key: string, value: unknown): void {
   const resolved = resolveProfileDataKey(key);
   if (!resolved) throw new Error(`Unknown key '${key.slice(0, 64)}'`);
 
-  const rawSize = JSON.stringify(value).length;
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined) throw new Error('Missing value');
+  const rawSize = new TextEncoder().encode(serialized).byteLength;
   if (rawSize > MAX_KEY_SIZE) {
     throw new Error(`Payload too large for '${key}' (${rawSize} bytes, max 1 MB)`);
   }
 
-  if (!resolved.schema) return;
+  if (value === null || !resolved.schema) return;
   const result = resolved.schema.safeParse(value);
   if (!result.success) {
     const issue = result.error.issues[0];

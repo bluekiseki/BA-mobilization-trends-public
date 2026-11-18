@@ -8,13 +8,13 @@ import { FaHistory, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { TbAlertTriangle, TbCalendarOff } from 'react-icons/tb';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap.css';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import type { BannerStrategy, StudentStrategyConfig } from '~/types/gacha';
 import type { BannerPeriod } from '~/utils/gachaData';
 
 interface Props {
   banners: BannerPeriod[];
   strategies: Record<string, BannerStrategy>;
-  portraitMap: Record<number, string>;
   onUpdateStrategy: (bannerId: string, updates: Partial<BannerStrategy>) => void;
   onUpdateStudentConfig: (bannerId: string, studentId: number, updates: Partial<StudentStrategyConfig>) => void;
   onResetPlannerData?: () => void;
@@ -22,7 +22,7 @@ interface Props {
 
 const monoStyle = { fontFamily: 'inherit' };
 
-export default function SimpleBannerPicker({ banners, strategies, portraitMap, onUpdateStrategy, onResetPlannerData }: Props) {
+export default function SimpleBannerPicker({ banners, strategies, onUpdateStrategy, onResetPlannerData }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.banner_planner' });
   const { t: t_g } = useTranslation('game');
   const [showOldBanners, setShowOldBanners] = useState(false);
@@ -123,8 +123,8 @@ export default function SimpleBannerPicker({ banners, strategies, portraitMap, o
                     {t('free_pulls_label', { count: banner.freePulls })}
                   </span>
                 )}
-                {banner.useChargeSystem && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400">{t('badge.charge_system')}</span>
+                {!banner.useChargeSystem && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400">{t('badge.point_system')}</span>
                 )}
               </div>
 
@@ -133,7 +133,6 @@ export default function SimpleBannerPicker({ banners, strategies, portraitMap, o
                 {banner.pickupStudents.map((student) => {
                   const cfg = strat.studentConfigs[student.id];
                   const selected = !!cfg && cfg.mode !== 'skip';
-                  const portrait = portraitMap[student.id];
                   return (
                     <Tooltip key={student.id} placement="top" overlay={<span className="text-xs font-bold">{student.name}</span>} mouseEnterDelay={0.05}>
                       <button
@@ -143,11 +142,7 @@ export default function SimpleBannerPicker({ banners, strategies, portraitMap, o
                           selected ? 'ring-2 ring-ba-btn-blue' : 'opacity-40 grayscale hover:opacity-70 hover:grayscale-0'
                         }`}
                       >
-                        {portrait ? (
-                          <img src={`data:image/webp;base64,${portrait}`} alt={student.name} className="w-full h-full object-cover object-top" />
-                        ) : (
-                          <div className="w-full h-full bg-neutral-200 dark:bg-neutral-700" />
-                        )}
+                        <SheetIcon sheet="student" id={student.id} alt={student.name} fallback={<div className="w-full h-full bg-neutral-200 dark:bg-neutral-700" />} />
                         <div className="absolute top-0 -left-0.5 -right-0.5 flex justify-between px-0.5 pointer-events-none">
                           {student.isRerun ? <span className="rounded-sm bg-blue-600/90 px-1 text-[9px] font-black text-white backdrop-blur-[1px] whitespace-nowrap">{t_g('rerun')}</span> : <span />}
                           <div className="flex gap-px">

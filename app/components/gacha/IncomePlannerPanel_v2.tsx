@@ -62,7 +62,6 @@ interface Props {
   region: 'KR' | 'JP';
   /** Student IDs the player already owns (from the Student Planner's growth-plan roster) — dupe pulls of these pay eligma from the very first roll of the sim. */
   ownedStudentIds?: number[];
-  portraitMap: Record<number, string>;
   pyroxeneIcon?: string | null;
   apIcon?: string | null;
   elephIconMap?: Record<string, string>;
@@ -134,8 +133,8 @@ const StatsPanel = ({
   simulationDays: number;
 }) => {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.stats' });
-  const { t: tIncome } = useTranslation('planner', { keyPrefix: 'gacha.income' });
   const { t: t_g } = useTranslation('game');
+  const { t: t_planner } = useTranslation('planner');
   const netFlow = stats.totalIncome - stats.expense.gacha;
   const finalBalance = config.currentPyroxene + netFlow - stats.expense.ap;
 
@@ -165,7 +164,7 @@ const StatsPanel = ({
       {/* Survival rate chip */}
       {hasSimulation && (
         <div className="px-4 py-1.5 border-b border-dashed border-neutral-200 dark:border-neutral-700 flex justify-between text-[11px]">
-          <span className="text-neutral-500">{t('survival_rate')}</span>
+          <span className="text-neutral-500">{t_planner('gacha.income.chart.survival_rate')}</span>
           <span className="font-bold" style={{ color: successColor }}>
             {planSuccessRate.toFixed(1)}%
           </span>
@@ -212,7 +211,7 @@ const StatsPanel = ({
       <div className="border-t-2 border-neutral-300 dark:border-neutral-600 mx-4" />
       <div className="border-t border-neutral-200 dark:border-neutral-700 mx-4 mt-px" />
       <div className="px-2 pt-2 pb-2 flex justify-between items-baseline">
-        <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300">{tIncome('net_income_label')}</span>
+        <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300">{t_planner('gacha.net_income')}</span>
         <span className="text-sm font-black tabular-nums" style={{ color: netFlow >= 0 ? '#77e0ff' : '#ef4444' }}>
           {netFlow >= 0 ? '+' : ''}
           {fmt(netFlow)}
@@ -263,7 +262,6 @@ export default function IncomePlannerPanel_v2({
   allStudents,
   region,
   ownedStudentIds,
-  portraitMap,
   pyroxeneIcon,
   apIcon,
   elephIconMap = {},
@@ -499,7 +497,7 @@ export default function IncomePlannerPanel_v2({
             style={{ background: '#77e0ff' }}
           >
             {isSimulating && <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />}
-            {isSimulating ? tr('panel.btn_running') : tr('panel.btn_start')}
+            {isSimulating ? tBase('button.simRunning') : tr('panel.btn_start')}
           </button>
           {progressBar}
         </div>
@@ -513,7 +511,7 @@ export default function IncomePlannerPanel_v2({
               </span>
               <div>
                 <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400 whitespace-nowrap" style={monoStyle}>
-                  {tr('panel.title')}
+                  {tBase('button.runSimulation')}
                 </div>
                 <div className="text-[10px] text-neutral-400 dark:text-neutral-500 hidden sm:block">
                   <Trans i18nKey="gacha.result.panel.desc" ns="planner" values={{ amount: config.currentPyroxene.toLocaleString() }} components={{ 1: <strong /> }} />
@@ -567,7 +565,7 @@ export default function IncomePlannerPanel_v2({
               style={{ background: '#77e0ff' }}
             >
               {isSimulating && <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />}
-              {isSimulating ? tr('panel.btn_running') : tr('panel.btn_start')}
+              {isSimulating ? tBase('button.simRunning') : tr('panel.btn_start')}
             </button>
 
             {/* Timing info */}
@@ -577,7 +575,7 @@ export default function IncomePlannerPanel_v2({
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 whitespace-nowrap">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                     {simTiming.count.toLocaleString()}
-                    {tr('panel.sim_count_unit')}
+                    {tBase('gacha.income.timeline.unit_times')}
                   </span>
                   <span className="whitespace-nowrap">{formatDuration(simTiming.totalMs)}</span>
                   <span className="whitespace-nowrap">{(simTiming.count / (simTiming.totalMs / 1000)).toFixed(0)}/s</span>
@@ -600,7 +598,7 @@ export default function IncomePlannerPanel_v2({
               </div>
               <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5">
                 {tr('panel.owned_students_count', { count: ownedStudentCount })}{' '}
-                <Link to={localeLink(locale, '/planner/students')} state={{ view: 'table' }} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+                <Link to={localeLink(locale, '/students?view=table')} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
                   {tBase('button.goToPlanner')}
                 </Link>
               </p>
@@ -619,7 +617,6 @@ export default function IncomePlannerPanel_v2({
             simple={simple}
             result={gachaSimResult}
             initialPyroxenes={config.currentPyroxene}
-            portraitMap={portraitMap}
             pyroxeneIcon={pyroxeneIcon}
             elephIconMap={elephIconMap}
             bankruptcyRate={bankruptcyRate}

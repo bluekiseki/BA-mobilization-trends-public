@@ -34,7 +34,18 @@ interface TreasurePlannerProps {
   remainingCurrency: Record<number, number>;
 }
 
-export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, remainingCurrency }: TreasurePlannerProps) => {
+export const TreasurePlanner = (props: TreasurePlannerProps) => {
+  const data = props.eventData.treasure;
+  return data ? <TreasurePlannerContent {...props} eventData={{ ...props.eventData, treasure: data }} /> : null;
+};
+
+const TreasurePlannerContent = ({
+  eventId,
+  eventData,
+  iconData,
+  onCalculate,
+  remainingCurrency,
+}: TreasurePlannerProps & { eventData: TreasurePlannerProps['eventData'] & { treasure: NonNullable<TreasurePlannerProps['eventData']['treasure']> } }) => {
   const [interactiveSimState, setInteractiveSimState] = useState<{
     show: boolean;
     roundData: TreasureRound | null;
@@ -55,7 +66,6 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
     setTreasureFinalTotalRounds: setFinalTotalRounds,
   } = usePlanForEvent(eventId);
 
-  if (!eventData.treasure) return null;
   const treasureData = eventData.treasure;
   const costPerCell = treasureData.round[0].CellCheckGoods.ConsumeParcelAmount[0];
   const costItemId = treasureData.round[0].CellCheckGoods.ConsumeParcelId[0];
@@ -226,7 +236,7 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
         {/* Tab Navigation */}
         <div className="flex border-b border-neutral-200 dark:border-neutral-700">
           {(['info', 'calculator', 'probability'] as const).map((tab) => {
-            const label = tab === 'info' ? t('treasure.tabInfo') : tab === 'calculator' ? t_ui('calculator') : t('treasure.probCalc');
+            const label = tab === 'info' ? t_ui('info') : tab === 'calculator' ? t_ui('calculator') : t('treasure.probCalc');
             return (
               <button
                 key={tab}
@@ -504,7 +514,7 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
                             {/* Cost */}
                             <div className="bg-red-50 dark:bg-red-900/40 rounded-lg overflow-hidden">
                               <div className="px-3 py-2 border-b border-red-100 dark:border-red-800/50">
-                                <h4 className="font-semibold text-red-800 dark:text-red-300 text-sm">{t('treasure.totalCost')}</h4>
+                                <h4 className="font-semibold text-red-800 dark:text-red-300 text-sm">{t_ui('totalCost')}</h4>
                               </div>
                               <div className="p-3">
                                 <ItemIcon type={costType} itemId={costId} amount={Math.ceil(totalCost)} size={10} eventData={eventData} iconData={iconData} />
@@ -520,8 +530,8 @@ export const TreasurePlanner = ({ eventId, eventData, iconData, onCalculate, rem
                                 <table className="w-full text-xs border-collapse">
                                   <thead>
                                     <tr className="border-b border-green-100 dark:border-green-800/50">
-                                      <th className="text-left py-1.5 px-3 font-semibold text-green-700 dark:text-green-400">{t('treasure.rewardItem')}</th>
-                                      <th className="text-right py-1.5 px-3 font-semibold text-green-700 dark:text-green-400">{t('treasure.rewardAmount')}</th>
+                                      <th className="text-left py-1.5 px-3 font-semibold text-green-700 dark:text-green-400">{t_ui('item')}</th>
+                                      <th className="text-right py-1.5 px-3 font-semibold text-green-700 dark:text-green-400">{t_ui('amount')}</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-green-100/60 dark:divide-green-800/30">

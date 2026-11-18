@@ -1,6 +1,5 @@
 import { RaidStudentPicker } from './RaidStudentPicker';
 import { useTranslation } from 'react-i18next';
-import type { PortraitData } from '~/types/raidReport';
 import type { RaidHistoryStudent } from '~/types/raidHistory';
 import type { Student } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
@@ -9,13 +8,12 @@ import { HiOutlineXMark } from 'react-icons/hi2';
 interface StudentPickerBottomSheetProps {
   isOpen: boolean;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: Locale;
   onSelect: (student: RaidHistoryStudent) => void;
   onClose: () => void;
 }
 
-export function StudentPickerBottomSheet({ isOpen, students, portraitData, locale, onSelect, onClose }: StudentPickerBottomSheetProps) {
+export function StudentPickerBottomSheet({ isOpen, students, locale, onSelect, onClose }: StudentPickerBottomSheetProps) {
   const { t: t_ui } = useTranslation('ui');
   const { t: tch } = useTranslation('charts');
   if (!isOpen) return null;
@@ -39,7 +37,6 @@ export function StudentPickerBottomSheet({ isOpen, students, portraitData, local
         <div className="p-4">
           <RaidStudentPicker
             students={students}
-            portraitData={portraitData}
             locale={locale}
             onSelect={(student) => {
               onSelect(student);

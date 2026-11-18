@@ -22,7 +22,7 @@ import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { getCurrentGlobalraid, getKstTime } from '~/data/globalRaidDates';
 import { PageHeader } from '~/components/common/PageHeader';
 import { textFeedUrl } from '~/data/textFeeds.meta';
-// import { usePageHelp } from '~/hooks/usePageHelp';
+import { toLocations } from '~/utils/raidLocation';
 
 // Define types: Total Assault is RaidInfo, Joint Firing Drill is RaidInfo array.
 type GroupedRaidInfo = RaidFullInfo | RaidFullInfo[];
@@ -140,7 +140,9 @@ function RaidCard({ region, raidInfos, locale }: { region: GameServer; raidInfos
         <div className="flex items-center gap-2">
           <span className="font-mono font-semibold text-xs">{isGrand ? t_g('eraid') : t_g('raid')}</span>
           <span className="w-px h-2 bg-neutral-300 dark:bg-neutral-600"></span>
-          <TerrainIconGameStyle terrain={location as Terrain} size={'1em'} />
+          {toLocations(location).map((terrain) => (
+            <TerrainIconGameStyle key={terrain} terrain={terrain as Terrain} size={'1em'} />
+          ))}
         </div>
         <time className="font-mono text-neutral-400 dark:text-neutral-500 font-light text-xs">{date.split('~')[0].trim()}</time>
       </div>
@@ -228,7 +230,9 @@ function LiveShortcutCard({ raidInfos, locale }: { raidInfos: RaidFullInfo[]; lo
 
           <span className="w-px h-2 bg-neutral-300 dark:bg-neutral-600"></span>
 
-          <TerrainIconGameStyle terrain={location as Terrain} size={'1em'} />
+          {toLocations(location).map((terrain) => (
+            <TerrainIconGameStyle key={terrain} terrain={terrain as Terrain} size={'1em'} />
+          ))}
         </div>
 
         {/* Date */}

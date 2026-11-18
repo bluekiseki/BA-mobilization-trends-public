@@ -10,17 +10,19 @@ export function extractBossKeyAndArmorType(field: string): { bossKey: string; ar
   if (ARMOR_TYPES.has(last)) return { bossKey: parts.slice(0, -1).join('_'), armorType: last };
   return { bossKey: field, armorType: null };
 }
-export function extractLocation(bossKey: string): string {
+export function extractLocations(bossKey: string): string[] {
   const parts = bossKey.split('_');
   const last = parts[parts.length - 1];
-  return TERRAIN_TYPES.has(last) ? last : '';
+  if (TERRAIN_TYPES.has(last)) return [last];
+  const terrain = (bossData as unknown as Record<string, { teran?: string | string[] }>)[bossKey]?.teran;
+  return terrain ? [terrain].flat() : [];
 }
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface StatusRaid {
   id: string;
   bossName: string;
-  location: string;
+  locations: string[];
   isGrand: boolean;
   status: 'live' | 'active' | 'upcoming'; // live = /live page, active = dashboard available, upcoming = not started yet (no link)
   endDateIso?: string; // available for live (+7d) and GL/KR CSV

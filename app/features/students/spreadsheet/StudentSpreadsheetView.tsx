@@ -1,5 +1,6 @@
+import { isUnrecruited } from '~/utils/student/recruitState';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import type { Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { Student, StudentData } from '~/types/plannerData';
 import type { GrowthPlan } from '~/store/planner/useGlobalStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { useSpreadsheetDraftStore } from '~/features/students/useSpreadsheetDraftStore';
@@ -10,17 +11,18 @@ import { SpreadsheetHeader } from './SpreadsheetHeader';
 import { SpreadsheetTableRow } from './SpreadsheetTableRow';
 import { compareRows, type Row } from './spreadsheetSort';
 import { MdKeyboard, MdExpandMore, MdChevronRight, MdWarning, MdSave, MdClose } from 'react-icons/md';
-import { getCombatStyleGroupRosterIds, getCombatStylePlanGroupId, getCombatStyleRepresentativeId, isCombatStyleFormOne } from '~/utils/combatStyle';
+import { getCombatStylePlanGroupId, getCombatStyleRepresentativeId, isCombatStyleFormOne } from '~/utils/combatStyle';
 
 interface Props {
   allStudents: StudentData;
-  studentPortraits: StudentPortraitData;
   searchTerm: string;
   showOnlySelected: boolean;
   matchesStudent: (student: Student | undefined) => boolean;
+  // Position of each student in the caller's own ordering; header sorting is applied on top of it
+  baseOrder?: ReadonlyMap<number, number>;
 }
 
-export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTerm, showOnlySelected, matchesStudent }: Props) {
+export function StudentSpreadsheetView({ allStudents, searchTerm, showOnlySelected, matchesStudent, baseOrder }: Props) {
   const [isMobile, setIsMobile] = useState(false);
   const [screenWidth, setScreenWidth] = useState(0);
   const [sortStack, setSortStack] = useState<{ field: string; direction: 'asc' | 'desc' }[]>([]);
@@ -83,6 +85,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
   const { t } = useTranslation('planner', { keyPrefix: 'spreadsheet' });
   const { t: t_ui } = useTranslation('ui');
   const { t: t_g } = useTranslation('game');
+  const { t: t_planner } = useTranslation('planner');
 
   const starUwOptions = useMemo(
     () =>
@@ -181,15 +184,13 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         return {
           studentId: sid,
           name: student.Name,
-          school: (t_club as (key: string, defaultValue?: string) => string)(
+          school: t_club(
             ((x: string) => {
               if (['Sakugawa', 'ETC', 'Tokiwadai'].includes(x)) return 'ETC';
               return x;
             })(student.School),
             student.School,
           ),
-          portrait: studentPortraits[sid],
-          portraits: Object.fromEntries(getCombatStyleGroupRosterIds(sid).map((styleId) => [styleId, studentPortraits[styleId]])),
           plan,
           hasGear: Object.keys(student.Gear ?? {}).length > 0,
           minStar: student.StarGrade ?? 1,
@@ -202,7 +203,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         }
         return true;
       })
-      .sort((a, b) => compareRows(a, b, sortStack));
+      .sort((a, b) => compareRows(a, b, sortStack, baseOrder));
 
     if (!hasPendingChanges) {
       // After saving: save new sort state
@@ -222,7 +223,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
         return aOrder - bOrder;
       });
     }
-  }, [allStudents, studentPortraits, planByStudentId, searchTerm, showOnlySelected, sortStack, t_club, hasPendingChanges, matchesStudent]);
+  }, [allStudents, planByStudentId, searchTerm, showOnlySelected, sortStack, baseOrder, t_club, hasPendingChanges, matchesStudent]);
 
   const handleAdd = useCallback(
     (studentId: number) => {
@@ -358,14 +359,14 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
 
       {sortStack.length > 0 && (
         <div className="text-sm px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 rounded">
-          {t('messages.sortLabel')}{' '}
+          {t_planner('ui.sortLabel')}{' '}
           {sortStack
             .map((s) => {
               const sortLabels: Record<string, string> = {
                 hasPlan: t('sortLabels.hasPlan'),
                 isSelected: t('sortLabels.isSelected'),
                 school: t_g('school'),
-                name: t('sortLabels.name'),
+                name: t_ui('nameLabel'),
                 level: t('sortLabels.currentLevel'),
                 star: t('sortLabels.currentRank'),
                 uwLevel: t('sortLabels.currentUeLevel'),
@@ -387,7 +388,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
                 normal: 'N',
                 passive: 'P',
                 sub: 'S',
-                acquiredDate: t('sortLabels.acquiredDate'),
+                acquiredDate: t_planner('spreadsheet.headerField.acquiredDate'),
               };
               return `${sortLabels[s.field] || s.field} ${s.direction === 'asc' ? '↑' : '↓'}`;
             })
@@ -399,7 +400,7 @@ export function StudentSpreadsheetView({ allStudents, studentPortraits, searchTe
       )}
 
       <div className="text-sm text-neutral-600 dark:text-neutral-400 px-3 py-2">
-        {t('messages.recruitedStudents')}: <span className="font-semibold text-neutral-900 dark:text-neutral-100">{rows.filter((r) => r.plan !== null).length}</span>
+        {t('messages.recruitedStudents')}: <span className="font-semibold text-neutral-900 dark:text-neutral-100">{rows.filter((r) => r.plan !== null && !isUnrecruited(r.plan)).length}</span>
       </div>
 
       <div className="-mx-4 w-[calc(100%+2rem)] overflow-hidden border-y border-neutral-200 dark:border-neutral-700 sm:mx-0 sm:w-full sm:rounded-lg sm:border">

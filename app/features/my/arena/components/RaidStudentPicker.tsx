@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StudentIcon } from '~/components/student/studentIcon';
 import { SearchableDropdown } from '~/components/common/SearchableDropdown';
-import type { Character, PortraitData } from '~/types/raidReport';
+import type { Character } from '~/types/raidReport';
 import type { Student } from '~/types/plannerData';
 import type { RaidHistoryStudent } from '~/types/raidHistory';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
@@ -10,12 +10,11 @@ import type { Locale } from '~/utils/i18n/config';
 
 interface RaidStudentPickerProps {
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: Locale;
   onSelect: (student: RaidHistoryStudent) => void;
 }
 
-export function RaidStudentPicker({ students, portraitData, locale, onSelect }: RaidStudentPickerProps) {
+export function RaidStudentPicker({ students, locale, onSelect }: RaidStudentPickerProps) {
   const { t: td } = useTranslation('dashboard');
   const { t: tp } = useTranslation(['planner', 'game']);
   const { t: t_ui } = useTranslation('ui');
@@ -80,7 +79,7 @@ export function RaidStudentPicker({ students, portraitData, locale, onSelect }: 
                       className={`flex w-full items-center gap-3 px-3 py-2 text-left ${index === highlightedIndex ? 'bg-neutral-100 dark:bg-neutral-800' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
                     >
                       <div className="w-10 shrink-0">
-                        <StudentIcon character={character} student={student} portraitData={portraitData} />
+                        <StudentIcon character={character} student={student} />
                       </div>
                       <span className="min-w-0 truncate text-neutral-900 dark:text-neutral-100" title={student.Name}>
                         {student.Name}
@@ -99,7 +98,7 @@ export function RaidStudentPicker({ students, portraitData, locale, onSelect }: 
         <div className="space-y-3 border-t border-neutral-200 pt-3 dark:border-neutral-800">
           <div className="flex items-center gap-3">
             <div className="w-12 shrink-0">
-              <StudentIcon character={{ id: selectedStudentId, level: 0, star, hasWeapon: weaponStar > 0, weaponStar, isAssist: false }} student={selectedStudent} portraitData={portraitData} />
+              <StudentIcon character={{ id: selectedStudentId, level: 0, star, hasWeapon: weaponStar > 0, weaponStar, isAssist: false }} student={selectedStudent} />
             </div>
             <div className="min-w-0 truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100" title={selectedStudent.Name}>
               {selectedStudent.Name}

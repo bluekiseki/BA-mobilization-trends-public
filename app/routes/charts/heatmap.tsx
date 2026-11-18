@@ -4,25 +4,20 @@ import ClientHeatmapLoader from '~/features/raid-stats/charts/heatmap/ClientHeat
 import { PageHeader } from '~/components/common/PageHeader';
 
 import type { Route } from './+types/heatmap';
-import { useParams, type LoaderFunctionArgs } from 'react-router'; // useRouteLoaderData, type LoaderFunctionArgs,
+import { Link, useParams, type LoaderFunctionArgs } from 'react-router'; // useRouteLoaderData, type LoaderFunctionArgs,
 import type { AppHandle } from '~/types/link';
 import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/head';
 
 import { GAMESERVER_LIST, type GameServer, type GameServerParams } from '~/types/data';
 import { getInstance } from '~/middleware/i18next';
 import { cdn } from '~/utils/cdn';
+import { localeLink } from '~/utils/localeLink';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/hooks/usePageHelp';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export const links: Route.LinksFunction = () => {
   return [
-    {
-      rel: 'preload',
-      href: cdn(`/w/students_portrait.json`),
-      crossOrigin: 'anonymous',
-      as: 'fetch',
-    },
     {
       rel: 'preload',
       href: cdn(`/ew/icon_img.json`),
@@ -79,15 +74,16 @@ export const handle: AppHandle = {
     if (!locale) return [];
 
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
-        href: cdn(`/w/${getLocaleShortName(locale)}.students.bin`),
+        href: cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
       {
         rel: 'preload',
-        href: cdn(`/w/${server}/${getLocaleShortName(locale)}.raid_info.bin`),
+        href: cdn(`/w/v2/${server}/${getLocaleShortName(locale)}.raid_info.bin`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -110,18 +106,22 @@ export function headers({}: Route.HeadersArgs) {
 }
 
 export default function Home() {
-  const { t } = useTranslation('charts', { keyPrefix: 'heatmap' });
+  const { t, i18n } = useTranslation('charts', { keyPrefix: 'heatmap' });
+  const locale = i18n.language as Locale;
 
   const { server } = useParams<GameServerParams>();
   if (!server) return <></>;
 
   // const {t} = useTranslation('charts.heatmap')
 
-  useHelpKey('chart.heatmap');
-
   return (
     <div className="px-4 mx-auto py-6">
       <PageHeader title={`${t('title')} (${server.toUpperCase()})`} description={t('description1')} />
+      <p className="mb-4 text-sm text-blue-700 dark:text-blue-300">
+        <Link to={localeLink(locale, '/students/10000?tab=stats')} className="font-semibold underline">
+          {t('studentsPageNotice')}
+        </Link>
+      </p>
       {/* <Suspense fallback={<p className="text-center text-neutral-600">Loading...</p>}> */}
       <ClientHeatmapLoader server={server} />
       {/* </Suspense> */}

@@ -2,6 +2,7 @@
 import { useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CustomNumberInput } from '../common/CustomInput';
+import { SheetIcon } from '../common/SheetIcon';
 import { FaHistory, FaChevronDown, FaChevronUp, FaGem, FaInfoCircle } from 'react-icons/fa';
 import { TbCalendarOff, TbAlertTriangle } from 'react-icons/tb';
 import Tooltip from 'rc-tooltip';
@@ -13,7 +14,6 @@ import { resolveMaxPull, type GlobalAggregatedResult } from '~/utils/gachaEngine
 interface Props {
   banners: BannerPeriod[];
   strategies: Record<string, BannerStrategy>;
-  portraitMap: Record<number, string>;
   pyroxeneIcon?: string | null;
   onUpdateStrategy: (bannerId: string, updates: Partial<BannerStrategy>) => void;
   onUpdateStudentConfig: (bannerId: string, studentId: number, updates: Partial<StudentStrategyConfig>) => void;
@@ -65,7 +65,7 @@ function GameImg({ src, size = 24 }: { src: string; size?: number }) {
   );
 }
 
-export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyroxeneIcon, onUpdateStrategy, onUpdateStudentConfig, gachaSimResult, onResetPlannerData }: Props) {
+export default function BannerPlanner_v2({ banners, strategies, pyroxeneIcon, onUpdateStrategy, onUpdateStudentConfig, gachaSimResult, onResetPlannerData }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.banner_planner' });
   const { t: tResultView } = useTranslation('planner', { keyPrefix: 'gacha.result_view' });
   const { t: t_g } = useTranslation('game');
@@ -230,22 +230,12 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                   return (
                     <div className={`flex ${spaceClass} pt-0.5 shrink-0`}>
                       {sortedPortraits.map((s, i) => {
-                        const imgSrc = portraitMap[s.id] ? `data:image/webp;base64,${portraitMap[s.id]}` : null;
                         const isSelected = strat?.studentConfigs?.[s.id]?.mode !== 'skip' && !!strat?.studentConfigs?.[s.id];
+                        const ringClass = `w-10 h-10 rounded-full border-2 ${isSelected ? 'border-ba-btn-blue' : 'border-neutral-300 dark:border-neutral-600'}`;
                         return (
                           <Tooltip key={i} placement="top" overlay={<span className="text-xs">{s.name}</span>}>
                             <div className="relative" style={{ zIndex: sortedPortraits.length - i }}>
-                              {imgSrc ? (
-                                <img
-                                  src={imgSrc}
-                                  className={`w-10 h-10 rounded-full object-cover border-2 ${isSelected ? 'border-ba-btn-blue' : 'border-neutral-300 dark:border-neutral-600'}`}
-                                  alt={s.name}
-                                />
-                              ) : (
-                                <div
-                                  className={`w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 border-2 ${isSelected ? 'border-ba-btn-blue' : 'border-neutral-300 dark:border-neutral-600'}`}
-                                />
-                              )}
+                              <SheetIcon sheet="student" id={s.id} alt={s.name} className={ringClass} fallback={<div className={`${ringClass} bg-neutral-200 dark:bg-neutral-700`} />} />
                             </div>
                           </Tooltip>
                         );
@@ -267,8 +257,8 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                         {t('free_pulls_label', { count: banner.freePulls })}
                       </span>
                     )}
-                    {banner.useChargeSystem && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400">{t('badge.charge_system')}</span>
+                    {!banner.useChargeSystem && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400">{t('badge.point_system')}</span>
                     )}
                   </div>
                   <div className="mt-0.5 flex items-center gap-2 flex-wrap text-xs text-neutral-500 dark:text-neutral-400" style={monoStyle}>
@@ -458,7 +448,6 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                     {sortedPickupStudents.map((student) => {
                       const config = strat.studentConfigs[student.id];
                       if (!config) return null;
-                      const imgSrc = portraitMap[student.id] ? `data:image/webp;base64,${portraitMap[student.id]}` : null;
                       const isTargeting = config.mode !== 'skip';
                       const tIdx = targetingIds.indexOf(student.id);
                       const canUp = isTargeting && tIdx > 0;
@@ -466,11 +455,13 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                       return (
                         <div key={student.id} className={`pt-3 first:pt-0 ${!isTargeting ? 'opacity-50' : ''}`}>
                           <div className="flex items-center gap-2.5 mb-2">
-                            {imgSrc ? (
-                              <img src={imgSrc} className="w-7 h-7 rounded-full object-cover border border-neutral-300 dark:border-neutral-600 shrink-0" alt={student.name} />
-                            ) : (
-                              <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />
-                            )}
+                            <SheetIcon
+                              sheet="student"
+                              id={student.id}
+                              alt={student.name}
+                              className="w-7 h-7 rounded-full border border-neutral-300 dark:border-neutral-600 shrink-0"
+                              fallback={<div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 shrink-0" />}
+                            />
                             <div className="flex min-w-0 flex-wrap items-center gap-1">
                               <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100">{student.name}</span>
                               {student.isRerun && (
@@ -598,7 +589,7 @@ export default function BannerPlanner_v2({ banners, strategies, portraitMap, pyr
                             if (!stat) return null;
                             return (
                               <span key={s.id} className="flex items-center gap-1.5 whitespace-nowrap">
-                                {portraitMap[s.id] ? <img src={`data:image/webp;base64,${portraitMap[s.id]}`} alt={s.name} className="w-4 h-4 rounded-full object-cover" /> : null}
+                                <SheetIcon sheet="student" id={s.id} alt={s.name} className="w-4 h-4 rounded-full" />
                                 <span className="text-neutral-600 dark:text-neutral-300">{s.name}</span>
                                 <b style={{ color: rateColor(stat.obtainRate) }}>{stat.obtainRate.toFixed(1)}%</b>
                                 {stat.avgEleph > 0 && (

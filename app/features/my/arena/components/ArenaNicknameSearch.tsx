@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { SearchableDropdown } from '~/components/common/SearchableDropdown';
-import type { PortraitData } from '~/types/raidReport';
 import type { Student } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
@@ -12,12 +11,11 @@ interface Props {
   onChange: (nickname: string) => void;
   candidates: OpponentCandidate[];
   students: Record<string, Student>;
-  portraitData: PortraitData;
   locale: string;
 }
 
 // Free-text nickname filter with suggestions from saved opponents (avatar, last met, battle count).
-export function ArenaNicknameSearch({ value, onChange, candidates, students, portraitData, locale }: Props) {
+export function ArenaNicknameSearch({ value, onChange, candidates, students, locale }: Props) {
   const [open, setOpen] = useState(false);
   // Same locale-aware matcher as the student search (e.g. Hangul initial consonants).
   const matcher = useSearchMatcher(locale as Locale);
@@ -53,7 +51,7 @@ export function ArenaNicknameSearch({ value, onChange, candidates, students, por
               onMouseEnter={() => onHighlight(i)}
               className={`flex cursor-pointer items-center gap-3 px-3 py-2 ${i === highlighted ? 'bg-neutral-100 dark:bg-neutral-700' : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'}`}
             >
-              <div className="w-8 shrink-0">{c.avatarId !== null && <StudentPortrait id={c.avatarId} portraitData={portraitData} name={students[String(c.avatarId)]?.Name} />}</div>
+              <div className="w-8 shrink-0">{c.avatarId !== null && <StudentPortrait id={c.avatarId} name={students[String(c.avatarId)]?.Name} />}</div>
               <span className="min-w-0 flex-1 truncate text-sm text-neutral-900 dark:text-neutral-100" title={c.nickname}>
                 {c.nickname}
               </span>

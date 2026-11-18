@@ -6,7 +6,6 @@ import type { ReviewOverlay, StudentCurrent } from './types';
 export interface StudentReviewRow {
   studentId: number | null;
   name: string;
-  portrait: string | undefined;
   equipmentTypes: Student['Equipment'] | null;
   // Student's base rarity, used to seed the default target star when no growth
   // plan exists yet — prevents dispatch/low-rarity students from defaulting to 5★.

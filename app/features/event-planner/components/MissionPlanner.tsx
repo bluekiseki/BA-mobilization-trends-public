@@ -68,8 +68,6 @@ export const MissionPlanner = ({ eventId, eventData, iconData, onCalculate }: Mi
     onCalculate({ rewards });
   }, [completedMissions, durationDays, missionData, missionTypes, onCalculate]);
 
-  if (completedMissions === undefined || durationDays === undefined) return null;
-
   const handleToggleMission = useCallback(
     (missionId: number) => {
       setCompletedMissions(
@@ -95,7 +93,7 @@ export const MissionPlanner = ({ eventId, eventData, iconData, onCalculate }: Mi
     setCompletedMissions(new Set());
   }, []);
 
-  if (missionData.length === 0) return null;
+  if (completedMissions === undefined || durationDays === undefined || missionData.length === 0) return null;
 
   return (
     <>

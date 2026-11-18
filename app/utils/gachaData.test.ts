@@ -59,6 +59,18 @@ describe('parseAndGroupBanners — recruit charge system cutoff', () => {
   });
 });
 
+describe('parseAndGroupBanners — explicit free pulls', () => {
+  it('grants 200 free pulls to the KR Makoto/Satsuki (Swimsuit) banner instead of the automatic 100', () => {
+    const banner = parseAndGroupBanners('KR', null).find((b) => b.pickupStudents.some((s) => s.id === CHARGE_SYSTEM_TRIGGER_ID));
+    expect(banner?.freePulls).toBe(200);
+  });
+
+  it('keeps the automatic 100 free pulls for banners without an explicit value', () => {
+    const jpTrigger = parseAndGroupBanners('JP', null).find((b) => b.pickupStudents.some((s) => s.id === CHARGE_SYSTEM_TRIGGER_ID));
+    expect(jpTrigger?.freePulls).toBe(100);
+  });
+});
+
 describe('withPickupFallbackStudents', () => {
   const makeStudent = (id: number, name: string): Student => ({ id, name, isLimited: false, isFes: false, isRerun: false, isRecall: false });
   const makeBanner = (pickupStudents: Student[]): BannerPeriod => ({

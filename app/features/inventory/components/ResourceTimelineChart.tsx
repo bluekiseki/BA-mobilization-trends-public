@@ -89,6 +89,8 @@ const WEEKS_PER_MONTH = 365 / 12 / 7;
 
 export default function ResourceTimelineChart({ label, data, weeklySpendLimit, height = 280, annotations, planningLine, planningLabel, resolveItemLabel }: Props) {
   const { t } = useTranslation();
+  // i18next's strictly typed `t` rejects keys built at runtime.
+  const tDynamic = t as unknown as (key: string, options?: Record<string, unknown>) => string;
 
   if (!data.length) return null;
 
@@ -273,7 +275,7 @@ export default function ResourceTimelineChart({ label, data, weeklySpendLimit, h
                           <span style={{ maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {a.labelKey
                               ? a.labelKey.includes(':')
-                                ? t(
+                                ? tDynamic(
                                     a.labelKey,
                                     a.labelParams && resolveItemLabel && typeof a.labelParams.itemKey === 'string'
                                       ? { ...a.labelParams, item: resolveItemLabel(a.labelParams.itemKey), itemKey: undefined }

@@ -14,6 +14,7 @@ interface Props {
 
 export default function APSchedulePanel({ schedules, apOverrides, onApChange }: Props) {
   const { t } = useTranslation('planner', { keyPrefix: 'gacha.income.timeline' });
+  const { t: t_planner } = useTranslation('planner');
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -51,7 +52,7 @@ export default function APSchedulePanel({ schedules, apOverrides, onApChange }: 
         <div className="w-16">{t('headers.start')}</div>
         <div className="w-12 text-center">{t('headers.type')}</div>
         <div className="flex-1 px-2">{t('headers.name')}</div>
-        <div className="w-14 text-right">{t('headers.ap')}</div>
+        <div className="w-14 text-right">{t_planner('common.ap')}</div>
       </div>
 
       <div className="max-h-96 overflow-y-auto custom-scrollbar">

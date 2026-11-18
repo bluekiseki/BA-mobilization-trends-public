@@ -3,6 +3,7 @@ import StarIcon from './StarIcon';
 
 interface StarRatingProps {
   n: number;
+  size?: number;
 }
 
 const styles = {
@@ -10,7 +11,7 @@ const styles = {
   cyan: { color: 'cyan' },
 };
 
-export const StarRating: React.FC<StarRatingProps> = React.memo(({ n }: StarRatingProps) => {
+export const StarRating: React.FC<StarRatingProps> = React.memo(({ n, size = 20 }: StarRatingProps) => {
   const isassist = n <= 0;
   const assistStr = isassist ? (
     <span
@@ -40,11 +41,11 @@ export const StarRating: React.FC<StarRatingProps> = React.memo(({ n }: StarRati
 
   const starNode = ((n: number) => {
     if (n <= 5) {
-      return <StarIcon number={n} color="#f6e94b" height={20} />;
+      return <StarIcon number={n} color="#f6e94b" height={size} />;
     } else if (n === 6) {
-      return <StarIcon number={''} color="#77e0ff" height={20} />;
+      return <StarIcon number={''} color="#77e0ff" height={size} />;
     } else if (n <= 10) {
-      return <StarIcon number={n - 6} color="#77e0ff" height={20} />;
+      return <StarIcon number={n - 6} color="#77e0ff" height={size} />;
     } else if (n === 11) {
       return <span style={styles.cyan}>(A)</span>;
     }

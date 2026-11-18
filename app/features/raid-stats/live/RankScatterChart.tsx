@@ -282,8 +282,8 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
   // per-commit re-render doesn't fight the drag for the main thread.
   const [isZooming, setIsZooming] = useState(false);
 
-  const [showPredictionCut, setShowPredictionCut] = useState<boolean>(true);
-  const [predictionMode, setPredictionMode] = useState<'model' | 'stats' | 'compare'>('model');
+  // At most one mode is active; null means the prediction cutoff is hidden
+  const [predictionMode, setPredictionMode] = useState<'model' | 'stats' | 'compare' | null>('model');
 
   const [compareRaidId, setCompareRaidId] = useState<string>('');
 
@@ -292,12 +292,13 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
   const { t, i18n } = useTranslation('liveDashboard');
   const { t: t_ui } = useTranslation('ui');
   const { t: t_dash } = useTranslation('dashboard');
+  const { t: t_game } = useTranslation('game');
   const locale = i18n.language as Locale;
   const currentLocaleShort = getLocaleShortName(locale);
 
   const fetchRaids = useDataCache<RaidInfo[]>();
   useEffect(() => {
-    fetchRaids(cdn(`/w/${server}/${currentLocaleShort}.raid_info.bin`), (res) => res.json())
+    fetchRaids(cdn(`/w/v2/${server}/${currentLocaleShort}.raid_info.bin`), (res) => res.json())
       .then((data) => {
         if (data) setAllRaidInfos(data);
       })
@@ -408,7 +409,48 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
 
   // Speed-adjusted model for the active tab; null when none was published for this raid type.
   const activeScoreModel = isRaid ? totalAssaultModel : activeTab === 'total' ? eliminationRaidModel?.total : eliminationRaidModel?.boss;
-  const effectiveMode = predictionMode === 'model' && !activeScoreModel ? 'stats' : predictionMode;
+  // Speed-adjusted cut: needs the newest snapshot plus the 12/24/48h-old ones from the timeline.
+  const fusedPrediction = useMemo(() => {
+    const scoreModel = activeScoreModel;
+    if (predictionMode !== 'model' || !scoreModel) return null;
+    const endMs = getKstTime(raidInfos[0].Date) + 3600_000 * 24 * getLiveRaidDuration() - 3600_000 * 7;
+    const hoursAt = (time: string) => (endMs - getKstTime(time, '+00:00')) / 3600_000;
+    const hours = hoursAt(lastData.time);
+    if (!(hours > 0)) return null;
+
+    // Latest snapshot: the elimination total tab sums the three boss scores of each rank, like the chart does.
+    let latest: ReadonlyArray<{ r: number; s: number }> | undefined;
+    if (isRaid) latest = (lastData.data as LastRaidData).boss?.d;
+    else if (activeTab === 'total') {
+      const scores = new Map<number, number>();
+      const total = (lastData.data as LastERaidData).total;
+      for (const boss of [total?.boss1, total?.boss2, total?.boss3]) for (const entry of boss?.d ?? []) scores.set(entry.r, (scores.get(entry.r) ?? 0) + entry.s);
+      latest = Array.from(scores, ([r, s]) => ({ r, s }));
+    } else latest = (lastData.data as LastERaidData)[activeTab]?.d;
+    if (!latest || latest.length === 0) return null;
+    const latestEntries = latest;
+
+    const sources: SnapshotSource[] = [{ hoursRemaining: hours, getCurve: () => curveFromEntries(latestEntries) }];
+    for (const point of timelineData) {
+      const data = point.data;
+      let entries: ReadonlyArray<{ r: number; s: number }> | undefined;
+      if ('boss' in data) entries = data.boss.d;
+      else entries = activeTab === 'total' ? data.total : data[activeTab]?.d;
+      if (!entries || entries.length === 0) continue;
+      const pointEntries = entries;
+      sources.push({ hoursRemaining: hoursAt(point.time), getCurve: () => curveFromEntries(pointEntries) });
+    }
+    const prediction = predictScoreCut(scoreModel, sources, hours);
+    if (!prediction) return null;
+    // The 80% band is measured in final ranks around the target rank; the predicted rank maps to that
+    // target, so scale the band by the same ratio to draw it on the current curve.
+    const spread = prediction.p80 === null ? null : prediction.p80 / scoreModel.targetRank;
+    return { ...prediction, bandLow: spread === null ? null : prediction.rank * (1 - spread), bandHigh: spread === null ? null : prediction.rank * (1 + spread) };
+  }, [predictionMode, activeScoreModel, isRaid, activeTab, raidInfos, lastData, timelineData]);
+
+  // Falls back to the stats mode while the speed-adjusted model cannot produce a cut yet (e.g. early in a raid).
+  const effectiveMode = predictionMode === 'model' && !fusedPrediction ? 'stats' : predictionMode;
+  const showPredictionCut = effectiveMode !== null;
 
   const currentPrediction = useMemo(() => {
     if (!showPredictionCut || !predictionData || effectiveMode === 'model') return null;
@@ -596,45 +638,6 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
       return { chartData: timeData, customTicks: undefined, xDomain: ['dataMin', 'dataMax'] as const, legendPayload: payload, panels: null as PanelGeometry | null };
     }
   }, [lastData, activeTab, axisType, server, raidInfos, SCORE_BRACKETS, isRaid, isTotalChart, activeRaidInfo]);
-
-  // Speed-adjusted cut: needs the newest snapshot plus the 12/24/48h-old ones from the timeline.
-  const fusedPrediction = useMemo(() => {
-    const scoreModel = activeScoreModel;
-    if (!showPredictionCut || !scoreModel || effectiveMode !== 'model') return null;
-    const endMs = getKstTime(raidInfos[0].Date) + 3600_000 * 24 * getLiveRaidDuration() - 3600_000 * 7;
-    const hoursAt = (time: string) => (endMs - getKstTime(time, '+00:00')) / 3600_000;
-    const hours = hoursAt(lastData.time);
-    if (!(hours > 0)) return null;
-
-    // Latest snapshot: the elimination total tab sums the three boss scores of each rank, like the chart does.
-    let latest: ReadonlyArray<{ r: number; s: number }> | undefined;
-    if (isRaid) latest = (lastData.data as LastRaidData).boss?.d;
-    else if (activeTab === 'total') {
-      const scores = new Map<number, number>();
-      const total = (lastData.data as LastERaidData).total;
-      for (const boss of [total?.boss1, total?.boss2, total?.boss3]) for (const entry of boss?.d ?? []) scores.set(entry.r, (scores.get(entry.r) ?? 0) + entry.s);
-      latest = Array.from(scores, ([r, s]) => ({ r, s }));
-    } else latest = (lastData.data as LastERaidData)[activeTab]?.d;
-    if (!latest || latest.length === 0) return null;
-    const latestEntries = latest;
-
-    const sources: SnapshotSource[] = [{ hoursRemaining: hours, getCurve: () => curveFromEntries(latestEntries) }];
-    for (const point of timelineData) {
-      const data = point.data;
-      let entries: ReadonlyArray<{ r: number; s: number }> | undefined;
-      if ('boss' in data) entries = data.boss.d;
-      else entries = activeTab === 'total' ? data.total : data[activeTab]?.d;
-      if (!entries || entries.length === 0) continue;
-      const pointEntries = entries;
-      sources.push({ hoursRemaining: hoursAt(point.time), getCurve: () => curveFromEntries(pointEntries) });
-    }
-    const prediction = predictScoreCut(scoreModel, sources, hours);
-    if (!prediction) return null;
-    // The 80% band is measured in final ranks around the target rank; the predicted rank maps to that
-    // target, so scale the band by the same ratio to draw it on the current curve.
-    const spread = prediction.p80 === null ? null : prediction.p80 / scoreModel.targetRank;
-    return { ...prediction, bandLow: spread === null ? null : prediction.rank * (1 - spread), bandHigh: spread === null ? null : prediction.rank * (1 + spread) };
-  }, [showPredictionCut, activeScoreModel, effectiveMode, isRaid, activeTab, raidInfos, lastData, timelineData]);
 
   // Find the intersection point between the predicted rank (X) and the score distribution curve.
   const predictionIntersection = useMemo(() => {
@@ -915,24 +918,24 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
       return (
         <div className="p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-md border dark:border-neutral-700 text-sm shadow-md">
           <p>
-            <strong>Rank:</strong> {rank.toLocaleString()}
+            <strong>{t_dash('byRank')}:</strong> {rank.toLocaleString()}
           </p>
           <p>
-            <strong>Score:</strong> {originalScore.toLocaleString()}
+            <strong>{t_dash('byScore')}:</strong> {originalScore.toLocaleString()}
           </p>
           {!isTotalChart && (
             <p>
-              <strong>Time:</strong> {time}
+              <strong>{t_ui('time')}:</strong> {time}
               {parties > 1 && <span className="text-neutral-500 dark:text-neutral-400"> ({t_dash('nPartyCount', { n: parties })})</span>}
             </p>
           )}
           <p>
-            <strong>Difficulty:</strong> <span style={{ color: hoveredSeries.color }}>{dataKey}</span>
+            <strong>{t_game('difficulty')}:</strong> <span style={{ color: hoveredSeries.color }}>{dataKey}</span>
           </p>
         </div>
       );
     },
-    [activeRaidInfo, server, isTotalChart, t_dash],
+    [activeRaidInfo, server, isTotalChart, t_dash, t_ui, t_game],
   );
 
   return (
@@ -944,58 +947,48 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
       `}</style>
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4 bg-purple-50 dark:bg-neutral-800 p-3 sm:p-4 rounded-lg border border-purple-200 dark:border-neutral-700">
-        {/* 1. Checkbox Area: shrink-0 to prevent compression */}
-        <label className="flex items-center gap-2 cursor-pointer font-bold text-sm text-purple-700 dark:text-purple-400 shrink-0">
-          <input
-            type="checkbox"
-            checked={showPredictionCut}
-            onChange={(e) => setShowPredictionCut(e.target.checked)}
-            className="w-4 h-4 rounded border-neutral-300 text-purple-600 focus:ring-purple-500"
-          />
-          {t('show_prediction_cutoff')}
-        </label>
+        <span className="font-bold text-sm text-purple-700 dark:text-purple-400 shrink-0">{t('show_prediction_cutoff')}</span>
 
-        {showPredictionCut && (
-          /* 2. Radio & Select Container: Vertical (flex-col) on mobile, horizontal (sm:flex-row) from tablet. min-w-0 required */
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-sm font-medium w-full md:w-auto min-w-0">
-            {/* Radio Button Group: wraps onto a second line on narrow screens instead of overflowing */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 min-w-0">
-              {activeScoreModel && (
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="predMode" checked={effectiveMode === 'model'} onChange={() => setPredictionMode('model')} />
-                  <span className="whitespace-nowrap">{t('prediction_mode_model')}</span>
-                </label>
-              )}
+        {/* Mode checkboxes behave like a radio group that can also be cleared */}
+        {/* Checkbox & Select Container: Vertical (flex-col) on mobile, horizontal (sm:flex-row) from tablet. min-w-0 required */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-sm font-medium w-full md:w-auto min-w-0">
+          {/* Mode checkbox group: wraps onto a second line on narrow screens instead of overflowing */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 min-w-0">
+            {activeScoreModel && (
               <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="predMode" checked={effectiveMode === 'stats'} onChange={() => setPredictionMode('stats')} />
-                <span className="whitespace-nowrap">{t('prediction_mode_stats')}</span>
+                <input type="checkbox" checked={effectiveMode === 'model'} onChange={(e) => setPredictionMode(e.target.checked ? 'model' : null)} />
+                <span className="whitespace-nowrap">{t('prediction_mode_model')}</span>
               </label>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="predMode" checked={effectiveMode === 'compare'} onChange={() => setPredictionMode('compare')} />
-                <span className="whitespace-nowrap">{t('prediction_mode_compare')}</span>
-              </label>
-            </div>
-
-            {/* 3. Select Area: w-full for full-width on mobile; appropriate max-width with truncation from sm onwards */}
-            {effectiveMode === 'compare' && (
-              <div className="w-full sm:w-auto min-w-0 flex-1">
-                <select
-                  className="w-full sm:max-w-50 lg:max-w-62.5 px-2 py-1.5 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 outline-none truncate"
-                  value={compareRaidId}
-                  onChange={(e) => setCompareRaidId(e.target.value)}
-                  // Added title attribute to allow viewing full text on hover when truncated
-                  title={compareOptions.find((opt) => opt.value === compareRaidId)?.label || ''}
-                >
-                  {compareOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             )}
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" checked={effectiveMode === 'stats'} onChange={(e) => setPredictionMode(e.target.checked ? 'stats' : null)} />
+              <span className="whitespace-nowrap">{t('prediction_mode_stats')}</span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" checked={effectiveMode === 'compare'} onChange={(e) => setPredictionMode(e.target.checked ? 'compare' : null)} />
+              <span className="whitespace-nowrap">{t('prediction_mode_compare')}</span>
+            </label>
           </div>
-        )}
+
+          {/* 3. Select Area: w-full for full-width on mobile; appropriate max-width with truncation from sm onwards */}
+          {effectiveMode === 'compare' && (
+            <div className="w-full sm:w-auto min-w-0 flex-1">
+              <select
+                className="w-full sm:max-w-50 lg:max-w-62.5 px-2 py-1.5 border rounded-md bg-white dark:bg-neutral-700 dark:border-neutral-600 outline-none truncate"
+                value={compareRaidId}
+                onChange={(e) => setCompareRaidId(e.target.value)}
+                // Added title attribute to allow viewing full text on hover when truncated
+                title={compareOptions.find((opt) => opt.value === compareRaidId)?.label || ''}
+              >
+                {compareOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex justify-between items-center mb-4 pb-3 border-b border-neutral-200 dark:border-neutral-700">
@@ -1023,10 +1016,10 @@ export const RankScatterChart: FC<RankScatterChartProps> = ({
           {(isRaid || activeTab !== 'total') && (
             <div className="flex gap-1 rounded-lg bg-neutral-200 dark:bg-neutral-700 p-1 text-xs font-semibold">
               <button onClick={() => setAxisType('score')} className={`px-3 py-1 rounded-md transition-colors ${axisType === 'score' ? 'bg-white dark:bg-neutral-900 shadow-sm' : ''}`}>
-                Score
+                {t_dash('byScore')}
               </button>
               <button onClick={() => setAxisType('time')} className={`px-3 py-1 rounded-md transition-colors ${axisType === 'time' ? 'bg-white dark:bg-neutral-900 shadow-sm' : ''}`}>
-                Time
+                {t_ui('time')}
               </button>
             </div>
           )}

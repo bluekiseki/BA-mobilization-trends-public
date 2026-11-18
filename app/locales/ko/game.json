@@ -13,11 +13,13 @@
     "breakthrough": "돌파시험",
     "escort": "호위시험"
   },
+  "tacticalRelay": "가상적성시험",
   "tacticalChallenge": "전술대항전",
   "expertPermit": "숙련 증서",
   "event": "이벤트",
   "schedule": "스케쥴",
   "difficulty": "난이도",
+  "boss_armor_type": "보스 방어 타입",
   "difficulties": {
     "lunatic": "루나틱",
     "torment": "토르먼트",

@@ -1,16 +1,15 @@
-import type { StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { StudentData } from '~/types/plannerData';
 import type { StudentResult } from './types';
 import type { StudentReviewRow } from './reviewTypes';
 import { getCombatStyleRepresentativeId } from '~/utils/combatStyle';
 
-function toReviewRow(result: StudentResult, portraits: StudentPortraitData, students: StudentData): StudentReviewRow {
+function toReviewRow(result: StudentResult, students: StudentData): StudentReviewRow {
   const studentId = result.student ? getCombatStyleRepresentativeId(result.student.id) : null;
   const equipmentTypes = studentId !== null ? (students[String(studentId)]?.Equipment ?? null) : null;
   const starGrade = studentId !== null ? (students[String(studentId)]?.StarGrade ?? 1) : 1;
   return {
     studentId,
     name: studentId !== null ? (students[String(studentId)]?.Name ?? result.student?.name ?? '') : '',
-    portrait: studentId !== null ? portraits[studentId] : undefined,
     equipmentTypes,
     starGrade,
     confidence: result.student?.confidence ?? null,
@@ -25,15 +24,15 @@ function toReviewRow(result: StudentResult, portraits: StudentPortraitData, stud
 }
 
 // Dedupe by studentId (keeping highest-confidence), but leave already-edited rows untouched.
-export function mergeReviewRow(rows: StudentReviewRow[], result: StudentResult, portraits: StudentPortraitData, students: StudentData): { rows: StudentReviewRow[]; duplicate: boolean } {
+export function mergeReviewRow(rows: StudentReviewRow[], result: StudentResult, students: StudentData): { rows: StudentReviewRow[]; duplicate: boolean } {
   if (result.student === null) {
-    return { rows: [...rows, toReviewRow(result, portraits, students)], duplicate: false };
+    return { rows: [...rows, toReviewRow(result, students)], duplicate: false };
   }
 
   const representativeId = getCombatStyleRepresentativeId(result.student.id);
   const index = rows.findIndex((row) => row.studentId === representativeId);
   if (index === -1) {
-    return { rows: [...rows, toReviewRow(result, portraits, students)], duplicate: false };
+    return { rows: [...rows, toReviewRow(result, students)], duplicate: false };
   }
 
   const existing = rows[index];
@@ -42,6 +41,6 @@ export function mergeReviewRow(rows: StudentReviewRow[], result: StudentResult, 
   }
 
   const next = [...rows];
-  next[index] = toReviewRow(result, portraits, students);
+  next[index] = toReviewRow(result, students);
   return { rows: next, duplicate: true };
 }

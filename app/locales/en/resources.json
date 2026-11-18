@@ -70,7 +70,7 @@
     "weeklyIncome": "Weekly income",
     "permitsPerWeek": "permits/week",
     "dailyInputHint": "Daily input: use the Schedule calendar below to enter daily amounts.",
-    "defaultMaxFloor": "Default max floor",
+    "defaultMaxFloor": "Multifloor floor reached (every season)",
     "noMfPeriods": "No Talents Unlock WB periods in schedule."
   },
   "elephCard": {
@@ -148,6 +148,20 @@
     "growthSpendEleph": "{{item}} — goal spend",
     "growthSpendDefault": "Growth spend",
     "elephGoalReached": "{{studentName}} - Eleph (Goal reached)",
-    "goalLabel": "(Goal)"
+    "goalLabel": "(Goal)",
+    "coinShopAuto": "Joint Firing Drill shop (auto-buy)"
+  },
+  "assumeAll": {
+    "title": "Assumed income",
+    "raid": "Collect all Total Assault score rewards",
+    "eraid": "Collect all Grand Assault score rewards",
+    "eventTitle": "Event income",
+    "eventMode": {
+      "planner": "Use event planner results",
+      "all": "Sum all shop and mission rewards (no stage farming)"
+    }
+  },
+  "autoBuy": {
+    "jfd": "Buy the monthly maximum in the Joint Firing Drill shop"
   }
 }

@@ -13,11 +13,13 @@
     "breakthrough": "Breakthrough Test",
     "escort": "Escort Test"
   },
+  "tacticalRelay": "Virtual Aptitude Test",
   "tacticalChallenge": "Tactical Challenge",
   "expertPermit": "Expert Permit",
   "event": "Event",
   "schedule": "Schedule",
   "difficulty": "Difficulty",
+  "boss_armor_type": "Boss Armor Type",
   "difficulties": {
     "lunatic": "Lunatic",
     "torment": "Torment",

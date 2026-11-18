@@ -9,7 +9,7 @@ import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { useGanttController } from '~/features/calendar/gantt/useGanttController';
 import { useLazySchedule } from '~/features/calendar/gantt/useLazySchedule';
 import { GanttChart } from '~/features/calendar/gantt/GanttChart';
-import type { Student, StudentPortraitData } from '~/types/plannerData';
+import type { Student } from '~/types/plannerData';
 import { createLinkHreflang, createLocalizedUrl, createMetaDescriptor } from '~/components/shell/head';
 import { PageHeader } from '~/components/common/PageHeader';
 import { textFeedUrl } from '~/data/textFeeds.meta';
@@ -20,6 +20,7 @@ import type { Route } from './+types/calendar';
 import { FiClock } from 'react-icons/fi';
 import { localeLink } from '~/utils/localeLink';
 import { getItemTitle } from '~/utils/scheduleDisplay';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 const SEO_TRACKS = ['event', 'pickup', 'raid', 'multifloor'] as const;
 
@@ -63,9 +64,11 @@ export function loader({ context, request }: LoaderFunctionArgs) {
                 ? i18n.t('game:event')
                 : item.type === 'multifloor'
                   ? i18n.t('game:multifloor')
-                  : item.type === 'pickup'
-                    ? i18n.t('game:pickup')
-                    : i18n.t(`calendar:track.${item.type}`);
+                  : item.type === 'tacticalRelay'
+                    ? i18n.t('game:tacticalRelay')
+                    : item.type === 'pickup'
+                      ? i18n.t('game:pickup')
+                      : i18n.t(`calendar:track.${item.type}`);
       return {
         id: item.id,
         title: isPickup ? i18n.t('calendar:track.pickup') : getItemTitle(item, locale, i18n),
@@ -99,15 +102,10 @@ export const handle: AppHandle = {
 
     const locale = d?.locale as Locale;
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
-        as: 'fetch',
-        crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
-        href: cdn(`/w/students_portrait.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -137,18 +135,13 @@ export default function SchedulePageGantt() {
     resetKey: loadedServer,
   });
 
-  // 1. Data Fetching (Student info and portraits)
+  // 1. Data Fetching (Student info)
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
 
   useEffect(() => {
     fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
       .then((r) => r.json())
       .then((data) => setStudentData(data as Record<number, Student>))
-      .catch(console.error);
-    fetch(cdn(`/w/students_portrait.json`))
-      .then((r) => r.json())
-      .then((data) => setStudentPortraits(data as StudentPortraitData))
       .catch(console.error);
   }, [locale]);
 
@@ -238,7 +231,6 @@ export default function SchedulePageGantt() {
               tracks: scheduleData.tracks,
               timeRange: scheduleData.timeRange,
               studentData,
-              studentPortraits,
               birthdayTrackItems,
             }}
             controller={ganttController}

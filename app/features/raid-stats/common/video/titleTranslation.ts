@@ -8,7 +8,7 @@ export interface TermConcept {
   forms: Partial<Record<TermLocale, string[]>>;
   /** Higher priority wins when two concepts share a surface form with different outputs. */
   priority: number;
-  /** Curated concepts may use single-character forms (e.g. 凸). */
+  /** Curated concepts may use single-character forms. */
   allowShortForms?: boolean;
 }
 
@@ -50,7 +50,7 @@ function splitCostume(name: string): { base: string; costume: string } | null {
   return m ? { base: m[1], costume: m[2] } : null;
 }
 
-// "カスミ（水着）" -> "水着カスミ", "Kasumi (Swimsuit)" -> "Swimsuit Kasumi"
+// Move parenthesized variants before the name: "Kasumi (Swimsuit)" -> "Swimsuit Kasumi".
 function costumePrefixForm(name: string, locale: TermLocale): string | null {
   const parts = splitCostume(name);
   if (!parts) return null;
@@ -91,7 +91,7 @@ export function studentConcepts(students: StudentsByLocale): TermConcept[] {
       if (!student) continue;
       label[l] = student.Name;
       const prefixed = costumePrefixForm(student.Name, l);
-      // Titles often drop the star in names like "シロコ＊テラー".
+      // Titles may omit the star separator in variant names.
       const unstarred = student.Name.replace(/\s*[＊*]\s*/g, '');
       forms[l] = [student.Name, ...student.SearchTags, ...(prefixed ? [prefixed] : []), ...(unstarred !== student.Name ? [unstarred] : [])];
       const costume = splitCostume(student.Name)?.costume;
@@ -169,8 +169,8 @@ function isTileable(text: string, dict: TitleDictionary): boolean {
  * Reject matches that are only part of a longer word. Japanese writes words without spaces,
  * so kana neighbours are judged by the leftover piece of the same-script run:
  * - katakana: the leftover must be empty, made of other dictionary forms, or itself a word
- *   (2+ chars next to a 3+ char form). "チナトロ|ボーダー" passes; "ハード|ル" and "チャン|ネル" do not.
- * - hiragana: particles may follow (なし|で), but the form must not start mid-word (は|なし).
+ *   (2+ chars next to a 3+ char form). Reject fragments of ordinary words.
+ * - hiragana: allow trailing particles, but reject forms that start mid-word.
  */
 function isAtBoundary(lower: string, start: number, end: number, dict: TitleDictionary): boolean {
   const keyLength = end - start;
@@ -208,7 +208,7 @@ export function segmentTitle(title: string, dict: TitleDictionary): TitleSegment
     return l.length === ch.length ? l : ch;
   }).join('');
   // Han-only forms from Chinese are skipped in Japanese titles, where the same characters
-  // are usually ordinary words (e.g. 希望 is a student name in zh_Hant but "hope" in ja).
+  // may also be ordinary words in another language.
   const isJapanese = /[\u3040-\u30FF]/.test(title);
   const usable = (locales: Set<TermLocale>, key: string) => !isJapanese || locales.has('ja') || charClass(key[0]) !== 'han';
   const segments: TitleSegment[] = [];
@@ -234,7 +234,7 @@ const isWordChar = (ch: string | undefined) => !!ch && (/[0-9]/.test(ch) || char
 const textOf = (s: TitleSegment) => (typeof s === 'string' ? s : s.dst);
 
 // Japanese titles have no spaces between words; space-separated targets (en, ko) need one
-// where a translated word now touches another word, e.g. "総力戦S93" -> "Total Assault S93".
+// where a translated word touches another word or a season number.
 function spaceTranslatedWords(segments: TitleSegment[]): TitleSegment[] {
   const result: TitleSegment[] = [];
   for (const seg of segments) {

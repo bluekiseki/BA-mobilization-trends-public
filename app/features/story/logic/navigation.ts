@@ -1,14 +1,13 @@
 import type { Server } from './releaseDates';
-import { ALL_CATEGORIES } from './storyIndex';
 
 export const STORY_CATEGORIES = ['Main', 'Event', 'Group', 'Mini', 'Favor', 'Content'] as const;
 
 export function readStoryFilters(params: URLSearchParams, server: Server = 'jp') {
-  const requestedCategory = params.get('category');
+  // Several categories can be on at once (?category=Main,Event); none is the timeline. The older value 'all' means every category.
+  const requested = params.get('category') ?? '';
   return {
     query: params.get('q') ?? '',
-    // '' is the timeline of main, event, group and mini stories; 'all' adds bond stories and the rest.
-    category: requestedCategory === ALL_CATEGORIES ? ALL_CATEGORIES : (STORY_CATEGORIES.find((value) => value === requestedCategory) ?? ''),
+    categories: requested === 'all' ? [...STORY_CATEGORIES] : STORY_CATEGORIES.filter((value) => requested.split(',').includes(value)),
     sort: server,
     descending: params.get('order') === 'desc',
     year: /^\d{4}$/.test(params.get('year') ?? '') ? params.get('year') : null,
@@ -33,6 +32,6 @@ export function storyListPath(query: string): string {
 // Keep chapter numbers with their titles while moving the volume to a quieter line.
 export function splitSeriesTitle(label: string, main: boolean): { context: string; title: string } {
   if (!main) return { context: '', title: label };
-  const match = /^(.*?)(\d+장\s.*|第\d+章.*|Ch\.\s*\d+.*)$/.exec(label);
+  const match = /^(.*?)(Ch\.\s*\d+.*|\d+장\s.*|第\d+章.*)$/.exec(label);
   return match ? { context: match[1].replace(/[,\s]+$/, ''), title: match[2].trim() } : { context: '', title: label };
 }

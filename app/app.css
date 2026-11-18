@@ -184,3 +184,10 @@ body {
   font-display: swap;
   unicode-range: U+20-17F, U+2B0-2FF, U+2000-206F, U+20A0-20CF, U+2100-21FF, U+2600-26FF, U+AC00-D7A3, U+3131-318E;
 }
+
+/* Recharts 3 makes the chart surface focusable (accessibilityLayer); tapping a chart on mobile then draws a white focus ring around it. */
+.recharts-wrapper:focus,
+.recharts-wrapper *:focus,
+.recharts-surface:focus {
+  outline: none;
+}

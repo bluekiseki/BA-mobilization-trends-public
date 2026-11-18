@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { data, useLoaderData, useParams, type LoaderFunctionArgs } from 'react-router';
 import { EventInfo } from '~/components/common/EventInfo';
-import type { EventData, EventSeason, IconData, IconInfos, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, EventSeason, IconData, IconInfos, StudentData } from '~/types/plannerData';
 // import iconDataInfoModule from "~/data/event/icon_info.json"
 // import iconDataAllModule from "~/data/event/icon_img.json"
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,7 @@ import type { AppHandle, AppUIMatch } from '~/types/link';
 import { cdn } from '~/utils/cdn';
 import { EventPlannerLoader } from '~/features/event-planner/components/EventPlannerLoader';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
-import { useHelpKey } from '~/hooks/usePageHelp';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 const fetchEventSeasonData = async (eventId: number) => {
   try {
@@ -65,15 +65,10 @@ export const handle: AppHandle = {
     const eventId = match?.params.eventId;
     const locale = (data as { locale?: Locale })?.locale || DEFAULT_LOCALE;
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
-        as: 'fetch',
-        crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
-        href: cdn(`/w/students_portrait.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -114,13 +109,10 @@ export const EventPage = () => {
 
   // Student-related state
   const [allStudents, setAllStudents] = useState<StudentData>({});
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
 
   const { t, i18n } = useTranslation('planner');
   // const { t: t_c } = useTranslation("common");
   const locale = i18n.language as Locale;
-
-  useHelpKey('planner.event', !([854].includes(eventId) || parseInt(String(eventId / 10000)) == 6));
 
   //  dynamic loading useEffect
   useEffect(() => {
@@ -190,9 +182,8 @@ export const EventPage = () => {
 
     const fetchStudentData = async () => {
       try {
-        const [studentRes, portraitRes] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
+        const studentRes = await fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`));
         setAllStudents(await studentRes.json());
-        setStudentPortraits(await portraitRes.json());
       } catch (e) {
         console.error(t('error.studentDataLoadFailed'), e);
         setError(t('error.studentDataLoadFailed'));
@@ -228,7 +219,7 @@ export const EventPage = () => {
         </div>
       </div>
 
-      <EventPlannerLoader isLoading={isLoading} error={error} eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
+      <EventPlannerLoader isLoading={isLoading} error={error} eventId={eventId} eventData={eventData} iconData={iconData} allStudents={allStudents} />
     </div>
   );
 };

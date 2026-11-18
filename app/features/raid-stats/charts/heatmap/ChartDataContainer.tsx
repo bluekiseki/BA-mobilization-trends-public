@@ -4,6 +4,7 @@ import { useMemo, useEffect, memo, lazy, Suspense } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useChartControlsStore } from '../chartControlsStore';
 import { useDataCache } from '../../../../hooks/cache';
+import type { ColumnTable } from '../../../../utils/columnTable';
 import type { ChartData, GameServer } from '~/types/data';
 import { useTranslation } from 'react-i18next';
 import type { Locale } from '~/utils/i18n/config';
@@ -50,10 +51,11 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
       histogramMode: state.histogramMode,
       heatmapMode: state.heatmapMode,
       selectedDifficulties: state.selectedDifficulties,
+      selectedBossTypes: state.selectedBossTypes,
       combatStyleViewMode: state.combatStyleViewMode,
     })),
   );
-  const fetchAndProcessWithCache = useDataCache<string>();
+  const fetchAndProcessWithCache = useDataCache<ColumnTable>();
 
   useEffect(() => {
     void fetchAndProcessChartData(server, fetchAndProcessWithCache, locale);
@@ -66,6 +68,7 @@ const ChartDataContainer = ({ server }: ChartDataContainerProps) => {
     processingParams.heatmapMode,
     processingParams.histogramMode,
     processingParams.selectedDifficulties,
+    processingParams.selectedBossTypes,
     processingParams.combatStyleViewMode,
     // xLabels,
     fetchAndProcessWithCache,

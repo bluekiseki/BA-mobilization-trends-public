@@ -8,6 +8,7 @@ import { getMostDifficultLevel, type_translation, typecolor } from '../../../com
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { DownloadButton } from './DownloadButton';
 import { YouTubeSearchGenerator } from '../common/YouTubeSearchGenerator';
+import { toLocations } from '~/utils/raidLocation';
 
 interface RaidHeaderProps {
   raidInfo: RaidInfo;
@@ -27,8 +28,10 @@ export default function RaidHeader({ raidInfo, server, isGrandAssault, allData, 
         <div className="flex justify-center items-center gap-2 mb-6">
           <span className="inline-block px-3 py-1 text-s font-semibold text-black bg-ba-btn-blue rounded-full">{raidTypeLabel.replace(/Assault/gi, '').trim()}</span>
           <span className="inline-block px-3 py-0.5 text-s font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">
-            <span className="relative top-1">
-              <TerrainIconGameStyle terrain={raidInfo.Location as Terrain} size={'1.5em'} />
+            <span className="relative top-1 inline-flex gap-1">
+              {toLocations(raidInfo.Location).map((terrain) => (
+                <TerrainIconGameStyle key={terrain} terrain={terrain as Terrain} size={'1.5em'} />
+              ))}
             </span>
           </span>
           <span className="inline-block px-3 py-1 text-s font-semibold text-neutral-800 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-700 rounded-full">{getMostDifficultLevel(raidInfo)}</span>

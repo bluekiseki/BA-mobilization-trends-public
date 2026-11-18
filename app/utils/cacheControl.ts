@@ -1,5 +1,4 @@
-// Minimal in-house replacement for the `pretty-cache-header` package — we only ever
-// use a handful of time-based directives, so a full parser library is unnecessary.
+// Format time-based Cache-Control directives.
 
 type TimeUnit = 's' | 'm' | 'h' | 'd' | 'w';
 type TimeString = `${number}${TimeUnit}`;

@@ -1,3 +1,4 @@
+import { SheetSvgIcon } from '~/components/common/SheetIcon';
 import React from 'react';
 import type { Student } from '~/types/data';
 import { StarRating } from '../../../../components/student/StarRating';
@@ -63,8 +64,6 @@ interface RankingChartProps {
     bullettype: Student['BulletType'];
     total: number;
     count: number;
-    portrait: Student['Portrait'];
-    portraits: Student['Portrait'][];
     ratings: {
       [key: string]: number;
     };
@@ -110,11 +109,7 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
             }}
           >
             <div className="h-10 w-10">
-              <CombatStylePortrait
-                studentId={item.id}
-                portraits={Object.fromEntries(getCombatStyleGroupRosterIds(item.id).map((id, index) => [id, item.portraits[index] ?? item.portrait]))}
-                alt={`${item.name}'s icon`}
-              />
+              <CombatStylePortrait studentId={item.id} alt={`${item.name}'s icon`} />
             </div>
           </div>
           <div className="font-semibold px-4 text-neutral-800 mb-1">{item.name}</div>
@@ -192,7 +187,7 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
                   width="30"
                   height="30"
                 />
-                {item.portraits.length === 2 ? (
+                {getCombatStyleGroupRosterIds(item.id).length === 2 ? (
                   <>
                     <defs>
                       <clipPath id={`ranking-${item.id}-first`}>
@@ -202,12 +197,12 @@ export const RankingChart = ({ svgWidth, containerRef, processedData, displayMod
                         <polygon points="22,8 30,8 30,30 8,30 8,22" />
                       </clipPath>
                     </defs>
-                    <image x="0" href={`data:image/webp;base64,${item.portraits[0]}`} width="22" height="22" clipPath={`url(#ranking-${item.id}-first)`} />
-                    <image x="8" y="8" href={`data:image/webp;base64,${item.portraits[1]}`} width="22" height="22" clipPath={`url(#ranking-${item.id}-second)`} />
+                    <SheetSvgIcon sheet="student" id={getCombatStyleGroupRosterIds(item.id)[0]} x={0} y={0} width={22} height={22} clipPath={`url(#ranking-${item.id}-first)`} />
+                    <SheetSvgIcon sheet="student" id={getCombatStyleGroupRosterIds(item.id)[1]} x={8} y={8} width={22} height={22} clipPath={`url(#ranking-${item.id}-second)`} />
                     <line x1="30" y1="0" x2="0" y2="30" stroke="white" strokeWidth="1.25" />
                   </>
                 ) : (
-                  <image x="0" href={`data:image/webp;base64,${item.portrait}`} width="30" height="30" />
+                  <SheetSvgIcon sheet="student" id={item.id} x={0} y={0} width={30} height={30} />
                 )}
 
                 {/* Bars and Labels */}

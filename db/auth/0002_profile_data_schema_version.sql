@@ -1,0 +1,1 @@
+ALTER TABLE profile_data ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 1;

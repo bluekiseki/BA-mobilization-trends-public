@@ -268,5 +268,15 @@
     },
     "teran": "Street",
     "armorType": "Normal"
+  },
+  "EN0023": {
+    "name": {
+      "ko": "악몽 열차",
+      "ja": "悪夢急行",
+      "en": "Nightmare Train",
+      "zh_Hant": "Nightmare Train"
+    },
+    "teran": ["Indoor", "Street"],
+    "armorType": "LightArmor"
   }
 }

@@ -16,7 +16,7 @@ export type TreasureSimConfig = z.infer<typeof treasureSimConfigSchema>;
 export const DefaultTreasureSimConfig: TreasureSimConfig = {
   strategy: 'heuristic',
   goal: 'clear_all',
-  simRuns: 1000,
+  simRuns: 2000,
 };
 
 export type TreasureResult = {

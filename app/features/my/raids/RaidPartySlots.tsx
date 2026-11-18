@@ -1,7 +1,7 @@
 import { StudentIcon } from '~/components/student/studentIcon';
 import { HiOutlineXMark } from 'react-icons/hi2';
 import { useTranslation } from 'react-i18next';
-import type { Character, PortraitData } from '~/types/raidReport';
+import type { Character } from '~/types/raidReport';
 import type { RaidHistoryStudent } from '~/types/raidHistory';
 import type { Student } from '~/types/plannerData';
 import type { ReactNode } from 'react';
@@ -12,7 +12,6 @@ interface RaidPartySlotsProps {
   m: (RaidHistoryStudent | null)[];
   s: (RaidHistoryStudent | null)[];
   students: Record<string, Student>;
-  portraitData: PortraitData;
   teamMemberCount?: 6 | 10;
   title?: string;
   activeSlot?: { role: SquadType; index: number } | null;
@@ -26,7 +25,6 @@ function Slot({
   index,
   value,
   students,
-  portraitData,
   teamMemberCount,
   isActive,
   onPickSlot,
@@ -36,7 +34,6 @@ function Slot({
   index: number;
   value: RaidHistoryStudent | null;
   students: Record<string, Student>;
-  portraitData: PortraitData;
   teamMemberCount: 6 | 10;
   isActive: boolean;
   onPickSlot: (role: SquadType, index: number) => void;
@@ -70,11 +67,7 @@ function Slot({
             : 'rounded border border-dashed border-neutral-300 text-[10px] font-semibold text-neutral-500 hover:border-blue-500 hover:text-blue-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-blue-500 dark:hover:text-blue-400'
         }`}
       >
-        {value && character && student ? (
-          <StudentIcon character={character} student={student} portraitData={portraitData} teamMemberCount={teamMemberCount} />
-        ) : (
-          <span>{role === 'Main' ? `M${index + 1}` : `S${index + 1}`}</span>
-        )}
+        {value && character && student ? <StudentIcon character={character} student={student} teamMemberCount={teamMemberCount} /> : <span>{role === 'Main' ? `M${index + 1}` : `S${index + 1}`}</span>}
       </button>
       {value && (
         <button
@@ -90,7 +83,7 @@ function Slot({
   );
 }
 
-export function RaidPartySlots({ m, s, students, portraitData, teamMemberCount = 6, title, activeSlot, activePicker, onPickSlot, onClearSlot }: RaidPartySlotsProps) {
+export function RaidPartySlots({ m, s, students, teamMemberCount = 6, title, activeSlot, activePicker, onPickSlot, onClearSlot }: RaidPartySlotsProps) {
   return (
     <div className="space-y-2">
       {title && <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{title}</h3>}
@@ -103,7 +96,6 @@ export function RaidPartySlots({ m, s, students, portraitData, teamMemberCount =
             index={index}
             value={slot}
             students={students}
-            portraitData={portraitData}
             teamMemberCount={teamMemberCount}
             isActive={activeSlot?.role === 'Main' && activeSlot.index === index}
             onPickSlot={onPickSlot}
@@ -118,7 +110,6 @@ export function RaidPartySlots({ m, s, students, portraitData, teamMemberCount =
             index={index}
             value={slot}
             students={students}
-            portraitData={portraitData}
             teamMemberCount={teamMemberCount}
             isActive={activeSlot?.role === 'Support' && activeSlot.index === index}
             onPickSlot={onPickSlot}

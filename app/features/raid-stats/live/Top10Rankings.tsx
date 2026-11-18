@@ -1,7 +1,7 @@
 import { type FC, useMemo, useState } from 'react';
 import type { LastData, LastERaidData, LastRaidData } from '~/features/raid-stats/live/livetype';
 import type { GameServer, RaidInfo } from '~/types/data';
-import type { PortraitData, ReportEntry, ReportEntryRank, ReportStudentData } from '~/types/raidReport';
+import type { ReportEntry, ReportEntryRank, ReportStudentData } from '~/types/raidReport';
 import { TotalRankingList } from '~/features/raid-stats/live/TotalRankingList';
 import { RankingList } from '~/features/raid-stats/live/RankingList';
 import { RankCard } from '~/features/raid-stats/common/rankingsTableComponent';
@@ -17,12 +17,11 @@ interface Top10RankingsProps {
   readonly raidInfos: RaidInfo[];
   readonly server: GameServer;
   readonly studentData: ReportStudentData;
-  readonly portraitData: PortraitData;
 }
 type Top10Tab = 'total' | 'boss1' | 'boss2' | 'boss3';
 
-export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidInfos, server, studentData, portraitData }) => {
-  // console.log('[Top10Rankings] ', { isRaid, lastData, raidInfos, server, studentData, portraitData });
+export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidInfos, server, studentData }) => {
+  // console.log('[Top10Rankings] ', { isRaid, lastData, raidInfos, server, studentData });
   const [activeTab, setActiveTab] = useState<Top10Tab>('total');
   // const { t, i18n } = useTranslation('liveDashboard');
   const { t: t_ui, i18n } = useTranslation('ui');
@@ -187,7 +186,7 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
       </div>
 
       {!isRaid && activeTab === 'total' ? (
-        <TotalRankingList title={`${t_ui('totalScore')} Top 10`} data={totalTop10DataForDisplay} raidInfos={raidInfos} server={server} studentData={studentData} portraitData={portraitData} />
+        <TotalRankingList title={`${t_ui('totalScore')} Top 10`} data={totalTop10DataForDisplay} raidInfos={raidInfos} server={server} studentData={studentData} />
       ) : (
         <>
           <RankingList
@@ -200,7 +199,6 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
             raidInfo={activeRaidInfo}
             server={server}
             studentData={studentData}
-            portraitData={portraitData}
           />
 
           {difficultyBests.length > 0 && (
@@ -211,7 +209,7 @@ export const Top10Rankings: FC<Top10RankingsProps> = ({ isRaid, lastData, raidIn
                     {t_raid(difficulty)} {t_dash('maxScore')}
                   </h4>
                   {entries.map((entry) => (
-                    <RankCard key={entry.r} entry={entry} studentData={studentData} portraitData={portraitData} raid={activeRaidInfo} server={server} />
+                    <RankCard key={entry.r} entry={entry} studentData={studentData} raid={activeRaidInfo} server={server} />
                   ))}
                 </div>
               ))}

@@ -2,7 +2,8 @@ const MAGIC_NUMBER = [36, 238, 163, 129, 131, 217]; // ^0xd9 XORed
 export const KEY_SIZE = 16;
 const KEY_SIZE_1 = 15;
 
-export function processStream(sourceStream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+/** When `xzMagic` is true (default), the 6 xz magic bytes are prepended (legacy xz files). Use false for gzip files. */
+export function processStream(sourceStream: ReadableStream<Uint8Array>, xzMagic = true): ReadableStream<Uint8Array> {
   let key: Uint8Array | null = null;
   let size: number = 0;
   const reader = sourceStream.getReader();
@@ -49,12 +50,15 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
             const xoredData = xorWithKey(remainingData);
 
             // Create a new chunk with the magic number and the processed data
-            const newChunk = new Uint8Array(MAGIC_NUMBER.length + xoredData.length);
-            newChunk.set(
-              MAGIC_NUMBER.map((v) => v ^ 0xd9),
-              0,
-            );
-            newChunk.set(xoredData, MAGIC_NUMBER.length);
+            const magicLength = xzMagic ? MAGIC_NUMBER.length : 0;
+            const newChunk = new Uint8Array(magicLength + xoredData.length);
+            if (xzMagic) {
+              newChunk.set(
+                MAGIC_NUMBER.map((v) => v ^ 0xd9),
+                0,
+              );
+            }
+            newChunk.set(xoredData, magicLength);
 
             // Enqueue the new, processed chunk
             controller.enqueue(newChunk);
@@ -74,4 +78,17 @@ export function processStream(sourceStream: ReadableStream<Uint8Array>): Readabl
       void reader.cancel();
     },
   });
+}
+
+/** Decodes a `[16-byte XOR key][XOR-ed gzip]` response body into a byte stream. With doXor false the body is plain gzip. */
+export function gzipDecodeStream(body: ReadableStream<Uint8Array>, doXor = true): ReadableStream<Uint8Array> {
+  const source = doXor ? processStream(body, false) : body;
+  return source.pipeThrough(new DecompressionStream('gzip') as unknown as TransformStream<Uint8Array, Uint8Array>);
+}
+
+/** Fetches a gzip+XOR JSON file and returns the parsed object. */
+export async function fetchGzipJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok || !res.body) throw new Error(`Failed to fetch ${url}: ${res.status}`);
+  return new Response(gzipDecodeStream(res.body)).json<T>();
 }

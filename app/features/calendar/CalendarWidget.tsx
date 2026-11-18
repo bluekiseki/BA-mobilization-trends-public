@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import type { Student, StudentPortraitData } from '~/types/plannerData';
+import type { Student } from '~/types/plannerData';
 import type { GameServer } from '~/types/data';
 import type { loadScheduleDataV2 } from '~/utils/calender.data.v2';
 
@@ -26,7 +26,6 @@ export function CalendarWidget({ server, scheduleData: initialScheduleData }: Ca
   const locale = i18n.language as Locale;
 
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
 
   // 1. Fetch student data
   useEffect(() => {
@@ -34,14 +33,6 @@ export function CalendarWidget({ server, scheduleData: initialScheduleData }: Ca
       .then((r) => r.json())
       .then((data: unknown) => {
         setStudentData(data as Record<number, Student>);
-      })
-      .catch((err: unknown) => {
-        console.error(err);
-      });
-    fetch(cdn(`/w/students_portrait.json`))
-      .then((r) => r.json())
-      .then((data: unknown) => {
-        setStudentPortraits(data as StudentPortraitData);
       })
       .catch((err: unknown) => {
         console.error(err);
@@ -74,7 +65,6 @@ export function CalendarWidget({ server, scheduleData: initialScheduleData }: Ca
             tracks: scheduleData.tracks,
             timeRange: scheduleData.timeRange,
             studentData,
-            studentPortraits,
             birthdayTrackItems: [],
           }}
           mode="widget"

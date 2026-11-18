@@ -57,7 +57,7 @@ function GameImg({ src, size = 24 }: { src: string; size?: number }) {
 
 export default function IncomeSettingsPanel_v2({ simple = false, config, setConfig, schedules, pyroxeneIcon, ticket1Icon: _ticket1Icon, ticket10Icon }: Props) {
   const { t: _t } = useTranslation('planner', { keyPrefix: 'gacha.income' });
-  const t = _t as (key: string, opts?: Record<string, string | number>) => string;
+  const t = _t;
   const { t: tIntro } = useTranslation('planner', { keyPrefix: 'gacha.intro.notes' });
   const { t: tUi } = useTranslation('ui');
   const { t: tGame } = useTranslation('game');
@@ -488,7 +488,7 @@ export default function IncomeSettingsPanel_v2({ simple = false, config, setConf
                 <button
                   type="button"
                   onClick={handleAddCustom}
-                  title={t('common.add')}
+                  title={tUi('add')}
                   className="px-3.5 flex items-center justify-center text-neutral-400 hover:bg-ba-btn-blue hover:text-[#06262f] transition-colors border-l border-neutral-200 dark:border-neutral-700 shrink-0"
                 >
                   <FaPlus size={11} />

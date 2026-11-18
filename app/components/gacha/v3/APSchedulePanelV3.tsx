@@ -123,7 +123,7 @@ export default function APSchedulePanelV3({
         {/* Event period */}
         <div className="grid grid-cols-2 gap-4 py-2.5">
           <label className="v3-field">
-            <span>{t('eventPeriod')}</span>
+            <span>{tp('gacha.income.settings.event_period')}</span>
             <ApSelect value={apRefreshes_event} onChange={(v) => onApRefreshChange('apRefreshes_event', v)} />
           </label>
           <label className="v3-field">
@@ -208,7 +208,7 @@ export default function APSchedulePanelV3({
                   <div className="w-14">{t('headers.start')}</div>
                   <div className="w-14 text-center">{t('headers.type')}</div>
                   <div className="flex-1 px-2">{t('headers.name')}</div>
-                  <div className="w-32 text-right">{t('headers.ap')}</div>
+                  <div className="w-32 text-right">{tp('common.ap')}</div>
                 </div>
 
                 <div className="divide-y divide-neutral-200 dark:divide-neutral-700 max-h-72 overflow-y-auto custom-scrollbar">

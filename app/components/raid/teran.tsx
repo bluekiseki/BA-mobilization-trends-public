@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 const indoorIcon = (
-  <svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+  <svg width="100%" height="100%" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
     <path stroke="currentColor" fill="none" strokeWidth="18px" d="M 62.412 170.828 L 175.115 91.245 L 284.851 167.862"></path>
     <path strokeMiterlimit="3" fill="none" stroke="currentColor" strokeWidth="18px" d="M 220.435 209.979 L 127.371 209.979"></path>
     <path strokeMiterlimit="3" fill="none" stroke="currentColor" strokeWidth="18px" d="M 148.806 256.73 L 148.806 208.915"></path>
@@ -13,7 +13,7 @@ const indoorIcon = (
 );
 
 const streetIcon = (
-  <svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+  <svg width="100%" height="100%" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
     <defs></defs>
     <path fill="none" stroke="currentColor" strokeWidth="18px" d="M 189 190 L 189 165"></path>
     <path fill="none" stroke="currentColor" strokeWidth="18px" d="M 189 142 L 189 115"></path>
@@ -26,7 +26,7 @@ const streetIcon = (
 );
 
 const outdoorIcon = (
-  <svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+  <svg width="100%" height="100%" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
     <path stroke="currentColor" fill="none" strokeWidth="14px" d="M 121.879 207.413 L 87.32 207.413"></path>
     <path stroke="currentColor" fill="none" strokeWidth="15px" d="M 180.084 243.486 L 231.318 170.637 L 282.018 244.286 L 65.449 243.939 L 148.65 120.391 L 208.69 203.379"></path>
     <path fill="none" stroke="currentColor" strokeWidth="14px" d="M 150.251 172.692 L 112.892 172.692"></path>
@@ -42,7 +42,7 @@ export const TerrainIcon = ({ terrain }: { terrain: Terrain }) => {
   return streetIcon;
 };
 
-export const TerrainIconGameStyle = ({ terrain, size }: { terrain: Terrain; size: string }) => {
+export const TerrainIconGameStyle = ({ terrain, size, label }: { terrain: Terrain; size: string; label?: string }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -81,7 +81,7 @@ export const TerrainIconGameStyle = ({ terrain, size }: { terrain: Terrain; size
                     ${showTooltip ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
                 `}
       >
-        {terrain}
+        {label ?? terrain}
         <div className="absolute left-1/2 top-full -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-neutral-800 dark:border-t-black"></div>
       </div>
     </div>

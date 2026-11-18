@@ -31,11 +31,8 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
 
   // Synchronize when external value changes
   useEffect(() => {
-    if (value !== null) {
-      setDisplayValue(String(value));
-    } else {
-      setDisplayValue('');
-    }
+    // Keep an emptied field empty when the parent coerces null to 0, otherwise Backspace on the last digit snaps back to "0".
+    setDisplayValue((current) => (current === '' && (value === null || value === 0) ? current : value !== null ? String(value) : ''));
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +73,7 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
       onChange(clampedValue); // Update with clamped value
     }
 
-    // Important: Execute external onBlur if provided (triggers commit in RenderRow)
+    // Forward onBlur so the parent can commit the value.
     if (onBlur) {
       onBlur(e);
     }

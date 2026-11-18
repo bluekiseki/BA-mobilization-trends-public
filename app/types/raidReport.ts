@@ -18,7 +18,10 @@ export interface Team {
 }
 
 export interface ReportEntry {
+  // Overall rank (the in-game rank, based on the combined score).
   r: number;
+  // Rank by the score of this boss/attribute alone. Omitted when it equals `r`.
+  b?: number;
   s: number;
   t: Team[];
   // The upstream data provider flagged this record as suspected cheating. Hidden by default on /live.
@@ -31,9 +34,6 @@ export interface ReportEntryRank extends ReportEntry {
 
 export type ReportStudentData = Record<number, Student>;
 
-export type PortraitData = Record<number, string>;
-
-// New type for portrait data
 export type UsageStats = Map<number, { total: number; stars: Map<number, number> }>;
 
 export interface StudentConditionBase {

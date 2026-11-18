@@ -88,6 +88,8 @@ export function ResourceEventLogList({
   resolveItemLabel?: (key: string) => string;
 }) {
   const { t } = useTranslation();
+  // i18next's strictly typed `t` rejects keys built at runtime.
+  const tDynamic = t as unknown as (key: string, options?: Record<string, unknown>) => string;
 
   if (rows.length === 0) return null;
 
@@ -101,7 +103,7 @@ export function ResourceEventLogList({
           entry.labelParams && resolveItemLabel && typeof entry.labelParams.itemKey === 'string'
             ? { ...entry.labelParams, item: resolveItemLabel(entry.labelParams.itemKey), itemKey: undefined }
             : entry.labelParams;
-        const displayLabel = entry.labelKey ? (entry.labelKey.includes(':') ? t(entry.labelKey, resolvedParams) : (resolveItemLabel?.(entry.labelKey) ?? entry.labelKey)) : entry.label;
+        const displayLabel = entry.labelKey ? (entry.labelKey.includes(':') ? tDynamic(entry.labelKey, resolvedParams) : (resolveItemLabel?.(entry.labelKey) ?? entry.labelKey)) : entry.label;
         return (
           <div key={i} className="flex items-center gap-2 py-1 text-xs">
             <span className="inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sourceMeta.color }} />

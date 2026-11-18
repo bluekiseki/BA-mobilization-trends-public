@@ -1,13 +1,14 @@
+import { PROFILE_STORAGE_EVENT, writeProfileStorage } from '~/store/history/localPersistence';
 // app/routes/planner/Gacha_v2.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaSpinner, FaTimes, FaChevronRight } from 'react-icons/fa';
 
-import { parseAndGroupBanners, getAllStudents, normalizePortraitMap, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
+import { parseAndGroupBanners, getAllStudents, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
 import type { Student } from '~/types/gacha';
 import { PageHeader } from '~/components/common/PageHeader';
 import IncomePlannerPanel_v2 from '~/components/gacha/IncomePlannerPanel_v2';
-import type { CustomIncome } from '~/utils/pyroxeneCalc';
+import type { CustomIncome, PyroLogKey } from '~/utils/pyroxeneCalc';
 import BannerPlanner_v2 from '~/components/gacha/BannerPlanner_v2';
 import SimpleBannerPicker from '~/components/gacha/SimpleBannerPicker';
 import PyroTimelineChart, { type ProbTimelinePoint, type CustomLineConfig, type BannerStudentMarker } from '~/components/gacha/PyroTimelineChart';
@@ -43,6 +44,7 @@ import type { AppHandle } from '~/types/link';
 import { useGachaResultStore } from '~/store/planner/useGachaResultStore';
 import { useGlobalStore } from '~/store/planner/useGlobalStore';
 import { ConfirmDialog } from '~/components/common/ConfirmDialog';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export type { PyroxeneConfig } from '~/utils/pyroxeneCalc';
 
@@ -56,13 +58,13 @@ export const handle: AppHandle = {
     const typedData = data as DataType;
     const locale = typedData?.locale;
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${locale}.students.min.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
-      { rel: 'preload', href: cdn(`/w/students_portrait.json`), as: 'fetch', crossOrigin: 'anonymous' },
       // icon_img.json isn't preloaded — decorative, loaded lazily off the critical path.
       // { rel: 'preload', href: cdn(`/ew/icon_img.854.json`), as: 'fetch', crossOrigin: 'anonymous' }, // re-enable only if icon_img.json stops carrying Currency.3/5, Item.23/6998/6999
       ...createLinkHreflang(`/planner/gacha`),
@@ -96,16 +98,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
   ];
 }
 
-// Fetch roster/portrait during hydration, not in useEffect — avoids blocking on useTranslation() Suspense.
+// Fetch roster during hydration, not in useEffect — avoids blocking on useTranslation() Suspense.
 // icon_img.json loaded afterward (decorative, not on critical path).
 export async function clientLoader({ params, serverLoader }: Route.ClientLoaderArgs) {
   const serverData = await serverLoader();
   const locale = (params.locale as Locale) || DEFAULT_LOCALE;
 
-  const [studentRes, portraitRes] = await Promise.all([fetch(cdn(`/schaledb.com/${locale}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
+  const studentRes = await fetch(cdn(`/schaledb.com/${locale}.students.min.json`));
 
   const rawStudentData: SchaleStudent[] | Record<string, SchaleStudent> = studentRes.ok ? await studentRes.json() : {};
-  const rawPortraitData: Record<string, string> = portraitRes.ok ? await portraitRes.json() : {};
 
   const studentMap: Record<string, SchaleStudent> = {};
   (Array.isArray(rawStudentData) ? rawStudentData : Object.values(rawStudentData)).forEach((s) => {
@@ -116,7 +117,6 @@ export async function clientLoader({ params, serverLoader }: Route.ClientLoaderA
     ...serverData,
     studentMap,
     baseStudents: getAllStudents(studentMap),
-    portraitMap: normalizePortraitMap(rawPortraitData),
   };
 }
 clientLoader.hydrate = true;
@@ -127,7 +127,7 @@ clientLoader.hydrate = true;
 interface TimelinePoint {
   date: string;
   pyroxene: number;
-  logs: { i18nKey?: string; params?: Record<string, string | number>; title?: string; amount: number }[];
+  logs: { i18nKey?: PyroLogKey; params?: Record<string, string | number>; title?: string; amount: number }[];
 }
 
 export const SIMULATION_DAYS = 150;
@@ -290,12 +290,11 @@ function buildStrategies(loadedBanners: BannerPeriod[], saved: Record<string, Ba
 }
 
 export default function GachaMain() {
-  // studentMap/baseStudents/portraitMap only land once clientLoader resolves; during SSR and early
+  // studentMap/baseStudents only land once clientLoader resolves; during SSR and early
   // hydration (no HydrateFallback) they read as undefined rather than showing a fallback.
   const loaderData = useLoaderData<typeof clientLoader>();
   const { scheduleData, studentMap } = loaderData;
   const baseStudents = loaderData.baseStudents ?? [];
-  const portraitMap = loaderData.portraitMap ?? {};
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'gacha' });
   const { t: t_ui } = useTranslation('ui');
   useTranslation('calendar'); // Load schedule labels for mini stories and joint firing drills.
@@ -421,9 +420,9 @@ export default function GachaMain() {
   }, []);
 
   // Student IDs already owned, so gacha sim dupes pay eligma from the first roll. Reuses the same
-  // "recruited" signal (has a growth plan) as StudentSpreadsheetView and the video scanner.
+  // "recruited" signal (has a growth plan not marked as unrecruited) as StudentSpreadsheetView and the video scanner.
   const growthPlans = useGlobalStore((s) => s.growthPlans);
-  const ownedStudentIds = useMemo(() => Array.from(new Set(growthPlans.filter((p) => p.studentId !== null).map((p) => p.studentId as number))), [growthPlans]);
+  const ownedStudentIds = useMemo(() => Array.from(new Set(growthPlans.filter((p) => p.studentId !== null && p.recruited !== false).map((p) => p.studentId as number))), [growthPlans]);
 
   const [savedStrategies] = useLocalStorage<Record<string, BannerStrategy>>('gacha_strategies_v3', {});
   const savedStrategiesRef = useRef(savedStrategies);
@@ -431,6 +430,18 @@ export default function GachaMain() {
   const [strategies, setStrategies] = useState<Record<string, BannerStrategy>>(() => buildStrategies(banners, savedStrategiesRef.current, server));
   // Skip the redundant rebuild on mount; re-run only when `banners` actually changes (server toggle or
   // studentMap landing). Passes current state as `prevRuntime` so a strategy edit made in that window isn't discarded.
+  const skipStrategySave = useRef(false);
+  useEffect(() => {
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<{ key: string; value: string | null; origin: string }>).detail;
+      if (detail.key !== 'gacha_strategies_v3' || detail.origin === 'local') return;
+      const saved = detail.value ? (JSON.parse(detail.value) as Record<string, BannerStrategy>) : {};
+      skipStrategySave.current = true;
+      setStrategies(buildStrategies(banners, saved, server));
+    };
+    window.addEventListener(PROFILE_STORAGE_EVENT, listener);
+    return () => window.removeEventListener(PROFILE_STORAGE_EVENT, listener);
+  }, [banners, server]);
   const prevBannersForStrategiesRef = useRef(banners);
   useEffect(() => {
     if (prevBannersForStrategiesRef.current === banners) return;
@@ -439,6 +450,10 @@ export default function GachaMain() {
   }, [banners, server]);
 
   useEffect(() => {
+    if (skipStrategySave.current) {
+      skipStrategySave.current = false;
+      return;
+    }
     if (Object.keys(strategies).length === 0) return;
     try {
       const bannerById = new Map(banners.map((b) => [b.id, b]));
@@ -449,7 +464,7 @@ export default function GachaMain() {
         if (!banner) return;
         toStore[strategyStorageKey(banner, server)] = s;
       });
-      window.localStorage.setItem('gacha_strategies_v3', JSON.stringify(toStore));
+      writeProfileStorage('gacha_strategies_v3', JSON.stringify(toStore), 'local');
       syncPush('gacha_strategies', toStore, 3);
     } catch {}
   }, [strategies, banners, server, syncPush]);
@@ -675,14 +690,13 @@ export default function GachaMain() {
       const students = targeted.map((s) => ({
         id: s.id,
         name: s.name,
-        portrait: portraitMap[s.id] ? (portraitMap[s.id].startsWith('data:') ? portraitMap[s.id] : `data:image/webp;base64,${portraitMap[s.id]}`) : undefined,
       }));
       const existing = map.get(date);
       if (existing) existing.students.push(...students);
       else map.set(date, { date, students });
     });
     return Array.from(map.values());
-  }, [banners, strategies, portraitMap]);
+  }, [banners, strategies]);
 
   const customLinesConfig = useMemo<CustomLineConfig[]>(() => {
     const palette = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
@@ -948,7 +962,7 @@ export default function GachaMain() {
             <SimpleBannerPicker
               banners={banners}
               strategies={strategies}
-              portraitMap={portraitMap}
+
               onUpdateStrategy={updateStrategy}
               onUpdateStudentConfig={updateStudentConfig}
               onResetPlannerData={() => setResetConfirmOpen(true)}
@@ -957,7 +971,7 @@ export default function GachaMain() {
             <BannerPlanner_v2
               banners={banners}
               strategies={strategies}
-              portraitMap={portraitMap}
+
               pyroxeneIcon={pyroxeneIcon}
               onUpdateStrategy={updateStrategy}
               onUpdateStudentConfig={updateStudentConfig}
@@ -1004,7 +1018,7 @@ export default function GachaMain() {
             allStudents={allStudents}
             region={server}
             ownedStudentIds={ownedStudentIds}
-            portraitMap={portraitMap}
+
             pyroxeneIcon={pyroxeneIcon}
             apIcon={apIcon}
             elephIconMap={elephIconMap}

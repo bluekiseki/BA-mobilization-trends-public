@@ -15,7 +15,10 @@ export function hasGrowthGoal(plan: GrowthPlan): boolean {
     plan.current.potential.heal !== plan.target.potential.heal
   );
 }
-export type FilterableStudent = Student & Pick<PlannerStudent, 'ArmorType'>;
+// Display order of the attack/defense type filters (same in every filter UI)
+export const ATTACK_TYPES = ['Explosion', 'Pierce', 'Mystic', 'Sonic', 'Chemical'] as const;
+export const DEFENSE_TYPES = ['LightArmor', 'HeavyArmor', 'Unarmed', 'ElasticArmor', 'CompositeArmor'] as const;
+export type FilterableStudent = Student & Pick<PlannerStudent, 'ArmorType' | 'Skills'>;
 export type StaticFilterKey = 'schools' | 'attackTypes' | 'defenseTypes' | 'squadTypes' | 'tacticRoles' | 'recruitTypes';
 export type ProgressFilterKey = 'starGrades' | 'levelRanges' | 'affectionRanges';
 // Single-field extractors, shared by matchesAdvancedFilters/matchesProgressFilters (which can

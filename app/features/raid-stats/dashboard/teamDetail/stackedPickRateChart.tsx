@@ -1,8 +1,9 @@
 // app/components/dashboard/stackedPickRateChart.tsx
+import { SheetSvgIcon } from '~/components/common/SheetIcon';
 import { useCallback, useMemo, useState } from 'react';
 import { useIsDarkState } from '~/store/isDarkState';
 import { getBackgroundRatingColor, getCharacterStarValue } from '../../../../utils/raid/report';
-import type { PortraitData, ReportEntry, ReportStudentData } from '../../../../types/raidReport';
+import type { ReportEntry, ReportStudentData } from '../../../../types/raidReport';
 import { Bar, BarChart, CartesianGrid, LabelList, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { StarRating } from '~/components/student/StarRating';
 import { useTranslation } from 'react-i18next';
@@ -17,8 +18,7 @@ type AssistantFilter = 'include' | 'exclude' | 'only';
 export const StackedPickRateChart: React.FC<{
   data: ReportEntry[];
   studentData: ReportStudentData;
-  portraitData: PortraitData;
-}> = React.memo(({ data, studentData, portraitData }) => {
+}> = React.memo(({ data, studentData }) => {
   const currentRank = data.length;
   const { isDark } = useIsDarkState();
   const [visibleCount, setVisibleCount] = useState(INITIAL_ITEMS); // State for load more
@@ -79,15 +79,12 @@ export const StackedPickRateChart: React.FC<{
 
   const CustomYAxisTick = ({ x = 0, y = 0, payload }: AxisTickProps) => {
     const studentId = Number(payload?.value ?? 0);
-    const imageUrl = portraitData[studentId] ? `data:image/webp;base64,${portraitData[studentId]}` : '';
     const portraitIds = isCombatStyleMerged(studentId) ? getCombatStyleGroupRosterIds(studentId) : [];
 
-    if (imageUrl) {
+    if (studentId) {
       if (portraitIds.length === 2) {
         const imageX = x - 24;
         const imageY = y - 14;
-        const firstImage = portraitData[portraitIds[0]] ? `data:image/webp;base64,${portraitData[portraitIds[0]]}` : '';
-        const secondImage = portraitData[portraitIds[1]] ? `data:image/webp;base64,${portraitData[portraitIds[1]]}` : '';
         const firstClipId = `portrait-${studentId}-first`;
         const secondClipId = `portrait-${studentId}-second`;
         return (
@@ -100,13 +97,13 @@ export const StackedPickRateChart: React.FC<{
                 <polygon points={`${imageX + 20},${imageY + 8} ${imageX + 28},${imageY + 8} ${imageX + 28},${imageY + 28} ${imageX + 8},${imageY + 28} ${imageX + 8},${imageY + 20}`} />
               </clipPath>
             </defs>
-            <image x={imageX} y={imageY} href={firstImage} width={20} height={20} clipPath={`url(#${firstClipId})`} />
-            <image x={imageX + 8} y={imageY + 8} href={secondImage} width={20} height={20} clipPath={`url(#${secondClipId})`} />
+            <SheetSvgIcon sheet="student" id={portraitIds[0]} x={imageX} y={imageY} width={20} height={20} clipPath={`url(#${firstClipId})`} />
+            <SheetSvgIcon sheet="student" id={portraitIds[1]} x={imageX + 8} y={imageY + 8} width={20} height={20} clipPath={`url(#${secondClipId})`} />
             <line x1={imageX + 28} y1={imageY} x2={imageX} y2={imageY + 28} stroke="white" strokeWidth={1.25} />
           </g>
         );
       }
-      return <image x={x - 24} y={y - 14} href={imageUrl} width={28} height={28} />;
+      return <SheetSvgIcon sheet="student" id={studentId} x={x - 24} y={y - 14} width={28} height={28} />;
     }
 
     return (

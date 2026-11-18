@@ -14,6 +14,9 @@ import { GrowthRangeSlider, moveGrowthRange } from './GrowthRangeSlider';
 import type { TFunction } from 'i18next';
 
 // --- Helpers ---
+// Highest rank slider index an acquired star can take (index 4 = 5 stars; the rest are unique weapon ranks)
+const ACQUIRED_RANK_MAX_INDEX = 4;
+
 const getAffectionLimit = (star: number, uw: number = 0): number => {
   if (uw > 0 || star >= 5) return 100;
   if (star === 4) return 30;
@@ -61,10 +64,7 @@ const EditableLevelDisplay = ({
     return (
       <div className={`flex items-center gap-1 px-1 py-0.5 opacity-30 select-none ${textClassName}`}>
         {icon && <span className="mr-0.5">{icon}</span>}
-        <span className="font-bold font-mono">
-          {prefix}
-          {value}
-        </span>
+        <span className="font-bold font-mono">-</span>
       </div>
     );
   }
@@ -108,11 +108,14 @@ interface BasicStatsTabProps {
   rankOptions: { value: string; label: string }[];
   iconData?: IconData;
   eventData?: EventData;
+  /** Unrecruited plan: `current` is fixed to the recruit baseline, except the acquired star. */
+  currentLocked?: boolean;
 }
 
-export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions, iconData, eventData }: BasicStatsTabProps) => {
+export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions, iconData, eventData, currentLocked = false }: BasicStatsTabProps) => {
   const { t } = useTranslation('planner');
   const { t: tUi } = useTranslation('ui');
+  const { t: tGame } = useTranslation('game');
   const updateGrowthRange = useGlobalStore((state) => state.updateGrowthRange);
 
   // Rank Indexing
@@ -160,6 +163,7 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
                 max={90}
                 min={1}
                 prefix="Lv."
+                disabled={currentLocked}
                 onChange={(val) => {
                   const next = moveGrowthRange({ current: plan.current.level, target: plan.target.level }, 'current', val);
                   updateGrowthRange(plan.uuid, { kind: 'scalar', field: 'level' }, next.current, next.target);
@@ -187,6 +191,8 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
             min={1}
             max={90}
             value={{ current: plan.current.level, target: plan.target.level }}
+            disabled={{ current: currentLocked }}
+            hideCurrent={currentLocked}
             onChange={({ current, target }) => updateGrowthRange(plan.uuid, { kind: 'scalar', field: 'level' }, current, target)}
           />
           <InlineCostHint needs={calcLevelNeeds(plan.current.level, plan.target.level)} iconData={iconData} eventData={eventData} />
@@ -231,7 +237,7 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
               ),
             }))}
             formatValue={(index) => rankOptions[index]?.label ?? String(index)}
-            onChange={({ current, target }) => updateGrowthRange(plan.uuid, { kind: 'rank' }, current, target)}
+            onChange={({ current, target }) => updateGrowthRange(plan.uuid, { kind: 'rank' }, currentLocked ? Math.min(current, ACQUIRED_RANK_MAX_INDEX) : current, target)}
           />
           <InlineCostHint needs={calcRankNeeds(plan.current.star, plan.target.star, plan.current.uw, plan.target.uw, plan.studentId ?? undefined)} iconData={iconData} eventData={eventData} />
         </div>
@@ -248,6 +254,7 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
                 value={plan.current.affection}
                 max={100}
                 min={1}
+                disabled={currentLocked}
                 onChange={(val) => {
                   const next = moveGrowthRange({ current: plan.current.affection, target: plan.target.affection }, 'current', val);
                   updateGrowthRange(plan.uuid, { kind: 'scalar', field: 'affection' }, next.current, next.target);
@@ -277,6 +284,8 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
             max={100}
             value={{ current: plan.current.affection, target: plan.target.affection }}
             invalid={{ current: isCurrentExceeded, target: isTargetExceeded }}
+            disabled={{ current: currentLocked }}
+            hideCurrent={currentLocked}
             onChange={({ current, target }) => updateGrowthRange(plan.uuid, { kind: 'scalar', field: 'affection' }, current, target)}
           />
           {hasAffectionWarning && warningMsg && (
@@ -349,7 +358,7 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
         'TierUpMaterial' in studentInfo.Gear &&
         (() => {
           const TIERS = [0, 1, 2] as const;
-          const tierLabel = (v: number) => (v === 0 ? t('basicStatsTab.gearNone', 'None') : `T${v}`);
+          const tierLabel = (v: number) => (v === 0 ? tUi('none') : `T${v}`);
           const currentGear = plan.current.gear ?? 0;
           const targetGear = plan.target.gear ?? 0;
           const affectionCurrent = plan.current.affection;
@@ -369,10 +378,11 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
             return affectionTarget >= gearAffectionReq(val);
           };
 
-          const TierBtn = ({ val, selected, onClick }: { val: number; selected: boolean; onClick: () => void }) => (
+          const TierBtn = ({ val, selected, onClick, disabled = false }: { val: number; selected: boolean; onClick: () => void; disabled?: boolean }) => (
             <button
               onClick={onClick}
-              className={`px-2 py-0.5 rounded text-xs font-bold border transition-colors ${
+              disabled={disabled}
+              className={`px-2 py-0.5 rounded text-xs font-bold border transition-colors disabled:opacity-40 disabled:cursor-default ${
                 selected
                   ? 'bg-blue-500 border-blue-500 text-white'
                   : 'bg-transparent border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:border-blue-400 hover:text-blue-500'
@@ -386,15 +396,17 @@ export const BasicStatsTab = ({ plan, studentInfo, handlePlanChange, rankOptions
             <div className="pt-4 border-t border-dashed border-neutral-200 dark:border-neutral-800">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-2 shrink-0 mt-0.5">
-                  <span className="font-bold text-sm text-neutral-800 dark:text-neutral-100 uppercase">{t('basicStatsTab.bondGear', 'Bond Gear')}</span>
+                  <span className="font-bold text-sm text-neutral-800 dark:text-neutral-100 uppercase">{tGame('gear')}</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2">
                     {/* Current */}
                     <div className="flex items-center gap-1">
-                      {TIERS.filter(showCurrentGearBtn).map((v) => (
-                        <TierBtn key={v} val={v} selected={currentGear === v} onClick={() => handlePlanChange('current.gear', v, true)} />
-                      ))}
+                      {currentLocked ? (
+                        <span className="px-2 text-xs font-bold text-neutral-400 dark:text-neutral-500">-</span>
+                      ) : (
+                        TIERS.filter(showCurrentGearBtn).map((v) => <TierBtn key={v} val={v} selected={currentGear === v} onClick={() => handlePlanChange('current.gear', v, true)} />)
+                      )}
                     </div>
                     <span className="text-[10px] text-neutral-400 dark:text-neutral-500">➜</span>
                     {/* Target */}

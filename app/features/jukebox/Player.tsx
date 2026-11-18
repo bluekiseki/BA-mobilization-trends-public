@@ -41,6 +41,7 @@ interface YouTubeAPI {
       events: {
         onReady: (event: YouTubeEvent) => void;
         onStateChange: (event: YouTubeEvent) => void;
+        onError: (event: YouTubeEvent) => void;
       };
     },
   ) => YouTubePlayer;
@@ -84,10 +85,9 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Auto-expand on new song so ads are always visible and skippable
+  // Reset progress on new song; the video is only force-expanded when playback fails (see onError)
   useEffect(() => {
     if (song) {
-      setIsExpanded(true);
       setCurrentTime(0);
       setDuration(0);
     }
@@ -146,6 +146,11 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
               onSongEndRef.current(e.target);
             }
           },
+          // Unplayable video (removed, private, embedding disabled, ...): show the player so the reason is visible
+          onError: () => {
+            setIsPlaying(false);
+            setIsExpanded(true);
+          },
         },
       });
     };
@@ -163,7 +168,7 @@ const Player: React.FC<PlayerProps> = React.memo(({ song, onClose, onSongEnd, on
   if (!song) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:bottom-4 md:right-4 md:left-auto md:w-100 md:rounded-xl md:overflow-hidden md:shadow-2xl">
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:bottom-4 md:right-4 md:left-auto md:w-100 md:shadow-2xl">
       {/* YouTube iframe — collapsed via max-height so audio/ads remain accessible */}
       <div className="overflow-hidden transition-all duration-300 ease-in-out bg-black" style={{ maxHeight: isExpanded ? '360px' : 0 }}>
         <div className="relative aspect-video w-full max-h-90 max-w-160 mx-auto">

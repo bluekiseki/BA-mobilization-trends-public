@@ -9,7 +9,7 @@ import { createLinkHreflang, createMetaDescriptor } from '~/components/shell/hea
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { getInstance } from '~/middleware/i18next';
 import type { Route } from './+types/Equipment';
-import type { CampaignData, EventData, IconData, IconInfos, Student, StudentPortraitData } from '~/types/plannerData';
+import type { CampaignData, EventData, IconData, IconInfos, Student } from '~/types/plannerData';
 import { FaFilter, FaSortAmountUp, FaSortAmountDown, FaPlusCircle, FaLayerGroup, FaSortNumericDown, FaSortAmountDown as FaSortDesc, FaSearch, FaUsers, FaCalculator, FaMap } from 'react-icons/fa';
 import { NumberInput } from '~/components/common/NumberInput';
 import { EquipmentStudentCard } from '~/features/equipment/components/EquipmentStudentCard';
@@ -24,6 +24,7 @@ import { EquipmentSummaryPanel } from '~/features/equipment/components/Equipment
 import { StageAccordion } from '~/features/equipment/components/StageAccordion';
 import { SimRunButton } from '~/features/event-planner/components/SimRunButton';
 import { BlueprintUsageDetail } from '~/features/equipment/components/BlueprintUsageDetail';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { cdn } from '~/utils/cdn';
 import { calculateEquipmentSurplus, blueprintIdToType, equipmentTypeToBlueprint, normalizeBluprintToEquipment, type OptimizeResult } from '~/utils/blueprintUtils';
 import { CustomNumberInput } from '~/components/common/CustomInput';
@@ -31,6 +32,7 @@ import type { AppHandle } from '~/types/link';
 import { StatCard, MultiplierSeg, PaneHeader } from '~/features/equipment/components/EquipmentPrimitives';
 import { deductWithOwnedBlueprints, planOptimization } from '~/features/equipment/logic/equipmentPlan';
 import { equipmentTypeLabelKey } from '~/features/equipment/equipmentTypeLabels';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export function loader({ context }: LoaderFunctionArgs) {
   const i18n = getInstance(context);
@@ -51,15 +53,10 @@ export const handle: AppHandle = {
     const locale = d?.locale as Locale | undefined;
     if (!locale) return [];
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),
-        as: 'fetch',
-        crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
-        href: cdn(`/w/students_portrait.json`),
         as: 'fetch',
         crossOrigin: 'anonymous',
       },
@@ -112,7 +109,6 @@ export default function EquipmentPlannerV2() {
   const [optimizerOutput, setOptimizerOutput] = useState<Pick<OptimizeResult, 'blueprintsUsed' | 'finalRemaining'> | null>(null);
   const [summarySortMode, setSummarySortMode] = useState<'tier' | 'id' | 'amount'>('tier');
   const [studentData, setStudentData] = useState<Record<string, Student> | null>(null);
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData>({});
   const [iconData, setIconData] = useState<IconData>({});
   const [allCampaigns, setAllCampaigns] = useState<{ jp?: CampaignData; kr?: CampaignData }>({});
   const [iconInfoData, setIconInfoData] = useState<IconInfos>({
@@ -150,10 +146,6 @@ export default function EquipmentPlannerV2() {
       .then((r) => r.json() as unknown as Record<string, Student>)
       .then(setStudentData)
       .catch(console.error);
-    fetch(cdn(`/w/students_portrait.json`))
-      .then((r) => r.json() as unknown as StudentPortraitData)
-      .then(setStudentPortraits)
-      .catch(console.error);
     fetch(cdn(`/ew/icon_img.json`))
       .then((r) => r.json() as unknown as IconData)
       .then(setIconData)
@@ -166,15 +158,7 @@ export default function EquipmentPlannerV2() {
       .catch(console.error);
   }, [locale]);
 
-  const mergedStudents = useMemo(() => {
-    if (!studentData) return {};
-    const students = { ...studentData };
-    Object.keys(students).forEach((id) => {
-      const n = Number(id);
-      if (studentPortraits[n]) students[id].Portrait = studentPortraits[n];
-    });
-    return students;
-  }, [studentData, studentPortraits]);
+  const mergedStudents = useMemo(() => studentData ?? {}, [studentData]);
 
   const resolvedStages = useMemo((): ResolvedStage[] => {
     if (!campaigns) return [];
@@ -363,7 +347,7 @@ export default function EquipmentPlannerV2() {
     });
   }, []);
   const handleSelectAllPlans = useCallback(() => setSelectedPlanUuids(new Set(growthPlans.map((p) => p.uuid))), [growthPlans]);
-  const handleSelectFocusPlans = useCallback(() => setSelectedPlanUuids(new Set(growthPlans.filter((p) => p.isSelected !== false).map((p) => p.uuid))), [growthPlans]);
+  const handleSelectFocusPlans = useCallback(() => setSelectedPlanUuids(new Set(growthPlans.filter((p) => p.isSelected ?? true).map((p) => p.uuid))), [growthPlans]);
   const handleDeselectAllPlans = useCallback(() => setSelectedPlanUuids(new Set()), []);
 
   const eventDataForIcon = useMemo(() => ({ icons: iconInfoData }) as EventData, [iconInfoData]);
@@ -469,7 +453,7 @@ export default function EquipmentPlannerV2() {
       <div className="lg:hidden shrink-0 flex border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
         {[
           { pane: 'input' as const, icon: <FaUsers size={13} />, label: t('equipment.tabInput') },
-          { pane: 'stages' as const, icon: <FaMap size={13} />, label: t('equipment.tabStages') },
+          { pane: 'stages' as const, icon: <FaMap size={13} />, label: t('equipment.statStages') },
           { pane: 'results' as const, icon: <FaCalculator size={13} />, label: t('equipment.tabResults') },
         ].map(({ pane, icon, label }) => (
           <button
@@ -496,14 +480,14 @@ export default function EquipmentPlannerV2() {
           <div className="shrink-0 border-b border-neutral-100 dark:border-neutral-800">
             <PaneHeader>{t_ui('settings')}</PaneHeader>
             <div className="px-3 py-2 grid grid-cols-[72px_1fr] gap-x-2 gap-y-2 text-xs">
-              <label className="text-neutral-500 dark:text-neutral-400 flex items-center">{t('equipment.source')}</label>
+              <label className="text-neutral-500 dark:text-neutral-400 flex items-center">{t_ui('source')}</label>
               <select
                 value={campaignSource}
                 onChange={(e) => setCampaignSource(e.target.value as 'kr' | 'jp')}
                 className="w-full rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-200 text-xs ios-compact-12 py-1 px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="kr">{t('equipment.sourceKR')}</option>
-                <option value="jp">{t('equipment.sourceJPNew')}</option>
+                <option value="jp">{t_ui('jp')}</option>
               </select>
 
               <label className="text-neutral-500 dark:text-neutral-400 flex items-center">{t('equipment.farmingDays')}</label>
@@ -575,8 +559,8 @@ export default function EquipmentPlannerV2() {
               {growthPlans.length === 0 ? (
                 <div className="text-center py-8 text-xs text-neutral-400 dark:text-neutral-500 px-3">
                   <p className="font-semibold text-neutral-600 dark:text-neutral-300 mb-1">{t('ui.noStudentGrowthPlan')}</p>
-                  <Link to={localeLink(locale, '/planner/students')} className="text-blue-500 hover:underline">
-                    [{t('page.studentGrowthPlanner')}]
+                  <Link to={localeLink(locale, '/students')} className="text-blue-500 hover:underline">
+                    [{t_ui('studentGrowthPlanner')}]
                   </Link>{' '}
                   {t('ui.startByAddingNewPlan')}
                 </div>
@@ -585,13 +569,12 @@ export default function EquipmentPlannerV2() {
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {filteredGrowthPlans.map((plan) => {
                       const student = plan.studentId ? mergedStudents[plan.studentId] : null;
-                      const portraitSrc = plan.studentId && studentPortraits[plan.studentId] ? `data:image/webp;base64,${studentPortraits[plan.studentId]}` : null;
                       return (
                         <EquipmentStudentCard
                           key={plan.uuid}
                           plan={plan}
                           studentName={student?.Name ?? t('growthCard.selectStudentPlaceholder')}
-                          portraitSrc={portraitSrc}
+                          studentId={plan.studentId}
                           isSelected={selectedPlanUuids.has(plan.uuid)}
                           onClick={() => handleTogglePlan(plan.uuid)}
                         />
@@ -604,7 +587,7 @@ export default function EquipmentPlannerV2() {
             </div>
 
             <div className="shrink-0 px-3 py-2 border-t border-neutral-100 dark:border-neutral-800">
-              <Link to={localeLink(locale, '/planner/students')} className="flex items-center gap-1.5 text-xs text-blue-500 dark:text-blue-400 hover:underline">
+              <Link to={localeLink(locale, '/students')} className="flex items-center gap-1.5 text-xs text-blue-500 dark:text-blue-400 hover:underline">
                 <FaPlusCircle size={11} /> {t('equipment.addEditPlans')}
               </Link>
             </div>
@@ -704,7 +687,6 @@ export default function EquipmentPlannerV2() {
               <span className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 shrink-0">{t('equipment.elephStudents')}</span>
               {hardElephStudents.map((studentId) => {
                 const student = mergedStudents[studentId];
-                const portrait = studentPortraits[studentId];
                 const isSelected = hardStudentFilter.has(studentId);
                 return (
                   <button
@@ -725,11 +707,7 @@ export default function EquipmentPlannerV2() {
                       isSelected ? 'border-blue-500 ring-1 ring-blue-300 dark:ring-blue-700' : 'border-neutral-200 dark:border-neutral-600 opacity-50 hover:opacity-100'
                     }`}
                   >
-                    {portrait ? (
-                      <img src={`data:image/webp;base64,${portrait}`} alt={student?.Name} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[9px] text-neutral-400">?</div>
-                    )}
+                    <SheetIcon sheet="student" id={studentId} alt={student?.Name ?? ''} fallback={<div className="w-full h-full bg-neutral-200 dark:bg-neutral-700" />} />
                   </button>
                 );
               })}
@@ -792,7 +770,7 @@ export default function EquipmentPlannerV2() {
 
           {/* Hard mode + Optimize */}
           <div className="shrink-0 p-3 border-b border-neutral-100 dark:border-neutral-800">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-2">{t('equipment.hardModeTitle')}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-2">{t_ui('hardMode')}</p>
             <div className="grid grid-cols-2 gap-1.5 mb-3">
               {[
                 { mode: 'aggressive' as const, label: t('equipment.hardModeAggressive'), desc: t('equipment.hardModeAggressiveDesc') },

@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { ClientOnly } from '~/components/common/ClientOnly';
 import { createMetaDescriptor } from '~/components/shell/head';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
+import type { AppHandle } from '~/types/link';
 
 // Unlisted while in development: no nav link, not in the sitemap, and noindex.
 const ArenaPage = lazy(() => import('~/features/my/arena/components/ArenaPage').then((m) => ({ default: m.ArenaPage })));
@@ -18,3 +20,7 @@ export default function ArenaRoute() {
     </ClientOnly>
   );
 }
+
+export const handle: AppHandle = {
+  preload: () => studentSheetPreloadLinks(),
+};

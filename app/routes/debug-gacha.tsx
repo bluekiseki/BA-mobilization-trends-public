@@ -1,3 +1,4 @@
+import { SheetIcon } from '~/components/common/SheetIcon';
 import './debug-gacha.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { parseAndGroupBanners, getAllStudents, withPickupFallbackStudents, type SchaleStudent, type BannerPeriod } from '~/utils/gachaData';
@@ -90,8 +91,7 @@ function pct(count: number, total: number, decimals = 4): string {
   return total > 0 ? ((count / total) * 100).toFixed(decimals) : '0.0000';
 }
 
-function EnvelopeCard({ pull, portraits, delayMs, fromBottom }: { pull: PullResult; portraits: Record<number, string>; delayMs: number; fromBottom: boolean }) {
-  const portrait = portraits[pull.studentId];
+function EnvelopeCard({ pull, delayMs, fromBottom }: { pull: PullResult; delayMs: number; fromBottom: boolean }) {
   const style = CARD_STYLE[pull.grade as 1 | 2 | 3] ?? CARD_STYLE[1];
   return (
     <div className={`relative ${fromBottom ? 'animate-gacha-reveal-from-bottom' : 'animate-gacha-reveal'}`} style={{ animationDelay: `${delayMs}ms` }}>
@@ -106,7 +106,7 @@ function EnvelopeCard({ pull, portraits, delayMs, fromBottom }: { pull: PullResu
         title={pull.studentName}
       >
         <div className="aspect-[1.15] w-full skew-x-6 overflow-hidden rounded-[clamp(2px,0.25vw,4px)] bg-white/45">
-          {portrait ? <img src={`data:image/webp;base64,${portrait}`} alt={pull.studentName} className="h-full w-full object-cover" /> : <div className="h-full w-full bg-neutral-200" />}
+          <SheetIcon sheet="student" id={pull.studentId} alt={pull.studentName} className="w-full aspect-square" fallback={<div className="h-full w-full bg-neutral-200" />} />
         </div>
         <div className={`flex aspect-[4.5] w-full items-center justify-center border-t border-white/40 ${style.panel}`}>
           <div className="flex skew-x-6 gap-0.5">
@@ -205,7 +205,6 @@ export default function DebugGachaPage() {
   const [batches, setBatches] = useState<PullResult[][]>([]);
   const [stats, setStats] = useState<CumulativeStats>(EMPTY_STATS());
   const [loading, setLoading] = useState(false);
-  const [portraits, setPortraits] = useState<Record<number, string>>({});
   const [activeTab, setActiveTab] = useState<GradeTab>(3);
   const [selectedPickupId, setSelectedPickupId] = useState<number | null>(null);
   const [customCount, setCustomCount] = useState<string>('100000000');
@@ -247,12 +246,8 @@ export default function DebugGachaPage() {
         const parsedBanners = parseAndGroupBanners('KR', studentMap);
         const students = withPickupFallbackStudents(getAllStudents(studentMap), parsedBanners) as unknown as Student[];
 
-        const portraitRes = await fetch(cdn('/w/students_portrait.json'));
-        const portraitData: Record<number, string> = await portraitRes.json();
-
         setBanners(parsedBanners);
         setAllStudents(students);
-        setPortraits(portraitData);
         if (parsedBanners.length > 0) {
           const lastBanner = parsedBanners[parsedBanners.length - 1];
           setSelectedBannerId(lastBanner.id);
@@ -833,7 +828,7 @@ export default function DebugGachaPage() {
                       style={{ '--gacha-card-w': 'min(9rem, calc((100% - 2rem) / 5))' } as React.CSSProperties}
                     >
                       {batch.map((pull, pIdx) => (
-                        <EnvelopeCard key={pIdx} pull={pull} portraits={portraits} delayMs={pIdx * 35} fromBottom={pIdx >= 5} />
+                        <EnvelopeCard key={pIdx} pull={pull} delayMs={pIdx * 35} fromBottom={pIdx >= 5} />
                       ))}
                     </div>
                     {hasRewards && (

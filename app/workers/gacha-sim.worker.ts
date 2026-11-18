@@ -12,6 +12,8 @@ export type SimWorkerInMsg = {
   initialOwnedIds: number[];
   ticketBatchesJson: string;
   consumeExpiringTickets: boolean;
+  initialChargeNormal?: number;
+  initialChargeLimited?: number;
 };
 
 export type SimWorkerOutMsg =
@@ -29,7 +31,7 @@ self.onmessage = async (e: MessageEvent<SimWorkerInMsg>) => {
       initialized = true;
     }
 
-    const { strategiesJson, bannerPoolsJson, simCount, seed: seedNum, initialOwnedIds, ticketBatchesJson, consumeExpiringTickets } = e.data;
+    const { strategiesJson, bannerPoolsJson, simCount, seed: seedNum, initialOwnedIds, ticketBatchesJson, consumeExpiringTickets, initialChargeNormal, initialChargeLimited } = e.data;
     const ownedIdsArray = new Uint32Array(initialOwnedIds ?? []);
 
     let completed = 0;
@@ -38,7 +40,17 @@ self.onmessage = async (e: MessageEvent<SimWorkerInMsg>) => {
 
     while (completed < simCount) {
       const chunkCount = Math.min(CHUNK_SIZE, simCount - completed);
-      const raw = simulate_strategies_chunk(strategiesJson, bannerPoolsJson, chunkCount, seed, ownedIdsArray, ticketBatchesJson ?? '[]', consumeExpiringTickets ?? true);
+      const raw = simulate_strategies_chunk(
+        strategiesJson,
+        bannerPoolsJson,
+        chunkCount,
+        seed,
+        ownedIdsArray,
+        ticketBatchesJson ?? '[]',
+        consumeExpiringTickets ?? true,
+        initialChargeNormal ?? 0,
+        initialChargeLimited ?? 0,
+      );
 
       if (raw.startsWith('{"error"')) {
         const parsed = JSON.parse(raw) as { error: string };

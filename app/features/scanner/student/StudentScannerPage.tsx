@@ -14,7 +14,7 @@ import type { ModelLoadPhase, ScanPhase, LogEntry } from '~/features/scanner/cor
 import type { Locale } from '~/utils/i18n/config';
 import { getLocaleShortName } from '~/utils/i18n/config';
 import { cdn } from '~/utils/cdn';
-import type { StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { StudentData } from '~/types/plannerData';
 import { loadAllModels, isModelsLoaded } from '~/features/scanner/student/modelLoader.client';
 import { processImages, processVideoBatch, type BatchScanRunner } from '~/features/scanner/student/pipeline.client';
 import { toStudentRecords } from '~/features/scanner/student/studentDatabase';
@@ -142,7 +142,6 @@ export function StudentScannerPage() {
   const returnTo = returnToRaw && returnToRaw.startsWith('/') && !returnToRaw.startsWith('//') ? returnToRaw : null;
 
   const [allStudents, setAllStudents] = useState<StudentData | null>(null);
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
   const scanningRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   // Mirrors state.reviewRows/results synchronously so the per-frame onResult callback merges against latest rows, not a stale closure; also fixes unmount cleanup only seeing initial state.
@@ -152,10 +151,9 @@ export function StudentScannerPage() {
   useEffect(() => {
     const locale = i18n.language as Locale;
     void (async () => {
-      const [studentsRes, portraitsRes] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
-      const [students, portraits] = (await Promise.all([studentsRes.json(), portraitsRes.json()])) as [StudentData, StudentPortraitData];
+      const studentsRes = await fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`));
+      const students: StudentData = await studentsRes.json();
       setAllStudents(students);
-      setStudentPortraits(portraits);
     })();
   }, [i18n.language]);
 
@@ -187,10 +185,10 @@ export function StudentScannerPage() {
         (step, percent) => dispatch({ type: 'LOAD_PROGRESS', step, percent }),
         (msg) => log(msg),
         {
-          loadingData: t('loadingModelData'),
+          loadingData: t_ui('loadingModelData'),
           loadingClassifier: t('loadingEquipmentClassifier'),
           loadingOcr: t('loadingTextRecognitionModel'),
-          ready: t('loadReady'),
+          ready: t_ui('loadReady'),
         },
       );
       dispatch({ type: 'MODELS_READY' });
@@ -205,7 +203,7 @@ export function StudentScannerPage() {
   // immediately instead of waiting for the whole video to finish.
   function handleResult(result: StudentResult) {
     resultsRef.current = [...resultsRef.current, result];
-    const { rows, duplicate } = mergeReviewRow(reviewRowsRef.current, result, studentPortraits ?? {}, allStudents ?? {});
+    const { rows, duplicate } = mergeReviewRow(reviewRowsRef.current, result, allStudents ?? {});
     reviewRowsRef.current = rows;
     dispatch({ type: 'SCAN_RESULT', result, rows });
     if (duplicate) log(`Merged duplicate detection${result.student ? ` for ${result.student.name}` : ''}`);
@@ -223,8 +221,8 @@ export function StudentScannerPage() {
 
   async function runScan(files: File[], runner: BatchScanRunner) {
     if (scanningRef.current || files.length === 0) return;
-    if (!allStudents || !studentPortraits) {
-      log('Student roster/portraits are still loading — try again in a moment.', 'warn');
+    if (!allStudents) {
+      log('Student roster is still loading — try again in a moment.', 'warn');
       return;
     }
     scanningRef.current = true;
@@ -363,12 +361,7 @@ export function StudentScannerPage() {
 
       <LogPanel entries={state.logEntries} visible={state.logVisible} onToggle={() => dispatch({ type: 'TOGGLE_LOG' })} startTime={state.startTime} translationKeyPrefix="itemScanner" />
 
-      <DataCollectionBanner
-        allowDataCollection={state.allowDataCollection}
-        onToggle={(allow) => dispatch({ type: 'SET_CONSENT', allow })}
-        translationKeyPrefix="studentScanner"
-        detailsLabel={tItemScanner('dataCollectionDetails')}
-      />
+      <DataCollectionBanner allowDataCollection={state.allowDataCollection} onToggle={(allow) => dispatch({ type: 'SET_CONSENT', allow })} translationKeyPrefix="studentScanner" />
 
       {loadPhase === 'loading' && <ScanProgressPanel step={loadStep} percent={loadPercent} />}
       {scanPhase === 'scanning' && (
@@ -407,8 +400,8 @@ export function StudentScannerPage() {
 
       {loadPhase !== 'loading' && scanPhase !== 'scanning' && (
         <DropZone
-          disabled={loadPhase !== 'ready' || !allStudents || !studentPortraits}
-          disabledLabel={loadPhase === 'ready' && (!allStudents || !studentPortraits) ? t('loadingRosterLabel') : tItemScanner('dropZoneDisabled')}
+          disabled={loadPhase !== 'ready' || !allStudents}
+          disabledLabel={loadPhase === 'ready' && !allStudents ? t('loadingRosterLabel') : tItemScanner('dropZoneDisabled')}
           accept="image/*,video/*"
           multiple
           translationKeyPrefix="studentScanner"

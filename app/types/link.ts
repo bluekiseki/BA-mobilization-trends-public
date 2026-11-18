@@ -8,6 +8,8 @@ export interface CollectedLink {
   type?: string;
   crossOrigin?: 'anonymous' | 'use-credentials';
   hrefLang?: string;
+  media?: string;
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 // Custom type to the handle object on the React Router.

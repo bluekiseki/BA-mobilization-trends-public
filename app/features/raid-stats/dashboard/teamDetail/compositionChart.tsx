@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Character, PortraitData, ReportEntryRank, ReportStudentData } from '../../../../types/raidReport';
+import type { Character, ReportEntryRank, ReportStudentData } from '../../../../types/raidReport';
 import { StudentIcon } from '../../../../components/student/studentIcon';
 import { useTranslation } from 'react-i18next';
 import { CompositionDetailView } from './compositionDetailView';
@@ -10,6 +10,8 @@ import { FaChevronDown } from 'react-icons/fa6';
 import { FiVideo } from 'react-icons/fi';
 import React from 'react';
 import { CustomNumberInput } from '~/components/common/CustomInput';
+import { CheckboxSelect } from '~/components/common/CheckboxSelect';
+import { matchesScope, type VideoScope } from '../../common/video/videoMerge';
 import { VideoMatchSection } from '../../common/video/VideoMatchSection';
 import { useMergedVideos } from '../../common/video/useMergedVideos';
 import { hasVideoPartyInfo } from '../../common/video/videoFilters';
@@ -18,6 +20,7 @@ import { useStudentFilterSearch } from '../useStudentFilterSearch';
 import { StudentFilterBar } from '../StudentFilterBar';
 import { createStudentFilter, matchesStudentFilter, type StudentFilterState } from '../studentFilter';
 import type { Locale } from '~/utils/i18n/config';
+import { SheetIcon } from '~/components/common/SheetIcon';
 
 // --- Types ---
 interface TeamSnapshot {
@@ -66,13 +69,12 @@ export const CompositionChart: React.FC<{
   data: ReportEntryRank[];
   detailedData?: ReportEntryRank[];
   studentData: ReportStudentData;
-  portraitData: PortraitData;
   raidInfo: RaidInfo;
   server: GameServer;
   onScrollToFilter?: () => void;
   useDetailed: boolean;
   onUseDetailedChange: (v: boolean) => void;
-}> = React.memo(({ data, detailedData, studentData, portraitData, raidInfo, server, onScrollToFilter, useDetailed, onUseDetailedChange }) => {
+}> = React.memo(({ data, detailedData, studentData, raidInfo, server, onScrollToFilter, useDetailed, onUseDetailedChange }) => {
   const { t, i18n } = useTranslation('dashboard'); // Translation hook
   const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
@@ -82,6 +84,7 @@ export const CompositionChart: React.FC<{
   const [showIdOrder, setShowIdOrder] = useState(false);
   const [sortBy, setSortBy] = useState<'count' | 'bestRank'>('count');
   const merged = useMergedVideos(server, raidInfo.Id);
+  const [videoScope, setVideoScope] = useState<VideoScope>('all');
   const videoData = merged.loaded ? merged.videos : null;
   const [studentFilter, setStudentFilter] = useState<StudentFilterState>(createStudentFilter);
 
@@ -90,7 +93,7 @@ export const CompositionChart: React.FC<{
     const map = new Map<string, VideoEntry[]>();
     for (const video of videoData) {
       // Only parties with real student IDs can match a composition.
-      if (!hasVideoPartyInfo(video)) continue;
+      if (!hasVideoPartyInfo(video) || !matchesScope(video, videoScope)) continue;
       if (analysisUnit === 'report') {
         const key = video.parties
           .flat()
@@ -112,7 +115,7 @@ export const CompositionChart: React.FC<{
       }
     }
     return map;
-  }, [videoData, analysisUnit]);
+  }, [videoData, analysisUnit, videoScope]);
 
   const activeData = useDetailed && detailedData ? detailedData : data;
 
@@ -475,6 +478,27 @@ export const CompositionChart: React.FC<{
             </div>
           )}
 
+          {merged.referenceRaidId && (
+            <div className="flex min-h-11 items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200 sm:min-h-7">
+              <span>{t('videos_scope_label')}</span>
+              <CheckboxSelect<VideoScope>
+                ariaLabel={t('videos_scope_label')}
+                options={[
+                  { value: server === 'jp' ? 'current' : 'reference', label: 'JP' },
+                  { value: server === 'kr' ? 'current' : 'reference', label: 'GL·KR' },
+                ]}
+                selectedValues={new Set<VideoScope>(videoScope === 'all' ? ['current', 'reference'] : videoScope === 'none' ? [] : [videoScope])}
+                onChange={(values) => {
+                  if (values.has('current') && values.has('reference')) setVideoScope('all');
+                  else if (values.has('current')) setVideoScope('current');
+                  else if (values.has('reference')) setVideoScope('reference');
+                  else setVideoScope('none');
+                }}
+                buttonClassName="flex min-h-11 min-w-32 items-center justify-between gap-2 border border-neutral-300 bg-white px-2 text-base text-neutral-900 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 sm:min-h-7 sm:text-sm"
+              />
+            </div>
+          )}
+
           {videoData && (
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input type="checkbox" checked={filters.onlyWithVideo} onChange={(e) => setFilters((p) => ({ ...p, onlyWithVideo: e.target.checked }))} className="" />
@@ -521,7 +545,6 @@ export const CompositionChart: React.FC<{
               filter={studentFilter}
               onChange={setStudentFilter}
               studentNames={studentNames}
-              portraitData={portraitData}
               searchFn={searchFn}
               usageCounts={studentUsageCounts}
               filteredCount={displayedCompData.length}
@@ -559,13 +582,13 @@ export const CompositionChart: React.FC<{
                     <div key={tIdx} className="flex gap-2 relative justify-center md:justify-start">
                       {analysisUnit === 'report' && <div className="hidden md:block absolute -left-5 top-1/2 -translate-y-1/2 text-xs font-mono text-neutral-400 -rotate-90">T{tIdx + 1}</div>}
 
-                      <div className="grid grid-cols-6 gap-2">
+                      <div className="grid grid-cols-[repeat(6,minmax(0,3.5rem))] gap-2">
                         {displayed.map((char, idx) => {
                           const mulIdx = teamMulIds.indexOf(char.id);
                           const mulProps = mulIdx >= 0 ? (comp.hasMulliganOrder ? { mulliganIndex: mulIdx } : { isMulligan: true as const }) : {};
                           return (
-                            <div key={idx} className="relative">
-                              <StudentIcon character={{ id: char.id, CombatStyleIndex: char.CombatStyleIndex, ...mulProps } as Character} student={studentData[char.id]} portraitData={portraitData} />
+                            <div key={idx} className="relative w-full">
+                              <StudentIcon character={{ id: char.id, CombatStyleIndex: char.CombatStyleIndex, ...mulProps } as Character} student={studentData[char.id]} />
                             </div>
                           );
                         })}
@@ -621,7 +644,6 @@ export const CompositionChart: React.FC<{
                   boss={raidInfo.Boss}
                   server={server}
                   id={raidInfo.Id}
-                  portraitData={portraitData}
                   onClose={() => setSelectedCompKey(null)}
                 />
                 {/* 
@@ -638,11 +660,11 @@ export const CompositionChart: React.FC<{
                 {videoMatches.length > 0 && (
                   <>
                     <div className="my-4 border-t dark:border-neutral-700"></div>
-                    <VideoMatchSection videos={videoMatches} portraitData={portraitData} studentData={studentData} />
+                    <VideoMatchSection videos={videoMatches} studentData={studentData} />
                   </>
                 )}
                 <div className="my-4 border-t dark:border-neutral-700"></div>
-                <VariantStats comp={comp} portraitData={portraitData} studentData={studentData} />
+                <VariantStats comp={comp} studentData={studentData} />
               </div>
             )}
           </div>
@@ -661,9 +683,8 @@ export const CompositionChart: React.FC<{
 // --- Extracted Component: VariantStats ---
 const VariantStats: React.FC<{
   comp: AggregatedComp;
-  portraitData: PortraitData;
   studentData: ReportStudentData;
-}> = ({ comp, portraitData }) => {
+}> = ({ comp }) => {
   const { t } = useTranslation('dashboard');
   const [mulView, setMulView] = useState<'order' | 'ox'>('order');
 
@@ -699,7 +720,7 @@ const VariantStats: React.FC<{
                   <div key={tIdx} className="flex -space-x-1 scale-90 origin-left">
                     {[...team.m, ...team.s].map((c, ci) => (
                       <div key={ci} className="w-11 h-11 rounded-sm border-white dark:border-neutral-600 overflow-hidden">
-                        {c && <img src={`data:image/webp;base64,${portraitData[c.id]}`} alt="" className="w-full h-full object-cover" />}
+                        {c && <SheetIcon sheet="student" id={c.id} alt="" />}
                       </div>
                     ))}
                   </div>
@@ -754,7 +775,7 @@ const VariantStats: React.FC<{
                                 : 'border-yellow-500 dark:border-yellow-200'
                             }`}
                           >
-                            <img src={`data:image/webp;base64,${portraitData[id]}`} alt="" className="w-full h-full object-cover" />
+                            <SheetIcon sheet="student" id={id} alt="" />
                           </div>
                           {comp.hasMulliganOrder && mulView === 'order' && (
                             <div

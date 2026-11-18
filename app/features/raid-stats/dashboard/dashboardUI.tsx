@@ -9,7 +9,7 @@ import { loadIndex, buildSeasonItems } from '~/features/raid-stats/charts/networ
 import type { SeasonItem } from '~/features/raid-stats/charts/network/types';
 import { getCharacterStarValue } from '~/utils/raid/report';
 import { InclusionUsage } from '~/types/raidReport';
-import type { Character, PortraitData, ReportEntryRank, ReportStudentData, TableFilters, UsageStats } from '~/types/raidReport';
+import type { Character, ReportEntryRank, ReportStudentData, TableFilters, UsageStats } from '~/types/raidReport';
 import type { GameServer, RaidInfo } from '~/types/data';
 import { difficultyInfo } from '~/components/raid/Difficulty';
 import { DownloadButton } from './DownloadButton';
@@ -38,13 +38,12 @@ const RANK_RANGES: RankRange[] = [
 interface DashboardUIProps {
   dashboardData: ReportEntryRank[];
   studentData: ReportStudentData;
-  portraitData: PortraitData;
   raidInfo: RaidInfo;
   server: GameServer;
 }
 
 // --- MAIN UI COMPONENT ---
-function DashboardUI({ dashboardData: allData, studentData, portraitData, raidInfo, server }: DashboardUIProps) {
+function DashboardUI({ dashboardData: allData, studentData, raidInfo, server }: DashboardUIProps) {
   const [networkSeasons, setNetworkSeasons] = useState<SeasonItem[]>([]);
   useEffect(() => {
     if (server !== 'jp') return;
@@ -97,7 +96,8 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
     if (!allData.length) return [];
     // Adjusted as min must be at least 1
     const safeMin = Math.max(1, currentMin);
-    return allData.slice(safeMin - 1, currentMax);
+    // Entries are sparse, so filter by the actual rank instead of the array position.
+    return allData.filter((entry) => entry.typeRanking >= safeMin && entry.typeRanking <= currentMax);
   }, [allData, currentMin, currentMax]);
 
   const handleRankChange = (min: number, max: number, id?: string) => {
@@ -429,6 +429,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
             activeRangeId={activeRangeId}
             onRangeChange={handleRankChange}
             raidInfo={raidInfo}
+            dataCount={allData.length ? allData[allData.length - 1].typeRanking : 0}
             // rankRanges={rank_ranges}
           />
         </Card>
@@ -443,7 +444,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
 
       <div id={sections[2].id} className="gap-8 mb-6 sm:mb-14 scroll-mt-15" ref={pickRateRef}>
         <Card title={t('participationRate')} defaultExpanded={true} icon={<HiOutlineChartPie className="w-4 h-4" />}>
-          <StackedPickRateChart data={rankFilteredData} studentData={studentData} portraitData={portraitData} />
+          <StackedPickRateChart data={rankFilteredData} studentData={studentData} />
         </Card>
       </div>
 
@@ -456,7 +457,7 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
 
       <div id={sections[4].id} className="gap-8 mb-6 sm:mb-14 scroll-mt-15" ref={rankUsageRef}>
         <Card title={t('StudentGrowthByRankTitle')} defaultExpanded={false} icon={<HiOutlineUserGroup className="w-4 h-4" />}>
-          <RankUsageChart data={rankFilteredData} studentData={studentData} portraitData={portraitData} />
+          <RankUsageChart data={rankFilteredData} studentData={studentData} />
         </Card>
       </div>
 
@@ -477,7 +478,6 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
             data={rankFilteredData}
             detailedData={detailedFilteredData}
             studentData={studentData}
-            portraitData={portraitData}
             raidInfo={raidInfo}
             server={server}
             onScrollToFilter={handleScrollToTableArea}
@@ -504,7 +504,6 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
             handleTableFilterChange={handleTableFilterChange}
             usageStats={usageStats}
             studentData={studentData}
-            portraitData={portraitData}
             partyCountMin={partyCountMin}
             partyCountMax={partyCountMax}
           />
@@ -514,7 +513,6 @@ function DashboardUI({ dashboardData: allData, studentData, portraitData, raidIn
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
             studentData={studentData}
-            portraitData={portraitData}
             paginatedData={displayData}
             handlePageChange={handlePageChange}
             handleItemsPerPageChange={handleItemsPerPageChange}

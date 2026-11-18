@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next';
 import type { GameServer, RaidInfo, Student } from '~/types/data';
 import { GAMESERVER_LIST } from '~/types/data';
 import { loadRaidInfos } from '~/utils/loadRaidInfo';
-import type { PortraitData, ReportStudentData } from '~/types/raidReport';
+import type { ReportStudentData } from '~/types/raidReport';
 import { cdn } from '~/utils/cdn';
 import { VideoPageView } from '~/features/raid-stats/common/video/VideoPageView';
-import { getLiveRaidInfo } from '~/data/liveRaid';
+import { getScheduledRaidInfo } from '~/data/liveRaid';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { HiOutlineChevronLeft } from 'react-icons/hi2';
 import { type_translation, typecolor } from '~/components/raid/raidToString';
@@ -15,6 +15,9 @@ import { useDataCacheJson } from '~/hooks/useDataCacheJson';
 import { getInstance } from '~/middleware/i18next';
 import { createMetaDescriptor } from '~/components/shell/head';
 import type { Route } from './+types/$server.videos';
+import { formatLocations } from '~/utils/raidLocation';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
+import type { AppHandle } from '~/types/link';
 
 export function loader({ context, params }: LoaderFunctionArgs) {
   const { server } = params;
@@ -40,21 +43,20 @@ export default function RaidVideosPage() {
   const locale = i18n.language as Locale;
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const [portraitData, setPortraitData] = useState<PortraitData>({});
   const [studentData, setStudentData] = useState<ReportStudentData>({});
   const [loading, setLoading] = useState(true);
   const fetchStudents = useDataCacheJson<Record<string, Student>>();
 
-  // Get all raids (live + past) sorted by date descending
+  // Get all raids (announced + past) sorted by date descending
   // Keep all Type variations for Grand Assault, but deduplicate by Id for sorting reference
   const allRaids = useMemo(() => {
     const allData = loadRaidInfos(server as GameServer, locale);
-    const liveData = getLiveRaidInfo(locale, server as GameServer);
+    const scheduledData = getScheduledRaidInfo(locale, server as GameServer);
 
-    // allData first so a raid's finalized/localized entry wins the dedupe below over liveData's temporary placeholder.
-    const merged: RaidInfo[] = [...allData, ...liveData];
+    // Finalized entries take precedence over schedule metadata.
+    const merged: RaidInfo[] = [...allData, ...scheduledData];
 
-    // Dedupe by Id+Type so a raid still tracked in liveData after its official data has
+    // Dedupe by Id+Type so a raid still tracked in scheduledData after its official data has
     // landed doesn't produce duplicate boss-type entries.
     const seenIdType = new Set<string>();
     const deduped = merged.filter((raid) => {
@@ -115,10 +117,9 @@ export default function RaidVideosPage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchStudents(cdn(`/w/${getLocaleShortName(locale)}.students.bin`)), fetch(cdn('/w/students_portrait.json')).then((res) => res.json() as unknown)])
-      .then(([studentJson, portraitJson]) => {
+    fetchStudents(cdn(`/w/v2/${getLocaleShortName(locale)}.students.bin`))
+      .then((studentJson) => {
         if (studentJson) setStudentData(studentJson);
-        setPortraitData(portraitJson as PortraitData);
       })
       .catch((err: unknown) => {
         console.error('Failed to load student data:', err);
@@ -153,7 +154,7 @@ export default function RaidVideosPage() {
             <option value="">-- Select a Raid --</option>
             {uniqueRaidIds.map((raid) => (
               <option key={raid.Id} value={raid.Id}>
-                {raid.Boss} ({raid.Location}) - {raid.Id} {raid.Date && `(${new Date(raid.Date).toLocaleDateString()})`}
+                {raid.Boss} ({formatLocations(raid.Location)}) - {raid.Id} {raid.Date && `(${new Date(raid.Date).toLocaleDateString()})`}
               </option>
             ))}
           </select>
@@ -198,10 +199,14 @@ export default function RaidVideosPage() {
       ) : loading ? (
         <div className="min-h-[50vh] flex justify-center items-center text-2xl cursor-progress">{t_ui('loading')}</div>
       ) : raidInfo ? (
-        <VideoPageView raidInfo={raidInfo} server={server as GameServer} portraitData={portraitData} studentData={studentData} isGrandAssault={isGrandAssault} activeTab={selectedType || 'All'} />
+        <VideoPageView key={`${server}:${selectedId}`} raidInfo={raidInfo} server={server as GameServer} studentData={studentData} isGrandAssault={isGrandAssault} activeTab={selectedType || 'All'} />
       ) : (
         <div className="text-center py-12 text-neutral-400">{t_ui('loading')}</div>
       )}
     </div>
   );
 }
+
+export const handle: AppHandle = {
+  preload: () => studentSheetPreloadLinks(),
+};

@@ -3,6 +3,7 @@ import type { IconInfos, StudentData } from '~/types/plannerData';
 import type { SummaryPoolStat } from '~/features/inventory/types';
 import { calculatedGrowthNeeds } from '~/utils/calculatedGrowthNeeds';
 import { compactPoolNet, compactPoolOwned, compactSubPool, computeSubPoolXp, FUNGIBLE_POOLS, type FungibleSubPool } from '~/utils/groupMaterialNeeds';
+import { applyUniversalBlueprints } from '~/utils/blueprintUtils';
 import { buildUwDemandFromPlans, calcUwMaterialXp } from '~/utils/uwMaterialXp';
 
 export interface DisplayInventoryInput {
@@ -98,7 +99,16 @@ export function calcFungiblePoolData({ showTarget, displayInventory, needed, gro
   // attributes each student's UW XP demand to their own weapon-type's matching series instead
   // of always firing pins, so applyPoolVisibility's per-tier netting is exact for these three —
   // no cross-series competition, since each series only ever answers its own weapon types.
-  for (const pool of FUNGIBLE_POOLS.uwGrowth.slice(0, 3)) applyPoolVisibility(pool);
+  for (const pool of FUNGIBLE_POOLS.uwGrowth.slice(0, 3)) {
+    applyPoolVisibility(pool);
+    // A series short on its own is still covered when leftovers of other series and firing pins fill the gap, so no tile may read as short.
+    if (uw.required > 0 && uw.deficit <= 0) {
+      for (const k of pool.keys) {
+        if (k in deficitByKey) deficitByKey[k] = 0;
+        if ((diffByKey[k] ?? 0) < 0) diffByKey[k] = 0;
+      }
+    }
+  }
 
   // Firing pins have no demand of their own (any series' leftover can fall back to them), so
   // `needed` never attributes anything to their keys and applyPoolVisibility always leaves
@@ -123,12 +133,14 @@ export function calcFungiblePoolData({ showTarget, displayInventory, needed, gro
   if (uw.required > 0) {
     summaryPools.push({
       labelKey: 'planner:label.uwEnh',
-      ownedXp: uw.effectiveOwned,
+      ownedXp: uw.effectiveOwned + uw.surplus,
       requiredXp: uw.required,
       tooltipKey: 'planner:inventory.uwSummaryTooltip',
       iconKey: FIRING_PIN_POOL.keys[FIRING_PIN_POOL.keys.length - 1],
     });
   }
+
+  applyUniversalBlueprints(displayInventory, needed, deficitByKey, diffByKey);
 
   return { fungibleDeficitByKey: deficitByKey, fungibleDiffByKey: diffByKey, poolVisibleKeys, goalSummaryPools: summaryPools };
 }

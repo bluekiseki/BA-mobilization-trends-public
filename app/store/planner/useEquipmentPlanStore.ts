@@ -1,6 +1,7 @@
+import { safeLocalStorage } from '../history/localPersistence';
 // app/store/planner/useEquipmentPlanStore.ts
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface EquipmentPlanState {
   // Sweep counts by stage
@@ -56,6 +57,7 @@ export const useEquipmentPlanStore = create<EquipmentPlanState>()(
     }),
     {
       name: 'equipment-plan-storage',
+      storage: createJSONStorage(() => safeLocalStorage),
     },
   ),
 );

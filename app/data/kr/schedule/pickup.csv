@@ -1,4 +1,4 @@
-studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
+studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction,freePulls
 10010,Shiroko,2021-11-09 00:00,2021-11-16 12:00,false,false,false
 10005,Hoshino,2021-11-09 00:00,2021-11-16 12:00,false,false,false
 10000,Aru,2021-11-16 12:30,2021-11-29 12:00,false,false,false
@@ -530,31 +530,31 @@ studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
 10120,Natsu (Band),2026-10-06 11:00:00,2026-10-13 10:59:00,true,false,false,
 10143,Shun (Swimsuit),2026-10-13 11:00:00,2026-10-27 10:59:00,false,false,false,
 10145,Kisaki (Swimsuit),2026-10-13 11:00:00,2026-10-27 10:59:00,false,false,false,
-10033,Wakamo,2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,recall,true
-10045,Hoshino (Swimsuit),2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,recall,true
-10059,Mika,2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,recall,true
-10086,Hina (Dress),2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,recall,true
-10074,Hanako (Swimsuit),2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,recall,true
-10117,Hikari,2026-10-27 11:00:00,2026-11-10 10:59:00,true,true,false,,true
-10118,Nozomi,2026-10-27 11:00:00,2026-11-10 10:59:00,true,true,false,,true
-10101,Saori (Swimsuit),2026-10-27 11:00:00,2026-11-10 10:59:00,true,true,false,,true
-10102,Hiyori (Swimsuit),2026-10-27 11:00:00,2026-11-10 10:59:00,true,true,false,,true
-20049,Misaki (Swimsuit),2026-10-27 11:00:00,2026-11-10 10:59:00,true,false,false,,true
-20033,Makoto,2026-11-03 11:00:00,2026-11-10 10:59:00,true,true,false,,true
-10087,Ako (Dress),2026-11-03 11:00:00,2026-11-10 10:59:00,true,true,false,,true
-20040,Satsuki,2026-11-03 11:00:00,2026-11-10 10:59:00,true,false,false,,true
-10107,Chiaki,2026-11-03 11:00:00,2026-11-10 10:59:00,true,false,false,,true
-10096,Kanna (Swimsuit),2026-11-03 11:00:00,2026-11-10 10:59:00,true,false,false,,true
-10146,Makoto (Swimsuit),2026-11-10 11:00:00,2026-11-17 10:59:00,false,true,false,,true
-10147,Satsuki (Swimsuit),2026-11-10 11:00:00,2026-11-17 10:59:00,false,true,false,,true
-10148,Iroha (Swimsuit),2026-11-17 11:00:00,2026-11-24 10:59:00,false,true,true,,true
-20060,Ibuki (Swimsuit),2026-11-17 11:00:00,2026-11-24 10:59:00,false,true,true,,true
-20041,Rio,2026-11-17 11:00:00,2026-11-24 10:59:00,true,true,true,,true
-10111,Neru (School Uniform),2026-11-17 11:00:00,2026-11-24 10:59:00,true,true,true,,true
-10113,Sena (Casual),2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,,true
-10114,Juri (Part-Timer),2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,,true
-10119,Nagusa,2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,,true
-20046,Niya,2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,,true
+10117,Hikari,2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,
+10118,Nozomi,2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,
+10101,Saori (Swimsuit),2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,
+10102,Hiyori (Swimsuit),2026-10-27 11:00:00,2026-11-03 10:59:00,true,true,false,
+20049,Misaki (Swimsuit),2026-10-27 11:00:00,2026-11-03 10:59:00,true,false,false,
+10033,Wakamo,2026-10-27 11:00,2026-11-03 10:590,true,true,false,recall
+10045,Hoshino (Swimsuit),2026-10-27 11:00,2026-11-03 10:59,true,true,false,recall
+10059,Mika,2026-10-27 11:00,2026-11-03 10:59,true,true,false,recall
+10086,Hina (Dress),2026-10-27 11:00,2026-11-03 10:59,true,true,false,recall
+10074,Hanako (Swimsuit),2026-10-27 11:00,2026-11-03 10:59,true,true,false,recall
+20033,Makoto,2026-11-03 11:00:00,2026-11-10 10:59:00,true,true,false,
+10087,Ako (Dress),2026-11-03 11:00:00,2026-11-10 10:59:00,true,true,false,
+20040,Satsuki,2026-11-03 11:00:00,2026-11-10 10:59:00,true,false,false,
+10107,Chiaki,2026-11-03 11:00:00,2026-11-10 10:59:00,true,false,false,
+10096,Kanna (Swimsuit),2026-11-03 11:00:00,2026-11-10 10:59:00,true,false,false,
+10146,Makoto (Swimsuit),2026-11-10 11:00:00,2026-11-17 10:59:00,false,true,false,,,200
+10147,Satsuki (Swimsuit),2026-11-10 11:00:00,2026-11-17 10:59:00,false,true,false,,,200
+10148,Iroha (Swimsuit),2026-11-17 11:00:00,2026-11-24 10:59:00,false,true,true,
+20060,Ibuki (Swimsuit),2026-11-17 11:00:00,2026-11-24 10:59:00,false,true,true,
+20041,Rio,2026-11-17 11:00:00,2026-11-24 10:59:00,true,true,true,
+10111,Neru (School Uniform),2026-11-17 11:00:00,2026-11-24 10:59:00,true,true,true,
+10113,Sena (Casual),2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,
+10114,Juri (Part-Timer),2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,
+10119,Nagusa,2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,
+20046,Niya,2026-11-24 11:00:00,2026-12-08 10:59:00,false,false,false,
 10149,Kokoro,2026-12-08 11:00:00,2026-12-22 10:59:00,false,false,false,,true
 10150,Kotone,2026-12-08 11:00:00,2026-12-22 10:59:00,false,false,false,,true
 20061,Kasumi (Swimsuit),2026-12-22 11:00:00,2027-01-05 10:59:00,false,false,false,,true
@@ -573,3 +573,8 @@ studentId,name,startTime,endTime,rerun,limited,fest,bannerType,prediction
 10103,Marina (Qipao),2027-02-02 11:00:00,2027-02-09 10:59:00,true,false,false,,true
 20023,Kanna,2027-02-02 11:00:00,2027-02-09 10:59:00,true,false,false,,true
 10052,Noa,2027-02-02 11:00:00,2027-02-09 10:59:00,true,false,false,,true
+10153,Hifumi (Racing),2027-02-09 11:00:00,2027-02-23 10:59:00,false,true,false,,true
+20063,Azusa (Racing),2027-02-09 11:00:00,2027-02-23 10:59:00,false,true,false,,true
+10127,Miyo,2027-02-23 11:00:00,2027-03-02 10:59:00,true,false,false,,true
+10128,Fuyu,2027-02-23 11:00:00,2027-03-02 10:59:00,true,false,false,,true
+20050,Ritsu,2027-02-23 11:00:00,2027-03-02 10:59:00,true,false,false,,true

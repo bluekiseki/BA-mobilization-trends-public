@@ -52,8 +52,8 @@ function sliderToWeight(s: number): number {
 function resolveSeasonLabel(item: SeasonItem, locale: LocaleShortName): string {
   const entry = bossdata[item.bossKey as keyof typeof bossdata];
   const bossName = entry?.name[locale] ?? item.label.split(' · ')[0];
-  const rawTerrain = entry?.teran ?? item.label.split(' · ')[1] ?? '';
-  const terrain = terrain_translation[rawTerrain]?.[locale] ?? rawTerrain;
+  const rawTerrains = [entry?.teran ?? item.label.split(' · ')[1] ?? ''].flat();
+  const terrain = rawTerrains.map((raw) => terrain_translation[raw]?.[locale] ?? raw).join(' ');
   return `${bossName} · ${terrain}`;
 }
 

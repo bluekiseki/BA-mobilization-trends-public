@@ -13,11 +13,10 @@ import { REMAINING_TIME_PREHYDRATE_SCRIPT } from './components/common/RemainingT
 // import { Analytics } from "@vercel/analytics/react" // for vercel
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { DEFAULT_LOCALE, type Locale } from './utils/i18n/config';
-import { getLocale, i18nextMiddleware } from './middleware/i18next';
+import { getLocale, i18nextMiddleware } from '~/middleware/i18next';
 import { useTranslation } from 'react-i18next';
 import { domain, cdn as cdn_domain } from './data/livedataServer.json';
 const DynamicDevtoolsdetector = lazy(() => import('./components/common/devtools-detector.client'));
-const DynamicHelpSidebar = lazy(() => import('./components/common/HelpSidebar').then((m) => ({ default: m.HelpSidebar })));
 // posthog-js is a browser-only analytics SDK; keeping it behind a .client.tsx boundary
 // excludes it from the SSR Worker bundle entirely (see PostHogInit.client.tsx).
 const DynamicPostHogInit = lazy(() => import('./components/shell/analytics/PostHogInit.client').then((m) => ({ default: m.PostHogInit })));
@@ -25,7 +24,6 @@ import { env } from 'cloudflare:workers'; // for cloudflare
 // import { env } from 'node:process';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { ClientOnly } from './components/common/ClientOnly';
-import { useHelpStore } from './store/helpStore';
 import { useAuthStore, SESSION_HINT_KEY } from './store/authStore';
 import { applySession, type SessionPayload } from './store/applySession';
 import { useSyncWatcher } from './store/planner/useSyncWatcher';
@@ -35,6 +33,8 @@ import { useCrossTabSync } from './hooks/useCrossTabSync';
 // useLayoutEffect warns when it runs during SSR (it never actually runs server-side); fall back to
 // useEffect there so this hook can be used in SSR routes without console noise.
 const useIsomorphicLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
+
+export { shouldRevalidateOnPathOrLang as shouldRevalidate } from './utils/revalidate';
 
 export function loader({ context, request, params }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -70,9 +70,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const locale = data?.locale || DEFAULT_LOCALE;
   const { pathname } = useLocation();
   const isFullWidth = /\/charts\/[^/]+\/network(\/|$)/.test(pathname);
-  // Only mount HelpSidebar (and its 'help' namespace useTranslation call) once the user
-  // actually opens it, so help.json isn't fetched on every page load by default.
-  const isHelpOpen = useHelpStore((s) => s.isOpen);
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -189,12 +186,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <SyncConflictModal />
-
-          {isHelpOpen && (
-            <Suspense fallback={null}>
-              <DynamicHelpSidebar />
-            </Suspense>
-          )}
         </ThemeProvider>
 
         {/* </I18nextProvider> */}

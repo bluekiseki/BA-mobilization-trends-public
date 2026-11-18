@@ -61,12 +61,6 @@ export const handle: AppHandle = {
       },
       {
         rel: 'preload',
-        href: cdn(`/w/students_portrait.json`),
-        as: 'fetch',
-        crossOrigin: 'anonymous',
-      },
-      {
-        rel: 'preload',
         href: `/api/notices?region=${newsServer}&sort=new&type=ALL&limit=5`,
         as: 'fetch',
       },
@@ -94,9 +88,11 @@ function RaidCard({ raid, server, locale }: { raid: StatusRaid | null; server: '
       <div className="flex items-center gap-1.5">
         <ServerBadge server={server} />
         <StatusBadge status={raid.status} />
-        {raid.location && (
-          <span className="ml-auto shrink-0">
-            <TerrainIconGameStyle terrain={raid.location as Terrain} size="1em" />
+        {raid.locations.length > 0 && (
+          <span className="ml-auto flex shrink-0 items-center gap-1">
+            {raid.locations.map((terrain) => (
+              <TerrainIconGameStyle key={terrain} terrain={terrain as Terrain} size="1em" />
+            ))}
           </span>
         )}
       </div>
@@ -190,7 +186,7 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
       badge: s,
     },
     {
-      to: localeLink(locale, `/charts/${server}/heatmap`),
+      to: localeLink(locale, '/students/10000?tab=stats'),
       img: heatmapImage,
       title: tCommon('btn1'),
       desc: tCharts('heatmap.description1'),
@@ -212,7 +208,7 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
       desc: tHomeFeatures('gachaPlannerDesc', 'Calculate income & Simulate gacha'),
     },
     {
-      to: localeLink(locale, '/planner/students'),
+      to: localeLink(locale, '/students'),
       img: isDark ? '/img/growth_dark.webp' : '/img/growth.webp',
       title: t_ui('studentGrowthPlanner'),
       desc: tHomeFeatures('studentGrowthPlannerDesc'),
@@ -249,7 +245,7 @@ function ToolLinks({ locale, isDark }: { locale: Locale; isDark: boolean }) {
     },
     {
       to: localeLink(locale, '/scanner/student'),
-      img: '/img/student-scanner.webp',
+      img: cdn('/img/student-scanner.webp'),
       title: tNav('studentScanner'),
       desc: tHomeFeatures('studentScannerDesc'),
     },

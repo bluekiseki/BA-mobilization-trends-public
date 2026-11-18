@@ -13,18 +13,13 @@ import { cdn } from '~/utils/cdn';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
 import { CACHE_CONTROL_CONFIG } from '~/utils/cacheControl';
 import { localeLink } from '~/utils/localeLink';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
 
 export const links: Route.LinksFunction = () => {
   return [
     {
       rel: 'preload',
-      href: cdn('/network-data/index.json'),
-      as: 'fetch',
-      crossOrigin: 'anonymous',
-    },
-    {
-      rel: 'preload',
-      href: cdn('/w/students_portrait.json'),
+      href: cdn('/w/v2/network/index.bin'),
       as: 'fetch',
       crossOrigin: 'anonymous',
     },
@@ -72,6 +67,7 @@ export const handle: AppHandle = {
     const path = `/charts/${server}/network${match[2] ?? ''}`;
 
     return [
+      ...studentSheetPreloadLinks(),
       {
         rel: 'preload',
         href: cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`),

@@ -2,8 +2,8 @@ import { useParams } from 'react-router';
 import { noticeImages } from '../logic/noticeImages';
 import { ownRelease, SERVERS } from '../logic/releaseDates';
 import { seriesIdBySlug } from '../logic/slugs';
-import { neighbours, pickText, seriesLabel, storyTitle } from '../logic/storyIndex';
-import { BgmList, CategoryPill, NoticeImages, Section, StoryLink, CharacterChips, ReleaseDates, seriesPath, storyPath, storyButtonClass } from './StorySections';
+import { episodeRange, episodeSlot, episodeTotal, neighbours, pickText, seriesLabel, storyTitle } from '../logic/storyIndex';
+import { BgmList, CategoryPill, NoticeImages, Section, StoryLink, CharacterChips, ReleaseDates, seriesPath, storyPath } from './StorySections';
 import { StoryShell } from './StoryShell';
 import { useStoryIndex, useStoryLang } from './useStoryIndex';
 import { storyListPath } from '../logic/navigation';
@@ -16,14 +16,18 @@ export function EpisodePage() {
   const { index, releases, error } = useStoryIndex();
   const { lang, setLang, query } = useStoryLang();
   const t = storyCopy(lang);
-  const spoilers = useStorySettings().settings?.spoilers ?? false;
+  const { settings } = useStorySettings();
+  const spoilers = settings?.spoilers ?? false;
+  const episodeTotals = settings?.episodeTotals ?? false;
   const seriesId = index ? seriesIdBySlug(index, decodeURIComponent(slug)) : null;
   const story = index?.stories[storyId];
   const series = index && seriesId ? index.series[seriesId] : undefined;
+  const position = series ? series.stories.indexOf(storyId) : -1;
+  const slot = index && series ? episodeSlot(index, series, storyId, lang) : null;
   const found = index && seriesId && series && story && story.s === seriesId;
 
   return (
-    <StoryShell lang={lang} onLang={setLang} langQuery={query} error={error} loading={!index}>
+    <StoryShell lang={lang} onLang={setLang} langQuery={query} error={error} loading={!index} detail>
       {found ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-x-2 text-sm text-neutral-600 dark:text-neutral-400">
@@ -36,11 +40,19 @@ export function EpisodePage() {
             </StoryLink>
           </div>
           <div className="flex flex-col items-start gap-2">
-            <CategoryPill category={series.c} lang={lang} />
-            <h2 className="text-lg font-bold">{storyTitle(storyId, story, lang)}</h2>
+            <span className="flex items-center gap-2">
+              <CategoryPill category={series.c} lang={lang} />
+              <span className="text-sm font-semibold tabular-nums text-neutral-600 dark:text-neutral-300">
+                {slot !== null && episodeRange(slot, slot, lang)}
+                {slot !== null && episodeTotals && <span className="font-normal text-neutral-500 dark:text-neutral-400"> / {episodeTotal(index, series, lang)}</span>}
+              </span>
+            </span>
+            <h1 className="text-2xl font-bold leading-snug">{storyTitle(storyId, story, lang)}</h1>
           </div>
 
-          {spoilers && !story.p && pickText(story.m, lang) && <p className="whitespace-pre-line text-sm leading-relaxed">{pickText(story.m, lang)}</p>}
+          {spoilers && !story.p && pickText(story.m, lang) && (
+            <p className="whitespace-pre-line text-sm font-normal leading-relaxed text-neutral-600 dark:text-neutral-300">{pickText(story.m, lang)}</p>
+          )}
 
           {story.p && (
             <ol className="flex flex-col divide-y divide-neutral-200 border-y border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
@@ -55,36 +67,38 @@ export function EpisodePage() {
             </ol>
           )}
 
-          <NoticeImages urls={spoilers ? noticeImages(series.r, ownRelease(releases[seriesId]?.jp ?? [], series.stories.indexOf(storyId))?.date ?? releases[seriesId]?.jp?.[0]?.date) : undefined} />
+          <NoticeImages urls={spoilers ? noticeImages(series.r, ownRelease(releases[seriesId]?.jp ?? [], position)?.date ?? releases[seriesId]?.jp?.[0]?.date) : undefined} />
 
           <CharacterChips keys={story.c ?? []} index={index} lang={lang} langQuery={query} />
 
-          <nav aria-label={t.backSeries} className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2 dark:border-neutral-800">
-            {(['prev', 'next'] as const).map((direction) => {
-              const target = neighbours(index, storyId)[direction];
-              const label = direction === 'prev' ? t.previousEpisode : t.nextEpisode;
-              return target ? (
-                <StoryLink key={direction} to={storyPath(index, target, query)} className={`${storyButtonClass} flex-col items-start gap-1`}>
-                  <span className="text-xs">{label}</span>
-                  <span className="text-left leading-relaxed">{storyTitle(target, index.stories[target], lang)}</span>
-                </StoryLink>
-              ) : (
-                <span key={direction} aria-disabled="true" className={`${storyButtonClass} opacity-40`}>
-                  {label}
-                </span>
-              );
-            })}
-            <StoryLink to={seriesPath(index, seriesId, query)} className="flex min-h-11 items-center justify-center text-sm underline sm:col-span-2">
+          <nav aria-label={t.backSeries} className="flex flex-col gap-1 border-t border-neutral-200 pt-3 dark:border-neutral-800">
+            <div className="flex flex-wrap justify-between gap-x-6">
+              {(['prev', 'next'] as const).map((direction) => {
+                const target = neighbours(index, storyId)[direction];
+                const label = direction === 'prev' ? t.previousEpisode : t.nextEpisode;
+                const targetSlot = target ? episodeSlot(index, series, target, lang) : null;
+                return target ? (
+                  <StoryLink
+                    key={direction}
+                    to={storyPath(index, target, query)}
+                    className={`flex min-h-11 min-w-0 flex-col justify-center text-sm ${direction === 'next' ? 'ml-auto items-end text-right' : ''}`}
+                  >
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                      {label}
+                      {targetSlot !== null && ` · ${episodeRange(targetSlot, targetSlot, lang)}`}
+                    </span>
+                    <span className="leading-relaxed text-neutral-700 underline dark:text-neutral-300">{storyTitle(target, index.stories[target], lang)}</span>
+                  </StoryLink>
+                ) : null;
+              })}
+            </div>
+            <StoryLink to={seriesPath(index, seriesId, query)} className="flex min-h-11 items-center text-sm text-neutral-600 underline dark:text-neutral-400">
               {t.backSeries}
             </StoryLink>
           </nav>
           {!neighbours(index, storyId).next && <RelationGraphSection index={index} seriesId={seriesId} lang={lang} langQuery={query} />}
           <Section title={t.release}>
-            <ReleaseDates
-              lang={lang}
-              releases={releases[seriesId]}
-              own={Object.fromEntries(SERVERS.map((server) => [server, ownRelease(releases[seriesId]?.[server] ?? [], series.stories.indexOf(storyId))]))}
-            />
+            <ReleaseDates lang={lang} releases={releases[seriesId]} own={Object.fromEntries(SERVERS.map((server) => [server, ownRelease(releases[seriesId]?.[server] ?? [], position)]))} />
           </Section>
           <BgmList keys={story.b ?? []} index={index} />
         </div>

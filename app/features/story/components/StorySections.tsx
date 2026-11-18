@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { localeLink } from '~/utils/localeLink';
-import { useStudentPortraits } from './useStoryIndex';
+import { SheetIcon } from '~/components/common/SheetIcon';
 import { collapseSameDate, SERVER_LABELS, SERVERS, type Release, type SeriesReleases } from '../logic/releaseDates';
 import { archiveImageUrl } from '~/utils/archiveImage';
 import { seriesSlug } from '../logic/slugs';
@@ -78,9 +78,9 @@ export function ReleaseLine({ releases, lang }: { releases: SeriesReleases[strin
     const first = releases?.[server]?.[0];
     return first ? [{ server, text: `${first.date.slice(0, 10)}${first.estimated ? ` (${t.estimated})` : ''}` }] : [];
   });
-  if (shown.length === 0) return <span className="text-sm text-neutral-500 dark:text-neutral-400">{t.noDate}</span>;
+  if (shown.length === 0) return <span className="text-xs text-neutral-500 dark:text-neutral-400">{t.noDate}</span>;
   return (
-    <span className="flex flex-wrap gap-x-4 text-sm tabular-nums text-neutral-700 dark:text-neutral-300">
+    <span className="flex flex-wrap gap-x-4 text-xs tabular-nums text-neutral-600 dark:text-neutral-300">
       {shown.map(({ server, text }) => (
         <span key={server}>
           <span className="text-neutral-500 dark:text-neutral-400">{SERVER_LABELS[server]}</span> {text}
@@ -96,7 +96,7 @@ export function SeriesTitle({ label, main, large = false, suffix }: { label: str
   return (
     <span className="flex min-w-0 flex-col gap-1 break-words">
       {context && <span className="text-xs font-normal leading-relaxed text-neutral-600 dark:text-neutral-400">{context}</span>}
-      <span className={`${large ? 'text-lg' : 'text-sm'} font-semibold leading-relaxed`}>
+      <span className={`${large ? 'text-2xl leading-snug' : 'text-sm'} font-semibold leading-relaxed`}>
         {title}
         {suffix && <span className="ml-2 text-xs font-semibold text-neutral-600 dark:text-neutral-300">{suffix}</span>}
       </span>
@@ -118,7 +118,7 @@ export function storyPath(index: StoryIndex, storyId: string, langQuery: string)
 }
 
 export function characterPath(key: string, langQuery: string): string {
-  return `/utils/story${storyQuery(langQuery, { character: key, category: 'all', q: null, year: null, focus: null })}`;
+  return `/utils/story${storyQuery(langQuery, { character: key, category: null, q: null, year: null, focus: null })}`;
 }
 
 function formatRelease(release: Release, lang: StoryLang): string {
@@ -203,8 +203,6 @@ export function BgmList({ keys, index }: { keys: string[]; index: StoryIndex }) 
 }
 
 export function CharacterChips({ keys, index, lang, langQuery }: { keys: string[]; index: StoryIndex; lang: StoryLang; langQuery: string }) {
-  const portraits = useStudentPortraits();
-  const portrait = (key: string): string | undefined => portraits[index.cs[key] ?? ''];
   if (keys.length === 0) return null;
   const chips = (items: string[]) =>
     items.map((key) => (
@@ -217,7 +215,7 @@ export function CharacterChips({ keys, index, lang, langQuery }: { keys: string[
         <span className="flex items-center gap-1">
           {index.cs[key] && (
             <span className="size-4 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800">
-              {portrait(key) && <img className="size-4 rounded-full" src={`data:image/webp;base64,${portrait(key)}`} alt="" />}
+              <SheetIcon sheet="student" id={index.cs[key]} alt="" className="size-4 rounded-full" />
             </span>
           )}
           {characterLabel(index, key, lang)}

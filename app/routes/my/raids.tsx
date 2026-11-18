@@ -11,11 +11,11 @@ import { CheckboxSelect, type CheckboxSelectOption } from '~/components/common/C
 import { useAuthStore } from '~/store/authStore';
 import { useRaidHistoryStore } from '~/store/planner/useRaidHistoryStore';
 import type { RaidHistoryEntry, RaidHistoryServer, RaidType } from '~/types/raidHistory';
-import type { Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { Student, StudentData } from '~/types/plannerData';
 import type { Locale } from '~/utils/i18n/config';
 import { getLocaleShortName } from '~/utils/i18n/config';
 import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
-import { getArmorDisplayName, getItemTitle, type I18nLike } from '~/utils/scheduleDisplay';
+import { getArmorDisplayName, getItemTitle, type I18nInput } from '~/utils/scheduleDisplay';
 import { cdn } from '~/utils/cdn';
 import { PROFILE_SERVER_OPTIONS } from '~/store/authStore';
 import { localeLink } from '~/utils/localeLink';
@@ -24,10 +24,12 @@ import { RAID_HISTORY_EXPORT_VERSION } from '~/features/my/common/historyJsonExc
 import { ProfileDataSchemas } from '~/schemas/profileDataValidation';
 import { PageHeader } from '~/components/common/PageHeader';
 import { HistoryExternalEditPromptButton } from '~/features/my/common/HistoryExternalEditPromptButton';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
+import type { AppHandle } from '~/types/link';
 
 type RaidHistorySort = 'date_desc' | 'date_asc' | 'added_desc' | 'added_asc';
 
-function buildRaidLabel(item: ScheduleItemV2, id: string, locale: Locale, i18n: I18nLike): string {
+function buildRaidLabel(item: ScheduleItemV2, id: string, locale: Locale, i18n: I18nInput): string {
   const rawTitle = getItemTitle(item, locale, i18n);
   const armorLabel = getArmorDisplayName(item.details?.armorType, locale) ?? item.details?.armorType;
   // JFD's translated title already embeds "#{season}" (e.g. "#55 Shooting Test"), so use a short
@@ -55,7 +57,7 @@ function buildRaidLabel(item: ScheduleItemV2, id: string, locale: Locale, i18n: 
   return `${displayId} ${title}`;
 }
 
-function toRaidOption(server: RaidHistoryServer, item: ScheduleItemV2, locale: Locale, i18n: I18nLike): RaidOption | null {
+function toRaidOption(server: RaidHistoryServer, item: ScheduleItemV2, locale: Locale, i18n: I18nInput): RaidOption | null {
   if (item.type !== 'raid' && item.type !== 'eraid' && item.type !== 'jointFiringDrill' && item.type !== 'multifloor') return null;
   const [, season] = item.id.split('-');
   const type = item.type === 'jointFiringDrill' ? 'jfd' : item.type;
@@ -81,7 +83,7 @@ function toRaidOption(server: RaidHistoryServer, item: ScheduleItemV2, locale: L
   };
 }
 
-function buildRaidOptions(server: RaidHistoryServer, items: ScheduleItemV2[], locale: Locale, i18n: I18nLike) {
+function buildRaidOptions(server: RaidHistoryServer, items: ScheduleItemV2[], locale: Locale, i18n: I18nInput) {
   const seen = new Set<string>();
   const options: RaidOption[] = [];
   for (const item of items) {
@@ -141,7 +143,6 @@ export default function MyRaidHistoryPage() {
   const deleteEntry = useRaidHistoryStore((s) => s.deleteEntry);
   const replaceEntries = useRaidHistoryStore((s) => s.replaceEntries);
   const [students, setStudents] = useState<Record<string, Student>>({});
-  const [portraits, setPortraits] = useState<StudentPortraitData>({});
   const [serverFilter, setServerFilter] = useState<RaidHistoryServer | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<Set<RaidType | 'all'>>(new Set(['all']));
   const [sortOrder, setSortOrder] = useState<RaidHistorySort>('date_desc');
@@ -160,26 +161,12 @@ export default function MyRaidHistoryPage() {
 
   useEffect(() => {
     const loadStudents = async () => {
-      const [studentsRes, portraitsRes] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
+      const studentsRes = await fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`));
       const studentData: StudentData = await studentsRes.json();
-      const portraitData: StudentPortraitData = await portraitsRes.json();
-      const mergedStudents: Record<string, Student> = {};
-      for (const [id, student] of Object.entries(studentData)) {
-        mergedStudents[id] = { ...student, Portrait: portraitData[Number(id)] };
-      }
-      setStudents(mergedStudents);
-      setPortraits(portraitData);
+      setStudents(studentData);
     };
     void loadStudents();
   }, [locale]);
-
-  const portraitData = useMemo(() => {
-    const result: Record<number, string> = {};
-    for (const [id, portrait] of Object.entries(portraits)) {
-      result[Number(id)] = portrait;
-    }
-    return result;
-  }, [portraits]);
 
   const filteredEntries = useMemo(() => {
     const safeEntries = Array.isArray(entries) ? entries : [];
@@ -413,7 +400,6 @@ export default function MyRaidHistoryPage() {
               entries={filteredEntries}
               raidOptions={raidOptions}
               students={students}
-              portraitData={portraitData}
               locale={locale}
               onEdit={(entry) => {
                 setEditingEntry(entry);
@@ -423,7 +409,7 @@ export default function MyRaidHistoryPage() {
             />
           </div>
         ) : (
-          <RaidStatsTab entries={filteredEntries} raidOptions={raidOptions} students={students} portraitData={portraitData} locale={locale} />
+          <RaidStatsTab entries={filteredEntries} raidOptions={raidOptions} students={students} locale={locale} />
         )}
       </>
 
@@ -433,7 +419,6 @@ export default function MyRaidHistoryPage() {
           serverOptions={serverOptions}
           defaultServer={activeProfileServer ?? defaultServer}
           students={students}
-          portraitData={portraitData}
           locale={locale}
           initialEntry={editingEntry}
           onClose={() => {
@@ -455,3 +440,7 @@ export default function MyRaidHistoryPage() {
     </div>
   );
 }
+
+export const handle: AppHandle = {
+  preload: () => studentSheetPreloadLinks(),
+};

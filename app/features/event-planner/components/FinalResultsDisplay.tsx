@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { ItemIcon } from '../../../components/item/Icon';
 import { useTranslation } from 'react-i18next';
 import { HiArrowNarrowUp } from 'react-icons/hi';
-import type { EventData, IconData, TransactionEntry, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { EventData, IconData, TransactionEntry, StudentData } from '~/types/plannerData';
 import { getItemSortPriority } from '~/features/event-planner/logic/itemSort';
 import { FUNGIBLE_POOLS, compactSubPool } from '~/utils/groupMaterialNeeds';
 import type { TFunction } from 'i18next';
@@ -16,16 +16,15 @@ interface FinalResultsDisplayProps {
   eventData: EventData;
   iconData: IconData;
   allStudents?: StudentData;
-  studentPortraits?: StudentPortraitData;
 }
 
 type SortMode = 'priority' | 'id';
 type ItemEntry = [string, { amount: number; isBonusApplied: boolean }];
 
 const getTransactionSourceName = (source: string, t: TFunction<'planner'>) => {
-  if (source === 'location_cost') return '스케줄 소모';
-  if (source === 'location_reward') return '스케줄 보상 기대값';
   const keyMap: Record<string, string> = {
+    location_cost: 'source.locationCost',
+    location_reward: 'source.locationReward',
     shop_cost: 'source.shopCost',
     shop_reward: 'source.shopReward',
     farming: 'source.farming',
@@ -106,7 +105,7 @@ function sortEntries(items: ItemEntry[], mode: SortMode, eventData: EventData, d
   });
 }
 
-export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, allStudents, studentPortraits }: FinalResultsDisplayProps) => {
+export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, allStudents }: FinalResultsDisplayProps) => {
   const { t } = useTranslation('planner');
   const { t: t_ui } = useTranslation('ui');
 
@@ -197,16 +196,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
                   const [type, id] = key.split('_');
                   return (
                     <div key={key} className="relative shrink-0">
-                      <ItemIcon
-                        type={type}
-                        itemId={id}
-                        amount={Math.round(data.amount)}
-                        size={10}
-                        eventData={eventData}
-                        iconData={iconData}
-                        allStudents={allStudents}
-                        studentPortraits={studentPortraits}
-                      />
+                      <ItemIcon type={type} itemId={id} amount={Math.round(data.amount)} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} />
                       {data.isBonusApplied && (
                         <span
                           className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-neutral-800"
@@ -235,16 +225,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
                   const [type, id] = key.split('_');
                   return (
                     <div key={key} className="shrink-0">
-                      <ItemIcon
-                        type={type}
-                        itemId={id}
-                        amount={Math.round(-data.amount)}
-                        size={10}
-                        eventData={eventData}
-                        iconData={iconData}
-                        allStudents={allStudents}
-                        studentPortraits={studentPortraits}
-                      />
+                      <ItemIcon type={type} itemId={id} amount={Math.round(-data.amount)} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} />
                     </div>
                   );
                 })}
@@ -253,7 +234,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
           )}
         </div>
       ) : (
-        <div className="space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2">
+        <div className="space-y-4 sm:max-h-[70vh] sm:overflow-y-auto sm:pr-2">
           {transactions.map((transaction, index) => {
             const rawGained: ItemEntry[] = [];
             const rawSpent: ItemEntry[] = [];
@@ -280,7 +261,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
                       if (roundedAmount === 0) return null;
                       return (
                         <div key={key} className="relative shrink-0">
-                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
+                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} />
                           {data.isBonusApplied && (
                             <span
                               className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-neutral-800"
@@ -303,7 +284,7 @@ export const FinalResultsDisplay = ({ acquiredItemsResult, eventData, iconData, 
                       if (roundedAmount === 0) return null;
                       return (
                         <div key={key} className="relative shrink-0">
-                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} studentPortraits={studentPortraits} />
+                          <ItemIcon type={type} itemId={id} amount={roundedAmount} size={10} eventData={eventData} iconData={iconData} allStudents={allStudents} />
                         </div>
                       );
                     })}

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Student } from '~/types/data';
-import { getCharacterStarValue, Transparent_Image } from '../../utils/raid/report';
-import type { Character, PortraitData } from '../../types/raidReport';
+import { getCharacterStarValue } from '../../utils/raid/report';
+import { SheetIcon } from '~/components/common/SheetIcon';
+import type { Character } from '../../types/raidReport';
 import { StarRating } from './StarRating';
 import React from 'react';
 import { getCombatStyleGroupRosterIds, isCombatStyleMerged } from '~/utils/combatStyle';
@@ -9,13 +10,11 @@ import { getCombatStyleGroupRosterIds, isCombatStyleMerged } from '~/utils/comba
 export const StudentIcon: React.FC<{
   character?: Character;
   student?: Student;
-  portraitData: PortraitData;
   grayscale?: boolean;
   teamMemberCount?: 6 | 10;
   size?: 'default' | 'responsive';
   combinedPortrait?: boolean;
-}> = React.memo(({ character, student, portraitData, grayscale = false, teamMemberCount = 6, size = 'default', combinedPortrait = false }) => {
-  const imageUrl = character ? (portraitData[character?.id] ? `data:image/webp;base64,${portraitData[character?.id]}` : null) : null;
+}> = React.memo(({ character, student, grayscale = false, teamMemberCount = 6, size = 'default', combinedPortrait = false }) => {
   const portraitIds = character && combinedPortrait && isCombatStyleMerged(character.id) ? getCombatStyleGroupRosterIds(character.id) : [];
   const isBackHalfMulligan = typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= (teamMemberCount === 10 ? 5 : 3);
   const isFrontHalfMulligan = character?.isMulligan || (typeof character?.mulliganIndex === 'number' && character.mulliganIndex >= 0 && character.mulliganIndex < (teamMemberCount === 10 ? 5 : 3));
@@ -59,22 +58,30 @@ export const StudentIcon: React.FC<{
       >
         {portraitIds.length === 2 ? (
           <>
-            <img
-              src={portraitData[portraitIds[0]] ? `data:image/webp;base64,${portraitData[portraitIds[0]]}` : Transparent_Image}
-              alt={student?.Name}
-              className="absolute top-0 left-0 h-[72%] w-[72%] bg-neutral-50 object-cover [clip-path:polygon(0_0,100%_0,100%_39%,39%_100%,0_100%)] dark:bg-neutral-700"
+            <SheetIcon
+              sheet="student"
+              id={portraitIds[0]}
+              alt={student?.Name ?? ''}
+              className="absolute top-0 left-0 h-[72%] w-[72%] bg-neutral-50 [clip-path:polygon(0_0,100%_0,100%_39%,39%_100%,0_100%)] dark:bg-neutral-700"
             />
-            <img
-              src={portraitData[portraitIds[1]] ? `data:image/webp;base64,${portraitData[portraitIds[1]]}` : Transparent_Image}
+            <SheetIcon
+              sheet="student"
+              id={portraitIds[1]}
               alt=""
-              className="absolute right-0 bottom-0 h-[72%] w-[72%] bg-neutral-50 object-cover [clip-path:polygon(61%_0,100%_0,100%_100%,0_100%,0_61%)] dark:bg-neutral-700"
+              className="absolute right-0 bottom-0 h-[72%] w-[72%] bg-neutral-50 [clip-path:polygon(61%_0,100%_0,100%_100%,0_100%,0_61%)] dark:bg-neutral-700"
             />
             <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <line x1="100" y1="0" x2="0" y2="100" stroke="white" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </>
         ) : (
-          <img src={imageUrl ? imageUrl : Transparent_Image} alt={student?.Name} className="w-full h-full mb-0.5 rounded-sm bg-neutral-50 dark:bg-neutral-700" />
+          <SheetIcon
+            sheet="student"
+            id={character?.id ?? 0}
+            alt={student?.Name ?? ''}
+            className="w-full h-full mb-0.5 rounded-sm bg-neutral-50 dark:bg-neutral-700"
+            fallback={<span className="block w-full h-full mb-0.5 rounded-sm bg-neutral-50 dark:bg-neutral-700" />}
+          />
         )}
         <div
           className="h-1 w-full absolute bottom-0 "

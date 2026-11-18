@@ -6,14 +6,14 @@ describe('story browsing navigation', () => {
     const search = '?q=%EC%95%84%EB%A3%A8&category=all&year=2024&order=desc&lang=ko';
     const detailQuery = storyQuery(search, { focus: 'event-34' });
     const returned = new URL(storyListPath(detailQuery), 'https://example.com');
-    expect(readStoryFilters(returned.searchParams, 'kr')).toEqual({ query: '아루', category: 'all', sort: 'kr', year: '2024', descending: true });
+    expect(readStoryFilters(returned.searchParams, 'gl')).toEqual({ query: '아루', categories: ['Main', 'Event', 'Group', 'Mini', 'Favor', 'Content'], sort: 'gl', year: '2024', descending: true });
     expect(returned.searchParams.get('lang')).toBe('ko');
     expect(returned.hash).toBe('#series-event-34');
   });
 
   it('defaults to the timeline of linked stories and validates incoming filters', () => {
-    expect(readStoryFilters(new URLSearchParams('category=invalid&year=bad&order=invalid'))).toEqual({ query: '', category: '', sort: 'jp', year: null, descending: false });
-    expect(readStoryFilters(new URLSearchParams('category=Favor')).category).toBe('Favor');
+    expect(readStoryFilters(new URLSearchParams('category=invalid&year=bad&order=invalid'))).toEqual({ query: '', categories: [], sort: 'jp', year: null, descending: false });
+    expect(readStoryFilters(new URLSearchParams('category=Favor,Main,bad')).categories).toEqual(['Main', 'Favor']);
   });
 
   it('clears stale filters without dropping the selected language or flow selection', () => {

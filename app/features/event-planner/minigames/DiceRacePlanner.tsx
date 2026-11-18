@@ -249,6 +249,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
 
   const { t, i18n } = useTranslation('planner', { keyPrefix: 'dice_race' });
   const { t: t_ui } = useTranslation('ui');
+  const { t: t_planner } = useTranslation('planner');
   const locale = i18n.language as Locale;
 
   const diceRaceData = eventData.dice_race;
@@ -441,7 +442,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
                 </div>
               </div>
               <details>
-                <summary className={`${inputLabelCls} cursor-pointer w-fit`}>{t('simRuns')}</summary>
+                <summary className={`${inputLabelCls} cursor-pointer w-fit`}>{t_ui('simRuns')}</summary>
                 <div className="mt-2 w-40">
                   <NumberInput value={simConfig.simRuns} onChange={(v) => setSimConfig((p) => ({ ...p, simRuns: v }))} min={1} max={Infinity} narrowButtonType="plus_only" />
                 </div>
@@ -633,7 +634,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
               disabled={goalIssue !== null}
               className="w-full bg-ba-btn-blue hover:bg-ba-btn-blue-dark text-neutral-900 font-bold py-2 rounded-lg text-base"
             >
-              {t('runSimulation')}
+              {t_planner('button.runSimulation')}
             </SimRunButton>
 
             {simResult && (
@@ -645,7 +646,7 @@ export const DiceRacePlanner = ({ eventId, eventData, iconData, onCalculate /*re
                 <Stat label={t('avgRolls')} value={`${simResult.avgRolls.toFixed(2)} ${t('rollsUnit')}`} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-neutral-200 dark:border-neutral-700 pt-3">
                   <div className="flex flex-col gap-2">
-                    <h4 className="text-xs text-neutral-500 dark:text-neutral-400">{t('avgCost')}</h4>
+                    <h4 className="text-xs text-neutral-500 dark:text-neutral-400">{t_ui('avgCost')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(simResult.avgCost).map(([key, amount]) => (
                         <ItemIcon key={key} type={key.split('_')[0]} itemId={key.split('_')[1]} amount={amount} size={12} eventData={eventData} iconData={iconData} />

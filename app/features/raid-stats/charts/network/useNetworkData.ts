@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { cdn } from '~/utils/cdn';
+import { fetchGzipJson } from '~/utils/xorProcess';
 import type { NetworkFilters, NetworkGraph, NetworkNode, NetworkIndex, SeasonData, SeasonItem } from './types';
 import type { Locale } from '~/utils/i18n/config';
 import { getCombatStyleDisplayId } from '~/utils/combatStyle';
+import { formatLocations } from '~/utils/raidLocation';
 
 interface StudentMeta {
   Id: number;
@@ -20,10 +22,12 @@ const indexCache: { data: NetworkIndex | null } = { data: null };
 const seasonCache: Record<string, SeasonData> = {};
 const studentCache: {
   meta: Record<number, StudentMeta> | null;
-  portraits: Record<number, string> | null;
-} = { meta: null, portraits: null };
+} = { meta: null };
 
-async function fetchJSON<T>(url: string): Promise<T> {
+// Network data is gzip+XOR JSON. Student metadata is plain SchaleDB JSON, hence fetchPlainJSON.
+const fetchJSON = <T>(url: string): Promise<T> => fetchGzipJson<T>(url);
+
+async function fetchPlainJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
   return res.json();
@@ -37,7 +41,7 @@ export function buildSeasonItems(index: NetworkIndex): SeasonItem[] {
     if (!m.date) continue;
     items.push({
       id: `R${m.season}`,
-      label: `${m.boss ?? '?'} · ${m.location ?? '?'}`,
+      label: `${m.boss ?? '?'} · ${formatLocations(m.location ?? undefined, '/') || '?'}`,
       bossKey: m.boss ?? '',
       date: m.date,
       tag: 'raid',
@@ -120,19 +124,15 @@ export function useNetworkData(filters: NetworkFilters, allSeasonItems: SeasonIt
       try {
         setProgress('Loading student data...');
         if (!studentCache.meta) {
-          const raw = await fetchJSON<Record<string, StudentMeta>>(cdn(`/schaledb.com/${locale}.students.min.json`));
+          const raw = await fetchPlainJSON<Record<string, StudentMeta>>(cdn(`/schaledb.com/${locale}.students.min.json`));
           studentCache.meta = Object.fromEntries(Object.values(raw).map((s) => [s.Id, s]));
-        }
-        if (!studentCache.portraits) {
-          const raw = await fetchJSON<Record<string, string>>(cdn('/w/students_portrait.json'));
-          studentCache.portraits = Object.fromEntries(Object.entries(raw).map(([k, v]) => [Number(k), `data:image/webp;base64,${v}`]));
         }
         if (abortRef.current) return;
 
         const filesToLoad: string[] = [];
 
         if (studentMode) {
-          filesToLoad.push('student-latest.json');
+          filesToLoad.push('student-latest.bin');
         } else {
           const selectedItemMap = new Map(allSeasonItems.map((s) => [s.id, s]));
           for (const sid of filters.selectedSeasons) {
@@ -152,7 +152,7 @@ export function useNetworkData(filters: NetworkFilters, allSeasonItems: SeasonIt
         const loadedSeasons = await Promise.all(
           uniqueFiles.map(async (file) => {
             if (!seasonCache[file]) {
-              seasonCache[file] = await fetchJSON<SeasonData>(cdn(`/network-data/${file}`));
+              seasonCache[file] = await fetchJSON<SeasonData>(cdn(`/w/v2/network/${file}`));
             }
             setProgress(`Loading... (${++done}/${filesToLoad.length})`);
             return seasonCache[file];
@@ -238,7 +238,6 @@ export function useNetworkData(filters: NetworkFilters, allSeasonItems: SeasonIt
         const nodes: NetworkNode[] = topNodes.map((id) => ({
           id,
           name: studentCache.meta?.[id]?.Name ?? `ID:${id}`,
-          portrait: studentCache.portraits?.[id] ?? '',
           totalAppearances: nodeMap.get(id) ?? 0,
         }));
 
@@ -264,7 +263,7 @@ export function useNetworkData(filters: NetworkFilters, allSeasonItems: SeasonIt
 
 export async function loadIndex(): Promise<NetworkIndex> {
   if (!indexCache.data) {
-    indexCache.data = await fetchJSON<NetworkIndex>(cdn('/network-data/index.json'));
+    indexCache.data = await fetchJSON<NetworkIndex>(cdn('/w/v2/network/index.bin'));
   }
   return indexCache.data;
 }

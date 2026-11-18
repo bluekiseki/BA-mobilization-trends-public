@@ -43,7 +43,6 @@
       "dashboard": "儀表板",
       "planner": "規劃器",
       "help": "幫助",
-      "viewDescription": "查看說明",
       "reportBug": "使用指南",
       "viewCode": "查看代碼",
       "theme": "主題",
@@ -54,6 +53,7 @@
       "jukebox": "BGM 播放器",
       "notices": "公告存檔",
       "itemScanner": "物品掃描器",
+      "inventory": "庫存",
       "studentScanner": "學生培養掃描器",
       "eventPlanner": "活動刷取規劃器",
       "gachaPlanner": "青輝石與招募規劃",
@@ -85,15 +85,6 @@
       "unsupported": {
         "message": "您偏好的語言尚未支援。您可以協助翻譯或選擇其他語言。",
         "contribute_button": "在 GitHub 上貢獻"
-      }
-    },
-    "helpSidebar": {
-      "title": "使用指南",
-      "noGuide": "目前頁面沒有指南。",
-      "startGuide": "開始指南",
-      "driver": {
-        "next": "下一步 ➔",
-        "prev": "⬅ 上一步"
       }
     },
     "bugReport": {
@@ -184,6 +175,7 @@
     "heatmap": {
       "title": "學生出擊率趨勢熱圖",
       "description1": "以熱圖形式查看學生出擊率趨勢",
+      "studentsPageNotice": "各學生的動向將整合至學生列表的統計分頁。",
       "description2": "數據根據學生等級相對於等級上限進行加權。例如，如果上限為90，則等級45的學生出擊率計為0.5（45/90）。",
       "processingMessage": "載入、解壓縮及處理資料中...",
       "noDataMessage": "無資料顯示。請至少選擇一個星級。",
@@ -226,7 +218,8 @@
         "desp_chart": "將滑鼠懸停在圖表上以查看詳細資訊。"
       },
       "usage_statistics": "使用統計",
-      "usage_desc": "按星級比較各總力戰·大決戰的選擇率。"
+      "usage_desc": "按星級比較各總力戰·大決戰的選擇率。",
+      "usage_total_pick": "總選擇率"
     }
   },
   "raidInfo": {
@@ -309,6 +302,11 @@
     "switchToRank": "切換至排名",
     "switchToScore": "切換至分數",
     "binSize": "區間（區間大小）",
+    "yAxisScale": "Y 軸刻度",
+    "chartOptions": "圖表選項",
+    "xAxisLabel": "X 軸標籤",
+    "scaleCumulative": "累計",
+    "scaleLinear": "線性",
     "bracketFilter": "難度區間篩選",
     "playerCount": "玩家數",
     "donutChartTitle": "階層 / 難度組合分佈",
@@ -425,13 +423,13 @@
     },
     "videos_select_boss": "選擇Boss類型以查看影片。",
     "videos_empty": "沒有可用影片。",
+    "videos_stats_server": "影片統計：以 {{server}} 影片為準",
     "videos_scope_label": "影片範圍",
     "videos_scope_all": "全部",
     "videos_scope_current": "本期",
     "videos_scope_reference": "{{raid}} 參考",
     "videos_reference_title": "條件相同的其他伺服器賽季的影片",
-    "videos_candidate": "候選",
-    "videos_basic_analysis": "基礎分析",
+    "videos_basic_analysis": "標題",
     "videos_basic_analysis_title": "僅從標題讀取分數與難度",
     "videos_sort_score_desc": "分數由高到低",
     "videos_sort_score_asc": "分數由低到高",
@@ -442,7 +440,7 @@
     "videos_party_info_missing": "無學生編隊資訊",
     "videos_view_results": "查看影片（{{count}}部）",
     "videos_filter_tl": "僅TL",
-    "videos_show_original_title": "原文",
+    "videos_translate_title": "翻譯",
     "videos_description": "說明",
     "videos_copy_link": "複製連結",
     "videos_copy_failed": "無法複製。請長按或選取連結以複製。",
@@ -521,10 +519,10 @@
     "bond50": "好感度等級50",
     "bond100": "好感度等級100",
     "aggregationType": "彙總類型",
-    "byStudentSeparate": "按學生（季節分開）",
-    "student_separate": "按學生（季節分開）",
-    "byStudentCombined": "按學生（季節合併）",
-    "student_combined": "按學生（季節合併）",
+    "byStudentSeparate": "按學生（版本分開）",
+    "student_separate": "按學生（版本分開）",
+    "byStudentCombined": "按學生（版本合併）",
+    "student_combined": "按學生（版本合併）",
     "byClub": "按社團",
     "club": "按社團",
     "bySchool": "按學校",

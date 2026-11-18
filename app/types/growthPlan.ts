@@ -25,6 +25,8 @@ export const growthPlanSchema = z.object({
   eligmaInfo: z.object({ price: z.number(), stock: z.number() }),
   isSelected: z.boolean(),
   acquiredDate: z.string().optional(),
+  /** `false` = student is not recruited yet (goal only). Missing/`true` = recruited. */
+  recruited: z.boolean().optional(),
 });
 
 export type GrowthPlan = z.infer<typeof growthPlanSchema>;

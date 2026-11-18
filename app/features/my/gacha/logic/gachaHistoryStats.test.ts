@@ -48,6 +48,14 @@ describe('calculateGachaHistoryStats', () => {
     expect(stats.halfPityPickupCount).toBe(1);
   });
 
+  it('measures the goal by the pull it was met at, not the pulls made afterwards', () => {
+    const entry = { ...makeEntry(), goalPullCount: 40 };
+    const stats = calculateGachaHistoryStats([entry], new Map([['GL:test', banner]]));
+    const whole = calculateGachaHistoryStats([makeEntry()], new Map([['GL:test', banner]]));
+    expect(stats.goals?.actual).toBe(40);
+    expect(whole.goals?.actual).toBe(100);
+  });
+
   it('uses the exact binomial distribution for a single half-pity result', () => {
     const stats = calculateGachaHistoryStats([makeEntry()], new Map([['GL:test', banner]]));
 
@@ -135,15 +143,15 @@ describe('gacha history simulation count', () => {
   it('auto-runs only valid counts below the default', () => {
     expect(shouldAutoRunGachaHistorySimulation(9_999)).toBe(true);
     expect(shouldAutoRunGachaHistorySimulation(10_000)).toBe(false);
-    expect(shouldAutoRunGachaHistorySimulation(100_000)).toBe(false);
+    expect(shouldAutoRunGachaHistorySimulation(500_000)).toBe(false);
     expect(shouldAutoRunGachaHistorySimulation(99)).toBe(false);
   });
 
-  it('accepts the configured simulation count limits', () => {
+  it('accepts integer simulation counts from 100 to 10,000,000', () => {
     expect(isValidGachaHistorySimulationCount(100)).toBe(true);
-    expect(isValidGachaHistorySimulationCount(100_000)).toBe(true);
+    expect(isValidGachaHistorySimulationCount(10_000_000)).toBe(true);
+    expect(isValidGachaHistorySimulationCount(10_000_001)).toBe(false);
     expect(isValidGachaHistorySimulationCount(100.5)).toBe(false);
-    expect(isValidGachaHistorySimulationCount(100_001)).toBe(false);
   });
 });
 

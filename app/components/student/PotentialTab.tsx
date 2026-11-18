@@ -26,6 +26,7 @@ const EditableLevelDisplay = ({
   onChange,
   prefix = '',
   textClassName = '',
+  disabled = false,
 }: {
   value: number;
   max: number;
@@ -33,6 +34,7 @@ const EditableLevelDisplay = ({
   onChange: (val: number) => void;
   prefix?: string;
   textClassName?: string;
+  disabled?: boolean;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localVal, setLocalVal] = useState(value);
@@ -49,6 +51,14 @@ const EditableLevelDisplay = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleCommit();
   };
+
+  if (disabled) {
+    return (
+      <div className={`flex items-center gap-1 px-1 py-0.5 opacity-30 select-none ${textClassName}`}>
+        <span className="font-bold">-</span>
+      </div>
+    );
+  }
 
   if (isEditing) {
     return (
@@ -86,9 +96,11 @@ interface PotentialTabProps {
   iconData?: IconData;
   eventData?: EventData;
   studentInfo?: Student;
+  /** Unrecruited plan: `current` is fixed to the recruit baseline. */
+  currentLocked?: boolean;
 }
 
-export const PotentialTab = ({ plan, iconData, eventData, studentInfo }: PotentialTabProps) => {
+export const PotentialTab = ({ plan, iconData, eventData, studentInfo, currentLocked = false }: PotentialTabProps) => {
   const { t } = useTranslation(['planner', 'game']);
   const { t: tUi } = useTranslation('ui');
   const updateGrowthRange = useGlobalStore((state) => state.updateGrowthRange);
@@ -143,6 +155,7 @@ export const PotentialTab = ({ plan, iconData, eventData, studentInfo }: Potenti
                   value={currentVal}
                   max={MAX_POTENTIAL}
                   min={0}
+                  disabled={currentLocked}
                   onChange={(val) => handleSliderChange(stat, moveGrowthRange({ current: currentVal, target: targetVal }, 'current', val))}
                   textClassName={`font-mono text-sm ${isCurrentInvalid ? 'text-rose-500' : 'text-neutral-500 dark:text-neutral-400'}`}
                 />
@@ -168,6 +181,8 @@ export const PotentialTab = ({ plan, iconData, eventData, studentInfo }: Potenti
               max={MAX_POTENTIAL}
               value={{ current: currentVal, target: targetVal }}
               invalid={{ current: isCurrentInvalid, target: isTargetInvalid }}
+              disabled={{ current: currentLocked }}
+              hideCurrent={currentLocked}
               onChange={(value) => handleSliderChange(stat, value)}
             />
 

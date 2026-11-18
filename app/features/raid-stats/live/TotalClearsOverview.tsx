@@ -165,7 +165,7 @@ export const TotalClearsOverview: FC<TotalClearsOverviewProps> = ({ rows, isRaid
     const highest = getHighestDifficulty(row.tiers);
     return (
       <div>
-        <div className="mb-2 flex flex-wrap items-baseline gap-x-10 gap-y-2">
+        <div className="mb-2 flex flex-wrap items-start gap-x-10 gap-y-3">
           <div>
             <span className="block text-xs text-neutral-500 dark:text-neutral-400">{t_ui('totalClears')}</span>
             <strong className="text-xl font-semibold tabular-nums md:text-2xl">{players(row.total)}</strong>
@@ -173,16 +173,16 @@ export const TotalClearsOverview: FC<TotalClearsOverviewProps> = ({ rows, isRaid
           {row.rank20000Score != null && (
             <div>
               <span className="block text-xs text-neutral-500 dark:text-neutral-400">{rankLabel(CUTOFF_RANK)}</span>
-              <span className="text-base font-medium tabular-nums">{row.rank20000Score.toLocaleString()}</span>
+              <strong className="text-lg font-medium tabular-nums">{row.rank20000Score.toLocaleString()}</strong>
             </div>
           )}
           {highest && (
             <div>
               <span className="block text-xs text-neutral-500 dark:text-neutral-400">{t('highest_cleared_difficulty')}</span>
-              <span className="flex items-center gap-1.5 text-base font-medium tabular-nums">
-                <Swatch diff={highest.diff} />
+              <strong className="flex items-center gap-1.5 text-lg font-medium tabular-nums">
+                <Swatch diff={highest.diff} className="size-3" />
                 {highest.diff} {players(highest.count)}
-              </span>
+              </strong>
             </div>
           )}
         </div>

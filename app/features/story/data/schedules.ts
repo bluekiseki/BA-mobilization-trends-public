@@ -3,11 +3,11 @@ import jpGroupCsv from '~/data/jp/schedule/groupStory.csv?raw';
 import jpMainCsv from '~/data/jp/schedule/mainstory.csv?raw';
 import jpMiniCsv from '~/data/jp/schedule/miniStory.csv?raw';
 import jpPickupCsv from '~/data/jp/schedule/pickup.csv?raw';
-import krEventCsv from '~/data/kr/schedule/event.csv?raw';
-import krGroupCsv from '~/data/kr/schedule/groupStory.csv?raw';
-import krMainCsv from '~/data/kr/schedule/mainstory.csv?raw';
-import krMiniCsv from '~/data/kr/schedule/miniStory.csv?raw';
-import krPickupCsv from '~/data/kr/schedule/pickup.csv?raw';
+import glEventCsv from '~/data/kr/schedule/event.csv?raw';
+import glGroupCsv from '~/data/kr/schedule/groupStory.csv?raw';
+import glMainCsv from '~/data/kr/schedule/mainstory.csv?raw';
+import glMiniCsv from '~/data/kr/schedule/miniStory.csv?raw';
+import glPickupCsv from '~/data/kr/schedule/pickup.csv?raw';
 import { parseCsvString } from '~/utils/calender.data';
 import type { EventRow, GroupRow, MainRow, MiniRow, PickupRow, Server, ServerSchedule } from '../logic/releaseDates';
 
@@ -23,5 +23,5 @@ function parse(main: string, group: string, mini: string, event: string, pickup:
 
 export const STORY_SCHEDULES: Record<Server, ServerSchedule> = {
   jp: parse(jpMainCsv, jpGroupCsv, jpMiniCsv, jpEventCsv, jpPickupCsv),
-  kr: parse(krMainCsv, krGroupCsv, krMiniCsv, krEventCsv, krPickupCsv),
+  gl: parse(glMainCsv, glGroupCsv, glMiniCsv, glEventCsv, glPickupCsv),
 };

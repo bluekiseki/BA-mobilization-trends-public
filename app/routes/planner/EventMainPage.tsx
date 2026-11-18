@@ -24,7 +24,7 @@ import { PageHeader } from '~/components/common/PageHeader';
 import { textFeedUrl } from '~/data/textFeeds.meta';
 import { cdn } from '~/utils/cdn';
 import { getLocaleShortName } from '~/utils/i18n/config';
-import type { Student, StudentPortraitData } from '~/types/plannerData';
+import type { Student } from '~/types/plannerData';
 import { type ScheduleTrack } from '~/utils/calender.data';
 import { loadScheduleDataV2, type ScheduleItemV2 } from '~/utils/calender.data.v2';
 import { RemainingTime } from '~/components/common/RemainingTime';
@@ -107,6 +107,8 @@ export function headers({}: Route.HeadersArgs) {
 type PickupMode = 'none' | 'jp' | 'kr';
 type SortOrder = 'desc' | 'asc';
 
+const PAST_VISIBLE_MS = 7 * 24 * 60 * 60 * 1000;
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatKstShort(isoStr: string): string {
@@ -121,6 +123,7 @@ export const EventMainPage = () => {
   const t = tRaw as unknown as (key: string) => string;
   const { t: tc } = useTranslation('common');
   const { t: tg } = useTranslation('game');
+  const { t: t_ui } = useTranslation('ui');
   const locale = i18n.language as Locale;
   const { jpEvent, glEvent, pickupScheduleData } = useLoaderData<typeof loader>();
   const plans = useEventPlanStore((state) => state.plans);
@@ -145,9 +148,8 @@ export const EventMainPage = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>(() => (locale === 'ja' ? 'desc' : 'asc'));
   const [showGains, setShowGains] = useState(false);
 
-  // ── Pickup data (lazy — portraits only) ───────────────────────────────────
+  // ── Pickup data (lazy) ───────────────────────────────────
   const [studentData, setStudentData] = useState<Record<number, Student> | null>(null);
-  const [studentPortraits, setStudentPortraits] = useState<StudentPortraitData | null>(null);
   const [pickupLoading, setPickupLoading] = useState(true);
   const [loadedForLocale, setLoadedForLocale] = useState<string | null>(null);
 
@@ -156,10 +158,10 @@ export const EventMainPage = () => {
     if (loadedForLocale === locale) return;
 
     setPickupLoading(true);
-    Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)).then((r) => r.json()), fetch(cdn('/w/students_portrait.json')).then((r) => r.json())])
-      .then(([students, portraits]) => {
+    fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`))
+      .then((r) => r.json())
+      .then((students) => {
         setStudentData(students as Record<number, Student>);
-        setStudentPortraits(portraits as StudentPortraitData);
         setLoadedForLocale(locale);
       })
       .catch(console.error)
@@ -180,32 +182,28 @@ export const EventMainPage = () => {
       }));
   }, [locale]);
 
-  // Upcoming: active or future, sorted ascending (nearest first)
-  const upcomingEvents = useMemo(() => allEvents.filter((e) => e.closeTime >= now).sort((a, b) => a.openTime.getTime() - b.openTime.getTime()), [allEvents, now]);
-
-  // Past: fully ended, sorted descending (most recent first)
-  const pastEvents = useMemo(() => allEvents.filter((e) => e.closeTime < now).sort((a, b) => b.openTime.getTime() - a.openTime.getTime()), [allEvents, now]);
-
-  // ── Pagination ─────────────────────────────────────────────────────────────
-  const [visiblePastCount, setVisiblePastCount] = useState(() => {
-    if (!glEvent || glEvent.status !== 'active') return 10;
-    const idx = pastEvents.findIndex((e) => e.id === glEvent.id);
-    return Math.max(10, idx + 1);
-  });
-
-  // Past events ordered according to sortOrder
-  const displayedPastEvents = useMemo(() => {
-    if (sortOrder === 'asc') {
-      // Oldest first: reverse the descending array, then slice from the newest end
-      // so "Load more" reveals progressively older events above
-      return [...pastEvents].reverse().slice(Math.max(0, pastEvents.length - visiblePastCount));
-    }
-    // desc: most recent first
-    return pastEvents.slice(0, visiblePastCount);
-  }, [pastEvents, sortOrder, visiblePastCount]);
-
   // ── GL/KR dates ────────────────────────────────────────────────────────────
   const glDates = getGlobalEventDates();
+
+  // An event stays listed until a week after it ended on both JP and GL/KR, so GL/KR-side events that lag behind JP remain visible
+  const visibleEvents = useMemo(() => {
+    const cutoffMs = now.getTime() - PAST_VISIBLE_MS;
+    return allEvents.filter((e) => {
+      const glInfo = glDates[e.id];
+      const lastEndMs = Math.max(e.closeTime.getTime(), glInfo ? getKstTime(glInfo.end) : 0);
+      return lastEndMs >= cutoffMs;
+    });
+  }, [allEvents, glDates, now]);
+
+  // Upcoming: active or future, sorted ascending (nearest first)
+  const upcomingEvents = useMemo(() => visibleEvents.filter((e) => e.closeTime >= now).sort((a, b) => a.openTime.getTime() - b.openTime.getTime()), [visibleEvents, now]);
+
+  // Past: ended within the last week, sorted descending (most recent first)
+  const pastEvents = useMemo(() => visibleEvents.filter((e) => e.closeTime < now).sort((a, b) => b.openTime.getTime() - a.openTime.getTime()), [visibleEvents, now]);
+
+  // Past events ordered according to sortOrder
+  const orderedPast = useMemo(() => (sortOrder === 'asc' ? [...pastEvents].reverse() : pastEvents), [pastEvents, sortOrder]);
+
   const isJpActive = (id: number) => jpEvent?.status === 'active' && jpEvent.id === id;
   const isGlActive = (id: number) => glEvent?.status === 'active' && glEvent.id === id;
 
@@ -386,23 +384,9 @@ export const EventMainPage = () => {
                   )}
                   <div className="flex items-end gap-1.5 flex-wrap">
                     {students.map((s) => {
-                      const portrait = studentPortraits?.[s.id];
                       const name = studentData?.[s.id]?.Name ?? String(s.id);
                       const bulletType = studentData?.[s.id]?.BulletType;
-                      return (
-                        <PickupStudentIcon
-                          key={s.id}
-                          portrait={portrait}
-                          studentPortraits={studentPortraits ?? undefined}
-                          name={name}
-                          studentId={s.id}
-                          rerun={s.rerun}
-                          fest={s.fest}
-                          limited={s.limited}
-                          bulletType={bulletType}
-                          locale={locale}
-                        />
-                      );
+                      return <PickupStudentIcon key={s.id} name={name} studentId={s.id} rerun={s.rerun} fest={s.fest} limited={s.limited} bulletType={bulletType} locale={locale} />;
                     })}
                   </div>
                 </div>
@@ -415,9 +399,6 @@ export const EventMainPage = () => {
   };
 
   // ── Rendering ──────────────────────────────────────────────────────────────
-  const orderedPast = displayedPastEvents;
-  const showMorePast = visiblePastCount < pastEvents.length;
-
   // In asc mode: past (old→recent) at top, upcoming at bottom
   // In desc mode: upcoming at top, past (recent→old) at bottom
   const topSection = sortOrder === 'asc' ? orderedPast : upcomingEvents;
@@ -452,7 +433,7 @@ export const EventMainPage = () => {
                 {mode === 'none' ? t('ui.noPickup') : mode === 'kr' ? 'GL/KR' : 'JP'}
               </button>
             ))}
-            {pickupLoading && <span className="text-xs text-neutral-400 dark:text-neutral-500 self-center animate-pulse ml-1">{t('ui.loadingData')}</span>}
+            {pickupLoading && <span className="text-xs text-neutral-400 dark:text-neutral-500 self-center animate-pulse ml-1">{t_ui('loading')}</span>}
           </div>
 
           <div className="flex items-center gap-1.5 ml-auto">
@@ -490,37 +471,11 @@ export const EventMainPage = () => {
           </div>
         )}
 
-        {/* "Load more" at top in asc mode */}
-        {sortOrder === 'asc' && showMorePast && (
-          <div className="flex gap-2 mb-3 pl-6">
-            <button onClick={() => setVisiblePastCount((n) => n + 10)} className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              {t('ui.showMore')}
-            </button>
-            <span className="text-neutral-300 dark:text-neutral-600">·</span>
-            <button onClick={() => setVisiblePastCount(pastEvents.length)} className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              {t('ui.showAll')}
-            </button>
-          </div>
-        )}
-
         {/* Unified event list */}
         <div className="space-y-3 pl-2 border-l-2 border-neutral-100 dark:border-neutral-700 ml-2">
           {topSection.map(renderEvent)}
           {bottomSection.map(renderEvent)}
         </div>
-
-        {/* "Load more" at bottom in desc mode */}
-        {sortOrder === 'desc' && showMorePast && (
-          <div className="flex gap-2 mt-4 pl-6">
-            <button onClick={() => setVisiblePastCount((n) => n + 10)} className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              {t('ui.showMore')}
-            </button>
-            <span className="text-neutral-300 dark:text-neutral-600">·</span>
-            <button onClick={() => setVisiblePastCount(pastEvents.length)} className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-              {t('ui.showAll')}
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="border-t border-neutral-200 dark:border-neutral-700">

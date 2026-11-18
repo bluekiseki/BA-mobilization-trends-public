@@ -182,6 +182,8 @@ export function SearchableDropdown({
             setHighlightedIndex(-1);
           }}
           onFocus={() => onOpenChange(true)}
+          // The input keeps focus after a pick closes the list, so a second click fires no focus event
+          onClick={() => onOpenChange(true)}
           onKeyDown={handleKeyDown}
           className={inputClassName}
         />

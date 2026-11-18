@@ -18,6 +18,7 @@ import jpJfdCsvRaw from '~/data/jp/schedule/jointFiringDrill.csv?raw';
 import jpMainstoryCsvRaw from '~/data/jp/schedule/mainstory.csv?raw';
 import jpMinistoryCsvRaw from '~/data/jp/schedule/miniStory.csv?raw';
 import jpPatchCsvRaw from '~/data/jp/schedule/patch.csv?raw';
+import jpTacticalRelayCsvRaw from '~/data/jp/schedule/tacticalRelay.csv?raw';
 import krEventCsvRaw from '~/data/kr/schedule/event.csv?raw';
 import krRaidCsvRaw from '~/data/kr/schedule/raid.csv?raw';
 import krEraidCsvRaw from '~/data/kr/schedule/eraid.csv?raw';
@@ -29,6 +30,7 @@ import krJfdCsvRaw from '~/data/kr/schedule/jointFiringDrill.csv?raw';
 import krMainstoryCsvRaw from '~/data/kr/schedule/mainstory.csv?raw';
 import krMinistoryCsvRaw from '~/data/kr/schedule/miniStory.csv?raw';
 import krPatchCsvRaw from '~/data/kr/schedule/patch.csv?raw';
+import krTacticalRelayCsvRaw from '~/data/kr/schedule/tacticalRelay.csv?raw';
 
 const jpEventList = jpEventListJson as unknown as EventListData;
 const krEventList = krEventListJson as unknown as EventListData;
@@ -50,9 +52,10 @@ export interface ScheduleItemDetailsV2 {
   studentId?: number;
   prediction?: boolean;
   maxDifficulty?: string;
-  terrain?: string;
+  terrain?: string | string[];
   armorType?: ArmorType;
   jfdType?: string;
+  phase?: string;
   jfd3rd?: MultiLang;
   jfd4th?: MultiLang;
   campaignType?: string;
@@ -63,7 +66,7 @@ export interface ScheduleItemDetailsV2 {
   storyVolume?: string;
   storyTitleMulti?: MultiLang;
   ministoryTitle?: MultiLang;
-  part?: number;
+  part?: number | string;
   id?: number; // for mini-story
 }
 
@@ -110,6 +113,13 @@ interface ERaidItem {
   endTime: string;
   prediction?: boolean;
 }
+interface TacticalRelayItem {
+  phase: string;
+  startTime: string;
+  // Empty until the end is announced; such a phase is shown as a point marker.
+  endTime?: string;
+  prediction?: boolean;
+}
 interface MultifloorItem {
   season: number;
   boss?: string;
@@ -145,7 +155,7 @@ interface StoryItemBase {
   titleKey?: string;
   volume?: string | number;
   chapter?: number;
-  part?: number;
+  part?: number | string;
   titleEn?: string;
   titleJa?: string;
   titleKo?: string;
@@ -197,6 +207,7 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
       mainstory: jpMainstoryCsvRaw,
       ministory: jpMinistoryCsvRaw,
       patch: jpPatchCsvRaw,
+      tacticalRelay: jpTacticalRelayCsvRaw,
     },
     kr: {
       eventList: krEventList,
@@ -211,6 +222,7 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
       mainstory: krMainstoryCsvRaw,
       ministory: krMinistoryCsvRaw,
       patch: krPatchCsvRaw,
+      tacticalRelay: krTacticalRelayCsvRaw,
     },
   };
 
@@ -271,7 +283,7 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
   if (tracksToLoadArray.includes('raid')) {
     parseCsvString<RaidItem>(sources.raid).forEach((item) => {
       if (!item.boss) return;
-      const bossInfo = (bossData as unknown as Record<string, { name: Record<string, string>; teran?: string; armorType?: ArmorType }>)[item.boss];
+      const bossInfo = (bossData as unknown as Record<string, { name: Record<string, string>; teran?: string | string[]; armorType?: ArmorType }>)[item.boss];
       const details: ScheduleItemDetailsV2 = { maxDifficulty: item.maxDifficulty, prediction: !!item.prediction };
       if (bossInfo) {
         details.terrain = bossInfo.teran;
@@ -354,6 +366,23 @@ export function loadScheduleDataV2({ server, tracksToLoad, dateRangeMs }: LoadSc
         i18nKey: `game:jfds.${item.type}`,
         season: item.season,
         details: { jfdType: item.type, terrain: item.teran, armorType: item.armorType, prediction: !!item.prediction, jfd3rd: buildML('3nd'), jfd4th: buildML('4nd') },
+      });
+    });
+  }
+
+  // Shown in the patch track for now, since no end date has been announced.
+  if (tracksToLoadArray.includes('patch')) {
+    parseCsvString<TacticalRelayItem>(sources.tacticalRelay).forEach((item) => {
+      if (!item.startTime) return;
+      const isOpenEnded = !item.endTime;
+      const endTime = item.endTime || new Date(new Date(parseKST(item.startTime)).getTime() + MS_PER_HOUR).toISOString();
+      addItem('patch', {
+        id: `tacticalRelay-${item.phase}`,
+        type: 'tacticalRelay',
+        startTime: item.startTime,
+        endTime,
+        i18nKey: 'game:tacticalRelay',
+        details: { isPointEvent: isOpenEnded, phase: item.phase, prediction: !!item.prediction },
       });
     });
   }

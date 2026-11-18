@@ -18,7 +18,8 @@ import {
   calculateGachaHistoryStats,
   calculateGachaHistoryStatsByBanner,
   calculateTopRecruitedStudentGroups,
-  DEFAULT_SIMULATION_COUNT,
+  AUTO_RUN_BELOW_SIMULATION_COUNT,
+  defaultGachaHistorySimulationCount,
   isValidGachaHistorySimulationCount,
   MAX_SIMULATION_COUNT,
   MIN_SIMULATION_COUNT,
@@ -33,11 +34,14 @@ import { useAuthStore } from '~/store/authStore';
 import { useSearchMatcher } from '~/hooks/useSearchMatcher';
 import type { GachaHistoryEntry, GachaHistoryResult, GachaHistoryServer, GachaResultSource } from '~/types/gachaHistory';
 import { getLocaleShortName, type Locale } from '~/utils/i18n/config';
-import type { Student, StudentData, StudentPortraitData } from '~/types/plannerData';
+import type { Student, StudentData } from '~/types/plannerData';
 import type { BannerPeriod as SimulationBannerPeriod, Student as SimulationStudent } from '~/types/gacha';
+import { CustomNumberInput } from '~/components/common/CustomInput';
 import { useGachaStatsSimulation } from '~/features/my/gacha/useGachaStatsSimulation';
 import GachaHistoryStatsWorker from '~/workers/gacha-history-stats.worker?worker';
 import { getBannerDate, bannerLabel, createForm, type FormState, BannerLuckRangeChart, type LuckRangePoint, DistributionChart } from '~/features/my/gacha/GachaHistoryParts';
+import { studentSheetPreloadLinks } from '~/utils/iconSheet';
+import type { AppHandle } from '~/types/link';
 
 type HistoryBanner = BannerPeriod & { historyId: string; server: GachaHistoryServer };
 
@@ -87,6 +91,7 @@ export function links() {
 export default function MyGachaHistoryPage() {
   const { title, description, locale } = useLoaderData<typeof loader>();
   const { t } = useTranslation(['mypage', 'ui', 'game', 'planner', 'common']);
+  const { t: t_planner } = useTranslation('planner');
   const user = useAuthStore((state) => state.user);
   const activeProfileId = useAuthStore((state) => state.activeProfileId);
   const entries = useGachaHistoryStore((state) => state.entries);
@@ -94,10 +99,10 @@ export default function MyGachaHistoryPage() {
   const updateEntry = useGachaHistoryStore((state) => state.updateEntry);
   const deleteEntry = useGachaHistoryStore((state) => state.deleteEntry);
   const replaceEntries = useGachaHistoryStore((state) => state.replaceEntries);
-  const simulationCount = useGachaHistoryStore((state) => state.simulationCount ?? DEFAULT_SIMULATION_COUNT);
+  // 10,000 and 100,000 were the old built-in defaults and may be saved from before; they are not a choice the user made.
+  const savedSimulationCount = useGachaHistoryStore((state) => (state.simulationCount === 10_000 || state.simulationCount === 100_000 ? undefined : state.simulationCount));
   const setSimulationCount = useGachaHistoryStore((state) => state.setSimulationCount);
   const [students, setStudents] = useState<Record<number, Student>>({});
-  const [portraits, setPortraits] = useState<StudentPortraitData>({});
   const [tab, setTab] = useState<'records' | 'stats' | 'studentStats'>('records');
   const [form, setForm] = useState<FormState | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -107,7 +112,7 @@ export default function MyGachaHistoryPage() {
   const [bannerQuery, setBannerQuery] = useState('');
   const matcher = useSearchMatcher(locale);
   const [selectedResultStudentId, setSelectedResultStudentId] = useState<number | null>(null);
-  const [simulationCountInput, setSimulationCountInput] = useState(String(simulationCount));
+  const [simulationCountInput, setSimulationCountInput] = useState(String(savedSimulationCount ?? defaultGachaHistorySimulationCount(entries.length)));
   const [recordsSortAscending, setRecordsSortAscending] = useState(false);
   const [studentRecruitmentScope, setStudentRecruitmentScope] = useState<StudentRecruitmentScope>('all');
   const [resultsReversed, setResultsReversed] = useState(false);
@@ -115,10 +120,6 @@ export default function MyGachaHistoryPage() {
   const importRef = useRef<HTMLInputElement>(null);
   const activeProfileServer = user?.profiles?.find((profile) => profile.id === activeProfileId)?.server;
   const defaultHistoryServer: GachaHistoryServer = activeProfileServer === 'jp' ? 'JP' : 'GL';
-
-  useEffect(() => {
-    setSimulationCountInput(String(simulationCount));
-  }, [simulationCount]);
 
   const bannerOptions = useMemo<HistoryBanner[]>(
     () => (['GL', 'JP'] as const).flatMap((server) => parseAndGroupBanners(BANNER_REGION[server], null).map((banner) => ({ ...banner, server, historyId: `${server}:${banner.id}` }))),
@@ -129,17 +130,24 @@ export default function MyGachaHistoryPage() {
   const recordsListEntries = useMemo(() => (recordsSortAscending ? [...historyEntries].reverse() : historyEntries), [historyEntries, recordsSortAscending]);
   const activeStatsEntryId = selectedStatsEntryId ?? historyEntries[0]?.id ?? null;
   const selectedEntries = useMemo(() => (statsScope === 'all' ? entries : entries.filter((entry) => entry.id === activeStatsEntryId)), [activeStatsEntryId, entries, statsScope]);
+  // Unless the user picked a count: 10,000 per recorded recruitment.
+  const defaultSimulationCount = defaultGachaHistorySimulationCount(selectedEntries.length);
+  const simulationCount = savedSimulationCount ?? defaultSimulationCount;
+  useEffect(() => {
+    setSimulationCountInput(String(simulationCount));
+  }, [simulationCount]);
   const statsContextKey = useMemo(() => `${statsScope}:${activeStatsEntryId ?? ''}:${JSON.stringify(selectedEntries)}`, [activeStatsEntryId, selectedEntries, statsScope]);
   const analyticalStats = useMemo(() => calculateGachaHistoryStats(selectedEntries, bannersById, 0), [selectedEntries, bannersById]);
   const analyticalPerBannerStats = useMemo(() => (statsScope === 'all' ? calculateGachaHistoryStatsByBanner(entries, bannersById, 0) : []), [bannersById, entries, statsScope]);
-  const { completedStatsForContext, isStatsCalculating, statsSimulationErrorKey, startStatsSimulation } = useGachaStatsSimulation({
+  const { completedStatsForContext, isStatsCalculating, statsSimulationErrorKey, statsSimulationProgress, startStatsSimulation } = useGachaStatsSimulation({
     tab,
     statsContextKey,
     selectedEntries,
     bannersById,
     statsScope,
     simulationCountInput,
-    setSimulationCount,
+    baselineSimulationCount: defaultSimulationCount,
+    setSimulationCount: (count) => setSimulationCount(count === defaultSimulationCount ? undefined : count),
     createWorker: createStatsWorker,
   });
   const stats = completedStatsForContext?.stats ?? analyticalStats;
@@ -191,7 +199,6 @@ export default function MyGachaHistoryPage() {
           students: representativeStudentIds.map((studentId) => ({
             id: studentId,
             name: studentNames.get(studentId) ?? t('gacha.form.unknownStudent', { id: studentId }),
-            portrait: portraits[studentId] ?? students[studentId]?.Portrait,
           })),
           min: summary.topPercentMin,
           max: summary.topPercentMax,
@@ -260,15 +267,13 @@ export default function MyGachaHistoryPage() {
 
   useEffect(() => {
     const loadRoster = async () => {
-      const [studentsResponse, portraitsResponse] = await Promise.all([fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`)), fetch(cdn('/w/students_portrait.json'))]);
-      if (!studentsResponse.ok || !portraitsResponse.ok) return;
+      const studentsResponse = await fetch(cdn(`/schaledb.com/${getLocaleShortName(locale)}.students.min.json`));
+      if (!studentsResponse.ok) return;
       const rawStudentData: StudentData | Student[] = await studentsResponse.json();
       const studentRows = Array.isArray(rawStudentData) ? rawStudentData : Object.values(rawStudentData);
-      const portraitData: StudentPortraitData = await portraitsResponse.json();
       const merged: Record<number, Student> = {};
-      for (const student of studentRows) merged[student.Id] = { ...student, Portrait: portraitData[student.Id] };
+      for (const student of studentRows) merged[student.Id] = student;
       setStudents(merged);
-      setPortraits(portraitData);
     };
     void loadRoster();
   }, [locale]);
@@ -299,8 +304,6 @@ export default function MyGachaHistoryPage() {
     setSelectedResultStudentId(null);
   };
 
-  const portraitFor = (studentId: number): string | undefined => portraits[studentId] ?? students[studentId]?.Portrait;
-
   const updateResult = (id: string, patch: Partial<GachaHistoryResult>) => {
     setForm((current) =>
       current
@@ -322,10 +325,12 @@ export default function MyGachaHistoryPage() {
   const save = () => {
     if (!form || !activeBanner) return setMessage(t('gacha.form.errorNoBanner'));
     const pullCount = Number(form.pullCount);
+    const goalPullCount = form.goalPullCount.trim() === '' ? undefined : Number(form.goalPullCount);
     const initialCharge = Number(form.initialCharge);
     const initialChargeLimited = Number(form.initialChargeLimited);
     const isValidCharge = (value: number) => Number.isInteger(value) && value >= 0 && value <= 199;
     if (!Number.isInteger(pullCount) || pullCount < 1) return setMessage(t('gacha.form.errorPullCount'));
+    if (goalPullCount !== undefined && (!Number.isInteger(goalPullCount) || goalPullCount < 1 || goalPullCount > pullCount)) return setMessage(t('gacha.form.errorGoalPullCount'));
     if (activeBanner.useChargeSystem && !isValidCharge(initialCharge)) return setMessage(t('gacha.form.errorInitialCharge'));
     if (activeBanner.useChargeSystem && bannerHasBothPickupTypes && !isValidCharge(initialChargeLimited)) return setMessage(t('gacha.form.errorInitialCharge'));
     const guaranteed = form.results.filter((result) => result.source === 'half_pity' || result.source === 'hard_pity').length;
@@ -346,6 +351,7 @@ export default function MyGachaHistoryPage() {
       server: form.server,
       date: form.date,
       pullCount,
+      goalPullCount,
       initialCharge: activeBanner.useChargeSystem ? initialCharge : undefined,
       initialChargeLimited: activeBanner.useChargeSystem && bannerHasBothPickupTypes ? initialChargeLimited : undefined,
       results: form.results,
@@ -387,7 +393,7 @@ export default function MyGachaHistoryPage() {
 
   const requestedSimulationCount = Number(simulationCountInput);
   const isSimulationCountValid = isValidGachaHistorySimulationCount(requestedSimulationCount);
-  const showManualSimulationButton = isSimulationCountValid && requestedSimulationCount >= DEFAULT_SIMULATION_COUNT;
+  const showManualSimulationButton = isSimulationCountValid && requestedSimulationCount >= AUTO_RUN_BELOW_SIMULATION_COUNT;
   const showStatsSimulationError = statsSimulationErrorKey === `${statsContextKey}:${requestedSimulationCount}`;
 
   return (
@@ -556,16 +562,13 @@ export default function MyGachaHistoryPage() {
                         }}
                         components={{ 1: <span className={entry.pullCount >= 200 ? 'font-semibold text-blue-600 dark:text-blue-400' : undefined} /> }}
                       />
+                      {entry.goalPullCount !== undefined && entry.goalPullCount < entry.pullCount && ` · ${t('gacha.records.goalPulls', { count: entry.goalPullCount.toLocaleString() })}`}
                     </div>
                     {entry.results.length > 0 && (
                       <div className="mt-2 flex flex-wrap items-center gap-1">
                         {entry.results.map((result) => (
                           <div key={result.id} className="w-9">
-                            <StudentIcon
-                              character={{ id: result.studentId, level: 0, star: 0, hasWeapon: false, weaponStar: 0, isAssist: false }}
-                              student={students[result.studentId]}
-                              portraitData={portraits}
-                            />
+                            <StudentIcon character={{ id: result.studentId, level: 0, star: 0, hasWeapon: false, weaponStar: 0, isAssist: false }} student={students[result.studentId]} />
                           </div>
                         ))}
                       </div>
@@ -633,21 +636,14 @@ export default function MyGachaHistoryPage() {
                     >
                       <span className="flex -space-x-1.5" aria-label={banner ? bannerLabel(banner, studentNames) : entry.date}>
                         {icons.map((student, index) => {
-                          const portrait = portraitFor(student.id);
-                          return portrait ? (
+                          return (
                             <div
                               key={student.id}
                               style={{ zIndex: icons.length - index }}
                               className="relative h-7 w-7 overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-neutral-900 dark:bg-neutral-800"
                             >
-                              <CombatStylePortrait studentId={student.id} portraits={portraits} alt="" />
+                              <CombatStylePortrait studentId={student.id} alt="" />
                             </div>
-                          ) : (
-                            <span
-                              key={student.id}
-                              style={{ zIndex: icons.length - index }}
-                              className="relative h-7 w-7 rounded-full border border-white bg-neutral-200 dark:border-neutral-900 dark:bg-neutral-700"
-                            />
                           );
                         })}
                         {hiddenIconCount > 0 && (
@@ -675,24 +671,23 @@ export default function MyGachaHistoryPage() {
             <DistributionChart
               title={t('gacha.stats.goalTicketsTitle')}
               subtitle={t('gacha.stats.goalTicketsSubtitle', { n: stats.goalCount })}
+              description={t('gacha.stats.goalTicketsDescription')}
               valueUnit={t('planner:gacha.income.unit_sheets')}
               summary={stats.goals}
               lowerIsBetter
             />
             <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
               <label htmlFor="gacha-history-simulation-count">{t('planner:cardShop.simulationCount')}</label>
-              <input
+              <CustomNumberInput
                 id="gacha-history-simulation-count"
-                type="number"
+                value={simulationCountInput === '' ? null : Number(simulationCountInput)}
+                onChange={(value) => setSimulationCountInput(value === null ? '' : String(value))}
                 min={MIN_SIMULATION_COUNT}
                 max={MAX_SIMULATION_COUNT}
-                step={100}
-                value={simulationCountInput}
-                onChange={(event) => setSimulationCountInput(event.currentTarget.value)}
                 onBlur={(event) => {
-                  if (!isValidGachaHistorySimulationCount(Number(event.currentTarget.value))) setSimulationCountInput(String(simulationCount));
+                  if (!isValidGachaHistorySimulationCount(Number(event.currentTarget.value.replace(/,/g, '')))) setSimulationCountInput(String(simulationCount));
                 }}
-                className="w-24 rounded border border-neutral-300 bg-white px-2 py-1 text-right tabular-nums text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                className="w-24 rounded border border-neutral-300 bg-white px-2 py-1 text-right text-sm font-normal tabular-nums text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
                 aria-label={t('planner:cardShop.simulationCount')}
               />
               {showManualSimulationButton && (
@@ -702,12 +697,13 @@ export default function MyGachaHistoryPage() {
                   disabled={isStatsCalculating}
                   className="rounded bg-ba-btn-blue px-3 py-1 font-semibold text-neutral-900 hover:bg-ba-btn-blue-dark disabled:cursor-wait disabled:opacity-60"
                 >
-                  {isStatsCalculating ? t('planner:gacha.result.panel.btn_running') : t('ui:run')}
+                  {isStatsCalculating ? t_planner('button.simRunning') : t('ui:run')}
                 </button>
               )}
               {isStatsCalculating && (
                 <span role="status" aria-live="polite" className="font-medium text-blue-600 dark:text-blue-400">
-                  {t('planner:gacha.result.panel.btn_running')}
+                  {t_planner('button.simRunning')}
+                  {statsSimulationProgress && ` ${statsSimulationProgress.completed.toLocaleString()} / ${statsSimulationProgress.total.toLocaleString()}`}
                 </span>
               )}
               {showStatsSimulationError && <span className="font-medium text-red-600 dark:text-red-400">{t('planner:gacha.result.alert_error')}</span>}
@@ -738,7 +734,7 @@ export default function MyGachaHistoryPage() {
                 onClick={() => setStudentRecruitmentScope(scope)}
                 className={`rounded px-3 py-2 text-sm font-semibold ${studentRecruitmentScope === scope ? 'bg-ba-btn-blue text-neutral-950' : 'text-neutral-600 dark:text-neutral-300'}`}
               >
-                {scope === 'all' ? t('gacha.studentStats.allAcquisitions') : t('gacha.source.normal')}
+                {scope === 'all' ? t('gacha.studentStats.allAcquisitions') : t('gacha.studentStats.excludePityExchange')}
               </button>
             ))}
           </div>
@@ -760,20 +756,11 @@ export default function MyGachaHistoryPage() {
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {studentIds.map((studentId) => {
-                          const portrait = portraitFor(studentId);
                           const name = studentNames.get(studentId) ?? t('gacha.form.unknownStudent', { id: studentId });
-                          return portrait ? (
+                          return (
                             <div key={studentId} title={name} className="h-10 w-10 overflow-hidden rounded-full border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
-                              <CombatStylePortrait studentId={studentId} portraits={portraits} alt={name} />
+                              <CombatStylePortrait studentId={studentId} alt={name} />
                             </div>
-                          ) : (
-                            <span
-                              key={studentId}
-                              title={name}
-                              className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-xs font-semibold text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                            >
-                              {name.slice(0, 1)}
-                            </span>
                           );
                         })}
                       </div>
@@ -855,18 +842,15 @@ export default function MyGachaHistoryPage() {
                       <span className="flex min-w-0 items-center gap-2">
                         <span className="flex shrink-0 -space-x-1.5">
                           {banner.pickupStudents.slice(0, MAX_VISIBLE_BANNER_STUDENTS).map((student, index) => {
-                            const portrait = portraitFor(student.id);
                             const zIndex = Math.min(banner.pickupStudents.length, MAX_VISIBLE_BANNER_STUDENTS) - index;
-                            return portrait ? (
+                            return (
                               <div
                                 key={student.id}
                                 style={{ zIndex }}
                                 className="relative h-8 w-8 overflow-hidden rounded-full border border-white bg-neutral-100 dark:border-neutral-900 dark:bg-neutral-800"
                               >
-                                <CombatStylePortrait studentId={student.id} portraits={portraits} alt="" />
+                                <CombatStylePortrait studentId={student.id} alt="" />
                               </div>
-                            ) : (
-                              <span key={student.id} style={{ zIndex }} className="relative h-8 w-8 rounded-full border border-white bg-neutral-200 dark:border-neutral-900 dark:bg-neutral-700" />
                             );
                           })}
                           {banner.pickupStudents.length > MAX_VISIBLE_BANNER_STUDENTS && (
@@ -908,6 +892,19 @@ export default function MyGachaHistoryPage() {
                   onChange={(event) => {
                     const pullCount = event.currentTarget.value;
                     setForm((current) => (current ? { ...current, pullCount } : current));
+                  }}
+                  className="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                />
+              </label>
+              <label className="text-sm font-medium">
+                {t('gacha.form.goalPullCountLabel')}
+                <input
+                  inputMode="numeric"
+                  value={form.goalPullCount}
+                  placeholder={t('gacha.form.goalPullCountPlaceholder')}
+                  onChange={(event) => {
+                    const goalPullCount = event.currentTarget.value;
+                    setForm((current) => (current ? { ...current, goalPullCount } : current));
                   }}
                   className="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
                 />
@@ -962,6 +959,7 @@ export default function MyGachaHistoryPage() {
                     selectedStudentId={selectedResultStudentId}
                     setSelectedStudentId={addResultForStudent}
                     hideLavel
+                    clearOnSelect
                     priorityStudentIds={pickupIds}
                     mergeCombatStyleForms
                   />
@@ -978,13 +976,9 @@ export default function MyGachaHistoryPage() {
                   return (
                     <div key={result.id} className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-200 pb-3 dark:border-neutral-800">
                       <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
-                        {portraitFor(result.studentId) ? (
-                          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-                            <CombatStylePortrait studentId={result.studentId} portraits={portraits} alt="" />
-                          </div>
-                        ) : (
-                          <span className="h-8 w-8 shrink-0 rounded-full bg-neutral-200 dark:bg-neutral-700" />
-                        )}
+                        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                          <CombatStylePortrait studentId={result.studentId} alt="" />
+                        </div>
                         <span className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100" title={studentDisplayName(result.studentId)}>
                           {studentDisplayName(result.studentId)}
                         </span>
@@ -1083,3 +1077,7 @@ export default function MyGachaHistoryPage() {
     </div>
   );
 }
+
+export const handle: AppHandle = {
+  preload: () => studentSheetPreloadLinks(),
+};

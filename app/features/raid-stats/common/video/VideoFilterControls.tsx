@@ -2,7 +2,6 @@ import { useId, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CustomNumberInput } from '~/components/common/CustomInput';
 import { StudentFilterBar } from '../../dashboard/StudentFilterBar';
-import type { PortraitData } from '../../../../types/raidReport';
 import type { VideoFilterState, VideoSort } from './videoFilters';
 
 const sorts: VideoSort[] = ['score_desc', 'score_asc', 'upload_desc', 'upload_asc'];
@@ -58,20 +57,20 @@ export function VideoAdvancedFilters({
   onChange,
   studentNames,
   searchFn,
-  portraitData,
   usageCounts,
   resultsPresentation = 'dropdown',
   quickControls,
+  serverControl,
 }: {
   filters: VideoFilterState;
   isGrandAssault: boolean;
   onChange: (patch: Partial<VideoFilterState>) => void;
   studentNames: Map<number, string>;
   searchFn: (query: string, excludedIds: Set<number>) => Array<[number, string]>;
-  portraitData: PortraitData;
   usageCounts: Map<number, number>;
   resultsPresentation?: 'dropdown' | 'inline';
   quickControls?: ReactNode;
+  serverControl?: ReactNode;
 }) {
   const { t } = useTranslation('dashboard');
   const { t: tu } = useTranslation('ui');
@@ -85,6 +84,7 @@ export function VideoAdvancedFilters({
   return (
     <div className="space-y-4 sm:space-y-2">
       <div className="space-y-4 sm:flex sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:space-y-0">
+        {serverControl}
         {quickControls && <div className="flex shrink-0 gap-2">{quickControls}</div>}
         <fieldset>
           <legend className="mb-2 font-medium text-neutral-700 dark:text-neutral-200 sm:float-left sm:mb-0 sm:mr-2 sm:leading-7">{t('byScore')}</legend>
@@ -126,7 +126,6 @@ export function VideoAdvancedFilters({
           onChange={(students) => onChange({ students })}
           studentNames={studentNames}
           searchFn={searchFn}
-          portraitData={portraitData}
           usageCounts={usageCounts}
           resultsPresentation={resultsPresentation}
         />

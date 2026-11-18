@@ -7,6 +7,8 @@ export type { LocalizeEtc };
 // src/types/student.ts
 export interface Student extends StudentBase {
   Name: string;
+  /** Summons created by the student's skills; their data lives in the summon catalog. */
+  Summons?: { Id: number; SourceSkill: string }[];
   SearchTags: string[];
   // Position: "Back" | "Front" | "Middle";
   // SquadType: "Main" | "Support";
@@ -53,9 +55,6 @@ export type ImageMap = Record<string, string>;
 // Use Student ID as Key
 export type StudentData = Record<string, Student>;
 
-// Student Portrait Data (ID: Base64 Webp String)
-export type StudentPortraitData = Record<number, string>;
-
 // Icon image data (Type: {ID: Base64 Webp string })
 export type IconData = Record<string, Record<string, string>>;
 
@@ -76,6 +75,8 @@ export interface EventData {
     stage?: Stage[];
     story?: Stage[];
     challenge?: Stage[];
+    // Older layouts: sub-battles of challenges and area stages not listed under `stage`.
+    else?: Stage[];
   };
   shop?: Record<string, ShopItem[]>; // key: shop ID
   icons: IconInfos;
@@ -129,6 +130,7 @@ export interface EventData {
   };
   minigame_road_puzzle?: RoadPuzzleData;
   minigame_janken?: MinigameJanken;
+  minigame_tank?: MinigameTank;
   location?: LocationData;
 }
 
@@ -390,6 +392,8 @@ export interface Skill {
   Parameters: string[][];
   Icon: string;
   Cost?: number[];
+  /** Area shapes of the skill; absent or empty for single-target skills. */
+  Radius?: { Type: string; Radius?: number }[];
   Effects: {
     Type: string;
     Block: 0 | 1;
@@ -397,6 +401,10 @@ export interface Skill {
     Hits: number[];
     DescParamId: number;
     Scale: number[];
+    /** Buff-like effects list their targets as an array; heal-like effects use a plain string. */
+    Target?: string | string[];
+    Stat?: string;
+    Icon?: string;
   }[]; // simplified to any[]
 }
 
@@ -721,6 +729,43 @@ export interface MinigameJanken {
   stage: MinigameJankenStage[];
   reward_score: MinigameJankenRewardScore[];
   reward_score_item: MinigameJankenRewardScoreItem[];
+}
+
+// MinigameTank Types (tank racing)
+export interface MinigameTankStage {
+  UniqueId: number;
+  StageNumber: number;
+  StageType: number; // 1: Normal, 2: Boss, 3: Time attack (no cost, no rewards)
+  CostParcelId: number;
+  CostParcelTypeStr: string;
+  CostParcelAmount: number;
+  NameStr?: { Kr?: string; Jp?: string; En?: string; Tw?: string };
+  PrevStageId: number;
+  StarGoal: number[];
+  StarGoalAmount: number[];
+  EventContentStageReward?: StageReward[]; // Absent on time-attack stages
+}
+
+export interface MinigameTankCharacter {
+  TankGroupId: number;
+  Grade: number;
+  UniqueId: number;
+  PrevGradeId: number;
+  UnlockConditionStageId: number;
+  UpgradeItemAmount: number;
+  UpgradeItemParcelId: number;
+  UpgradeItemParcelTypeStr?: string;
+  MaxHp: number;
+  MaxSpeed: number;
+  AttackPower: number;
+  MaxFuel: number;
+  TankNameStr?: { Kr?: string; Jp?: string; En?: string; Tw?: string };
+  TeamNameStr?: { Kr?: string; Jp?: string; En?: string; Tw?: string };
+}
+
+export interface MinigameTank {
+  stage: MinigameTankStage[];
+  character: MinigameTankCharacter[];
 }
 
 // ClueSearch Types
